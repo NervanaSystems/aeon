@@ -27,9 +27,9 @@ TEST(loader,decode) {
         false, 0, 0, 0, 0);  // subtract mean, r, g, b, gray means
     ImageIngestParams *iip = new ImageIngestParams(true, true, 256, 256);
 
-    BatchFile bf;
+    BatchFileReader bf;
     string batchFileName = _datagen.GetDatasetPath() + "/archive-0.cpio";
-    bf.openForRead(batchFileName);
+    bf.open(batchFileName);
 
     // Just get a single item
     auto dpair = bf.readItem();

@@ -90,7 +90,8 @@ public:
 };
 
 class BatchFileHeader {
-friend class BatchFile;
+friend class BatchFileReader;
+friend class BatchFileWriter;
 public:
     BatchFileHeader();
     void read(IfStream& ifs);
@@ -121,23 +122,18 @@ private:
     uint                        _unused[4];
 };
 
-class BatchFile {
+class BatchFileReader {
 public:
-    BatchFile();
-    BatchFile(const std::string& fileName);
-    BatchFile(const std::string& fileName, const std::string& dataType);
-    ~BatchFile() ;
+    BatchFileReader();
+    BatchFileReader(const std::string& fileName);
+    ~BatchFileReader() ;
 
-    void openForRead(const std::string& fileName);
-    void openForWrite(const std::string& fileName, const std::string& dataType);
+    void open(const std::string& fileName);
     void close();
 
     void readItem(BufferPair& buffers);
     DataPair readItem();
-    void writeItem(char* datum, char* target,
-                   uint datumSize, uint targetSize);
 
-    void writeItem(ByteVect &datum, ByteVect &target);
     int itemCount() ;
 
     int totalDataSize() ;
@@ -150,7 +146,6 @@ public:
 
 private:
     IfStream                    _ifs;
-    OfStream                    _ofs;
     BatchFileHeader             _fileHeader;
     BatchFileTrailer            _fileTrailer;
     RecordHeader                _recordHeader;
@@ -159,6 +154,31 @@ private:
     std::string                 _tempName;
 };
 
+class BatchFileWriter {
+public:
+    BatchFileWriter();
+    BatchFileWriter(const std::string& fileName);
+    BatchFileWriter(const std::string& fileName, const std::string& dataType);
+    ~BatchFileWriter() ;
+
+    void open(const std::string& fileName, const std::string& dataType);
+    void close();
+
+    void writeItem(char* datum, char* target,
+                   uint datumSize, uint targetSize);
+
+    void writeItem(ByteVect &datum, ByteVect &target);
+
+
+private:
+    OfStream                    _ofs;
+    BatchFileHeader             _fileHeader;
+    BatchFileTrailer            _fileTrailer;
+    RecordHeader                _recordHeader;
+    int                         _fileHeaderOffset;
+    std::string                 _fileName;
+    std::string                 _tempName;
+};
 extern int readFileLines(const std::string &filn, LineList &ll);
 extern int readFileBytes(const std::string &filn, ByteVect &b);
 

@@ -89,8 +89,8 @@ extern void write_batch(char *outfile, const int numData,
     if (numData == 0) {
         return;
     }
-    BatchFile bf;
-    bf.openForWrite(outfile, "imgclass");
+    BatchFileWriter bf;
+    bf.open(outfile, "imgclass");
     for (int i=0; i<numData; i++) {
         ByteVect inp;
         readFileBytes(jpgfiles[i], inp);
@@ -114,9 +114,9 @@ extern void write_raw(char *outfile, const int numData,
     if (numData == 0) {
         return;
     }
-    BatchFile bf;
+    BatchFileWriter bf;
     uint32_t tgtSize = sizeof(uint32_t);
-    bf.openForWrite(outfile, "imgclass");
+    bf.open(outfile, "imgclass");
     for (int i=0; i<numData; i++) {
         bf.writeItem(jpgdata[i], (char *) &targets[i], jpglens[i], tgtSize);
     }
@@ -124,8 +124,8 @@ extern void write_raw(char *outfile, const int numData,
 }
 
 extern int read_max_item(char *batchfile) {
-    BatchFile bf;
-    bf.openForRead(batchfile);
+    BatchFileReader bf;
+    bf.open(batchfile);
     int maxItemSize = bf.maxDatumSize();
     bf.close();
     return maxItemSize;

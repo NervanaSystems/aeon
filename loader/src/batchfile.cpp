@@ -125,24 +125,28 @@ void BatchFileTrailer::read(IfStream& ifs) {
     ifs.read(&_unused);
 }
 
-BatchFile::BatchFile() : _fileHeaderOffset(0)  {
+
+
+
+
+
+
+
+
+
+BatchFileReader::BatchFileReader() : _fileHeaderOffset(0)  {
     _ifs.exceptions(_ifs.failbit);
-    _ofs.exceptions(_ofs.failbit);
 }
 
-BatchFile::BatchFile(const string& fileName) {
-    openForRead(fileName);
+BatchFileReader::BatchFileReader(const string& fileName) {
+    open(fileName);
 }
 
-BatchFile::BatchFile(const string& fileName, const string& dataType) {
-    openForWrite(fileName, dataType);
-}
-
-BatchFile::~BatchFile() {
+BatchFileReader::~BatchFileReader() {
     close();
 }
 
-void BatchFile::openForRead(const string& fileName) {
+void BatchFileReader::open(const string& fileName) {
     assert(_ifs.is_open() == false);
     _ifs.open(fileName, IfStream::binary);
     uint fileSize;
@@ -151,7 +155,86 @@ void BatchFile::openForRead(const string& fileName) {
     _fileHeader.read(_ifs);
 }
 
-void BatchFile::openForWrite(const string& fileName, const string& dataType) {
+void BatchFileReader::close() {
+    if (_ifs.is_open() == true) {
+        _ifs.close();
+    }
+}
+
+void BatchFileReader::readItem(BufferPair& buffers) {
+    uint datumSize;
+    uint targetSize;
+    _recordHeader.read(_ifs, &datumSize);
+    buffers.first->read(_ifs, datumSize);
+    _ifs.readPadding(datumSize);
+    _recordHeader.read(_ifs, &targetSize);
+    buffers.second->read(_ifs, targetSize);
+    _ifs.readPadding(targetSize);
+}
+
+DataPair BatchFileReader::readItem() {
+    uint datumSize = 0;
+    _recordHeader.read(_ifs, &datumSize);
+    unique_ptr<ByteVect> datum(new ByteVect((size_t) datumSize));
+    _ifs.read(&(*datum)[0], datumSize);
+    _ifs.readPadding(datumSize);
+
+    uint targetSize = 0;
+    _recordHeader.read(_ifs, &targetSize);
+    unique_ptr<ByteVect> target(new ByteVect((size_t) targetSize));
+    _ifs.read(&(*target)[0], targetSize);
+    _ifs.readPadding(targetSize);
+    return DataPair(std::move(datum), std::move(target));
+}
+
+int BatchFileReader::itemCount() {
+    return _fileHeader._itemCount;
+}
+
+int BatchFileReader::totalDataSize() {
+    return _fileHeader._totalDataSize;
+}
+
+int BatchFileReader::totalTargetsSize() {
+    return _fileHeader._totalTargetsSize;
+}
+
+int BatchFileReader::maxDatumSize() {
+    return _fileHeader._maxDatumSize;
+}
+
+int BatchFileReader::maxTargetSize() {
+    return _fileHeader._maxTargetSize;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+BatchFileWriter::BatchFileWriter() : _fileHeaderOffset(0)  {
+    _ofs.exceptions(_ofs.failbit);
+}
+
+BatchFileWriter::BatchFileWriter(const string& fileName, const string& dataType) {
+    open(fileName, dataType);
+}
+
+BatchFileWriter::~BatchFileWriter() {
+    close();
+}
+
+void BatchFileWriter::open(const string& fileName, const string& dataType) {
     static_assert(sizeof(_fileHeader) == 64, "file header is not 64 bytes");
     _fileName = fileName;
     _tempName = fileName + ".tmp";
@@ -166,10 +249,7 @@ void BatchFile::openForWrite(const string& fileName, const string& dataType) {
     _fileHeader.write(_ofs);
 }
 
-void BatchFile::close() {
-    if (_ifs.is_open() == true) {
-        _ifs.close();
-    }
+void BatchFileWriter::close() {
     if (_ofs.is_open() == true) {
         // Write the trailer.
         static_assert(sizeof(_fileTrailer) == 16,
@@ -190,33 +270,7 @@ void BatchFile::close() {
     }
 }
 
-void BatchFile::readItem(BufferPair& buffers) {
-    uint datumSize;
-    uint targetSize;
-    _recordHeader.read(_ifs, &datumSize);
-    buffers.first->read(_ifs, datumSize);
-    _ifs.readPadding(datumSize);
-    _recordHeader.read(_ifs, &targetSize);
-    buffers.second->read(_ifs, targetSize);
-    _ifs.readPadding(targetSize);
-}
-
-DataPair BatchFile::readItem() {
-    uint datumSize = 0;
-    _recordHeader.read(_ifs, &datumSize);
-    unique_ptr<ByteVect> datum(new ByteVect((size_t) datumSize));
-    _ifs.read(&(*datum)[0], datumSize);
-    _ifs.readPadding(datumSize);
-
-    uint targetSize = 0;
-    _recordHeader.read(_ifs, &targetSize);
-    unique_ptr<ByteVect> target(new ByteVect((size_t) targetSize));
-    _ifs.read(&(*target)[0], targetSize);
-    _ifs.readPadding(targetSize);
-    return DataPair(std::move(datum), std::move(target));
-}
-
-void BatchFile::writeItem(char* datum, char* target,
+void BatchFileWriter::writeItem(char* datum, char* target,
                uint datumSize, uint targetSize) {
     char fileName[16];
     // Write the datum.
@@ -239,31 +293,19 @@ void BatchFile::writeItem(char* datum, char* target,
     _fileHeader._itemCount++;
 }
 
-void BatchFile::writeItem(ByteVect &datum, ByteVect &target) {
+void BatchFileWriter::writeItem(ByteVect &datum, ByteVect &target) {
     uint    datumSize = datum.size();
     uint    targetSize = target.size();
     writeItem(&datum[0], &target[0], datumSize, targetSize);
 }
 
-int BatchFile::itemCount() {
-    return _fileHeader._itemCount;
-}
 
-int BatchFile::totalDataSize() {
-    return _fileHeader._totalDataSize;
-}
 
-int BatchFile::totalTargetsSize() {
-    return _fileHeader._totalTargetsSize;
-}
 
-int BatchFile::maxDatumSize() {
-    return _fileHeader._maxDatumSize;
-}
 
-int BatchFile::maxTargetSize() {
-    return _fileHeader._maxTargetSize;
-}
+
+
+
 
 // Some utilities that would be used by batch writers
 int readFileLines(const string &filn, LineList &ll) {

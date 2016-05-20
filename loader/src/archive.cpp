@@ -111,7 +111,7 @@ int ArchiveWriter::write() {
     if (Reader::exists(fileName.str()) == true) {
         return 0;
     }
-    BatchFile       batchFile(fileName.str(), "");
+    BatchFileWriter batchFile(fileName.str(), "");
     for (int i = 0; i < _batchSize; i++) {
         int dataLen = 0;
         int targetLen = 0;
@@ -260,8 +260,8 @@ int ArchiveReader::getCount() {
 
     int count = 0;
     for( const std::string& f : _fileList ) {
-        BatchFile b;
-        b.openForRead(f);
+        BatchFileReader b;
+        b.open(f);
         count += b.itemCount();
     }
 
@@ -324,8 +324,8 @@ void ArchiveReader::readThread() {
                 _archiveWriter->waitFor(fileName);
             }
 
-            BatchFile b;
-            b.openForRead(fileName);
+            BatchFileReader b;
+            b.open(fileName);
             logCurrentFile(fileName);
 
             // Something larger than 1 to force reading a second macroblock

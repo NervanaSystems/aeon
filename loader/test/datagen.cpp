@@ -105,8 +105,8 @@ int DataGen::Create() {
             int batchSize = min(remainder,_maxItems);
             string fileName = _path + "/" + _prefix + to_string(fileNo++) + ".cpio";
             _fileList.push_back(fileName);
-            BatchFile bf;
-            bf.openForWrite(fileName, "");
+            BatchFileWriter bf;
+            bf.open(fileName, "");
             for(int i=0; i<batchSize; i++) {
                 int target = 42;
                 vector<unsigned char> imageData = RenderImage( imageNumber++, target );

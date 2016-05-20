@@ -164,7 +164,7 @@ private:
     int                         _itemIdx;
     // Number of items left in the current archive.
     int                         _itemsLeft;
-    BatchFile                   _batchFile;
+    BatchFileReader             _batchFile;
     std::deque<DataPair>        _shuffleQueue;
     ArchiveWriter*              _archiveWriter;
 
