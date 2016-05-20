@@ -6,7 +6,7 @@
             "desc": "How many color channels"
         },
         "height": {
-            "value": 224,
+            "value": 100,
             "valid": {"min":0},
             "desc": "height in pixels"
         },
@@ -27,4 +27,5 @@
         "rgb_mean": [104, 119, 127],
         "aspect_ratio": 1.0
     }
+
 }

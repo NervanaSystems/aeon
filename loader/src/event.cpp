@@ -15,9 +15,9 @@
 
 #include "event.hpp"
 
- nervana::event::event() :
+nervana::event::event() :
     _ready(false) {
- }
+}
 
 void nervana::event::wait() {
     std::unique_lock<std::mutex> lk(_mutex);

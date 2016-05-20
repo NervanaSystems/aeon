@@ -37,7 +37,7 @@
 #include "threadpool.hpp"
 #include "batchfile.hpp"
 #include "media.hpp"
-#include "event.hpp" 
+#include "event.hpp"
 
 using std::string;
 using std::ifstream;
@@ -378,7 +378,7 @@ private:
                 logCurrentFile(fileName);
 
                 // Something larger than 1 to force reading a second macroblock
-                _readAheadSize = std::max<size_t>(_readAheadSize, b.itemCount() * 1.5); 
+                _readAheadSize = std::max<size_t>(_readAheadSize, b.itemCount() * 1.5);
 
                 vector<DataPair> tmpBuffer(b.itemCount());
                 for( int i=0; i<b.itemCount(); i++ ) {
