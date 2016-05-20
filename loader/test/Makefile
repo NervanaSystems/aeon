@@ -82,7 +82,7 @@ print-%  : ; @echo $* = $($*)
 ifeq ($(GTEST_INSTALLED),true)
 test: $(OBJS)
 	@echo "Building $@..."
-	$(CC) -o test $(OBJS) ../src/event.o ../src/media.o ../src/device.o ../src/batchfile.o ../src/image.o $(LDIR) $(LIBS)
+	$(CC) -o test $(OBJS) ../src/loader.a $(LDIR) $(LIBS)
 else
 test:
 	@echo "gtest must be installed to build test"

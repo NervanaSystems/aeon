@@ -14,7 +14,7 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------
 
-SRCS            := media.cpp event.cpp device.cpp batchfile.cpp image.cpp
+SRCS            := media.cpp event.cpp device.cpp batchfile.cpp image.cpp archive.cpp reader.cpp
 OBJS 			= $(subst .cpp,.o,$(SRCS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -fPIC
 CFLAGSDBG       := -g -Wall -O0 -std=c++11
