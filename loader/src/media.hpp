@@ -21,8 +21,6 @@
 #include <vector>
 #include <sstream>
 
-using std::vector;
-
 enum MediaType {
     UNKNOWN = -1,
     IMAGE = 0,
@@ -156,7 +154,7 @@ public:
     }
 
 private:
-    vector<char*>               _bufs;
+    std::vector<char*>          _bufs;
     int                         _bufSize;
     int                         _dataSize;
     int                         _sampleSize;

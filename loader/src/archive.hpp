@@ -71,7 +71,7 @@ public:
 
     virtual ~ArchiveWriter();
 
-    void waitFor(string& name);
+    void waitFor(std::string& name);
 
     int write();
 
@@ -80,17 +80,17 @@ private:
 
 private:
     int                         _batchSize;
-    string                      _repoDir;
-    string                      _archiveDir;
-    string                      _indexFile;
-    string                      _archivePrefix;
+    std::string                 _repoDir;
+    std::string                 _archiveDir;
+    std::string                 _indexFile;
+    std::string                 _archivePrefix;
     // Index of current archive file.
     int                         _fileIdx;
     // Total number of items in this dataset.
     int                         _itemCount;
     bool                        _started;
-    mutex                       _mutex;
-    condition_variable          _write;
+    std::mutex                  _mutex;
+    std::condition_variable     _write;
     WriteThread*                _writeThread;
     FileReader*                 _reader;
     char*                       _dataBuf;
@@ -130,7 +130,7 @@ public:
 
     int totalTargetsSize();
 
-    void addFiles( const std::vector<string>& files );
+    void addFiles( const std::vector<std::string>& files );
 
 private:
     int getCount();
@@ -144,7 +144,7 @@ private:
 
     void getFileList();
 
-    bool testFileName( const string& s );
+    bool testFileName( const std::string& s );
 
     // This method is called by mutiple threads so make sure you lock the call with _fileListMutex
     void shuffleFileList();
@@ -154,9 +154,9 @@ private:
     void logSeed( unsigned int seed );
 
 private:
-    string                      _archiveDir;
-    string                      _indexFile;
-    string                      _archivePrefix;
+    std::string                 _archiveDir;
+    std::string                 _indexFile;
+    std::string                 _archivePrefix;
     int                         _startFileIdx;
     // Index of current archive file.
     int                         _fileIdx;
@@ -178,7 +178,7 @@ private:
     std::condition_variable     _readDataReady;
     std::mutex                  _readMutex;
     size_t                      _fileListIndex;
-    std::vector<string>         _fileList;
+    std::vector<std::string>    _fileList;
     std::thread*                _readThread;
     size_t                      _readAheadSize;
     std::ofstream               _logFile;

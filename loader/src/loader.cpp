@@ -26,6 +26,9 @@
 #include "media.hpp"
 #include "matrix.hpp"
 #include "device.hpp"
+#include "loader.hpp"
+
+using namespace std;
 
 DecodeThreadPool::DecodeThreadPool(int count, int batchSize,
                  int datumSize, int datumTypeSize,
@@ -56,7 +59,7 @@ DecodeThreadPool::DecodeThreadPool(int count, int batchSize,
     }
 }
 
-virtual DecodeThreadPool::~DecodeThreadPool() {
+DecodeThreadPool::~DecodeThreadPool() {
     if (_manager != 0) {
         _manager->join();
         delete _manager;
@@ -69,14 +72,14 @@ virtual DecodeThreadPool::~DecodeThreadPool() {
     // of the parent class.
 }
 
-virtual void DecodeThreadPool::start() {
+void DecodeThreadPool::start() {
     for (int i = 0; i < _count; i++) {
         _threads.push_back(new thread(&DecodeThreadPool::run, this, i));
     }
     _manager = new thread(&DecodeThreadPool::manage, this);
 }
 
-virtual void DecodeThreadPool::stop() {
+void DecodeThreadPool::stop() {
     ThreadPool::stop();
     while (stopped() == false) {
         std::this_thread::yield();
@@ -94,7 +97,7 @@ virtual void DecodeThreadPool::stop() {
     }
 }
 
-virtual void DecodeThreadPool::run(int id) {
+void DecodeThreadPool::run(int id) {
     assert(id < _count);
     _startInds[id] = id * _itemsPerThread;
     int itemCount = _itemsPerThread;
@@ -112,7 +115,7 @@ virtual void DecodeThreadPool::run(int id) {
     _stopped[id] = true;
 }
 
-virtual void DecodeThreadPool::work(int id) {
+void DecodeThreadPool::work(int id) {
     // Thread function.
     {
         unique_lock<mutex> lock(_mutex);
@@ -234,7 +237,7 @@ ReadThread::ReadThread(BufferPool& out, Reader* reader)
     assert(_count == 1);
 }
 
-virtual void ReadThread::work(int id) {
+void ReadThread::work(int id) {
     produce();
 }
 
@@ -282,7 +285,7 @@ Loader::Loader(int* itemCount, int batchSize,
                                 targetTypeSize, targetConversion);
 }
 
-virtual Loader::~Loader() {
+Loader::~Loader() {
     delete _readBufs;
     delete _readThread;
     delete _decodeBufs;

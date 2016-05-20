@@ -24,16 +24,9 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <cstring>
 
 #include "streams.hpp"
-
-typedef uint8_t uchar;
-using std::vector;
-using std::pair;
-using std::make_pair;
-using std::mutex;
-using std::unique_lock;
-using std::condition_variable;
 
 template<typename T>
 class Buffer {
@@ -62,7 +55,7 @@ public:
     }
 
     void dump() {
-        uchar* data = reinterpret_cast<uchar*>(_data);
+        uint8_t* data = reinterpret_cast<uint8_t*>(_data);
         int len = _size * sizeof(T);
         assert(len % 16 == 0);
         int index = 0;
@@ -184,97 +177,41 @@ public:
 protected:
     T*                          _cur;
     int                         _idx;
-    vector<int>                 _items;
-    vector<int>                 _lens;
+    std::vector<int>            _items;
+    std::vector<int>            _lens;
     bool                        _alloc;
     bool                        _pinned;
 };
 
 typedef Buffer<char>                                    CharBuffer;
-typedef pair<CharBuffer*, CharBuffer*>                  BufferPair;
+typedef std::pair<CharBuffer*, CharBuffer*>             BufferPair;
 
 class BufferPool {
 public:
-    BufferPool(int dataSize, int targetSize, bool pinned = false, int count = 2)
-    : _count(count), _used(0), _readPos(0), _writePos(0) {
-        for (int i = 0; i < count; i++) {
-            CharBuffer* dataBuffer = new CharBuffer(dataSize, pinned);
-            CharBuffer* targetBuffer = new CharBuffer(targetSize, pinned);
-            _bufs.push_back(make_pair(dataBuffer, targetBuffer));
-        }
-    }
-
-    virtual ~BufferPool() {
-        for (auto buf : _bufs) {
-            delete buf.first;
-            delete buf.second;
-        }
-    }
-
-    BufferPair& getForWrite() {
-        _bufs[_writePos].first->reset();
-        _bufs[_writePos].second->reset();
-        return _bufs[_writePos];
-    }
-
-    BufferPair& getForRead() {
-        return _bufs[_readPos];
-    }
-
-    void advanceReadPos() {
-        _used--;
-        advance(_readPos);
-    }
-
-    void advanceWritePos() {
-        _used++;
-        advance(_writePos);
-    }
-
-    bool empty() {
-        assert(_used >= 0);
-        return (_used == 0);
-    }
-
-    bool full() {
-        assert(_used <= _count);
-        return (_used == _count);
-    }
-
-    mutex& getMutex() {
-        return _mutex;
-    }
-
-    void waitForNonEmpty(unique_lock<mutex>& lock) {
-        _nonEmpty.wait(lock);
-    }
-
-    void waitForNonFull(unique_lock<mutex>& lock) {
-        _nonFull.wait(lock);
-    }
-
-    void signalNonEmpty() {
-        _nonEmpty.notify_all();
-    }
-
-    void signalNonFull() {
-        _nonFull.notify_all();
-    }
+    BufferPool(int dataSize, int targetSize, bool pinned = false, int count = 2);
+    virtual ~BufferPool();
+    BufferPair& getForWrite();
+    BufferPair& getForRead();
+    void advanceReadPos();
+    void advanceWritePos();
+    bool empty();
+    bool full();
+    std::mutex& getMutex();
+    void waitForNonEmpty(std::unique_lock<std::mutex>& lock);
+    void waitForNonFull(std::unique_lock<std::mutex>& lock);
+    void signalNonEmpty();
+    void signalNonFull();
 
 protected:
-    void advance(int& index) {
-        if (++index == _count) {
-            index = 0;
-        }
-    }
+    void advance(int& index);
 
 protected:
     int                         _count;
     int                         _used;
-    vector<BufferPair>          _bufs;
+    std::vector<BufferPair>     _bufs;
     int                         _readPos;
     int                         _writePos;
-    mutex                       _mutex;
-    condition_variable          _nonFull;
-    condition_variable          _nonEmpty;
+    std::mutex                  _mutex;
+    std::condition_variable     _nonFull;
+    std::condition_variable     _nonEmpty;
 };

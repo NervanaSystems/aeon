@@ -13,9 +13,10 @@
  limitations under the License.
 */
 
+ #pragma once
+
 #if HAS_IMGLIB
 #include <opencv2/core/core.hpp>
-using cv::Mat;
 #endif
 
 #define UNSUPPORTED_MEDIA_MESSAGE "support not built-in. Please install the " \
@@ -32,8 +33,8 @@ public:
         } else {
             throw std::runtime_error("Unsupported type in transpose\n");
         }
-        Mat input = Mat(height, width, elemType, data).clone();
-        Mat output = Mat(width, height, elemType, data);
+        cv::Mat input = cv::Mat(height, width, elemType, data).clone();
+        cv::Mat output = cv::Mat(width, height, elemType, data);
         cv::transpose(input, output);
 #else
 #warning ("OpenCV support not built-in. Certain features will not work.")

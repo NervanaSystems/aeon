@@ -40,13 +40,7 @@
 #include "media.hpp"
 #include "event.hpp"
 
-using std::string;
-using std::ifstream;
-using std::ofstream;
-using std::ios;
-using std::stringstream;
-using std::vector;
-using std::map;
+using namespace std;
 
 WriteThread::WriteThread(Writer* writer)
 : ThreadPool(1), _writer(writer) {

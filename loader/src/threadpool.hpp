@@ -27,12 +27,6 @@
 #include <utility>
 #include <algorithm>
 
-using std::thread;
-using std::mutex;
-using std::condition_variable;
-using std::unique_lock;
-using std::lock_guard;
-
 class ThreadPool {
 public:
     explicit ThreadPool(int count)
@@ -53,7 +47,7 @@ public:
 
     virtual void start() {
         for (int i = 0; i < _count; i++) {
-            _threads.push_back(new thread(&ThreadPool::run, this, i));
+            _threads.push_back(new std::thread(&ThreadPool::run, this, i));
         }
     }
 
@@ -88,7 +82,7 @@ protected:
 
 protected:
     int                         _count;
-    vector<thread*>             _threads;
+    std::vector<std::thread*>   _threads;
     bool                        _done;
     bool*                       _stopped;
 };

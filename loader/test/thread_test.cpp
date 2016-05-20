@@ -21,6 +21,7 @@
 extern DataGen _datagen;
 
 // Code for unit testing.
+using namespace std;
 
 unsigned int sum(char* data, unsigned int len) {
     unsigned int result = 0;
