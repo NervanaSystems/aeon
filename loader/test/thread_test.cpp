@@ -13,7 +13,12 @@
  limitations under the License.
 */
 
-#include "loader.cpp"
+#include "loader.hpp"
+#include "image.hpp"
+#include "datagen.hpp"
+#include "gtest/gtest.h"
+
+extern DataGen _datagen;
 
 // Code for unit testing.
 
@@ -89,7 +94,7 @@ int multi(Loader* loader, int epochCount, int minibatchCount,
     return sm;
 }
 
-int test(char* repoDir, char* indexFile,
+int test(const char* repoDir, const char* indexFile,
          int batchSize, int nchan, int height, int width) {
     int datumSize = nchan * height * width;
     int targetSize = 1;
@@ -112,7 +117,7 @@ int test(char* repoDir, char* indexFile,
     }
 
     string archiveDir(repoDir);
-    archiveDir += "-ingested";
+    //archiveDir += "-ingested";
     CpuParams deviceParams(0, 0, dataBuffer, targetBuffer);
     ImageIngestParams ingestParams(false, true, 0, 0);
     Loader loader(&itemCount, batchSize, repoDir, archiveDir.c_str(),
@@ -131,23 +136,20 @@ int test(char* repoDir, char* indexFile,
         delete[] dataBuffer[i];
         delete[] targetBuffer[i];
     }
-    printf("sum %u true sum %u\n", multiSum, singleSum);
-    assert(multiSum == singleSum);
-    printf("OK\n");
+    // printf("sum %u true sum %u\n", multiSum, singleSum);
+    EXPECT_EQ( multiSum, singleSum );
+    // assert(multiSum == singleSum);
+    // printf("OK\n");
     return 0;
 }
 
-int main(int argc, char** argv) {
+TEST(thread,loader) {
     int nchan = 3;
-    int height = 32;
-    int width = 32;
+    int height = 128;
+    int width = 128;
     int batchSize = 128;
-    if (argc < 3) {
-        printf("Usage: %s repo_dir index_file\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
-    char* repoDir = argv[1];
-    char* indexFile = argv[2];
+    const char* repoDir = _datagen.GetDatasetPath().c_str();
+    const char* indexFile = "";
 
     test(repoDir, indexFile, batchSize, nchan, height, width);
 }

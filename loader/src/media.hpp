@@ -19,6 +19,7 @@
 #pragma once
 
 #include <vector>
+#include <sstream>
 
 using std::vector;
 
@@ -142,7 +143,7 @@ public:
 
     void copyData(char* buf, int bufSize) {
         if (_dataSize * (int) _bufs.size() > bufSize) {
-            stringstream ss;
+            std::stringstream ss;
             ss << "Buffer too small to copy decoded data. Buffer size " <<
                    bufSize << " Data size " << _dataSize * _bufs.size();
             throw std::runtime_error(ss.str());
