@@ -32,11 +32,11 @@
 
 #include "api.hpp"
 
-Media* Media::create(MediaParams* params, MediaParams* ingestParams, int id) {
+std::shared_ptr<Media> Media::create(MediaParams* params, MediaParams* ingestParams, int id) {
     switch (params->_mtype) {
     case IMAGE:
 #if HAS_IMGLIB
-        return new Image(reinterpret_cast<ImageParams*>(params),
+        return std::make_shared<Image>(reinterpret_cast<ImageParams*>(params),
                          reinterpret_cast<ImageIngestParams*>(ingestParams),
                          id);
 #else
@@ -47,7 +47,7 @@ Media* Media::create(MediaParams* params, MediaParams* ingestParams, int id) {
 #endif
     case VIDEO:
 #if HAS_VIDLIB
-        return new Video(reinterpret_cast<VideoParams*>(params), id);
+        return std::make_shared<Video>(reinterpret_cast<VideoParams*>(params), id);
 #else
         {
             string message = "Video " UNSUPPORTED_MEDIA_MESSAGE;
@@ -56,7 +56,7 @@ Media* Media::create(MediaParams* params, MediaParams* ingestParams, int id) {
 #endif
     case AUDIO:
 #if HAS_AUDLIB
-        return new Audio(reinterpret_cast<AudioParams*>(params), id);
+        return std::make_shared<Audio>(reinterpret_cast<AudioParams*>(params), id);
 #else
         {
             string message = "Audio " UNSUPPORTED_MEDIA_MESSAGE;

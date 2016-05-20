@@ -34,8 +34,8 @@ public:
     DecodeThreadPool(int count, int batchSize,
                      int datumSize, int datumTypeSize,
                      int targetSize, int targetTypeSize,
-                     BufferPool& in, BufferPool& out,
-                     Device* device,
+                     const std::shared_ptr<BufferPool>& in, const std::shared_ptr<BufferPool>& out,
+                     const std::shared_ptr<Device>& device,
                      MediaParams* mediaParams);
     virtual ~DecodeThreadPool();
     virtual void start();
@@ -53,8 +53,8 @@ private:
     DecodeThreadPool(const DecodeThreadPool&);
 
     int                         _itemsPerThread;
-    BufferPool&                 _in;
-    BufferPool&                 _out;
+    std::shared_ptr<BufferPool> _in;
+    std::shared_ptr<BufferPool> _out;
     std::mutex                  _mutex;
     std::condition_variable     _started;
     std::condition_variable     _ended;
@@ -78,13 +78,13 @@ private:
     int                         _datumLen;
     // Target length in bytes.
     int                         _targetLen;
-    Device*                     _device;
-    Media**                     _media;
+    std::shared_ptr<Device>     _device;
+    std::vector<std::shared_ptr<Media> > _media;
 };
 
 class ReadThread: public ThreadPool {
 public:
-    ReadThread(BufferPool& out, Reader* reader);
+    ReadThread(const std::shared_ptr<BufferPool>& out, const std::shared_ptr<Reader>& reader);
 
 protected:
     virtual void work(int id);
@@ -93,8 +93,8 @@ protected:
 private:
     ReadThread();
     ReadThread(const ReadThread&);
-    BufferPool&                 _out;
-    Reader*                     _reader;
+    std::shared_ptr<BufferPool> _out;
+    std::shared_ptr<Reader>     _reader;
 };
 
 class Loader {
@@ -117,26 +117,26 @@ public:
     int reset();
     void next(Buffer<char>* dataBuf, Buffer<char>* targetsBuf);
     void next();
-;    Reader* getReader();
-;    Device* getDevice();
+    std::shared_ptr<Reader> getReader();
+    std::shared_ptr<Device> getDevice();
 
 private:
     void drain();
-;
+
 private:
     Loader();
     Loader(const Loader&);
-    bool                        _first;
-    int                         _batchSize;
-    int                         _datumSize;
-    int                         _datumTypeSize;
-    int                         _targetSize;
-    int                         _targetTypeSize;
-    BufferPool*                 _readBufs;
-    BufferPool*                 _decodeBufs;
-    ReadThread*                 _readThread;
-    DecodeThreadPool*           _decodeThreads;
-    Device*                     _device;
-    Reader*                     _reader;
-    MediaParams*                _mediaParams;
+    bool                                _first;
+    int                                 _batchSize;
+    int                                 _datumSize;
+    int                                 _datumTypeSize;
+    int                                 _targetSize;
+    int                                 _targetTypeSize;
+    std::shared_ptr<BufferPool>         _readBufs;
+    std::shared_ptr<BufferPool>         _decodeBufs;
+    std::unique_ptr<ReadThread>         _readThread;
+    std::unique_ptr<DecodeThreadPool>   _decodeThreads;
+    std::shared_ptr<Device>             _device;
+    std::shared_ptr<Reader>             _reader;
+    MediaParams*                        _mediaParams;
 };

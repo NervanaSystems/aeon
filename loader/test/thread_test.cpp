@@ -35,10 +35,10 @@ int single(Loader* loader, int epochCount, int minibatchCount,
            int batchSize, int datumSize, int targetSize,
            ImageParams* mediaParams, ImageIngestParams* ingestParams) {
     unsigned int sm = 0;
-    Reader* reader = loader->getReader();
-    Media* media = Media::create(mediaParams, ingestParams, 0);
-    char* dataBuf = new char[datumSize];
-    memset(dataBuf, 0, datumSize);
+    shared_ptr<Reader> reader = loader->getReader();
+    shared_ptr<Media> media = Media::create(mediaParams, ingestParams, 0);
+    unique_ptr<char> dataBuf = unique_ptr<char>(new char[datumSize]);
+    memset(dataBuf.get(), 0, datumSize);
     CharBuffer dataBuffer(0);
     CharBuffer targetBuffer(0);
     BufferPair bufPair = make_pair(&dataBuffer, &targetBuffer);
@@ -52,8 +52,8 @@ int single(Loader* loader, int epochCount, int minibatchCount,
                 int itemSize = 0;
                 char* item = bufPair.first->getItem(j, itemSize);
                 assert(item != 0);
-                media->transform(item, itemSize, dataBuf, datumSize);
-                sm += sum(dataBuf, datumSize);
+                media->transform(item, itemSize, dataBuf.get(), datumSize);
+                sm += sum(dataBuf.get(), datumSize);
                 int targetChunkSize = 0;
                 char* targets = bufPair.second->getItem(j, targetChunkSize);
                 sm += sum(targets, targetSize);
@@ -61,8 +61,6 @@ int single(Loader* loader, int epochCount, int minibatchCount,
         }
     }
 
-    delete[] dataBuf;
-    delete media;
     return sm;
 }
 
@@ -77,7 +75,7 @@ int multi(Loader* loader, int epochCount, int minibatchCount,
     char* targets = new char[targetsSize];
     memset(data, 0, dataSize);
     memset(targets, 0, targetsSize);
-    Device* device = loader->getDevice();
+    shared_ptr<Device> device = loader->getDevice();
     for (int epoch = 0; epoch < epochCount; epoch++) {
         loader->reset();
         for (int i = 0; i < minibatchCount; i++) {

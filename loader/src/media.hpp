@@ -20,6 +20,7 @@
 
 #include <vector>
 #include <sstream>
+#include <memory>
 
 enum MediaType {
     UNKNOWN = -1,
@@ -73,7 +74,7 @@ public:
     virtual void transform(char* item, int itemSize, char* buf, int bufSize) = 0;
     virtual void ingest(char** dataBuf, int* dataBufLen, int* dataLen) = 0;
 
-    static Media* create(MediaParams* params, MediaParams* ingestParams, int id);
+    static std::shared_ptr<Media> create(MediaParams* params, MediaParams* ingestParams, int id);
 };
 
 class RawMedia {

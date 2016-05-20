@@ -33,8 +33,8 @@ using namespace std;
 DecodeThreadPool::DecodeThreadPool(int count, int batchSize,
                  int datumSize, int datumTypeSize,
                  int targetSize, int targetTypeSize,
-                 BufferPool& in, BufferPool& out,
-                 Device* device,
+                 const std::shared_ptr<BufferPool>& in, const std::shared_ptr<BufferPool>& out,
+                 const std::shared_ptr<Device>& device,
                  MediaParams* mediaParams)
 : ThreadPool(count),
   _itemsPerThread((batchSize - 1) / count + 1),
@@ -48,9 +48,8 @@ DecodeThreadPool::DecodeThreadPool(int count, int batchSize,
   _device(device) {
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
-    _media = new Media*[count];
     for (int i = 0; i < count; i++) {
-        _media[i] = Media::create(mediaParams, 0, i);
+        _media.push_back(Media::create(mediaParams, 0, i));
         _startSignaled.push_back(0);
         _startInds.push_back(0);
         _endInds.push_back(0);
@@ -64,10 +63,6 @@ DecodeThreadPool::~DecodeThreadPool() {
         _manager->join();
         delete _manager;
     }
-    for (int i = 0; i < _count; i++) {
-        delete _media[i];
-    }
-    delete[] _media;
     // The other thread objects are freed in the destructor
     // of the parent class.
 }
@@ -83,15 +78,15 @@ void DecodeThreadPool::stop() {
     ThreadPool::stop();
     while (stopped() == false) {
         std::this_thread::yield();
-        _in.advanceWritePos();
-        _in.signalNonEmpty();
+        _in->advanceWritePos();
+        _in->signalNonEmpty();
     }
 
     _stopManager = true;
     while (_managerStopped == false) {
         std::this_thread::yield();
-        _in.advanceWritePos();
-        _in.signalNonEmpty();
+        _in->advanceWritePos();
+        _in->signalNonEmpty();
         _endSignaled++;
         _ended.notify_one();
     }
@@ -133,7 +128,7 @@ void DecodeThreadPool::work(int id) {
     int end = _endInds[id];
     // No locking required because threads
     // write into non-overlapping regions.
-    BufferPair& outBuf = _out.getForWrite();
+    BufferPair& outBuf = _out->getForWrite();
     char* dataBuf = outBuf.first->_data + _dataOffsets[id];
     char* targetBuf = outBuf.second->_data + _targetOffsets[id];
     for (int i = start; i < end; i++) {
@@ -168,9 +163,9 @@ void DecodeThreadPool::work(int id) {
 void DecodeThreadPool::produce() {
     // Produce a minibatch.
     {
-        unique_lock<mutex> lock(_out.getMutex());
-        while (_out.full() == true) {
-            _out.waitForNonFull(lock);
+        unique_lock<mutex> lock(_out->getMutex());
+        while (_out->full() == true) {
+            _out->waitForNonFull(lock);
         }
         {
             lock_guard<mutex> lock(_mutex);
@@ -187,7 +182,7 @@ void DecodeThreadPool::produce() {
             _endSignaled = 0;
         }
         // At this point, we have decoded data for the whole minibatch.
-        BufferPair& outBuf = _out.getForWrite();
+        BufferPair& outBuf = _out->getForWrite();
         Matrix::transpose(outBuf.first->_data, _batchSize,
                           _datumSize, _datumTypeSize);
         Matrix::transpose(outBuf.second->_data, _batchSize,
@@ -198,26 +193,26 @@ void DecodeThreadPool::produce() {
         _device->copyLabels(_bufferIndex, outBuf.second->_data,
                             outBuf.second->_size);
         _bufferIndex = (_bufferIndex == 0) ? 1 : 0;
-        _out.advanceWritePos();
+        _out->advanceWritePos();
     }
-    _out.signalNonEmpty();
+    _out->signalNonEmpty();
 }
 
 void DecodeThreadPool::consume() {
     // Consume an input buffer.
     {
-        unique_lock<mutex> lock(_in.getMutex());
-        while (_in.empty() == true) {
-            _in.waitForNonEmpty(lock);
+        unique_lock<mutex> lock(_in->getMutex());
+        while (_in->empty() == true) {
+            _in->waitForNonEmpty(lock);
             if (_stopManager == true) {
                 return;
             }
         }
-        _inputBuf = &_in.getForRead();
+        _inputBuf = &_in->getForRead();
         produce();
-        _in.advanceReadPos();
+        _in->advanceReadPos();
     }
-    _in.signalNonFull();
+    _in->signalNonFull();
 }
 
 void DecodeThreadPool::manage() {
@@ -232,7 +227,7 @@ void DecodeThreadPool::manage() {
     _managerStopped = true;
 }
 
-ReadThread::ReadThread(BufferPool& out, Reader* reader)
+ReadThread::ReadThread(const shared_ptr<BufferPool>& out, const shared_ptr<Reader>& reader)
 : ThreadPool(1), _out(out), _reader(reader) {
     assert(_count == 1);
 }
@@ -244,19 +239,19 @@ void ReadThread::work(int id) {
 void ReadThread::produce() {
     // Fill input buffers.
     {
-        unique_lock<mutex> lock(_out.getMutex());
-        while (_out.full() == true) {
-            _out.waitForNonFull(lock);
+        unique_lock<mutex> lock(_out->getMutex());
+        while (_out->full() == true) {
+            _out->waitForNonFull(lock);
         }
-        BufferPair& bufPair = _out.getForWrite();
+        BufferPair& bufPair = _out->getForWrite();
         int result = _reader->read(bufPair);
         if (result == -1) {
             _done = true;
             throw std::runtime_error("Could not read data\n");
         }
-        _out.advanceWritePos();
+        _out->advanceWritePos();
     }
-    _out.signalNonEmpty();
+    _out->signalNonEmpty();
 }
 
 Loader::Loader(int* itemCount, int batchSize,
@@ -274,24 +269,18 @@ Loader::Loader(int* itemCount, int batchSize,
   _batchSize(batchSize),
   _datumSize(datumSize), _datumTypeSize(datumTypeSize),
   _targetSize(targetSize), _targetTypeSize(targetTypeSize),
-  _readBufs(0), _decodeBufs(0), _readThread(0), _decodeThreads(0),
-  _device(0), _reader(0), _mediaParams(mediaParams) {
+  _readBufs(nullptr), _decodeBufs(nullptr), _readThread(nullptr), _decodeThreads(nullptr),
+  _device(nullptr), _reader(nullptr), _mediaParams(mediaParams) {
     _device = Device::create(deviceParams);
-    _reader = new ArchiveReader(itemCount, batchSize, repoDir, archiveDir,
+    _reader = shared_ptr<ArchiveReader>(new ArchiveReader(itemCount, batchSize, repoDir, archiveDir,
                                 indexFile, archivePrefix,
                                 shuffle, reshuffle,
                                 startFileIdx, subsetPercent,
                                 mediaParams, ingestParams,
-                                targetTypeSize, targetConversion);
+                                targetTypeSize, targetConversion));
 }
 
 Loader::~Loader() {
-    delete _readBufs;
-    delete _readThread;
-    delete _decodeBufs;
-    delete _decodeThreads;
-    delete _device;
-    delete _reader;
 }
 
 int Loader::start() {
@@ -301,18 +290,18 @@ int Loader::start() {
         int targetLen = _batchSize * _targetSize * _targetTypeSize;
         // Start the read buffers off with a reasonable size. They will
         // get resized as needed.
-        _readBufs = new BufferPool(dataLen / 8, targetLen);
-        _readThread = new ReadThread(*_readBufs, _reader);
+        _readBufs = shared_ptr<BufferPool>(new BufferPool(dataLen / 8, targetLen));
+        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _reader));
         bool pinned = (_device->_type != CPU);
-        _decodeBufs = new BufferPool(dataLen, targetLen, pinned);
+        _decodeBufs = shared_ptr<BufferPool>(new BufferPool(dataLen, targetLen, pinned));
         int numCores = thread::hardware_concurrency();
         int itemsPerThread = (_batchSize - 1) /  numCores + 1;
         int threadCount =  (_batchSize - 1) / itemsPerThread + 1;
         threadCount = std::min(threadCount, _batchSize);
-        _decodeThreads = new DecodeThreadPool(threadCount, _batchSize,
+        _decodeThreads = unique_ptr<DecodeThreadPool>(new DecodeThreadPool(threadCount, _batchSize,
                 _datumSize, _datumTypeSize,
                 _targetSize, _targetTypeSize,
-                *_readBufs, *_decodeBufs, _device, _mediaParams);
+                _readBufs, _decodeBufs, _device, _mediaParams));
     } catch(std::bad_alloc&) {
         return -1;
     }
@@ -333,14 +322,10 @@ void Loader::stop() {
     }
     _decodeThreads->stop();
 
-    delete _readBufs;
-    delete _readThread;
-    delete _decodeBufs;
-    delete _decodeThreads;
-    _readBufs = 0;
-    _readThread = 0;
-    _decodeBufs = 0;
-    _decodeThreads = 0;
+    _readBufs = nullptr;
+    _readThread = nullptr;
+    _decodeBufs = nullptr;
+    _decodeThreads = nullptr;
 }
 
 int Loader::reset() {
@@ -381,11 +366,11 @@ void Loader::next() {
     }
 }
 
-Reader* Loader::getReader() {
+std::shared_ptr<Reader> Loader::getReader() {
     return _reader;
 }
 
-Device* Loader::getDevice() {
+std::shared_ptr<Device> Loader::getDevice() {
     return _device;
 }
 

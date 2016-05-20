@@ -103,7 +103,7 @@ private:
     char*                       _targetBuf;
     int                         _dataBufLen;
     int                         _targetBufLen;
-    Media*                      _media;
+    std::shared_ptr<Media>      _media;
 };
 
 class ArchiveReader : public Reader {

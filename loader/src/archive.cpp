@@ -86,7 +86,6 @@ ArchiveWriter::~ArchiveWriter() {
     delete _reader;
     delete[] _targetBuf;
     delete[] _dataBuf;
-    delete _media;
 }
 
 void ArchiveWriter::waitFor(string& name) {

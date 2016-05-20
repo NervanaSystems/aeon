@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <cstring>
 #include <stdexcept>
+#include <memory>
 
 enum DeviceType { CPU=0, GPU=1 };
 
@@ -55,7 +56,7 @@ public:
     virtual int copyDataBack(int idx, char* data, int size) = 0;
     virtual int copyLabelsBack(int idx, char* data, int size) = 0;
 
-    static Device* create(DeviceParams* params);
+    static std::shared_ptr<Device> create(DeviceParams* params);
 
 public:
     int                         _type;
