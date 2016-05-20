@@ -14,67 +14,23 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------
 
-SRCS            := $(wildcard src/*.hpp)
-CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=c++11
-CFLAGSDBG       := -g -Wall -O0 -std=c++11
-CC              := g++
-THREAD_TEST     := bin/thread_test
-DECODE_TEST     := bin/decode_test
-LOADER_SO       := bin/loader.so
-UNAME_S         := $(shell uname -s)
-ifeq ($(UNAME_S), FreeBSD)
-	CC          := clang++
-endif
+print-%  : ; @echo $* = $($*)
 
-ifeq ($(shell pkg-config --exists opencv; echo $$?), 0)
-	IMGFLAG     := -DHAS_IMGLIB
-	INC         := $(shell pkg-config --cflags opencv)
-	IMGLDIR     := $(shell pkg-config --libs-only-L opencv)
-	IMGLIBS     := $(shell pkg-config --libs-only-l opencv)
-ifeq ($(shell pkg-config --exists libavutil libavformat libavcodec libswscale; echo $$?), 0)
-	VIDFLAG     := -DHAS_VIDLIB
-	AUDFLAG     := -DHAS_AUDLIB
-	VIDLDIR     := $(shell pkg-config --libs-only-L libavutil libavformat libavcodec libswscale)
-	VIDLIBS     := -lavutil -lavformat -lavcodec -lswscale
-endif
-endif
+HAS_GPU := $(shell nvcc --version > /dev/null 2>&1 && echo true)
+TEST_OPTS =
 
-MEDIAFLAGS      := $(IMGFLAG) $(VIDFLAG) $(AUDFLAG)
-LDIR            := $(IMGLDIR) $(VIDLDIR)
-LIBS            := $(IMGLIBS) $(VIDLIBS)
+bin/loader.so: Makefile
+	@cd src && make ../bin/loader.so HAS_GPU=$(HAS_GPU)
 
-ifeq ($(HAS_GPU), true)
-ifeq ($(CUDA_ROOT),)
-	CUDA_ROOT   := $(patsubst %/bin/nvcc,%, $(shell which nvcc))
-endif
+test: build_test
+	@test/test $(TEST_OPTS)
 
-	GPUFLAG     := -DHAS_GPU
-	INC         := -I$(CUDA_ROOT)/include $(INC)
-	ifeq ($(shell uname -s),Darwin)
-		LDIR    := -L$(CUDA_ROOT)/lib $(LDIR)
-	else
-		LDIR    := -L$(CUDA_ROOT)/lib64 $(LDIR)
-	endif
-	LIBS        := -lcuda -lcudart $(LIBS)
-endif
+build_test: Makefile
+	@cd src && make loader.a HAS_GPU=$(HAS_GPU)
+	@cd test && make test HAS_GPU=$(HAS_GPU)
 
-$(shell mkdir -p bin)
-
-.PHONY: clean
-
-all: $(THREAD_TEST) $(DECODE_TEST) $(LOADER_SO)
-
-$(THREAD_TEST): test/thread_test.cpp src/loader.cpp $(SRCS)
-	@echo "Building $@..."
-	$(CC) -o $@ $(CFLAGSDBG) $(GPUFLAG) $(MEDIAFLAGS) $< $(INC) -Isrc $(LDIR) $(LIBS)
-
-$(DECODE_TEST): test/decode_test.cpp $(SRCS)
-	@echo "Building $@..."
-	$(CC) -o $@ $(CFLAGSDBG) $(MEDIAFLAGS) $< $(INC) -Isrc $(LDIR) $(LIBS)
-
-$(LOADER_SO): src/loader.cpp $(SRCS)
-	@echo "Building $@..."
-	$(CC) -shared -o $@ -fPIC $(CFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $< $(INC) $(LDIR) $(LIBS)
+.PHONY: all test bin/loader.so build_test
 
 clean:
-	@rm -vf *.o $(THREAD_TEST) $(DECODE_TEST) $(LOADER_SO)
+	@cd src  && make clean
+	@cd test && make clean

@@ -28,11 +28,16 @@
 #include <memory>
 #include <deque>
 #include <random>
+#include <chrono>
+#include <dirent.h>
+#include <math.h>
+#include <algorithm>
 
 #include "reader.hpp"
 #include "threadpool.hpp"
 #include "batchfile.hpp"
 #include "media.hpp"
+#include "event.hpp" 
 
 using std::string;
 using std::ifstream;
@@ -198,24 +203,34 @@ public:
       _archiveDir(archiveDir), _indexFile(indexFile),
       _archivePrefix(archivePrefix),
       _startFileIdx(startFileIdx),
-      _fileIdx(startFileIdx), _itemIdx(0), _itemsLeft(0), _archiveWriter(0) {
+      _fileIdx(startFileIdx), _itemIdx(0), _itemsLeft(0), _archiveWriter(nullptr),
+      _active(true), _shuffle(shuffle), _readQueue(), _readQueueMutex(), _readDataReadyMutex(),
+      _readDataRequest(), _readDataReady(), _readMutex(), _fileListIndex(-1),
+      _readThread(nullptr), _readAheadSize(1000) {
+        getFileList();
         if (*itemCount == 0) {
             *itemCount = getCount();
             // Create a writer just in case. It will only be used if archive
             // files are missing or damaged.
-            _archiveWriter = new ArchiveWriter(ARCHIVE_ITEM_COUNT,
-                    repoDir, archiveDir, indexFile, archivePrefix,
-                    shuffle, params, ingestParams,
-                    targetTypeSize, targetConversion);
+            // _archiveWriter = new ArchiveWriter(ARCHIVE_ITEM_COUNT,
+            //         repoDir, archiveDir, indexFile, archivePrefix,
+            //         shuffle, params, ingestParams,
+            //         targetTypeSize, targetConversion);
         }
+
         _itemCount = *itemCount;
         assert(_itemCount != 0);
-        open();
+
+        _logFile.open("test.log");
+
+        _readThread = new std::thread(readThreadEntry,this);
     }
 
     virtual ~ArchiveReader() {
+        killReadThread();
+        delete _readThread;
         delete _archiveWriter;
-        close();
+        _logFile.close();
     }
 
     int read(BufferPair& buffers) {
@@ -223,11 +238,7 @@ public:
         while (offset < _batchSize) {
             int count = _batchSize - offset;
             int result;
-            if (_reshuffle) {
-                result = readShuffle(buffers, count);
-            } else {
-                result = read(buffers, count);
-            }
+            result = read(buffers, count);
             if (result == -1) {
                 return -1;
             }
@@ -240,10 +251,14 @@ public:
     }
 
     int reset() {
-        close();
         _fileIdx = _startFileIdx;
         _itemIdx = 0;
-        open();
+
+        _readQueueMutex.lock();
+        _readQueue.clear();
+        _readQueueMutex.unlock();
+        _fileListIndex = 0;
+
         return 0;
     }
 
@@ -267,23 +282,36 @@ public:
         return _batchFile.totalTargetsSize();
     }
 
+    void addFiles( const std::vector<string>& files ) {
+        std::lock_guard<mutex> lk(_fileListMutex);
+        _fileList.insert( _fileList.end(), files.begin(), files.end() );
+        shuffleFileList();
+    }
+
 private:
     int getCount() {
-        ifstream ifs(_indexFile);
-        if (!ifs) {
-            stringstream ss;
-            ss << "Could not open " << _indexFile;
-            throw std::ios_base::failure(ss.str());
-        }
+        // ifstream ifs(_indexFile);
+        // if (!ifs) {
+        //     stringstream ss;
+        //     ss << "Could not open " << _indexFile;
+        //     throw std::ios_base::failure(ss.str());
+        // }
 
-        string  line;
-        int     count = 0;
-        std::getline(ifs, line);
-        while (std::getline(ifs, line)) {
-            if (line[0] == '#') {
-                continue;
-            }
-            count++;
+        // string  line;
+        // int     count = 0;
+        // std::getline(ifs, line);
+        // while (std::getline(ifs, line)) {
+        //     if (line[0] == '#') {
+        //         continue;
+        //     }
+        //     count++;
+        // }
+
+        int count = 0;
+        for( const std::string& f : _fileList ) {
+            BatchFile b;
+            b.openForRead(f);
+            count += b.itemCount();
         }
 
         if (_subsetPercent != 100) {
@@ -299,83 +327,124 @@ private:
     }
 
     int read(BufferPair& buffers, int count) {
-        if (_itemsLeft == 0) {
-            next();
-        }
-        assert(_itemsLeft > 0);
-        int realCount = std::min(count, _itemsLeft);
-        if (_itemIdx + realCount >= _itemCount) {
-            realCount = _itemCount - _itemIdx;
-            readExact(buffers, realCount);
-            reset();
-            return realCount;
-        }
-        readExact(buffers, realCount);
-        return realCount;
-    }
-
-    int replenishQueue(int count) {
-        // Make sure we have at least count in our queue
-        if ( (int) _shuffleQueue.size() >= count)
-            return 0;
-
-        while (_itemsLeft > 0 && _itemIdx < _itemCount) {
-            DataPair d = _batchFile.readItem();
-            _shuffleQueue.push_back(std::move(d));
-            _itemIdx++;
-            _itemsLeft--;
-        }
-        std::random_device rd;
-        std::shuffle(_shuffleQueue.begin(), _shuffleQueue.end(),
-                     std::mt19937(rd()));
-        if (_itemIdx == _itemCount)
-            reset();
-        else
-            next();
-        return 0;
-    }
-
-    int readShuffle(BufferPair& buffers, int count) {
-        while ((int) _shuffleQueue.size() < count) {
-            replenishQueue(count);
+        while((int)_readQueue.size() < count) {
+            //std::cout << "data starvation" << std::endl;
+            std::unique_lock<std::mutex> waitLock(_readDataReadyMutex);
+            _readDataRequest.notify_one();
+            _readDataReady.wait(waitLock);
         }
         for (int i=0; i<count; ++i) {
-            auto ee = std::move(_shuffleQueue.at(0));
-            buffers.first->read(&(*ee.first)[0], ee.first->size());
-            buffers.second->read(&(*ee.second)[0], ee.second->size());
-            _shuffleQueue.pop_front();
+            const DataPair& d = _readQueue[0];
+            buffers.first->read(d.first->data(), d.first->size());
+            buffers.second->read(d.second->data(), d.second->size());
+            _readQueue.pop_front();
         }
+        _readDataRequest.notify_all();
         return count;
     }
 
-    void readExact(BufferPair& buffers, int count) {
-        assert(count <= _itemsLeft);
-        for (int i = 0; i < count; ++i) {
-            _batchFile.readItem(buffers);
+    static void readThreadEntry( ArchiveReader* ar ) {
+        ar->readThread();
+    }
+
+    void killReadThread() {
+        std::unique_lock<std::mutex> lk(_readMutex);
+        _active = false;
+        lk.unlock();
+        _readDataRequest.notify_all();
+        _readThread->join();
+    }
+
+    void readThread() {
+        auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+        logSeed(seed);
+        std::minstd_rand0 rand(seed);
+        while(_active) {
+            if( _readQueue.size() < _readAheadSize ) {
+                _fileListMutex.lock();
+                if( _fileListIndex >= _fileList.size() ) {
+                    _fileListIndex = 0;
+                    shuffleFileList();
+                }
+                string fileName = _fileList[ _fileListIndex++ ];
+                _fileListMutex.unlock();
+                _fileIdx++;
+                if ((Reader::exists(fileName) == false) && (_archiveWriter != 0)) {
+                    _archiveWriter->waitFor(fileName);
+                }
+
+                BatchFile b;
+                b.openForRead(fileName);
+                logCurrentFile(fileName);
+
+                // Something larger than 1 to force reading a second macroblock
+                _readAheadSize = std::max<size_t>(_readAheadSize, b.itemCount() * 1.5); 
+
+                vector<DataPair> tmpBuffer(b.itemCount());
+                for( int i=0; i<b.itemCount(); i++ ) {
+                    tmpBuffer[i] = b.readItem();
+                }
+                b.close();
+                if(_shuffle) shuffle(tmpBuffer.begin(), tmpBuffer.end(), rand);
+                _readQueueMutex.lock();
+                for( size_t i=0; i<tmpBuffer.size(); i++ ) {
+                    _readQueue.push_back( std::move(tmpBuffer[i]) );
+                }
+                _readQueueMutex.unlock();
+                _readDataReady.notify_all();
+            }
+            std::unique_lock<std::mutex> lk(_readMutex);
+            if(!_active) {
+                std::cout << "not active before wait" << std::endl;
+                break;
+            }
+            _readDataRequest.wait(lk);
+       }
+    }
+
+    void getFileList() {
+        DIR *dir;
+        struct dirent *ent;
+        _fileList.clear();
+        if ((dir = opendir (_archiveDir.c_str())) != NULL) {
+            /* print all the files and directories within directory */
+            while ((ent = readdir (dir)) != NULL) {
+                if( testFileName(ent->d_name) ) {
+                    string path = _archiveDir + "/" + ent->d_name;
+                    _fileList.push_back( path );
+                }
+            }
+            closedir (dir);
         }
-        _itemsLeft -= count;
-        _itemIdx += count;
-    }
-
-    void next() {
-        close();
-        _fileIdx++;
-        open();
-    }
-
-    void open() {
-        stringstream ss;
-        ss << _archiveDir << '/' << _archivePrefix << _fileIdx << ".cpio";
-        string fileName = ss.str();
-        if ((Reader::exists(fileName) == false) && (_archiveWriter != 0)) {
-            _archiveWriter->waitFor(fileName);
+        else {
+            perror ("error getting file list");
         }
-        _batchFile.openForRead(fileName);
-        _itemsLeft = _batchFile.itemCount();
     }
 
-    void close() {
-        _batchFile.close();
+    bool testFileName( const string& s ) {
+        bool rc = false;
+        // sigh, gcc still does not support c++11 regex
+        if( s.length() > 5 && s.length() > _archivePrefix.length() &&
+            s.substr(s.length()-5,5) == ".cpio" &&
+            s.substr(0,_archivePrefix.length()) == _archivePrefix ) {
+            rc = true;
+        }
+        return rc;
+    }
+
+    // This method is called by mutiple threads so make sure you lock the call with _fileListMutex
+    void shuffleFileList() {
+        static auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+        static std::minstd_rand0 rand(seed);
+        std::shuffle( _fileList.begin(), _fileList.end(), rand );
+    }
+
+    void logCurrentFile( const std::string& file ) {
+        _logFile << file << "\n";
+    }
+
+    void logSeed( unsigned int seed ) {
+        _logFile << seed << "\n";
     }
 
 private:
@@ -392,4 +461,19 @@ private:
     BatchFile                   _batchFile;
     std::deque<DataPair>        _shuffleQueue;
     ArchiveWriter*              _archiveWriter;
+
+    bool                        _active;
+    bool                        _shuffle;
+    std::deque<DataPair>        _readQueue;
+    std::mutex                  _readQueueMutex;
+    std::mutex                  _readDataReadyMutex;
+    std::mutex                  _fileListMutex;
+    std::condition_variable     _readDataRequest;
+    std::condition_variable     _readDataReady;
+    std::mutex                  _readMutex;
+    size_t                      _fileListIndex;
+    std::vector<string>         _fileList;
+    std::thread*                _readThread;
+    size_t                      _readAheadSize;
+    std::ofstream               _logFile;
 };

@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <fstream>
 #include <vector>
+#include <string>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -42,7 +43,7 @@ typedef struct {
 } AugParams;
 
 // These are the eigenvectors of the pixelwise covariance matrix
-float _CPCA[3][3] = {{0.39731118,  0.70119634, -0.59200296},
+static float _CPCA[3][3] = {{0.39731118,  0.70119634, -0.59200296},
                     {-0.81698062, -0.02354167, -0.5761844},
                     {0.41795513, -0.71257945, -0.56351045}};
 const Mat CPCA(3, 3, CV_32FC1, _CPCA);
@@ -52,6 +53,8 @@ const Mat CSTD(3, 1, CV_32FC1, {19.72083305, 37.09388853, 121.78006099});
 
 // This is the set of coefficients for converting BGR to grayscale
 const Mat GSCL(3, 1, CV_32FC1, {0.114, 0.587, 0.299});
+
+extern void resizeInput(vector<char> &jpgdata, int maxDim);
 
 class ImageParams : public MediaParams {
 public:
@@ -217,28 +220,6 @@ public:
 
 };
 
-void resizeInput(vector<char> &jpgdata, int maxDim){
-    // Takes the buffer containing encoded jpg, determines if its shortest dimension
-    // is greater than maxDim.  If so, it scales it down so that the shortest dimension
-    // is equal to maxDim.  equivalent to "512x512^>" for maxDim=512 geometry argument in
-    // imagemagick
-
-    Mat image(1, jpgdata.size(), CV_8UC3, &jpgdata[0]);
-    Mat decodedImage = cv::imdecode(image, CV_LOAD_IMAGE_COLOR);
-
-    int minDim = std::min(decodedImage.rows, decodedImage.cols);
-    // If no resizing necessary, just return, original image still in jpgdata;
-    if (minDim <= maxDim)
-        return;
-
-    vector<int> param = {CV_IMWRITE_JPEG_QUALITY, 90};
-    double scaleFactor = (double) maxDim / (double) minDim;
-    Mat resizedImage;
-    cv::resize(decodedImage, resizedImage, Size2i(0, 0), scaleFactor, scaleFactor, CV_INTER_AREA);
-    cv::imencode(".jpg", resizedImage, *(reinterpret_cast<vector<uchar>*>(&jpgdata)), param);
-    return;
-}
-
 class Image: public Media {
 friend class Video;
 public:
@@ -323,7 +304,7 @@ public:
 
         // Re-encode
         vector<int> param;
-        string ext;
+        std::string ext;
         if (_ingestParams->_lossyEncoding == true) {
             param = {CV_IMWRITE_JPEG_QUALITY, 90};
             ext = ".jpg";
@@ -360,7 +341,7 @@ private:
             Mat image(1, itemSize, CV_8UC3, item);
             cv::imdecode(image, CV_LOAD_IMAGE_COLOR, dst);
         } else {
-            stringstream ss;
+            std::stringstream ss;
             ss << "Unsupported number of channels in image: " << _params->_channelCount;
             throw std::runtime_error(ss.str());
         }

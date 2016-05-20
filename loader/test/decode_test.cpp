@@ -11,9 +11,15 @@
 #include "buffer.hpp"
 #include "batchfile.hpp"
 #include "image.hpp"
+#include "datagen.hpp"
+#include "gtest/gtest.h"
 
-int main (int argc, char **argv) {
-    ImageParams *imgp = new ImageParams(3, 224, 224, false, true, // channels, h, w, augment, flip
+extern DataGen _datagen;
+
+using namespace std;
+
+TEST(loader,decode) {
+    ImageParams *imgp = new ImageParams(3, 128, 128, false, true, // channels, h, w, augment, flip
         20, 100,   // Scale Params
         60, 140,    // Contrast params
         -10, 10,       // Rotation params
@@ -21,11 +27,8 @@ int main (int argc, char **argv) {
         false, 0, 0, 0, 0);  // subtract mean, r, g, b, gray means
     ImageIngestParams *iip = new ImageIngestParams(true, true, 256, 256);
 
-    if (argc < 3)
-        return -1;
-
     BatchFile bf;
-    string batchFileName(argv[1]);
+    string batchFileName = _datagen.GetDatasetPath() + "/archive-0.cpio";
     bf.openForRead(batchFileName);
 
     // Just get a single item
@@ -43,16 +46,17 @@ int main (int argc, char **argv) {
     std::cout << "numpixels: " << num_pixels << std::endl;
     std::cout << "outbuf size: " << outbuf.size() << std::endl;
     std::cout << "label index: " << label_idx << std::endl;
+    EXPECT_EQ( 42, label_idx ) << "Label mismatch";
 
     for (int i = 0; i < num_decode; i++) {
         decoder.transform(&data[0], data.size(), &outbuf[i * num_pixels], num_pixels);
     }
 
-    std::ofstream file (argv[2], std::ofstream::out | std::ofstream::binary);
-    file.write((char *) &num_decode, sizeof(int));
-    file.write((char *) &num_pixels, sizeof(int));
-    file.write((char *) &outbuf[0], outbuf.size());
-    file.close();
+    // std::ofstream file (argv[2], std::ofstream::out | std::ofstream::binary);
+    // file.write((char *) &num_decode, sizeof(int));
+    // file.write((char *) &num_pixels, sizeof(int));
+    // file.write((char *) &outbuf[0], outbuf.size());
+    // file.close();
     delete imgp;
     delete iip;
 }

@@ -21,8 +21,12 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <cassert>
+#include <cstring>
+#include <sstream>
 
 #include "streams.hpp"
+#include "buffer.hpp"
 
 #define FORMAT_VERSION  1
 #define WRITER_VERSION  1
@@ -362,37 +366,8 @@ private:
     string                      _tempName;
 };
 
-// Some utilities that would be used by batch writers
-int readFileLines(const string &filn, LineList &ll) {
-    std::ifstream ifs(filn);
-    if (ifs) {
-        for (string line; std::getline( ifs, line ); /**/ )
-           ll.push_back( line );
-        ifs.close();
-        return 0;
-    } else {
-        std::cerr << "Unable to open " << filn << std::endl;
-        return -1;
-    }
-}
+extern int readFileLines(const string &filn, LineList &ll);
+extern int readFileBytes(const string &filn, ByteVect &b);
 
-int readFileBytes(const string &filn, ByteVect &b) {
-/* Reads in the binary file as a sequence of bytes, resizing
- * the provided byte vector to fit
-*/
-    std::ifstream ifs(filn, std::ifstream::binary);
-    if (ifs) {
-        ifs.seekg (0, ifs.end);
-        int length = ifs.tellg();
-        ifs.seekg (0, ifs.beg);
 
-        b.resize(length);
-        ifs.read(&b[0], length);
-        ifs.close();
-        return 0;
-    } else {
-        std::cerr << "Unable to open " << filn << std::endl;
-        return -1;
-    }
-}
 
