@@ -55,7 +55,7 @@ with open(sys.argv[1], 'r') as f:
     a = json.load(f)
 
 a = ParamDict(**a['imagenet'])
-a.update(**dict(channels=1, dimensions=2, subtract_mean=True))
+a.update(**dict(channels=1, height=2, subtract_mean=True))
 
 for k in a:
     print("{}:  {}".format(k, a[k]))

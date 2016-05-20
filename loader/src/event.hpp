@@ -13,21 +13,21 @@
  limitations under the License.
 */
 
- #pragma once
+#pragma once
 
- #include <mutex>
- #include <condition_variable>
+#include <mutex>
+#include <condition_variable>
 
- namespace nervana{
+namespace nervana{
     class event;
- }
+}
 
 class nervana::event {
 public:
     event();
     void wait();
     void notify();
-    
+
 private:
     std::condition_variable     _condition;
     std::mutex                  _mutex;
