@@ -156,8 +156,8 @@ ArchiveReader::ArchiveReader(int* itemCount, int batchSize,
   _archivePrefix(archivePrefix),
   _startFileIdx(startFileIdx),
   _fileIdx(startFileIdx), _itemIdx(0), _itemsLeft(0), _archiveWriter(nullptr),
-  _active(true), _shuffle(shuffle), _readQueue(), _readQueueMutex(), _readDataReadyMutex(),
-  _readDataRequest(), _readDataReady(), _readMutex(), _fileListIndex(-1),
+  _active(true), _shuffle(shuffle), _readQueue(), _readQueueMutex(),
+  _fileListMutex(), _fileListIndex(-1), _dataRequestEvent(), _dataReadyEvent(),
   _readThread(nullptr), _readAheadSize(1000) {
     getFileList();
     if (*itemCount == 0) {
@@ -280,9 +280,8 @@ int ArchiveReader::getCount() {
 int ArchiveReader::read(BufferPair& buffers, int count) {
     while((int)_readQueue.size() < count) {
         //std::cout << "data starvation" << std::endl;
-        std::unique_lock<std::mutex> waitLock(_readDataReadyMutex);
-        _readDataRequest.notify_one();
-        _readDataReady.wait(waitLock);
+        _dataRequestEvent.notify();
+        _dataReadyEvent.wait();
     }
     for (int i=0; i<count; ++i) {
         const DataPair& d = _readQueue[0];
@@ -290,7 +289,7 @@ int ArchiveReader::read(BufferPair& buffers, int count) {
         buffers.second->read(d.second->data(), d.second->size());
         _readQueue.pop_front();
     }
-    _readDataRequest.notify_all();
+    _dataRequestEvent.notify();
     return count;
 }
 
@@ -299,10 +298,8 @@ void ArchiveReader::readThreadEntry( ArchiveReader* ar ) {
 }
 
 void ArchiveReader::killReadThread() {
-    std::unique_lock<std::mutex> lk(_readMutex);
     _active = false;
-    lk.unlock();
-    _readDataRequest.notify_all();
+    _dataRequestEvent.notify();
     _readThread->join();
 }
 
@@ -342,14 +339,13 @@ void ArchiveReader::readThread() {
                 _readQueue.push_back( std::move(tmpBuffer[i]) );
             }
             _readQueueMutex.unlock();
-            _readDataReady.notify_all();
+            _dataReadyEvent.notify();
         }
-        std::unique_lock<std::mutex> lk(_readMutex);
         if(!_active) {
             std::cout << "not active before wait" << std::endl;
             break;
         }
-        _readDataRequest.wait(lk);
+        _dataRequestEvent.wait();
    }
 }
 

@@ -58,6 +58,9 @@ protected:
     virtual void work(int id);
 
 private:
+    WriteThread();
+    WriteThread(const WriteThread&);
+
     Writer*                     _writer;
 };
 
@@ -79,6 +82,9 @@ private:
     void start();
 
 private:
+    ArchiveWriter();
+    ArchiveWriter(const ArchiveWriter&);
+
     int                         _batchSize;
     std::string                 _repoDir;
     std::string                 _archiveDir;
@@ -154,6 +160,9 @@ private:
     void logSeed( unsigned int seed );
 
 private:
+    ArchiveReader();
+    ArchiveReader(const ArchiveReader&);
+
     std::string                 _archiveDir;
     std::string                 _indexFile;
     std::string                 _archivePrefix;
@@ -170,15 +179,17 @@ private:
 
     bool                        _active;
     bool                        _shuffle;
+
     std::deque<DataPair>        _readQueue;
     std::mutex                  _readQueueMutex;
-    std::mutex                  _readDataReadyMutex;
-    std::mutex                  _fileListMutex;
-    std::condition_variable     _readDataRequest;
-    std::condition_variable     _readDataReady;
-    std::mutex                  _readMutex;
-    size_t                      _fileListIndex;
+
     std::vector<std::string>    _fileList;
+    std::mutex                  _fileListMutex;
+    size_t                      _fileListIndex;
+    
+    nervana::event              _dataRequestEvent;
+    nervana::event              _dataReadyEvent;
+
     std::thread*                _readThread;
     size_t                      _readAheadSize;
     std::ofstream               _logFile;

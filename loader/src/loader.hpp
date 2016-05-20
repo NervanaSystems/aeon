@@ -49,6 +49,9 @@ protected:
     void manage();
 
 private:
+    DecodeThreadPool();
+    DecodeThreadPool(const DecodeThreadPool&);
+
     int                         _itemsPerThread;
     BufferPool&                 _in;
     BufferPool&                 _out;
@@ -88,6 +91,8 @@ protected:
     void produce();
 
 private:
+    ReadThread();
+    ReadThread(const ReadThread&);
     BufferPool&                 _out;
     Reader*                     _reader;
 };
@@ -119,6 +124,8 @@ private:
     void drain();
 ;
 private:
+    Loader();
+    Loader(const Loader&);
     bool                        _first;
     int                         _batchSize;
     int                         _datumSize;
