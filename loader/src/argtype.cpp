@@ -15,7 +15,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <map>
 #include "argtype.hpp"
 
 using namespace std;
@@ -24,32 +23,49 @@ vector<shared_ptr<interface_ArgType> > ParameterCollection::get_args() const {
     return _arg_list;
 }
 
-bool ParameterCollection::parse(const std::string& args) {
+bool ParameterCollection::parse(const std::string& args, map<argtype_t,string>& parsedArgs) {
     stringstream ss(args);
     vector<string> argList;
     string arg;
+    bool rc = true;
     while( ss >> arg ) { argList.push_back(arg); }
 
-    map<shared_ptr<interface_ArgType>,string> parsedArgs;
     auto it = argList.cbegin();
     while(it != argList.end()) {
         bool parsed = false;
-        for( shared_ptr<interface_ArgType> a : _arg_list ) {
+        for( argtype_t a : _arg_list ) {
             string value;
             if( a->try_parse( it, value ) ) {
+                if(parsedArgs.find(a)!=parsedArgs.end()) {
+                    cout << "argument -" << a->verb_short() << "|--" << a->verb_long() << " included more than once" << endl;
+                    rc = false;
+                    break;
+                }
                 if( a->validate( value ) ) {
                     parsed = true;
+                    parsedArgs.insert({a, value});
                 }
                 break;
             }
         }
         if(!parsed) {
             cout << "failed to parse arg " << *it << endl;
+            rc = false;
             break;
         }
     }
 
-    return true;
+    // Check for required arguments
+    if(rc == true) {
+        for( argtype_t a : _arg_list ) {
+            if(a->required() && parsedArgs.find(a)==parsedArgs.end()) {
+                rc = false;
+                cout << "required argument -" << a->verb_short() << "|--" << a->verb_long() << " missing" << endl;
+            }
+        }
+    }
+
+    return rc;
 }
 
 

@@ -45,10 +45,20 @@ TEST(loader,argtype) {
     ASSERT_EQ(5, args.size());
 
     {
-        string argString = "-a1 5 -a3 10 -a4 20";
-        EXPECT_TRUE(_ParamList1.parse(argString));
+        string argString = "-a1 5";
+        map<argtype_t,string> parsed;
+        EXPECT_FALSE(_ParamList1.parse(argString,parsed)) << "**** failed to detect missing required arguments";
     }
-
+    {
+        string argString = "-a1 5 -a3 10 -a4 20";
+        map<argtype_t,string> parsed;
+        EXPECT_TRUE(_ParamList1.parse(argString,parsed));
+    }
+    {
+        string argString = "-a1 5 -a3 10 -a4 20 --arg-4 30";
+        map<argtype_t,string> parsed;
+        EXPECT_FALSE(_ParamList1.parse(argString,parsed)) << "**** argument int4 included more than once";
+    }
     // arg1
     EXPECT_EQ(5,args.size()) << "ParamList1";
     {

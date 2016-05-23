@@ -18,6 +18,11 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <map>
+
+//=============================================================================
+//
+//=============================================================================
 
 class interface_ArgType {
 public:
@@ -32,6 +37,12 @@ public:
     virtual bool try_parse( std::vector<std::string>::const_iterator& args, std::string& value ) const = 0;
     virtual bool validate( const std::string& value ) const = 0;
 };
+
+typedef std::shared_ptr<interface_ArgType> argtype_t;
+
+//=============================================================================
+//
+//=============================================================================
 
 template<typename T>
 class ArgType : public interface_ArgType {
@@ -123,6 +134,9 @@ private:
     bool                _range_valid;
 };
 
+//=============================================================================
+//
+//=============================================================================
 
 class ParameterCollection {
 public:
@@ -150,14 +164,14 @@ public:
     {
         auto arg = std::make_shared<ArgType<T> >(name, description, verb_short, verb_long,
                                                  required, default_value, minimum_value, maximum_value);
-            _arg_list.push_back(arg);
+        _arg_list.push_back(arg);
     }
 
-    std::vector<std::shared_ptr<interface_ArgType> > get_args() const;
+    std::vector<argtype_t> get_args() const;
 
-    bool parse(const std::string& args);
+    bool parse(const std::string& args, std::map<argtype_t,std::string>& parsedArgs);
     
 private:
     // void register_arg(const ArgType& arg);
-    std::vector<std::shared_ptr<interface_ArgType> >     _arg_list;
+    std::vector<argtype_t>     _arg_list;
 };
