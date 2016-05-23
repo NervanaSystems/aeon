@@ -32,20 +32,23 @@ public:
 
     std::string verb_long() const { return _verb_long; }
 
+    virtual std::string default_value() const = 0;
+
     // T get_default() const { return _default; }
 
-    bool try_parse( std::vector<std::string>::const_iterator args ) {
-        return false;
-    }
+    // If try_parse is successful it advances the args iterator to the next argument
+    // and set value to the parsed and validated value
+    bool try_parse( std::vector<std::string>::const_iterator& args, std::string& value ) const;
 
     virtual bool validate( const std::string& value ) const = 0;
 
     ArgType( ParameterCollection& params,
-             const std::string& name,
-             const std::string& description,
-             bool required,
-             const std::string& verb_short,
-             const std::string& verb_long );
+            const std::string& name,
+            const std::string& description,
+            const std::string& verb_short,
+            const std::string& verb_long,
+            bool required
+            );
 
 private:
     ArgType() = delete;
@@ -61,28 +64,45 @@ private:
 class ArgType_int : public ArgType {
 public:
     ArgType_int( ParameterCollection& params,
-         const std::string& name,
-         const std::string& description,
-         bool required,
-         int default_value,
-         const std::string& verb_short,
-         const std::string& verb_long );
+        const std::string& name,
+        const std::string& description,
+        const std::string& verb_short,
+        const std::string& verb_long,
+        bool required,
+        int default_value
+        );
+    ArgType_int( ParameterCollection& params,
+        const std::string& name,
+        const std::string& description,
+        const std::string& verb_short,
+        const std::string& verb_long,
+        bool required,
+        int default_value,
+        int minimum_value,
+        int maximum_value
+        );
+    bool validate( const std::string& value ) const override ;
 
-    bool validate( const std::string& value ) const override {
-        return false;
-    }
+    std::string default_value() const override { return std::to_string(_default); }
 
 private:
     int         _default;
+    int         _minimum_value;
+    int         _maximum_value;
+    bool        _range_valid;
 };
 
 
 
 
 class ParameterCollection {
+    friend class ArgType;
 public:
-    void register_arg(const ArgType& arg);
+    std::vector<const ArgType*> get_args() const;
+
+    bool parse(const std::string& args);
     
 private:
-    std::vector<ArgType>        _arg_list;
+    void register_arg(const ArgType& arg);
+    std::vector<const ArgType*>     _arg_list;
 };

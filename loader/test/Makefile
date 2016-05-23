@@ -27,6 +27,7 @@ $(shell mkdir -p $(DEPDIR) >/dev/null)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 GTEST_TEST      := /usr/local/lib/libgtest.a
+LOADER_LIB      := ../src/loader.a
 ifeq ($(UNAME_S), FreeBSD)
 	CC          := clang++
 endif
@@ -80,9 +81,9 @@ $(shell mkdir -p bin)
 print-%  : ; @echo $* = $($*)
 
 ifeq ($(GTEST_INSTALLED),true)
-test: $(OBJS)
+test: $(OBJS) $(LOADER_LIB)
 	@echo "Building $@..."
-	$(CC) -o test $(OBJS) ../src/loader.a $(LDIR) $(LIBS)
+	$(CC) -o test $(OBJS) $(LOADER_LIB) $(LDIR) $(LIBS)
 else
 test:
 	@echo "gtest must be installed to build test"
