@@ -23,17 +23,25 @@ using namespace std;
 
 class ParamList1 : public ParameterCollection {
 public:
-    const ArgType_int arg1{*this, "arg1", "description of arg1", "a1", "arg-1", false, 3};
-    const ArgType_int arg2{*this, "arg2", "description of arg2", "a2", "arg-2", false, 3, 0, 100};
-    const ArgType_int arg3{*this, "arg3", "description of arg3", "a3", "arg-3", true, 3};
-    const ArgType_int arg4{*this, "arg4", "description of arg4", "a4", "arg-4", true, 3, 0, 100};
-    const ArgType_int arg5{*this, "arg5", "description of arg5", "a5", "arg-5", false, -50, -100, -10};
+    ParamList1() {
+        add<int>("int1", "description of arg1", "a1", "arg-1", false, 3);
+        add<int>("int2", "description of arg2", "a2", "arg-2", false, 3, 0, 100);
+        add<int>("int3", "description of arg3", "a3", "arg-3", true, 3);
+        add<int>("int4", "description of arg4", "a4", "arg-4", true, 3, 0, 100);
+        add<int>("int5", "description of arg5", "a5", "arg-5", false, -50, -100, -10);
+
+        // add<float>("float1", "description of arg1", "f1", "float-1", false, 3);
+        // add<float>("float2", "description of arg2", "f2", "float-2", false, 3, 0, 100);
+        // add<float>("float3", "description of arg3", "f3", "float-3", true, 3);
+        // add<float>("float4", "description of arg4", "f4", "float-4", true, 3, 0, 100);
+        // add<float>("float5", "description of arg5", "f5", "float-5", false, -50, -100, -10);
+    }
 };
 
 static ParamList1 _ParamList1;
 
 TEST(loader,argtype) {
-    vector<const ArgType*> args = _ParamList1.get_args();
+    vector<shared_ptr<interface_ArgType> > args = _ParamList1.get_args();
     ASSERT_EQ(5, args.size());
 
     {
@@ -44,7 +52,7 @@ TEST(loader,argtype) {
     // arg1
     EXPECT_EQ(5,args.size()) << "ParamList1";
     {
-        const ArgType& arg = *args[0];
+        const interface_ArgType& arg = *args[0];
         EXPECT_EQ("3",arg.default_value());
         EXPECT_TRUE(arg.validate("10"));
         EXPECT_TRUE(arg.validate("1000"));
@@ -53,7 +61,7 @@ TEST(loader,argtype) {
     // arg2
     EXPECT_EQ(5,args.size()) << "ParamList1";
     {
-        const ArgType& arg = *args[1];
+        const interface_ArgType& arg = *args[1];
         EXPECT_EQ("3",arg.default_value());
         EXPECT_TRUE(arg.validate("10"));
         EXPECT_TRUE(arg.validate("0"));
@@ -65,11 +73,12 @@ TEST(loader,argtype) {
     // arg5
     EXPECT_EQ(5,args.size()) << "ParamList1";
     {
-        const ArgType& arg = *args[4];
+        const interface_ArgType& arg = *args[4];
         EXPECT_EQ("-50",arg.default_value());
         EXPECT_TRUE(arg.validate("-11"));
         EXPECT_TRUE(arg.validate("-100"));
         EXPECT_TRUE(arg.validate("-50"));
         EXPECT_FALSE(arg.validate("-101"));
         EXPECT_FALSE(arg.validate("0"));
-    }}
+    }
+}
