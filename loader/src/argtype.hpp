@@ -19,8 +19,6 @@
 #include <vector>
 #include <memory>
 
-class ParameterCollection;
-
 class interface_ArgType {
 public:
     virtual std::string name() const = 0;
@@ -72,8 +70,7 @@ public:
         return rc;
     } 
 
-    ArgType( ParameterCollection& params,
-            const std::string& name,
+    ArgType( const std::string& name,
             const std::string& description,
             const std::string& verb_short,
             const std::string& verb_long,
@@ -90,8 +87,7 @@ public:
     {
     }
 
-    ArgType( ParameterCollection& params,
-            const std::string& name,
+    ArgType( const std::string& name,
             const std::string& description,
             const std::string& verb_short,
             const std::string& verb_long,
@@ -138,7 +134,7 @@ public:
                         bool required,
                         T default_value )
     {
-        auto arg = std::make_shared<ArgType<T> >(*this, name, description, verb_short, verb_long, required, default_value);
+        auto arg = std::make_shared<ArgType<T> >(name, description, verb_short, verb_long, required, default_value);
         _arg_list.push_back(arg);
     }
 
@@ -152,7 +148,7 @@ public:
                         T minimum_value,
                         T maximum_value )
     {
-        auto arg = std::make_shared<ArgType<T> >(*this, name, description, verb_short, verb_long,
+        auto arg = std::make_shared<ArgType<T> >(name, description, verb_short, verb_long,
                                                  required, default_value, minimum_value, maximum_value);
             _arg_list.push_back(arg);
     }
