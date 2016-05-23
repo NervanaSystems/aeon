@@ -25,17 +25,16 @@ vector<shared_ptr<interface_ArgType> > ParameterCollection::get_args() const {
 
 bool ParameterCollection::parse(const std::string& args, map<argtype_t,string>& parsedArgs) {
     stringstream ss(args);
-    vector<string> argList;
+    deque<string> argList;
     string arg;
     bool rc = true;
     while( ss >> arg ) { argList.push_back(arg); }
 
-    auto it = argList.cbegin();
-    while(it != argList.end()) {
+    while(argList.size()>0) {
         bool parsed = false;
         for( argtype_t a : _arg_list ) {
             string value;
-            if( a->try_parse( it, value ) ) {
+            if( a->try_parse( argList, value ) ) {
                 if(parsedArgs.find(a)!=parsedArgs.end()) {
                     cout << "argument -" << a->verb_short() << "|--" << a->verb_long() << " included more than once" << endl;
                     rc = false;
@@ -48,8 +47,9 @@ bool ParameterCollection::parse(const std::string& args, map<argtype_t,string>& 
                 break;
             }
         }
+        if(rc == false) break;
         if(!parsed) {
-            cout << "failed to parse arg " << *it << endl;
+            cout << "failed to parse arg " << argList.front() << endl;
             rc = false;
             break;
         }
@@ -63,6 +63,10 @@ bool ParameterCollection::parse(const std::string& args, map<argtype_t,string>& 
                 cout << "required argument -" << a->verb_short() << "|--" << a->verb_long() << " missing" << endl;
             }
         }
+    }
+
+    if(rc == false) {
+        parsedArgs.clear();
     }
 
     return rc;

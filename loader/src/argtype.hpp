@@ -19,6 +19,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <deque>
 
 //=============================================================================
 //
@@ -34,7 +35,7 @@ public:
     virtual std::string default_value() const = 0;
     // If try_parse is successful it advances the args iterator to the next argument
     // and set value to the parsed and validated value
-    virtual bool try_parse( std::vector<std::string>::const_iterator& args, std::string& value ) const = 0;
+    virtual bool try_parse( std::deque<std::string>& args, std::string& value ) const = 0;
     virtual bool validate( const std::string& value ) const = 0;
 };
 
@@ -56,11 +57,12 @@ public:
 
     // If try_parse is successful it advances the args iterator to the next argument
     // and set value to the parsed and validated value
-    virtual bool try_parse( std::vector<std::string>::const_iterator& args, std::string& value ) const override {
+    virtual bool try_parse( std::deque<std::string>& args, std::string& value ) const override {
         bool rc = false;
-        if( (*args == "-"+_verb_short) || (*args == "--"+_verb_long) ) {
-            args++; // skip verb
-            value = *args++; // skip value
+        if( (args.front() == "-"+_verb_short) || (args.front() == "--"+_verb_long) ) {
+            args.pop_front(); // skip verb
+            value = args.front();
+            args.pop_front(); // skip value
             rc = true;
         }
         return rc;
