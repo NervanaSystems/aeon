@@ -13,4 +13,41 @@
  limitations under the License.
 */
 
+#include <iostream>
 #include "argtype.hpp"
+
+
+using namespace std;
+
+ArgType::ArgType( ParameterCollection& params,
+         const std::string& name,
+         const std::string& description,
+         bool required,
+         const std::string& verb_short,
+         const std::string& verb_long ) :
+    _name{name},
+    _description{description},
+    _required{required},
+    _verb_short{verb_short},
+    _verb_long{verb_long}
+{
+    params.register_arg(*this);
+}
+
+ArgType_int::ArgType_int( ParameterCollection& params,
+        const std::string& name,
+        const std::string& description,
+        bool required,
+        int default_value,
+        const std::string& verb_short,
+        const std::string& verb_long ) :
+    ArgType(params, name, description, required, verb_short, verb_long),
+    _default{default_value}
+{
+}
+    
+
+void ParameterCollection::register_arg(const ArgType& arg) {
+    cout << "register " << arg.name() << endl;
+    // _arg_list.push_back(arg);
+}

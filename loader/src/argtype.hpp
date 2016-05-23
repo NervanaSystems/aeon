@@ -18,9 +18,9 @@
 #include <string>
 #include <vector>
 
-template<typename T>
+class ParameterCollection;
+
 class ArgType{
-    friend class unit_test;
 public:
     std::string name() const { return _name;  }
 
@@ -32,36 +32,57 @@ public:
 
     std::string verb_long() const { return _verb_long; }
 
-    T get_default() const { return _default; }
+    // T get_default() const { return _default; }
 
     bool try_parse( std::vector<std::string>::const_iterator args ) {
         return false;
     }
 
-    bool validate( const T& value ) {
-        return false;
-    }
+    virtual bool validate( const std::string& value ) const = 0;
 
-    ArgType( const std::string& name,
+    ArgType( ParameterCollection& params,
+             const std::string& name,
              const std::string& description,
              bool required,
-             const T& default_value,
              const std::string& verb_short,
              const std::string& verb_long );
+
+private:
     ArgType() = delete;
     ArgType(const ArgType&) = delete;
-
-    ArgType& name(const std::string& value) { _name = value; return *this; }
-    ArgType& description(const std::string& value) { _description = value; return *this; }
-    ArgType& required(bool value) { _required = value; return *this; }
-    ArgType& default_value(const T& value) { _default = value; return *this; }
-    ArgType& verb_short(const std::string& value) { _verb_short = value; return *this; }
-    ArgType& verb_long(const std::string& value) { _verb_long = value; return *this; }
 
     std::string         _name;
     std::string         _description;
     bool                _required;
-    const T             _default;
     std::string         _verb_short;
     std::string         _verb_long;
+};
+
+class ArgType_int : public ArgType {
+public:
+    ArgType_int( ParameterCollection& params,
+         const std::string& name,
+         const std::string& description,
+         bool required,
+         int default_value,
+         const std::string& verb_short,
+         const std::string& verb_long );
+
+    bool validate( const std::string& value ) const override {
+        return false;
+    }
+
+private:
+    int         _default;
+};
+
+
+
+
+class ParameterCollection {
+public:
+    void register_arg(const ArgType& arg);
+    
+private:
+    std::vector<ArgType>        _arg_list;
 };

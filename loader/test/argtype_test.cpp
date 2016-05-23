@@ -16,19 +16,12 @@
 #include "gtest/gtest.h"
 #include "argtype.hpp"
 
-class unit_test{};    // grant access to ArgType privates
-
-    // ArgType& name(const std::string& value) { _name = value; return *this; }
-    // ArgType& description(const std::string& value) { _description = value; return *this; }
-    // ArgType& required(bool value) { _required = value; return *this; }
-    // ArgType& default(const T& value) { _default = value; return *this; }
-    // ArgType& verb_short(const std::string& value) { _verb_short = value; return *this; }
-    // ArgType& verb_long(const std::string& value) { _verb_long = value; return *this; }
-
-class ParamList1 : public unit_test {
+class ParamList1 : public ParameterCollection {
 public:
-    static const ArgType<int> arg1("arg1","description of arg1",false,3,"a1","arg-1");
+    const ArgType_int arg1{*this, "arg1", "description of arg1", false, 3, "a1", "arg-1"};
  };
+
+ static ParamList1 _ParamList1;
 
  TEST(loader,argtype) {
  }
