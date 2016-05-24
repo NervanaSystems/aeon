@@ -23,17 +23,15 @@
 
 namespace nervana {
     template<typename T> class ArgType;
-    // template<> bool validate<int>( ArgType<int>& ) {
-
-    // }
-    class selection;
+    class interface_ArgType;
+    class ParameterCollection;
 }
 
 //=============================================================================
 //
 //=============================================================================
 
-class interface_ArgType {
+class nervana::interface_ArgType {
 public:
     virtual std::string name() const = 0;
     virtual std::string description() const = 0;
@@ -47,14 +45,14 @@ public:
     virtual bool validate( const std::string& value ) const = 0;
 };
 
-typedef std::shared_ptr<interface_ArgType> argtype_t;
+typedef std::shared_ptr<nervana::interface_ArgType> argtype_t;
 
 //=============================================================================
 //
 //=============================================================================
 
 template<typename T>
-class nervana::ArgType : public interface_ArgType {
+class nervana::ArgType : public nervana::interface_ArgType {
 public:
     virtual std::string name() const override { return _name;  }
     virtual std::string description() const override { return _description; }
@@ -125,7 +123,7 @@ private:
     std::string make_string(const std::string& s) const { return s; }
     std::string make_string(int value) const { return std::to_string(value); }
     std::string make_string(float value) const { return std::to_string(value); }
-    std::string make_string(bool value) const { return std::to_string(value); }
+    std::string make_string(bool value) const { return ( value ? "true" : "false" ); }
 
     std::string         _name;
     std::string         _description;
@@ -143,7 +141,7 @@ private:
 //
 //=============================================================================
 
-class ParameterCollection {
+class nervana::ParameterCollection {
 public:
     template<typename T> void add(
                         const std::string& name,
@@ -172,19 +170,8 @@ public:
         _arg_list.push_back(arg);
     }
 
-    // template<typename T> void add(
-    //                     const std::string& name,
-    //                     const std::string& description,
-    //                     const std::string& verb_short,
-    //                     const std::string& verb_long,
-    //                     bool required,
-    //                     T default_value,
-    //                     std::initializer_list<std::string> list )
-    // {
-    //     // auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long,
-    //     //                                          required, default_value, minimum_value, maximum_value);
-    //     // _arg_list.push_back(arg);
-    // }
+    // first of map is the friendly name of the argument
+    // second is the actual argument
     std::map<std::string,argtype_t> get_args() const;
 
     bool parse(const std::string& args, std::map<argtype_t,std::string>& parsedArgs);

@@ -77,7 +77,7 @@ namespace nervana {
 }
 
 
-map<string,shared_ptr<interface_ArgType> > ParameterCollection::get_args() const {
+map<string,shared_ptr<nervana::interface_ArgType> > nervana::ParameterCollection::get_args() const {
     map<string,shared_ptr<interface_ArgType> > rc;
     for( argtype_t arg : _arg_list ) {
         rc.insert({arg->name(),arg});
@@ -85,7 +85,7 @@ map<string,shared_ptr<interface_ArgType> > ParameterCollection::get_args() const
     return rc;
 }
 
-bool ParameterCollection::parse(const std::string& args, map<argtype_t,string>& parsedArgs) {
+bool nervana::ParameterCollection::parse(const std::string& args, map<argtype_t,string>& parsedArgs) {
     stringstream ss(args);
     deque<string> argList;
     string arg;

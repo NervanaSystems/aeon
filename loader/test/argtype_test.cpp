@@ -20,6 +20,7 @@
 #include "argtype.hpp"
 
 using namespace std;
+using namespace nervana;
 
 class ParamList1 : public ParameterCollection {
 public:
@@ -38,8 +39,8 @@ public:
 
         add<bool>("bool1", "description of bool1", "b1", "bool-1", false, false);
 
-        add<std::string>("string1", "description of string1", "s1", "string-1", false, "");
-        // add<std::string>("selection1", "description of selection1", "sel1", "selection-1", false, "three", {"one","two","three"});
+        add<string>("string1", "description of string1", "s1", "string-1", false, "");
+        // add<string>("selection1", "description of selection1", "sel1", "selection-1", false, "three", {"one","two","three"});
     }
 };
 
@@ -107,5 +108,14 @@ TEST(loader,argtype) {
         EXPECT_TRUE(arg.validate("-50"));
         EXPECT_FALSE(arg.validate("-101"));
         EXPECT_FALSE(arg.validate("0"));
+    }
+
+    {
+        const interface_ArgType& arg = *args["bool1"];
+        EXPECT_EQ("false",arg.default_value());
+        EXPECT_TRUE(arg.validate("true"));
+        EXPECT_TRUE(arg.validate("false"));
+        EXPECT_FALSE(arg.validate("0"));
+        EXPECT_FALSE(arg.validate("1"));
     }
 }

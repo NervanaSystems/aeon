@@ -150,5 +150,5 @@ TEST(thread,loader) {
     const char* repoDir = _datagen.GetDatasetPath().c_str();
     const char* indexFile = "";
 
-    //test(repoDir, indexFile, batchSize, nchan, height, width);
+    test(repoDir, indexFile, batchSize, nchan, height, width);
 }
