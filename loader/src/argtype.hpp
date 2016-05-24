@@ -61,9 +61,11 @@ public:
         bool rc = false;
         if( (args.front() == "-"+_verb_short) || (args.front() == "--"+_verb_long) ) {
             args.pop_front(); // skip verb
-            value = args.front();
-            args.pop_front(); // skip value
-            rc = true;
+            if(args.size()>0) {
+                value = args.front();
+                args.pop_front(); // skip value
+                rc = true;
+            }
         }
         return rc;
     }
@@ -71,14 +73,18 @@ public:
     bool validate( const std::string& value ) const override {
         bool rc = false;
         size_t end;
-        int n = std::stoi(value, &end);
-        if(end == value.size()) {
-            if( _range_valid == false ) {
-                rc = true;
+        try {
+            int n = std::stoi(value, &end);
+            if(end == value.size()) {
+                if( _range_valid == false ) {
+                    rc = true;
+                }
+                else if( (n >= _minimum_value) && (n < _maximum_value) ) {
+                    rc = true;
+                }
             }
-            else if( (n >= _minimum_value) && (n < _maximum_value) ) {
-                rc = true;
-            }
+        } catch(std::exception) {
+
         }
         return rc;
     } 

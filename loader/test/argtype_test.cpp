@@ -57,6 +57,18 @@ TEST(loader,argtype) {
         EXPECT_EQ(3,parsed.size());
     }
     {
+        string argString = "-a1 5 -a3 10 -a4";
+        map<argtype_t,string> parsed;
+        EXPECT_FALSE(_ParamList1.parse(argString,parsed)) << "**** missing value for -a4 arg";
+        EXPECT_EQ(0,parsed.size());
+    }
+    {
+        string argString = "-a1 5 -a3 10 -a4 true";
+        map<argtype_t,string> parsed;
+        EXPECT_FALSE(_ParamList1.parse(argString,parsed)) << "**** non-int value for -a4";
+        EXPECT_EQ(0,parsed.size());
+    }
+    {
         string argString = "-a1 5 -a3 10 -a4 20 --arg-4 30";
         map<argtype_t,string> parsed;
         EXPECT_FALSE(_ParamList1.parse(argString,parsed)) << "**** argument int4 included more than once";

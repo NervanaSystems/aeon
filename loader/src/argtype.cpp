@@ -32,6 +32,7 @@ bool ParameterCollection::parse(const std::string& args, map<argtype_t,string>& 
 
     while(argList.size()>0) {
         bool parsed = false;
+        string tmpArg = argList.front();
         for( argtype_t a : _arg_list ) {
             string value;
             if( a->try_parse( argList, value ) ) {
@@ -49,7 +50,7 @@ bool ParameterCollection::parse(const std::string& args, map<argtype_t,string>& 
         }
         if(rc == false) break;
         if(!parsed) {
-            cout << "failed to parse arg " << argList.front() << endl;
+            cout << "failed to parse arg " << tmpArg << endl;
             rc = false;
             break;
         }
