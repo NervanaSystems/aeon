@@ -61,7 +61,7 @@ public:
     virtual bool required() const override { return _required; }
     virtual std::string verb_short() const override { return _verb_short; }
     virtual std::string verb_long() const override { return _verb_long; }
-    virtual std::string default_value() const override { return std::to_string(_default); }
+    virtual std::string default_value() const override { return make_string(_default); }
 
     // If try_parse is successful it advances the args iterator to the next argument
     // and set value to the parsed and validated value
@@ -122,6 +122,11 @@ private:
     ArgType() = delete;
     ArgType(const ArgType&) = delete;
 
+    std::string make_string(const std::string& s) const { return s; }
+    std::string make_string(int value) const { return std::to_string(value); }
+    std::string make_string(float value) const { return std::to_string(value); }
+    std::string make_string(bool value) const { return std::to_string(value); }
+
     std::string         _name;
     std::string         _description;
     std::string         _verb_short;
@@ -180,7 +185,7 @@ public:
     //     //                                          required, default_value, minimum_value, maximum_value);
     //     // _arg_list.push_back(arg);
     // }
-    std::vector<argtype_t> get_args() const;
+    std::map<std::string,argtype_t> get_args() const;
 
     bool parse(const std::string& args, std::map<argtype_t,std::string>& parsedArgs);
     

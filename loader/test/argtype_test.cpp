@@ -38,7 +38,7 @@ public:
 
         add<bool>("bool1", "description of bool1", "b1", "bool-1", false, false);
 
-        // add<std::string>("string1", "description of string1", "s1", "string-1", false, "");
+        add<std::string>("string1", "description of string1", "s1", "string-1", false, "");
         // add<std::string>("selection1", "description of selection1", "sel1", "selection-1", false, "three", {"one","two","three"});
     }
 };
@@ -46,8 +46,8 @@ public:
 static ParamList1 _ParamList1;
 
 TEST(loader,argtype) {
-    vector<shared_ptr<interface_ArgType> > args = _ParamList1.get_args();
-    ASSERT_EQ(11, args.size());
+    map<string,shared_ptr<interface_ArgType> > args = _ParamList1.get_args();
+    ASSERT_EQ(12, args.size());
 
     {
         string argString = "-a1 5";
@@ -81,7 +81,7 @@ TEST(loader,argtype) {
     }
     // arg1
     {
-        const interface_ArgType& arg = *args[0];
+        const interface_ArgType& arg = *args["int1"];
         EXPECT_EQ("3",arg.default_value());
         EXPECT_TRUE(arg.validate("10"));
         EXPECT_TRUE(arg.validate("1000"));
@@ -89,7 +89,7 @@ TEST(loader,argtype) {
 
     // arg2
     {
-        const interface_ArgType& arg = *args[1];
+        const interface_ArgType& arg = *args["int2"];
         EXPECT_EQ("3",arg.default_value());
         EXPECT_TRUE(arg.validate("10"));
         EXPECT_TRUE(arg.validate("0"));
@@ -100,7 +100,7 @@ TEST(loader,argtype) {
 
     // arg5
     {
-        const interface_ArgType& arg = *args[4];
+        const interface_ArgType& arg = *args["int5"];
         EXPECT_EQ("-50",arg.default_value());
         EXPECT_TRUE(arg.validate("-11"));
         EXPECT_TRUE(arg.validate("-100"));
