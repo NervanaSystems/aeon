@@ -21,6 +21,14 @@
 #include <map>
 #include <deque>
 
+namespace nervana {
+    template<typename T> class ArgType;
+    // template<> bool validate<int>( ArgType<int>& ) {
+
+    // }
+    class selection;
+}
+
 //=============================================================================
 //
 //=============================================================================
@@ -46,7 +54,7 @@ typedef std::shared_ptr<interface_ArgType> argtype_t;
 //=============================================================================
 
 template<typename T>
-class ArgType : public interface_ArgType {
+class nervana::ArgType : public interface_ArgType {
 public:
     virtual std::string name() const override { return _name;  }
     virtual std::string description() const override { return _description; }
@@ -70,24 +78,7 @@ public:
         return rc;
     }
 
-    bool validate( const std::string& value ) const override {
-        bool rc = false;
-        size_t end;
-        try {
-            int n = std::stoi(value, &end);
-            if(end == value.size()) {
-                if( _range_valid == false ) {
-                    rc = true;
-                }
-                else if( (n >= _minimum_value) && (n < _maximum_value) ) {
-                    rc = true;
-                }
-            }
-        } catch(std::exception) {
-
-        }
-        return rc;
-    } 
+    bool validate( const std::string& value ) const override;
 
     ArgType( const std::string& name,
             const std::string& description,
@@ -142,6 +133,7 @@ private:
     bool                _range_valid;
 };
 
+
 //=============================================================================
 //
 //=============================================================================
@@ -156,7 +148,7 @@ public:
                         bool required,
                         T default_value )
     {
-        auto arg = std::make_shared<ArgType<T> >(name, description, verb_short, verb_long, required, default_value);
+        auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long, required, default_value);
         _arg_list.push_back(arg);
     }
 
@@ -170,11 +162,24 @@ public:
                         T minimum_value,
                         T maximum_value )
     {
-        auto arg = std::make_shared<ArgType<T> >(name, description, verb_short, verb_long,
+        auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long,
                                                  required, default_value, minimum_value, maximum_value);
         _arg_list.push_back(arg);
     }
 
+    // template<typename T> void add(
+    //                     const std::string& name,
+    //                     const std::string& description,
+    //                     const std::string& verb_short,
+    //                     const std::string& verb_long,
+    //                     bool required,
+    //                     T default_value,
+    //                     std::initializer_list<std::string> list )
+    // {
+    //     // auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long,
+    //     //                                          required, default_value, minimum_value, maximum_value);
+    //     // _arg_list.push_back(arg);
+    // }
     std::vector<argtype_t> get_args() const;
 
     bool parse(const std::string& args, std::map<argtype_t,std::string>& parsedArgs);

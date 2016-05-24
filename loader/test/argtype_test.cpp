@@ -30,11 +30,16 @@ public:
         add<int>("int4", "description of arg4", "a4", "arg-4", true, 3, 0, 100);
         add<int>("int5", "description of arg5", "a5", "arg-5", false, -50, -100, -10);
 
-        // add<float>("float1", "description of arg1", "f1", "float-1", false, 3);
-        // add<float>("float2", "description of arg2", "f2", "float-2", false, 3, 0, 100);
-        // add<float>("float3", "description of arg3", "f3", "float-3", true, 3);
-        // add<float>("float4", "description of arg4", "f4", "float-4", true, 3, 0, 100);
-        // add<float>("float5", "description of arg5", "f5", "float-5", false, -50, -100, -10);
+        add<float>("float1", "description of arg1", "f1", "float-1", false, 3);
+        add<float>("float2", "description of arg2", "f2", "float-2", false, 3, 0, 100);
+        add<float>("float3", "description of arg3", "f3", "float-3", false, 3);
+        add<float>("float4", "description of arg4", "f4", "float-4", false, 3, 0, 100);
+        add<float>("float5", "description of arg5", "f5", "float-5", false, -50, -100, -10);
+
+        add<bool>("bool1", "description of bool1", "b1", "bool-1", false, false);
+
+        // add<std::string>("string1", "description of string1", "s1", "string-1", false, "");
+        // add<std::string>("selection1", "description of selection1", "sel1", "selection-1", false, "three", {"one","two","three"});
     }
 };
 
@@ -42,7 +47,7 @@ static ParamList1 _ParamList1;
 
 TEST(loader,argtype) {
     vector<shared_ptr<interface_ArgType> > args = _ParamList1.get_args();
-    ASSERT_EQ(5, args.size());
+    ASSERT_EQ(11, args.size());
 
     {
         string argString = "-a1 5";
@@ -75,7 +80,6 @@ TEST(loader,argtype) {
         EXPECT_EQ(0,parsed.size());
     }
     // arg1
-    EXPECT_EQ(5,args.size()) << "ParamList1";
     {
         const interface_ArgType& arg = *args[0];
         EXPECT_EQ("3",arg.default_value());
@@ -84,7 +88,6 @@ TEST(loader,argtype) {
     }
 
     // arg2
-    EXPECT_EQ(5,args.size()) << "ParamList1";
     {
         const interface_ArgType& arg = *args[1];
         EXPECT_EQ("3",arg.default_value());
@@ -96,7 +99,6 @@ TEST(loader,argtype) {
     }
 
     // arg5
-    EXPECT_EQ(5,args.size()) << "ParamList1";
     {
         const interface_ArgType& arg = *args[4];
         EXPECT_EQ("-50",arg.default_value());

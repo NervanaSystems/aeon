@@ -19,6 +19,64 @@
 
 using namespace std;
 
+namespace nervana {
+    template<>
+    bool ArgType<int>::validate( const std::string& value ) const {
+        bool rc = false;
+        size_t end;
+        try {
+            int n = std::stoi(value, &end);
+            if(end == value.size()) {
+                if( _range_valid == false ) {
+                    rc = true;
+                }
+                else if( (n >= _minimum_value) && (n < _maximum_value) ) {
+                    rc = true;
+                }
+            }
+        } catch(std::exception) {
+
+        }
+        return rc;
+    }
+
+    template<>
+    bool ArgType<float>::validate( const std::string& value ) const {
+        bool rc = false;
+        size_t end;
+        try {
+            int n = std::stof(value, &end);
+            if(end == value.size()) {
+                if( _range_valid == false ) {
+                    rc = true;
+                }
+                else if( (n >= _minimum_value) && (n < _maximum_value) ) {
+                    rc = true;
+                }
+            }
+        } catch(std::exception) {
+
+        }
+        return rc;
+    }
+
+    template<>
+    bool ArgType<bool>::validate( const std::string& value ) const {
+        return value == "true" || value == "false";
+    }
+
+    template<>
+    bool ArgType<std::string>::validate( const std::string& value ) const {
+        return true;
+    }
+
+    template<>
+    std::string ArgType<std::string>::default_value() const {
+        return _default;
+    }
+}
+
+
 vector<shared_ptr<interface_ArgType> > ParameterCollection::get_args() const {
     return _arg_list;
 }
