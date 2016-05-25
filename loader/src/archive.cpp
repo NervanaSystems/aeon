@@ -337,7 +337,9 @@ bool ArchiveReader::testFileName( const string& s ) {
 void ArchiveReader::shuffleFileList() {
     static auto seed = std::chrono::system_clock::now().time_since_epoch().count();
     static std::minstd_rand0 rand(seed);
-    std::shuffle( _fileList.begin(), _fileList.end(), rand );
+    if(_shuffle) {
+        std::shuffle( _fileList.begin(), _fileList.end(), rand );
+    }
 }
 
 void ArchiveReader::logCurrentFile( const std::string& file ) {

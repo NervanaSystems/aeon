@@ -30,7 +30,7 @@ static void CreateDataset() {
             .Prefix("archive-")
             .MacrobatchMaxItems(500)
             // SetSize must be a multiple of (minibatchCount*batchSize) which is 8320 currently
-            .DatasetSize(8320/4)
+            .DatasetSize(1500)
             .ImageSize(128,128)
             .Create();
     auto end = timer.now();

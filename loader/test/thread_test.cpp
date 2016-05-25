@@ -146,7 +146,7 @@ TEST(thread,loader) {
     int nchan = 3;
     int height = 128;
     int width = 128;
-    int batchSize = 128;
+    int batchSize = 16;
     const char* repoDir = _datagen.GetDatasetPath().c_str();
     const char* indexFile = "";
 
