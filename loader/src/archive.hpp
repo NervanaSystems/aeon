@@ -124,16 +124,6 @@ public:
 
     int reset();
 
-    int itemCount();
-
-    int maxDatumSize();
-
-    int maxTargetSize();
-
-    int totalDataSize();
-
-    int totalTargetsSize();
-
     void addFiles( const std::vector<std::string>& files );
 
 private:
@@ -173,7 +163,6 @@ private:
     int                         _itemsLeft;
     BatchFileReader             _batchFile;
     std::deque<DataPair>        _shuffleQueue;
-    ArchiveWriter*              _archiveWriter;
 
     bool                        _active;
     bool                        _shuffle;
@@ -188,7 +177,7 @@ private:
     nervana::event              _dataRequestEvent;
     nervana::event              _dataReadyEvent;
 
-    std::thread*                _readThread;
+    std::unique_ptr<std::thread>_readThread;
     size_t                      _readAheadSize;
     std::ofstream               _logFile;
 };

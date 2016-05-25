@@ -154,19 +154,13 @@ ArchiveReader::ArchiveReader(int* itemCount, int batchSize,
   _archiveDir(archiveDir), _indexFile(indexFile),
   _archivePrefix(archivePrefix),
   _startFileIdx(startFileIdx),
-  _fileIdx(startFileIdx), _itemIdx(0), _itemsLeft(0), _archiveWriter(nullptr),
+  _fileIdx(startFileIdx), _itemIdx(0), _itemsLeft(0),
   _active(true), _shuffle(shuffle), _readQueue(), _readQueueMutex(),
   _fileListMutex(), _fileListIndex(-1), _dataRequestEvent(), _dataReadyEvent(),
   _readThread(nullptr), _readAheadSize(1000) {
     getFileList();
     if (*itemCount == 0) {
         *itemCount = getCount();
-        // Create a writer just in case. It will only be used if archive
-        // files are missing or damaged.
-        // _archiveWriter = new ArchiveWriter(ARCHIVE_ITEM_COUNT,
-        //         repoDir, archiveDir, indexFile, archivePrefix,
-        //         shuffle, params, ingestParams,
-        //         targetTypeSize, targetConversion);
     }
 
     _itemCount = *itemCount;
@@ -174,13 +168,11 @@ ArchiveReader::ArchiveReader(int* itemCount, int batchSize,
 
     _logFile.open("test.log");
 
-    _readThread = new std::thread(readThreadEntry,this);
+    _readThread = unique_ptr<thread>(new std::thread(readThreadEntry,this));
 }
 
 ArchiveReader::~ArchiveReader() {
     killReadThread();
-    delete _readThread;
-    delete _archiveWriter;
     _logFile.close();
 }
 
@@ -213,26 +205,6 @@ int ArchiveReader::reset() {
     return 0;
 }
 
-int ArchiveReader::itemCount() {
-    return _batchFile.itemCount();
-}
-
-int ArchiveReader::maxDatumSize() {
-    return _batchFile.maxDatumSize();
-}
-
-int ArchiveReader::maxTargetSize() {
-    return _batchFile.maxTargetSize();
-}
-
-int ArchiveReader::totalDataSize() {
-    return _batchFile.totalDataSize();
-}
-
-int ArchiveReader::totalTargetsSize() {
-    return _batchFile.totalTargetsSize();
-}
-
 void ArchiveReader::addFiles( const std::vector<string>& files ) {
     std::lock_guard<mutex> lk(_fileListMutex);
     _fileList.insert( _fileList.end(), files.begin(), files.end() );
@@ -240,23 +212,6 @@ void ArchiveReader::addFiles( const std::vector<string>& files ) {
 }
 
 int ArchiveReader::getCount() {
-    // ifstream ifs(_indexFile);
-    // if (!ifs) {
-    //     stringstream ss;
-    //     ss << "Could not open " << _indexFile;
-    //     throw std::ios_base::failure(ss.str());
-    // }
-
-    // string  line;
-    // int     count = 0;
-    // std::getline(ifs, line);
-    // while (std::getline(ifs, line)) {
-    //     if (line[0] == '#') {
-    //         continue;
-    //     }
-    //     count++;
-    // }
-
     int count = 0;
     for( const std::string& f : _fileList ) {
         BatchFileReader b;
@@ -316,9 +271,6 @@ void ArchiveReader::readThread() {
             string fileName = _fileList[ _fileListIndex++ ];
             _fileListMutex.unlock();
             _fileIdx++;
-            if ((Reader::exists(fileName) == false) && (_archiveWriter != 0)) {
-                _archiveWriter->waitFor(fileName);
-            }
 
             BatchFileReader b;
             b.open(fileName);
