@@ -1,7 +1,7 @@
 #include "restruct.hpp"
 
 
-virtual shared_ptr<DecodedMedia> ImageExtracter::decode(char* inbuf, int insize) override
+virtual shared_ptr<DecodedMedia> ImageExtractor::decode(char* inbuf, int insize) override
 {
     auto ip = dynamic_cast<shared_ptr<ImageParams>>(_extract_params);
     int channelCount = ip->getChannelCount();

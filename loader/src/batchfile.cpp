@@ -161,32 +161,40 @@ void BatchFileReader::close() {
     }
 }
 
-void BatchFileReader::readItem(BufferPair& buffers) {
-    uint datumSize;
-    uint targetSize;
-    _recordHeader.read(_ifs, &datumSize);
-    buffers.first->read(_ifs, datumSize);
-    _ifs.readPadding(datumSize);
-    _recordHeader.read(_ifs, &targetSize);
-    buffers.second->read(_ifs, targetSize);
-    _ifs.readPadding(targetSize);
-}
+// void BatchFileReader::readItem(BufferPair& buffers) {
+//     uint datumSize;
+//     uint targetSize;
+//     _recordHeader.read(_ifs, &datumSize);
+//     buffers.first->read(_ifs, datumSize);
+//     _ifs.readPadding(datumSize);
+//     _recordHeader.read(_ifs, &targetSize);
+//     buffers.second->read(_ifs, targetSize);
+//     _ifs.readPadding(targetSize);
+// }
 
-DataPair BatchFileReader::readItem() {
+// DataPair BatchFileReader::readItem() {
+//     uint datumSize = 0;
+//     _recordHeader.read(_ifs, &datumSize);
+//     unique_ptr<ByteVect> datum(new ByteVect((size_t) datumSize));
+//     _ifs.read(&(*datum)[0], datumSize);
+//     _ifs.readPadding(datumSize);
+
+//     uint targetSize = 0;
+//     _recordHeader.read(_ifs, &targetSize);
+//     unique_ptr<ByteVect> target(new ByteVect((size_t) targetSize));
+//     _ifs.read(&(*target)[0], targetSize);
+//     _ifs.readPadding(targetSize);
+//     return DataPair(std::move(datum), std::move(target));
+// }
+
+shared_ptr<ByteVect> BatchFileReader::read() {
     uint datumSize = 0;
     _recordHeader.read(_ifs, &datumSize);
-    unique_ptr<ByteVect> datum(new ByteVect((size_t) datumSize));
-    _ifs.read(&(*datum)[0], datumSize);
+    shared_ptr<ByteVect> datum = make_shared<ByteVect>(datumSize);
+    _ifs.read(datum->data(), datumSize);
     _ifs.readPadding(datumSize);
-
-    uint targetSize = 0;
-    _recordHeader.read(_ifs, &targetSize);
-    unique_ptr<ByteVect> target(new ByteVect((size_t) targetSize));
-    _ifs.read(&(*target)[0], targetSize);
-    _ifs.readPadding(targetSize);
-    return DataPair(std::move(datum), std::move(target));
+    return datum;
 }
-
 int BatchFileReader::itemCount() {
     return _fileHeader._itemCount;
 }

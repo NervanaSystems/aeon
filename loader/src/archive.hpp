@@ -43,8 +43,6 @@
 
 #define ARCHIVE_ITEM_COUNT  4096
 
-typedef std::pair<std::unique_ptr<ByteVect>,std::unique_ptr<ByteVect>> DataPair;
-
 class Writer {
 public:
     virtual int write() = 0;

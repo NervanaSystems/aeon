@@ -329,7 +329,10 @@ void ArchiveReader::readThread() {
 
             vector<DataPair> tmpBuffer(b.itemCount());
             for( int i=0; i<b.itemCount(); i++ ) {
-                tmpBuffer[i] = b.readItem();
+                auto datum = b.read();
+                auto target = b.read();
+
+                tmpBuffer[i] = DataPair(datum,target);
             }
             b.close();
             if(_shuffle) shuffle(tmpBuffer.begin(), tmpBuffer.end(), rand);

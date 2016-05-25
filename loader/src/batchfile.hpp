@@ -38,7 +38,7 @@
 
 typedef std::vector<std::string> LineList;
 typedef std::vector<char> ByteVect;
-typedef std::pair<std::unique_ptr<ByteVect>,std::unique_ptr<ByteVect>> DataPair;
+typedef std::pair<std::shared_ptr<ByteVect>,std::shared_ptr<ByteVect>> DataPair;
 
 static_assert(sizeof(int) == 4, "int is not 4 bytes");
 static_assert(sizeof(uint) == 4, "uint is not 4 bytes");
@@ -131,8 +131,7 @@ public:
     void open(const std::string& fileName);
     void close();
 
-    void readItem(BufferPair& buffers);
-    DataPair readItem();
+    std::shared_ptr<ByteVect> read();
 
     int itemCount() ;
 

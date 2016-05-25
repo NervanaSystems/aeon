@@ -108,4 +108,4 @@ $(LOADER_STATIC): $(OBJS)
 	ar rcs $@ $(OBJS)
 
 clean:
-	@rm -vf *.o $(LOADER_SO)
+	@rm -vf *.o $(LOADER_SO) $(LOADER_STATIC)

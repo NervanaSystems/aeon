@@ -3,7 +3,7 @@ class DecodedMedia {
 public:
     DecodedMedia() {}
     virtual ~DecodedMedia();
-}
+};
 
 class DecodedImage : public DecodedMedia {
 public:
@@ -16,29 +16,29 @@ public:
 
 private:
     cv::Mat _img;
-}
+};
 
 
 
-class Extracter {
+class Extractor {
 public:
-    Extracter(shared_ptr<ExtractParams> extract_params)
+    Extractor(shared_ptr<ExtractParams> extract_params)
     : _extract_params(extract_params) {
     }
 
-    virtual ~Extracter();
+    virtual ~Extractor();
     virtual shared_ptr<DecodedMedia> decode(char* inbuf, int insize) = 0;
 
 protected:
     shared_ptr<ExtractParams> _extract_params;
-}
+};
 
 
-class ImageExtracter : public Extracter {
+class ImageExtractor : public Extractor {
 public:
-    ~ImageExtracter() {}
+    ~ImageExtractor() {}
     virtual shared_ptr<DecodedMedia> decode(char* inbuf, int insize) override;
-}
+};
 
 
 
@@ -53,7 +53,7 @@ public:
 
 protected:
     shared_ptr<TransformParams> _transform_params;
-}
+};
 
 
 class ImageTransformer : public Transformer {
@@ -70,7 +70,7 @@ private:
 
     void cbsjitter(cv::Mat& inout, float cbs[]);
 
-}
+};
 
 
 
@@ -84,7 +84,7 @@ public:
 
 protected:
     shared_ptr<LoaderParams> _loader_params;
-}
+};
 
 
 class ImageLoader : public Loader {
@@ -93,13 +93,13 @@ public:
 
 private:
     void split(cv::Mat& img, char* buf, int bufSize);
-}
+};
 
 
 class Provider {
 public:
-    Provider(shared_ptr<Extracter> ex, shared_ptr<Transformer> tr, shared_ptr<Loader> lo)
-    : _extracter(ex), _transformer(tr), _loader(lo) {
+    Provider(shared_ptr<Extractor> ex, shared_ptr<Transformer> tr, shared_ptr<Loader> lo)
+    : _Extractor(ex), _transformer(tr), _loader(lo) {
     }
 
     inline void provide(char *inbuf, int insize, char *outbuf, int outsize,
@@ -107,24 +107,24 @@ public:
     {
         _loader->load(
                       _transformer->transform(
-                                              _extracter->decode(inbuf, insize),
+                                              _Extractor->decode(inbuf, insize),
                                               txs),
                       outbuf, outsz);
     }
 
-}
+};
 
 /*
 // Sample code would do the following in setup:
 
-shared_ptr<ImageExtracter> imgex = make_shared<ImageExtracter>(new ImageExParams());
+shared_ptr<ImageExtractor> imgex = make_shared<ImageExtractor>(new ImageExParams());
 shared_ptr<ImageTransformer> imgtr = make_shared<ImageTransformer>(new ImageTrParams());
 shared_ptr<ImageLoader> imgex = make_shared<ImageLoader>(new ImageLoParams());
 
 Provider imgprov(imgex, imgtr, imglo);
 
 // Something that reads in metadata and makes bounding box targets
-shared_ptr<JSONExtracter> jsonex = make_shared<JSONExtracter>(new JSONExParams());  // This first part is probably generic depending on how we are encoding our metadata
+shared_ptr<JSONExtractor> jsonex = make_shared<JSONExtractor>(new JSONExParams());  // This first part is probably generic depending on how we are encoding our metadata
 shared_ptr<BboxTransformer> bboxtr = make_shared<BboxTransformer>(new BboxTrParams());
 shared_ptr<BboxLoader> bboxex = make_shared<BboxLoader>(new BboxLoParams());
 
