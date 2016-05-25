@@ -19,7 +19,7 @@
 #include <vector>
 #include <memory>
 
- class DataGen {
+class DataGen {
 public:
     DataGen();
     ~DataGen();
@@ -47,7 +47,7 @@ private:
     bool        _pathExisted;
 
     std::vector<std::string> _fileList;
- 
+
     bool exists(const std::string& fileName);
     std::vector<unsigned char> RenderImage( int number, int label );
 };

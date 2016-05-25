@@ -175,7 +175,7 @@ public:
     std::map<std::string,argtype_t> get_args() const;
 
     bool parse(const std::string& args, std::map<argtype_t,std::string>& parsedArgs);
-    
+
 private:
     // void register_arg(const ArgType& arg);
     std::vector<argtype_t>     _arg_list;
