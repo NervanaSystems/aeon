@@ -20,19 +20,32 @@ namespace nervana {
 
     media_ptr_t image_extractor::extract(char* inbuf, int insize)
     {
-        auto output = make_shared<decoded_image>();
+        cv::Mat output_img;
         cv::Mat input_img(1, insize, _pixel_type, inbuf);
-        cv::imdecode(input_img, _color_mode, output->get_image());
+        cv::imdecode(input_img, _color_mode, output_img);
+
+        auto output = make_shared<decoded_image>(output_img);
         return static_pointer_cast<decoded_media>(output);
     }
 
 
+    /* Transform:
+        transformer_params will be a supplied bunch of settings used by this provider.
+        on each record, the transformer will use the transform_params along with the supplied
+        record to fill a transform_settings structure which will have
 
+        Spatial distortion settings:
+        randomly sampled crop box (based on params->center, params->aspect_ratio, params->scale_pct, record size)
+        randomly determined flip (based on params->flip)
+        randomly sampled rotation angle (based on params->angle)
 
+        Photometric distortion settings:
+        randomly sampled contrast, brightness, saturation, lighting values (based on params->cbs, lighting bounds)
+
+    */
     image_transformer::image_transformer(param_ptr_t image_transformer_params)
     {
-
-
+        // should we be doing anything in here?
     }
 
     media_ptr_t image_transformer::transform(settings_ptr_t transform_settings,
