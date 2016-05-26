@@ -39,7 +39,7 @@ public:
 
         add<bool>("bool1", "description of bool1", "b1", "bool-1", false, false);
 
-        add<string>("string1", "description of string1", "s1", "string-1", false, "");
+        add<string>("string1", "description of string1", "s1", "string-1", false, "blah");
         // add<string>("selection1", "description of selection1", "sel1", "selection-1", false, "three", {"one","two","three"});
     }
 };
@@ -59,7 +59,18 @@ TEST(loader,argtype) {
         string argString = "-a1 5 -a3 10 -a4 20";
         parsed_args parsed;
         EXPECT_TRUE(_ParamList1.parse(argString,parsed));
-        EXPECT_EQ(5,parsed.get_value<int>("int1"));
+        EXPECT_EQ(5,parsed.value<int>("int1"));
+        EXPECT_EQ(3,parsed.value<int>("int2"));
+        EXPECT_EQ(10,parsed.value<int>("int3"));
+        EXPECT_EQ(20,parsed.value<int>("int4"));
+        EXPECT_EQ(-50,parsed.value<int>("int5"));
+        EXPECT_EQ(3,parsed.value<float>("float1"));
+        EXPECT_EQ(3,parsed.value<float>("float2"));
+        EXPECT_EQ(3,parsed.value<float>("float3"));
+        EXPECT_EQ(3,parsed.value<float>("float4"));
+        EXPECT_EQ(-50,parsed.value<float>("float5"));
+        EXPECT_EQ(false,parsed.value<bool>("bool1"));
+        EXPECT_STREQ("blah",parsed.value<string>("string1").c_str());
     }
     {
         string argString = "-a1 5 -a3 10 -a4";

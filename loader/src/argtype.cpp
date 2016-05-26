@@ -76,7 +76,6 @@ namespace nervana {
     }
 }
 
-
 map<string,shared_ptr<nervana::interface_ArgType> > nervana::ParameterCollection::get_args() const {
     map<string,shared_ptr<interface_ArgType> > rc;
     for( argtype_t arg : _arg_list ) {
@@ -97,9 +96,17 @@ bool nervana::ParameterCollection::parse(const std::string& args, parsed_args& p
         string tmpArg = argList.front();
         for( argtype_t a : _arg_list ) {
             string value;
-            if( a->try_parse( argList, value ) ) {
-                if(parsedArgs.add_value(a, value)) {
-                    parsed = true;
+            if( a->try_parse( argList ) ) {
+                argList.pop_front(); // skip verb
+                if(argList.size()>0) {
+                    value = argList.front();
+                    argList.pop_front(); // skip value
+                    if(parsedArgs.add_value(a, value)) {
+                        parsed = true;
+                    }
+                } else {
+                    cout << "missing value for " << a->verb_short() << "|--" << a->verb_long() << endl;
+                    rc = false;
                 }
                 break;
             }
@@ -152,16 +159,20 @@ bool nervana::parsed_args::contains( const std::string& name ) const {
 }
 
 namespace nervana {
-    template<> int parsed_args::get_value<int>( const std::string& name ) const{
+    template<> int parsed_args::value<int>( const std::string& name ) const{
         string value = value_map.at(name);
-        cout << "int get_value " << name << " got value " << value << endl;
         return stoi(value);
     }
-
-    template<> int parsed_args::operator[]( const std::string& name ) const {
+    template<> float parsed_args::value<float>( const std::string& name ) const{
         string value = value_map.at(name);
-        cout << "int operator[] " << name << " got value " << value << endl;
-        return stoi(value);
+        return stof(value);
     }
-
+    template<> bool parsed_args::value<bool>( const std::string& name ) const{
+        string value = value_map.at(name);
+        return name == "true";
+    }
+    template<> string parsed_args::value<string>( const std::string& name ) const{
+        string value = value_map.at(name);
+        return value;
+    }
 }

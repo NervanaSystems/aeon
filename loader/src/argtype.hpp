@@ -42,7 +42,7 @@ public:
     virtual std::string default_value() const = 0;
     // If try_parse is successful it advances the args iterator to the next argument
     // and set value to the parsed and validated value
-    virtual bool try_parse( std::deque<std::string>& args, std::string& value ) const = 0;
+    virtual bool try_parse( std::deque<std::string>& args ) const = 0;
     virtual bool validate( const std::string& value ) const = 0;
 };
 
@@ -63,17 +63,11 @@ public:
     virtual std::string verb_long() const override { return _verb_long; }
     virtual std::string default_value() const override { return make_string(_default); }
 
-    // If try_parse is successful it advances the args iterator to the next argument
-    // and set value to the parsed and validated value
-    virtual bool try_parse( std::deque<std::string>& args, std::string& value ) const override {
+    // If try_parse is successful it advances the args iterator to the value
+    virtual bool try_parse( std::deque<std::string>& args ) const override {
         bool rc = false;
         if( (args.front() == "-"+_verb_short) || (args.front() == "--"+_verb_long) ) {
-            args.pop_front(); // skip verb
-            if(args.size()>0) {
-                value = args.front();
-                args.pop_front(); // skip value
-                rc = true;
-            }
+            rc = true;
         }
         return rc;
     }
@@ -146,14 +140,11 @@ private:
 class nervana::parsed_args {
 public:
     template<typename T>
-    T get_value( const std::string& name ) const;
+    T value( const std::string& name ) const;
 
     bool add_value( const argtype_t& arg, const std::string& value );
 
     bool contains( const std::string& name ) const;
-
-    template<typename T>
-    T operator[]( const std::string& name ) const;
 
 private:
     std::map<std::string,std::string>   value_map;
