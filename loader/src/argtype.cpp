@@ -85,7 +85,7 @@ map<string,shared_ptr<nervana::interface_ArgType> > nervana::ParameterCollection
     return rc;
 }
 
-bool nervana::ParameterCollection::parse(const std::string& args, map<argtype_t,string>& parsedArgs) {
+bool nervana::ParameterCollection::parse(const std::string& args, parsed_args& parsedArgs) {
     stringstream ss(args);
     deque<string> argList;
     string arg;
@@ -98,14 +98,8 @@ bool nervana::ParameterCollection::parse(const std::string& args, map<argtype_t,
         for( argtype_t a : _arg_list ) {
             string value;
             if( a->try_parse( argList, value ) ) {
-                if(parsedArgs.find(a)!=parsedArgs.end()) {
-                    cout << "argument -" << a->verb_short() << "|--" << a->verb_long() << " included more than once" << endl;
-                    rc = false;
-                    break;
-                }
-                if( a->validate( value ) ) {
+                if(parsedArgs.add_value(a, value)) {
                     parsed = true;
-                    parsedArgs.insert({a, value});
                 }
                 break;
             }
@@ -118,21 +112,49 @@ bool nervana::ParameterCollection::parse(const std::string& args, map<argtype_t,
         }
     }
 
+    // fill in any missing non-required args
+    for( argtype_t a : _arg_list ) {
+        if(a->required() == false && parsedArgs.contains(a->name()) == false) {
+            parsedArgs.add_value(a, a->default_value());
+        }
+    }
+
     // Check for required arguments
     if(rc == true) {
         for( argtype_t a : _arg_list ) {
-            if(a->required() && parsedArgs.find(a)==parsedArgs.end()) {
+            if(a->required() && !parsedArgs.contains(a->name())) {
                 rc = false;
                 cout << "required argument -" << a->verb_short() << "|--" << a->verb_long() << " missing" << endl;
             }
         }
     }
 
-    if(rc == false) {
-        parsedArgs.clear();
-    }
+    // if(rc == false) {
+    //     parsedArgs.clear();
+    // }
 
     return rc;
 }
 
+bool nervana::parsed_args::add_value( const argtype_t& arg, const std::string& value ) {
+    bool rc = false;
+    if(value_map.find(arg->name())!=value_map.end()) {
+        cout << "argument -" << arg->verb_short() << "|--" << arg->verb_long() << " included more than once" << endl;
+    } else if( arg->validate( value ) ) {
+        rc = true;
+        value_map.insert({arg->name(), value});
+    }
+    return rc;
+}
 
+bool nervana::parsed_args::contains( const std::string& name ) const {
+    return value_map.find(name)!=value_map.end();
+}
+
+namespace nervana {
+    template<> int parsed_args::get_value<int>( const std::string& name ) const{
+        string value = value_map.at(name);
+        cout << "lookup " << name << " got value " << value << endl;
+        return stoi(value);
+    }
+}

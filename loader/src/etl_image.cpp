@@ -5,7 +5,7 @@ namespace nervana {
     /* Extract */
     image_extractor::image_extractor(param_ptr_t image_extractor_params)
     {
-        _channel_count = image_extractor_params->get_channel_count();
+        _channel_count = *image_extractor_params["channel_count"]->get_value();
         if !(_channel_count == 1 || _channel_count == 3)
         {
             std::stringstream ss;

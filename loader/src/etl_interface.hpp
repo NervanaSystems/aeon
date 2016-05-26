@@ -14,7 +14,6 @@ public:
     virtual media_ptr_t extract(char*, int) = 0;
 
 private:
-    extractor_interface();
 };
 
 class nervana::transformer_interface {
@@ -24,7 +23,6 @@ public:
     virtual void fill_settings(settings_ptr_t) = 0;
 
 private:
-    transformer_interface();
 };
 
 class nervana::loader_interface {
@@ -33,5 +31,4 @@ public:
     virtual void load(char*, int, const media_ptr_t&) = 0;
 
 private:
-    loader_interface();
-}
+};

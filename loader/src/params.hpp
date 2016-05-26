@@ -23,13 +23,12 @@ public:
     virtual MediaType get_type() = 0;
 
 private:
-    decoded_media();
 };
 
 
-typedef shared_ptr<nervana::decoded_media>        media_ptr_t;
-typedef shared_ptr<nervana::ParameterCollection>  param_ptr_t;
-typedef shared_ptr<nervana::settings>             settings_ptr_t;
+typedef std::shared_ptr<nervana::decoded_media>        media_ptr_t;
+typedef std::shared_ptr<nervana::ParameterCollection>  param_ptr_t;
+typedef std::shared_ptr<nervana::settings>             settings_ptr_t;
 
 class nervana::image_params : public ParameterCollection {
 public:
