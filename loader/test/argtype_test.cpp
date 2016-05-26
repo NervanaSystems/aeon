@@ -59,6 +59,7 @@ TEST(loader,argtype) {
         string argString = "-a1 5 -a3 10 -a4 20";
         parsed_args parsed;
         EXPECT_TRUE(_ParamList1.parse(argString,parsed));
+        EXPECT_EQ(5,parsed.get_value<int>("int1"));
     }
     {
         string argString = "-a1 5 -a3 10 -a4";
@@ -75,6 +76,8 @@ TEST(loader,argtype) {
         parsed_args parsed;
         EXPECT_FALSE(_ParamList1.parse(argString,parsed)) << "**** argument int4 included more than once";
     }
+
+    // Test arg validators
     // arg1
     {
         const interface_ArgType& arg = *args["int1"];

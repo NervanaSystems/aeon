@@ -146,11 +146,14 @@ private:
 class nervana::parsed_args {
 public:
     template<typename T>
-    T get_value( const std::string& name ) const { return T(); }
+    T get_value( const std::string& name ) const;
 
     bool add_value( const argtype_t& arg, const std::string& value );
 
     bool contains( const std::string& name ) const;
+
+    template<typename T>
+    T operator[]( const std::string& name ) const;
 
 private:
     std::map<std::string,std::string>   value_map;

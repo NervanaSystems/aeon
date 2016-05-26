@@ -154,7 +154,14 @@ bool nervana::parsed_args::contains( const std::string& name ) const {
 namespace nervana {
     template<> int parsed_args::get_value<int>( const std::string& name ) const{
         string value = value_map.at(name);
-        cout << "lookup " << name << " got value " << value << endl;
+        cout << "int get_value " << name << " got value " << value << endl;
         return stoi(value);
     }
+
+    template<> int parsed_args::operator[]( const std::string& name ) const {
+        string value = value_map.at(name);
+        cout << "int operator[] " << name << " got value " << value << endl;
+        return stoi(value);
+    }
+
 }
