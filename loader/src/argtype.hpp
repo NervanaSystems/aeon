@@ -77,15 +77,13 @@ public:
     ArgType( const std::string& name,
             const std::string& description,
             const std::string& verb_short,
-            const std::string& verb_long,
-            bool required,
-            T default_value
+            const std::string& verb_long
             ) :
         _name{name},
         _description{description},
         _verb_short{verb_short},
         _verb_long{verb_long},
-        _required{required},
+        _required{true},
         _default{default_value},
         _range_valid{false}
     {
@@ -95,7 +93,22 @@ public:
             const std::string& description,
             const std::string& verb_short,
             const std::string& verb_long,
-            bool required,
+            T default_value
+            ) :
+        _name{name},
+        _description{description},
+        _verb_short{verb_short},
+        _verb_long{verb_long},
+        _required{false},
+        _default{default_value},
+        _range_valid{false}
+    {
+    }
+
+    ArgType( const std::string& name,
+            const std::string& description,
+            const std::string& verb_short,
+            const std::string& verb_long,
             T default_value,
             T minimum_value,
             T maximum_value
@@ -104,7 +117,7 @@ public:
         _description{description},
         _verb_short{verb_short},
         _verb_long{verb_long},
-        _required{required},
+        _required{false},
         _default{default_value},
         _minimum_value{minimum_value},
         _maximum_value{maximum_value},
@@ -153,30 +166,41 @@ private:
 class nervana::ParameterCollection {
 public:
     template<typename T> void add(
+                        T& value,
                         const std::string& name,
                         const std::string& description,
                         const std::string& verb_short,
-                        const std::string& verb_long,
-                        bool required,
-                        T default_value )
+                        const std::string& verb_long )
     {
-        auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long, required, default_value);
-        _arg_list.push_back(arg);
+        // auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long);
+        // _arg_list.push_back(arg);
     }
 
     template<typename T> void add(
+                        T& value,
                         const std::string& name,
                         const std::string& description,
                         const std::string& verb_short,
                         const std::string& verb_long,
-                        bool required,
+                        T default_value )
+    {
+        // auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long, default_value);
+        // _arg_list.push_back(arg);
+    }
+
+    template<typename T> void add(
+                        T& value,
+                        const std::string& name,
+                        const std::string& description,
+                        const std::string& verb_short,
+                        const std::string& verb_long,
                         T default_value,
                         T minimum_value,
                         T maximum_value )
     {
-        auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long,
-                                                 required, default_value, minimum_value, maximum_value);
-        _arg_list.push_back(arg);
+        // auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long,
+        //                                          default_value, minimum_value, maximum_value);
+        // _arg_list.push_back(arg);
     }
 
     // first of map is the friendly name of the argument

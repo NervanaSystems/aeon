@@ -22,25 +22,46 @@
 using namespace std;
 using namespace nervana;
 
+#define GET_MACRO(_1,_2,_3,_4,_5,_6,_7,NAME,...) NAME
+#define ADD_ARG(...) GET_MACRO(__VA_ARGS__,F7,F6,F5,F4)(__VA_ARGS__)
+#define F7(t,desc,vs,vl,def,minimum,maximum) add(t,#t,desc,vs,vl,(decltype(t))def,(decltype(t))minimum,(decltype(t))maximum)
+#define F4(t,desc,vs,vl) add(t,#t,desc,vs,vl)
+#define F5(t,desc,vs,vl,def) add(t,#t,desc,vs,vl,(decltype(t))def)
+
+// #define ADD_ARGR(t,desc,vs,vl) add(t,#t,desc,vs,vl)
+// #define ADD_ARG(t,desc,vs,vl,def,minimum,maximum) add(t,#t,desc,vs,vl,(decltype(t))def,(decltype(t))minimum,(decltype(t))maximum)
+
 class ParamList1 : public ParameterCollection {
 public:
+    int int1;
+    int int2;
+    int int3;
+    int int4;
+    int int5;
+    float float1;
+    float float2;
+    float float3;
+    float float4;
+    float float5;
+    bool bool1;
+    std::string string1;
+
     ParamList1() {
-        add<int>("int1", "description of arg1", "a1", "arg-1", false, 3);
-        add<int>("int2", "description of arg2", "a2", "arg-2", false, 3, 0, 100);
-        add<int>("int3", "description of arg3", "a3", "arg-3", true, 3);
-        add<int>("int4", "description of arg4", "a4", "arg-4", true, 3, 0, 100);
-        add<int>("int5", "description of arg5", "a5", "arg-5", false, -50, -100, -10);
+        ADD_ARG(int1, "description of arg1", "a1", "arg-1", 3, 0, 50);
+        ADD_ARG(int2, "description of arg2", "a2", "arg-2", 3, 0, 100);
+        ADD_ARG(int3, "description of arg3", "a3", "arg-3");
+        ADD_ARG(int4, "description of arg4", "a4", "arg-4");
+        ADD_ARG(int5, "description of arg5", "a5", "arg-5", -50, -100, -10);
 
-        add<float>("float1", "description of arg1", "f1", "float-1", false, 3);
-        add<float>("float2", "description of arg2", "f2", "float-2", false, 3, 0, 100);
-        add<float>("float3", "description of arg3", "f3", "float-3", false, 3);
-        add<float>("float4", "description of arg4", "f4", "float-4", false, 3, 0, 100);
-        add<float>("float5", "description of arg5", "f5", "float-5", false, -50, -100, -10);
+        ADD_ARG(float1, "description of arg1", "f1", "float-1", 3, 0, 50);
+        ADD_ARG(float2, "description of arg2", "f2", "float-2", 3, 0, 100);
+        ADD_ARG(float3, "description of arg3", "f3", "float-3", 3, 0, 20);
+        ADD_ARG(float4, "description of arg4", "f4", "float-4", 3, 0, 100);
+        ADD_ARG(float5, "description of arg5", "f5", "float-5", -50, -100, -10);
 
-        add<bool>("bool1", "description of bool1", "b1", "bool-1", false, false);
+        ADD_ARG(bool1, "description of bool1", "b1", "bool-1", false);
 
-        add<string>("string1", "description of string1", "s1", "string-1", false, "blah");
-        // add<string>("selection1", "description of selection1", "sel1", "selection-1", false, "three", {"one","two","three"});
+        ADD_ARG(string1, "description of string1", "s1", "string-1","");
     }
 };
 
