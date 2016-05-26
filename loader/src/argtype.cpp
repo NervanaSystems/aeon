@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <set>
 #include "argtype.hpp"
 
 using namespace std;
@@ -84,10 +85,11 @@ map<string,shared_ptr<nervana::interface_ArgType> > nervana::ParameterCollection
     return rc;
 }
 
-bool nervana::ParameterCollection::parse(const std::string& args, parsed_args& parsedArgs) {
+bool nervana::ParameterCollection::parse(const std::string& args) {
     stringstream ss(args);
     deque<string> argList;
     string arg;
+    set<string> parsedArgsList;
     bool rc = true;
     while( ss >> arg ) { argList.push_back(arg); }
 
@@ -98,12 +100,24 @@ bool nervana::ParameterCollection::parse(const std::string& args, parsed_args& p
             string value;
             if( a->try_parse( argList ) ) {
                 argList.pop_front(); // skip verb
+
+                if(parsedArgsList.find(a->name())!=parsedArgsList.end()) {
+                    cout << a->verb_short() << "|--" << a->verb_long() << " in list multiple times" << endl;
+                    rc = false;
+                }
+
                 if(argList.size()>0) {
                     value = argList.front();
                     argList.pop_front(); // skip value
-                    if(parsedArgs.add_value(a, value)) {
+
+
+                    if(a->set_value(value)) {
+                        parsedArgsList.insert(a->name());
                         parsed = true;
                     }
+
+
+
                 } else {
                     cout << "missing value for " << a->verb_short() << "|--" << a->verb_long() << endl;
                     rc = false;
@@ -121,15 +135,15 @@ bool nervana::ParameterCollection::parse(const std::string& args, parsed_args& p
 
     // fill in any missing non-required args
     for( argtype_t a : _arg_list ) {
-        if(a->required() == false && parsedArgs.contains(a->name()) == false) {
-            parsedArgs.add_value(a, a->default_value());
+        if(a->required() == false && (parsedArgsList.find(a->name())==parsedArgsList.end())) {
+            a->set_value(a->default_value());
         }
     }
 
     // Check for required arguments
     if(rc == true) {
         for( argtype_t a : _arg_list ) {
-            if(a->required() && !parsedArgs.contains(a->name())) {
+            if(a->required() && (parsedArgsList.find(a->name())==parsedArgsList.end())) {
                 rc = false;
                 cout << "required argument -" << a->verb_short() << "|--" << a->verb_long() << " missing" << endl;
             }
@@ -143,36 +157,32 @@ bool nervana::ParameterCollection::parse(const std::string& args, parsed_args& p
     return rc;
 }
 
-bool nervana::parsed_args::add_value( const argtype_t& arg, const std::string& value ) {
-    bool rc = false;
-    if(value_map.find(arg->name())!=value_map.end()) {
-        cout << "argument -" << arg->verb_short() << "|--" << arg->verb_long() << " included more than once" << endl;
-    } else if( arg->validate( value ) ) {
-        rc = true;
-        value_map.insert({arg->name(), value});
-    }
-    return rc;
-}
+// bool nervana::parsed_args::add_value( const argtype_t& arg, const std::string& value ) {
+//     bool rc = false;
+//     if(value_map.find(arg->name())!=value_map.end()) {
+//         cout << "argument -" << arg->verb_short() << "|--" << arg->verb_long() << " included more than once" << endl;
+//     } else if( arg->validate( value ) ) {
+//         rc = true;
+//         value_map.insert({arg->name(), value});
+//     }
+//     return rc;
+// }
 
-bool nervana::parsed_args::contains( const std::string& name ) const {
-    return value_map.find(name)!=value_map.end();
-}
+// bool nervana::parsed_args::contains( const std::string& name ) const {
+//     return value_map.find(name)!=value_map.end();
+// }
 
 namespace nervana {
-    template<> int parsed_args::value<int>( const std::string& name ) const{
-        string value = value_map.at(name);
+    template<> int ArgType<int>::parse_value( const std::string& value ) const{
         return stoi(value);
     }
-    template<> float parsed_args::value<float>( const std::string& name ) const{
-        string value = value_map.at(name);
+    template<> float ArgType<float>::parse_value( const std::string& value ) const{
         return stof(value);
     }
-    template<> bool parsed_args::value<bool>( const std::string& name ) const{
-        string value = value_map.at(name);
-        return name == "true";
+    template<> bool ArgType<bool>::parse_value( const std::string& value ) const{
+        return value == "true";
     }
-    template<> string parsed_args::value<string>( const std::string& name ) const{
-        string value = value_map.at(name);
+    template<> string ArgType<string>::parse_value( const std::string& value ) const{
         return value;
     }
 }

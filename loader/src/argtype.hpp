@@ -20,6 +20,7 @@
 #include <memory>
 #include <map>
 #include <deque>
+#include <exception>
 
 namespace nervana {
     template<typename T> class ArgType;
@@ -44,6 +45,7 @@ public:
     // and set value to the parsed and validated value
     virtual bool try_parse( std::deque<std::string>& args ) const = 0;
     virtual bool validate( const std::string& value ) const = 0;
+    virtual bool set_value( const std::string& value ) = 0;
 };
 
 typedef std::shared_ptr<nervana::interface_ArgType> argtype_t;
@@ -62,6 +64,15 @@ public:
     virtual std::string verb_short() const override { return _verb_short; }
     virtual std::string verb_long() const override { return _verb_long; }
     virtual std::string default_value() const override { return make_string(_default); }
+    virtual bool set_value( const std::string& value ) override {
+        bool rc = true;
+        try {
+            *_value = parse_value(value);
+        } catch( std::exception err ) {
+            rc = false;
+        }
+        return rc;
+    }
 
     // If try_parse is successful it advances the args iterator to the value
     virtual bool try_parse( std::deque<std::string>& args ) const override {
@@ -75,15 +86,17 @@ public:
     bool validate( const std::string& value ) const override;
 
     ArgType( const std::string& name,
+            T& value,
             const std::string& description,
             const std::string& verb_short,
             const std::string& verb_long
             ) :
         _name{name},
+        _value{&value},
         _description{description},
         _verb_short{verb_short},
         _verb_long{verb_long},
-        _required{false},
+        _required{true},
         _default{},
         _minimum_value{},
         _maximum_value{},
@@ -92,12 +105,14 @@ public:
     }
 
     ArgType( const std::string& name,
+            T& value,
             const std::string& description,
             const std::string& verb_short,
             const std::string& verb_long,
             T default_value
             ) :
         _name{name},
+        _value{&value},
         _description{description},
         _verb_short{verb_short},
         _verb_long{verb_long},
@@ -110,6 +125,7 @@ public:
     }
 
     ArgType( const std::string& name,
+            T& value,
             const std::string& description,
             const std::string& verb_short,
             const std::string& verb_long,
@@ -118,6 +134,7 @@ public:
             T maximum_value
             ) :
         _name{name},
+        _value{&value},
         _description{description},
         _verb_short{verb_short},
         _verb_long{verb_long},
@@ -137,8 +154,10 @@ private:
     std::string make_string(int value) const { return std::to_string(value); }
     std::string make_string(float value) const { return std::to_string(value); }
     std::string make_string(bool value) const { return ( value ? "true" : "false" ); }
+    T parse_value( const std::string& value ) const;
 
     std::string         _name;
+    T*                  _value;
     std::string         _description;
     std::string         _verb_short;
     std::string         _verb_long;
@@ -154,18 +173,18 @@ private:
 //
 //=============================================================================
 
-class nervana::parsed_args {
-public:
-    template<typename T>
-    T value( const std::string& name ) const;
+// class nervana::parsed_args {
+// public:
+//     template<typename T>
+//     T value( const std::string& name ) const;
 
-    bool add_value( const argtype_t& arg, const std::string& value );
+//     bool add_value( const argtype_t& arg, const std::string& value );
 
-    bool contains( const std::string& name ) const;
+//     bool contains( const std::string& name ) const;
 
-private:
-    std::map<std::string,std::string>   value_map;
-};
+// private:
+//     std::map<std::string,std::string>   value_map;
+// };
 
 class nervana::ParameterCollection {
 public:
@@ -176,7 +195,7 @@ public:
                         const std::string& verb_short,
                         const std::string& verb_long )
     {
-        auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long);
+        auto arg = std::make_shared<nervana::ArgType<T> >(name, value, description, verb_short, verb_long);
         _arg_list.push_back(arg);
     }
 
@@ -188,7 +207,7 @@ public:
                         const std::string& verb_long,
                         T default_value )
     {
-        auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long, default_value);
+        auto arg = std::make_shared<nervana::ArgType<T> >(name, value, description, verb_short, verb_long, default_value);
         _arg_list.push_back(arg);
     }
 
@@ -202,7 +221,7 @@ public:
                         T minimum_value,
                         T maximum_value )
     {
-        auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long,
+        auto arg = std::make_shared<nervana::ArgType<T> >(name, value, description, verb_short, verb_long,
                                                  default_value, minimum_value, maximum_value);
         _arg_list.push_back(arg);
     }
@@ -211,9 +230,8 @@ public:
     // second is the actual argument
     std::map<std::string,argtype_t> get_args() const;
 
-    bool parse(const std::string& args, parsed_args& parsedArgs);
+    bool parse(const std::string& args);
 
 private:
-    // void register_arg(const ArgType& arg);
     std::vector<argtype_t>     _arg_list;
 };

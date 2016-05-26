@@ -47,11 +47,11 @@ public:
     std::string string1;
 
     ParamList1() {
-        ADD_ARG(int1, "description of arg1", "a1", "arg-1", 3, 0, 50);
-        ADD_ARG(int2, "description of arg2", "a2", "arg-2", 3, 0, 100);
-        ADD_ARG(int3, "description of arg3", "a3", "arg-3");
-        ADD_ARG(int4, "description of arg4", "a4", "arg-4");
-        ADD_ARG(int5, "description of arg5", "a5", "arg-5", -50, -100, -10);
+        ADD_ARG(int1, "description of arg1", "i1", "int-1", 3, 0, 50);
+        ADD_ARG(int2, "description of arg2", "i2", "int-2", 3, 0, 100);
+        ADD_ARG(int3, "description of arg3", "i3", "int-3");
+        ADD_ARG(int4, "description of arg4", "i4", "int-4");
+        ADD_ARG(int5, "description of arg5", "i5", "int-5", -50, -100, -10);
 
         ADD_ARG(float1, "description of arg1", "f1", "float-1", 3, 0, 50);
         ADD_ARG(float2, "description of arg2", "f2", "float-2", 3, 0, 100);
@@ -61,7 +61,7 @@ public:
 
         ADD_ARG(bool1, "description of bool1", "b1", "bool-1", false);
 
-        ADD_ARG(string1, "description of string1", "s1", "string-1","");
+        ADD_ARG(string1, "description of string1", "s1", "string-1","blah");
     }
 };
 
@@ -72,41 +72,36 @@ TEST(loader,argtype) {
     ASSERT_EQ(12, args.size());
 
     {
-        string argString = "-a1 5";
-        parsed_args parsed;
-        EXPECT_FALSE(_ParamList1.parse(argString,parsed)) << "**** failed to detect missing required arguments";
+        string argString = "-i1 5";
+        EXPECT_FALSE(_ParamList1.parse(argString)) << "**** failed to detect missing required arguments in '" << argString << "'";
     }
     {
-        string argString = "-a1 5 -a3 10 -a4 20";
-        parsed_args parsed;
-        EXPECT_TRUE(_ParamList1.parse(argString,parsed));
-        EXPECT_EQ(5,parsed.value<int>("int1"));
-        EXPECT_EQ(3,parsed.value<int>("int2"));
-        EXPECT_EQ(10,parsed.value<int>("int3"));
-        EXPECT_EQ(20,parsed.value<int>("int4"));
-        EXPECT_EQ(-50,parsed.value<int>("int5"));
-        EXPECT_EQ(3,parsed.value<float>("float1"));
-        EXPECT_EQ(3,parsed.value<float>("float2"));
-        EXPECT_EQ(3,parsed.value<float>("float3"));
-        EXPECT_EQ(3,parsed.value<float>("float4"));
-        EXPECT_EQ(-50,parsed.value<float>("float5"));
-        EXPECT_EQ(false,parsed.value<bool>("bool1"));
-        EXPECT_STREQ("blah",parsed.value<string>("string1").c_str());
+        string argString = "-i1 5 -i3 10 --int-4 20";
+        EXPECT_TRUE(_ParamList1.parse(argString)) << argString;
+        EXPECT_EQ(5,_ParamList1.int1);
+        EXPECT_EQ(3,_ParamList1.int2);
+        EXPECT_EQ(10,_ParamList1.int3);
+        EXPECT_EQ(20,_ParamList1.int4);
+        EXPECT_EQ(-50,_ParamList1.int5);
+        EXPECT_EQ(3,_ParamList1.float1);
+        EXPECT_EQ(3,_ParamList1.float2);
+        EXPECT_EQ(3,_ParamList1.float3);
+        EXPECT_EQ(3,_ParamList1.float4);
+        EXPECT_EQ(-50,_ParamList1.float5);
+        EXPECT_EQ(false,_ParamList1.bool1);
+        EXPECT_STREQ("blah",_ParamList1.string1.c_str());
     }
     {
-        string argString = "-a1 5 -a3 10 -a4";
-        parsed_args parsed;
-        EXPECT_FALSE(_ParamList1.parse(argString,parsed)) << "**** missing value for -a4 arg";
+        string argString = "-i1 5 -i3 10 -i4";
+        EXPECT_FALSE(_ParamList1.parse(argString)) << "**** missing value for -a4 arg in '" << argString << "'";
     }
     {
-        string argString = "-a1 5 -a3 10 -a4 true";
-        parsed_args parsed;
-        EXPECT_FALSE(_ParamList1.parse(argString,parsed)) << "**** non-int value for -a4";
+        string argString = "-i1 5 -i3 10 -i4 true";
+        EXPECT_FALSE(_ParamList1.parse(argString)) << "**** non-int value for -a4 in '" << argString << "'";
     }
     {
-        string argString = "-a1 5 -a3 10 -a4 20 --arg-4 30";
-        parsed_args parsed;
-        EXPECT_FALSE(_ParamList1.parse(argString,parsed)) << "**** argument int4 included more than once";
+        string argString = "-i1 5 -i3 10 -i4 20 --int-4 30";
+        EXPECT_FALSE(_ParamList1.parse(argString)) << "**** argument int4 included more than once in '" << argString << "'";
     }
 
     // Test arg validators
@@ -115,7 +110,7 @@ TEST(loader,argtype) {
         const interface_ArgType& arg = *args["int1"];
         EXPECT_EQ("3",arg.default_value());
         EXPECT_TRUE(arg.validate("10"));
-        EXPECT_TRUE(arg.validate("1000"));
+        EXPECT_FALSE(arg.validate("1000"));
     }
 
     // arg2
