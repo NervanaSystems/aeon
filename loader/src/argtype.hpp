@@ -26,7 +26,6 @@ namespace nervana {
     template<typename T> class ArgType;
     class interface_ArgType;
     class ParameterCollection;
-    class parsed_args;
 }
 
 // GET_MACRO and ADD_ARG work together to convert the number of arguments to
@@ -59,7 +58,6 @@ public:
 };
 
 typedef std::shared_ptr<nervana::interface_ArgType> argtype_t;
-typedef std::map<std::string,argtype_t> argmap_t;
 
 //=============================================================================
 //
@@ -182,19 +180,6 @@ private:
 //=============================================================================
 //
 //=============================================================================
-
-// class nervana::parsed_args {
-// public:
-//     template<typename T>
-//     T value( const std::string& name ) const;
-
-//     bool add_value( const argtype_t& arg, const std::string& value );
-
-//     bool contains( const std::string& name ) const;
-
-// private:
-//     std::map<std::string,std::string>   value_map;
-// };
 
 class nervana::ParameterCollection {
 public:
