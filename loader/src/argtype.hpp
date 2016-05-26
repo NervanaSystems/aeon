@@ -83,9 +83,11 @@ public:
         _description{description},
         _verb_short{verb_short},
         _verb_long{verb_long},
-        _required{true},
-        _default{default_value},
-        _range_valid{false}
+        _required{false},
+        _default{},
+        _minimum_value{},
+        _maximum_value{},
+        _range_valid{true}
     {
     }
 
@@ -101,6 +103,8 @@ public:
         _verb_long{verb_long},
         _required{false},
         _default{default_value},
+        _minimum_value{},
+        _maximum_value{},
         _range_valid{false}
     {
     }
@@ -172,8 +176,8 @@ public:
                         const std::string& verb_short,
                         const std::string& verb_long )
     {
-        // auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long);
-        // _arg_list.push_back(arg);
+        auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long);
+        _arg_list.push_back(arg);
     }
 
     template<typename T> void add(
@@ -184,8 +188,8 @@ public:
                         const std::string& verb_long,
                         T default_value )
     {
-        // auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long, default_value);
-        // _arg_list.push_back(arg);
+        auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long, default_value);
+        _arg_list.push_back(arg);
     }
 
     template<typename T> void add(
@@ -198,9 +202,9 @@ public:
                         T minimum_value,
                         T maximum_value )
     {
-        // auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long,
-        //                                          default_value, minimum_value, maximum_value);
-        // _arg_list.push_back(arg);
+        auto arg = std::make_shared<nervana::ArgType<T> >(name, description, verb_short, verb_long,
+                                                 default_value, minimum_value, maximum_value);
+        _arg_list.push_back(arg);
     }
 
     // first of map is the friendly name of the argument
