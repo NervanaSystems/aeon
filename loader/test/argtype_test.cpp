@@ -22,15 +22,6 @@
 using namespace std;
 using namespace nervana;
 
-#define GET_MACRO(_1,_2,_3,_4,_5,_6,_7,NAME,...) NAME
-#define ADD_ARG(...) GET_MACRO(__VA_ARGS__,F7,F6,F5,F4)(__VA_ARGS__)
-#define F7(t,desc,vs,vl,def,minimum,maximum) add(t,#t,desc,vs,vl,(decltype(t))def,(decltype(t))minimum,(decltype(t))maximum)
-#define F4(t,desc,vs,vl) add(t,#t,desc,vs,vl)
-#define F5(t,desc,vs,vl,def) add(t,#t,desc,vs,vl,(decltype(t))def)
-
-// #define ADD_ARGR(t,desc,vs,vl) add(t,#t,desc,vs,vl)
-// #define ADD_ARG(t,desc,vs,vl,def,minimum,maximum) add(t,#t,desc,vs,vl,(decltype(t))def,(decltype(t))minimum,(decltype(t))maximum)
-
 class ParamList1 : public ParameterCollection {
 public:
     int int1;
