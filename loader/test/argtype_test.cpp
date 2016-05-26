@@ -22,7 +22,7 @@
 using namespace std;
 using namespace nervana;
 
-class ParamList1 : public ParameterCollection {
+class ParamList1 : public parameter_collection {
 public:
     int int1;
     int int2;

@@ -1,12 +1,14 @@
 #include "etl_image.hpp"
 
+using namespace std;
+
 namespace nervana {
 
     /* Extract */
     image_extractor::image_extractor(param_ptr_t image_extractor_params)
     {
-        _channel_count = *image_extractor_params["channel_count"]->get_value();
-        if !(_channel_count == 1 || _channel_count == 3)
+        _channel_count = image_extractor_params->channels;
+        if (!(_channel_count == 1 || _channel_count == 3))
         {
             std::stringstream ss;
             ss << "Unsupported number of channels in image: " << _channel_count;
@@ -22,7 +24,7 @@ namespace nervana {
     {
         cv::Mat output_img;
         cv::Mat input_img(1, insize, _pixel_type, inbuf);
-        cv::imdecode(input_img, _color_mode, output_img);
+        cv::imdecode(input_img, _color_mode, &output_img);
 
         auto output = make_shared<decoded_image>(output_img);
         return static_pointer_cast<decoded_media>(output);
@@ -51,21 +53,21 @@ namespace nervana {
     media_ptr_t image_transformer::transform(settings_ptr_t transform_settings,
                                              const media_ptr_t& input)
     {
-        fill_settings(transform_settings)
+        fill_settings(transform_settings);
 
         cv::Mat rotatedImage;
         auto img = static_pointer_cast<decoded_image>(input);
-        rotate(img->get_image(), rotatedImage, transform_settings->get_angle());
-        cv::Mat croppedImage = rotatedImage(transform_settings->get_cropbox());
+        rotate(img->get_image(), rotatedImage, transform_settings->angle);
+        cv::Mat croppedImage = rotatedImage(transform_settings->cropbox);
 
         cv::Mat resizedImage;
-        resize(croppedImage, resizedImage, transform_settings->get_size());
-        cbsjitter(croppedImage, transform_settings->get_cbs());
-        lighting(croppedImage, transform_settings->get_colornoise());
+        resize(croppedImage, resizedImage, transform_settings->size);
+        cbsjitter(croppedImage, transform_settings->cbs);
+        lighting(croppedImage, transform_settings->colornoise);
 
         cv::Mat *finalImage = &resizedImage;
         cv::Mat flippedImage;
-        if (transform_settings->get_flip()) {
+        if (transform_settings->flip) {
             cv::flip(resizedImage, flippedImage, 1);
             finalImage = &flippedImage;
         }
@@ -76,11 +78,10 @@ namespace nervana {
 
     void image_transformer::fill_settings(settings_ptr_t settings)
     {
-        if (settings->filled())
-        {
-            return;
-        }
-
+        // if (settings->filled())
+        // {
+        //     return;
+        // }
     }
 
     void image_transformer::rotate(const cv::Mat& input, cv::Mat& output, int angle)
@@ -148,6 +149,4 @@ namespace nervana {
         cv::Mat channels[3] = {b, g, r};
         cv::split(img, channels);
     }
-
-
 }

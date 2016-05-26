@@ -25,7 +25,7 @@
 namespace nervana {
     template<typename T> class ArgType;
     class interface_ArgType;
-    class ParameterCollection;
+    class parameter_collection;
 }
 
 // GET_MACRO and ADD_ARG work together to convert the number of arguments to
@@ -181,7 +181,7 @@ private:
 //
 //=============================================================================
 
-class nervana::ParameterCollection {
+class nervana::parameter_collection {
 public:
     template<typename T> void add(
                         T& value,
