@@ -25,7 +25,9 @@ SRCS            := \
 	buffer.cpp \
 	loader.cpp \
 	argtype.cpp \
-	etl_image.cpp
+	etl_image.cpp \
+	codec.cpp \
+	video.cpp
 OBJS 			= $(subst .cpp,.o,$(SRCS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -fPIC
 CFLAGSDBG       := -g -Wall -O0 -std=c++11

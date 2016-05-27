@@ -79,80 +79,19 @@ public:
 
 class RawMedia {
 public:
-    RawMedia() : _bufSize(0), _dataSize(0), _sampleSize(0) {
-    }
-
-    virtual ~RawMedia() {
-        for (uint i = 0; i < _bufs.size(); i++) {
-            delete[] _bufs[i];
-        }
-    }
-
-    void reset() {
-        _dataSize = 0;
-    }
-
-    void addBufs(int count, int size) {
-        for (int i = 0; i < count; i++) {
-            _bufs.push_back(new char[size]);
-        }
-        _bufSize = size;
-    }
-
-    void fillBufs(char** frames, int frameSize) {
-        for (uint i = 0; i < _bufs.size(); i++) {
-            memcpy(_bufs[i] + _dataSize, frames[i], frameSize);
-        }
-        _dataSize += frameSize;
-    }
-
-    void growBufs(int grow) {
-        for (uint i = 0; i < _bufs.size(); i++) {
-            char* buf = new char[_bufSize + grow];
-            memcpy(buf, _bufs[i], _dataSize);
-            delete[] _bufs[i];
-            _bufs[i] = buf;
-        }
-        _bufSize += grow;
-    }
-
-    void setSampleSize(int sampleSize) {
-        _sampleSize = sampleSize;
-    }
-
-    int size() {
-        return _bufs.size();
-    }
-
-    char* getBuf(int idx) {
-        return _bufs[idx];
-    }
-
-    int bufSize() {
-        return _bufSize;
-    }
-
-    int dataSize() {
-        return _dataSize;
-    }
-
-    int sampleSize() {
-        return _sampleSize;
-    }
-
-    void copyData(char* buf, int bufSize) {
-        if (_dataSize * (int) _bufs.size() > bufSize) {
-            std::stringstream ss;
-            ss << "Buffer too small to copy decoded data. Buffer size " <<
-                   bufSize << " Data size " << _dataSize * _bufs.size();
-            throw std::runtime_error(ss.str());
-        }
-
-        for (uint i = 0; i < _bufs.size(); i++) {
-            memcpy(buf, _bufs[i], _dataSize);
-            buf += _dataSize;
-        }
-    }
+    RawMedia();
+    virtual ~RawMedia();
+    void reset();
+    void addBufs(int count, int size);
+    void fillBufs(char** frames, int frameSize);
+    void growBufs(int grow);
+    void setSampleSize(int sampleSize);
+    int size();
+    char* getBuf(int idx);
+    int bufSize();
+    int dataSize();
+    int sampleSize();
+    void copyData(char* buf, int bufSize);
 
 private:
     std::vector<char*>          _bufs;
