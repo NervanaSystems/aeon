@@ -5,7 +5,7 @@ using namespace std;
 namespace nervana {
 
     /* Extract */
-    image_extractor::image_extractor(param_ptr_t image_extractor_params)
+    image_extractor::image_extractor(param_ptr image_extractor_params)
     {
         _channel_count = image_extractor_params->channels;
         if (!(_channel_count == 1 || _channel_count == 3))
@@ -20,14 +20,13 @@ namespace nervana {
 
     }
 
-    media_ptr_t image_extractor::extract(char* inbuf, int insize)
+    media_ptr image_extractor::extract(char* inbuf, int insize)
     {
         cv::Mat output_img;
         cv::Mat input_img(1, insize, _pixel_type, inbuf);
         cv::imdecode(input_img, _color_mode, &output_img);
 
-        auto output = make_shared<decoded_image>(output_img);
-        return static_pointer_cast<decoded_media>(output);
+        return make_shared<decoded_image>(output_img);
     }
 
 
@@ -45,13 +44,13 @@ namespace nervana {
         randomly sampled contrast, brightness, saturation, lighting values (based on params->cbs, lighting bounds)
 
     */
-    image_transformer::image_transformer(param_ptr_t image_transformer_params)
+    image_transformer::image_transformer(param_ptr image_transformer_params)
     {
         // should we be doing anything in here?
     }
 
-    media_ptr_t image_transformer::transform(settings_ptr_t transform_settings,
-                                             const media_ptr_t& input)
+    media_ptr image_transformer::transform(settings_ptr transform_settings,
+                                             const media_ptr& input)
     {
         fill_settings(transform_settings);
 
@@ -72,11 +71,10 @@ namespace nervana {
             finalImage = &flippedImage;
         }
 
-        auto output = make_shared<decoded_image>(*finalImage);
-        return static_pointer_cast<decoded_media>(output);
+        return make_shared<decoded_image>(*finalImage);
     }
 
-    void image_transformer::fill_settings(settings_ptr_t settings)
+    void image_transformer::fill_settings(settings_ptr settings)
     {
         // if (settings->filled())
         // {
@@ -117,9 +115,9 @@ namespace nervana {
 
 
 
-    image_loader::image_loader(param_ptr_t image_loader_params) {}
+    image_loader::image_loader(param_ptr image_loader_params) {}
 
-    void image_loader::load(char* outbuf, int outsize, const media_ptr_t& input)
+    void image_loader::load(char* outbuf, int outsize, const media_ptr& input)
     {
         auto img = static_pointer_cast<decoded_image>(input);
         this->split(img->get_image(), outbuf, outsize);

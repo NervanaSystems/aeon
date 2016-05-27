@@ -22,9 +22,9 @@ namespace nervana {
 
     class image_extractor : public extractor_interface {
     public:
-        image_extractor(param_ptr_t);
+        image_extractor(param_ptr);
         ~image_extractor() {}
-        virtual media_ptr_t extract(char*, int) override;
+        virtual media_ptr extract(char*, int) override;
 
     private:
         int _channel_count;
@@ -35,10 +35,10 @@ namespace nervana {
 
     class image_transformer : public transformer_interface {
     public:
-        image_transformer(param_ptr_t);
+        image_transformer(param_ptr);
         ~image_transformer() {}
-        virtual media_ptr_t transform(settings_ptr_t, const media_ptr_t&) override;
-        virtual void fill_settings(settings_ptr_t) override;
+        virtual media_ptr transform(settings_ptr, const media_ptr&) override;
+        virtual void fill_settings(settings_ptr) override;
 
     private:
         void rotate(const cv::Mat& input, cv::Mat& output, int angle);
@@ -51,9 +51,9 @@ namespace nervana {
 
     class image_loader : public loader_interface {
     public:
-        image_loader(param_ptr_t);
+        image_loader(param_ptr);
         ~image_loader() {}
-        virtual void load(char*, int, const media_ptr_t&) override;
+        virtual void load(char*, int, const media_ptr&) override;
 
     private:
         void split(cv::Mat& img, char* buf, int bufSize);

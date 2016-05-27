@@ -26,9 +26,9 @@ private:
 };
 
 
-typedef std::shared_ptr<nervana::decoded_media>        media_ptr_t;
-typedef std::shared_ptr<nervana::image_params>         param_ptr_t;
-typedef std::shared_ptr<nervana::settings>             settings_ptr_t;
+typedef std::shared_ptr<nervana::decoded_media>        media_ptr;
+typedef std::shared_ptr<nervana::image_params>         param_ptr;
+typedef std::shared_ptr<nervana::settings>             settings_ptr;
 
 class nervana::image_params : public parameter_collection {
 public:
