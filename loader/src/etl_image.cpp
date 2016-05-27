@@ -5,8 +5,10 @@ using namespace std;
 namespace nervana {
 
     /* Extract */
-    image_extractor::image_extractor(param_ptr image_extractor_params)
+    image_extractor::image_extractor(param_ptr pptr)
     {
+        auto image_extractor_params = static_pointer_cast<image_params>(pptr);
+
         _channel_count = image_extractor_params->channels;
         if (!(_channel_count == 1 || _channel_count == 3))
         {

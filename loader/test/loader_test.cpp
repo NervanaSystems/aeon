@@ -22,6 +22,7 @@
 #include "params.hpp"
 #include "etl_interface.hpp"
 #include "etl_image.hpp"
+#include "etl_label.hpp"
 #include "provider.hpp"
 
 extern DataGen _datagen;
@@ -30,6 +31,7 @@ using namespace std;
 using namespace nervana;
 
 static param_ptr _ip1 = make_shared<image_params>();
+static param_ptr _lp1 = make_shared<label_params>();
 
 // An Integer Provider
 
