@@ -108,7 +108,7 @@ int DataGen::Create() {
             BatchFileWriter bf;
             bf.open(fileName, "");
             for(int i=0; i<batchSize; i++) {
-                int target = 42;
+                int target = imageNumber + 42;
                 vector<unsigned char> imageData = RenderImage( imageNumber++, target );
                 int imageSize = imageData.size();
                 bf.writeItem((char*)imageData.data(),(char*)&target,(uint)imageSize,(uint)sizeof(target));

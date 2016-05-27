@@ -13,6 +13,7 @@ enum class MediaType {
     VIDEO = 1,
     AUDIO = 2,
     TEXT = 3,
+    TARGET = 4,
 };
 
 /*  ABSTRACT INTERFACES */
@@ -20,8 +21,6 @@ class nervana::decoded_media {
 public:
     virtual ~decoded_media() {}
     virtual MediaType get_type() = 0;
-
-private:
 };
 
 

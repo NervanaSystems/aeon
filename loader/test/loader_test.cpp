@@ -22,6 +22,7 @@
 #include "params.hpp"
 #include "etl_interface.hpp"
 #include "etl_image.hpp"
+#include "provider.hpp"
 
 extern DataGen _datagen;
 
@@ -30,7 +31,11 @@ using namespace nervana;
 
 static param_ptr _ip1 = make_shared<image_params>();
 
-TEST(myloader,argtype) {
+// An Integer Provider
+
+class label_extractor ::
+
+TEST(myloader, argtype) {
     map<string,shared_ptr<interface_ArgType> > args = _ip1->get_args();
     ASSERT_EQ(11, args.size());
 
@@ -39,6 +44,21 @@ TEST(myloader,argtype) {
         EXPECT_TRUE(_ip1->parse(argString)) << "**** missing required arguments in '" << argString << "'";
         auto ie_p = make_shared<image_extractor>(_ip1);
         EXPECT_EQ(ie_p->get_channel_count(), 3);
+    }
+    {
+        BatchFileReader bf;
+        string batchFileName = _datagen.GetDatasetPath() + "/archive-0.cpio";
+        bf.open(batchFileName);
+
+        // Just get a single item
+        auto data = bf.read();
+        auto labels = bf.read();
+        bf.close();
+
+        // Take the int and do provision with it.
+
+
+
     }
 
 }
