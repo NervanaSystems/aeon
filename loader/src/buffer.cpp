@@ -35,7 +35,7 @@ Buffer::Buffer(int size, bool pinned)
 }
 
 Buffer::Buffer(char* data, int size)
-: _data(data), _size(size), _cur(_data), _idx(0), _alloc(false) {
+: _data(data), _size(size), _cur(_data), _idx(0), _alloc(false), _pinned(false) {
 }
 
 Buffer::~Buffer() {
