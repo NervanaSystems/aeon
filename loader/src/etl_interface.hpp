@@ -10,7 +10,7 @@ namespace nervana {
 
 class nervana::extractor_interface {
 public:
-    virtual ~extractor_interface();
+    virtual ~extractor_interface() {}
     virtual media_ptr extract(char*, int) = 0;
 
 private:
@@ -18,7 +18,7 @@ private:
 
 class nervana::transformer_interface {
 public:
-    virtual ~transformer_interface();
+    virtual ~transformer_interface() {}
     virtual media_ptr transform(settings_ptr, const media_ptr&) = 0;
     virtual void fill_settings(settings_ptr) = 0;
 
@@ -27,7 +27,7 @@ private:
 
 class nervana::loader_interface {
 public:
-    virtual ~loader_interface();
+    virtual ~loader_interface() {}
     virtual void load(char*, int, const media_ptr&) = 0;
 
 private:

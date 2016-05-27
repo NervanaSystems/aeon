@@ -14,7 +14,7 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------
 
-SRCS            := main.cpp thread_test.cpp datagen.cpp decode_test.cpp argtype_test.cpp
+SRCS            := main.cpp thread_test.cpp datagen.cpp decode_test.cpp argtype_test.cpp loader_test.cpp
 TOBJS 			= $(subst .cpp,.o,$(SRCS))
 OBJS 			= $(subst .c,.o,$(TOBJS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3

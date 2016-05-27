@@ -50,23 +50,24 @@ namespace nervana {
     }
 
     media_ptr image_transformer::transform(settings_ptr transform_settings,
-                                             const media_ptr& input)
+                                           const media_ptr& input)
     {
-        fill_settings(transform_settings);
+        auto img_xform = static_pointer_cast<image_settings>(transform_settings);
+        fill_settings(img_xform);
 
         cv::Mat rotatedImage;
         auto img = static_pointer_cast<decoded_image>(input);
-        rotate(img->get_image(), rotatedImage, transform_settings->angle);
-        cv::Mat croppedImage = rotatedImage(transform_settings->cropbox);
+        rotate(img->get_image(), rotatedImage, img_xform->angle);
+        cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
 
         cv::Mat resizedImage;
-        resize(croppedImage, resizedImage, transform_settings->size);
-        cbsjitter(croppedImage, transform_settings->cbs);
-        lighting(croppedImage, transform_settings->colornoise);
+        resize(croppedImage, resizedImage, img_xform->size);
+        cbsjitter(croppedImage, img_xform->cbs);
+        lighting(croppedImage, img_xform->colornoise);
 
         cv::Mat *finalImage = &resizedImage;
         cv::Mat flippedImage;
-        if (transform_settings->flip) {
+        if (img_xform->flip) {
             cv::flip(resizedImage, flippedImage, 1);
             finalImage = &flippedImage;
         }

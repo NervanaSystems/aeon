@@ -5,7 +5,6 @@
 namespace nervana {
     class decoded_media;
     class image_params;
-    class settings;
 }
 
 enum class MediaType {
@@ -19,7 +18,7 @@ enum class MediaType {
 /*  ABSTRACT INTERFACES */
 class nervana::decoded_media {
 public:
-    virtual ~decoded_media();
+    virtual ~decoded_media() {}
     virtual MediaType get_type() = 0;
 
 private:
@@ -28,7 +27,7 @@ private:
 
 typedef std::shared_ptr<nervana::decoded_media>        media_ptr;
 typedef std::shared_ptr<nervana::image_params>         param_ptr;
-typedef std::shared_ptr<nervana::settings>             settings_ptr;
+typedef std::shared_ptr<nervana::parameter_collection> settings_ptr;
 
 class nervana::image_params : public parameter_collection {
 public:
@@ -60,14 +59,4 @@ public:
         ADD_ARG(flip, "randomly flip?", "f1", "flip", false);
         ADD_ARG(center, "always center?", "c1", "center", true);
     }
-};
-
-class nervana::settings : public parameter_collection {
-public:
-    cv::Rect cropbox;
-    cv::Size size;
-    int angle;
-    bool flip;
-    float colornoise[3];  //pixelwise random values
-    float cbs[3];  // contrast, brightness, saturation
 };
