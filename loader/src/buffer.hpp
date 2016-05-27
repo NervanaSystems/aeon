@@ -28,7 +28,6 @@
 
 #include "streams.hpp"
 
-template<typename T>
 class Buffer {
 public:
     explicit Buffer(int size, bool pinned = false)
@@ -37,7 +36,7 @@ public:
         _cur = _data;
     }
 
-    Buffer(T* data, int size)
+    Buffer(char* data, int size)
     : _data(data), _size(size), _cur(_data), _idx(0), _alloc(false) {
     }
 
@@ -56,7 +55,7 @@ public:
 
     void dump() {
         uint8_t* data = reinterpret_cast<uint8_t*>(_data);
-        int len = _size * sizeof(T);
+        int len = _size;
         assert(len % 16 == 0);
         int index = 0;
         while (index < len) {
@@ -85,7 +84,7 @@ public:
         _idx += len;
     }
 
-    T* getItem(int index, int& len) {
+    char* getItem(int index, int& len) {
         if (index >= (int) _items.size()) {
             return 0;
         }
@@ -97,7 +96,7 @@ public:
         return _items.size();
     }
 
-    T* getCurrent() {
+    char* getCurrent() {
         return _cur;
     }
 
@@ -115,9 +114,9 @@ public:
         pushItem(size);
     }
 
-    void read(T* src, int size) {
+    void read(char* src, int size) {
         resizeIfNeeded(size);
-        memcpy((void *) _cur, (void *) src, size * sizeof(T));
+        memcpy((void *) _cur, (void *) src, size);
         pushItem(size);
     }
 
@@ -133,32 +132,32 @@ private:
         _size = getLevel() + inc;
         // Allocate a bit more to minimize reallocations.
         _size += _size / 8;
-        T* data = alloc();
-        memcpy(data, _data, getLevel() * sizeof(T));
+        char* data = alloc();
+        memcpy(data, _data, getLevel());
         dealloc(_data);
         _data = data;
         _cur = _data + _idx;
     }
 
-    T* alloc() {
-        T*      data;
+    char* alloc() {
+        char*      data;
         assert(_alloc == true);
         if (_pinned == true) {
 #if HAS_GPU
-            CUresult status = cuMemAllocHost((void**)&data, _size * sizeof(T));
+            CUresult status = cuMemAllocHost((void**)&data, _size);
             if (status != CUDA_SUCCESS) {
                 throw std::bad_alloc();
             }
 #else
-            data = new T[_size];
+            data = new char[_size];
 #endif
         } else {
-            data = new T[_size];
+            data = new char[_size];
         }
         return data;
     }
 
-    void dealloc(T* data) {
+    void dealloc(char* data) {
         if (_pinned == true) {
 #if HAS_GPU
             cuMemFreeHost(data);
@@ -171,11 +170,11 @@ private:
     }
 
 public:
-    T*                          _data;
+    char*                       _data;
     uint                        _size;
 
 protected:
-    T*                          _cur;
+    char*                       _cur;
     int                         _idx;
     std::vector<int>            _items;
     std::vector<int>            _lens;
@@ -183,8 +182,7 @@ protected:
     bool                        _pinned;
 };
 
-typedef Buffer<char>                                    CharBuffer;
-typedef std::pair<CharBuffer*, CharBuffer*>             BufferPair;
+typedef std::pair<Buffer*, Buffer*>             BufferPair;
 
 class BufferPool {
 public:

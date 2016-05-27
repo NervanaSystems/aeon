@@ -31,8 +31,8 @@
 BufferPool::BufferPool(int dataSize, int targetSize, bool pinned, int count)
 : _count(count), _used(0), _readPos(0), _writePos(0) {
     for (int i = 0; i < count; i++) {
-        CharBuffer* dataBuffer = new CharBuffer(dataSize, pinned);
-        CharBuffer* targetBuffer = new CharBuffer(targetSize, pinned);
+        Buffer* dataBuffer = new Buffer(dataSize, pinned);
+        Buffer* targetBuffer = new Buffer(targetSize, pinned);
         _bufs.push_back(make_pair(dataBuffer, targetBuffer));
     }
 }

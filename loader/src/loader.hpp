@@ -115,7 +115,7 @@ public:
     int start();
     void stop();
     int reset();
-    void next(Buffer<char>* dataBuf, Buffer<char>* targetsBuf);
+    void next(Buffer* dataBuf, Buffer* targetsBuf);
     void next();
     std::shared_ptr<Reader> getReader();
     std::shared_ptr<Device> getDevice();

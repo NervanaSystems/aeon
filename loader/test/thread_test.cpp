@@ -39,8 +39,8 @@ int single(Loader* loader, int epochCount, int minibatchCount,
     shared_ptr<Media> media = Media::create(mediaParams, ingestParams, 0);
     unique_ptr<char> dataBuf = unique_ptr<char>(new char[datumSize]);
     memset(dataBuf.get(), 0, datumSize);
-    CharBuffer dataBuffer(0);
-    CharBuffer targetBuffer(0);
+    Buffer dataBuffer(0);
+    Buffer targetBuffer(0);
     BufferPair bufPair = make_pair(&dataBuffer, &targetBuffer);
     for (int epoch = 0; epoch < epochCount; epoch++) {
         reader->reset();

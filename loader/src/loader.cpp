@@ -335,7 +335,7 @@ int Loader::reset() {
     return 0;
 }
 
-void Loader::next(Buffer<char>* dataBuf, Buffer<char>* targetsBuf) {
+void Loader::next(Buffer* dataBuf, Buffer* targetsBuf) {
     // Copy minibatch data into the buffers passed in.
     // Only used for testing purposes.
     {
@@ -343,9 +343,9 @@ void Loader::next(Buffer<char>* dataBuf, Buffer<char>* targetsBuf) {
         while (_decodeBufs->empty()) {
             _decodeBufs->waitForNonEmpty(lock);
         }
-        Buffer<char>* data = _decodeBufs->getForRead().first;
+        Buffer* data = _decodeBufs->getForRead().first;
         memcpy(dataBuf->_data, data->_data, dataBuf->_size);
-        Buffer<char>* targets = _decodeBufs->getForRead().second;
+        Buffer* targets = _decodeBufs->getForRead().second;
         memcpy(targetsBuf->_data, targets->_data, targetsBuf->_size);
         _decodeBufs->advanceReadPos();
     }
