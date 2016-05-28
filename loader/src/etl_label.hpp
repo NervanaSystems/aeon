@@ -2,6 +2,8 @@
 #include "etl_interface.hpp"
 #include "params.hpp"
 
+using namespace std;
+
 namespace nervana {
     class label_params : public parameter_collection {
     public:
@@ -13,7 +15,7 @@ namespace nervana {
         float ld_offset;
         bool ld_dofloat;
 
-        image_params() {
+        label_params() {
             // Optionals with some standard defaults
             ADD_ARG(ex_offset, "offset to add on extract", "eo", "extract_offset", 0, -100, 100);
             ADD_ARG(tx_scale, "scale to multiply by on transform", "tsc", "transform scale", 1, -5, 5);
@@ -55,7 +57,7 @@ namespace nervana {
         ~label_extractor() {}
         media_ptr extract(char* buf, int bufSize) override {
             if (bufSize != 4) {
-                throw std::runtime_error("Only 4 byte buffers can be loaded as int32")
+                throw runtime_error("Only 4 byte buffers can be loaded as int32");
             }
             return make_shared<decoded_label>(*reinterpret_cast<int *>(buf) + _ex_offset);
         }
@@ -67,7 +69,7 @@ namespace nervana {
     class label_transformer : public transformer_interface {
     public:
         label_transformer(param_ptr pptr) {
-            shared_pt<label_params> lbl_ptr = static_pointer_cast<label_params>(pptr);
+            shared_ptr<label_params> lbl_ptr = static_pointer_cast<label_params>(pptr);
             _tx_scale = lbl_ptr->tx_scale;
             _tx_shift = lbl_ptr->tx_shift;
         }
@@ -88,7 +90,7 @@ namespace nervana {
     class label_loader : public loader_interface {
     public:
         label_loader(param_ptr pptr) {
-            shared_pt<label_params> lbl_ptr = static_pointer_cast<label_params>(pptr);
+            shared_ptr<label_params> lbl_ptr = static_pointer_cast<label_params>(pptr);
             _ld_offset = lbl_ptr->ld_offset;
             _ld_dofloat = lbl_ptr->ld_dofloat;
         }
