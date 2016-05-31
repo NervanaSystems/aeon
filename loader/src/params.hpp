@@ -44,9 +44,9 @@ public:
 
     image_params() {
         // Required Params
-        ADD_ARG(height, "image height", "h", "height");
-        ADD_ARG(width, "image width", "w", "width");
-        ADD_ARG(scale_pct, "percentage of original image to scale crop", "s1", "scale_pct");
+        ADD_ARG(height, "image height", "h", "height",1,1024);
+        ADD_ARG(width, "image width", "w", "width",1,1024);
+        ADD_ARG(scale_pct, "percentage of original image to scale crop", "s1", "scale_pct",0,100);
 
         // Optionals with some standard defaults
         ADD_ARG(channels, "number of channels", "ch", "channels", 3, 1, 3);

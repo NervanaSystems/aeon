@@ -36,6 +36,7 @@ namespace nervana {
 #define ADD_ARG(...) GET_MACRO(__VA_ARGS__,F7,F6,F5,F4)(__VA_ARGS__)
 #define F4(t,desc,vs,vl) add(t,#t,desc,vs,vl)
 #define F5(t,desc,vs,vl,def) add(t,#t,desc,vs,vl,(decltype(t))def)
+#define F6(t,desc,vs,vl,minimum,maximum) add(t,#t,desc,vs,vl,(decltype(t))minimum,(decltype(t))maximum)
 #define F7(t,desc,vs,vl,def,minimum,maximum) add(t,#t,desc,vs,vl,(decltype(t))def,(decltype(t))minimum,(decltype(t))maximum)
 
 //=============================================================================
@@ -50,6 +51,9 @@ public:
     virtual std::string verb_short() const = 0;
     virtual std::string verb_long() const = 0;
     virtual std::string default_value() const = 0;
+    virtual std::string minimum_value() const = 0;
+    virtual std::string maximum_value() const = 0;
+    virtual bool range_valid() const = 0;
     // If try_parse is successful it advances the args iterator to the next argument
     // and set value to the parsed and validated value
     virtual bool try_parse( std::deque<std::string>& args ) const = 0;
@@ -72,6 +76,9 @@ public:
     virtual std::string verb_short() const override { return _verb_short; }
     virtual std::string verb_long() const override { return _verb_long; }
     virtual std::string default_value() const override { return make_string(_default); }
+    virtual std::string minimum_value() const override { return make_string(_minimum_value); }
+    virtual std::string maximum_value() const override { return make_string(_maximum_value); }
+    virtual bool range_valid() const override { return _range_valid; }
     virtual bool set_value( const std::string& value ) override {
         bool rc = true;
         try {
@@ -108,6 +115,27 @@ public:
         _default{},
         _minimum_value{},
         _maximum_value{},
+        _range_valid{false}
+    {
+    }
+
+    ArgType( const std::string& name,
+            T& value,
+            const std::string& description,
+            const std::string& verb_short,
+            const std::string& verb_long,
+            T minimum_value,
+            T maximum_value
+            ) :
+        _name{name},
+        _value{&value},
+        _description{description},
+        _verb_short{verb_short},
+        _verb_long{verb_long},
+        _required{true},
+        _default{},
+        _minimum_value{minimum_value},
+        _maximum_value{maximum_value},
         _range_valid{true}
     {
     }
@@ -212,6 +240,20 @@ public:
                         const std::string& description,
                         const std::string& verb_short,
                         const std::string& verb_long,
+                        T minimum_value,
+                        T maximum_value )
+    {
+        auto arg = std::make_shared<nervana::ArgType<T> >(name, value, description, verb_short, verb_long,
+                                                 minimum_value, maximum_value);
+        _arg_list.push_back(arg);
+    }
+
+    template<typename T> void add(
+                        T& value,
+                        const std::string& name,
+                        const std::string& description,
+                        const std::string& verb_short,
+                        const std::string& verb_long,
                         T default_value,
                         T minimum_value,
                         T maximum_value )
@@ -226,6 +268,8 @@ public:
     std::map<std::string,argtype_t> get_args() const;
 
     bool parse(const std::string& args);
+
+    std::string help() const;
 
 private:
     std::vector<argtype_t>     _arg_list;

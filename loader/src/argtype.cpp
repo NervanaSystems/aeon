@@ -110,6 +110,14 @@ bool nervana::parameter_collection::parse(const std::string& args) {
                     value = argList.front();
                     argList.pop_front(); // skip value
 
+                    if(!a->validate(value)) {
+                        cout << a->verb_short() << "|--" << a->verb_long() << " value '"
+                            << value << "' out of range " << "[" << a->minimum_value()
+                            << "," << a->maximum_value() << ")" << endl;
+                        rc = false;
+                        break;
+                    }
+
 
                     if(a->set_value(value)) {
                         parsedArgsList.insert(a->name());
@@ -151,6 +159,34 @@ bool nervana::parameter_collection::parse(const std::string& args) {
     }
 
     return rc;
+}
+
+string nervana::parameter_collection::help() const {
+    stringstream ss;
+    int arg_width = 25;
+
+    for( argtype_t a : _arg_list ) {
+        stringstream tmp;
+        tmp << "-" << a->verb_short() << " | --" << a->verb_long();
+        for( int i=tmp.tellp(); i<arg_width; i++ ) {
+            tmp << " ";
+        }
+        ss << tmp.str();
+        ss << a->description() << "\n";
+        for( int i=0; i<arg_width; i++) ss << " ";
+        if( a->required() )
+        {
+            ss << "required";
+        } else {
+            ss << "default " << a->default_value() << "";
+        }
+        if( a->range_valid() ) {
+            ss << " range [" << a->minimum_value() << "," << a->maximum_value() << ")";
+        }
+        ss << "\n";
+    }
+
+    return ss.str();
 }
 
 namespace nervana {

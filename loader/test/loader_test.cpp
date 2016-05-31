@@ -46,7 +46,7 @@ TEST(myloader, argtype) {
         EXPECT_EQ(ie_p->get_channel_count(), 3);
     }
     {
-        string argString = "-eo 20 -tsc 10 -tsh -5";
+        string argString = "-eo 20 -tsc 4 -tsh -5";
         EXPECT_TRUE(_lblp1->parse(argString)) << "missing required arguments in '" << argString << "'";
 
         BatchFileReader bf;

@@ -41,7 +41,7 @@ public:
         ADD_ARG(int1, "description of arg1", "i1", "int-1", 3, 0, 50);
         ADD_ARG(int2, "description of arg2", "i2", "int-2", 3, 0, 100);
         ADD_ARG(int3, "description of arg3", "i3", "int-3");
-        ADD_ARG(int4, "description of arg4", "i4", "int-4");
+        ADD_ARG(int4, "description of arg4", "i4", "int-4", 10, 40);
         ADD_ARG(int5, "description of arg5", "i5", "int-5", -50, -100, -10);
 
         ADD_ARG(float1, "description of arg1", "f1", "float-1", 3, 0, 50);
@@ -62,17 +62,24 @@ TEST(loader,argtype) {
     map<string,shared_ptr<interface_ArgType> > args = _ParamList1.get_args();
     ASSERT_EQ(12, args.size());
 
+    string help = _ParamList1.help();
+    cout << help << endl;
+
     {
         string argString = "-i1 5";
         EXPECT_FALSE(_ParamList1.parse(argString)) << "**** failed to detect missing required arguments in '" << argString << "'";
     }
     {
-        string argString = "-i1 5 -i3 10 --int-4 20";
+        string argString = "-i3 5 -i4 40";
+        EXPECT_FALSE(_ParamList1.parse(argString)) << "**** argument out-of-range '" << argString << "'";
+    }
+    {
+        string argString = "-i1 5 -i3 10 --int-4 30";
         EXPECT_TRUE(_ParamList1.parse(argString)) << argString;
         EXPECT_EQ(5,_ParamList1.int1);
         EXPECT_EQ(3,_ParamList1.int2);
         EXPECT_EQ(10,_ParamList1.int3);
-        EXPECT_EQ(20,_ParamList1.int4);
+        EXPECT_EQ(30,_ParamList1.int4);
         EXPECT_EQ(-50,_ParamList1.int5);
         EXPECT_EQ(3,_ParamList1.float1);
         EXPECT_EQ(3,_ParamList1.float2);
