@@ -35,7 +35,6 @@ namespace nervana {
 
     class decoded_label : public decoded_media {
     public:
-        decoded_label() {}
         decoded_label(int index) :
             _index{index} {}
         virtual ~decoded_label() override {}
@@ -44,6 +43,7 @@ namespace nervana {
         inline int get_index() { return _index; }
 
     private:
+        decoded_label() = delete;
         int _index;
     };
 

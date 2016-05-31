@@ -50,7 +50,9 @@ TEST(myloader, argtype) {
         EXPECT_TRUE(_lblp1->parse(argString)) << "missing required arguments in '" << argString << "'";
 
         BatchFileReader bf;
-        string batchFileName = _datagen.GetDatasetPath() + "/archive-0.cpio";
+        auto dataFiles = _datagen.GetFiles();
+        ASSERT_GT(dataFiles.size(),0);
+        string batchFileName = dataFiles[0];
         bf.open(batchFileName);
 
         // Just get a single item
@@ -65,7 +67,7 @@ TEST(myloader, argtype) {
 
         provider pp(lble, lblt, lbll);
         int outx = 0;
-        pp.provide(&((*labels)[0]), 4, (char *)(&outx), 4, nullptr);
+        pp.provide(labels->data(), 4, (char *)(&outx), 4, nullptr);
         cout << outx << endl;
 
 
