@@ -20,8 +20,8 @@ namespace nervana {
             ADD_ARG(ex_offset, "offset to add on extract", "eo", "extract_offset", 0, -100, 100);
             ADD_ARG(tx_scale, "scale to multiply by on transform", "tsc", "transform_scale", 1, -5, 5);
             ADD_ARG(tx_shift, "shift to multiply by on transform", "tsh", "transform_shift", 0, -200, 200);
-            ADD_ARG(ld_offset, "width to load as a binary string if bitbuffer loading", "lo", "load_width", 0.0, -0.9, 0.9);
-            ADD_ARG(ld_dofloat, "load as a float?", "lf", "ld_dofloat", false);
+            ADD_ARG(ld_offset, "offset to add on load if loading as float", "lo", "load_offset", 0.0, -0.9, 0.9);
+            ADD_ARG(ld_dofloat, "load as a float?", "lf", "load_dofloat", false);
         }
     };
 
@@ -107,7 +107,7 @@ namespace nervana {
         }
 
     private:
-        int _ld_offset;
+        float _ld_offset;
         bool _ld_dofloat;
     };
 

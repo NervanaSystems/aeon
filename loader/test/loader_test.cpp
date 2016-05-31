@@ -15,6 +15,7 @@
 
 #include <vector>
 #include <string>
+#include <sstream>
 
 #include "gtest/gtest.h"
 #include "argtype.hpp"
@@ -46,8 +47,20 @@ TEST(myloader, argtype) {
         EXPECT_EQ(ie_p->get_channel_count(), 3);
     }
     {
-        string argString = "-eo 20 -tsc 4 -tsh -5";
+
+        int eo = 20;
+        int tsh = -5;
+        int tsc = 18;
+
+        ostringstream argStringStream;
+        argStringStream << "--extract_offset " << eo << " ";
+        argStringStream << "--transform_scale " << tsc << " ";
+        argStringStream << "--transform_shift " << tsh << " ";
+
+        string argString = argStringStream.str();
+
         EXPECT_TRUE(_lblp1->parse(argString)) << "missing required arguments in '" << argString << "'";
+
 
         BatchFileReader bf;
         auto dataFiles = _datagen.GetFiles();
@@ -60,17 +73,34 @@ TEST(myloader, argtype) {
         auto labels = bf.read();
         bf.close();
 
+        int reference = ((int) (*labels)[0] + eo)* tsc + tsh;
+
         // Take the int and do provision with it.
         auto lble = make_shared<label_extractor>(_lblp1);
         auto lblt = make_shared<label_transformer>(_lblp1);
-        auto lbll = make_shared<label_loader>(_lblp1);
 
-        provider pp(lble, lblt, lbll);
-        int outx = 0;
-        pp.provide(labels->data(), 4, (char *)(&outx), 4, nullptr);
-        cout << outx << endl;
+        {
+            auto lbll = make_shared<label_loader>(_lblp1);
 
+            int reference_target = reference;
+            int loaded_target = 0;
+            provider pp(lble, lblt, lbll);
+            pp.provide(&((*labels)[0]), 4, (char *)(&loaded_target), 4, nullptr);
+            EXPECT_EQ(reference_target, loaded_target);
+        }
 
+        {
+            // This is a float loader that loads into a float with an offset
+            param_ptr flt_lbl_params = make_shared<label_params>();
+            flt_lbl_params->parse("--load_dofloat true --load_offset 0.8");
+            auto lbll = make_shared<label_loader>(flt_lbl_params);
+
+            float reference_target = reference + 0.8;
+            float loaded_target = 0.0;
+            provider pp(lble, lblt, lbll);
+            pp.provide(&((*labels)[0]), 4, (char *)(&loaded_target), 4, nullptr);
+            EXPECT_EQ(reference_target, loaded_target);
+        }
 
     }
 
