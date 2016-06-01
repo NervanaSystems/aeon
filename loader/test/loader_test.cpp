@@ -16,6 +16,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <random>
 
 #include "gtest/gtest.h"
 #include "argtype.hpp"
@@ -49,8 +50,8 @@ TEST(myloader, argtype) {
     {
 
         int eo = 20;
-        int tsh = -5;
-        int tsc = 18;
+        int tsh = 5;
+        int tsc = 10;
 
         ostringstream argStringStream;
         argStringStream << "--extract_offset " << eo << " ";
@@ -73,7 +74,15 @@ TEST(myloader, argtype) {
         auto labels = bf.read();
         bf.close();
 
-        int reference = ((int) (*labels)[0] + eo)* tsc + tsh;
+        auto lstg = make_shared<label_settings>();
+
+        std::default_random_engine r_eng(0);
+        static_pointer_cast<label_params>(_lblp1)->fill_settings(lstg, r_eng);
+
+        cout << "Set scale: " << lstg->scale << " ";
+        cout << "Set shift: " << lstg->shift << endl;
+
+        int reference = ((int) (*labels)[0] + eo)* lstg->scale + lstg->shift;
 
         // Take the int and do provision with it.
         auto lble = make_shared<label_extractor>(_lblp1);
@@ -85,7 +94,7 @@ TEST(myloader, argtype) {
             int reference_target = reference;
             int loaded_target = 0;
             provider pp(lble, lblt, lbll);
-            pp.provide(&((*labels)[0]), 4, (char *)(&loaded_target), 4, nullptr);
+            pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }
 
@@ -98,7 +107,7 @@ TEST(myloader, argtype) {
             float reference_target = reference + 0.8;
             float loaded_target = 0.0;
             provider pp(lble, lblt, lbll);
-            pp.provide(&((*labels)[0]), 4, (char *)(&loaded_target), 4, nullptr);
+            pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }
 

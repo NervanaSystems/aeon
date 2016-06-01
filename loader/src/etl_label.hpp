@@ -1,10 +1,20 @@
 #pragma once
+#include <random>
 #include "etl_interface.hpp"
 #include "params.hpp"
 
 using namespace std;
 
 namespace nervana {
+
+    class label_settings : public parameter_collection {
+    public:
+        int scale;
+        int shift;
+        label_settings() {}
+    };
+
+
     class label_params : public parameter_collection {
     public:
         int ex_offset;
@@ -23,13 +33,15 @@ namespace nervana {
             ADD_ARG(ld_offset, "offset to add on load if loading as float", "lo", "load_offset", 0.0, -0.9, 0.9);
             ADD_ARG(ld_dofloat, "load as a float?", "lf", "load_dofloat", false);
         }
-    };
 
+        void fill_settings(settings_ptr stg, default_random_engine eng) {
+            uniform_int_distribution<int> scale_rng(-tx_scale, tx_scale);
+            uniform_int_distribution<int> shift_rng(-tx_shift, tx_shift);
 
-    class label_settings : public parameter_collection {
-    public:
-        int scale;
-        int shift;
+            auto lstg = static_pointer_cast<label_settings>(stg);
+            lstg->scale = scale_rng(eng);
+            lstg->shift = shift_rng(eng);
+        }
     };
 
 
@@ -55,6 +67,7 @@ namespace nervana {
         }
 
         ~label_extractor() {}
+
         media_ptr extract(char* buf, int bufSize) override {
             if (bufSize != 4) {
                 throw runtime_error("Only 4 byte buffers can be loaded as int32");
@@ -66,26 +79,25 @@ namespace nervana {
         int _ex_offset;
     };
 
+
     class label_transformer : public transformer_interface {
     public:
-        label_transformer(param_ptr pptr) {
-            shared_ptr<label_params> lbl_ptr = static_pointer_cast<label_params>(pptr);
-            _tx_scale = lbl_ptr->tx_scale;
-            _tx_shift = lbl_ptr->tx_shift;
-        }
+        label_transformer(param_ptr pptr) {}
 
         ~label_transformer() {}
-        // Ignoring tx settings for now and only using the parameters
+
         media_ptr transform(settings_ptr tx, const media_ptr& mp) override {
             int old_index = static_pointer_cast<decoded_label>(mp)->get_index();
-            return make_shared<decoded_label>( old_index * _tx_scale + _tx_shift );
+            shared_ptr<label_settings> txs = static_pointer_cast<label_settings>(tx);
+
+            return make_shared<decoded_label>( old_index * txs->scale + txs->shift );
         }
+
+        // Filling settings is done by the relevant params
         void fill_settings(settings_ptr tx) override {}
 
-    private:
-        int _tx_scale;
-        int _tx_shift;
     };
+
 
     class label_loader : public loader_interface {
     public:
