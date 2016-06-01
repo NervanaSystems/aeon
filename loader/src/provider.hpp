@@ -3,7 +3,7 @@
 #include "etl_interface.hpp"
 
 namespace nervana {
-
+    // Do we want to have a vector of transformers so that we can cascade?
     class provider {
     public:
         provider(shared_ptr<extractor_interface> ex,

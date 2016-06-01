@@ -4,7 +4,10 @@
 
 namespace nervana {
     class decoded_media;
-    class image_params;
+    class image_extract_params;
+    class image_transform_params;
+    class image_load_params;
+    class settings;
 }
 
 enum class MediaType {
@@ -23,26 +26,37 @@ public:
     virtual MediaType get_type() = 0;
 };
 
+/*  ABSTRACT INTERFACES */
+class nervana::settings {
+public:
+    virtual ~settings() {}
+    virtual void set_
+};
 
 typedef std::shared_ptr<nervana::decoded_media>        media_ptr;
 typedef std::shared_ptr<nervana::parameter_collection> param_ptr;
 typedef std::shared_ptr<nervana::parameter_collection> settings_ptr;
 
-class nervana::image_params : public parameter_collection {
+class nervana::image_extract_params : public parameter_collection {
 public:
-    int height;
-    int width;
-    float scale_pct;
     int channels;
+    image_extract_params() {
+        ADD_ARG(channels, "number of channels", "ch", "channels", 3, 1, 3);
+    }
+}
+
+class nervana::image_transform_params : public parameter_collection {
+public:
+    float scale_pct;
     int angle;
     float cbs_range;
     float lighting_range;
     float aspect_ratio;
     bool area_scaling;
     bool flip;
-    bool center;
+    float crop_offset_range;
 
-    image_params() {
+    image_transform_params() {
         // Required Params
         ADD_REQUIRED(height, "image height", "h", "height");
         ADD_REQUIRED(width, "image width", "w", "width");
@@ -57,5 +71,21 @@ public:
         ADD_OPTIONAL(area_scaling, "whether to use area based scaling", "a2", "area_scaling", false);
         ADD_OPTIONAL(flip, "randomly flip?", "f1", "flip", false);
         ADD_OPTIONAL(center, "always center?", "c1", "center", true);
+    }
+}
+
+class nervana::image_load_params : public parameter_collection {
+public:
+    int height;
+    int width;
+    bool chw;
+
+    image_load_params() {
+        // Required Params
+        ADD_ARG(height, "image height", "h", "height");
+        ADD_ARG(width, "image width", "w", "width");
+
+        // Optional
+        ADD_ARG(center, "always center?", "c1", "center", true);
     }
 };
