@@ -20,17 +20,19 @@ namespace nervana {
     };
 
 
-    class decoded_image : public decoded_media {
+    class decoded_images : public decoded_media {
     public:
-        decoded_image() {}
-        decoded_image(cv::Mat img) { _img = img; }
-        virtual ~decoded_image() override {}
+        decoded_images() {}
+        decoded_images(cv::Mat img) : _img(img) { _images.push_back(_img); }
+        virtual ~decoded_images() override {}
 
-        inline MediaType get_type() override { return MediaType::IMAGE; }
-        inline cv::Mat& get_image() { return _img; }
+        MediaType get_type() override { return MediaType::IMAGE; }
+        cv::Mat& get_image(int index) { return _images[index]; }
+        size_t size() const { return _images.size(); }
 
     private:
         cv::Mat _img;
+        std::vector<cv::Mat> _images;
     };
 
 

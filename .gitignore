@@ -27,6 +27,12 @@
 *.out
 *.app
 
+# QT Creator
+*.creator
+*.config
+*.files
+*.includes
+
 .DS_Store
 @eaDir/
 .d/

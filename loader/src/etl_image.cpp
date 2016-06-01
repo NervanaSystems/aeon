@@ -28,7 +28,7 @@ namespace nervana {
         cv::Mat input_img(1, insize, _pixel_type, inbuf);
         cv::imdecode(input_img, _color_mode, &output_img);
 
-        return make_shared<decoded_image>(output_img);
+        return make_shared<decoded_images>(output_img);
     }
 
 
@@ -58,8 +58,8 @@ namespace nervana {
         fill_settings(img_xform);
 
         cv::Mat rotatedImage;
-        auto img = static_pointer_cast<decoded_image>(input);
-        rotate(img->get_image(), rotatedImage, img_xform->angle);
+        auto img = static_pointer_cast<decoded_images>(input);
+        rotate(img->get_image(0), rotatedImage, img_xform->angle);
         cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
 
         cv::Mat resizedImage;
@@ -74,7 +74,7 @@ namespace nervana {
             finalImage = &flippedImage;
         }
 
-        return make_shared<decoded_image>(*finalImage);
+        return make_shared<decoded_images>(*finalImage);
     }
 
     void image_transformer::fill_settings(settings_ptr settings)
@@ -122,8 +122,8 @@ namespace nervana {
 
     void image_loader::load(char* outbuf, int outsize, const media_ptr& input)
     {
-        auto img = static_pointer_cast<decoded_image>(input);
-        this->split(img->get_image(), outbuf, outsize);
+        auto img = static_pointer_cast<decoded_images>(input);
+        this->split(img->get_image(0), outbuf, outsize);
     }
 
     void image_loader::split(cv::Mat& img, char* buf, int bufSize)
