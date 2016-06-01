@@ -50,8 +50,8 @@ TEST(myloader, argtype) {
     {
 
         int eo = 20;
+        int tsc = 8;
         int tsh = 5;
-        int tsc = 10;
 
         ostringstream argStringStream;
         argStringStream << "--extract_offset " << eo << " ";
