@@ -70,6 +70,52 @@ TEST(etl, bbox) {
     auto tx = transform.transform( settings, decoded );
 }
 
+TEST(etl, bbox_transform) {
+    // Create test metadata
+    nlohmann::json j = nlohmann::json::object();
+    cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
+    cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
+    cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]
+    cv::Rect r3 = cv::Rect( 70, 30, 10, 10 );   // result[2]
+    cv::Rect r4 = cv::Rect( 90, 35, 10, 10 );   // outside
+    cv::Rect r5 = cv::Rect( 30, 70, 10, 10 );   // result[3]
+    cv::Rect r6 = cv::Rect( 70, 70, 10, 10 );   // result[4]
+    cv::Rect r7 = cv::Rect( 30, 30, 80, 80 );   // result[5]
+    j["boxes"] = {bbox::extractor::create_box( r0, 3 ),
+                  bbox::extractor::create_box( r1, 4 ),
+                  bbox::extractor::create_box( r2, 4 ),
+                  bbox::extractor::create_box( r3, 4 ),
+                  bbox::extractor::create_box( r4, 4 ),
+                  bbox::extractor::create_box( r5, 4 ),
+                  bbox::extractor::create_box( r6, 4 ),
+                  bbox::extractor::create_box( r7, 42)};
+    // cout << std::setw(4) << j << endl;
+
+    string buffer = j.dump();
+
+    bbox::extractor extractor;
+    auto data = extractor.extract( &buffer[0], buffer.size() );
+    shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
+    vector<bbox::box> boxes = decoded->get_data();
+
+    ASSERT_EQ(8,boxes.size());
+
+    bbox::transformer transform;
+    shared_ptr<image_settings> iparam = make_shared<image_settings>();
+    iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
+    settings_ptr settings = static_pointer_cast<parameter_collection>(iparam);
+    auto tx = transform.transform( settings, decoded );
+    shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
+    vector<bbox::box> tx_boxes = tx_decoded->get_data();
+    ASSERT_EQ(6,tx_boxes.size());
+    EXPECT_EQ(cv::Rect(35,35,5,5),tx_boxes[0].rect);
+    EXPECT_EQ(cv::Rect(50,50,10,10),tx_boxes[1].rect);
+    EXPECT_EQ(cv::Rect(70,35,5,5),tx_boxes[2].rect);
+    EXPECT_EQ(cv::Rect(35,70,5,5),tx_boxes[3].rect);
+    EXPECT_EQ(cv::Rect(70,70,5,5),tx_boxes[4].rect);
+    EXPECT_EQ(cv::Rect(35,35,40,40),tx_boxes[5].rect);
+}
+
 TEST(myloader, argtype) {
     map<string,shared_ptr<interface_ArgType> > args = _ip1->get_args();
     ASSERT_EQ(11, args.size());

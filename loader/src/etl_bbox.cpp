@@ -5,6 +5,9 @@ using namespace std;
 using namespace nervana;
 using namespace nlohmann;   // json stuff
 
+nervana::bbox::decoded::decoded() {
+}
+
 nervana::bbox::decoded::decoded( const char* data, int size ) {
     string buffer( data, size );
     json j = json::parse(buffer);
@@ -40,12 +43,36 @@ nervana::bbox::transformer::transformer() {
 media_ptr nervana::bbox::transformer::transform(settings_ptr _settings, const media_ptr& media) {
     shared_ptr<image_settings> settings = static_pointer_cast<image_settings>(_settings);
     shared_ptr<bbox::decoded> boxes = static_pointer_cast<bbox::decoded>(media);
-    // shared_ptr<bbox::decoded> rc;
-    // *rc.get() = *box.get();
-    for( box b : boxes->get_data() ) {
-        cout << b.rect.x << ", " << b.rect.y << ", " << b.rect.width << ", " << b.rect.height << ", " << b.label << endl;
+    shared_ptr<bbox::decoded> rc = make_shared<bbox::decoded>();
+    cv::Rect crop = settings->cropbox;
+    for( box tmp : boxes->get_data() ) {
+        box b = tmp;
+        if( b.rect.x + b.rect.width <= crop.x ) {           // outside left
+        } else if( b.rect.x >= crop.x + crop.width ) {      // outside right
+        } else if( b.rect.y + b.rect.height <= crop.y ) {   // outside above
+        } else if( b.rect.y >= crop.y + crop.height ) {     // outside below
+        } else {
+            if( b.rect.x < crop.x ) {
+                int dx = crop.x - b.rect.x;
+                b.rect.x += dx;
+                b.rect.width -= dx;
+            }
+            if( b.rect.y < crop.y ) {
+                int dy = crop.y - b.rect.y;
+                b.rect.y += dy;
+                b.rect.height -= dy;
+            }
+            if( b.rect.x + b.rect.width > crop.x + crop.width ) {
+                b.rect.width = crop.x + crop.width - b.rect.x;
+            }
+            if( b.rect.y + b.rect.height > crop.y + crop.height ) {
+                b.rect.height = crop.y + crop.height - b.rect.y;
+            }
+            rc->_boxes.push_back( b );
+        }
+        // cout << b.rect.x << ", " << b.rect.y << ", " << b.rect.width << ", " << b.rect.height << ", " << b.label << endl;
     }
-    return boxes;
+    return rc;
 }
 
 void nervana::bbox::transformer::fill_settings(settings_ptr) {

@@ -22,7 +22,9 @@ public:
 };
 
 class nervana::bbox::decoded : public decoded_media {
+    friend class transformer;
 public:
+    decoded();
     decoded( const char* data, int size );
     virtual ~decoded() {}
 
