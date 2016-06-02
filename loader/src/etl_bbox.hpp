@@ -2,6 +2,7 @@
 #include <opencv2/core/core.hpp>
 
 #include "etl_interface.hpp"
+#include "etl_image.hpp"
 #include "json.hpp"
 
 namespace nervana {
@@ -48,6 +49,7 @@ public:
     transformer();
     virtual ~transformer(){}
     virtual media_ptr transform(settings_ptr, const media_ptr&) override;
+    virtual void fill_settings(settings_ptr) override;
 private:
 };
 

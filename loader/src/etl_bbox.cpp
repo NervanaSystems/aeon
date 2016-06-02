@@ -33,10 +33,23 @@ json nervana::bbox::extractor::create_box( const cv::Rect& rect, int label ) {
     return j;
 }
 
-media_ptr nervana::bbox::transformer::transform(settings_ptr settings, const media_ptr& media) {
-    char* data;
-    int size;
-    return make_shared<decoded>(data,size);
+nervana::bbox::transformer::transformer() {
+
+}
+
+media_ptr nervana::bbox::transformer::transform(settings_ptr _settings, const media_ptr& media) {
+    shared_ptr<image_settings> settings = static_pointer_cast<image_settings>(_settings);
+    shared_ptr<bbox::decoded> boxes = static_pointer_cast<bbox::decoded>(media);
+    // shared_ptr<bbox::decoded> rc;
+    // *rc.get() = *box.get();
+    for( box b : boxes->get_data() ) {
+        cout << b.rect.x << ", " << b.rect.y << ", " << b.rect.width << ", " << b.rect.height << ", " << b.label << endl;
+    }
+    return boxes;
+}
+
+void nervana::bbox::transformer::fill_settings(settings_ptr) {
+
 }
 
 void nervana::bbox::loader::load(char* data, int size, const media_ptr& media) {

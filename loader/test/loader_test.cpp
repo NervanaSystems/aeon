@@ -63,6 +63,11 @@ TEST(etl, bbox) {
     EXPECT_EQ(3,boxes[0].label);
     EXPECT_EQ(4,boxes[1].label);
     EXPECT_EQ(42,boxes[2].label);
+
+    bbox::transformer transform;
+    shared_ptr<image_params> iparam = make_shared<image_params>();
+    settings_ptr settings = static_pointer_cast<parameter_collection>(iparam);
+    auto tx = transform.transform( settings, decoded );
 }
 
 TEST(myloader, argtype) {
