@@ -27,7 +27,9 @@
 #include "etl_interface.hpp"
 #include "etl_image.hpp"
 #include "etl_label.hpp"
+#include "etl_bbox.hpp"
 #include "provider.hpp"
+#include "json.hpp"
 
 extern DataGen _datagen;
 
@@ -36,6 +38,19 @@ using namespace nervana;
 
 static param_ptr _ip1 = make_shared<image_params>();
 static param_ptr _lblp1 = make_shared<label_params>();
+
+TEST(etl, bbox) {
+    nlohmann::json j = nlohmann::json::object();
+    // j["boxes"] = {{{"x",0},{"y",0},{"w",10},{"h",10},{"label",3}}};
+    // stringstream ss;
+    // ss << "{";
+    // ss << bbox_extractor::create_box( 0, 0, 10, 15, 3 );
+    // ss << bbox_extractor::create_box( 10, 10, 12, 13, 4 );
+    // ss << "}";
+    j["boxes"] = {bbox_extractor::create_box( 0, 0, 10, 15, 3 ),
+                  bbox_extractor::create_box( 10, 10, 12, 13, 4 )};
+    cout << std::setw(4) << j << endl;
+}
 
 TEST(myloader, argtype) {
     map<string,shared_ptr<interface_ArgType> > args = _ip1->get_args();

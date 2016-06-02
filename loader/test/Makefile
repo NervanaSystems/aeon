@@ -20,7 +20,7 @@ OBJS 			= $(subst .c,.o,$(TOBJS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3
 CXXFLAGS        := -Wall -Wno-deprecated-declarations -O3 -std=c++11
 CFLAGSDBG       := -g -Wall -O0 -std=c++11
-CC              := g++
+CC              := clang++
 UNAME_S         := $(shell uname -s)
 DEPDIR = .d
 $(shell mkdir -p $(DEPDIR) >/dev/null)

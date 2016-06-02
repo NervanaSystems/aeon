@@ -31,7 +31,7 @@ SRCS            := \
 OBJS 			= $(subst .cpp,.o,$(SRCS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -fPIC
 CFLAGSDBG       := -g -Wall -O0 -std=c++11
-CC              := g++
+CC              := clang++
 LOADER_SO       := ../bin/loader.so
 LOADER_STATIC   := loader.a
 UNAME_S         := $(shell uname -s)
