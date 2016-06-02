@@ -38,21 +38,21 @@ public:
     std::string string1;
 
     ParamList1() {
-        ADD_ARG(int1, "description of arg1", "i1", "int-1", 3, 0, 50);
-        ADD_ARG(int2, "description of arg2", "i2", "int-2", 3, 0, 100);
-        ADD_ARG(int3, "description of arg3", "i3", "int-3");
-        ADD_ARG(int4, "description of arg4", "i4", "int-4", 10, 40);
-        ADD_ARG(int5, "description of arg5", "i5", "int-5", -50, -100, -10);
+        ADD_OPTIONAL(int1, "description of arg1", "i1", "int-1", 3, 0, 50);
+        ADD_OPTIONAL(int2, "description of arg2", "i2", "int-2", 3, 0, 100);
+        ADD_REQUIRED(int3, "description of arg3", "i3", "int-3");
+        ADD_REQUIRED(int4, "description of arg4", "i4", "int-4", 10, 40);
+        ADD_OPTIONAL(int5, "description of arg5", "i5", "int-5", -50, -100, -10);
 
-        ADD_ARG(float1, "description of arg1", "f1", "float-1", 3, 0, 50);
-        ADD_ARG(float2, "description of arg2", "f2", "float-2", 3, 0, 100);
-        ADD_ARG(float3, "description of arg3", "f3", "float-3", 3, 0, 20);
-        ADD_ARG(float4, "description of arg4", "f4", "float-4", 3, 0, 100);
-        ADD_ARG(float5, "description of arg5", "f5", "float-5", -50, -100, -10);
+        ADD_OPTIONAL(float1, "description of arg1", "f1", "float-1", 3, 0, 50);
+        ADD_OPTIONAL(float2, "description of arg2", "f2", "float-2", 3, 0, 100);
+        ADD_OPTIONAL(float3, "description of arg3", "f3", "float-3", 3, 0, 20);
+        ADD_OPTIONAL(float4, "description of arg4", "f4", "float-4", 3, 0, 100);
+        ADD_OPTIONAL(float5, "description of arg5", "f5", "float-5", -50, -100, -10);
 
-        ADD_ARG(bool1, "description of bool1", "b1", "bool-1", false);
+        ADD_OPTIONAL(bool1, "description of bool1", "b1", "bool-1", false);
 
-        ADD_ARG(string1, "description of string1", "s1", "string-1","blah");
+        ADD_OPTIONAL(string1, "description of string1", "s1", "string-1","blah");
     }
 };
 

@@ -33,11 +33,14 @@ namespace nervana {
 // arguments. Ultimately these result in calls to add().
 // the '#t' converts the ADD_ARGS first argument into a string.
 #define GET_MACRO(_1,_2,_3,_4,_5,_6,_7,NAME,...) NAME
-#define ADD_ARG(...) GET_MACRO(__VA_ARGS__,F7,F6,F5,F4)(__VA_ARGS__)
-#define F4(t,desc,vs,vl) add(t,#t,desc,vs,vl)
-#define F5(t,desc,vs,vl,def) add(t,#t,desc,vs,vl,(decltype(t))def)
-#define F6(t,desc,vs,vl,minimum,maximum) add(t,#t,desc,vs,vl,(decltype(t))minimum,(decltype(t))maximum)
-#define F7(t,desc,vs,vl,def,minimum,maximum) add(t,#t,desc,vs,vl,(decltype(t))def,(decltype(t))minimum,(decltype(t))maximum)
+#define ADD_REQUIRED(...) GET_MACRO(__VA_ARGS__,F7,R6,F5,R4)(__VA_ARGS__)
+#define ADD_OPTIONAL(...) GET_MACRO(__VA_ARGS__,O7,F6,O5,F4)(__VA_ARGS__)
+
+#define R4(t,desc,vs,vl) add(t,#t,desc,vs,vl)
+#define R6(t,desc,vs,vl,minimum,maximum) add(t,#t,desc,vs,vl,(decltype(t))minimum,(decltype(t))maximum)
+
+#define O5(t,desc,vs,vl,def) add(t,#t,desc,vs,vl,(decltype(t))def)
+#define O7(t,desc,vs,vl,def,minimum,maximum) add(t,#t,desc,vs,vl,(decltype(t))def,(decltype(t))minimum,(decltype(t))maximum)
 
 //=============================================================================
 //
