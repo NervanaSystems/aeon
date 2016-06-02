@@ -5,6 +5,7 @@
 namespace nervana {
     class extractor_interface;
     class transformer_interface;
+    class transformer_settings_interface;
     class loader_interface;
 }
 
@@ -23,6 +24,11 @@ public:
     virtual void fill_settings(settings_ptr) = 0;
 
 private:
+};
+
+class nervana::transformer_settings_interface {
+public:
+    virtual void fill_settings(settings_ptr) = 0;
 };
 
 class nervana::loader_interface {

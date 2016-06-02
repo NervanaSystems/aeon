@@ -40,16 +40,29 @@ static param_ptr _ip1 = make_shared<image_params>();
 static param_ptr _lblp1 = make_shared<label_params>();
 
 TEST(etl, bbox) {
+    // Create test metadata
     nlohmann::json j = nlohmann::json::object();
-    // j["boxes"] = {{{"x",0},{"y",0},{"w",10},{"h",10},{"label",3}}};
-    // stringstream ss;
-    // ss << "{";
-    // ss << bbox_extractor::create_box( 0, 0, 10, 15, 3 );
-    // ss << bbox_extractor::create_box( 10, 10, 12, 13, 4 );
-    // ss << "}";
-    j["boxes"] = {bbox_extractor::create_box( 0, 0, 10, 15, 3 ),
-                  bbox_extractor::create_box( 10, 10, 12, 13, 4 )};
-    cout << std::setw(4) << j << endl;
+    cv::Rect r0 = cv::Rect( 0, 0, 10, 15 );
+    cv::Rect r1 = cv::Rect( 10, 10, 12, 13 );
+    cv::Rect r2 = cv::Rect( 100, 100, 120, 130 );
+    j["boxes"] = {bbox::extractor::create_box( r0, 3 ),
+                  bbox::extractor::create_box( r1, 4 ),
+                  bbox::extractor::create_box( r2, 42)};
+    // cout << std::setw(4) << j << endl;
+
+    string buffer = j.dump();
+
+    bbox::extractor extractor;
+    auto data = extractor.extract( &buffer[0], buffer.size() );
+    shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
+    vector<bbox::box> boxes = decoded->get_data();
+    ASSERT_EQ(3,boxes.size());
+    EXPECT_EQ(r0,boxes[0].rect);
+    EXPECT_EQ(r1,boxes[1].rect);
+    EXPECT_EQ(r2,boxes[2].rect);
+    EXPECT_EQ(3,boxes[0].label);
+    EXPECT_EQ(4,boxes[1].label);
+    EXPECT_EQ(42,boxes[2].label);
 }
 
 TEST(myloader, argtype) {

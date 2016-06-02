@@ -1,46 +1,60 @@
 #include <string>
+#include <opencv2/core/core.hpp>
+
 #include "etl_interface.hpp"
 #include "json.hpp"
 
 namespace nervana {
-    class decoded_bbox;
-    class bbox_extractor;
-    class bbox_transformer;
-    class bbox_loader;
+    namespace bbox {
+        class decoded;
+        class extractor;
+        class transformer;
+        class loader;
+        class box;
+    }
 }
 
-class nervana::decoded_bbox : public decoded_media {
+class nervana::bbox::box {
 public:
-    decoded_bbox( const char* data, int size );
-    virtual ~decoded_bbox() {}
+    cv::Rect    rect;
+    int         label;
+};
+
+class nervana::bbox::decoded : public decoded_media {
+public:
+    decoded( const char* data, int size );
+    virtual ~decoded() {}
 
     MediaType get_type() override { return MediaType::TARGET; }
 
+    std::vector<box> get_data() { return _boxes; }
+
 private:
+    std::vector<box> _boxes;
 };
 
 
-class nervana::bbox_extractor : public extractor_interface {
+class nervana::bbox::extractor : public extractor_interface {
 public:
-    bbox_extractor();
-    virtual ~bbox_extractor(){}
+    extractor();
+    virtual ~extractor(){}
     virtual media_ptr extract(char*, int) override;
-    static nlohmann::json create_box( int x, int y, int w, int h, int label );
+    static nlohmann::json create_box( const cv::Rect& rect, int label );
 private:
 };
 
-class nervana::bbox_transformer : public nervana::transformer_interface {
+class nervana::bbox::transformer : public nervana::transformer_interface {
 public:
-    bbox_transformer();
-    virtual ~bbox_transformer(){}
+    transformer();
+    virtual ~transformer(){}
     virtual media_ptr transform(settings_ptr, const media_ptr&) override;
 private:
 };
 
-class nervana::bbox_loader : public nervana::loader_interface {
+class nervana::bbox::loader : public nervana::loader_interface {
 public:
-    bbox_loader();
-    virtual ~bbox_loader(){}
+    loader();
+    virtual ~loader(){}
     virtual void load(char*, int, const media_ptr&) override;
 private:
 };
