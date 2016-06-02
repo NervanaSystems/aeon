@@ -1,8 +1,17 @@
+#include <iostream>
 #include "etl_image.hpp"
 
 using namespace std;
 
 namespace nervana {
+
+    image_settings::image_settings() :
+        angle{0},
+        flip{false},
+        colornoise{0,0,0},  //pixelwise random values
+        cbs{0,0,0}  // contrast, brightness, saturation
+    {
+    }
 
     /* Extract */
     image_extractor::image_extractor(param_ptr pptr)

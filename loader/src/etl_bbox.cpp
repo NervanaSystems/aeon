@@ -43,6 +43,9 @@ nervana::bbox::transformer::transformer() {
 media_ptr nervana::bbox::transformer::transform(settings_ptr _settings, const media_ptr& media) {
     shared_ptr<image_settings> settings = static_pointer_cast<image_settings>(_settings);
     shared_ptr<bbox::decoded> boxes = static_pointer_cast<bbox::decoded>(media);
+    if( settings->angle != 0 ) {
+        return shared_ptr<bbox::decoded>();
+    }
     shared_ptr<bbox::decoded> rc = make_shared<bbox::decoded>();
     cv::Rect crop = settings->cropbox;
     for( box tmp : boxes->get_data() ) {

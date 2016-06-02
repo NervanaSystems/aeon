@@ -65,7 +65,7 @@ TEST(etl, bbox) {
     EXPECT_EQ(42,boxes[2].label);
 
     bbox::transformer transform;
-    shared_ptr<image_params> iparam = make_shared<image_params>();
+    shared_ptr<image_settings> iparam = make_shared<image_settings>();
     settings_ptr settings = static_pointer_cast<parameter_collection>(iparam);
     auto tx = transform.transform( settings, decoded );
 }
@@ -114,6 +114,30 @@ TEST(etl, bbox_transform) {
     EXPECT_EQ(cv::Rect(35,70,5,5),tx_boxes[3].rect);
     EXPECT_EQ(cv::Rect(70,70,5,5),tx_boxes[4].rect);
     EXPECT_EQ(cv::Rect(35,35,40,40),tx_boxes[5].rect);
+}
+
+TEST(etl, bbox_angle) {
+    // Create test metadata
+    nlohmann::json j = nlohmann::json::object();
+    cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );
+    j["boxes"] = {bbox::extractor::create_box( r0, 3 )};
+
+    string buffer = j.dump();
+
+    bbox::extractor extractor;
+    auto data = extractor.extract( &buffer[0], buffer.size() );
+    shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
+    vector<bbox::box> boxes = decoded->get_data();
+
+    ASSERT_EQ(1,boxes.size());
+
+    bbox::transformer transform;
+    shared_ptr<image_settings> iparam = make_shared<image_settings>();
+    iparam->angle = 5;
+    settings_ptr settings = static_pointer_cast<parameter_collection>(iparam);
+    auto tx = transform.transform( settings, decoded );
+    shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
+    EXPECT_EQ(nullptr,tx_decoded.get());
 }
 
 TEST(myloader, argtype) {

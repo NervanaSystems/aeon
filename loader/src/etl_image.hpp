@@ -11,6 +11,8 @@ namespace nervana {
 
     class image_settings : public parameter_collection {
     public:
+        image_settings();
+
         cv::Rect cropbox;
         cv::Size size;
         int angle;
