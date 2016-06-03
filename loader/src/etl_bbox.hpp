@@ -37,7 +37,7 @@ private:
 };
 
 
-class nervana::bbox::extractor : public extractor_interface {
+class nervana::bbox::extractor : public nervana::interface::extractor {
 public:
     extractor();
     virtual ~extractor(){}
@@ -46,7 +46,7 @@ public:
 private:
 };
 
-class nervana::bbox::transformer : public nervana::transformer_interface {
+class nervana::bbox::transformer : public nervana::interface::transformer {
 public:
     transformer();
     virtual ~transformer(){}
@@ -55,7 +55,7 @@ public:
 private:
 };
 
-class nervana::bbox::loader : public nervana::loader_interface {
+class nervana::bbox::loader : public nervana::interface::loader {
 public:
     loader();
     virtual ~loader(){}

@@ -36,8 +36,12 @@ extern DataGen _datagen;
 using namespace std;
 using namespace nervana;
 
-static param_ptr _ip1 = make_shared<image_params>();
-static param_ptr _lblp1 = make_shared<label_params>();
+static param_ptr _iep1 = make_shared<image::extract_params>();
+static param_ptr _itp1 = make_shared<image::transform_params>();
+static param_ptr _ilp1 = make_shared<image::load_params>();
+
+static param_ptr _lblp1 = make_shared<label::params>();
+
 
 TEST(etl, bbox) {
     // Create test metadata
@@ -65,9 +69,9 @@ TEST(etl, bbox) {
     EXPECT_EQ(42,boxes[2].label);
 
     bbox::transformer transform;
-    shared_ptr<image_settings> iparam = make_shared<image_settings>();
-    settings_ptr settings = static_pointer_cast<parameter_collection>(iparam);
-    auto tx = transform.transform( settings, decoded );
+    shared_ptr<image::settings> iparam = make_shared<image::settings>();
+    settings_ptr sptr = static_pointer_cast<settings>(iparam);
+    auto tx = transform.transform( sptr, decoded );
 }
 
 TEST(etl, bbox_transform) {
@@ -101,10 +105,10 @@ TEST(etl, bbox_transform) {
     ASSERT_EQ(8,boxes.size());
 
     bbox::transformer transform;
-    shared_ptr<image_settings> iparam = make_shared<image_settings>();
+    shared_ptr<image::settings> iparam = make_shared<image::settings>();
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
-    settings_ptr settings = static_pointer_cast<parameter_collection>(iparam);
-    auto tx = transform.transform( settings, decoded );
+    settings_ptr sptr = static_pointer_cast<settings>(iparam);
+    auto tx = transform.transform( sptr, decoded );
     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
     vector<bbox::box> tx_boxes = tx_decoded->get_data();
     ASSERT_EQ(6,tx_boxes.size());
@@ -132,22 +136,22 @@ TEST(etl, bbox_angle) {
     ASSERT_EQ(1,boxes.size());
 
     bbox::transformer transform;
-    shared_ptr<image_settings> iparam = make_shared<image_settings>();
+    shared_ptr<image::settings> iparam = make_shared<image::settings>();
     iparam->angle = 5;
-    settings_ptr settings = static_pointer_cast<parameter_collection>(iparam);
-    auto tx = transform.transform( settings, decoded );
+    settings_ptr sptr = static_pointer_cast<settings>(iparam);
+    auto tx = transform.transform( sptr, decoded );
     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
     EXPECT_EQ(nullptr,tx_decoded.get());
 }
 
 TEST(myloader, argtype) {
-    map<string,shared_ptr<interface_ArgType> > args = _ip1->get_args();
-    ASSERT_EQ(11, args.size());
+    map<string,shared_ptr<interface_ArgType> > args = _iep1->get_args();
+    ASSERT_EQ(1, args.size());
 
     {
-        string argString = "-h 220 -w 23 -s1 0.8";
-        EXPECT_TRUE(_ip1->parse(argString)) << "missing required arguments in '" << argString << "'";
-        auto ie_p = make_shared<image_extractor>(_ip1);
+        string argString = "";
+        EXPECT_TRUE(_iep1->parse(argString)) << "missing required arguments in '" << argString << "'";
+        auto ie_p = make_shared<image::extractor>(_iep1);
         EXPECT_EQ(ie_p->get_channel_count(), 3);
     }
     {
@@ -177,10 +181,15 @@ TEST(myloader, argtype) {
         auto labels = bf.read();
         bf.close();
 
-        auto lstg = make_shared<label_settings>();
+        auto lstg = make_shared<label::settings>();
 
-        std::default_random_engine r_eng(0);
-        static_pointer_cast<label_params>(_lblp1)->fill_settings(lstg, r_eng);
+        default_random_engine r_eng(0);
+        shared_ptr<label::params> lblp = static_pointer_cast<label::params>(_lblp1);
+        lstg->scale = uniform_int_distribution<int>{-lblp->tx_scale, lblp->tx_scale}(r_eng);
+        lstg->shift = uniform_int_distribution<int>{-lblp->tx_shift, lblp->tx_shift}(r_eng);
+
+
+        // static_pointer_cast<label::params>(_lblp1)->fill_settings(lstg, r_eng);
 
         cout << "Set scale: " << lstg->scale << " ";
         cout << "Set shift: " << lstg->shift << endl;
@@ -188,11 +197,11 @@ TEST(myloader, argtype) {
         int reference = ((int) (*labels)[0] + eo)* lstg->scale + lstg->shift;
 
         // Take the int and do provision with it.
-        auto lble = make_shared<label_extractor>(_lblp1);
-        auto lblt = make_shared<label_transformer>(_lblp1);
+        auto lble = make_shared<label::extractor>(_lblp1);
+        auto lblt = make_shared<label::transformer>(_lblp1);
 
         {
-            auto lbll = make_shared<label_loader>(_lblp1);
+            auto lbll = make_shared<label::loader>(_lblp1);
 
             int reference_target = reference;
             int loaded_target = 0;
@@ -203,9 +212,9 @@ TEST(myloader, argtype) {
 
         {
             // This is a float loader that loads into a float with an offset
-            param_ptr flt_lbl_params = make_shared<label_params>();
+            param_ptr flt_lbl_params = make_shared<label::params>();
             flt_lbl_params->parse("--load_dofloat true --load_offset 0.8");
-            auto lbll = make_shared<label_loader>(flt_lbl_params);
+            auto lbll = make_shared<label::loader>(flt_lbl_params);
 
             float reference_target = reference + 0.8;
             float loaded_target = 0.0;

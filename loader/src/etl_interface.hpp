@@ -3,38 +3,28 @@
 #include "params.hpp"
 
 namespace nervana {
-    class extractor_interface;
-    class transformer_interface;
-    class transformer_settings_interface;
-    class loader_interface;
+    namespace interface {
+        class extractor;
+        class transformer;
+        class loader;
+    }
 }
 
-class nervana::extractor_interface {
+class nervana::interface::extractor {
 public:
-    virtual ~extractor_interface() {}
+    virtual ~extractor() {}
     virtual media_ptr extract(char*, int) = 0;
-
-private:
 };
 
-class nervana::transformer_interface {
+class nervana::interface::transformer {
 public:
-    virtual ~transformer_interface() {}
+    virtual ~transformer() {}
     virtual media_ptr transform(settings_ptr, const media_ptr&) = 0;
     virtual void fill_settings(settings_ptr) = 0;
-
-private:
 };
 
-class nervana::transformer_settings_interface {
+class nervana::interface::loader {
 public:
-    virtual void fill_settings(settings_ptr) = 0;
-};
-
-class nervana::loader_interface {
-public:
-    virtual ~loader_interface() {}
+    virtual ~loader() {}
     virtual void load(char*, int, const media_ptr&) = 0;
-
-private:
 };

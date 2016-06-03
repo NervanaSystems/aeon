@@ -6,9 +6,9 @@ namespace nervana {
     // Do we want to have a vector of transformers so that we can cascade?
     class provider {
     public:
-        provider(shared_ptr<extractor_interface> ex,
-                 shared_ptr<transformer_interface> tr,
-                 shared_ptr<loader_interface> lo)
+        provider(shared_ptr<interface::extractor> ex,
+                 shared_ptr<interface::transformer> tr,
+                 shared_ptr<interface::loader> lo)
         : _extractor(ex), _transformer(tr), _loader(lo) {
         }
 
@@ -20,9 +20,9 @@ namespace nervana {
         }
 
     private:
-        shared_ptr<extractor_interface>   _extractor;
-        shared_ptr<transformer_interface> _transformer;
-        shared_ptr<loader_interface>      _loader;
+        shared_ptr<interface::extractor>   _extractor;
+        shared_ptr<interface::transformer> _transformer;
+        shared_ptr<interface::loader>      _loader;
     };
 
 }
