@@ -27,6 +27,7 @@ SRCS            := \
 	argtype.cpp \
 	etl_image.cpp \
 	etl_bbox.cpp \
+	etl_lmap.cpp \
 	codec.cpp \
 	video.cpp
 OBJS 			= $(subst .cpp,.o,$(SRCS))

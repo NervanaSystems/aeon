@@ -28,6 +28,7 @@
 #include "etl_image.hpp"
 #include "etl_label.hpp"
 #include "etl_bbox.hpp"
+#include "etl_lmap.hpp"
 #include "provider.hpp"
 #include "json.hpp"
 
@@ -42,6 +43,58 @@ using namespace nervana;
 
 // static param_ptr _lblp1 = make_shared<label::params>();
 
+
+TEST(etl, lmap) {
+    {
+        vector<string> vocab = {"a","and","the","quick","fox","cow","dog","blue",
+            "black","brown","happy","lazy","skip","jumped","run","under","over","around"};
+        lmap::extractor extractor(vocab);
+        auto data = extractor.get_data();
+        EXPECT_EQ(2,data["the"]);
+
+        {
+            // the word 'jump' is not in the vocab
+            string t1 = "the quick brown fox jump over the lazy dog";
+            auto extracted = extractor.extract(&t1[0], t1.size());
+            EXPECT_EQ(nullptr, extracted);
+        }
+        {
+            string t1 = "the quick brown fox jumped over the lazy dog";
+            vector<int> expected = {2, 3, 9, 4, 13, 16, 2, 11, 6};
+            auto extracted = extractor.extract(&t1[0], t1.size());
+            ASSERT_NE(nullptr, extracted);
+            shared_ptr<lmap::decoded> decoded = static_pointer_cast<lmap::decoded>(extracted);
+            ASSERT_EQ(expected.size(),decoded->get_data().size());
+            for( int i=0; i<expected.size(); i++ ) {
+                EXPECT_EQ(expected[i], decoded->get_data()[i]) << "at index " << i;
+            }
+        }
+    }
+    {
+        stringstream vocab("a and the quick fox cow dog blue black brown happy lazy skip jumped run under over around");
+        lmap::extractor extractor(vocab);
+        auto data = extractor.get_data();
+        EXPECT_EQ(2,data["the"]);
+
+        {
+            // the word 'jump' is not in the vocab
+            string t1 = "the quick brown fox jump over the lazy dog";
+            auto extracted = extractor.extract(&t1[0], t1.size());
+            EXPECT_EQ(nullptr, extracted);
+        }
+        {
+            string t1 = "the quick brown fox jumped over the lazy dog";
+            vector<int> expected = {2, 3, 9, 4, 13, 16, 2, 11, 6};
+            auto extracted = extractor.extract(&t1[0], t1.size());
+            ASSERT_NE(nullptr, extracted);
+            shared_ptr<lmap::decoded> decoded = static_pointer_cast<lmap::decoded>(extracted);
+            ASSERT_EQ(expected.size(),decoded->get_data().size());
+            for( int i=0; i<expected.size(); i++ ) {
+                EXPECT_EQ(expected[i], decoded->get_data()[i]) << "at index " << i;
+            }
+        }
+    }
+}
 
 TEST(etl, bbox) {
     // Create test metadata
