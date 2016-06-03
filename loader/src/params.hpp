@@ -4,10 +4,6 @@
 
 namespace nervana {
     class decoded_media;
-    class image_extract_params;
-    class image_transform_params;
-    class image_load_params;
-    class settings;
 }
 
 enum class MediaType {
@@ -26,12 +22,6 @@ public:
     virtual MediaType get_type() = 0;
 };
 
-/*  ABSTRACT INTERFACES */
-class nervana::settings {
-public:
-    virtual ~settings() {}
-    virtual void set_
-};
 
 typedef std::shared_ptr<nervana::decoded_media>        media_ptr;
 typedef std::shared_ptr<nervana::parameter_collection> param_ptr;
