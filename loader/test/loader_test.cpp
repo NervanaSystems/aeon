@@ -155,7 +155,9 @@ TEST(myloader, argtype) {
         EXPECT_EQ(ie_p->get_channel_count(), 3);
     }
 
-    /* */
+    /* Uses an alternate parser to unpack required params and create distributions from a json
+       string
+    */
     {
         string argString = R"(
             {
