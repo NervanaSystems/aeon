@@ -2,14 +2,19 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include "json.hpp"
 
 #include "etl_interface.hpp"
 #include "params.hpp"
+
+using namespace nlohmann;   // json stuff
+using namespace std;
 
 namespace nervana {
     namespace image {
         class extract_params;
         class transform_params;
+        class transform_params_json;
         class load_params;
 
         class extractor;
@@ -29,6 +34,56 @@ public:
     }
 };
 
+
+class nervana::image::transform_params_json : public nervana::parameter_collection {
+public:
+    int height;
+    int width;
+    uniform_int_distribution<int> angle;
+    uniform_real_distribution<float> scale;
+    normal_distribution<float> lighting;
+
+    transform_params_json(string argString) {
+        auto js = nlohmann::json::parse(argString);
+
+        bool success = true;
+        success &= parse_required(height, "height", js);
+        success &= parse_required(width, "width", js);
+        if (!success) {
+            cout << "Parse Failed" << endl;
+        }
+
+        parse_distribution(angle, "angle_dist_params", js, 0, 0);
+        parse_distribution(scale, "scale_dist_params", js, 1.0f, 1.0f);
+        parse_distribution(lighting, "lighting_dist_params", js, 0.0f, 0.0f);
+    }
+
+    template<typename T, typename S> void parse_distribution(T& value,
+                                                             const string key,
+                                                             const nlohmann::json &js,
+                                                             S a, S b)
+    {
+        S prm1=a, prm2=b;
+        if (js.find(key) != js.end()) {
+            auto params = js[key].get<vector<S>>();
+            prm1 = params[0];
+            prm2 = params[1];
+        }
+        value = T{prm1, prm2};
+    }
+
+    template<typename T> bool parse_required(T& value, const string key, const nlohmann::json &js)
+    {
+        if (js.find(key) != js.end()) {
+            value = js[key].get<T>();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+};
 
 class nervana::image::transform_params : public nervana::parameter_collection {
 public:

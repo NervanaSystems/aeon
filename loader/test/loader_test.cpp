@@ -154,6 +154,36 @@ TEST(myloader, argtype) {
         auto ie_p = make_shared<image::extractor>(_iep1);
         EXPECT_EQ(ie_p->get_channel_count(), 3);
     }
+
+    /* */
+    {
+        string argString = R"(
+            {
+                "height": 25,
+                "width" : 30,
+                "angle_dist_params" : [-20, 20],
+                "scale_dist_params" : [0.2, 0.8],
+                "lighting_dist_params" : [0.0, 0.1]
+            }
+        )";
+
+        auto itpj = make_shared<image::transform_params_json>(argString);
+
+        // output the fixed parameters
+        cout << "HEIGHT: " << itpj->height << endl;
+        cout << "WIDTH: " << itpj->width << endl;
+
+        // output the random parameters
+        default_random_engine r_eng(0);
+        for (int i=0; i<5; i++) {
+            cout << " angle: " << itpj->angle(r_eng);
+            cout << " scale: " << itpj->scale(r_eng);
+            cout << " lighting: " << itpj->lighting(r_eng);
+            cout << endl;
+        }
+    }
+
+
     {
 
         int eo = 20;

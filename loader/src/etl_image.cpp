@@ -11,12 +11,9 @@ void nervana::image::transform_params::fill_settings(media_ptr mptr, settings_pt
     img_settings->flip  = flip && _rngu(eng) > 0;
     img_settings->angle = (int) (_rngu(eng) * angle);
 
-    float scale = _rngu(eng);
+    // float scale = _rngu(eng);
 
-    cv::Size2f isz = imgptr->get_image(0).size();
-
-
-
+    // cv::Size2f isz = imgptr->get_image(0).size();
 }
 
 // void nervana::image::transform_params::scaleCropBoxArea(const cv::Size2f &inSize, cv::Rect &cropBox) {

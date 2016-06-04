@@ -45,7 +45,6 @@ public:
         ADD_OPTIONAL(ld_offset, "offset to add on load if loading as float", "lo", "load_offset", 0.0, -0.9, 0.9);
         ADD_OPTIONAL(ld_dofloat, "load as a float?", "lf", "load_dofloat", false);
     }
-
 };
 
 
