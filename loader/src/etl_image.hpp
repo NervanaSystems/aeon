@@ -2,13 +2,14 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <unordered_map>
+#include <stdexcept>      // std::invalid_argument
+
 #include "json.hpp"
 
 #include "etl_interface.hpp"
 #include "params.hpp"
 
-using namespace nlohmann;   // json stuff
-using namespace std;
 
 namespace nervana {
     namespace image {
@@ -39,46 +40,61 @@ class nervana::image::transform_params_json : public nervana::parameter_collecti
 public:
     int height;
     int width;
-    uniform_int_distribution<int> angle;
-    uniform_real_distribution<float> scale;
-    normal_distribution<float> lighting;
+    std::uniform_real_distribution<float>    scale{1.0f, 1.0f};
 
-    transform_params_json(string argString) {
+    std::uniform_int_distribution<int>       angle{0, 0};
+    std::normal_distribution<float>          lighting{0.0f, 0.0f};
+    std::uniform_real_distribution<float>    photometric{0.0f, 0.0f};
+    std::uniform_real_distribution<float>    aspect_ratio{1.0f, 1.0f};
+    std::uniform_real_distribution<float>    crop_offset{1.0f, 1.0f};
+
+    bool do_area_scale;
+    bool do_flip;
+
+    transform_params_json(std::string argString) {
         auto js = nlohmann::json::parse(argString);
 
-        bool success = true;
-        success &= parse_required(height, "height", js);
-        success &= parse_required(width, "width", js);
-        if (!success) {
-            cout << "Parse Failed" << endl;
+        try {
+            parse_value(height, "height", js, true);
+            parse_value(width, "width", js, true);
+        }
+        catch (const std::invalid_argument &ia) {
+            std::cerr << ia.what() << '\n';
+            throw std::runtime_error("Failed Parse");
         }
 
-        parse_distribution(angle, "angle_dist_params", js, 0, 0);
-        parse_distribution(scale, "scale_dist_params", js, 1.0f, 1.0f);
-        parse_distribution(lighting, "lighting_dist_params", js, 0.0f, 0.0f);
+        parse_value(do_flip, "do_flip", js);
+        parse_value(do_area_scale, "do_area_scale", js);
+
+        parse_distribution<decltype(angle)>(angle, "angle_dist_params", js);
+        parse_distribution<decltype(scale)>(scale, "scale_dist_params", js);
+        parse_distribution<decltype(lighting)>(lighting, "lighting_dist_params", js);
+
     }
 
-    template<typename T, typename S> void parse_distribution(T& value,
-                                                             const string key,
-                                                             const nlohmann::json &js,
-                                                             S a, S b)
+    template<typename T> void parse_distribution(
+                                        T& value,
+                                        const std::string key,
+                                        const nlohmann::json &js )
     {
-        S prm1=a, prm2=b;
-        if (js.find(key) != js.end()) {
-            auto params = js[key].get<vector<S>>();
-            prm1 = params[0];
-            prm2 = params[1];
+        auto val = js.find(key);
+        if (val != js.end()) {
+            auto params = val->get<std::vector<typename T::result_type>>();
+            value = T{params[0], params[1]};
         }
-        value = T{prm1, prm2};
     }
 
-    template<typename T> bool parse_required(T& value, const string key, const nlohmann::json &js)
+    template<typename T> void parse_value(
+                                    T& value,
+                                    const std::string key,
+                                    const nlohmann::json &js,
+                                    required=false )
     {
-        if (js.find(key) != js.end()) {
-            value = js[key].get<T>();
-            return true;
-        } else {
-            return false;
+        auto val = js.find(key);
+        if (val != js.end()) {
+            value = val->get<T>();
+        } else if (required) {
+            throw std::invalid_argument("Required Argument: " + key + " not set");
         }
     }
 

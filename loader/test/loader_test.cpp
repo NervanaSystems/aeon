@@ -173,13 +173,13 @@ TEST(myloader, argtype) {
 
         // output the fixed parameters
         cout << "HEIGHT: " << itpj->height << endl;
-        cout << "WIDTH: " << itpj->width << endl;
+        cout << "WIDTH: "  << itpj->width  << endl;
 
         // output the random parameters
         default_random_engine r_eng(0);
         for (int i=0; i<5; i++) {
-            cout << " angle: " << itpj->angle(r_eng);
-            cout << " scale: " << itpj->scale(r_eng);
+            cout << " angle: "    << itpj->angle(r_eng);
+            cout << " scale: "    << itpj->scale(r_eng);
             cout << " lighting: " << itpj->lighting(r_eng);
             cout << endl;
         }
