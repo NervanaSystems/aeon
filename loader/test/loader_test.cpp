@@ -145,19 +145,15 @@ TEST(etl, bbox_angle) {
 }
 
 TEST(myloader, argtype) {
-    map<string,shared_ptr<interface_ArgType> > args = _iep1->get_args();
-    ASSERT_EQ(1, args.size());
 
     {
-        string argString = "";
-        EXPECT_TRUE(_iep1->parse(argString)) << "missing required arguments in '" << argString << "'";
-        auto ie_p = make_shared<image::extractor>(_iep1);
+        string argString = "{}";
+        auto iep1 = make_shared<image::extract_params>(argString);
+        auto ie_p = make_shared<image::extractor>(iep1);
         EXPECT_EQ(ie_p->get_channel_count(), 3);
     }
 
-    /* Uses an alternate parser to unpack required params and create distributions from a json
-       string
-    */
+
     {
         string argString = R"(
             {
@@ -170,7 +166,7 @@ TEST(myloader, argtype) {
             }
         )";
 
-        auto itpj = make_shared<image::transform_params_json>(argString);
+        auto itpj = make_shared<image::transform_params>(argString);
 
         // output the fixed parameters
         cout << "HEIGHT: " << itpj->height << endl;
@@ -219,7 +215,7 @@ TEST(myloader, argtype) {
         cout << "Set scale: " << lstg->scale << " ";
         cout << "Set shift: " << lstg->shift << endl;
 
-        int reference = ((int) (*labels)[0] + eo)* lstg->scale + lstg->shift;
+        int reference = ((int) (*labels)[0] + lblp->ex_offset)* lstg->scale + lstg->shift;
 
         // Take the int and do provision with it.
         auto lble = make_shared<label::extractor>(lblp);

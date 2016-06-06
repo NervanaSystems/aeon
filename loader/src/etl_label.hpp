@@ -27,7 +27,7 @@ public:
 };
 
 
-class nervana::label::params : public nervana::parameter_collection {
+class nervana::label::params : public nervana::json_parameter_collection {
 public:
     int ex_offset = 0;
 

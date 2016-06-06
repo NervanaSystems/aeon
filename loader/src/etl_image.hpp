@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <stdexcept>      // std::invalid_argument
 
-#include "json.hpp"
 
 #include "etl_interface.hpp"
 #include "params.hpp"

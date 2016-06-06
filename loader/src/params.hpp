@@ -2,6 +2,7 @@
 #include <memory>
 #include <random>
 #include "argtype.hpp"
+#include "json.hpp"
 
 namespace nervana {
     class decoded_media;
@@ -79,4 +80,4 @@ public:
     {
         parse_value(value, key, js, false);
     }
-}
+};

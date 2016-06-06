@@ -2,19 +2,19 @@
 
 using namespace std;
 
-void nervana::image::transform_params::fill_settings(media_ptr mptr, settings_ptr sptr, default_random_engine eng)
-{
-    auto imgptr = static_pointer_cast<decoded_images>(mptr);
-    auto img_settings = static_pointer_cast<nervana::image::settings>(sptr);
+// void nervana::image::transform_params::fill_settings(media_ptr mptr, settings_ptr sptr, default_random_engine eng)
+// {
+//     auto imgptr = static_pointer_cast<decoded_images>(mptr);
+//     auto img_settings = static_pointer_cast<nervana::image::settings>(sptr);
 
 
-    img_settings->flip  = flip && _rngu(eng) > 0;
-    img_settings->angle = (int) (_rngu(eng) * angle);
+//     img_settings->flip  = flip && _rngu(eng) > 0;
+//     img_settings->angle = (int) (_rngu(eng) * angle);
 
-    // float scale = _rngu(eng);
+//     // float scale = _rngu(eng);
 
-    // cv::Size2f isz = imgptr->get_image(0).size();
-}
+//     // cv::Size2f isz = imgptr->get_image(0).size();
+// }
 
 // void nervana::image::transform_params::scaleCropBoxArea(const cv::Size2f &inSize, cv::Rect &cropBox) {
 //     float oAR = width / (float) height;
@@ -31,7 +31,7 @@ nervana::image::extractor::extractor(param_ptr pptr)
 {
     auto iep = static_pointer_cast<extract_params>(pptr);
 
-    _channel_count = iep->channels;
+    _channel_count = iep->num_channels;
     if (!(_channel_count == 1 || _channel_count == 3))
     {
         std::stringstream ss;
