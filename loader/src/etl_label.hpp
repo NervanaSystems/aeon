@@ -29,21 +29,23 @@ public:
 
 class nervana::label::params : public nervana::parameter_collection {
 public:
-    int ex_offset;
+    int ex_offset = 0;
 
-    int tx_scale;
-    int tx_shift;
+    std::uniform_int_distribution<int>    tx_scale{1, 1};
+    std::uniform_int_distribution<int>    tx_shift{0, 0};
 
-    float ld_offset;
-    bool ld_dofloat;
+    float ld_offset = 0.0;
+    bool ld_dofloat = false;
 
-    params() {
+    params(std::string argString) {
+        auto js = nlohmann::json::parse(argString);
+
         // Optionals with some standard defaults
-        ADD_OPTIONAL(ex_offset, "offset to add on extract", "eo", "extract_offset", 0, -100, 100);
-        ADD_OPTIONAL(tx_scale, "scale to multiply by on transform", "tsc", "transform_scale", 1, 1, 10);
-        ADD_OPTIONAL(tx_shift, "shift to multiply by on transform", "tsh", "transform_shift", 0, 0, 200);
-        ADD_OPTIONAL(ld_offset, "offset to add on load if loading as float", "lo", "load_offset", 0.0, -0.9, 0.9);
-        ADD_OPTIONAL(ld_dofloat, "load as a float?", "lf", "load_dofloat", false);
+        parse_opt(ex_offset,  "extract offset",  js);
+        parse_dist<decltype(tx_scale)>(tx_scale, "transform scale dist params", js);
+        parse_dist<decltype(tx_shift)>(tx_shift, "transform shift dist params", js);
+        parse_opt(ld_offset,  "load offset",     js);
+        parse_opt(ld_dofloat, "load do float",   js);
     }
 };
 

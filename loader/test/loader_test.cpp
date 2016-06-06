@@ -36,11 +36,11 @@ extern DataGen _datagen;
 using namespace std;
 using namespace nervana;
 
-static param_ptr _iep1 = make_shared<image::extract_params>();
-static param_ptr _itp1 = make_shared<image::transform_params>();
-static param_ptr _ilp1 = make_shared<image::load_params>();
+// static param_ptr _iep1 = make_shared<image::extract_params>();
+// static param_ptr _itp1 = make_shared<image::transform_params>();
+// static param_ptr _ilp1 = make_shared<image::load_params>();
 
-static param_ptr _lblp1 = make_shared<label::params>();
+// static param_ptr _lblp1 = make_shared<label::params>();
 
 
 TEST(etl, bbox) {
@@ -165,7 +165,8 @@ TEST(myloader, argtype) {
                 "width" : 30,
                 "angle_dist_params" : [-20, 20],
                 "scale_dist_params" : [0.2, 0.8],
-                "lighting_dist_params" : [0.0, 0.1]
+                "lighting_dist_params" : [0.0, 0.1],
+                "flip_dist_params" : [false]
             }
         )";
 
@@ -181,6 +182,7 @@ TEST(myloader, argtype) {
             cout << " angle: "    << itpj->angle(r_eng);
             cout << " scale: "    << itpj->scale(r_eng);
             cout << " lighting: " << itpj->lighting(r_eng);
+            cout << " flip: " << itpj->flip(r_eng);
             cout << endl;
         }
     }
@@ -188,19 +190,14 @@ TEST(myloader, argtype) {
 
     {
 
-        int eo = 20;
-        int tsc = 8;
-        int tsh = 5;
-
-        ostringstream argStringStream;
-        argStringStream << "--extract_offset " << eo << " ";
-        argStringStream << "--transform_scale " << tsc << " ";
-        argStringStream << "--transform_shift " << tsh << " ";
-
-        string argString = argStringStream.str();
-
-        EXPECT_TRUE(_lblp1->parse(argString)) << "missing required arguments in '" << argString << "'";
-
+        string argString = R"(
+            {
+                "extract offset":  20,
+                "transform scale dist params":  [-8, 8],
+                "transform shift dist params":  [-5, 5]
+            }
+        )";
+        auto lblp = make_shared<label::params>(argString);
 
         BatchFileReader bf;
         auto dataFiles = _datagen.GetFiles();
@@ -216,12 +213,8 @@ TEST(myloader, argtype) {
         auto lstg = make_shared<label::settings>();
 
         default_random_engine r_eng(0);
-        shared_ptr<label::params> lblp = static_pointer_cast<label::params>(_lblp1);
-        lstg->scale = uniform_int_distribution<int>{-lblp->tx_scale, lblp->tx_scale}(r_eng);
-        lstg->shift = uniform_int_distribution<int>{-lblp->tx_shift, lblp->tx_shift}(r_eng);
-
-
-        // static_pointer_cast<label::params>(_lblp1)->fill_settings(lstg, r_eng);
+        lstg->scale = lblp->tx_scale(r_eng);
+        lstg->shift = lblp->tx_shift(r_eng);
 
         cout << "Set scale: " << lstg->scale << " ";
         cout << "Set shift: " << lstg->shift << endl;
@@ -229,11 +222,11 @@ TEST(myloader, argtype) {
         int reference = ((int) (*labels)[0] + eo)* lstg->scale + lstg->shift;
 
         // Take the int and do provision with it.
-        auto lble = make_shared<label::extractor>(_lblp1);
-        auto lblt = make_shared<label::transformer>(_lblp1);
+        auto lble = make_shared<label::extractor>(lblp);
+        auto lblt = make_shared<label::transformer>(lblp);
 
         {
-            auto lbll = make_shared<label::loader>(_lblp1);
+            auto lbll = make_shared<label::loader>(lblp);
 
             int reference_target = reference;
             int loaded_target = 0;
@@ -244,8 +237,14 @@ TEST(myloader, argtype) {
 
         {
             // This is a float loader that loads into a float with an offset
-            param_ptr flt_lbl_params = make_shared<label::params>();
-            flt_lbl_params->parse("--load_dofloat true --load_offset 0.8");
+            string lArgString = R"(
+                {
+                    "load do float":  true,
+                    "load offset": 0.8
+                }
+            )";
+            auto flt_lbl_params = make_shared<label::params>(lArgString);
+
             auto lbll = make_shared<label::loader>(flt_lbl_params);
 
             float reference_target = reference + 0.8;

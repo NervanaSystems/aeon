@@ -15,7 +15,6 @@ namespace nervana {
     namespace image {
         class extract_params;
         class transform_params;
-        class transform_params_json;
         class load_params;
 
         class extractor;
@@ -27,126 +26,59 @@ namespace nervana {
     class decoded_images;
 }
 
-class nervana::image::extract_params : public nervana::parameter_collection {
+class nervana::image::extract_params : public nervana::json_parameter_collection {
 public:
-    int channels;
-    extract_params() {
-        ADD_OPTIONAL(channels, "number of channels", "ch", "channels", 3, 1, 3);
-    }
-};
-
-
-class nervana::image::transform_params_json : public nervana::parameter_collection {
-public:
-    int height;
-    int width;
-    std::uniform_real_distribution<float>    scale{1.0f, 1.0f};
-
-    std::uniform_int_distribution<int>       angle{0, 0};
-    std::normal_distribution<float>          lighting{0.0f, 0.0f};
-    std::uniform_real_distribution<float>    photometric{0.0f, 0.0f};
-    std::uniform_real_distribution<float>    aspect_ratio{1.0f, 1.0f};
-    std::uniform_real_distribution<float>    crop_offset{1.0f, 1.0f};
-
-    bool do_area_scale;
-    bool do_flip;
-
-    transform_params_json(std::string argString) {
+    int num_channels = 3;
+    extract_params(std::string argString) {
         auto js = nlohmann::json::parse(argString);
 
-        try {
-            parse_value(height, "height", js, true);
-            parse_value(width, "width", js, true);
-        }
-        catch (const std::invalid_argument &ia) {
-            std::cerr << ia.what() << '\n';
-            throw std::runtime_error("Failed Parse");
-        }
-
-        parse_value(do_flip, "do_flip", js);
-        parse_value(do_area_scale, "do_area_scale", js);
-
-        parse_distribution<decltype(angle)>(angle, "angle_dist_params", js);
-        parse_distribution<decltype(scale)>(scale, "scale_dist_params", js);
-        parse_distribution<decltype(lighting)>(lighting, "lighting_dist_params", js);
-
+        parse_opt(num_channels, "num_channels", js);
     }
-
-    template<typename T> void parse_distribution(
-                                        T& value,
-                                        const std::string key,
-                                        const nlohmann::json &js )
-    {
-        auto val = js.find(key);
-        if (val != js.end()) {
-            auto params = val->get<std::vector<typename T::result_type>>();
-            value = T{params[0], params[1]};
-        }
-    }
-
-    template<typename T> void parse_value(
-                                    T& value,
-                                    const std::string key,
-                                    const nlohmann::json &js,
-                                    required=false )
-    {
-        auto val = js.find(key);
-        if (val != js.end()) {
-            value = val->get<T>();
-        } else if (required) {
-            throw std::invalid_argument("Required Argument: " + key + " not set");
-        }
-    }
-
-
 };
 
-class nervana::image::transform_params : public nervana::parameter_collection {
+
+class nervana::image::transform_params : public nervana::json_parameter_collection {
 public:
     int height;
     int width;
-    float scale_pct;
-    int angle;
-    float cbs_range;
-    float lighting_range;
-    float aspect_ratio;
-    bool area_scaling;
-    bool flip;
-    float crop_offset_range;
+    std::uniform_real_distribution<float> scale{1.0f, 1.0f};
 
-    transform_params() {
-        // Required Params
-        ADD_REQUIRED(height, "image height", "h", "height");
-        ADD_REQUIRED(width, "image width", "w", "width");
-        ADD_REQUIRED(scale_pct, "percentage of original image to scale crop", "s1", "scale_pct", 1, 100);
+    std::uniform_int_distribution<int>    angle{0, 0};
 
-        ADD_OPTIONAL(angle, "rotation angle", "angle", "rotate_angle", 0, 0, 90);
-        ADD_OPTIONAL(cbs_range, "augmentation range in pct to jitter contrast, brightness, saturation", "c1", "cbs_range", 0.0, 0.0, 1.0);
-        ADD_OPTIONAL(lighting_range, "augmentation range in pct to jitter lighting", "l1", "lighting_range", 0.0, 0.0, 0.2);
-        ADD_OPTIONAL(aspect_ratio, "aspect ratio to jitter", "a1", "aspect_ratio", 1.0, 1.0, 2.0);
-        ADD_OPTIONAL(area_scaling, "whether to use area based scaling", "a2", "area_scaling", false);
-        ADD_OPTIONAL(flip, "randomly flip?", "f1", "flip", false);
-        ADD_OPTIONAL(crop_offset_range, "augmentation range in pct to cropbox location", "c2", "crop_offset_range", 0.0, 0.0, 1.0);
+    std::normal_distribution<float>       lighting{0.0f, 0.0f};
+    std::uniform_real_distribution<float> aspect_ratio{1.0f, 1.0f};
+    std::uniform_real_distribution<float> photometric{0.0f, 0.0f};
+    std::uniform_real_distribution<float> crop_offset{1.0f, 1.0f};
+    std::bernoulli_distribution           flip{0};
 
-        _rngn = std::normal_distribution<float>(0.0, 1.0);
-        _rngu = std::uniform_real_distribution<float>(-1.0, 1.0);
+    bool do_area_scale = false;
+
+    transform_params(std::string argString) {
+        auto js = nlohmann::json::parse(argString);
+
+        parse_req(height, "height", js);
+        parse_req(width, "width", js);
+
+        parse_opt(do_area_scale, "do_area_scale", js);
+
+        parse_dist<decltype(angle)>(angle, "angle_dist_params", js);
+        parse_dist<decltype(scale)>(scale, "scale_dist_params", js);
+        parse_dist<decltype(lighting)>(lighting, "lighting_dist_params", js);
+        parse_dist<decltype(aspect_ratio)>(aspect_ratio, "aspect_ratio_dist_params", js);
+        parse_dist<decltype(photometric)>(photometric, "photometric_dist_params", js);
+        parse_dist<decltype(crop_offset)>(crop_offset, "crop_offset_dist_params", js);
+        parse_dist<decltype(flip)>(flip, "flip_dist_params", js);
     }
-
-    void fill_settings(media_ptr, settings_ptr, std::default_random_engine);
-
-private:
-    std::uniform_real_distribution<float>    _rngu;
-    std::normal_distribution<float>          _rngn;
 
 };
 
-
-class nervana::image::load_params : public nervana::parameter_collection {
+class nervana::image::load_params : public nervana::json_parameter_collection {
 public:
-    bool channel_major;
+    bool channel_major = true;
 
-    load_params() {
-        ADD_OPTIONAL(channel_major, "load in channel major mode?", "cm", "channel_major", true);
+    load_params(std::string argString) {
+        auto js = nlohmann::json::parse(argString);
+        parse_opt(channel_major, "channel_major", js);
     }
 };
 
