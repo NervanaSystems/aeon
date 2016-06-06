@@ -20,7 +20,9 @@ class nervana::interface::transformer {
 public:
     virtual ~transformer() {}
     virtual media_ptr transform(settings_ptr, const media_ptr&) = 0;
-    virtual void fill_settings(settings_ptr) = 0;
+    // virtual void fill_settings(settings_ptr, const media_ptr&) = 0;
+    virtual void fill_settings(settings_ptr, const media_ptr&, std::default_random_engine &) = 0;
+
 };
 
 class nervana::interface::loader {

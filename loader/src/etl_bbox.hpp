@@ -51,7 +51,8 @@ public:
     transformer();
     virtual ~transformer(){}
     virtual media_ptr transform(settings_ptr, const media_ptr&) override;
-    virtual void fill_settings(settings_ptr) override;
+    virtual void fill_settings(settings_ptr, const media_ptr&, std::default_random_engine &) override;
+
 private:
 };
 

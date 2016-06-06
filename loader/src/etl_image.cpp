@@ -2,19 +2,17 @@
 
 using namespace std;
 
-// void nervana::image::transform_params::fill_settings(media_ptr mptr, settings_ptr sptr, default_random_engine eng)
-// {
-//     auto imgptr = static_pointer_cast<decoded_images>(mptr);
-//     auto img_settings = static_pointer_cast<nervana::image::settings>(sptr);
-
-
-//     img_settings->flip  = flip && _rngu(eng) > 0;
-//     img_settings->angle = (int) (_rngu(eng) * angle);
-
-//     // float scale = _rngu(eng);
-
-//     // cv::Size2f isz = imgptr->get_image(0).size();
-// }
+void nervana::image::settings::dump()
+{
+    cout << "Angle: " << setw(3) << angle << " ";
+    cout << "Flip: " << flip << " ";
+    cout << "Filled: " << filled << " ";
+    cout << "Lighting: ";
+    for_each (lighting.begin(), lighting.end(), [](float &l) {cout << l << " ";});
+    cout << "Photometric: ";
+    for_each (photometric.begin(), photometric.end(), [](float &p) {cout << p << " ";});
+    cout << endl << "Crop Box: " << cropbox << endl;
+}
 
 // void nervana::image::transform_params::scaleCropBoxArea(const cv::Size2f &inSize, cv::Rect &cropBox) {
 //     float oAR = width / (float) height;
@@ -72,7 +70,8 @@ nervana::image::transformer::transformer(param_ptr pptr)
     _itp = static_pointer_cast<nervana::image::transform_params>(pptr);
 }
 
-media_ptr nervana::image::transformer::transform(settings_ptr transform_settings, const media_ptr& input)
+media_ptr nervana::image::transformer::transform(settings_ptr transform_settings,
+                                                 const media_ptr& input)
 {
     auto img_xform = static_pointer_cast<nervana::image::settings>(transform_settings);
     cv::Mat rotatedImage;
@@ -82,8 +81,8 @@ media_ptr nervana::image::transformer::transform(settings_ptr transform_settings
 
     cv::Mat resizedImage;
     resize(croppedImage, resizedImage, cv::Size2i(_itp->width, _itp->height));
-    cbsjitter(resizedImage, img_xform->cbs);
-    lighting(resizedImage, img_xform->colornoise);
+    cbsjitter(resizedImage, img_xform->photometric);
+    lighting(resizedImage, img_xform->lighting);
 
     cv::Mat *finalImage = &resizedImage;
     cv::Mat flippedImage;
@@ -93,6 +92,29 @@ media_ptr nervana::image::transformer::transform(settings_ptr transform_settings
     }
 
     return make_shared<decoded_images>(*finalImage);
+}
+
+void nervana::image::transformer::fill_settings(settings_ptr transform_settings,
+                                                const media_ptr& input,
+                                                default_random_engine &dre)
+{
+    auto imgstgs = static_pointer_cast<nervana::image::settings>(transform_settings);
+    // auto sz = static_pointer_cast<decoded_images>(input)->get_image_size();
+
+    imgstgs->angle = _itp->angle(dre);
+    imgstgs->flip  = _itp->flip(dre);
+
+    // float scale = _itp->scale(dre);
+    // float aspect_ratio = _itp->aspect_ratio(dre);
+    // float c_off_x = _itp->crop_offset(dre);
+    // float c_off_y = _itp->crop_offset(dre);
+
+    for_each(imgstgs->lighting.begin(),
+             imgstgs->lighting.end(),
+             [this, &dre] (float &n) {n = _itp->lighting(dre);});
+    for_each(imgstgs->photometric.begin(),
+             imgstgs->photometric.end(),
+             [this, &dre] (float &n) {n = _itp->photometric(dre);});
 }
 
 void nervana::image::transformer::rotate(const cv::Mat& input, cv::Mat& output, int angle)
@@ -116,11 +138,11 @@ void nervana::image::transformer::resize(const cv::Mat& input, cv::Mat& output, 
     }
 }
 
-void nervana::image::transformer::lighting(cv::Mat& inout, float pixelstd[])
+void nervana::image::transformer::lighting(cv::Mat& inout, vector<float> lighting)
 {
 }
 
-void nervana::image::transformer::cbsjitter(cv::Mat& inout, float cbs[])
+void nervana::image::transformer::cbsjitter(cv::Mat& inout, vector<float> photometric)
 {
 }
 

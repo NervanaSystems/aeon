@@ -78,8 +78,7 @@ media_ptr nervana::bbox::transformer::transform(settings_ptr _sptr, const media_
     return rc;
 }
 
-void nervana::bbox::transformer::fill_settings(settings_ptr) {
-
+void nervana::bbox::transformer::fill_settings(settings_ptr, const media_ptr&, std::default_random_engine &) {
 }
 
 void nervana::bbox::loader::load(char* data, int size, const media_ptr& media) {

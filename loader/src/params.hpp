@@ -1,6 +1,8 @@
 #pragma once
 #include <memory>
 #include <random>
+#include <stdexcept>      // std::invalid_argument
+
 #include "argtype.hpp"
 #include "json.hpp"
 
@@ -52,6 +54,7 @@ public:
         dist = T{params[0], params[1]};
     }
 
+    // Specialization for a bernoulli coin flipping random var
     inline void set_dist_params(std::bernoulli_distribution& dist, std::vector<bool>& params)
     {
         dist = std::bernoulli_distribution{params[0] ? 0.5 : 0.0};

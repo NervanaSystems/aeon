@@ -2,9 +2,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <unordered_map>
-#include <stdexcept>      // std::invalid_argument
-
 
 #include "etl_interface.hpp"
 #include "params.hpp"
@@ -86,11 +83,13 @@ class nervana::image::settings : public nervana::settings {
 public:
 
     settings() {}
+    void dump();
+
     cv::Rect cropbox;
     int angle = 0;
     bool flip = false;
-    float colornoise[3] {0.0, 0.0, 0.0};  //pixelwise random values
-    float cbs[3] {0.0, 0.0, 0.0};  // contrast, brightness, saturation
+    std::vector<float> lighting{0.0, 0.0, 0.0};  //pixelwise random values
+    std::vector<float> photometric{0.0, 0.0, 0.0};  // contrast, brightness, saturation
     bool filled = false;
 };
 
@@ -103,6 +102,7 @@ public:
 
     virtual MediaType get_type() override { return MediaType::IMAGE; }
     cv::Mat& get_image(int index) { return _images[index]; }
+    cv::Size2i get_image_size() {return _images[0].size(); }
     size_t size() const { return _images.size(); }
 
 private:
@@ -130,12 +130,13 @@ public:
     transformer(param_ptr);
     ~transformer() {}
     virtual media_ptr transform(settings_ptr, const media_ptr&) override;
+    virtual void fill_settings(settings_ptr, const media_ptr&, std::default_random_engine &) override;
 
 private:
     void rotate(const cv::Mat& input, cv::Mat& output, int angle);
     void resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size);
-    void lighting(cv::Mat& inout, float pixelstd[]);
-    void cbsjitter(cv::Mat& inout, float cbs[]);
+    void lighting(cv::Mat& inout, std::vector<float>);
+    void cbsjitter(cv::Mat& inout, std::vector<float>);
 
     std::shared_ptr<transform_params> _itp;
 };

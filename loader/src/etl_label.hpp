@@ -99,7 +99,8 @@ public:
     }
 
     // Filling settings is done by the relevant params
-    void fill_settings(settings_ptr tx) override {}
+    virtual void fill_settings(settings_ptr, const media_ptr&, std::default_random_engine &) override
+    {}
 
 };
 
