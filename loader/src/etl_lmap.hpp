@@ -31,7 +31,7 @@ private:
     std::vector<int>    _labels;
 };
 
-class nervana::lmap::extractor : public extractor_interface {
+class nervana::lmap::extractor : public nervana::interface::extractor {
 public:
     extractor( const std::vector<std::string>& labels );
     extractor( std::istream& in );
@@ -44,16 +44,15 @@ private:
     std::unordered_map<std::string,int>  _dictionary;
 };
 
-class nervana::lmap::transformer : public nervana::transformer_interface {
+class nervana::lmap::transformer : public nervana::interface::transformer {
 public:
     transformer();
     virtual ~transformer(){}
     virtual media_ptr transform(settings_ptr, const media_ptr&) override;
-    virtual void fill_settings(settings_ptr) override;
 private:
 };
 
-class nervana::lmap::loader : public nervana::loader_interface {
+class nervana::lmap::loader : public nervana::interface::loader {
 public:
     loader();
     virtual ~loader(){}

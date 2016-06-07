@@ -102,7 +102,6 @@ $(LOADER_SO): $(OBJS)
 	@echo "Building $@..."
 	@mkdir -p ../bin
 	$(CC) -shared -o $@ $(OBJS) $(LDIR) $(LIBS)
-	cp $(LOADER_SO) ../bin
 
 $(LOADER_STATIC): $(OBJS)
 	@echo "Building $@..."

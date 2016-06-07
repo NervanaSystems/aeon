@@ -52,10 +52,6 @@ media_ptr nervana::lmap::transformer::transform(settings_ptr _settings, const me
     return rc;
 }
 
-void nervana::lmap::transformer::fill_settings(settings_ptr) {
-
-}
-
 void nervana::lmap::loader::load(char* data, int size, const media_ptr& media) {
 
 }
