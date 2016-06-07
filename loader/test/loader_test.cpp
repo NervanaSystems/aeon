@@ -158,106 +158,107 @@ TEST(etl, bbox_extractor) {
     }
 }
 
-// TEST(etl, bbox) {
-//     // Create test metadata
-//     nlohmann::json j = nlohmann::json::object();
-//     cv::Rect r0 = cv::Rect( 0, 0, 10, 15 );
-//     cv::Rect r1 = cv::Rect( 10, 10, 12, 13 );
-//     cv::Rect r2 = cv::Rect( 100, 100, 120, 130 );
-//     j["boxes"] = {bbox::extractor::create_box( r0, 3 ),
-//                   bbox::extractor::create_box( r1, 4 ),
-//                   bbox::extractor::create_box( r2, 42)};
-//     // cout << std::setw(4) << j << endl;
+TEST(etl, bbox) {
+    // Create test metadata
+    cv::Rect r0 = cv::Rect( 0, 0, 10, 15 );
+    cv::Rect r1 = cv::Rect( 10, 10, 12, 13 );
+    cv::Rect r2 = cv::Rect( 100, 100, 120, 130 );
+    auto list = {bbox::extractor::create_box( r0, "rat" ),
+                  bbox::extractor::create_box( r1, "flea" ),
+                  bbox::extractor::create_box( r2, "tick")};
+    auto j = bbox::extractor::create_metadata(list);
+    // cout << std::setw(4) << j << endl;
 
-//     string buffer = j.dump();
+    string buffer = j.dump();
+    // cout << "boxes\n" << buffer << endl;
 
-//     bbox::extractor extractor;
-//     auto data = extractor.extract( &buffer[0], buffer.size() );
-//     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
-//     vector<bbox::box> boxes = decoded->get_data();
-//     ASSERT_EQ(3,boxes.size());
-//     EXPECT_EQ(r0,boxes[0].rect);
-//     EXPECT_EQ(r1,boxes[1].rect);
-//     EXPECT_EQ(r2,boxes[2].rect);
-//     EXPECT_EQ(3,boxes[0].label);
-//     EXPECT_EQ(4,boxes[1].label);
-//     EXPECT_EQ(42,boxes[2].label);
+    bbox::extractor extractor;
+    auto data = extractor.extract( &buffer[0], buffer.size() );
+    shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
+    vector<bbox::box> boxes = decoded->boxes();
+    ASSERT_EQ(3,boxes.size());
+    EXPECT_EQ(r0,boxes[0].rect());
+    EXPECT_EQ(r1,boxes[1].rect());
+    EXPECT_EQ(r2,boxes[2].rect());
+    EXPECT_STREQ("rat",boxes[0].name.c_str());
+    EXPECT_STREQ("flea",boxes[1].name.c_str());
+    EXPECT_STREQ("tick",boxes[2].name.c_str());
 
-//     bbox::transformer transform;
-//     shared_ptr<image::settings> iparam = make_shared<image::settings>();
-//     settings_ptr sptr = static_pointer_cast<settings>(iparam);
-//     auto tx = transform.transform( sptr, decoded );
-// }
+    bbox::transformer transform;
+    shared_ptr<image::settings> iparam = make_shared<image::settings>();
+    settings_ptr sptr = static_pointer_cast<settings>(iparam);
+    auto tx = transform.transform( sptr, decoded );
+}
 
-// TEST(etl, bbox_transform) {
-//     // Create test metadata
-//     nlohmann::json j = nlohmann::json::object();
-//     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
-//     cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
-//     cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]
-//     cv::Rect r3 = cv::Rect( 70, 30, 10, 10 );   // result[2]
-//     cv::Rect r4 = cv::Rect( 90, 35, 10, 10 );   // outside
-//     cv::Rect r5 = cv::Rect( 30, 70, 10, 10 );   // result[3]
-//     cv::Rect r6 = cv::Rect( 70, 70, 10, 10 );   // result[4]
-//     cv::Rect r7 = cv::Rect( 30, 30, 80, 80 );   // result[5]
-//     j["boxes"] = {bbox::extractor::create_box( r0, 3 ),
-//                   bbox::extractor::create_box( r1, 4 ),
-//                   bbox::extractor::create_box( r2, 4 ),
-//                   bbox::extractor::create_box( r3, 4 ),
-//                   bbox::extractor::create_box( r4, 4 ),
-//                   bbox::extractor::create_box( r5, 4 ),
-//                   bbox::extractor::create_box( r6, 4 ),
-//                   bbox::extractor::create_box( r7, 42)};
-//     // cout << std::setw(4) << j << endl;
+TEST(etl, bbox_transform) {
+    // Create test metadata
+    cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
+    cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
+    cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]
+    cv::Rect r3 = cv::Rect( 70, 30, 10, 10 );   // result[2]
+    cv::Rect r4 = cv::Rect( 90, 35, 10, 10 );   // outside
+    cv::Rect r5 = cv::Rect( 30, 70, 10, 10 );   // result[3]
+    cv::Rect r6 = cv::Rect( 70, 70, 10, 10 );   // result[4]
+    cv::Rect r7 = cv::Rect( 30, 30, 80, 80 );   // result[5]
+    auto list = {bbox::extractor::create_box( r0, "lion" ),
+                  bbox::extractor::create_box( r1, "tiger" ),
+                  bbox::extractor::create_box( r2, "eel" ),
+                  bbox::extractor::create_box( r3, "eel" ),
+                  bbox::extractor::create_box( r4, "eel" ),
+                  bbox::extractor::create_box( r5, "eel" ),
+                  bbox::extractor::create_box( r6, "eel" ),
+                  bbox::extractor::create_box( r7, "eel" )};
+    auto j = bbox::extractor::create_metadata(list);
+    // cout << std::setw(4) << j << endl;
 
-//     string buffer = j.dump();
+    string buffer = j.dump();
 
-//     bbox::extractor extractor;
-//     auto data = extractor.extract( &buffer[0], buffer.size() );
-//     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
-//     vector<bbox::box> boxes = decoded->get_data();
+    bbox::extractor extractor;
+    auto data = extractor.extract( &buffer[0], buffer.size() );
+    shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
+    vector<bbox::box> boxes = decoded->boxes();
 
-//     ASSERT_EQ(8,boxes.size());
+    ASSERT_EQ(8,boxes.size());
 
-//     bbox::transformer transform;
-//     shared_ptr<image::settings> iparam = make_shared<image::settings>();
-//     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
-//     settings_ptr sptr = static_pointer_cast<settings>(iparam);
-//     auto tx = transform.transform( sptr, decoded );
-//     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
-//     vector<bbox::box> tx_boxes = tx_decoded->get_data();
-//     ASSERT_EQ(6,tx_boxes.size());
-//     EXPECT_EQ(cv::Rect(35,35,5,5),tx_boxes[0].rect);
-//     EXPECT_EQ(cv::Rect(50,50,10,10),tx_boxes[1].rect);
-//     EXPECT_EQ(cv::Rect(70,35,5,5),tx_boxes[2].rect);
-//     EXPECT_EQ(cv::Rect(35,70,5,5),tx_boxes[3].rect);
-//     EXPECT_EQ(cv::Rect(70,70,5,5),tx_boxes[4].rect);
-//     EXPECT_EQ(cv::Rect(35,35,40,40),tx_boxes[5].rect);
-// }
+    bbox::transformer transform;
+    shared_ptr<image::settings> iparam = make_shared<image::settings>();
+    iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
+    settings_ptr sptr = static_pointer_cast<settings>(iparam);
+    auto tx = transform.transform( sptr, decoded );
+    shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
+    vector<bbox::box> tx_boxes = tx_decoded->boxes();
+    ASSERT_EQ(6,tx_boxes.size());
+    EXPECT_EQ(cv::Rect(35,35,5,5),tx_boxes[0].rect());
+    EXPECT_EQ(cv::Rect(50,50,10,10),tx_boxes[1].rect());
+    EXPECT_EQ(cv::Rect(70,35,5,5),tx_boxes[2].rect());
+    EXPECT_EQ(cv::Rect(35,70,5,5),tx_boxes[3].rect());
+    EXPECT_EQ(cv::Rect(70,70,5,5),tx_boxes[4].rect());
+    EXPECT_EQ(cv::Rect(35,35,40,40),tx_boxes[5].rect());
+}
 
-// TEST(etl, bbox_angle) {
-//     // Create test metadata
-//     nlohmann::json j = nlohmann::json::object();
-//     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );
-//     j["boxes"] = {bbox::extractor::create_box( r0, 3 )};
+TEST(etl, bbox_angle) {
+    // Create test metadata
+    cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );
+    auto list = {bbox::extractor::create_box( r0, "puma" )};
+    auto j = bbox::extractor::create_metadata(list);
 
-//     string buffer = j.dump();
+    string buffer = j.dump();
 
-//     bbox::extractor extractor;
-//     auto data = extractor.extract( &buffer[0], buffer.size() );
-//     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
-//     vector<bbox::box> boxes = decoded->get_data();
+    bbox::extractor extractor;
+    auto data = extractor.extract( &buffer[0], buffer.size() );
+    shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
+    vector<bbox::box> boxes = decoded->boxes();
 
-//     ASSERT_EQ(1,boxes.size());
+    ASSERT_EQ(1,boxes.size());
 
-//     bbox::transformer transform;
-//     shared_ptr<image::settings> iparam = make_shared<image::settings>();
-//     iparam->angle = 5;
-//     settings_ptr sptr = static_pointer_cast<settings>(iparam);
-//     auto tx = transform.transform( sptr, decoded );
-//     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
-//     EXPECT_EQ(nullptr,tx_decoded.get());
-// }
+    bbox::transformer transform;
+    shared_ptr<image::settings> iparam = make_shared<image::settings>();
+    iparam->angle = 5;
+    settings_ptr sptr = static_pointer_cast<settings>(iparam);
+    auto tx = transform.transform( sptr, decoded );
+    shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
+    EXPECT_EQ(nullptr,tx_decoded.get());
+}
 
 TEST(myloader, argtype) {
 

@@ -17,13 +17,15 @@ namespace nervana {
 
 class nervana::bbox::box {
 public:
-    int xmax;
-    int xmin;
-    int ymax;
-    int ymin;
-    bool difficult;
-    bool truncated;
+    int xmax = 0;
+    int xmin = 0;
+    int ymax = 0;
+    int ymin = 0;
+    bool difficult = false;
+    bool truncated = false;
     std::string name;
+
+    cv::Rect rect() const;
 };
 
 std::ostream& operator<<(std::ostream&,const nervana::bbox::box&);
@@ -55,7 +57,8 @@ public:
     extractor();
     virtual ~extractor(){}
     virtual media_ptr extract(char*, int) override;
-    static nlohmann::json create_box( const cv::Rect& rect, int label );
+    static nlohmann::json create_box( const cv::Rect& rect, const std::string& label );
+    static nlohmann::json create_metadata( const std::vector<nlohmann::json>& boxes );
 private:
 };
 
