@@ -39,3 +39,4 @@
 .d/
 bin/
 *.log
+*.json
