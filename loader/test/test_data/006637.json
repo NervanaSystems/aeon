@@ -1,0 +1,217 @@
+{
+    "filename": "006637.jpg",
+    "folder": "VOC2007",
+    "object": [
+        {
+            "bndbox": {
+                "xmax": 446,
+                "xmin": 351,
+                "ymax": 371,
+                "ymin": 206
+            },
+            "difficult": false,
+            "name": "bicycle",
+            "pose": "Unspecified",
+            "truncated": false
+        },
+        {
+            "bndbox": {
+                "xmax": 277,
+                "xmin": 164,
+                "ymax": 258,
+                "ymin": 157
+            },
+            "difficult": false,
+            "name": "bicycle",
+            "pose": "Right",
+            "truncated": false
+        },
+        {
+            "bndbox": {
+                "xmax": 171,
+                "xmin": 106,
+                "ymax": 303,
+                "ymin": 173
+            },
+            "difficult": false,
+            "name": "bicycle",
+            "pose": "Frontal",
+            "truncated": true
+        },
+        {
+            "bndbox": {
+                "xmax": 365,
+                "xmin": 324,
+                "ymax": 315,
+                "ymin": 109
+            },
+            "difficult": false,
+            "name": "person",
+            "part": [
+                {
+                    "bndbox": {
+                        "xmax": 361.832,
+                        "xmin": 337.056,
+                        "ymax": 141.6473,
+                        "ymin": 110.1523
+                    },
+                    "name": "head"
+                },
+                {
+                    "bndbox": {
+                        "xmax": 361.832,
+                        "xmin": 346.2945,
+                        "ymax": 221.0146,
+                        "ymin": 207.5767
+                    },
+                    "name": "hand"
+                },
+                {
+                    "bndbox": {
+                        "xmax": 367.7111,
+                        "xmin": 340.4155,
+                        "ymax": 315.9194,
+                        "ymin": 305.4211
+                    },
+                    "name": "foot"
+                }
+            ],
+            "pose": "Unspecified",
+            "truncated": false
+        },
+        {
+            "bndbox": {
+                "xmax": 258,
+                "xmin": 199,
+                "ymax": 254,
+                "ymin": 86
+            },
+            "difficult": false,
+            "name": "person",
+            "part": [
+                {
+                    "bndbox": {
+                        "xmax": 227.8735,
+                        "xmin": 208.5566,
+                        "ymax": 112.252,
+                        "ymin": 86.2161
+                    },
+                    "name": "head"
+                },
+                {
+                    "bndbox": {
+                        "xmax": 238.3718,
+                        "xmin": 226.6137,
+                        "ymax": 170.2027,
+                        "ymin": 160.1243
+                    },
+                    "name": "hand"
+                },
+                {
+                    "bndbox": {
+                        "xmax": 258.5286,
+                        "xmin": 246.3505,
+                        "ymax": 166.4233,
+                        "ymin": 155.925
+                    },
+                    "name": "hand"
+                },
+                {
+                    "bndbox": {
+                        "xmax": 247.1904,
+                        "xmin": 223.6741,
+                        "ymax": 247.8903,
+                        "ymin": 234.4524
+                    },
+                    "name": "foot"
+                },
+                {
+                    "bndbox": {
+                        "xmax": 221.9944,
+                        "xmin": 199.738,
+                        "ymax": 255.449,
+                        "ymin": 243.6909
+                    },
+                    "name": "foot"
+                }
+            ],
+            "pose": "Unspecified",
+            "truncated": false
+        },
+        {
+            "bndbox": {
+                "xmax": 209,
+                "xmin": 105,
+                "ymax": 287,
+                "ymin": 106
+            },
+            "difficult": false,
+            "name": "person",
+            "part": [
+                {
+                    "bndbox": {
+                        "xmax": 138.0078,
+                        "xmin": 114.9115,
+                        "ymax": 137.4479,
+                        "ymin": 105.1131
+                    },
+                    "name": "head"
+                },
+                {
+                    "bndbox": {
+                        "xmax": 180.0011,
+                        "xmin": 168.6629,
+                        "ymax": 188.2598,
+                        "ymin": 172.7223
+                    },
+                    "name": "hand"
+                },
+                {
+                    "bndbox": {
+                        "xmax": 146.4065,
+                        "xmin": 129.1892,
+                        "ymax": 200.0179,
+                        "ymin": 177.3415
+                    },
+                    "name": "hand"
+                },
+                {
+                    "bndbox": {
+                        "xmax": 210.6562,
+                        "xmin": 186.3001,
+                        "ymax": 286.944,
+                        "ymin": 270.1467
+                    },
+                    "name": "foot"
+                },
+                {
+                    "bndbox": {
+                        "xmax": 125.8298,
+                        "xmin": 109.8723,
+                        "ymax": 262.5879,
+                        "ymin": 237.3919
+                    },
+                    "name": "foot"
+                }
+            ],
+            "pose": "Unspecified",
+            "truncated": false
+        }
+    ],
+    "owner": {
+        "flickrid": "pdihr",
+        "name": "Patrick Dihr"
+    },
+    "segmented": "0",
+    "size": {
+        "depth": 3,
+        "height": 375,
+        "width": 500
+    },
+    "source": {
+        "annotation": "PASCAL VOC2007",
+        "database": "The VOC2007 Database",
+        "flickrid": "327338731",
+        "image": "flickr"
+    }
+}

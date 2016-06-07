@@ -14,11 +14,14 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------
 
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
+
 SRCS            := main.cpp thread_test.cpp datagen.cpp decode_test.cpp argtype_test.cpp loader_test.cpp
 TOBJS 			= $(subst .cpp,.o,$(SRCS))
 OBJS 			= $(subst .c,.o,$(TOBJS))
-CFLAGS          := -Wall -Wno-deprecated-declarations -O3
-CXXFLAGS        := -Wall -Wno-deprecated-declarations -O3 -std=c++11
+CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -DCURDIR=\"$(CURDIR)\"
+CXXFLAGS        := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -DCURDIR=\"$(CURDIR)\"
 CFLAGSDBG       := -g -Wall -O0 -std=c++11
 CC              := clang++
 UNAME_S         := $(shell uname -s)

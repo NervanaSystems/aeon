@@ -5,30 +5,40 @@ using namespace std;
 using namespace nervana;
 using namespace nlohmann;   // json stuff
 
-nervana::bbox::decoded::decoded() {
+ostream& operator<<(ostream& out, const nervana::bbox::box& b) {
+    out << b.name << " (" << b.xmax << "," << b.xmin << ")(" << b.ymax << "," << b.ymin << ") "
+        << b.difficult << " " << b.truncated;
+    return out;
 }
 
-nervana::bbox::decoded::decoded( const char* data, int size ) {
-    string buffer( data, size );
-    json j = json::parse(buffer);
-    for( auto bb : j["boxes"] ) {
-        box new_box;
-        int x = bb["x"];
-        int y = bb["y"];
-        int w = bb["w"];
-        int h = bb["h"];
-        int label = bb["label"];
-        new_box.rect = cv::Rect( x, y, w, h );
-        new_box.label = label;
-        _boxes.push_back( new_box );
-    }
+nervana::bbox::decoded::decoded() {
 }
 
 nervana::bbox::extractor::extractor() {
 }
 
 media_ptr nervana::bbox::extractor::extract(char* data, int size) {
-    return make_shared<decoded>(data,size);
+    shared_ptr<decoded> rc = make_shared<decoded>();
+    string buffer( data, size );
+    json j = json::parse(buffer);
+    auto object_list = j["object"];
+    auto image_size = j["size"];
+    rc->_height = image_size["height"];
+    rc->_width = image_size["width"];
+    rc->_depth = image_size["depth"];
+    for( auto object : object_list ) {
+        auto bndbox = object["bndbox"];
+        box b;
+        b.xmax = bndbox["xmax"];
+        b.xmin = bndbox["xmin"];
+        b.ymax = bndbox["ymax"];
+        b.ymin = bndbox["ymin"];
+        b.difficult = object["difficult"];
+        b.truncated = object["truncated"];
+        b.name = object["name"];
+        rc->_boxes.push_back(b);
+    }
+    return rc;
 }
 
 json nervana::bbox::extractor::create_box( const cv::Rect& rect, int label ) {
@@ -48,29 +58,25 @@ media_ptr nervana::bbox::transformer::transform(settings_ptr _sptr, const media_
     }
     shared_ptr<bbox::decoded> rc = make_shared<bbox::decoded>();
     cv::Rect crop = sptr->cropbox;
-    for( box tmp : boxes->get_data() ) {
+    for( box tmp : boxes->boxes() ) {
         box b = tmp;
-        if( b.rect.x + b.rect.width <= crop.x ) {           // outside left
-        } else if( b.rect.x >= crop.x + crop.width ) {      // outside right
-        } else if( b.rect.y + b.rect.height <= crop.y ) {   // outside above
-        } else if( b.rect.y >= crop.y + crop.height ) {     // outside below
+        if( b.xmax <= crop.x ) {           // outside left
+        } else if( b.xmin >= crop.x + crop.width ) {      // outside right
+        } else if( b.ymax <= crop.y ) {   // outside above
+        } else if( b.ymin >= crop.y + crop.height ) {     // outside below
         } else {
-            if( b.rect.x < crop.x ) {
-                int dx = crop.x - b.rect.x;
-                b.rect.x += dx;
-                b.rect.width -= dx;
+            if( b.xmin < crop.x ) {
+                b.xmin = crop.x;
             }
-            if( b.rect.y < crop.y ) {
-                int dy = crop.y - b.rect.y;
-                b.rect.y += dy;
-                b.rect.height -= dy;
+            if( b.ymin < crop.y ) {
+                b.ymin = crop.y;
             }
-            if( b.rect.x + b.rect.width > crop.x + crop.width ) {
-                b.rect.width = crop.x + crop.width - b.rect.x;
-            }
-            if( b.rect.y + b.rect.height > crop.y + crop.height ) {
-                b.rect.height = crop.y + crop.height - b.rect.y;
-            }
+            // if( b.rect.x + b.rect.width > crop.x + crop.width ) {
+            //     b.rect.width = crop.x + crop.width - b.rect.x;
+            // }
+            // if( b.rect.y + b.rect.height > crop.y + crop.height ) {
+            //     b.rect.height = crop.y + crop.height - b.rect.y;
+            // }
             rc->_boxes.push_back( b );
         }
         // cout << b.rect.x << ", " << b.rect.y << ", " << b.rect.width << ", " << b.rect.height << ", " << b.label << endl;

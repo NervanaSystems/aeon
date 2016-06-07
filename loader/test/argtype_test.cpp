@@ -62,8 +62,8 @@ TEST(loader,argtype) {
     map<string,shared_ptr<interface_ArgType> > args = _ParamList1.get_args();
     ASSERT_EQ(12, args.size());
 
-    string help = _ParamList1.help();
-    cout << help << endl;
+    // string help = _ParamList1.help();
+    // cout << help << endl;
 
     {
         string argString = "-i1 5";

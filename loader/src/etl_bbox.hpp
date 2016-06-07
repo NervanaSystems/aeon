@@ -17,23 +17,36 @@ namespace nervana {
 
 class nervana::bbox::box {
 public:
-    cv::Rect    rect;
-    int         label;
+    int xmax;
+    int xmin;
+    int ymax;
+    int ymin;
+    bool difficult;
+    bool truncated;
+    std::string name;
 };
+
+std::ostream& operator<<(std::ostream&,const nervana::bbox::box&);
 
 class nervana::bbox::decoded : public decoded_media {
     friend class transformer;
+    friend class extractor;
 public:
     decoded();
-    decoded( const char* data, int size );
     virtual ~decoded() {}
 
     MediaType get_type() override { return MediaType::TARGET; }
 
-    std::vector<box> get_data() { return _boxes; }
+    std::vector<box> boxes() const { return _boxes; }
+    int width() const { return _width; }
+    int height() const { return _height; }
+    int depth() const { return _depth; }
 
 private:
     std::vector<box> _boxes;
+    int _width;
+    int _height;
+    int _depth;
 };
 
 
