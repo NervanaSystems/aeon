@@ -74,6 +74,40 @@ def parse_single_file(path):
     olist = trimmed['object']
     if not isinstance(olist,collections.Sequence):
         trimmed['object'] = [olist];
+        olist = trimmed['object']
+    size = trimmed['size']
+    size['width'] = int(size['width'])
+    size['height'] = int(size['height'])
+    size['depth'] = int(size['depth'])
+    width = trimmed['size']['width']
+    height = trimmed['size']['height']
+    for obj in olist:
+        obj['difficult'] = int(obj['difficult']) != 0
+        obj['truncated'] = int(obj['truncated']) != 0
+        box = obj['bndbox']
+        box['xmax'] = int(box['xmax'])
+        box['xmin'] = int(box['xmin'])
+        box['ymax'] = int(box['ymax'])
+        box['ymin'] = int(box['ymin'])
+        if 'part' in obj:
+            for part in obj['part']:
+                box = part['bndbox']
+                box['xmax'] = float(box['xmax'])
+                box['xmin'] = float(box['xmin'])
+                box['ymax'] = float(box['ymax'])
+                box['ymin'] = float(box['ymin'])
+        # xmax = box['xmax']
+        # xmin = box['xmin']
+        # ymax = box['ymax']
+        # ymin = box['ymin']
+        # if xmax > width-1:
+        #     print('xmax {0} exceeds width {1}').format(xmax,width)
+        # if xmin < 0:
+        #     print('xmin {0} exceeds width {1}').format(xmin,width)
+        # if ymax > height-1:
+        #     print('ymax {0} exceeds width {1}').format(ymax,height)
+        # if ymin < 0:
+        #     print('ymin {0} exceeds width {1}').format(ymin,height)
     return trimmed
 
 def main(argv):
