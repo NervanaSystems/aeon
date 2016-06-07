@@ -44,7 +44,7 @@ public:
     std::normal_distribution<float>       lighting{0.0f, 0.0f};
     std::uniform_real_distribution<float> aspect_ratio{1.0f, 1.0f};
     std::uniform_real_distribution<float> photometric{0.0f, 0.0f};
-    std::uniform_real_distribution<float> crop_offset{1.0f, 1.0f};
+    std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
     std::bernoulli_distribution           flip{0};
 
     bool do_area_scale = false;
@@ -57,15 +57,23 @@ public:
 
         parse_opt(do_area_scale, "do_area_scale", js);
 
-        parse_dist<decltype(angle)>(angle, "angle_dist_params", js);
-        parse_dist<decltype(scale)>(scale, "scale_dist_params", js);
-        parse_dist<decltype(lighting)>(lighting, "lighting_dist_params", js);
-        parse_dist<decltype(aspect_ratio)>(aspect_ratio, "aspect_ratio_dist_params", js);
-        parse_dist<decltype(photometric)>(photometric, "photometric_dist_params", js);
-        parse_dist<decltype(crop_offset)>(crop_offset, "crop_offset_dist_params", js);
-        parse_dist<decltype(flip)>(flip, "flip_dist_params", js);
+        parse_dist<decltype(angle)>(angle, "dist_params/angle", js);
+        parse_dist<decltype(scale)>(scale, "dist_params/scale", js);
+        parse_dist<decltype(lighting)>(lighting, "dist_params/lighting", js);
+        parse_dist<decltype(aspect_ratio)>(aspect_ratio, "dist_params/aspect_ratio", js);
+        parse_dist<decltype(photometric)>(photometric, "dist_params/photometric", js);
+        parse_dist<decltype(crop_offset)>(crop_offset, "dist_params/crop_offset", js);
+        parse_dist<decltype(flip)>(flip, "dist_params/flip", js);
+        validate();
     }
 
+private:
+    bool validate() {
+
+        crop_offset.param().a() <= crop_offset.param
+        std::cout << crop_offset.param().a() << "\n";
+        return true;
+    }
 };
 
 class nervana::image::load_params : public nervana::json_parameter_collection {
@@ -83,7 +91,7 @@ class nervana::image::settings : public nervana::settings {
 public:
 
     settings() {}
-    void dump();
+    void dump(std::ostream & = std::cout);
 
     cv::Rect cropbox;
     int angle = 0;
@@ -137,6 +145,8 @@ private:
     void resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size);
     void lighting(cv::Mat& inout, std::vector<float>);
     void cbsjitter(cv::Mat& inout, std::vector<float>);
+    void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
+    void shift_cropbox(const cv::Size2f&, cv::Rect&, float, float);
 
     std::shared_ptr<transform_params> _itp;
 };

@@ -2,27 +2,19 @@
 
 using namespace std;
 
-void nervana::image::settings::dump()
+void nervana::image::settings::dump(ostream & ostr)
 {
-    cout << "Angle: " << setw(3) << angle << " ";
-    cout << "Flip: " << flip << " ";
-    cout << "Filled: " << filled << " ";
-    cout << "Lighting: ";
-    for_each (lighting.begin(), lighting.end(), [](float &l) {cout << l << " ";});
-    cout << "Photometric: ";
-    for_each (photometric.begin(), photometric.end(), [](float &p) {cout << p << " ";});
-    cout << endl << "Crop Box: " << cropbox << endl;
+    ostr << "Angle: " << setw(3) << angle << " ";
+    ostr << "Flip: " << flip << " ";
+    ostr << "Filled: " << filled << " ";
+    ostr << "Lighting: ";
+    for_each (lighting.begin(), lighting.end(), [&ostr](float &l) {ostr << l << " ";});
+    ostr << "Photometric: ";
+    for_each (photometric.begin(), photometric.end(), [&ostr](float &p) {ostr << p << " ";});
+    ostr << "\n" << "Crop Box: " << cropbox << "\n";
 }
 
-// void nervana::image::transform_params::scaleCropBoxArea(const cv::Size2f &inSize, cv::Rect &cropBox) {
-//     float oAR = width / (float) height;
-//     float iAR = inSize.width / inSize.height;
-//     float nAR = _gen_aspect_ratio(eng) * iAR;
-//     float maxScale = oAR > nAR ? nAR / oAR : oAR / nAR;
-//     float minScale = std::min(_scaleMin, maxScale);
-//     cropBox.height = sqrt(tgtArea / oAR);
-//     cropBox.width  = cropBox.height * oAR;
-// }
+
 
 /* Extract */
 nervana::image::extractor::extractor(param_ptr pptr)
@@ -99,15 +91,20 @@ void nervana::image::transformer::fill_settings(settings_ptr transform_settings,
                                                 default_random_engine &dre)
 {
     auto imgstgs = static_pointer_cast<nervana::image::settings>(transform_settings);
-    // auto sz = static_pointer_cast<decoded_images>(input)->get_image_size();
 
     imgstgs->angle = _itp->angle(dre);
     imgstgs->flip  = _itp->flip(dre);
 
-    // float scale = _itp->scale(dre);
-    // float aspect_ratio = _itp->aspect_ratio(dre);
-    // float c_off_x = _itp->crop_offset(dre);
-    // float c_off_y = _itp->crop_offset(dre);
+    cv::Size2f in_size = static_pointer_cast<decoded_images>(input)->get_image_size();
+
+    float scale = _itp->scale(dre);
+    float aspect_ratio = _itp->aspect_ratio(dre);
+    cout << "ASPECT_RATIO CHOSEN " << aspect_ratio << "\n";
+    scale_cropbox(in_size, imgstgs->cropbox, aspect_ratio, scale);
+
+    float c_off_x = _itp->crop_offset(dre);
+    float c_off_y = _itp->crop_offset(dre);
+    shift_cropbox(in_size, imgstgs->cropbox, c_off_x, c_off_y);
 
     for_each(imgstgs->lighting.begin(),
              imgstgs->lighting.end(),
@@ -116,6 +113,50 @@ void nervana::image::transformer::fill_settings(settings_ptr transform_settings,
              imgstgs->photometric.end(),
              [this, &dre] (float &n) {n = _itp->photometric(dre);});
 }
+
+void nervana::image::transformer::shift_cropbox(
+                            const cv::Size2f &in_size,
+                            cv::Rect &crop_box,
+                            float off_x,
+                            float off_y )
+{
+    crop_box.x = (in_size.width - crop_box.width) * off_x;
+    crop_box.y = (in_size.height - crop_box.height) * off_y;
+}
+
+void nervana::image::transformer::scale_cropbox(
+                            const cv::Size2f &in_size,
+                            cv::Rect &crop_box,
+                            float tgt_aspect_ratio,
+                            float tgt_scale )
+{
+    cv::Size2f out_size(_itp->width, _itp->height);
+    float out_a_r = out_size.width / out_size.height;
+    float in_a_r  = in_size.width / in_size.height;
+
+    float crop_a_r = out_a_r * tgt_aspect_ratio;
+
+    if (_itp->do_area_scale) {
+        // Area scaling -- use pctge of original area subject to aspect ratio constraints
+        float max_scale = in_a_r > crop_a_r ? crop_a_r /  in_a_r : in_a_r / crop_a_r;
+        float tgt_area  = std::min(tgt_scale, max_scale) * in_size.area();
+
+        crop_box.height = sqrt(tgt_area / crop_a_r);
+        crop_box.width  = crop_box.height * crop_a_r;
+    } else {
+        // Linear scaling -- make the long crop box side  the scale pct of the short orig side
+        float short_side = std::min(in_size.width, in_size.height);
+
+        if (crop_a_r < 1) { // long side is height
+            crop_box.height = tgt_scale * short_side;
+            crop_box.width  = crop_box.height * crop_a_r;
+        } else {
+            crop_box.width  = tgt_scale * short_side;
+            crop_box.height = crop_box.width / crop_a_r;
+        }
+    }
+}
+
 
 void nervana::image::transformer::rotate(const cv::Mat& input, cv::Mat& output, int angle)
 {

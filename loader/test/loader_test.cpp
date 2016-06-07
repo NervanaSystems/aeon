@@ -272,12 +272,13 @@ TEST(myloader, argtype) {
     {
         string argString = R"(
             {
-                "height": 25,
+                "height": 30,
                 "width" : 30,
-                "angle_dist_params" : [-20, 20],
-                "scale_dist_params" : [0.2, 0.8],
-                "lighting_dist_params" : [0.0, 0.1],
-                "flip_dist_params" : [false]
+                "dist_params/angle" : [-20, 20],
+                "dist_params/scale" : [0.2, 0.8],
+                "dist_params/lighting" : [0.0, 0.1],
+                "dist_params/aspect_ratio" : [0.75, 1.33],
+                "dist_params/flip" : [false]
             }
         )";
 
@@ -293,9 +294,9 @@ TEST(myloader, argtype) {
         auto its = make_shared<image::settings>();
         its->dump();
 
-        auto xformer = make_shared<image::transformer>(itpj);
-
-        xformer->fill_settings(its, nullptr, r_eng);
+        auto imgt = make_shared<image::transformer>(itpj);
+        auto input_img_ptr = make_shared<decoded_images>(cv::Mat(256, 320, CV_8UC3));
+        imgt->fill_settings(its, input_img_ptr, r_eng);
         its->dump();
 
     }
