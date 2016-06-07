@@ -97,6 +97,11 @@ private:
     std::shared_ptr<Reader>     _reader;
 };
 
+/* Loader
+ *
+ * The job of the Loader is to copy data from BufferPair shared with
+ * an ArchiveReader
+ */
 class Loader {
 public:
     Loader(int* itemCount, int batchSize,

@@ -104,6 +104,11 @@ private:
     std::shared_ptr<Media>      _media;
 };
 
+/* ArchiveReader
+ *
+ * The ArchiveReader should take a set of cpio files and load them into
+ * a BufferPair on each invocation of read()
+ */
 class ArchiveReader : public Reader {
 public:
     ArchiveReader(int* itemCount, int batchSize,
