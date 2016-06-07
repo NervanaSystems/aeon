@@ -69,10 +69,7 @@ public:
 
 private:
     bool validate() {
-
-        crop_offset.param().a() <= crop_offset.param
-        std::cout << crop_offset.param().a() << "\n";
-        return true;
+        return crop_offset.param().a() <= crop_offset.param().b();
     }
 };
 
