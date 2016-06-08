@@ -9,11 +9,11 @@
 namespace nervana {
     class decoded_media;
     class settings;
-    class json_parameter_collection;
+    class json_config_parser;
 }
 
 typedef std::shared_ptr<nervana::decoded_media>        media_ptr;
-typedef std::shared_ptr<nervana::json_parameter_collection> param_ptr;
+typedef std::shared_ptr<nervana::json_config_parser>   config_ptr;
 typedef std::shared_ptr<nervana::settings>             settings_ptr;
 
 enum class MediaType {
@@ -38,7 +38,7 @@ public:
     virtual ~settings() {}
 };
 
-class nervana::json_parameter_collection {
+class nervana::json_config_parser {
 public:
     template<typename T> void parse_dist(T& value, const std::string key, const nlohmann::json &js)
     {

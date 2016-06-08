@@ -37,12 +37,6 @@ extern DataGen _datagen;
 using namespace std;
 using namespace nervana;
 
-// static param_ptr _iep1 = make_shared<image::extract_params>();
-// static param_ptr _itp1 = make_shared<image::transform_params>();
-// static param_ptr _ilp1 = make_shared<image::load_params>();
-
-// static param_ptr _lblp1 = make_shared<label::params>();
-
 
 TEST(etl, lmap) {
     {
@@ -270,13 +264,14 @@ TEST(myloader, argtype) {
 
     {
         /* Create extractor with default num channels param */
-        auto ie_p = make_shared<image::extractor>(make_shared<image::extract_params>("{}"));
-        EXPECT_EQ(ie_p->get_channel_count(), 3);
+        string cfgString = "{\"height\":10, \"width\":10}";
+        auto ic = make_shared<image::extractor>(make_shared<image::config>(cfgString));
+        EXPECT_EQ(ic->get_channel_count(), 3);
     }
 
 
     {
-        string argString = R"(
+        string cfgString = R"(
             {
                 "height": 30,
                 "width" : 30,
@@ -288,7 +283,7 @@ TEST(myloader, argtype) {
             }
         )";
 
-        auto itpj = make_shared<image::transform_params>(argString);
+        auto itpj = make_shared<image::config>(cfgString);
 
         // output the fixed parameters
         cout << "HEIGHT: " << itpj->height << endl;
@@ -301,7 +296,7 @@ TEST(myloader, argtype) {
         its->dump();
 
         auto imgt = make_shared<image::transformer>(itpj);
-        auto input_img_ptr = make_shared<decoded_images>(cv::Mat(256, 320, CV_8UC3));
+        auto input_img_ptr = make_shared<image::decoded>(cv::Mat(256, 320, CV_8UC3));
         imgt->fill_settings(its, input_img_ptr, r_eng);
         its->dump();
 
@@ -310,14 +305,14 @@ TEST(myloader, argtype) {
 
     {
 
-        string argString = R"(
+        string cfgString = R"(
             {
                 "extract offset":  20,
-                "transform scale dist params":  [-8, 8],
-                "transform shift dist params":  [-5, 5]
+                "dist_params/transform scale":  [-8, 8],
+                "dist_params/transform shift":  [-5, 5]
             }
         )";
-        auto lblp = make_shared<label::params>(argString);
+        auto lblcfg = make_shared<label::config>(cfgString);
 
         BatchFileReader bf;
         auto dataFiles = _datagen.GetFiles();
@@ -333,20 +328,20 @@ TEST(myloader, argtype) {
         auto lstg = make_shared<label::settings>();
 
         default_random_engine r_eng(0);
-        lstg->scale = lblp->tx_scale(r_eng);
-        lstg->shift = lblp->tx_shift(r_eng);
+        lstg->scale = lblcfg->tx_scale(r_eng);
+        lstg->shift = lblcfg->tx_shift(r_eng);
 
         cout << "Set scale: " << lstg->scale << " ";
         cout << "Set shift: " << lstg->shift << endl;
 
-        int reference = ((int) (*labels)[0] + lblp->ex_offset)* lstg->scale + lstg->shift;
+        int reference = ((int) (*labels)[0] + lblcfg->ex_offset)* lstg->scale + lstg->shift;
 
         // Take the int and do provision with it.
-        auto lble = make_shared<label::extractor>(lblp);
-        auto lblt = make_shared<label::transformer>(lblp);
+        auto lble = make_shared<label::extractor>(lblcfg);
+        auto lblt = make_shared<label::transformer>(lblcfg);
 
         {
-            auto lbll = make_shared<label::loader>(lblp);
+            auto lbll = make_shared<label::loader>(lblcfg);
 
             int reference_target = reference;
             int loaded_target = 0;
@@ -363,9 +358,9 @@ TEST(myloader, argtype) {
                     "load offset": 0.8
                 }
             )";
-            auto flt_lbl_params = make_shared<label::params>(lArgString);
+            auto flt_lbl_config = make_shared<label::config>(lArgString);
 
-            auto lbll = make_shared<label::loader>(flt_lbl_params);
+            auto lbll = make_shared<label::loader>(flt_lbl_config);
 
             float reference_target = reference + 0.8;
             float loaded_target = 0.0;

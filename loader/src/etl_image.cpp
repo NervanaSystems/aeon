@@ -17,11 +17,11 @@ void nervana::image::settings::dump(ostream & ostr)
 
 
 /* Extract */
-nervana::image::extractor::extractor(param_ptr pptr)
+nervana::image::extractor::extractor(config_ptr cptr)
 {
-    auto iep = static_pointer_cast<extract_params>(pptr);
+    auto icp = static_pointer_cast<nervana::image::config>(cptr);
 
-    _channel_count = iep->num_channels;
+    _channel_count = icp->num_channels;
     if (!(_channel_count == 1 || _channel_count == 3))
     {
         std::stringstream ss;
@@ -39,13 +39,13 @@ media_ptr nervana::image::extractor::extract(char* inbuf, int insize)
     cv::Mat output_img;
     cv::Mat input_img(1, insize, _pixel_type, inbuf);
     cv::imdecode(input_img, _color_mode, &output_img);
-    return make_shared<decoded_images>(output_img);
+    return make_shared<nervana::image::decoded>(output_img);
 }
 
 
 /* Transform:
-    transformer_params will be a supplied bunch of settings used by this provider.
-    on each record, the transformer will use the transform_params along with the supplied
+    image::config will be a supplied bunch of settings used by this provider.
+    on each record, the transformer will use the config along with the supplied
     record to fill a transform_settings structure which will have
 
     Spatial distortion settings:
@@ -57,9 +57,9 @@ media_ptr nervana::image::extractor::extract(char* inbuf, int insize)
     randomly sampled contrast, brightness, saturation, lighting values (based on params->cbs, lighting bounds)
 
 */
-nervana::image::transformer::transformer(param_ptr pptr)
+nervana::image::transformer::transformer(config_ptr cptr)
 {
-    _itp = static_pointer_cast<nervana::image::transform_params>(pptr);
+    _icp = static_pointer_cast<nervana::image::config>(cptr);
 }
 
 media_ptr nervana::image::transformer::transform(settings_ptr transform_settings,
@@ -67,12 +67,12 @@ media_ptr nervana::image::transformer::transform(settings_ptr transform_settings
 {
     auto img_xform = static_pointer_cast<nervana::image::settings>(transform_settings);
     cv::Mat rotatedImage;
-    auto img = static_pointer_cast<decoded_images>(input);
+    auto img = static_pointer_cast<nervana::image::decoded>(input);
     rotate(img->get_image(0), rotatedImage, img_xform->angle);
     cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
 
     cv::Mat resizedImage;
-    resize(croppedImage, resizedImage, cv::Size2i(_itp->width, _itp->height));
+    resize(croppedImage, resizedImage, cv::Size2i(_icp->width, _icp->height));
     cbsjitter(resizedImage, img_xform->photometric);
     lighting(resizedImage, img_xform->lighting);
 
@@ -83,7 +83,7 @@ media_ptr nervana::image::transformer::transform(settings_ptr transform_settings
         finalImage = &flippedImage;
     }
 
-    return make_shared<decoded_images>(*finalImage);
+    return make_shared<nervana::image::decoded>(*finalImage);
 }
 
 void nervana::image::transformer::fill_settings(settings_ptr transform_settings,
@@ -92,26 +92,26 @@ void nervana::image::transformer::fill_settings(settings_ptr transform_settings,
 {
     auto imgstgs = static_pointer_cast<nervana::image::settings>(transform_settings);
 
-    imgstgs->angle = _itp->angle(dre);
-    imgstgs->flip  = _itp->flip(dre);
+    imgstgs->angle = _icp->angle(dre);
+    imgstgs->flip  = _icp->flip(dre);
 
-    cv::Size2f in_size = static_pointer_cast<decoded_images>(input)->get_image_size();
+    cv::Size2f in_size = static_pointer_cast<nervana::image::decoded>(input)->get_image_size();
 
-    float scale = _itp->scale(dre);
-    float aspect_ratio = _itp->aspect_ratio(dre);
+    float scale = _icp->scale(dre);
+    float aspect_ratio = _icp->aspect_ratio(dre);
     cout << "ASPECT_RATIO CHOSEN " << aspect_ratio << "\n";
     scale_cropbox(in_size, imgstgs->cropbox, aspect_ratio, scale);
 
-    float c_off_x = _itp->crop_offset(dre);
-    float c_off_y = _itp->crop_offset(dre);
+    float c_off_x = _icp->crop_offset(dre);
+    float c_off_y = _icp->crop_offset(dre);
     shift_cropbox(in_size, imgstgs->cropbox, c_off_x, c_off_y);
 
     for_each(imgstgs->lighting.begin(),
              imgstgs->lighting.end(),
-             [this, &dre] (float &n) {n = _itp->lighting(dre);});
+             [this, &dre] (float &n) {n = _icp->lighting(dre);});
     for_each(imgstgs->photometric.begin(),
              imgstgs->photometric.end(),
-             [this, &dre] (float &n) {n = _itp->photometric(dre);});
+             [this, &dre] (float &n) {n = _icp->photometric(dre);});
 }
 
 void nervana::image::transformer::shift_cropbox(
@@ -130,13 +130,13 @@ void nervana::image::transformer::scale_cropbox(
                             float tgt_aspect_ratio,
                             float tgt_scale )
 {
-    cv::Size2f out_size(_itp->width, _itp->height);
+    cv::Size2f out_size(_icp->width, _icp->height);
     float out_a_r = out_size.width / out_size.height;
     float in_a_r  = in_size.width / in_size.height;
 
     float crop_a_r = out_a_r * tgt_aspect_ratio;
 
-    if (_itp->do_area_scale) {
+    if (_icp->do_area_scale) {
         // Area scaling -- use pctge of original area subject to aspect ratio constraints
         float max_scale = in_a_r > crop_a_r ? crop_a_r /  in_a_r : in_a_r / crop_a_r;
         float tgt_area  = std::min(tgt_scale, max_scale) * in_size.area();
@@ -188,15 +188,15 @@ void nervana::image::transformer::cbsjitter(cv::Mat& inout, vector<float> photom
 }
 
 
-nervana::image::loader::loader(param_ptr pptr)
+nervana::image::loader::loader(config_ptr cptr)
 {
-    auto ilp = static_pointer_cast<load_params>(pptr);
-    _channel_major = ilp->channel_major;
+    auto icp = static_pointer_cast<nervana::image::config>(cptr);
+    _channel_major = icp->channel_major;
 }
 
 void nervana::image::loader::load(char* outbuf, int outsize, const media_ptr& input)
 {
-    auto img = static_pointer_cast<decoded_images>(input)->get_image(0);
+    auto img = static_pointer_cast<nervana::image::decoded>(input)->get_image(0);
     int all_pixels = img.channels() * img.total();
 
     if (all_pixels > outsize) {

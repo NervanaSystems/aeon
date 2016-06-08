@@ -9,38 +9,24 @@
 
 namespace nervana {
     namespace image {
-        class extract_params;
-        class transform_params;
-        class load_params;
+        class config;
+        class settings;
+        class decoded;
 
         class extractor;
         class transformer;
         class loader;
-
-        class settings;
     }
-    class decoded_images;
 }
 
-class nervana::image::extract_params : public nervana::json_parameter_collection {
-public:
-    int num_channels = 3;
-    extract_params(std::string argString) {
-        auto js = nlohmann::json::parse(argString);
 
-        parse_opt(num_channels, "num_channels", js);
-    }
-};
-
-
-class nervana::image::transform_params : public nervana::json_parameter_collection {
+class nervana::image::config : public nervana::json_config_parser {
 public:
     int height;
     int width;
+
     std::uniform_real_distribution<float> scale{1.0f, 1.0f};
-
     std::uniform_int_distribution<int>    angle{0, 0};
-
     std::normal_distribution<float>       lighting{0.0f, 0.0f};
     std::uniform_real_distribution<float> aspect_ratio{1.0f, 1.0f};
     std::uniform_real_distribution<float> photometric{0.0f, 0.0f};
@@ -48,14 +34,18 @@ public:
     std::bernoulli_distribution           flip{0};
 
     bool do_area_scale = false;
+    bool channel_major = true;
+    int num_channels = 3;
 
-    transform_params(std::string argString) {
+    config(std::string argString) {
         auto js = nlohmann::json::parse(argString);
 
         parse_req(height, "height", js);
         parse_req(width, "width", js);
 
         parse_opt(do_area_scale, "do_area_scale", js);
+        parse_opt(num_channels, "num_channels", js);
+        parse_opt(channel_major, "channel_major", js);
 
         parse_dist(angle, "dist_params/angle", js);
         parse_dist(scale, "dist_params/scale", js);
@@ -73,17 +63,6 @@ private:
     }
 };
 
-class nervana::image::load_params : public nervana::json_parameter_collection {
-public:
-    bool channel_major = true;
-
-    load_params(std::string argString) {
-        auto js = nlohmann::json::parse(argString);
-        parse_opt(channel_major, "channel_major", js);
-    }
-};
-
-
 class nervana::image::settings : public nervana::settings {
 public:
 
@@ -91,6 +70,7 @@ public:
     void dump(std::ostream & = std::cout);
 
     cv::Rect cropbox;
+    cv::Size2i output_size;
     int angle = 0;
     bool flip = false;
     std::vector<float> lighting{0.0, 0.0, 0.0};  //pixelwise random values
@@ -99,11 +79,11 @@ public:
 };
 
 
-class nervana::decoded_images : public nervana::decoded_media {
+class nervana::image::decoded : public nervana::decoded_media {
 public:
-    decoded_images() {}
-    decoded_images(cv::Mat img) : _img(img) { _images.push_back(_img); }
-    virtual ~decoded_images() override {}
+    decoded() {}
+    decoded(cv::Mat img) : _img(img) { _images.push_back(_img); }
+    virtual ~decoded() override {}
 
     virtual MediaType get_type() override { return MediaType::IMAGE; }
     cv::Mat& get_image(int index) { return _images[index]; }
@@ -118,7 +98,7 @@ private:
 
 class nervana::image::extractor : public nervana::interface::extractor {
 public:
-    extractor(param_ptr);
+    extractor(config_ptr);
     ~extractor() {}
     virtual media_ptr extract(char*, int) override;
 
@@ -132,7 +112,7 @@ private:
 
 class nervana::image::transformer : public nervana::interface::transformer {
 public:
-    transformer(param_ptr);
+    transformer(config_ptr);
     ~transformer() {}
     virtual media_ptr transform(settings_ptr, const media_ptr&) override;
     virtual void fill_settings(settings_ptr, const media_ptr&, std::default_random_engine &) override;
@@ -145,13 +125,13 @@ private:
     void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
     void shift_cropbox(const cv::Size2f&, cv::Rect&, float, float);
 
-    std::shared_ptr<transform_params> _itp;
+    std::shared_ptr<image::config> _icp;
 };
 
 
 class nervana::image::loader : public nervana::interface::loader {
 public:
-    loader(param_ptr);
+    loader(config_ptr);
     ~loader() {}
     virtual void load(char*, int, const media_ptr&) override;
 
