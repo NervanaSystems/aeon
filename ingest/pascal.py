@@ -77,6 +77,9 @@ def parse_single_file(path):
         olist = trimmed['object']
     size = trimmed['size']
 
+    # Add version number to json
+    trimmed['version'] = {'major': 1, 'minor': 0}
+
     # convert all numbers from string representation to number so json does not quote them
     # all of the bounding box numbers are one based so subtract 1
     size['width'] = int(size['width'])
@@ -123,7 +126,6 @@ def main(argv):
         print 'ingest.py -i <input> -o <output>'
         sys.exit(2)
     for opt, arg in opts:
-        print('opt {0}, arg {1}').format(opt,arg)
         if opt == '-h':
             print 'ingest.py -i <input> -o <output>'
             sys.exit()
