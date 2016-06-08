@@ -45,9 +45,7 @@ nervana::lmap::transformer::transformer() {
 
 }
 
-std::shared_ptr<nervana::lmap::decoded> nervana::lmap::transformer::transform(settings_ptr _settings, std::shared_ptr<nervana::lmap::decoded> media) {
-    // shared_ptr<image_settings> settings = static_pointer_cast<image_settings>(_settings);
-    // shared_ptr<lmap::decoded> boxes = static_pointer_cast<lmap::decoded>(media);
+std::shared_ptr<nervana::lmap::decoded> nervana::lmap::transformer::transform(param_ptr _pptr, std::shared_ptr<nervana::lmap::decoded> media) {
     shared_ptr<lmap::decoded> rc = make_shared<lmap::decoded>();
     return rc;
 }

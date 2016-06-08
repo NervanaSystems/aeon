@@ -183,8 +183,8 @@ TEST(etl, bbox) {
     EXPECT_EQ(7,boxes[2].label);
 
     bbox::transformer transform;
-    shared_ptr<image::settings> iparam = make_shared<image::settings>();
-    settings_ptr sptr = static_pointer_cast<settings>(iparam);
+    shared_ptr<image::params> iparam = make_shared<image::params>();
+    param_ptr sptr = static_pointer_cast<params>(iparam);
     auto tx = transform.transform( sptr, decoded );
 }
 
@@ -220,9 +220,9 @@ TEST(etl, bbox_transform) {
     ASSERT_EQ(8,boxes.size());
 
     bbox::transformer transform;
-    shared_ptr<image::settings> iparam = make_shared<image::settings>();
+    shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
-    settings_ptr sptr = static_pointer_cast<settings>(iparam);
+    param_ptr sptr = static_pointer_cast<params>(iparam);
     auto tx = transform.transform( sptr, decoded );
     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
     vector<bbox::box> tx_boxes = tx_decoded->boxes();
@@ -252,9 +252,9 @@ TEST(etl, bbox_angle) {
     ASSERT_EQ(1,boxes.size());
 
     bbox::transformer transform;
-    shared_ptr<image::settings> iparam = make_shared<image::settings>();
+    shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->angle = 5;
-    settings_ptr sptr = static_pointer_cast<settings>(iparam);
+    param_ptr sptr = static_pointer_cast<params>(iparam);
     auto tx = transform.transform( sptr, decoded );
     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
     EXPECT_EQ(nullptr,tx_decoded.get());
@@ -291,13 +291,12 @@ TEST(myloader, argtype) {
 
         // output the random parameters
         default_random_engine r_eng(0);
-
-        auto its = make_shared<image::settings>();
-        its->dump();
-
+        image::param_factory img_prm_maker(itpj);
         auto imgt = make_shared<image::transformer>(itpj);
+
         auto input_img_ptr = make_shared<image::decoded>(cv::Mat(256, 320, CV_8UC3));
-        imgt->fill_settings(its, input_img_ptr, r_eng);
+
+        auto its = img_prm_maker.make_params(input_img_ptr, r_eng);
         its->dump();
 
     }
@@ -325,11 +324,12 @@ TEST(myloader, argtype) {
         auto labels = bf.read();
         bf.close();
 
-        auto lstg = make_shared<label::settings>();
+
+        label::param_factory lbl_prm_maker(lblcfg);
 
         default_random_engine r_eng(0);
-        lstg->scale = lblcfg->tx_scale(r_eng);
-        lstg->shift = lblcfg->tx_shift(r_eng);
+        // Note we don't need the media to get params
+        auto lstg = lbl_prm_maker.make_params(nullptr, r_eng);
 
         cout << "Set scale: " << lstg->scale << " ";
         cout << "Set shift: " << lstg->shift << endl;

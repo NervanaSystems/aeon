@@ -84,13 +84,13 @@ nervana::bbox::transformer::transformer() {
 
 }
 
-std::shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(settings_ptr _sptr, std::shared_ptr<bbox::decoded> boxes) {
-    shared_ptr<image::settings> sptr = static_pointer_cast<image::settings>(_sptr);
-    if( sptr->angle != 0 ) {
+std::shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(param_ptr _pptr, std::shared_ptr<bbox::decoded> boxes) {
+    shared_ptr<image::params> pptr = static_pointer_cast<image::params>(_pptr);
+    if( pptr->angle != 0 ) {
         return shared_ptr<bbox::decoded>();
     }
     shared_ptr<bbox::decoded> rc = make_shared<bbox::decoded>();
-    cv::Rect crop = sptr->cropbox;
+    cv::Rect crop = pptr->cropbox;
     for( box tmp : boxes->boxes() ) {
         box b = tmp;
         if( b.xmax <= crop.x ) {           // outside left
@@ -115,9 +115,6 @@ std::shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(settings_pt
         // cout << b.rect.x << ", " << b.rect.y << ", " << b.rect.width << ", " << b.rect.height << ", " << b.label << endl;
     }
     return rc;
-}
-
-void nervana::bbox::transformer::fill_settings(settings_ptr, std::shared_ptr<bbox::decoded> boxes, std::default_random_engine &) {
 }
 
 void nervana::bbox::loader::load(char* data, int size, std::shared_ptr<bbox::decoded> boxes) {

@@ -9,22 +9,16 @@ namespace nervana {
 
     namespace label {
         class config;
+        class params;
         class decoded;
+
+        class param_factory; // goes from config -> params
 
         class extractor;
         class transformer;
         class loader;
-
-        class settings;
     }
 }
-
-class nervana::label::settings : public nervana::settings {
-public:
-    int scale;
-    int shift;
-    settings() {}
-};
 
 
 class nervana::label::config : public nervana::json_config_parser {
@@ -47,6 +41,35 @@ public:
         parse_opt(ld_offset,  "load offset",     js);
         parse_opt(ld_dofloat, "load do float",   js);
     }
+};
+
+
+class nervana::label::params : public nervana::params {
+public:
+    int scale;
+    int shift;
+    params() {}
+};
+
+
+class nervana::label::param_factory {
+public:
+    param_factory(std::shared_ptr<nervana::label::config> cfg) {
+        _cfg = cfg;
+    }
+    ~param_factory() {}
+
+    std::shared_ptr<nervana::label::params>
+    make_params(std::shared_ptr<const decoded> lbl, std::default_random_engine& dre) {
+        auto sptr = make_shared<nervana::label::params>();
+        sptr->scale = _cfg->tx_scale(dre);
+        sptr->shift = _cfg->tx_shift(dre);
+        return sptr;
+    }
+
+private:
+
+    std::shared_ptr<nervana::label::config> _cfg;
 };
 
 
@@ -91,16 +114,12 @@ public:
 
     ~transformer() {}
 
-    std::shared_ptr<nervana::label::decoded> transform(settings_ptr tx, std::shared_ptr<nervana::label::decoded> mp) override {
+    std::shared_ptr<nervana::label::decoded> transform(param_ptr tx, std::shared_ptr<nervana::label::decoded> mp) override {
         int old_index = static_pointer_cast<nervana::label::decoded>(mp)->get_index();
-        auto txs = static_pointer_cast<nervana::label::settings>(tx);
+        auto txs = static_pointer_cast<nervana::label::params>(tx);
 
         return make_shared<nervana::label::decoded>( old_index * txs->scale + txs->shift );
     }
-
-    // Filling settings is done by the relevant params
-    virtual void fill_settings(settings_ptr, std::shared_ptr<nervana::label::decoded>, std::default_random_engine &) override
-    {}
 
 };
 
@@ -113,11 +132,7 @@ public:
     }
     ~loader() {}
 
-<<<<<<< a6f241d1202fefa464640ff20763bc94544f5655
     void load(char* buf, int bufSize, std::shared_ptr<nervana::label::decoded> mp) override {
-=======
-    void load(char* buf, int bufSize, const media_ptr& mp) override {
->>>>>>> Checkpoint - class-typed shared_ptrs
         int index = static_pointer_cast<nervana::label::decoded>(mp)->get_index();
         if (_ld_dofloat) {
             float ld_index = index + _ld_offset;

@@ -10,10 +10,10 @@
 namespace nervana {
     namespace image {
         class config;
-        class settings;
+        class params;
         class decoded;
 
-        // class param_factory; // goes from config -> settings
+        class param_factory; // goes from config -> params
 
         class extractor;
         class transformer;
@@ -21,13 +21,34 @@ namespace nervana {
     }
 }
 
-// class nervana::image::param_factory {
-// public:
-//     param_factory(const nervana::image::config &);
-//     ~param_factory() {}
+class nervana::image::params : public nervana::params {
+public:
 
-//     shared_ptr<nervana::image::settings> make_settings(const nervana::image::decoded &input);
-// }
+    params() {}
+    void dump(std::ostream & = std::cout);
+
+    cv::Rect cropbox;
+    cv::Size2i output_size;
+    int angle = 0;
+    bool flip = false;
+    std::vector<float> lighting{0.0, 0.0, 0.0};  //pixelwise random values
+    std::vector<float> photometric{0.0, 0.0, 0.0};  // contrast, brightness, saturation
+};
+
+class nervana::image::param_factory {
+public:
+    param_factory(std::shared_ptr<nervana::image::config>);
+    ~param_factory() {}
+
+    std::shared_ptr<nervana::image::params> make_params(std::shared_ptr<const decoded>,
+                                                       std::default_random_engine&);
+private:
+    void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
+    void shift_cropbox(const cv::Size2f&, cv::Rect&, float, float);
+
+    bool _do_area_scale;
+    std::shared_ptr<nervana::image::config> _icp;
+};
 
 class nervana::image::config : public nervana::json_config_parser {
 public:
@@ -72,21 +93,6 @@ private:
     }
 };
 
-class nervana::image::settings : public nervana::settings {
-public:
-
-    settings() {}
-    void dump(std::ostream & = std::cout);
-
-    cv::Rect cropbox;
-    cv::Size2i output_size;
-    int angle = 0;
-    bool flip = false;
-    std::vector<float> lighting{0.0, 0.0, 0.0};  //pixelwise random values
-    std::vector<float> photometric{0.0, 0.0, 0.0};  // contrast, brightness, saturation
-    bool filled = false;
-};
-
 
 class nervana::image::decoded : public nervana::decoded_media {
 public:
@@ -96,7 +102,7 @@ public:
 
     virtual MediaType get_type() override { return MediaType::IMAGE; }
     cv::Mat& get_image(int index) { return _images[index]; }
-    cv::Size2i get_image_size() {return _images[0].size(); }
+    cv::Size2i get_image_size() const {return _images[0].size(); }
     size_t size() const { return _images.size(); }
 
 private:
@@ -120,22 +126,15 @@ private:
 
 class nervana::image::transformer : public nervana::interface::transformer<nervana::image::decoded> {
 public:
-    transformer(std::shared_ptr<nervana::image::config>);
+    transformer(std::shared_ptr<const nervana::image::config>) {}
     ~transformer() {}
-    virtual std::shared_ptr<image::decoded> transform(settings_ptr, std::shared_ptr<image::decoded>) override;
-    virtual void fill_settings(settings_ptr, std::shared_ptr<image::decoded>, std::default_random_engine &) override;
+    virtual std::shared_ptr<image::decoded> transform(param_ptr, std::shared_ptr<image::decoded>) override;
 
 private:
     void rotate(const cv::Mat& input, cv::Mat& output, int angle);
     void resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size);
     void lighting(cv::Mat& inout, std::vector<float>);
     void cbsjitter(cv::Mat& inout, std::vector<float>);
-    void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
-    void shift_cropbox(const cv::Size2f&, cv::Rect&, float, float);
-
-    std::shared_ptr<image::config> _icp;
-    cv::Size2i _size;
-    bool _do_area_scale;
 };
 
 

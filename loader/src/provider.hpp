@@ -15,10 +15,10 @@ public:
     : _extractor(ex), _transformer(tr), _loader(lo) {
     }
 
-    void provide(char *inbuf, int insize, char *outbuf, int outsize, settings_ptr txs)
+    void provide(char *inbuf, int insize, char *outbuf, int outsize, param_ptr pptr)
     {
         _loader->load(outbuf, outsize,
-                      _transformer->transform(txs,
+                      _transformer->transform(pptr,
                                               _extractor->extract(inbuf, insize)));
     }
 

@@ -68,8 +68,7 @@ class nervana::bbox::transformer : public nervana::interface::transformer<nervan
 public:
     transformer();
     virtual ~transformer(){}
-    virtual std::shared_ptr<bbox::decoded> transform(settings_ptr, std::shared_ptr<bbox::decoded>) override;
-    virtual void fill_settings(settings_ptr, std::shared_ptr<bbox::decoded>, std::default_random_engine &) override;
+    virtual std::shared_ptr<bbox::decoded> transform(param_ptr, std::shared_ptr<bbox::decoded>) override;
 
 private:
 };
