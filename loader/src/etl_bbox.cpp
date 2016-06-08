@@ -6,7 +6,7 @@ using namespace nervana;
 using namespace nlohmann;   // json stuff
 
 ostream& operator<<(ostream& out, const nervana::bbox::box& b) {
-    out << b.name << " (" << b.xmax << "," << b.xmin << ")(" << b.ymax << "," << b.ymin << ") "
+    out << b.label << " (" << b.xmax << "," << b.xmin << ")(" << b.ymax << "," << b.ymin << ") "
         << b.difficult << " " << b.truncated;
     return out;
 }
@@ -19,28 +19,50 @@ cv::Rect nervana::bbox::box::rect() const {
 nervana::bbox::decoded::decoded() {
 }
 
-nervana::bbox::extractor::extractor() {
+nervana::bbox::extractor::extractor( const std::vector<std::string>& labels ) {
+    for( int i=0; i<labels.size(); i++ ) {
+        label_map.insert({labels[i],i});
+    }
 }
 
 media_ptr nervana::bbox::extractor::extract(char* data, int size) {
     shared_ptr<decoded> rc = make_shared<decoded>();
     string buffer( data, size );
     json j = json::parse(buffer);
+    if( j["object"].is_null() ) return rc;
+    if( j["size"].is_null() ) return rc;
     auto object_list = j["object"];
     auto image_size = j["size"];
+    if( image_size["width"].is_null() ) return rc;
+    if( image_size["height"].is_null() ) return rc;
+    if( image_size["depth"].is_null() ) return rc;
     rc->_height = image_size["height"];
     rc->_width = image_size["width"];
     rc->_depth = image_size["depth"];
     for( auto object : object_list ) {
         auto bndbox = object["bndbox"];
         box b;
+        if( bndbox["xmax"].is_null() ) { rc = nullptr; return rc; }
+        if( bndbox["xmin"].is_null() ) { rc = nullptr; return rc; }
+        if( bndbox["ymax"].is_null() ) { rc = nullptr; return rc; }
+        if( bndbox["ymin"].is_null() ) { rc = nullptr; return rc; }
+        if( object["name"].is_null() ) { rc = nullptr; return rc; }
         b.xmax = bndbox["xmax"];
         b.xmin = bndbox["xmin"];
         b.ymax = bndbox["ymax"];
         b.ymin = bndbox["ymin"];
         if( !object["difficult"].is_null() ) b.difficult = object["difficult"];
         if( !object["truncated"].is_null() ) b.truncated = object["truncated"];
-        b.name = object["name"];
+        string name = object["name"];
+        auto found = label_map.find(name);
+        if( found == label_map.end() ) {
+            // did not find the label in the ctor supplied label list
+            rc = nullptr;
+            cout << "label '" << name << "' not found in label list" << endl;
+            break;
+        } else {
+            b.label = found->second;
+        }
         rc->_boxes.push_back(b);
     }
     return rc;

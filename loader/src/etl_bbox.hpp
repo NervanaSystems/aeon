@@ -1,4 +1,5 @@
 #include <string>
+#include <unordered_map>
 #include <opencv2/core/core.hpp>
 
 #include "etl_interface.hpp"
@@ -23,7 +24,7 @@ public:
     int ymin = 0;
     bool difficult = false;
     bool truncated = false;
-    std::string name;
+    int label;
 
     cv::Rect rect() const;
 };
@@ -54,12 +55,13 @@ private:
 
 class nervana::bbox::extractor : public nervana::interface::extractor {
 public:
-    extractor();
+    extractor( const std::vector<std::string>& label_list );
     virtual ~extractor(){}
     virtual media_ptr extract(char*, int) override;
     static nlohmann::json create_box( const cv::Rect& rect, const std::string& label );
     static nlohmann::json create_metadata( const std::vector<nlohmann::json>& boxes );
 private:
+     std::unordered_map<std::string,int> label_map;
 };
 
 class nervana::bbox::transformer : public nervana::interface::transformer {

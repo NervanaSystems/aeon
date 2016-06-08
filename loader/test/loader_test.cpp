@@ -105,8 +105,9 @@ static string read_file( const string& path ) {
 
 TEST(etl, bbox_extractor) {
     {
+        vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea"};
         string data = read_file(CURDIR"/test_data/000001.json");
-        bbox::extractor extractor;
+        bbox::extractor extractor{label_list};
         auto mdata = extractor.extract(&data[0],data.size());
         auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
         ASSERT_NE(nullptr,decoded);
@@ -119,7 +120,7 @@ TEST(etl, bbox_extractor) {
         EXPECT_EQ(239,boxes[0].ymin);
         EXPECT_FALSE(boxes[0].difficult);
         EXPECT_TRUE(boxes[0].truncated);
-        EXPECT_STREQ("dog",boxes[0].name.c_str());
+        EXPECT_EQ(1,boxes[0].label);
 
         EXPECT_EQ(351,boxes[1].xmax);
         EXPECT_EQ(7,boxes[1].xmin);
@@ -127,11 +128,12 @@ TEST(etl, bbox_extractor) {
         EXPECT_EQ(11,boxes[1].ymin);
         EXPECT_FALSE(boxes[1].difficult);
         EXPECT_TRUE(boxes[1].truncated);
-        EXPECT_STREQ("person",boxes[1].name.c_str());
+        EXPECT_EQ(0,boxes[1].label);
     }
     {
+        vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea","bicycle"};
         string data = read_file(CURDIR"/test_data/006637.json");
-        bbox::extractor extractor;
+        bbox::extractor extractor{label_list};
         auto mdata = extractor.extract(&data[0],data.size());
         auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
         ASSERT_NE(nullptr,decoded);
@@ -145,11 +147,12 @@ TEST(etl, bbox_extractor) {
         EXPECT_EQ(109,b.ymin);
         EXPECT_FALSE(b.difficult);
         EXPECT_FALSE(b.truncated);
-        EXPECT_STREQ("person",b.name.c_str());
+        EXPECT_EQ(0,b.label);
     }
     {
+        vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea"};
         string data = read_file(CURDIR"/test_data/009952.json");
-        bbox::extractor extractor;
+        bbox::extractor extractor{label_list};
         auto mdata = extractor.extract(&data[0],data.size());
         auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
         ASSERT_NE(nullptr,decoded);
@@ -160,6 +163,7 @@ TEST(etl, bbox_extractor) {
 
 TEST(etl, bbox) {
     // Create test metadata
+    vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea"};
     cv::Rect r0 = cv::Rect( 0, 0, 10, 15 );
     cv::Rect r1 = cv::Rect( 10, 10, 12, 13 );
     cv::Rect r2 = cv::Rect( 100, 100, 120, 130 );
@@ -172,7 +176,7 @@ TEST(etl, bbox) {
     string buffer = j.dump();
     // cout << "boxes\n" << buffer << endl;
 
-    bbox::extractor extractor;
+    bbox::extractor extractor{label_list};
     auto data = extractor.extract( &buffer[0], buffer.size() );
     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
     vector<bbox::box> boxes = decoded->boxes();
@@ -180,9 +184,9 @@ TEST(etl, bbox) {
     EXPECT_EQ(r0,boxes[0].rect());
     EXPECT_EQ(r1,boxes[1].rect());
     EXPECT_EQ(r2,boxes[2].rect());
-    EXPECT_STREQ("rat",boxes[0].name.c_str());
-    EXPECT_STREQ("flea",boxes[1].name.c_str());
-    EXPECT_STREQ("tick",boxes[2].name.c_str());
+    EXPECT_EQ(6,boxes[0].label);
+    EXPECT_EQ(8,boxes[1].label);
+    EXPECT_EQ(7,boxes[2].label);
 
     bbox::transformer transform;
     shared_ptr<image::settings> iparam = make_shared<image::settings>();
@@ -192,6 +196,7 @@ TEST(etl, bbox) {
 
 TEST(etl, bbox_transform) {
     // Create test metadata
+    vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea"};
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
     cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
     cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]
@@ -213,7 +218,7 @@ TEST(etl, bbox_transform) {
 
     string buffer = j.dump();
 
-    bbox::extractor extractor;
+    bbox::extractor extractor{label_list};
     auto data = extractor.extract( &buffer[0], buffer.size() );
     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
     vector<bbox::box> boxes = decoded->boxes();
@@ -238,13 +243,14 @@ TEST(etl, bbox_transform) {
 
 TEST(etl, bbox_angle) {
     // Create test metadata
+    vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea"};
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );
     auto list = {bbox::extractor::create_box( r0, "puma" )};
     auto j = bbox::extractor::create_metadata(list);
 
     string buffer = j.dump();
 
-    bbox::extractor extractor;
+    bbox::extractor extractor{label_list};
     auto data = extractor.extract( &buffer[0], buffer.size() );
     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
     vector<bbox::box> boxes = decoded->boxes();
