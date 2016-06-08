@@ -67,8 +67,8 @@ private:
 
 class nervana::label::extractor : public nervana::interface::extractor<nervana::label::decoded> {
 public:
-    extractor(config_ptr cptr) {
-        _ex_offset = static_pointer_cast<nervana::label::config>(cptr)->ex_offset;
+    extractor(shared_ptr<const nervana::label::config> cfg) {
+        _ex_offset = cfg->ex_offset;
     }
 
     ~extractor() {}
@@ -87,7 +87,7 @@ private:
 
 class nervana::label::transformer : public nervana::interface::transformer<nervana::label::decoded> {
 public:
-    transformer(config_ptr cptr) {}
+    transformer(shared_ptr<const nervana::label::config>) {}
 
     ~transformer() {}
 
@@ -107,14 +107,17 @@ public:
 
 class nervana::label::loader : public nervana::interface::loader<nervana::label::decoded> {
 public:
-    loader(config_ptr cptr) {
-        auto lbl_ptr = static_pointer_cast<nervana::label::config>(cptr);
-        _ld_offset = lbl_ptr->ld_offset;
-        _ld_dofloat = lbl_ptr->ld_dofloat;
+    loader(shared_ptr<const nervana::label::config> cfg) {
+        _ld_offset = cfg->ld_offset;
+        _ld_dofloat = cfg->ld_dofloat;
     }
     ~loader() {}
 
+<<<<<<< a6f241d1202fefa464640ff20763bc94544f5655
     void load(char* buf, int bufSize, std::shared_ptr<nervana::label::decoded> mp) override {
+=======
+    void load(char* buf, int bufSize, const media_ptr& mp) override {
+>>>>>>> Checkpoint - class-typed shared_ptrs
         int index = static_pointer_cast<nervana::label::decoded>(mp)->get_index();
         if (_ld_dofloat) {
             float ld_index = index + _ld_offset;

@@ -13,12 +13,21 @@ namespace nervana {
         class settings;
         class decoded;
 
+        // class param_factory; // goes from config -> settings
+
         class extractor;
         class transformer;
         class loader;
     }
 }
 
+// class nervana::image::param_factory {
+// public:
+//     param_factory(const nervana::image::config &);
+//     ~param_factory() {}
+
+//     shared_ptr<nervana::image::settings> make_settings(const nervana::image::decoded &input);
+// }
 
 class nervana::image::config : public nervana::json_config_parser {
 public:
@@ -98,13 +107,12 @@ private:
 
 class nervana::image::extractor : public nervana::interface::extractor<nervana::image::decoded> {
 public:
-    extractor(config_ptr);
+    extractor(std::shared_ptr<const nervana::image::config>);
     ~extractor() {}
     virtual std::shared_ptr<image::decoded> extract(char*, int) override;
 
-    const int get_channel_count() {return _channel_count;}
+    const int get_channel_count() {return _color_mode == CV_LOAD_IMAGE_COLOR ? 3 : 1;}
 private:
-    int _channel_count;
     int _pixel_type;
     int _color_mode;
 };
@@ -112,7 +120,7 @@ private:
 
 class nervana::image::transformer : public nervana::interface::transformer<nervana::image::decoded> {
 public:
-    transformer(config_ptr);
+    transformer(std::shared_ptr<nervana::image::config>);
     ~transformer() {}
     virtual std::shared_ptr<image::decoded> transform(settings_ptr, std::shared_ptr<image::decoded>) override;
     virtual void fill_settings(settings_ptr, std::shared_ptr<image::decoded>, std::default_random_engine &) override;
@@ -126,12 +134,14 @@ private:
     void shift_cropbox(const cv::Size2f&, cv::Rect&, float, float);
 
     std::shared_ptr<image::config> _icp;
+    cv::Size2i _size;
+    bool _do_area_scale;
 };
 
 
 class nervana::image::loader : public nervana::interface::loader<nervana::image::decoded> {
 public:
-    loader(config_ptr);
+    loader(std::shared_ptr<const nervana::image::config>);
     ~loader() {}
     virtual void load(char*, int, std::shared_ptr<image::decoded>) override;
 
