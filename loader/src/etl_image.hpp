@@ -57,13 +57,13 @@ public:
 
         parse_opt(do_area_scale, "do_area_scale", js);
 
-        parse_dist<decltype(angle)>(angle, "dist_params/angle", js);
-        parse_dist<decltype(scale)>(scale, "dist_params/scale", js);
-        parse_dist<decltype(lighting)>(lighting, "dist_params/lighting", js);
-        parse_dist<decltype(aspect_ratio)>(aspect_ratio, "dist_params/aspect_ratio", js);
-        parse_dist<decltype(photometric)>(photometric, "dist_params/photometric", js);
-        parse_dist<decltype(crop_offset)>(crop_offset, "dist_params/crop_offset", js);
-        parse_dist<decltype(flip)>(flip, "dist_params/flip", js);
+        parse_dist(angle, "dist_params/angle", js);
+        parse_dist(scale, "dist_params/scale", js);
+        parse_dist(lighting, "dist_params/lighting", js);
+        parse_dist(aspect_ratio, "dist_params/aspect_ratio", js);
+        parse_dist(photometric, "dist_params/photometric", js);
+        parse_dist(crop_offset, "dist_params/crop_offset", js);
+        parse_dist(flip, "dist_params/flip", js);
         validate();
     }
 
@@ -156,6 +156,7 @@ public:
     virtual void load(char*, int, const media_ptr&) override;
 
 private:
-    void split(cv::Mat& img, char* buf, int bufSize);
+    void split(cv::Mat&, char*);
+    bool _channel_major;
 };
 

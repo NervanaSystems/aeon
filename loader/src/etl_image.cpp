@@ -188,39 +188,45 @@ void nervana::image::transformer::cbsjitter(cv::Mat& inout, vector<float> photom
 }
 
 
-
-
-
-nervana::image::loader::loader(param_ptr pptr) {}
+nervana::image::loader::loader(param_ptr pptr)
+{
+    auto ilp = static_pointer_cast<load_params>(pptr);
+    _channel_major = ilp->channel_major;
+}
 
 void nervana::image::loader::load(char* outbuf, int outsize, const media_ptr& input)
 {
-    auto img = static_pointer_cast<decoded_images>(input);
-    this->split(img->get_image(0), outbuf, outsize);
+    auto img = static_pointer_cast<decoded_images>(input)->get_image(0);
+    int all_pixels = img.channels() * img.total();
+
+    if (all_pixels > outsize) {
+        throw std::runtime_error("Load failed - buffer too small");
+    }
+
+    if (_channel_major) {
+        this->split(img, outbuf);
+    } else {
+        memcpy(outbuf, img.data, all_pixels);
+    }
 }
 
-void nervana::image::loader::split(cv::Mat& img, char* buf, int bufSize)
+void nervana::image::loader::split(cv::Mat& img, char* buf)
 {
     int pix_per_channel = img.total();
     int num_channels = img.channels();
-    int all_pixels = pix_per_channel * num_channels;
-
-    if (all_pixels > bufSize) {
-        throw std::runtime_error("Decode failed - buffer too small");
-    }
 
     if (num_channels == 1) {
-        memcpy(buf, img.data, all_pixels);
-        return;
+        memcpy(buf, img.data, pix_per_channel);
+    } else {
+        // Split into separate channels
+        cv::Size2i size = img.size();
+        cv::Mat b(size, CV_8U, buf);
+        cv::Mat g(size, CV_8U, buf + pix_per_channel);
+        cv::Mat r(size, CV_8U, buf + 2 * pix_per_channel);
+
+        cv::Mat channels[3] = {b, g, r};
+        cv::split(img, channels);
     }
 
-    // Split into separate channels
-    cv::Size2i size = img.size();
-    cv::Mat b(size, CV_8U, buf);
-    cv::Mat g(size, CV_8U, buf + pix_per_channel);
-    cv::Mat r(size, CV_8U, buf + 2 * pix_per_channel);
-
-    cv::Mat channels[3] = {b, g, r};
-    cv::split(img, channels);
 }
 

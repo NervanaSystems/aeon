@@ -30,3 +30,12 @@ public:
     virtual ~loader() {}
     virtual void load(char*, int, const media_ptr&) = 0;
 };
+
+// class nervana::media_family::image {
+// public:
+//     virtual void config(const media_family::image_config&) = 0;
+// }
+// class nervana::media_family::audio {
+//     virtual void config(const media_family::audio_config&) = 0;
+
+// }
