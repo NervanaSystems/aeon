@@ -13,36 +13,12 @@
  limitations under the License.
 */
 
-#include "gtest/gtest.h"
-#include "manifest.hpp"
-#include "manifest_maker.hpp"
+#pragma once
 
-#include <iostream>
-#include <fstream>
 #include <string>
-#include <cstdio>
 
 using namespace std;
 
-TEST(manifest, constructor) {
-    Manifest manifest("manfiest.txt");
-}
-
-TEST(manifest, hash) {
-    // TODO not 42
-    Manifest manifest("manifest.txt");
-    ASSERT_EQ(manifest.hash(), "42");
-}
-
-TEST(manifest, parse_file_doesnt_exist) {
-    Manifest manifest("manifest.txt");
-
-    ASSERT_EQ(manifest.getSize(), 0);
-}
-
-TEST(manifest, parse_file) {
-    string tmpname = tmp_manifest_file(2, 0, 0);
-
-    Manifest manifest(tmpname);
-    ASSERT_EQ(manifest.getSize(), 2);
-} 
+string tmp_filename();
+string tmp_zero_file(uint size);
+string tmp_manifest_file(uint num_records, uint object_size, uint target_size);

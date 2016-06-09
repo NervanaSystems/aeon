@@ -13,36 +13,43 @@
  limitations under the License.
 */
 
-#include "gtest/gtest.h"
-#include "manifest.hpp"
 #include "manifest_maker.hpp"
 
-#include <iostream>
+#include <string.h>
 #include <fstream>
 #include <string>
-#include <cstdio>
 
 using namespace std;
 
-TEST(manifest, constructor) {
-    Manifest manifest("manfiest.txt");
+string tmp_filename() {
+    char *tmpname = strdup("/tmp/tmpfileXXXXXX");
+    mkstemp(tmpname);
+    return tmpname;
 }
 
-TEST(manifest, hash) {
-    // TODO not 42
-    Manifest manifest("manifest.txt");
-    ASSERT_EQ(manifest.hash(), "42");
+string tmp_zero_file(uint size) {
+    string tmpname = tmp_filename();
+    ofstream f(tmpname);
+
+    for(uint i = 0; i < size; ++i) {
+        f << (char)0 << endl;
+    }
+
+    f.close();
+
+    return tmpname;
 }
 
-TEST(manifest, parse_file_doesnt_exist) {
-    Manifest manifest("manifest.txt");
+string tmp_manifest_file(uint num_records, uint object_size, uint target_size) {
+    string tmpname = tmp_filename();
+    ofstream f(tmpname);
 
-    ASSERT_EQ(manifest.getSize(), 0);
+    for(uint i = 0; i < num_records; ++i) {
+        f << tmp_zero_file(object_size) << ",";
+        f << tmp_zero_file(target_size) << endl;
+    }
+
+    f.close();
+
+    return tmpname;
 }
-
-TEST(manifest, parse_file) {
-    string tmpname = tmp_manifest_file(2, 0, 0);
-
-    Manifest manifest(tmpname);
-    ASSERT_EQ(manifest.getSize(), 2);
-} 
