@@ -65,7 +65,7 @@ public:
 
     bool do_area_scale = false;
     bool channel_major = true;
-    int num_channels = 3;
+    int channels = 3;
 
     config(std::string argString) {
         auto js = nlohmann::json::parse(argString);
@@ -74,16 +74,17 @@ public:
         parse_req(width, "width", js);
 
         parse_opt(do_area_scale, "do_area_scale", js);
-        parse_opt(num_channels, "num_channels", js);
+        parse_opt(channels, "channels", js);
         parse_opt(channel_major, "channel_major", js);
 
-        parse_dist(angle, "dist_params/angle", js);
-        parse_dist(scale, "dist_params/scale", js);
-        parse_dist(lighting, "dist_params/lighting", js);
-        parse_dist(aspect_ratio, "dist_params/aspect_ratio", js);
-        parse_dist(photometric, "dist_params/photometric", js);
-        parse_dist(crop_offset, "dist_params/crop_offset", js);
-        parse_dist(flip, "dist_params/flip", js);
+        auto dist_params = js["distribution"];
+        parse_dist(angle, "angle", dist_params);
+        parse_dist(scale, "scale", dist_params);
+        parse_dist(lighting, "lighting", dist_params);
+        parse_dist(aspect_ratio, "aspect_ratio", dist_params);
+        parse_dist(photometric, "photometric", dist_params);
+        parse_dist(crop_offset, "crop_offset", dist_params);
+        parse_dist(flip, "flip", dist_params);
         validate();
     }
 

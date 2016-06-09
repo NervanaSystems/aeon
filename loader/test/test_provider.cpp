@@ -32,11 +32,13 @@ TEST(provider, argtype) {
             {
                 "height": 30,
                 "width" : 30,
-                "dist_params/angle" : [-20, 20],
-                "dist_params/scale" : [0.2, 0.8],
-                "dist_params/lighting" : [0.0, 0.1],
-                "dist_params/aspect_ratio" : [0.75, 1.33],
-                "dist_params/flip" : [false]
+                "distribution":{
+                    "angle" : [-20, 20],
+                    "scale" : [0.2, 0.8],
+                    "lighting" : [0.0, 0.1],
+                    "aspect_ratio" : [0.75, 1.33],
+                    "flip" : [false]
+                }
             }
         )";
 

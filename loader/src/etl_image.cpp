@@ -17,14 +17,14 @@ void nervana::image::params::dump(ostream & ostr)
 /* Extract */
 nervana::image::extractor::extractor(shared_ptr<const nervana::image::config> cfg)
 {
-    if (!(cfg->num_channels == 1 || cfg->num_channels == 3))
+    if (!(cfg->channels == 1 || cfg->channels == 3))
     {
         std::stringstream ss;
-        ss << "Unsupported number of channels in image: " << cfg->num_channels;
+        ss << "Unsupported number of channels in image: " << cfg->channels;
         throw std::runtime_error(ss.str());
     } else {
-        _pixel_type = cfg->num_channels == 1 ? CV_8UC1 : CV_8UC3;
-        _color_mode = cfg->num_channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR;
+        _pixel_type = cfg->channels == 1 ? CV_8UC1 : CV_8UC3;
+        _color_mode = cfg->channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR;
     }
 
 }
