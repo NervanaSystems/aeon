@@ -1,8 +1,9 @@
 #include "etl_image.hpp"
 
 using namespace std;
+using namespace nervana;
 
-void nervana::image::params::dump(ostream & ostr)
+void image::params::dump(ostream & ostr)
 {
     ostr << "Angle: " << setw(3) << angle << " ";
     ostr << "Flip: " << flip << " ";
@@ -15,7 +16,7 @@ void nervana::image::params::dump(ostream & ostr)
 
 
 /* Extract */
-nervana::image::extractor::extractor(shared_ptr<const nervana::image::config> cfg)
+image::extractor::extractor(shared_ptr<const image::config> cfg)
 {
     if (!(cfg->channels == 1 || cfg->channels == 3))
     {
@@ -29,12 +30,12 @@ nervana::image::extractor::extractor(shared_ptr<const nervana::image::config> cf
 
 }
 
-shared_ptr<nervana::image::decoded> nervana::image::extractor::extract(char* inbuf, int insize)
+shared_ptr<image::decoded> image::extractor::extract(char* inbuf, int insize)
 {
     cv::Mat output_img;
     cv::Mat input_img(1, insize, _pixel_type, inbuf);
     cv::imdecode(input_img, _color_mode, &output_img);
-    return make_shared<nervana::image::decoded>(output_img);
+    return make_shared<image::decoded>(output_img);
 }
 
 
@@ -53,9 +54,9 @@ shared_ptr<nervana::image::decoded> nervana::image::extractor::extract(char* inb
 
 */
 
-shared_ptr<nervana::image::decoded> nervana::image::transformer::transform(
-                                                 shared_ptr<nervana::image::params> img_xform,
-                                                 shared_ptr<nervana::image::decoded> img)
+shared_ptr<image::decoded> image::transformer::transform(
+                                                 shared_ptr<image::params> img_xform,
+                                                 shared_ptr<image::decoded> img)
 {
     cv::Mat rotatedImage;
     rotate(img->get_image(0), rotatedImage, img_xform->angle);
@@ -73,10 +74,10 @@ shared_ptr<nervana::image::decoded> nervana::image::transformer::transform(
         finalImage = &flippedImage;
     }
 
-    return make_shared<nervana::image::decoded>(*finalImage);
+    return make_shared<image::decoded>(*finalImage);
 }
 
-void nervana::image::transformer::rotate(const cv::Mat& input, cv::Mat& output, int angle)
+void image::transformer::rotate(const cv::Mat& input, cv::Mat& output, int angle)
 {
     if (angle == 0) {
         output = input;
@@ -87,7 +88,7 @@ void nervana::image::transformer::rotate(const cv::Mat& input, cv::Mat& output, 
     }
 }
 
-void nervana::image::transformer::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size)
+void image::transformer::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size)
 {
     if (size == input.size()) {
         output = input;
@@ -97,34 +98,34 @@ void nervana::image::transformer::resize(const cv::Mat& input, cv::Mat& output, 
     }
 }
 
-void nervana::image::transformer::lighting(cv::Mat& inout, vector<float> lighting)
+void image::transformer::lighting(cv::Mat& inout, vector<float> lighting)
 {
 }
 
-void nervana::image::transformer::cbsjitter(cv::Mat& inout, vector<float> photometric)
+void image::transformer::cbsjitter(cv::Mat& inout, vector<float> photometric)
 {
 }
 
 
-nervana::image::param_factory::param_factory(shared_ptr<nervana::image::config> cfg)
+image::param_factory::param_factory(shared_ptr<image::config> cfg)
 {
     _do_area_scale = cfg->do_area_scale;
     _icp = cfg;
 }
 
-shared_ptr<nervana::image::params>
-nervana::image::param_factory::make_params(
+shared_ptr<image::params>
+image::param_factory::make_params(
                                     shared_ptr<const decoded> input,
                                     default_random_engine& dre )
 {
-    auto imgstgs = make_shared<nervana::image::params>();
+    auto imgstgs = make_shared<image::params>();
 
     imgstgs->output_size = cv::Size2i(_icp->width, _icp->height);
 
     imgstgs->angle = _icp->angle(dre);
     imgstgs->flip  = _icp->flip(dre);
 
-    cv::Size2f in_size = input->get_image_size(0);
+    cv::Size2f in_size = input->get_image_size();
 
     float scale = _icp->scale(dre);
     float aspect_ratio = _icp->aspect_ratio(dre);
@@ -144,7 +145,7 @@ nervana::image::param_factory::make_params(
     return imgstgs;
 }
 
-void nervana::image::param_factory::shift_cropbox(
+void image::param_factory::shift_cropbox(
                             const cv::Size2f &in_size,
                             cv::Rect &crop_box,
                             float off_x,
@@ -154,7 +155,7 @@ void nervana::image::param_factory::shift_cropbox(
     crop_box.y = (in_size.height - crop_box.height) * off_y;
 }
 
-void nervana::image::param_factory::scale_cropbox(
+void image::param_factory::scale_cropbox(
                             const cv::Size2f &in_size,
                             cv::Rect &crop_box,
                             float tgt_aspect_ratio,
@@ -187,12 +188,12 @@ void nervana::image::param_factory::scale_cropbox(
     }
 }
 
-nervana::image::loader::loader(shared_ptr<const nervana::image::config> cfg)
+image::loader::loader(shared_ptr<const image::config> cfg)
 {
     _channel_major = cfg->channel_major;
 }
 
-void nervana::image::loader::load(char* outbuf, int outsize, shared_ptr<nervana::image::decoded> input)
+void image::loader::load(char* outbuf, int outsize, shared_ptr<image::decoded> input)
 {
     auto img = input->get_image(0);
     int all_pixels = img.channels() * img.total();
@@ -208,7 +209,7 @@ void nervana::image::loader::load(char* outbuf, int outsize, shared_ptr<nervana:
     }
 }
 
-void nervana::image::loader::split(cv::Mat& img, char* buf)
+void image::loader::split(cv::Mat& img, char* buf)
 {
     int pix_per_channel = img.total();
     int num_channels = img.channels();

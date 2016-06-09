@@ -63,7 +63,7 @@ void test_image(vector<unsigned char>& img, int channels) {
 
     ASSERT_NE(nullptr,decoded);
     EXPECT_EQ(1,decoded->size());
-    cv::Size2i size = decoded->get_image_size(0);
+    cv::Size2i size = decoded->get_image_size();
     EXPECT_EQ(256,size.width);
     EXPECT_EQ(256,size.height);
     cv::Mat mat = decoded->get_image(0);
