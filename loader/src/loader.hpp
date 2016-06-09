@@ -29,6 +29,13 @@
 #include "matrix.hpp"
 #include "device.hpp"
 
+/* DecodeThreadPool
+ *
+ * DecodeThreadPool takes data from the BufferPool `in`, transforms it
+ * using `count` threads with a Media::transform built from
+ * `mediaParams`.  Each minibatch is transposed by a manager thread.
+ *
+ */
 class DecodeThreadPool : public ThreadPool {
 public:
     DecodeThreadPool(int count, int batchSize,
