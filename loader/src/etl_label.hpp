@@ -9,7 +9,7 @@ namespace nervana {
 
     namespace label {
         class config;
-        class decoded_label;
+        class decoded;
 
         class extractor;
         class transformer;
@@ -50,22 +50,22 @@ public:
 };
 
 
-class nervana::label::decoded_label : public nervana::decoded_media {
+class nervana::label::decoded : public nervana::decoded_media {
 public:
-    decoded_label(int index) :
+    decoded(int index) :
         _index{index} {}
-    virtual ~decoded_label() override {}
+    virtual ~decoded() override {}
 
     inline MediaType get_type() override { return MediaType::TARGET; }
     inline int get_index() { return _index; }
 
 private:
-    decoded_label() = delete;
+    decoded() = delete;
     int _index;
 };
 
 
-class nervana::label::extractor : public nervana::interface::extractor<nervana::label::decoded_label> {
+class nervana::label::extractor : public nervana::interface::extractor<nervana::label::decoded> {
 public:
     extractor(config_ptr cptr) {
         _ex_offset = static_pointer_cast<nervana::label::config>(cptr)->ex_offset;
@@ -73,11 +73,11 @@ public:
 
     ~extractor() {}
 
-    std::shared_ptr<nervana::label::decoded_label> extract(char* buf, int bufSize) override {
+    std::shared_ptr<nervana::label::decoded> extract(char* buf, int bufSize) override {
         if (bufSize != 4) {
             throw runtime_error("Only 4 byte buffers can be loaded as int32");
         }
-        return make_shared<nervana::label::decoded_label>(*reinterpret_cast<int *>(buf) + _ex_offset);
+        return make_shared<nervana::label::decoded>(*reinterpret_cast<int *>(buf) + _ex_offset);
     }
 
 private:
@@ -85,27 +85,27 @@ private:
 };
 
 
-class nervana::label::transformer : public nervana::interface::transformer<nervana::label::decoded_label> {
+class nervana::label::transformer : public nervana::interface::transformer<nervana::label::decoded> {
 public:
     transformer(config_ptr cptr) {}
 
     ~transformer() {}
 
-    std::shared_ptr<nervana::label::decoded_label> transform(settings_ptr tx, std::shared_ptr<nervana::label::decoded_label> mp) override {
-        int old_index = static_pointer_cast<nervana::label::decoded_label>(mp)->get_index();
+    std::shared_ptr<nervana::label::decoded> transform(settings_ptr tx, std::shared_ptr<nervana::label::decoded> mp) override {
+        int old_index = static_pointer_cast<nervana::label::decoded>(mp)->get_index();
         auto txs = static_pointer_cast<nervana::label::settings>(tx);
 
-        return make_shared<nervana::label::decoded_label>( old_index * txs->scale + txs->shift );
+        return make_shared<nervana::label::decoded>( old_index * txs->scale + txs->shift );
     }
 
     // Filling settings is done by the relevant params
-    virtual void fill_settings(settings_ptr, std::shared_ptr<nervana::label::decoded_label>, std::default_random_engine &) override
+    virtual void fill_settings(settings_ptr, std::shared_ptr<nervana::label::decoded>, std::default_random_engine &) override
     {}
 
 };
 
 
-class nervana::label::loader : public nervana::interface::loader<nervana::label::decoded_label> {
+class nervana::label::loader : public nervana::interface::loader<nervana::label::decoded> {
 public:
     loader(config_ptr cptr) {
         auto lbl_ptr = static_pointer_cast<nervana::label::config>(cptr);
@@ -114,8 +114,8 @@ public:
     }
     ~loader() {}
 
-    void load(char* buf, int bufSize, std::shared_ptr<nervana::label::decoded_label> mp) override {
-        int index = static_pointer_cast<nervana::label::decoded_label>(mp)->get_index();
+    void load(char* buf, int bufSize, std::shared_ptr<nervana::label::decoded> mp) override {
+        int index = static_pointer_cast<nervana::label::decoded>(mp)->get_index();
         if (_ld_dofloat) {
             float ld_index = index + _ld_offset;
             memcpy(buf, &ld_index, bufSize);
