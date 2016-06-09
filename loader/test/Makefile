@@ -17,7 +17,15 @@
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
-SRCS            := main.cpp thread_test.cpp datagen.cpp decode_test.cpp argtype_test.cpp loader_test.cpp
+SRCS := \
+	main.cpp \
+	thread_test.cpp \
+	datagen.cpp \
+	argtype_test.cpp \
+	test_bbox.cpp \
+	test_image.cpp \
+	test_lmap.cpp \
+	test_provider.cpp
 TOBJS 			= $(subst .cpp,.o,$(SRCS))
 OBJS 			= $(subst .c,.o,$(TOBJS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -DCURDIR=\"$(CURDIR)\"
