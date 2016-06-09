@@ -31,6 +31,56 @@
 using namespace std;
 using namespace nervana;
 
+class image_config_builder {
+public:
+    image_config_builder& height(int val) { obj.height = val; return *this; }
+    image_config_builder& width(int val) { obj.width = val; return *this; }
+    image_config_builder& do_area_scale(bool val) { obj.do_area_scale = val; return *this; }
+    image_config_builder& channel_major(bool val) { obj.channel_major = val; return *this; }
+    image_config_builder& channels(int val) { obj.channels = val; return *this; }
+    image_config_builder& scale(float a, float b) { obj.scale = uniform_real_distribution<float>(a,b); return *this; }
+    image_config_builder& angle(float a, float b) { obj.angle = uniform_int_distribution<int>(a,b); return *this; }
+    image_config_builder& lighting(float a, float b) { obj.lighting = normal_distribution<float>(a,b); return *this; }
+    image_config_builder& aspect_ratio(float a, float b) { obj.aspect_ratio = uniform_real_distribution<float>(a,b); return *this; }
+    image_config_builder& photometric(float a, float b) { obj.photometric = uniform_real_distribution<float>(a,b); return *this; }
+    image_config_builder& crop_offset(float a, float b) { obj.crop_offset = uniform_real_distribution<float>(a,b); return *this; }
+    image_config_builder& flip(float p) { obj.flip = bernoulli_distribution(p); return *this; }
+
+    shared_ptr<image::config> dump(int tab=4) {
+        nlohmann::json js = {{"height",obj.height},{"width",obj.width},{"channels",obj.channels},
+        {"do_area_scale",obj.do_area_scale},{"channel_major",obj.channel_major},{
+        "distribution",{
+            {"angle",{obj.angle.a(),obj.angle.b()}},
+            {"scale",{obj.scale.a(),obj.scale.b()}},
+            {"lighting",{obj.lighting.mean(),obj.lighting.stddev()}},
+            {"aspect_ratio",{obj.aspect_ratio.a(),obj.aspect_ratio.b()}},
+            {"photometric",{obj.photometric.a(),obj.photometric.b()}},
+            {"crop_offset",{obj.crop_offset.a(),obj.crop_offset.b()}},
+            {"flip",{obj.flip.p()!=0}}
+        }}};
+        return make_shared<image::config>(js.dump());
+    }
+private:
+    image::config obj{ R"({"height":30,"width":30})" };
+};
+
+class image_params_builder {
+public:
+    image_params_builder& cropbox( int x, int y, int w, int h ) { obj.cropbox = cv::Rect(x,y,w,h); return *this; }
+    image_params_builder& output_size( int w, int h ) { obj.output_size = cv::Size2i(w,h); return *this; }
+    image_params_builder& angle( int val ) { obj.angle = val; return *this; }
+    image_params_builder& flip( bool val ) { obj.flip = val; return *this; }
+    image_params_builder& lighting( float f1, float f2, float f3 ) { obj.lighting = {f1,f2,f3}; return *this; }
+    image_params_builder& photometric( float f1, float f2, float f3 ) { obj.photometric = {f1,f2,f3}; return *this; }
+
+    operator shared_ptr<image::params>() const {
+        return make_shared<image::params>(obj);
+    }
+
+private:
+    image::params obj;
+};
+
 cv::Mat generate_indexed_image() {
     cv::Mat color = cv::Mat( 256, 256, CV_8UC3 );
     unsigned char *input = (unsigned char*)(color.data);
@@ -58,8 +108,8 @@ void test_image(vector<unsigned char>& img, int channels) {
 
     auto itpj = make_shared<image::config>(cfgString);
 
-    nervana::image::extractor ext{itpj};
-    std::shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+    image::extractor ext{itpj};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
     ASSERT_NE(nullptr,decoded);
     EXPECT_EQ(1,decoded->size());
@@ -128,7 +178,6 @@ TEST(etl, image_config) {
 
 TEST(etl, image_extract1) {
     auto indexed = generate_indexed_image();
-
     vector<unsigned char> png;
     cv::imencode( ".png", indexed, png );
 
@@ -137,7 +186,6 @@ TEST(etl, image_extract1) {
 
 TEST(etl, image_extract2) {
     auto indexed = generate_indexed_image();
-
     vector<unsigned char> png;
     cv::imencode( ".png", indexed, png );
 
@@ -146,7 +194,6 @@ TEST(etl, image_extract2) {
 
 TEST(etl, image_extract3) {
     cv::Mat img = cv::Mat( 256, 256, CV_8UC1 );
-
     vector<unsigned char> png;
     cv::imencode( ".png", img, png );
 
@@ -155,9 +202,30 @@ TEST(etl, image_extract3) {
 
 TEST(etl, image_extract4) {
     cv::Mat img = cv::Mat( 256, 256, CV_8UC1 );
-
     vector<unsigned char> png;
     cv::imencode( ".png", img, png );
 
     test_image( png, 1 );
+}
+
+TEST(etl, image_transform1) {
+    auto indexed = generate_indexed_image();
+    vector<unsigned char> img;
+    cv::imencode( ".png", indexed, img );
+
+    image_config_builder config;
+    shared_ptr<image::config> config_ptr = config.width(256).height(256).dump();
+
+    image_params_builder builder;
+    shared_ptr<image::params> params_ptr = builder.cropbox( 100, 150, 20, 30 ).output_size(20, 30);
+
+    image::extractor ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    image::transformer trans{config_ptr};
+    shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+    cv::Mat image = transformed->get_image(0);
+    EXPECT_EQ(20,image.size().width);
+    EXPECT_EQ(30,image.size().height);
 }
