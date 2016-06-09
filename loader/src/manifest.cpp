@@ -61,7 +61,11 @@ void Manifest::parseStream(istream& is) {
 
     // TODO: only optionally shuffle.  If we don't need to shuffle,
     // there may be small performance benefits in some situations to
-    // stream the filename_pairs instead of loading them all at once
+    // stream the filename_pairs instead of loading them all at once.
+    // That said, in the event that there is no cache and we are
+    // resuming training at a specific epoch, we may need to be able to
+    // jump around and read random blocks of the file, so a purely
+    // stream based interface is not sufficient.
     shuffleFilenamePairs();
 }
 
