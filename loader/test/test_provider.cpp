@@ -43,8 +43,8 @@ TEST(provider, argtype) {
         auto itpj = make_shared<image::config>(cfgString);
 
         // output the fixed parameters
-        cout << "HEIGHT: " << itpj->height << endl;
-        cout << "WIDTH: "  << itpj->width  << endl;
+        EXPECT_EQ(30,itpj->height);
+        EXPECT_EQ(30,itpj->width);
 
         // output the random parameters
         default_random_engine r_eng(0);

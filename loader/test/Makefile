@@ -115,5 +115,5 @@ $(DEPDIR)/%.d: ;
 
 clean:
 	@rm -vf *.o
-	@rm test
+	@rm -f test
 	@rm -rf $(DEPDIR)
