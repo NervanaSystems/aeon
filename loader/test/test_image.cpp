@@ -44,57 +44,58 @@ cv::Mat generate_indexed_image() {
     return color;
 }
 
+void test_image(vector<unsigned char>& img, int num_channels) {
+    string cfgString = R"(
+        {
+            "height": 30,
+            "width" : 30,
+            "num_channels" : )"+to_string(num_channels)+R"(,
+            "dist_params/angle" : [-20, 20],
+            "dist_params/scale" : [0.2, 0.8],
+            "dist_params/lighting" : [0.0, 0.1],
+            "dist_params/aspect_ratio" : [0.75, 1.33],
+            "dist_params/flip" : [false]
+        }
+    )";
+
+    cout << cfgString << endl;
+
+    auto itpj = make_shared<image::config>(cfgString);
+
+    nervana::image::extractor ext{itpj};
+    std::shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    ASSERT_NE(nullptr,decoded);
+    EXPECT_EQ(1,decoded->size());
+    cv::Size2i size = decoded->get_image_size(0);
+    EXPECT_EQ(256,size.width);
+    EXPECT_EQ(256,size.height);
+    cv::Mat mat = decoded->get_image(0);
+    EXPECT_EQ(256,mat.rows);
+    EXPECT_EQ(256,mat.cols);
+    EXPECT_EQ(num_channels,mat.channels());
+
+    // unsigned char *input = (unsigned char*)(mat.data);
+    // int index = 0;
+    // for(int row = 0; row < 256; row++) {
+    //     for(int col = 0; col < 256; col++) {
+    //         if(num_channels == 3) {
+    //             EXPECT_EQ(col,input[index++]);
+    //             EXPECT_EQ(row,input[index++]);
+    //             index++;
+    //         }
+    //     }
+    // }
+}
+
 TEST(etl, image_extract) {
     {
-        // test extract png
         auto indexed = generate_indexed_image();
         cv::imwrite( "indexed.png", indexed );
-
-        // cv::Mat mono = cv::Mat( 256, 256, CV_8UC1 );
-        // mono = cv::Scalar(128);
 
         vector<unsigned char> png;
         cv::imencode( ".png", indexed, png );
 
-        string cfgString = R"(
-            {
-                "height": 30,
-                "width" : 30,
-                "num_channels" : 3,
-                "dist_params/angle" : [-20, 20],
-                "dist_params/scale" : [0.2, 0.8],
-                "dist_params/lighting" : [0.0, 0.1],
-                "dist_params/aspect_ratio" : [0.75, 1.33],
-                "dist_params/flip" : [false]
-            }
-        )";
-
-        auto itpj = make_shared<image::config>(cfgString);
-
-        nervana::image::extractor ext{itpj};
-        std::shared_ptr<image::decoded> decoded = ext.extract((char*)&png[0], png.size());
-
-        ASSERT_NE(nullptr,decoded);
-        EXPECT_EQ(1,decoded->size());
-        cv::Size2i size = decoded->get_image_size(0);
-        EXPECT_EQ(256,size.width);
-        EXPECT_EQ(256,size.height);
-        cv::Mat mat = decoded->get_image(0);
-        EXPECT_EQ(256,mat.rows);
-        EXPECT_EQ(256,mat.cols);
-        EXPECT_EQ(3,mat.channels());
-
-        unsigned char *input = (unsigned char*)(mat.data);
-        int index = 0;
-        for(int row = 0; row < 256; row++) {
-            for(int col = 0; col < 256; col++) {
-                EXPECT_EQ(col,input[index++]);
-                EXPECT_EQ(row,input[index++]);
-                index++;
-            }
-        }
-    }
-    {
-        // test extract jpeg
+        test_image( png, 3 );
     }
 }
