@@ -37,6 +37,8 @@ extern DataGen _datagen;
 using namespace std;
 using namespace nervana;
 
+static vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea","bicycle"};
+
 static string read_file( const string& path ) {
     ifstream f(path);
     stringstream ss;
@@ -46,7 +48,6 @@ static string read_file( const string& path ) {
 
 TEST(etl, bbox_extractor) {
     {
-        vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea"};
         string data = read_file(CURDIR"/test_data/000001.json");
         bbox::extractor extractor{label_list};
         auto mdata = extractor.extract(&data[0],data.size());
@@ -72,7 +73,6 @@ TEST(etl, bbox_extractor) {
         EXPECT_EQ(0,boxes[1].label);
     }
     {
-        vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea","bicycle"};
         string data = read_file(CURDIR"/test_data/006637.json");
         bbox::extractor extractor{label_list};
         auto mdata = extractor.extract(&data[0],data.size());
@@ -91,7 +91,6 @@ TEST(etl, bbox_extractor) {
         EXPECT_EQ(0,b.label);
     }
     {
-        vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea"};
         string data = read_file(CURDIR"/test_data/009952.json");
         bbox::extractor extractor{label_list};
         auto mdata = extractor.extract(&data[0],data.size());
@@ -104,7 +103,6 @@ TEST(etl, bbox_extractor) {
 
 TEST(etl, bbox) {
     // Create test metadata
-    vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea"};
     cv::Rect r0 = cv::Rect( 0, 0, 10, 15 );
     cv::Rect r1 = cv::Rect( 10, 10, 12, 13 );
     cv::Rect r2 = cv::Rect( 100, 100, 120, 130 );
@@ -136,7 +134,6 @@ TEST(etl, bbox) {
 
 TEST(etl, bbox_transform) {
     // Create test metadata
-    vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea"};
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
     cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
     cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]
@@ -182,7 +179,6 @@ TEST(etl, bbox_transform) {
 
 TEST(etl, bbox_angle) {
     // Create test metadata
-    vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea"};
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );
     auto list = {bbox::extractor::create_box( r0, "puma" )};
     auto j = bbox::extractor::create_metadata(list);

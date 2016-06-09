@@ -37,3 +37,5 @@ extern DataGen _datagen;
 using namespace std;
 using namespace nervana;
 
+TEST(etl, image) {
+}
