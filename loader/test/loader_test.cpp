@@ -184,8 +184,7 @@ TEST(etl, bbox) {
 
     bbox::transformer transform;
     shared_ptr<image::params> iparam = make_shared<image::params>();
-    param_ptr sptr = static_pointer_cast<params>(iparam);
-    auto tx = transform.transform( sptr, decoded );
+    auto tx = transform.transform( iparam, decoded );
 }
 
 TEST(etl, bbox_transform) {
@@ -222,8 +221,7 @@ TEST(etl, bbox_transform) {
     bbox::transformer transform;
     shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
-    param_ptr sptr = static_pointer_cast<params>(iparam);
-    auto tx = transform.transform( sptr, decoded );
+    auto tx = transform.transform( iparam, decoded );
     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
     vector<bbox::box> tx_boxes = tx_decoded->boxes();
     ASSERT_EQ(6,tx_boxes.size());
@@ -254,8 +252,7 @@ TEST(etl, bbox_angle) {
     bbox::transformer transform;
     shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->angle = 5;
-    param_ptr sptr = static_pointer_cast<params>(iparam);
-    auto tx = transform.transform( sptr, decoded );
+    auto tx = transform.transform( iparam, decoded );
     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
     EXPECT_EQ(nullptr,tx_decoded.get());
 }
@@ -344,7 +341,7 @@ TEST(myloader, argtype) {
 
             int reference_target = reference;
             int loaded_target = 0;
-            provider<nervana::label::decoded> pp{lble, lblt, lbll};
+            provider<nervana::label::decoded, nervana::label::params> pp{lble, lblt, lbll};
             pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }
@@ -363,7 +360,7 @@ TEST(myloader, argtype) {
 
             float reference_target = reference + 0.8;
             float loaded_target = 0.0;
-            provider<nervana::label::decoded> pp{lble, lblt, lbll};
+            provider<nervana::label::decoded, nervana::label::params> pp{lble, lblt, lbll};
             pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }

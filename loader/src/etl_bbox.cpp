@@ -82,8 +82,7 @@ json nervana::bbox::extractor::create_metadata( const vector<json>& boxes ) {
 
 nervana::bbox::transformer::transformer() {}
 
-shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(param_ptr _pptr, shared_ptr<bbox::decoded> boxes) {
-    shared_ptr<image::params> pptr = static_pointer_cast<image::params>(_pptr);
+shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(shared_ptr<image::params> pptr, shared_ptr<bbox::decoded> boxes) {
     if( pptr->angle != 0 ) {
         return shared_ptr<bbox::decoded>();
     }

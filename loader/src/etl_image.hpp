@@ -124,11 +124,13 @@ private:
 };
 
 
-class nervana::image::transformer : public nervana::interface::transformer<nervana::image::decoded> {
+class nervana::image::transformer : public nervana::interface::transformer<nervana::image::decoded, nervana::image::params> {
 public:
     transformer(std::shared_ptr<const nervana::image::config>) {}
     ~transformer() {}
-    virtual std::shared_ptr<image::decoded> transform(param_ptr, std::shared_ptr<image::decoded>) override;
+    virtual std::shared_ptr<image::decoded> transform(
+                                            std::shared_ptr<image::params>,
+                                            std::shared_ptr<image::decoded>) override;
 
 private:
     void rotate(const cv::Mat& input, cv::Mat& output, int angle);

@@ -13,8 +13,14 @@ namespace nervana {
         class transformer;
         class loader;
         class box;
+        class params;
     }
 }
+
+class nervana::lmap::params : public nervana::params {
+public:
+    params() {}
+};
 
 class nervana::lmap::decoded : public decoded_media {
     friend class transformer;
@@ -44,11 +50,13 @@ private:
     std::unordered_map<std::string,int>  _dictionary;
 };
 
-class nervana::lmap::transformer : public nervana::interface::transformer<nervana::lmap::decoded> {
+class nervana::lmap::transformer : public nervana::interface::transformer<nervana::lmap::decoded, nervana::lmap::params> {
 public:
     transformer();
     virtual ~transformer(){}
-    virtual std::shared_ptr<nervana::lmap::decoded> transform(param_ptr, std::shared_ptr<nervana::lmap::decoded>) override;
+    virtual std::shared_ptr<nervana::lmap::decoded> transform(
+                                            std::shared_ptr<nervana::lmap::params>,
+                                            std::shared_ptr<nervana::lmap::decoded>) override;
 private:
 };
 

@@ -64,11 +64,13 @@ private:
      std::unordered_map<std::string,int> label_map;
 };
 
-class nervana::bbox::transformer : public nervana::interface::transformer<nervana::bbox::decoded> {
+class nervana::bbox::transformer : public nervana::interface::transformer<nervana::bbox::decoded, nervana::image::params> {
 public:
     transformer();
     virtual ~transformer(){}
-    virtual std::shared_ptr<bbox::decoded> transform(param_ptr, std::shared_ptr<bbox::decoded>) override;
+    virtual std::shared_ptr<bbox::decoded> transform(
+                                            std::shared_ptr<image::params>,
+                                            std::shared_ptr<bbox::decoded>) override;
 
 private:
 };

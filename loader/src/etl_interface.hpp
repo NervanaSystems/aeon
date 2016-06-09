@@ -5,7 +5,7 @@
 namespace nervana {
     namespace interface {
         template<typename T> class extractor;
-        template<typename T> class transformer;
+        template<typename T, typename S> class transformer;
         template<typename T> class loader;
     }
 }
@@ -16,10 +16,10 @@ public:
     virtual std::shared_ptr<T> extract(char*, int) = 0;
 };
 
-template<typename T> class nervana::interface::transformer {
+template<typename T, typename S> class nervana::interface::transformer {
 public:
     virtual ~transformer() {}
-    virtual std::shared_ptr<T> transform(param_ptr, std::shared_ptr<T>) = 0;
+    virtual std::shared_ptr<T> transform(std::shared_ptr<S>, std::shared_ptr<T>) = 0;
 };
 
 template<typename T> class nervana::interface::loader {

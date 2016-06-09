@@ -45,7 +45,9 @@ nervana::lmap::transformer::transformer() {
 
 }
 
-shared_ptr<nervana::lmap::decoded> nervana::lmap::transformer::transform(param_ptr _pptr, shared_ptr<nervana::lmap::decoded> media) {
+shared_ptr<nervana::lmap::decoded> nervana::lmap::transformer::transform(
+                                shared_ptr<nervana::lmap::params> pptr,
+                                shared_ptr<nervana::lmap::decoded> media) {
     shared_ptr<lmap::decoded> rc = make_shared<lmap::decoded>();
     return rc;
 }

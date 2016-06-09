@@ -108,16 +108,16 @@ private:
 };
 
 
-class nervana::label::transformer : public nervana::interface::transformer<nervana::label::decoded> {
+class nervana::label::transformer : public nervana::interface::transformer<nervana::label::decoded, nervana::label::params> {
 public:
     transformer(shared_ptr<const nervana::label::config>) {}
 
     ~transformer() {}
 
-    std::shared_ptr<nervana::label::decoded> transform(param_ptr tx, std::shared_ptr<nervana::label::decoded> mp) override {
+    std::shared_ptr<nervana::label::decoded> transform(
+                        std::shared_ptr<nervana::label::params> txs,
+                        std::shared_ptr<nervana::label::decoded> mp) override {
         int old_index = static_pointer_cast<nervana::label::decoded>(mp)->get_index();
-        auto txs = static_pointer_cast<nervana::label::params>(tx);
-
         return make_shared<nervana::label::decoded>( old_index * txs->scale + txs->shift );
     }
 

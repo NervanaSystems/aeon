@@ -53,10 +53,10 @@ shared_ptr<nervana::image::decoded> nervana::image::extractor::extract(char* inb
 
 */
 
-shared_ptr<nervana::image::decoded> nervana::image::transformer::transform(param_ptr _pptr,
+shared_ptr<nervana::image::decoded> nervana::image::transformer::transform(
+                                                 shared_ptr<nervana::image::params> img_xform,
                                                  shared_ptr<nervana::image::decoded> img)
 {
-    auto img_xform = static_pointer_cast<nervana::image::params>(_pptr);
     cv::Mat rotatedImage;
     rotate(img->get_image(0), rotatedImage, img_xform->angle);
     cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
