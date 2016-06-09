@@ -58,23 +58,27 @@ shared_ptr<image::decoded> image::transformer::transform(
                                                  shared_ptr<image::params> img_xform,
                                                  shared_ptr<image::decoded> img)
 {
-    cv::Mat rotatedImage;
-    rotate(img->get_image(0), rotatedImage, img_xform->angle);
-    cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
+    vector<cv::Mat> finalImageList;
+    for(int i=0; i<img->size(); i++) {
+        cv::Mat rotatedImage;
+        rotate(img->get_image(i), rotatedImage, img_xform->angle);
+        cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
 
-    cv::Mat resizedImage;
-    resize(croppedImage, resizedImage, img_xform->output_size);
-    cbsjitter(resizedImage, img_xform->photometric);
-    lighting(resizedImage, img_xform->lighting);
+        cv::Mat resizedImage;
+        resize(croppedImage, resizedImage, img_xform->output_size);
+        cbsjitter(resizedImage, img_xform->photometric);
+        lighting(resizedImage, img_xform->lighting);
 
-    cv::Mat *finalImage = &resizedImage;
-    cv::Mat flippedImage;
-    if (img_xform->flip) {
-        cv::flip(resizedImage, flippedImage, 1);
-        finalImage = &flippedImage;
+        cv::Mat *finalImage = &resizedImage;
+        cv::Mat flippedImage;
+        if (img_xform->flip) {
+            cv::flip(resizedImage, flippedImage, 1);
+            finalImage = &flippedImage;
+        }
+        finalImageList.push_back(*finalImage);
     }
 
-    return make_shared<image::decoded>(*finalImage);
+    return make_shared<image::decoded>(finalImageList);
 }
 
 void image::transformer::rotate(const cv::Mat& input, cv::Mat& output, int angle)

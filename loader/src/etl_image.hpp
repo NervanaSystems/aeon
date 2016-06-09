@@ -99,6 +99,7 @@ namespace nervana {
     public:
         decoded() {}
         decoded(cv::Mat img) : _img(img) { _images.push_back(_img); }
+        decoded(const std::vector<cv::Mat>& images) { _images = images; }
         virtual ~decoded() override {}
 
         virtual MediaType get_type() override { return MediaType::IMAGE; }
