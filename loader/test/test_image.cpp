@@ -19,23 +19,82 @@
 #include <random>
 
 #include "gtest/gtest.h"
-#include "argtype.hpp"
-#include "datagen.hpp"
-#include "batchfile.hpp"
 
 #include "params.hpp"
-#include "etl_interface.hpp"
 #include "etl_image.hpp"
-#include "etl_label.hpp"
-#include "etl_bbox.hpp"
-#include "etl_lmap.hpp"
-#include "provider.hpp"
-#include "json.hpp"
 
-extern DataGen _datagen;
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 using namespace std;
 using namespace nervana;
 
-TEST(etl, image) {
+cv::Mat generate_indexed_image() {
+    cv::Mat color = cv::Mat( 256, 256, CV_8UC3 );
+    unsigned char *input = (unsigned char*)(color.data);
+    int index = 0;
+    for(int row = 0; row < 256; row++) {
+        for(int col = 0; col < 256; col++) {
+            input[index++] = col;       // b
+            input[index++] = row;       // g
+            input[index++] = 0;         // r
+        }
+    }
+    return color;
+}
+
+TEST(etl, image_extract) {
+    {
+        // test extract png
+        auto indexed = generate_indexed_image();
+        cv::imwrite( "indexed.png", indexed );
+
+        // cv::Mat mono = cv::Mat( 256, 256, CV_8UC1 );
+        // mono = cv::Scalar(128);
+
+        vector<unsigned char> png;
+        cv::imencode( ".png", indexed, png );
+
+        string cfgString = R"(
+            {
+                "height": 30,
+                "width" : 30,
+                "num_channels" : 3,
+                "dist_params/angle" : [-20, 20],
+                "dist_params/scale" : [0.2, 0.8],
+                "dist_params/lighting" : [0.0, 0.1],
+                "dist_params/aspect_ratio" : [0.75, 1.33],
+                "dist_params/flip" : [false]
+            }
+        )";
+
+        auto itpj = make_shared<image::config>(cfgString);
+
+        nervana::image::extractor ext{itpj};
+        std::shared_ptr<image::decoded> decoded = ext.extract((char*)&png[0], png.size());
+
+        ASSERT_NE(nullptr,decoded);
+        EXPECT_EQ(1,decoded->size());
+        cv::Size2i size = decoded->get_image_size(0);
+        EXPECT_EQ(256,size.width);
+        EXPECT_EQ(256,size.height);
+        cv::Mat mat = decoded->get_image(0);
+        EXPECT_EQ(256,mat.rows);
+        EXPECT_EQ(256,mat.cols);
+        EXPECT_EQ(3,mat.channels());
+
+        unsigned char *input = (unsigned char*)(mat.data);
+        int index = 0;
+        for(int row = 0; row < 256; row++) {
+            for(int col = 0; col < 256; col++) {
+                EXPECT_EQ(col,input[index++]);
+                EXPECT_EQ(row,input[index++]);
+                index++;
+            }
+        }
+    }
+    {
+        // test extract jpeg
+    }
 }

@@ -102,7 +102,7 @@ public:
 
     virtual MediaType get_type() override { return MediaType::IMAGE; }
     cv::Mat& get_image(int index) { return _images[index]; }
-    cv::Size2i get_image_size() const {return _images[0].size(); }
+    cv::Size2i get_image_size(int index) const {return _images[index].size(); }
     size_t size() const { return _images.size(); }
 
 private:

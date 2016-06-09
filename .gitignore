@@ -40,3 +40,4 @@
 bin/
 *.log
 output/
+*.png

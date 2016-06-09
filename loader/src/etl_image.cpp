@@ -124,7 +124,7 @@ nervana::image::param_factory::make_params(
     imgstgs->angle = _icp->angle(dre);
     imgstgs->flip  = _icp->flip(dre);
 
-    cv::Size2f in_size = input->get_image_size();
+    cv::Size2f in_size = input->get_image_size(0);
 
     float scale = _icp->scale(dre);
     float aspect_ratio = _icp->aspect_ratio(dre);
