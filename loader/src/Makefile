@@ -29,7 +29,8 @@ SRCS            := \
 	etl_bbox.cpp \
 	etl_lmap.cpp \
 	codec.cpp \
-	video.cpp
+	video.cpp \
+	manifest.cpp
 OBJS 			= $(subst .cpp,.o,$(SRCS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -fPIC
 CFLAGSDBG       := -g -Wall -O0 -std=c++11
