@@ -70,8 +70,9 @@ string tmp_manifest_file(uint num_records, uint object_size, uint target_size) {
     ofstream f(tmpname);
 
     for(uint i = 0; i < num_records; ++i) {
-        f << tmp_file_repeating(object_size, i) << ",";
-        f << tmp_file_repeating(target_size, i) << endl;
+        // stick a unique uint into each file
+        f << tmp_file_repeating(object_size, i*2) << ",";
+        f << tmp_file_repeating(target_size, i*2+1) << endl;
     }
 
     f.close();
