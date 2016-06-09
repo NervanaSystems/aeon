@@ -107,12 +107,14 @@ uint Buffer::getLevel() {
 }
 
 void Buffer::read(IfStream& ifs, int size) {
+    // read `size` bytes out of `ifs` and push into buffer
     resizeIfNeeded(size);
     ifs.read(_cur, size);
     pushItem(size);
 }
 
 void Buffer::read(char* src, int size) {
+    // read `size` bytes out of `src` and push into buffer
     resizeIfNeeded(size);
     memcpy((void *) _cur, (void *) src, size);
     pushItem(size);
@@ -233,6 +235,7 @@ void BufferPool::signalNonFull() {
 }
 
 void BufferPool::advance(int& index) {
+    // increment index and reset to 0 when index hits `_count`
     if (++index == _count) {
         index = 0;
     }
