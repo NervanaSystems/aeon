@@ -31,12 +31,12 @@ private:
     std::vector<int>    _labels;
 };
 
-class nervana::lmap::extractor : public nervana::interface::extractor {
+class nervana::lmap::extractor : public nervana::interface::extractor<nervana::lmap::decoded> {
 public:
     extractor( const std::vector<std::string>& labels );
     extractor( std::istream& in );
     virtual ~extractor(){}
-    virtual media_ptr extract(char*, int) override;
+    virtual std::shared_ptr<nervana::lmap::decoded> extract(char*, int) override;
 
     std::unordered_map<std::string,int>  get_data() { return _dictionary; }
 
@@ -44,18 +44,18 @@ private:
     std::unordered_map<std::string,int>  _dictionary;
 };
 
-class nervana::lmap::transformer : public nervana::interface::transformer {
+class nervana::lmap::transformer : public nervana::interface::transformer<nervana::lmap::decoded> {
 public:
     transformer();
     virtual ~transformer(){}
-    virtual media_ptr transform(settings_ptr, const media_ptr&) override;
+    virtual std::shared_ptr<nervana::lmap::decoded> transform(settings_ptr, std::shared_ptr<nervana::lmap::decoded>) override;
 private:
 };
 
-class nervana::lmap::loader : public nervana::interface::loader {
+class nervana::lmap::loader : public nervana::interface::loader<nervana::lmap::decoded> {
 public:
     loader();
     virtual ~loader(){}
-    virtual void load(char*, int, const media_ptr&) override;
+    virtual void load(char*, int, std::shared_ptr<nervana::lmap::decoded>) override;
 private:
 };

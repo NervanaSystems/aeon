@@ -65,7 +65,7 @@ private:
 };
 
 
-class nervana::label::extractor : public nervana::interface::extractor {
+class nervana::label::extractor : public nervana::interface::extractor<nervana::label::decoded_label> {
 public:
     extractor(config_ptr cptr) {
         _ex_offset = static_pointer_cast<nervana::label::config>(cptr)->ex_offset;
@@ -73,7 +73,7 @@ public:
 
     ~extractor() {}
 
-    media_ptr extract(char* buf, int bufSize) override {
+    std::shared_ptr<nervana::label::decoded_label> extract(char* buf, int bufSize) override {
         if (bufSize != 4) {
             throw runtime_error("Only 4 byte buffers can be loaded as int32");
         }
@@ -85,13 +85,13 @@ private:
 };
 
 
-class nervana::label::transformer : public nervana::interface::transformer {
+class nervana::label::transformer : public nervana::interface::transformer<nervana::label::decoded_label> {
 public:
     transformer(config_ptr cptr) {}
 
     ~transformer() {}
 
-    media_ptr transform(settings_ptr tx, const media_ptr& mp) override {
+    std::shared_ptr<nervana::label::decoded_label> transform(settings_ptr tx, std::shared_ptr<nervana::label::decoded_label> mp) override {
         int old_index = static_pointer_cast<nervana::label::decoded_label>(mp)->get_index();
         auto txs = static_pointer_cast<nervana::label::settings>(tx);
 
@@ -99,13 +99,13 @@ public:
     }
 
     // Filling settings is done by the relevant params
-    virtual void fill_settings(settings_ptr, const media_ptr&, std::default_random_engine &) override
+    virtual void fill_settings(settings_ptr, std::shared_ptr<nervana::label::decoded_label>, std::default_random_engine &) override
     {}
 
 };
 
 
-class nervana::label::loader : public nervana::interface::loader {
+class nervana::label::loader : public nervana::interface::loader<nervana::label::decoded_label> {
 public:
     loader(config_ptr cptr) {
         auto lbl_ptr = static_pointer_cast<nervana::label::config>(cptr);
@@ -114,7 +114,7 @@ public:
     }
     ~loader() {}
 
-    void load(char* buf, int bufSize, const media_ptr& mp) override {
+    void load(char* buf, int bufSize, std::shared_ptr<nervana::label::decoded_label> mp) override {
         int index = static_pointer_cast<nervana::label::decoded_label>(mp)->get_index();
         if (_ld_dofloat) {
             float ld_index = index + _ld_offset;

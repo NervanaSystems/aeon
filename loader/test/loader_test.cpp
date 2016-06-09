@@ -345,7 +345,8 @@ TEST(myloader, argtype) {
 
             int reference_target = reference;
             int loaded_target = 0;
-            provider pp(lble, lblt, lbll);
+            // auto pp = new provider<nervana::label::decoded_label>(lble, lblt, lbll);
+            provider<nervana::label::decoded_label> pp{lble, lblt, lbll};
             pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }
@@ -364,7 +365,7 @@ TEST(myloader, argtype) {
 
             float reference_target = reference + 0.8;
             float loaded_target = 0.0;
-            provider pp(lble, lblt, lbll);
+            provider<nervana::label::decoded_label> pp{lble, lblt, lbll};
             pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }

@@ -4,31 +4,31 @@
 
 namespace nervana {
     namespace interface {
-        class extractor;
-        class transformer;
-        class loader;
+        template<typename T> class extractor;
+        template<typename T> class transformer;
+        template<typename T> class loader;
     }
 }
 
-class nervana::interface::extractor {
+template<typename T> class nervana::interface::extractor {
 public:
     virtual ~extractor() {}
-    virtual media_ptr extract(char*, int) = 0;
+    virtual std::shared_ptr<T> extract(char*, int) = 0;
 };
 
-class nervana::interface::transformer {
+template<typename T> class nervana::interface::transformer {
 public:
     virtual ~transformer() {}
-    virtual media_ptr transform(settings_ptr, const media_ptr&) = 0;
+    virtual std::shared_ptr<T> transform(settings_ptr, std::shared_ptr<T>) = 0;
     // virtual void fill_settings(settings_ptr, const media_ptr&) = 0;
-    virtual void fill_settings(settings_ptr, const media_ptr&, std::default_random_engine &) = 0;
+    virtual void fill_settings(settings_ptr, std::shared_ptr<T>, std::default_random_engine &) = 0;
 
 };
 
-class nervana::interface::loader {
+template<typename T> class nervana::interface::loader {
 public:
     virtual ~loader() {}
-    virtual void load(char*, int, const media_ptr&) = 0;
+    virtual void load(char*, int, std::shared_ptr<T>) = 0;
 };
 
 // class nervana::media_family::image {

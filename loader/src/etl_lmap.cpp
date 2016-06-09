@@ -23,7 +23,7 @@ nervana::lmap::extractor::extractor( std::istream& in ) {
     }
 }
 
-media_ptr nervana::lmap::extractor::extract(char* data, int size) {
+std::shared_ptr<nervana::lmap::decoded> nervana::lmap::extractor::extract(char* data, int size) {
     auto rc = make_shared<decoded>();
     stringstream ss( string(data, size) );
     string label;
@@ -45,14 +45,14 @@ nervana::lmap::transformer::transformer() {
 
 }
 
-media_ptr nervana::lmap::transformer::transform(settings_ptr _settings, const media_ptr& media) {
+std::shared_ptr<nervana::lmap::decoded> nervana::lmap::transformer::transform(settings_ptr _settings, std::shared_ptr<nervana::lmap::decoded> media) {
     // shared_ptr<image_settings> settings = static_pointer_cast<image_settings>(_settings);
     // shared_ptr<lmap::decoded> boxes = static_pointer_cast<lmap::decoded>(media);
     shared_ptr<lmap::decoded> rc = make_shared<lmap::decoded>();
     return rc;
 }
 
-void nervana::lmap::loader::load(char* data, int size, const media_ptr& media) {
+void nervana::lmap::loader::load(char* data, int size, std::shared_ptr<nervana::lmap::decoded> media) {
 
 }
 

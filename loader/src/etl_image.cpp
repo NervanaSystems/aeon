@@ -34,7 +34,7 @@ nervana::image::extractor::extractor(config_ptr cptr)
 
 }
 
-media_ptr nervana::image::extractor::extract(char* inbuf, int insize)
+std::shared_ptr<nervana::image::decoded> nervana::image::extractor::extract(char* inbuf, int insize)
 {
     cv::Mat output_img;
     cv::Mat input_img(1, insize, _pixel_type, inbuf);
@@ -62,12 +62,11 @@ nervana::image::transformer::transformer(config_ptr cptr)
     _icp = static_pointer_cast<nervana::image::config>(cptr);
 }
 
-media_ptr nervana::image::transformer::transform(settings_ptr transform_settings,
-                                                 const media_ptr& input)
+std::shared_ptr<nervana::image::decoded> nervana::image::transformer::transform(settings_ptr transform_settings,
+                                                 std::shared_ptr<nervana::image::decoded> img)
 {
     auto img_xform = static_pointer_cast<nervana::image::settings>(transform_settings);
     cv::Mat rotatedImage;
-    auto img = static_pointer_cast<nervana::image::decoded>(input);
     rotate(img->get_image(0), rotatedImage, img_xform->angle);
     cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
 
@@ -87,7 +86,7 @@ media_ptr nervana::image::transformer::transform(settings_ptr transform_settings
 }
 
 void nervana::image::transformer::fill_settings(settings_ptr transform_settings,
-                                                const media_ptr& input,
+                                                std::shared_ptr<nervana::image::decoded> input,
                                                 default_random_engine &dre)
 {
     auto imgstgs = static_pointer_cast<nervana::image::settings>(transform_settings);
@@ -95,7 +94,7 @@ void nervana::image::transformer::fill_settings(settings_ptr transform_settings,
     imgstgs->angle = _icp->angle(dre);
     imgstgs->flip  = _icp->flip(dre);
 
-    cv::Size2f in_size = static_pointer_cast<nervana::image::decoded>(input)->get_image_size();
+    cv::Size2f in_size = input->get_image_size();
 
     float scale = _icp->scale(dre);
     float aspect_ratio = _icp->aspect_ratio(dre);
@@ -194,9 +193,9 @@ nervana::image::loader::loader(config_ptr cptr)
     _channel_major = icp->channel_major;
 }
 
-void nervana::image::loader::load(char* outbuf, int outsize, const media_ptr& input)
+void nervana::image::loader::load(char* outbuf, int outsize, std::shared_ptr<nervana::image::decoded> input)
 {
-    auto img = static_pointer_cast<nervana::image::decoded>(input)->get_image(0);
+    auto img = input->get_image(0);
     int all_pixels = img.channels() * img.total();
 
     if (all_pixels > outsize) {

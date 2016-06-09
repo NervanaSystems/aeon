@@ -25,7 +25,7 @@ nervana::bbox::extractor::extractor( const std::vector<std::string>& labels ) {
     }
 }
 
-media_ptr nervana::bbox::extractor::extract(char* data, int size) {
+std::shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(char* data, int size) {
     shared_ptr<decoded> rc = make_shared<decoded>();
     string buffer( data, size );
     json j = json::parse(buffer);
@@ -84,9 +84,8 @@ nervana::bbox::transformer::transformer() {
 
 }
 
-media_ptr nervana::bbox::transformer::transform(settings_ptr _sptr, const media_ptr& media) {
+std::shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(settings_ptr _sptr, std::shared_ptr<bbox::decoded> boxes) {
     shared_ptr<image::settings> sptr = static_pointer_cast<image::settings>(_sptr);
-    shared_ptr<bbox::decoded> boxes = static_pointer_cast<bbox::decoded>(media);
     if( sptr->angle != 0 ) {
         return shared_ptr<bbox::decoded>();
     }
@@ -118,10 +117,10 @@ media_ptr nervana::bbox::transformer::transform(settings_ptr _sptr, const media_
     return rc;
 }
 
-void nervana::bbox::transformer::fill_settings(settings_ptr, const media_ptr&, std::default_random_engine &) {
+void nervana::bbox::transformer::fill_settings(settings_ptr, std::shared_ptr<bbox::decoded> boxes, std::default_random_engine &) {
 }
 
-void nervana::bbox::loader::load(char* data, int size, const media_ptr& media) {
+void nervana::bbox::loader::load(char* data, int size, std::shared_ptr<bbox::decoded> boxes) {
 
 }
 

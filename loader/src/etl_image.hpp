@@ -96,11 +96,11 @@ private:
 };
 
 
-class nervana::image::extractor : public nervana::interface::extractor {
+class nervana::image::extractor : public nervana::interface::extractor<nervana::image::decoded> {
 public:
     extractor(config_ptr);
     ~extractor() {}
-    virtual media_ptr extract(char*, int) override;
+    virtual std::shared_ptr<image::decoded> extract(char*, int) override;
 
     const int get_channel_count() {return _channel_count;}
 private:
@@ -110,12 +110,12 @@ private:
 };
 
 
-class nervana::image::transformer : public nervana::interface::transformer {
+class nervana::image::transformer : public nervana::interface::transformer<nervana::image::decoded> {
 public:
     transformer(config_ptr);
     ~transformer() {}
-    virtual media_ptr transform(settings_ptr, const media_ptr&) override;
-    virtual void fill_settings(settings_ptr, const media_ptr&, std::default_random_engine &) override;
+    virtual std::shared_ptr<image::decoded> transform(settings_ptr, std::shared_ptr<image::decoded>) override;
+    virtual void fill_settings(settings_ptr, std::shared_ptr<image::decoded>, std::default_random_engine &) override;
 
 private:
     void rotate(const cv::Mat& input, cv::Mat& output, int angle);
@@ -129,11 +129,11 @@ private:
 };
 
 
-class nervana::image::loader : public nervana::interface::loader {
+class nervana::image::loader : public nervana::interface::loader<nervana::image::decoded> {
 public:
     loader(config_ptr);
     ~loader() {}
-    virtual void load(char*, int, const media_ptr&) override;
+    virtual void load(char*, int, std::shared_ptr<image::decoded>) override;
 
 private:
     void split(cv::Mat&, char*);

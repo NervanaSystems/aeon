@@ -53,31 +53,31 @@ private:
 };
 
 
-class nervana::bbox::extractor : public nervana::interface::extractor {
+class nervana::bbox::extractor : public nervana::interface::extractor<nervana::bbox::decoded> {
 public:
     extractor( const std::vector<std::string>& label_list );
     virtual ~extractor(){}
-    virtual media_ptr extract(char*, int) override;
+    virtual std::shared_ptr<bbox::decoded> extract(char*, int) override;
     static nlohmann::json create_box( const cv::Rect& rect, const std::string& label );
     static nlohmann::json create_metadata( const std::vector<nlohmann::json>& boxes );
 private:
      std::unordered_map<std::string,int> label_map;
 };
 
-class nervana::bbox::transformer : public nervana::interface::transformer {
+class nervana::bbox::transformer : public nervana::interface::transformer<nervana::bbox::decoded> {
 public:
     transformer();
     virtual ~transformer(){}
-    virtual media_ptr transform(settings_ptr, const media_ptr&) override;
-    virtual void fill_settings(settings_ptr, const media_ptr&, std::default_random_engine &) override;
+    virtual std::shared_ptr<bbox::decoded> transform(settings_ptr, std::shared_ptr<bbox::decoded>) override;
+    virtual void fill_settings(settings_ptr, std::shared_ptr<bbox::decoded>, std::default_random_engine &) override;
 
 private:
 };
 
-class nervana::bbox::loader : public nervana::interface::loader {
+class nervana::bbox::loader : public nervana::interface::loader<nervana::bbox::decoded> {
 public:
     loader();
     virtual ~loader(){}
-    virtual void load(char*, int, const media_ptr&) override;
+    virtual void load(char*, int, std::shared_ptr<bbox::decoded>) override;
 private:
 };
