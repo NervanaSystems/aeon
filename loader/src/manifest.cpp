@@ -41,7 +41,7 @@ void Manifest::parse() {
     parseStream(infile);
 }
 
-size_t Manifest::getSize() {
+size_t Manifest::getSize() const {
     return _filename_pairs.size();
 }
 
@@ -75,4 +75,12 @@ void Manifest::shuffleFilenamePairs() {
     // don't want our blocks to be biased by that order.
     std::random_device rd;
     std::shuffle(_filename_pairs.begin(), _filename_pairs.end(), std::mt19937(rd()));
+}
+
+Manifest::iter Manifest::begin() const {
+    return _filename_pairs.begin();
+}
+
+Manifest::iter Manifest::end() const {
+    return _filename_pairs.end();
 }

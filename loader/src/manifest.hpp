@@ -21,6 +21,8 @@
 
 using namespace std;
 
+typedef pair<string, string> FilenamePair;
+
 /* Manifest
  *
  * load a manifest file and parse the filenames
@@ -40,8 +42,14 @@ class Manifest {
 public:
     Manifest(string filename);
 
+    typedef vector<FilenamePair>::const_iterator iter;
+
     string hash();
-    size_t getSize();
+    size_t getSize() const;
+
+    // begin and end provide iterators over the FilenamePairs
+    iter begin() const;
+    iter end() const;
 
 protected:
     void parse();
@@ -50,6 +58,6 @@ protected:
 
 private:
     const string _filename;
-    vector<pair<string, string>> _filename_pairs;
+    vector<FilenamePair> _filename_pairs;
 };
 
