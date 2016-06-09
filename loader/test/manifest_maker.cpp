@@ -16,23 +16,48 @@
 #include "manifest_maker.hpp"
 
 #include <string.h>
+#include <stdlib.h>
 #include <fstream>
 #include <string>
+#include <iostream>
+#include <vector>
+#include <cstdio>
 
 using namespace std;
+
+vector<string> tmp_filenames;
+
+void remove_files() {
+    for(auto it = tmp_filenames.begin(); it != tmp_filenames.end(); ++it) {
+        remove(it->c_str());
+    }
+}
+
+void register_atexit() {
+    // register an atexit to clean up files, and only ever do it once
+    static bool registered = false;
+    if(!registered) {
+        atexit(remove_files);
+        registered = true;
+    }
+}
 
 string tmp_filename() {
     char *tmpname = strdup("/tmp/tmpfileXXXXXX");
     mkstemp(tmpname);
+    tmp_filenames.push_back(tmpname);
+    register_atexit();
     return tmpname;
 }
 
-string tmp_zero_file(uint size) {
+string tmp_file_repeating(uint size, uint x) {
+    // create a temp file of `size` bytes filled with uint x
     string tmpname = tmp_filename();
-    ofstream f(tmpname);
+    ofstream f(tmpname, ios::binary);
 
-    for(uint i = 0; i < size; ++i) {
-        f << (char)0 << endl;
+    uint repeats = size / sizeof(x);
+    for(uint i = 0; i < repeats; ++i) {
+        f.write(reinterpret_cast <const char*>(&x), sizeof(x));
     }
 
     f.close();
@@ -45,8 +70,8 @@ string tmp_manifest_file(uint num_records, uint object_size, uint target_size) {
     ofstream f(tmpname);
 
     for(uint i = 0; i < num_records; ++i) {
-        f << tmp_zero_file(object_size) << ",";
-        f << tmp_zero_file(target_size) << endl;
+        f << tmp_file_repeating(object_size, i) << ",";
+        f << tmp_file_repeating(target_size, i) << endl;
     }
 
     f.close();
