@@ -29,7 +29,7 @@ nervana::image::extractor::extractor(shared_ptr<const nervana::image::config> cf
 
 }
 
-std::shared_ptr<nervana::image::decoded> nervana::image::extractor::extract(char* inbuf, int insize)
+shared_ptr<nervana::image::decoded> nervana::image::extractor::extract(char* inbuf, int insize)
 {
     cv::Mat output_img;
     cv::Mat input_img(1, insize, _pixel_type, inbuf);
@@ -53,8 +53,8 @@ std::shared_ptr<nervana::image::decoded> nervana::image::extractor::extract(char
 
 */
 
-std::shared_ptr<nervana::image::decoded> nervana::image::transformer::transform(param_ptr _pptr,
-                                                 std::shared_ptr<nervana::image::decoded> img)
+shared_ptr<nervana::image::decoded> nervana::image::transformer::transform(param_ptr _pptr,
+                                                 shared_ptr<nervana::image::decoded> img)
 {
     auto img_xform = static_pointer_cast<nervana::image::params>(_pptr);
     cv::Mat rotatedImage;
@@ -192,7 +192,7 @@ nervana::image::loader::loader(shared_ptr<const nervana::image::config> cfg)
     _channel_major = cfg->channel_major;
 }
 
-void nervana::image::loader::load(char* outbuf, int outsize, std::shared_ptr<nervana::image::decoded> input)
+void nervana::image::loader::load(char* outbuf, int outsize, shared_ptr<nervana::image::decoded> input)
 {
     auto img = input->get_image(0);
     int all_pixels = img.channels() * img.total();

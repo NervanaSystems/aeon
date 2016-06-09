@@ -303,7 +303,6 @@ TEST(myloader, argtype) {
 
 
     {
-
         string cfgString = R"(
             {
                 "extract offset":  20,

@@ -19,13 +19,13 @@ cv::Rect nervana::bbox::box::rect() const {
 nervana::bbox::decoded::decoded() {
 }
 
-nervana::bbox::extractor::extractor( const std::vector<std::string>& labels ) {
+nervana::bbox::extractor::extractor( const vector<string>& labels ) {
     for( int i=0; i<labels.size(); i++ ) {
         label_map.insert({labels[i],i});
     }
 }
 
-std::shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(char* data, int size) {
+shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(char* data, int size) {
     shared_ptr<decoded> rc = make_shared<decoded>();
     string buffer( data, size );
     json j = json::parse(buffer);
@@ -73,18 +73,16 @@ json nervana::bbox::extractor::create_box( const cv::Rect& rect, const string& l
     return j;
 }
 
-nlohmann::json nervana::bbox::extractor::create_metadata( const std::vector<nlohmann::json>& boxes ) {
-    nlohmann::json j = nlohmann::json::object();
+json nervana::bbox::extractor::create_metadata( const vector<json>& boxes ) {
+    json j = json::object();
     j["object"] = boxes;
     j["size"] = {{"depth",3},{"height",256},{"width",256}};
     return j;
 }
 
-nervana::bbox::transformer::transformer() {
+nervana::bbox::transformer::transformer() {}
 
-}
-
-std::shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(param_ptr _pptr, std::shared_ptr<bbox::decoded> boxes) {
+shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(param_ptr _pptr, shared_ptr<bbox::decoded> boxes) {
     shared_ptr<image::params> pptr = static_pointer_cast<image::params>(_pptr);
     if( pptr->angle != 0 ) {
         return shared_ptr<bbox::decoded>();
@@ -112,12 +110,12 @@ std::shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(param_ptr _
             }
             rc->_boxes.push_back( b );
         }
-        // cout << b.rect.x << ", " << b.rect.y << ", " << b.rect.width << ", " << b.rect.height << ", " << b.label << endl;
+        // cout << b.rect << ", " << b.label << endl;
     }
     return rc;
 }
 
-void nervana::bbox::loader::load(char* data, int size, std::shared_ptr<bbox::decoded> boxes) {
+void nervana::bbox::loader::load(char* data, int size, shared_ptr<bbox::decoded> boxes) {
 
 }
 
