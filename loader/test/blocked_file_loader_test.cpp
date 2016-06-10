@@ -20,11 +20,8 @@
 using namespace std;
 
 TEST(blocked_file_loader, constructor) {
-    uint object_size = 16;
-    uint target_size = 16;
-
     Manifest m("manifest.txt");
-    BlockedFileLoader bfl(&m, object_size, target_size);
+    BlockedFileLoader bfl(&m);
 }
 
 TEST(blocked_file_loader, loadBlock) {
@@ -34,12 +31,12 @@ TEST(blocked_file_loader, loadBlock) {
 
     Manifest m(tmp_manifest_file(4, object_size, target_size));
 
-    BlockedFileLoader bfl(&m, object_size, target_size);
+    BlockedFileLoader bfl(&m);
 
     // TODO: move this initialization which is copied from buffer.cpp
     // into constructor and destructor of BufferPair
-    Buffer* dataBuffer = new Buffer(object_size * block_size);
-    Buffer* targetBuffer = new Buffer(target_size * block_size);
+    Buffer* dataBuffer = new Buffer(0);
+    Buffer* targetBuffer = new Buffer(0);
     BufferPair bp = make_pair(dataBuffer, targetBuffer);
 
     bfl.loadBlock(bp, 0, block_size);

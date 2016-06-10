@@ -30,7 +30,8 @@ SRCS            := \
 	etl_lmap.cpp \
 	codec.cpp \
 	video.cpp \
-	manifest.cpp
+	manifest.cpp \
+	blocked_file_loader.cpp
 OBJS 			= $(subst .cpp,.o,$(SRCS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -fPIC
 CFLAGSDBG       := -g -Wall -O0 -std=c++11

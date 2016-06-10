@@ -22,8 +22,8 @@
 
 using namespace std;
 
-BlockedFileLoader::BlockedFileLoader(Manifest* manifest, uint object_size, uint target_size)
-: _manifest(manifest), _object_size(object_size), _target_size(target_size) {
+BlockedFileLoader::BlockedFileLoader(Manifest* manifest)
+: _manifest(manifest) {
 }
 
 void BlockedFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_size) {
@@ -45,19 +45,24 @@ void BlockedFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_s
     uint i = 0;
     for(auto it = begin_it; it != end_it; ++it, ++i) {
         // load both object and target files into respective buffers
-        loadFile(dest.first->_data + (i * _object_size), _object_size, it->first);
-        loadFile(dest.second->_data + (i * _target_size), _target_size, it->second);
+        //
+        // NOTE: if at some point in the future, loadFile is loading
+        // files from a network like s3 it may make sense to use multiple
+        // threads to make loads faster.  multiple threads would only
+        // slow down reads from a magnetic disk.
+        loadFile(dest.first, it->first);
+        loadFile(dest.second, it->second);
     }
 }
 
-void BlockedFileLoader::loadFile(char* dest, uint size, const string& filename) {
-    assert_exists_and_size(filename, size);
+void BlockedFileLoader::loadFile(Buffer* buff, const string& filename) {
+    off_t size = get_size(filename);
     ifstream fin(filename, ios::binary);
-    fin.read(dest, size);
+    buff->read(fin, size);
 }
 
-void BlockedFileLoader::assert_exists_and_size(const string& filename, uint size) {
-    // ensure that filename exists and is of the correct size
+off_t BlockedFileLoader::get_size(const string& filename) {
+    // ensure that filename exists and get its size
 
     struct stat stats;
     int result = stat(filename.c_str(), &stats);
@@ -67,10 +72,5 @@ void BlockedFileLoader::assert_exists_and_size(const string& filename, uint size
         throw std::runtime_error(ss.str());
     }
 
-    off_t st_size = stats.st_size;
-    if(size != st_size) {
-        stringstream ss;
-        ss << "file " << filename << " was expected to be " << size;
-        ss << " but was instead " << st_size << endl;
-        throw std::runtime_error(ss.str());
+    return stats.st_size;
 }

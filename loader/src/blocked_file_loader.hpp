@@ -20,23 +20,21 @@
 
 /* BlockedFIleLoader
  *
- * Loads blocks of files from a manifest.
+ * Loads blocks of files from a manifest into a Buffer.
  *
  * TODO: rename to BatchFileLoader since there is no temporal blocking
  * being done here, only a batch of file loads
  */
 class BlockedFileLoader {
 public:
-    BlockedFileLoader(Manifest* manifest, uint object_size, uint target_size);
+    BlockedFileLoader(Manifest* manifest);
 
     void loadBlock(BufferPair& dest, uint i, uint block_size);
-    void loadFile(char* dest, uint size, const string& filename);
+    void loadFile(Buffer* buff, const string& filename);
     
 
 private:
-    void assert_exists_and_size(const string& filename, uint size);
+    off_t get_size(const string& filename);
     
     const Manifest* _manifest;
-    uint _object_size;
-    uint _target_size;
 };
