@@ -93,6 +93,8 @@ void DecodeThreadPool::stop() {
 }
 
 void DecodeThreadPool::run(int id) {
+    // Initialize worker threads by computing memory offsets for the
+    // data this thread should work on
     assert(id < _count);
     _startInds[id] = id * _itemsPerThread;
     int itemCount = _itemsPerThread;

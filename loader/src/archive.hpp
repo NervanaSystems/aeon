@@ -129,6 +129,8 @@ public:
 
     int reset();
 
+    // TODO: is this actually used anywhere?  Do we need to continue
+    // supporting it?
     void addFiles( const std::vector<std::string>& files );
 
 private:
