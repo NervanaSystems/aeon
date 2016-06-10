@@ -208,7 +208,13 @@ TEST(etl, image_extract4) {
     test_image( png, 1 );
 }
 
-TEST(etl, image_transform1) {
+bool check_value(shared_ptr<image::decoded> transformed, int x0, int y0, int x1, int y1) {
+    cv::Mat image = transformed->get_image(0);
+    cv::Vec3b value = image.at<cv::Vec3b>(y0,x0); // row,col
+    return x1 == (int)value[0] && y1 == (int)value[1];
+}
+
+TEST(etl, image_transform_crop) {
     auto indexed = generate_indexed_image();
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
@@ -228,4 +234,34 @@ TEST(etl, image_transform1) {
     cv::Mat image = transformed->get_image(0);
     EXPECT_EQ(20,image.size().width);
     EXPECT_EQ(30,image.size().height);
+
+    EXPECT_TRUE(check_value(transformed,0,0,100,150));
+    EXPECT_TRUE(check_value(transformed,19,0,119,150));
+    EXPECT_TRUE(check_value(transformed,0,29,100,179));
+}
+
+TEST(etl, image_transform_flip) {
+    auto indexed = generate_indexed_image();
+    vector<unsigned char> img;
+    cv::imencode( ".png", indexed, img );
+
+    image_config_builder config;
+    shared_ptr<image::config> config_ptr = config.width(256).height(256).dump();
+
+    image_params_builder builder;
+    shared_ptr<image::params> params_ptr = builder.cropbox( 100, 150, 20, 20 ).output_size(20, 20).flip(true);
+
+    image::extractor ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    image::transformer trans{config_ptr};
+    shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+    cv::Mat image = transformed->get_image(0);
+    EXPECT_EQ(20,image.size().width);
+    EXPECT_EQ(20,image.size().height);
+
+    EXPECT_TRUE(check_value(transformed,0,0,119,150));
+    EXPECT_TRUE(check_value(transformed,19,0,100,150));
+    EXPECT_TRUE(check_value(transformed,0,19,119,169));
 }
