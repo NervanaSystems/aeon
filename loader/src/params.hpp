@@ -23,6 +23,7 @@ enum class MediaType {
     AUDIO = 2,
     TEXT = 3,
     TARGET = 4,
+    RAW = 5,
 };
 
 /*  ABSTRACT INTERFACES */
