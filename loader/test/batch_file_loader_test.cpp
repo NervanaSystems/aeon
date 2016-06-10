@@ -21,7 +21,7 @@ using namespace std;
 
 TEST(blocked_file_loader, constructor) {
     Manifest m("manifest.txt");
-    BlockedFileLoader bfl(&m);
+    BatchFileLoader bfl(&m);
 }
 
 TEST(blocked_file_loader, loadBlock) {
@@ -31,7 +31,7 @@ TEST(blocked_file_loader, loadBlock) {
 
     Manifest m(tmp_manifest_file(4, object_size, target_size));
 
-    BlockedFileLoader bfl(&m);
+    BatchFileLoader bfl(&m);
 
     // TODO: move this initialization which is copied from buffer.cpp
     // into constructor and destructor of BufferPair

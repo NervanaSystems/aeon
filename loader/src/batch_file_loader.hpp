@@ -18,20 +18,19 @@
 #include "manifest.hpp"
 #include "buffer.hpp"
 
-/* BlockedFIleLoader
+/* BatchFileLoader
  *
  * Loads blocks of files from a manifest into a Buffer.
  *
  * TODO: rename to BatchFileLoader since there is no temporal blocking
  * being done here, only a batch of file loads
  */
-class BlockedFileLoader {
+class BatchFileLoader {
 public:
-    BlockedFileLoader(Manifest* manifest);
+    BatchFileLoader(Manifest* manifest);
 
-    void loadBlock(BufferPair& dest, uint i, uint block_size);
+    void loadBlock(BufferPair& dest, uint block_num, uint block_size);
     void loadFile(Buffer* buff, const string& filename);
-    
 
 private:
     off_t getSize(const string& filename);

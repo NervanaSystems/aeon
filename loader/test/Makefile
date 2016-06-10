@@ -30,7 +30,7 @@ SRCS := \
 	loader_test.cpp \
 	manifest_test.cpp \
 	manifest_maker.cpp \
-	blocked_file_loader_test.cpp
+	batch_file_loader_test.cpp
 TOBJS 			= $(subst .cpp,.o,$(SRCS))
 OBJS 			= $(subst .c,.o,$(TOBJS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -DCURDIR=\"$(CURDIR)\"

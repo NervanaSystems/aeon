@@ -22,11 +22,11 @@
 
 using namespace std;
 
-BlockedFileLoader::BlockedFileLoader(Manifest* manifest)
+BatchFileLoader::BatchFileLoader(Manifest* manifest)
 : _manifest(manifest) {
 }
 
-void BlockedFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_size) {
+void BatchFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_size) {
     // NOTE: thread safe so long as you aren't modifying the manifest
     // NOTE: dest memory must already be allocated at the correct size
 
@@ -55,13 +55,13 @@ void BlockedFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_s
     }
 }
 
-void BlockedFileLoader::loadFile(Buffer* buff, const string& filename) {
+void BatchFileLoader::loadFile(Buffer* buff, const string& filename) {
     off_t size = getSize(filename);
     ifstream fin(filename, ios::binary);
     buff->read(fin, size);
 }
 
-off_t BlockedFileLoader::getSize(const string& filename) {
+off_t BatchFileLoader::getSize(const string& filename) {
     // ensure that filename exists and get its size
 
     struct stat stats;
