@@ -18,7 +18,7 @@
 #include <cassert>
 #include <sstream>
 
-#include "blocked_file_loader.hpp"
+#include "batch_file_loader.hpp"
 
 using namespace std;
 

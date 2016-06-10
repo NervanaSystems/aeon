@@ -15,9 +15,9 @@
 
 #pragma once
 
-#include "batch_loader.hpp"
 #include "manifest.hpp"
 #include "buffer.hpp"
+#include "batch_loader.hpp"
 
 /* BatchFileLoader
  *

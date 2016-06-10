@@ -14,7 +14,7 @@
 */
 
 #include "gtest/gtest.h"
-#include "blocked_file_loader.hpp"
+#include "batch_file_loader.hpp"
 #include "manifest_maker.hpp"
 
 using namespace std;

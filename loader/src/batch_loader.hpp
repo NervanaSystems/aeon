@@ -15,6 +15,8 @@
 
 #pragma once
 
+#include "buffer.hpp"
+
 /*
  * A BatchLoader is something which can load blocks of data into a
  * BufferPair
@@ -23,4 +25,4 @@
 class BatchLoader {
     public:
         virtual void loadBlock(BufferPair& dest, uint block_num, uint block_size) = 0;
-}
+};
