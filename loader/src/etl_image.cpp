@@ -54,6 +54,17 @@ shared_ptr<image::decoded> image::extractor::extract(char* inbuf, int insize)
 
 */
 
+image::transformer::transformer(shared_ptr<const image::config>) :
+    _CPCA{{0.39731118,  0.70119634, -0.59200296},
+                            {-0.81698062, -0.02354167, -0.5761844},
+                            {0.41795513, -0.71257945, -0.56351045}},
+    CPCA(3, 3, CV_32FC1, (float*)_CPCA),
+    CSTD(3, 1, CV_32FC1, {19.72083305, 37.09388853, 121.78006099}),
+    GSCL(3, 1, CV_32FC1, {0.114, 0.587, 0.299})
+{
+
+}
+
 shared_ptr<image::decoded> image::transformer::transform(
                                                  shared_ptr<image::params> img_xform,
                                                  shared_ptr<image::decoded> img)
@@ -67,7 +78,7 @@ shared_ptr<image::decoded> image::transformer::transform(
         cv::Mat resizedImage;
         resize(croppedImage, resizedImage, img_xform->output_size);
         cbsjitter(resizedImage, img_xform->photometric);
-        lighting(resizedImage, img_xform->lighting);
+        lighting(resizedImage, img_xform->lighting, img_xform->color_noise_std);
 
         cv::Mat *finalImage = &resizedImage;
         cv::Mat flippedImage;
@@ -102,14 +113,51 @@ void image::transformer::resize(const cv::Mat& input, cv::Mat& output, const cv:
     }
 }
 
-void image::transformer::lighting(cv::Mat& inout, vector<float> lighting)
+/*
+Implements colorspace noise perturbation as described in:
+Krizhevsky et. al., "ImageNet Classification with Deep Convolutional Neural Networks"
+Constructs a random coloring pixel that is uniformly added to every pixel of the image.
+lighting is filled with normally distributed values prior to calling this function.
+*/
+void image::transformer::lighting(cv::Mat& inout, vector<float> lighting, float color_noise_std)
 {
+    // Skip transformations if given deterministic settings
+    if (lighting.size() > 0) {
+        cv::Mat alphas(3, 1, CV_32FC1, lighting.data());
+        alphas = (CPCA * CSTD.mul(alphas));  // this is the random coloring pixel
+        auto pixel = alphas.reshape(3, 1).at<cv::Scalar_<float>>(0, 0);
+        inout = (inout + pixel) / (1.0 + color_noise_std);
+    }
 }
 
-void image::transformer::cbsjitter(cv::Mat& inout, vector<float> photometric)
+/*
+Implements contrast, brightness, and saturation jittering using the following definitions:
+Contrast: Add some multiple of the grayscale mean of the image.
+Brightness: Magnify the intensity of each pixel by photometric[1]
+Saturation: Add some multiple of the pixel's grayscale value to itself.
+photometric is filled with uniformly distributed values prior to calling this function
+*/
+// adjusts contrast, brightness, and saturation according
+// to values in photometric[0], photometric[1], photometric[2], respectively
+void image::transformer::cbsjitter(cv::Mat& inout, const vector<float>& photometric)
 {
-}
+    // Skip transformations if given deterministic settings
+    if (photometric.size() > 0) {
+        /****************************
+        *  BRIGHTNESS & SATURATION  *
+        *****************************/
+        cv::Mat satmtx = photometric[1] * (photometric[2] * cv::Mat::eye(3, 3, CV_32FC1) +
+                                (1 - photometric[2]) * cv::Mat::ones(3, 1, CV_32FC1) * GSCL.t());
+        cv::transform(inout, inout, satmtx);
 
+        /*************
+        *  CONTRAST  *
+        **************/
+        cv::Mat gray_mean;
+        cv::cvtColor(cv::Mat(1, 1, CV_32FC3, cv::mean(inout)), gray_mean, CV_BGR2GRAY);
+        inout = photometric[0] * inout + (1 - photometric[0]) * gray_mean.at<cv::Scalar_<float>>(0, 0);
+    }
+}
 
 image::param_factory::param_factory(shared_ptr<image::config> cfg)
 {
@@ -133,19 +181,23 @@ image::param_factory::make_params(
 
     float scale = _icp->scale(dre);
     float aspect_ratio = _icp->aspect_ratio(dre);
-    cout << "ASPECT_RATIO CHOSEN " << aspect_ratio << "\n";
     scale_cropbox(in_size, imgstgs->cropbox, aspect_ratio, scale);
 
     float c_off_x = _icp->crop_offset(dre);
     float c_off_y = _icp->crop_offset(dre);
     shift_cropbox(in_size, imgstgs->cropbox, c_off_x, c_off_y);
 
-    for_each(imgstgs->lighting.begin(),
-             imgstgs->lighting.end(),
-             [this, &dre] (float &n) {n = _icp->lighting(dre);});
-    for_each(imgstgs->photometric.begin(),
-             imgstgs->photometric.end(),
-             [this, &dre] (float &n) {n = _icp->photometric(dre);});
+    if (_icp->lighting.stddev() != 0) {
+        for( int i=0; i<3; i++ ) {
+            imgstgs->lighting.push_back(_icp->lighting(dre));
+        }
+        imgstgs->color_noise_std = _icp->lighting.stddev();
+    }
+    if (_icp->photometric.a()!=_icp->photometric.b()) {
+        for( int i=0; i<3; i++ ) {
+            imgstgs->photometric.push_back(_icp->photometric(dre));
+        }
+    }
     return imgstgs;
 }
 

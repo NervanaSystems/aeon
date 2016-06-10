@@ -40,7 +40,7 @@ public:
     image_config_builder& channels(int val) { obj.channels = val; return *this; }
     image_config_builder& scale(float a, float b) { obj.scale = uniform_real_distribution<float>(a,b); return *this; }
     image_config_builder& angle(float a, float b) { obj.angle = uniform_int_distribution<int>(a,b); return *this; }
-    image_config_builder& lighting(float a, float b) { obj.lighting = normal_distribution<float>(a,b); return *this; }
+    image_config_builder& lighting(float mean, float stddev) { obj.lighting = normal_distribution<float>(mean,stddev); return *this; }
     image_config_builder& aspect_ratio(float a, float b) { obj.aspect_ratio = uniform_real_distribution<float>(a,b); return *this; }
     image_config_builder& photometric(float a, float b) { obj.photometric = uniform_real_distribution<float>(a,b); return *this; }
     image_config_builder& crop_offset(float a, float b) { obj.crop_offset = uniform_real_distribution<float>(a,b); return *this; }
@@ -71,6 +71,7 @@ public:
     image_params_builder& angle( int val ) { obj.angle = val; return *this; }
     image_params_builder& flip( bool val ) { obj.flip = val; return *this; }
     image_params_builder& lighting( float f1, float f2, float f3 ) { obj.lighting = {f1,f2,f3}; return *this; }
+    image_params_builder& color_noise_std(float f) { obj.color_noise_std = f; return *this; }
     image_params_builder& photometric( float f1, float f2, float f3 ) { obj.photometric = {f1,f2,f3}; return *this; }
 
     operator shared_ptr<image::params>() const {

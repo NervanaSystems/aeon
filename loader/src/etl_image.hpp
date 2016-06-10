@@ -30,8 +30,9 @@ namespace nervana {
         cv::Size2i output_size;
         int angle = 0;
         bool flip = false;
-        std::vector<float> lighting{0.0, 0.0, 0.0};  //pixelwise random values
-        std::vector<float> photometric{0.0, 0.0, 0.0};  // contrast, brightness, saturation
+        std::vector<float> lighting;  //pixelwise random values
+        float color_noise_std = 0;
+        std::vector<float> photometric;  // contrast, brightness, saturation
     };
 
     class image::param_factory {
@@ -128,7 +129,7 @@ namespace nervana {
 
     class image::transformer : public interface::transformer<image::decoded, image::params> {
     public:
-        transformer(std::shared_ptr<const image::config>) {}
+        transformer(std::shared_ptr<const image::config>);
         ~transformer() {}
         virtual std::shared_ptr<image::decoded> transform(
                                                 std::shared_ptr<image::params>,
@@ -137,8 +138,18 @@ namespace nervana {
     private:
         void rotate(const cv::Mat& input, cv::Mat& output, int angle);
         void resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size);
-        void lighting(cv::Mat& inout, std::vector<float>);
-        void cbsjitter(cv::Mat& inout, std::vector<float>);
+        void lighting(cv::Mat& inout, std::vector<float>, float color_noise_std);
+        void cbsjitter(cv::Mat& inout, const std::vector<float>&);
+
+        // These are the eigenvectors of the pixelwise covariance matrix
+        const float _CPCA[3][3];
+        const cv::Mat CPCA;
+
+        // These are the square roots of the eigenvalues of the pixelwise covariance matrix
+        const cv::Mat CSTD;
+
+        // This is the set of coefficients for converting BGR to grayscale
+        const cv::Mat GSCL;
     };
 
 
