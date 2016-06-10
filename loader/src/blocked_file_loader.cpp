@@ -56,12 +56,12 @@ void BlockedFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_s
 }
 
 void BlockedFileLoader::loadFile(Buffer* buff, const string& filename) {
-    off_t size = get_size(filename);
+    off_t size = getSize(filename);
     ifstream fin(filename, ios::binary);
     buff->read(fin, size);
 }
 
-off_t BlockedFileLoader::get_size(const string& filename) {
+off_t BlockedFileLoader::getSize(const string& filename) {
     // ensure that filename exists and get its size
 
     struct stat stats;

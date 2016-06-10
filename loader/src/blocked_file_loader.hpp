@@ -34,7 +34,7 @@ public:
     
 
 private:
-    off_t get_size(const string& filename);
+    off_t getSize(const string& filename);
     
     const Manifest* _manifest;
 };
