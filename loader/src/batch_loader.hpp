@@ -15,26 +15,12 @@
 
 #pragma once
 
-#include "batch_loader.hpp"
-#include "manifest.hpp"
-#include "buffer.hpp"
-
-/* BatchFileLoader
- *
- * Loads blocks of files from a manifest into a Buffer.
- *
- * TODO: rename to BatchFileLoader since there is no temporal blocking
- * being done here, only a batch of file loads
+/*
+ * A BatchLoader is something which can load blocks of data into a
+ * BufferPair
  */
-class BatchFileLoader : public BatchLoader {
-public:
-    BatchFileLoader(Manifest* manifest);
 
-    void loadBlock(BufferPair& dest, uint block_num, uint block_size);
-    void loadFile(Buffer* buff, const string& filename);
-
-private:
-    off_t getSize(const string& filename);
-    
-    const Manifest* _manifest;
-};
+class BatchLoader {
+    public:
+        virtual void loadBlock(BufferPair& dest, uint block_num, uint block_size) = 0;
+}
