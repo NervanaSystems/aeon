@@ -45,7 +45,7 @@ public:
 
     void read(ifstream& ifs, int size);
     void read(IfStream& ifs, int size);
-    void read(char* src, int size);
+    void read(const char* src, int size);
     void reset();
     char* getItem(int index, int& len);
 
