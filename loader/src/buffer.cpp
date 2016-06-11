@@ -120,7 +120,7 @@ void Buffer::read(IfStream& ifs, int size) {
     pushItem(size);
 }
 
-void Buffer::read(char* src, int size) {
+void Buffer::read(const char* src, int size) {
     // read `size` bytes out of `src` and push into buffer
     resizeIfNeeded(size);
     memcpy((void *) _cur, (void *) src, size);
