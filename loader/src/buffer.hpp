@@ -51,6 +51,7 @@ public:
 
     void dump();
 
+    int getItemCount();
     uint getSize();
 
 private:
@@ -62,7 +63,6 @@ private:
     uint getLevel();
     void resizeIfNeeded(int inc);
 
-    int getItemCount();
     void pushItem(int len);
     char* getCurrent();
 
