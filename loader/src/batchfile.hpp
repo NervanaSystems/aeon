@@ -129,8 +129,11 @@ public:
     ~BatchFileReader() ;
 
     void open(const std::string& fileName);
+    bool tryOpen(const std::string& fileName);
     void close();
 
+    void readToBuffer(Buffer& dest);
+    // TODO: still need this read?
     std::shared_ptr<ByteVect> read();
 
     int itemCount() ;
