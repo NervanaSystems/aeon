@@ -28,7 +28,6 @@ void BatchLoaderCPIOCache::loadBlock(BufferPair& dest, uint block_num, uint bloc
     if(loadBlockFromCache(dest, block_num, block_size)) {
         return;
     } else {
-        cout << 'loadBlock' << block_num << " " << block_size << endl;
         _loader->loadBlock(dest, block_num, block_size);
         writeBlockToCache(dest, block_num, block_size);
     }
