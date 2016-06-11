@@ -23,8 +23,6 @@
  *
  * Loads blocks of files from a manifest into a Buffer.
  *
- * TODO: rename to BatchFileLoader since there is no temporal blocking
- * being done here, only a batch of file loads
  */
 class BatchFileLoader : public BatchLoader {
 public:
