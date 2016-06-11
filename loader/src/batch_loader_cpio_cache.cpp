@@ -17,7 +17,11 @@
 #include "batch_loader_cpio_cache.hpp"
 
 BatchLoaderCPIOCache::BatchLoaderCPIOCache(const char* cacheDir, BatchLoader* loader)
-    : _cacheDir(cacheDir), _loader(loader) {
+: _cacheDir(cacheDir), _loader(loader) {
+    // add '/' to end of cacheDir if one is not already there
+    if(cacheDir.back() != '/') {
+        cacheDir += '/';
+    }
 }
 
 void BatchLoaderCPIOCache::loadBlock(BufferPair& dest, uint block_num, uint block_size) {
