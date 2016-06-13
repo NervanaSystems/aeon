@@ -125,7 +125,7 @@ namespace nervana {
         cv::Size2i get_image_size() const {return _images[0].size(); }
         size_t get_image_count() const { return _images.size(); }
 
-    private:
+    protected:
         bool test_image_sizes() {
             for( int i=1; i<_images.size(); i++ ) {
                 if(_images[0].size()!=_images[i].size()) return false;

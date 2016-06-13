@@ -1,9 +1,11 @@
 #pragma once
+#include <inttypes.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 #include "etl_interface.hpp"
+#include "etl_image.hpp"
 #include "params.hpp"
 
 
@@ -85,12 +87,12 @@ namespace nervana {
 
             snap_to_nearest_pow2(frame_duration_n);
 
-            int prevpow = nextpow >> 1;
-
-            if ((nextpow - frame_duration_n) < (frame_duration_n - prevpow))
-                frame_duration_n = nextpow;
-            else
-                frame_duration_n = prevpow;
+// This is already handled in snap_to_nearest_pow2
+//            int prevpow = nextpow >> 1;
+//            if ((nextpow - frame_duration_n) < (frame_duration_n - prevpow))
+//                frame_duration_n = nextpow;
+//            else
+//                frame_duration_n = prevpow;
 
             int overlap_duration_n = overlap_duration_s * sampling_freq;
 
@@ -125,21 +127,18 @@ namespace nervana {
 
     };
 
-
-    class specgram::decoded : public decoded_media {
+    class specgram::decoded : public image::decoded {
     public:
         decoded() {}
-        decoded(cv::Mat img) : _img(img) { _specgrams.push_back(_img); }
+        decoded(cv::Mat img) : image::decoded(img) {}
         virtual ~decoded() override {}
 
-        virtual MediaType get_type() override { return MediaType::IMAGE; }
-        cv::Mat& get_specgram(int index) { return _specgrams[index]; }
-        cv::Size2i get_specgram_size() const {return _specgrams[0].size(); }
-        size_t size() const { return _specgrams.size(); }
+//        virtual MediaType get_type() override { return MediaType::IMAGE; }
+//        cv::Mat& get_specgram(int index) { return _images[index]; }
+//        cv::Size2i get_specgram_size() const {return _images[0].size(); }
+//        size_t get_specgram_count() const { return _images.size(); }
 
     private:
-        cv::Mat _img;
-        std::vector<cv::Mat> _specgrams;
     };
 
 
@@ -150,20 +149,20 @@ namespace nervana {
         virtual std::shared_ptr<specgram::decoded> extract(char*, int) override;
 
     private:
-
+        const float PI = 3.1415927;
 
         void none(int) {
         }
 
         void hann(int n) {
             for (int i = 0; i <= n; i++) {
-                _window->at<float>(0, i) = 0.5 - 0.5 * cos((2.0 * PI * i) / n);
+                _window.at<float>(0, i) = 0.5 - 0.5 * cos((2.0 * PI * i) / n);
             }
         }
 
         void blackman(int n) {
             for (int i = 0; i <= n; i++) {
-                _window->at<float>(0, i) = 0.42 -
+                _window.at<float>(0, i) = 0.42 -
                                            0.5 * cos((2.0 * PI * i) / n) +
                                            0.08 * cos(4.0 * PI * i / n);
             }
@@ -171,13 +170,13 @@ namespace nervana {
 
         void hamming(int n) {
             for (int i = 0; i <= n; i++) {
-                _window->at<float>(0, i) = 0.54 - 0.46 * cos((2.0 * PI * i) / n);
+                _window.at<float>(0, i) = 0.54 - 0.46 * cos((2.0 * PI * i) / n);
             }
         }
 
         void bartlett(int n) {
             for (int i = 0; i <= n; i++) {
-                _window->at<float>(0, i) = 1.0 - 2.0 * fabs(i - n / 2.0) / n;
+                _window.at<float>(0, i) = 1.0 - 2.0 * fabs(i - n / 2.0) / n;
             }
         }
 
