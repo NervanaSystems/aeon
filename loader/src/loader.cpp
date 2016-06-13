@@ -244,8 +244,7 @@ void ReadThread::work(int id) {
         while (_out->full() == true) {
             _out->waitForNonFull(lock);
         }
-        BufferPair& bufPair = _out->getForWrite();
-        _batch_iterator->read(bufPair);
+        _batch_iterator->read(_out->getForWrite());
         _out->advanceWritePos();
     }
     _out->signalNonEmpty();
