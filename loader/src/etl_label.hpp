@@ -2,6 +2,7 @@
 #include <random>
 #include "etl_interface.hpp"
 #include "params.hpp"
+#include "util.hpp"
 
 using namespace std;
 
@@ -101,7 +102,7 @@ namespace nervana {
             if (bufSize != 4) {
                 throw runtime_error("Only 4 byte buffers can be loaded as int32");
             }
-            return make_shared<label::decoded>(*reinterpret_cast<const int *>(buf) + _ex_offset);
+            return make_shared<label::decoded>(unpack_le<int>(buf)+_ex_offset);
         }
 
     private:

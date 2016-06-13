@@ -30,7 +30,8 @@ SRCS            := \
 	etl_lmap.cpp \
 	etl_specgram.cpp \
 	codec.cpp \
-	video.cpp
+	video.cpp \
+	util.cpp
 OBJS 			= $(subst .cpp,.o,$(SRCS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -fPIC
 CFLAGSDBG       := -g -Wall -O0 -std=c++11
