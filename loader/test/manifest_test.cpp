@@ -24,17 +24,17 @@
 using namespace std;
 
 TEST(manifest, constructor) {
-    Manifest manifest("manfiest.txt");
+    Manifest manifest("manfiest.txt", false);
 }
 
 TEST(manifest, hash) {
     // TODO not 42
-    Manifest manifest("manifest.txt");
+    Manifest manifest("manifest.txt", false);
     ASSERT_EQ(manifest.hash(), "42");
 }
 
 TEST(manifest, parse_file_doesnt_exist) {
-    Manifest manifest("manifest.txt");
+    Manifest manifest("manifest.txt", false);
 
     ASSERT_EQ(manifest.getSize(), 0);
 }
@@ -42,6 +42,32 @@ TEST(manifest, parse_file_doesnt_exist) {
 TEST(manifest, parse_file) {
     string tmpname = tmp_manifest_file(2, 0, 0);
 
-    Manifest manifest(tmpname);
+    Manifest manifest(tmpname, false);
     ASSERT_EQ(manifest.getSize(), 2);
 } 
+
+TEST(manifest, no_shuffle) {
+    string filename = tmp_manifest_file(20, 4, 4);
+    Manifest manifest1(filename, false);
+    Manifest manifest2(filename, false);
+
+    for(auto it1 = manifest1.begin(), it2 = manifest2.begin(); it1 != manifest1.end(); ++it1, ++it2) {
+        ASSERT_EQ(it1->first, it2->first);
+        ASSERT_EQ(it1->second, it2->second);
+    }
+}
+
+TEST(manifest, shuffle) {
+    string filename = tmp_manifest_file(20, 4, 4);
+    Manifest manifest1(filename, false);
+    Manifest manifest2(filename, true);
+
+    bool different = false;
+
+    for(auto it1 = manifest1.begin(), it2 = manifest2.begin(); it1 != manifest1.end(); ++it1, ++it2) {
+        if(it1->first != it2->first) {
+            different = true;
+        }
+    }
+    ASSERT_EQ(different, true);
+}

@@ -20,7 +20,7 @@
 using namespace std;
 
 TEST(blocked_file_loader, constructor) {
-    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest("manifest.txt")), 100);
+    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest("manifest.txt", true)), 100);
 }
 
 TEST(blocked_file_loader, loadBlock) {
@@ -28,7 +28,7 @@ TEST(blocked_file_loader, loadBlock) {
     uint object_size = 16;
     uint target_size = 16;
 
-    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmp_manifest_file(4, object_size, target_size))), 100);
+    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmp_manifest_file(4, object_size, target_size), true)), 100);
 
     // TODO: move this initialization which is copied from buffer.cpp
     // into constructor and destructor of BufferPair
@@ -60,7 +60,7 @@ TEST(blocked_file_loader, subsetPercent) {
     uint object_size = 16;
     uint target_size = 16;
 
-    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmp_manifest_file(10, object_size, target_size))), 50);
+    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmp_manifest_file(10, object_size, target_size), true)), 50);
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);

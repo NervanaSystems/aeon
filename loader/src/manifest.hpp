@@ -40,7 +40,7 @@ typedef pair<string, string> FilenamePair;
  */
 class Manifest {
 public:
-    Manifest(string filename);
+    Manifest(string filename, bool shuffle);
 
     typedef vector<FilenamePair>::const_iterator iter;
 
@@ -58,6 +58,7 @@ protected:
 
 private:
     const string _filename;
+    const bool _shuffle;
     vector<FilenamePair> _filename_pairs;
 };
 

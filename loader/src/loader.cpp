@@ -285,7 +285,8 @@ Loader::Loader(int* itemCount, int batchSize,
        shared_ptr<BatchLoaderCPIOCache>(new BatchLoaderCPIOCache(
             cacheDir,
             shared_ptr<BatchFileLoader>(new BatchFileLoader(
-                shared_ptr<Manifest>(new Manifest(manifestFilename)), subsetPercent
+                shared_ptr<Manifest>(new Manifest(manifestFilename, shuffle)),
+                subsetPercent
             ))
         )), _macroBatchSize
     ));

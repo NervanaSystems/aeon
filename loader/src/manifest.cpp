@@ -23,8 +23,8 @@
 
 using namespace std;
 
-Manifest::Manifest(string filename)
-: _filename(filename) {
+Manifest::Manifest(string filename, const bool shuffle)
+: _filename(filename), _shuffle(shuffle) {
     // for now parse the entire manifest on creation
     parse();
 }
@@ -66,7 +66,9 @@ void Manifest::parseStream(istream& is) {
     // resuming training at a specific epoch, we may need to be able to
     // jump around and read random blocks of the file, so a purely
     // stream based interface is not sufficient.
-    shuffleFilenamePairs();
+    if(_shuffle) {
+        shuffleFilenamePairs();
+    }
 }
 
 void Manifest::shuffleFilenamePairs() {
