@@ -26,7 +26,7 @@
  */
 class BatchFileLoader : public BatchLoader {
 public:
-    BatchFileLoader(shared_ptr<Manifest> manifest);
+    BatchFileLoader(shared_ptr<Manifest> manifest, uint subsetPercent);
 
     void loadBlock(BufferPair& dest, uint block_num, uint block_size);
     void loadFile(Buffer* buff, const string& filename);
@@ -36,4 +36,5 @@ private:
     off_t getFileSize(const string& filename);
     
     const shared_ptr<Manifest> _manifest;
+    uint _subsetPercent;
 };

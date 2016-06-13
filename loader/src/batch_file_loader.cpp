@@ -22,8 +22,9 @@
 
 using namespace std;
 
-BatchFileLoader::BatchFileLoader(shared_ptr<Manifest> manifest)
-: _manifest(manifest) {
+BatchFileLoader::BatchFileLoader(shared_ptr<Manifest> manifest, uint subsetPercent)
+: _manifest(manifest), _subsetPercent(subsetPercent) {
+    assert(_subsetPercent >= 0 && _subsetPercent <= 100);
 }
 
 void BatchFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_size) {
@@ -35,6 +36,15 @@ void BatchFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_siz
     size_t begin_i = block_num * block_size;
     size_t end_i = min((block_num + 1) * (size_t)block_size, _manifest->getSize());
     
+    if (_subsetPercent != 100) {
+        // adjust end_i in relation to begin_i.  We want to scale (end_i
+        // - begin_i) by _subsetPercent.  In the case of a smaller block
+        // than block_size (in the last block), we want _subsetPercent
+        // of them so we need to make sure we first shorten the end_i to
+        // the corrent smaller block size, and then scale that.
+        end_i = begin_i + (((end_i - begin_i) * _subsetPercent) / 100);
+    }
+
     // ensure we stay within bounds of manifest
     assert(begin_i <= _manifest->getSize());
     assert(end_i <= _manifest->getSize());

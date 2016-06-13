@@ -274,7 +274,6 @@ Loader::Loader(int* itemCount, int batchSize,
     // TODO: not a constant
     uint _macroBatchSize = 1024;
     _device = Device::create(deviceParams);
-    // TODO: subsetPercent
     // TODO: shuffle
     // TODO: reshuffle
     // TODO: itemCount
@@ -282,12 +281,11 @@ Loader::Loader(int* itemCount, int batchSize,
     // TODO: startFileIdx
     // TODO: mediaParams
     // TODO: ingestParams
-    // TODO: targetTypeSize
     _batch_iterator = shared_ptr<BatchIterator>(new BatchIterator(
        shared_ptr<BatchLoaderCPIOCache>(new BatchLoaderCPIOCache(
             cacheDir,
             shared_ptr<BatchFileLoader>(new BatchFileLoader(
-                shared_ptr<Manifest>(new Manifest(manifestFilename))
+                shared_ptr<Manifest>(new Manifest(manifestFilename)), subsetPercent
             ))
         )), _macroBatchSize
     ));

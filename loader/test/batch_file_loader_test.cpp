@@ -20,7 +20,7 @@
 using namespace std;
 
 TEST(blocked_file_loader, constructor) {
-    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest("manifest.txt")));
+    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest("manifest.txt")), 100);
 }
 
 TEST(blocked_file_loader, loadBlock) {
@@ -28,7 +28,7 @@ TEST(blocked_file_loader, loadBlock) {
     uint object_size = 16;
     uint target_size = 16;
 
-    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmp_manifest_file(4, object_size, target_size))));
+    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmp_manifest_file(4, object_size, target_size))), 100);
 
     // TODO: move this initialization which is copied from buffer.cpp
     // into constructor and destructor of BufferPair
@@ -47,6 +47,36 @@ TEST(blocked_file_loader, loadBlock) {
     for(uint i = 0; i < object_size / sizeof(uint) * block_size; ++i) {
         ASSERT_EQ(object_data[i] + 1, target_data[i]);
     }
+
+    delete bp.first;
+    delete bp.second;
+}
+
+TEST(blocked_file_loader, subsetPercent) {
+    // a 10 object manifest iterated through blocks sized 4 with
+    // percentSubset 50 should result in an output block size of 2, 2
+    // and then 1.
+    uint block_size = 4;
+    uint object_size = 16;
+    uint target_size = 16;
+
+    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmp_manifest_file(10, object_size, target_size))), 50);
+
+    Buffer* dataBuffer = new Buffer(0);
+    Buffer* targetBuffer = new Buffer(0);
+    BufferPair bp = make_pair(dataBuffer, targetBuffer);
+
+    bfl.loadBlock(bp, 0, block_size);
+    ASSERT_EQ(bp.first->getItemCount(), block_size / 2);
+    bp.first->reset();
+
+    bfl.loadBlock(bp, 1, block_size);
+    ASSERT_EQ(bp.first->getItemCount(), block_size / 2);
+    bp.first->reset();
+
+    bfl.loadBlock(bp, 2, block_size);
+    ASSERT_EQ(bp.first->getItemCount(), 1);
+    bp.first->reset();
 
     delete bp.first;
     delete bp.second;
