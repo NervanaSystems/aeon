@@ -41,7 +41,7 @@ std::shared_ptr<Media> Media::create(MediaParams* params, MediaParams* ingestPar
                          id);
 #else
         {
-            string message = "OpenCV " UNSUPPORTED_MEDIA_MESSAGE;
+            std::string message = "OpenCV " UNSUPPORTED_MEDIA_MESSAGE;
             throw std::runtime_error(message);
         }
 #endif
@@ -50,7 +50,7 @@ std::shared_ptr<Media> Media::create(MediaParams* params, MediaParams* ingestPar
         return std::make_shared<Video>(reinterpret_cast<VideoParams*>(params), id);
 #else
         {
-            string message = "Video " UNSUPPORTED_MEDIA_MESSAGE;
+            std::string message = "Video " UNSUPPORTED_MEDIA_MESSAGE;
             throw std::runtime_error(message);
         }
 #endif
@@ -59,7 +59,7 @@ std::shared_ptr<Media> Media::create(MediaParams* params, MediaParams* ingestPar
         return std::make_shared<Audio>(reinterpret_cast<AudioParams*>(params), id);
 #else
         {
-            string message = "Audio " UNSUPPORTED_MEDIA_MESSAGE;
+            std::string message = "Audio " UNSUPPORTED_MEDIA_MESSAGE;
             throw std::runtime_error(message);
         }
 #endif

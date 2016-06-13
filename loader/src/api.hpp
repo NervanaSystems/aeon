@@ -103,7 +103,7 @@ extern void write_batch(char *outfile, const int numData,
     }
     bf.close();
 #else
-    string message = "OpenCV " UNSUPPORTED_MEDIA_MESSAGE;
+    std::string message = "OpenCV " UNSUPPORTED_MEDIA_MESSAGE;
     throw std::runtime_error(message);
 #endif
 }
