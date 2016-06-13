@@ -235,10 +235,6 @@ ReadThread::ReadThread(const shared_ptr<BufferPool>& out, const shared_ptr<Reade
 }
 
 void ReadThread::work(int id) {
-    produce();
-}
-
-void ReadThread::produce() {
     // Fill input buffers.
     {
         unique_lock<mutex> lock(_out->getMutex());

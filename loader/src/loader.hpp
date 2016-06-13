@@ -95,7 +95,6 @@ public:
 
 protected:
     virtual void work(int id);
-    void produce();
 
 private:
     ReadThread();
