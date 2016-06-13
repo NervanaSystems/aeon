@@ -64,6 +64,25 @@ private:
     image::config obj{ R"({"height":30,"width":30})" };
 };
 
+class multicrop_config_builder {
+public:
+    multicrop_config_builder& height(int val) { obj.height = val; return *this; }
+    multicrop_config_builder& width(int val) { obj.width = val; return *this; }
+
+    // FIXME:  need to be able to properly set a vector type
+    multicrop_config_builder& scales(vector<float> val) { obj.scales = val; return *this; }
+    multicrop_config_builder& flip(bool val) { obj.flip = val; return *this; }
+    multicrop_config_builder& crops_per_scale(int val) { obj.crops_per_scale = val; return *this; }
+
+    shared_ptr<multicrop::config> dump(int tab=4) {
+        nlohmann::json js = {{"height",obj.height},{"width",obj.width},{"scales",obj.scales},
+        {"flip",obj.flip},{"crops_per_scale",obj.crops_per_scale}};
+        return make_shared<multicrop::config>(js.dump());
+    }
+private:
+    multicrop::config obj{ R"({"height":30,"width":30})" };
+};
+
 class image_params_builder {
 public:
     image_params_builder& cropbox( int x, int y, int w, int h ) { obj.cropbox = cv::Rect(x,y,w,h); return *this; }
@@ -209,8 +228,8 @@ TEST(etl, image_extract4) {
     test_image( png, 1 );
 }
 
-bool check_value(shared_ptr<image::decoded> transformed, int x0, int y0, int x1, int y1) {
-    cv::Mat image = transformed->get_image(0);
+bool check_value(shared_ptr<image::decoded> transformed, int x0, int y0, int x1, int y1, int ii=0) {
+    cv::Mat image = transformed->get_image(ii);
     cv::Vec3b value = image.at<cv::Vec3b>(y0,x0); // row,col
     return x1 == (int)value[0] && y1 == (int)value[1];
 }
@@ -265,4 +284,81 @@ TEST(etl, image_transform_flip) {
     EXPECT_TRUE(check_value(transformed,0,0,119,150));
     EXPECT_TRUE(check_value(transformed,19,0,100,150));
     EXPECT_TRUE(check_value(transformed,0,19,119,169));
+}
+
+TEST(etl, multi_crop_noresize) {
+    auto indexed = generate_indexed_image();  // 256 x 256
+    vector<unsigned char> img;
+    cv::imencode( ".png", indexed, img );
+
+    image_config_builder config;
+    shared_ptr<image::config> config_ptr = config.dump();  // Only used for extract and load
+
+    image::extractor ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    // Just center crop
+    {
+        auto jsstring = R"(
+            {
+                "width": 224,
+                "height": 224,
+                "scales": [0.875],
+                "crops_per_scale": 1
+            }
+        )";
+        auto mc_config_ptr = make_shared<multicrop::config>(jsstring);
+
+        multicrop::transformer trans{mc_config_ptr};
+        shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
+
+        cv::Mat image = transformed->get_image(0);
+        EXPECT_EQ(224,image.size().width);
+        EXPECT_EQ(224,image.size().height);
+
+        // First image in transformed should be the center crop, unflipped
+        EXPECT_TRUE(check_value(transformed,   0,   0,  16,  16));
+        EXPECT_TRUE(check_value(transformed, 223, 223, 239, 239));
+
+        // Second image in transformed should be the center crop, flipped
+        EXPECT_TRUE(check_value(transformed,   0,   0, 239,  16, 1));
+        EXPECT_TRUE(check_value(transformed, 223, 223,  16, 239, 1));
+
+    }
+
+    // Multi crop, no flip
+    {
+        auto jsstring = R"(
+            {
+                "width": 224,
+                "height": 224,
+                "scales": [0.875],
+                "flip": false
+            }
+        )";
+
+        auto mc_config_ptr = make_shared<multicrop::config>(jsstring);
+
+        multicrop::transformer trans{mc_config_ptr};
+        shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
+
+        cv::Mat image = transformed->get_image(0);
+        EXPECT_EQ(224,image.size().width);
+        EXPECT_EQ(224,image.size().height);
+
+        EXPECT_EQ(transformed->size(), 5);
+        // First image in transformed should be the center crop, unflipped
+        EXPECT_TRUE(check_value(transformed,   0,   0,  16,  16));
+        EXPECT_TRUE(check_value(transformed, 223, 223, 239, 239));
+
+        // NW, SW, NE, SE
+        EXPECT_TRUE(check_value(transformed,   0,   0,   0,   0, 1));
+        EXPECT_TRUE(check_value(transformed,   0,   0,   0,  32, 2));
+        EXPECT_TRUE(check_value(transformed,   0,   0,  32,   0, 3));
+        EXPECT_TRUE(check_value(transformed,   0,   0,  32,  32, 4));
+
+
+        // EXPECT_TRUE(check_value(transformed, 223, 223,  16, 239, 1));
+
+    }
 }

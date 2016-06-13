@@ -18,6 +18,15 @@ namespace nervana {
         class extractor;
         class transformer;
         class loader;
+
+        // These functions may be common across different transformers
+        void resize(const cv::Mat&, cv::Mat&, const cv::Size2i& );
+        void shift_cropbox(const cv::Size2f &, cv::Rect &, float, float);
+    }
+
+    namespace multicrop {
+        class config;
+        class transformer;
     }
 
     class image::params : public nervana::params {
@@ -41,10 +50,9 @@ namespace nervana {
         ~param_factory() {}
 
         std::shared_ptr<image::params> make_params(std::shared_ptr<const decoded>,
-                                                           std::default_random_engine&);
+                                                   std::default_random_engine&);
     private:
         void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
-        void shift_cropbox(const cv::Size2f&, cv::Rect&, float, float);
 
         bool _do_area_scale;
         std::shared_ptr<image::config> _icp;
@@ -103,6 +111,7 @@ namespace nervana {
         decoded(const std::vector<cv::Mat>& images) { _images = images; }
         virtual ~decoded() override {}
 
+        void add(cv::Mat img) { _images.push_back(img); }
         virtual MediaType get_type() override { return MediaType::IMAGE; }
         cv::Mat& get_image(int index) { return _images[index]; }
         cv::Size2i get_image_size() const {return _images[0].size(); }
@@ -137,7 +146,6 @@ namespace nervana {
 
     private:
         void rotate(const cv::Mat& input, cv::Mat& output, int angle);
-        void resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size);
         void lighting(cv::Mat& inout, std::vector<float>, float color_noise_std);
         void cbsjitter(cv::Mat& inout, const std::vector<float>&);
 
@@ -152,6 +160,75 @@ namespace nervana {
         const cv::Mat GSCL;
     };
 
+
+    class multicrop::config : public json_config_parser {
+    public:
+
+        // Required config variables
+        int height;
+        int width;
+        std::vector<float> scales;
+
+        // Optional config variables
+        int crops_per_scale = 5;
+        bool flip = true;
+
+        // Derived config variables
+        std::vector<cv::Point2f> offsets;
+        cv::Size2i output_size;
+
+        config(std::string argString)
+        {
+            auto js = nlohmann::json::parse(argString);
+
+            // Parse required and optional variables
+            parse_req(height, "height", js);
+            parse_req(width, "width", js);
+            parse_req(scales, "scales", js);
+            parse_opt(crops_per_scale, "crops_per_scale", js);
+            parse_opt(flip, "flip", js);
+
+            if (!validate()) {
+                throw std::runtime_error("invalid configuration values");
+            }
+
+            // Fill in derived variables
+            offsets.push_back(cv::Point2f(0.5, 0.5)); // Center
+            if (crops_per_scale == 5) {
+                offsets.push_back(cv::Point2f(0.0, 0.0)); // NW
+                offsets.push_back(cv::Point2f(0.0, 1.0)); // SW
+                offsets.push_back(cv::Point2f(1.0, 0.0)); // NE
+                offsets.push_back(cv::Point2f(1.0, 1.0)); // SE
+            }
+            output_size = cv::Size2i(height, width);
+        }
+
+    private:
+        bool validate()
+        {
+            bool isvalid = true;
+            isvalid &= ( crops_per_scale == 5 || crops_per_scale == 1);
+
+            for (const float &s: scales) {
+                isvalid &= ( (0.0 < s) && (s < 1.0));
+            }
+            return isvalid;
+        }
+    };
+
+
+    class multicrop::transformer : public interface::transformer<image::decoded, image::params> {
+    public:
+        transformer(std::shared_ptr<multicrop::config> cfg) : _cfg(cfg) {}
+        ~transformer() {}
+        virtual std::shared_ptr<image::decoded> transform(
+                                                std::shared_ptr<image::params>,
+                                                std::shared_ptr<image::decoded>) override;
+    private:
+        std::shared_ptr<multicrop::config> _cfg;
+
+        void add_resized_crops(const cv::Mat&, std::shared_ptr<image::decoded>&, std::vector<cv::Rect>&);
+    };
 
     class image::loader : public interface::loader<image::decoded> {
     public:

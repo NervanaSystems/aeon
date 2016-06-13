@@ -76,7 +76,7 @@ shared_ptr<image::decoded> image::transformer::transform(
         cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
 
         cv::Mat resizedImage;
-        resize(croppedImage, resizedImage, img_xform->output_size);
+        image::resize(croppedImage, resizedImage, img_xform->output_size);
         cbsjitter(resizedImage, img_xform->photometric);
         lighting(resizedImage, img_xform->lighting, img_xform->color_noise_std);
 
@@ -103,7 +103,7 @@ void image::transformer::rotate(const cv::Mat& input, cv::Mat& output, int angle
     }
 }
 
-void image::transformer::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size)
+void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size)
 {
     if (size == input.size()) {
         output = input;
@@ -167,8 +167,8 @@ image::param_factory::param_factory(shared_ptr<image::config> cfg)
 
 shared_ptr<image::params>
 image::param_factory::make_params(
-                                    shared_ptr<const decoded> input,
-                                    default_random_engine& dre )
+                            shared_ptr<const decoded> input,
+                            default_random_engine& dre )
 {
     auto imgstgs = make_shared<image::params>();
 
@@ -201,14 +201,10 @@ image::param_factory::make_params(
     return imgstgs;
 }
 
-void image::param_factory::shift_cropbox(
-                            const cv::Size2f &in_size,
-                            cv::Rect &crop_box,
-                            float off_x,
-                            float off_y )
+void image::shift_cropbox(const cv::Size2f &in_size, cv::Rect &crop_box, float xoff, float yoff)
 {
-    crop_box.x = (in_size.width - crop_box.width) * off_x;
-    crop_box.y = (in_size.height - crop_box.height) * off_y;
+    crop_box.x = (in_size.width - crop_box.width) * xoff;
+    crop_box.y = (in_size.height - crop_box.height) * yoff;
 }
 
 void image::param_factory::scale_cropbox(
@@ -241,6 +237,48 @@ void image::param_factory::scale_cropbox(
             crop_box.width  = tgt_scale * short_side;
             crop_box.height = crop_box.width / crop_a_r;
         }
+    }
+}
+
+shared_ptr<image::decoded> multicrop::transformer::transform(
+                                                shared_ptr<image::params> unused,
+                                                shared_ptr<image::decoded> input)
+{
+    cv::Size2i in_size = input->get_image_size();
+    int short_side_in = std::min(in_size.width, in_size.height);
+    vector<cv::Rect> cropboxes;
+
+    // Get the positional crop boxes
+    for (const float &s: _cfg->scales) {
+        cv::Size2i boxdim(short_side_in * s, short_side_in * s);
+        cv::Size2i border = in_size - boxdim;
+        for (cv::Point2f &offset: _cfg->offsets) {
+            cv::Point2i corner(border);
+            corner.x *= offset.x;
+            corner.y *= offset.y;
+            cropboxes.push_back(cv::Rect(corner, boxdim));
+        }
+    }
+
+    auto out_imgs = make_shared<image::decoded>();
+    add_resized_crops(input->get_image(0), out_imgs, cropboxes);
+    if (_cfg->flip) {
+        cv::Mat input_img;
+        cv::flip(input->get_image(0), input_img, 1);
+        add_resized_crops(input_img, out_imgs, cropboxes);
+    }
+    return out_imgs;
+}
+
+void multicrop::transformer::add_resized_crops(
+                const cv::Mat& input,
+                shared_ptr<image::decoded> &out_img,
+                vector<cv::Rect> &cropboxes)
+{
+    for (auto cropbox: cropboxes) {
+        cv::Mat img_out;
+        image::resize(input(cropbox), img_out, _cfg->output_size);
+        out_img->add(img_out);
     }
 }
 
