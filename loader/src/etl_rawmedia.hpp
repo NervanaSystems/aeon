@@ -1,10 +1,25 @@
 #pragma once
 
+#include <unordered_map>
+#include <stdexcept>
+
+extern "C" {
+    #include <libavformat/avformat.h>
+    #include <libavutil/imgutils.h>
+    #include <libswscale/swscale.h>
+    #include <libavcodec/avcodec.h>
+    #include <libavutil/common.h>
+    #include <libavutil/opt.h>
+}
+
+// this stuff makes me cranky!
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55,28,1)
+#define av_frame_alloc  avcodec_alloc_frame
+#define av_frame_free   avcodec_free_frame
+#endif
+
 #include "etl_interface.hpp"
 #include "params.hpp"
-#include <libavcodec/avcodec.h>
-#include <libavutil/common.h>
-
 
 namespace nervana {
     namespace rawmedia {
@@ -17,6 +32,28 @@ namespace nervana {
         class extractor;
         class transformer;
         class loader;
+
+//            UNKNOWN = -1,
+//            IMAGE = 0,
+//            VIDEO = 1,
+//            AUDIO = 2,
+//            TEXT = 3,
+//            TARGET = 4,
+//            RAW = 5,
+        MediaType av_media_type_to_internal( AVMediaType type ) {
+            MediaType rc;
+            switch( type ) {
+            case AVMEDIA_TYPE_UNKNOWN:    rc = MediaType::UNKNOWN;   break;
+            case AVMEDIA_TYPE_VIDEO:      rc = MediaType::VIDEO;     break;
+            case AVMEDIA_TYPE_AUDIO:      rc = MediaType::AUDIO;     break;
+            case AVMEDIA_TYPE_DATA:       rc = MediaType::UNKNOWN;   break;
+            case AVMEDIA_TYPE_SUBTITLE:   rc = MediaType::UNKNOWN;   break;
+            case AVMEDIA_TYPE_ATTACHMENT: rc = MediaType::UNKNOWN;   break;
+            case AVMEDIA_TYPE_NB:         rc = MediaType::UNKNOWN;   break;
+            default:                      rc = MediaType::UNKNOWN;   break;
+            }
+            return rc;
+        }
     }
 
     class rawmedia::params : public nervana::params {
@@ -39,8 +76,8 @@ namespace nervana {
     class rawmedia::config : public json_config_parser {
     public:
 
-        string media_type;
-        AVMediaType av_media_type = AVMEDIA_TYPE_UNKOWN;
+        std::string media_type;
+        AVMediaType av_media_type = AVMEDIA_TYPE_UNKNOWN;
 
         config(std::string argString)
         {
@@ -50,7 +87,7 @@ namespace nervana {
 
             auto avt = _avtype_map.find(media_type);
             if (avt == _avtype_map.end()) {
-                throw runtime_error("Unsupported media");
+                throw std::runtime_error("Unsupported media");
             } else {
                 av_media_type = avt->second;
             }
@@ -59,7 +96,7 @@ namespace nervana {
         }
 
     private:
-        bool validate() {}
+        bool validate() { return false; }
 
         std::unordered_map<std::string, AVMediaType> _avtype_map = {{"audio", AVMEDIA_TYPE_AUDIO},
                                                                     {"video", AVMEDIA_TYPE_VIDEO}};
@@ -103,9 +140,11 @@ namespace nervana {
 
     class rawmedia::extractor : public interface::extractor<rawmedia::decoded> {
     public:
-        extractor(std::shared_ptr<const rawmedia::config> cfg)
+        extractor(std::shared_ptr<const rawmedia::config> cfg) :
+            _media_type{cfg->av_media_type},
+            _format{nullptr},
+            _codec{nullptr}
         {
-            _av_media_type = cfg->av_media_type;
         }
 
         ~extractor() {}
@@ -117,7 +156,7 @@ namespace nervana {
                           int stream,
                           int itemSize);
 
-        AVMediaType      _av_media_type;
+        AVMediaType      _media_type;
         AVFormatContext* _format;
         AVCodecContext*  _codec;
     };

@@ -47,19 +47,19 @@ void rawmedia::decoded::grow_bufs(int grow)
 
 shared_ptr<rawmedia::decoded> rawmedia::extractor::extract(const char* item, int item_size)
 {
-    auto _raw = make_shared<rawmedia::decoded>();
+    auto _raw = make_shared<rawmedia::decoded>(av_media_type_to_internal(_media_type));
 
     _format = avformat_alloc_context();
     if (_format == 0) {
         throw runtime_error("Could not get context for decoding");
     }
-    uchar* item_copy = (uchar*) av_malloc(item_size);
+    char* item_copy = (char*) av_malloc(item_size);
     if (item_copy == 0) {
         throw runtime_error("Could not allocate memory");
     }
 
     memcpy(item_copy, item, item_size);
-    _format->pb = avio_alloc_context(item_copy, item_size, 0, 0, 0, 0, 0);
+    _format->pb = avio_alloc_context((unsigned char*)item_copy, item_size, 0, 0, 0, 0, 0);
 
     if (avformat_open_input(&_format , "", 0, 0) < 0) {
         throw runtime_error("Could not open input for decoding");
@@ -70,7 +70,7 @@ shared_ptr<rawmedia::decoded> rawmedia::extractor::extract(const char* item, int
     }
 
     _codec = _format->streams[0]->codec;
-    int stream = av_find_best_stream(_format, _avmedia_type, -1, -1, 0, 0);
+    int stream = av_find_best_stream(_format, _media_type, -1, -1, 0, 0);
 
     if (stream < 0) {
         throw runtime_error("Could not find media stream in input");
@@ -80,7 +80,7 @@ shared_ptr<rawmedia::decoded> rawmedia::extractor::extract(const char* item, int
         throw runtime_error("Could not open decoder");
     }
 
-    if (_raw->size() == 0) {
+    if (_raw->get_size() == 0) {
         _raw->add_bufs(_codec->channels, item_size);
     } else {
         _raw->reset();
@@ -111,7 +111,7 @@ void rawmedia::extractor::decode_frame(AVPacket* packet,
     if (packet->stream_index == stream) {
         AVFrame* frame = av_frame_alloc();
         int result = 0;
-        if (_mediaType == AVMEDIA_TYPE_AUDIO) {
+        if (_media_type == AVMEDIA_TYPE_AUDIO) {
             result = avcodec_decode_audio4(_codec, frame, &frame_done, packet);
         } else {
             throw runtime_error("Unsupported media");
