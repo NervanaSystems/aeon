@@ -15,15 +15,18 @@
 
 #pragma once
 
-#include "buffer.hpp"
+#include "batch_loader.hpp"
 
-/*
- * A BatchLoader is something which can load blocks of data into a
- * BufferPair
- */
-
-class BatchLoader {
+class BatchIterator {
 public:
-    virtual void loadBlock(BufferPair& dest, uint block_num, uint block_size) = 0;
-    virtual uint objectCount() = 0;
+    BatchIterator(shared_ptr<BatchLoader> loader, uint block_size);
+
+    void read(BufferPair& dest);
+    void reset();
+
+private:
+    shared_ptr<BatchLoader> _loader;
+    uint _i;
+    uint _block_size;
+    uint _count;
 };

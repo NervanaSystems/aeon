@@ -28,6 +28,7 @@
 #include "media.hpp"
 #include "matrix.hpp"
 #include "device.hpp"
+#include "batch_iterator.hpp"
 
 /* DecodeThreadPool
  *
@@ -91,7 +92,7 @@ private:
 
 class ReadThread: public ThreadPool {
 public:
-    ReadThread(const std::shared_ptr<BufferPool>& out, const std::shared_ptr<Reader>& reader);
+    ReadThread(const std::shared_ptr<BufferPool>& out, const std::shared_ptr<BatchIterator>& batch_iterator);
 
 protected:
     virtual void work(int id);
@@ -100,7 +101,7 @@ private:
     ReadThread();
     ReadThread(const ReadThread&);
     std::shared_ptr<BufferPool> _out;
-    std::shared_ptr<Reader>     _reader;
+    std::shared_ptr<BatchIterator> _batch_iterator;
 };
 
 /* Loader
@@ -120,7 +121,9 @@ public:
            int targetConversion, int subsetPercent,
            MediaParams* mediaParams,
            DeviceParams* deviceParams,
-           MediaParams* ingestParams);
+           MediaParams* ingestParams,
+           const char* manifestFilename,
+           const char* cacheDir);
 
     virtual ~Loader();
     int start();
@@ -128,8 +131,8 @@ public:
     int reset();
     void next(Buffer* dataBuf, Buffer* targetsBuf);
     void next();
-    std::shared_ptr<Reader> getReader();
     std::shared_ptr<Device> getDevice();
+    std::shared_ptr<BatchIterator> getBatchIterator();
 
 private:
     void drain();
@@ -148,6 +151,6 @@ private:
     std::unique_ptr<ReadThread>         _readThread;
     std::unique_ptr<DecodeThreadPool>   _decodeThreads;
     std::shared_ptr<Device>             _device;
-    std::shared_ptr<Reader>             _reader;
+    std::shared_ptr<BatchIterator>      _batch_iterator;
     MediaParams*                        _mediaParams;
 };

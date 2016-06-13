@@ -26,13 +26,14 @@
  */
 class BatchFileLoader : public BatchLoader {
 public:
-    BatchFileLoader(Manifest* manifest);
+    BatchFileLoader(shared_ptr<Manifest> manifest);
 
     void loadBlock(BufferPair& dest, uint block_num, uint block_size);
     void loadFile(Buffer* buff, const string& filename);
+    uint objectCount();
 
 private:
-    off_t getSize(const string& filename);
+    off_t getFileSize(const string& filename);
     
-    const Manifest* _manifest;
+    const shared_ptr<Manifest> _manifest;
 };

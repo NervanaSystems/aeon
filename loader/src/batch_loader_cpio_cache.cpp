@@ -16,7 +16,7 @@
 #include "batchfile.hpp"
 #include "batch_loader_cpio_cache.hpp"
 
-BatchLoaderCPIOCache::BatchLoaderCPIOCache(const char* cacheDir, BatchLoader* loader)
+BatchLoaderCPIOCache::BatchLoaderCPIOCache(const char* cacheDir, shared_ptr<BatchLoader> loader)
 : _cacheDir(cacheDir), _loader(loader) {
     // add '/' to end of cacheDir if one is not already there
     if(_cacheDir.back() != '/') {
@@ -83,4 +83,8 @@ string BatchLoaderCPIOCache::blockFilename(uint block_num, uint block_size) {
     stringstream s;
     s << _cacheDir << block_num << "-" << block_size << ".cpio";
     return s.str();
+}
+
+uint BatchLoaderCPIOCache::objectCount() {
+    return _loader->objectCount();
 }

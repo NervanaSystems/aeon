@@ -41,6 +41,10 @@ public:
         string target = randomString();
         dest.second->read(target.c_str(), target.length());
     };
+
+    uint objectCount() {
+        return 10;
+    }
 };
 
 string load_string(BatchLoaderCPIOCache& cache) {
@@ -64,8 +68,9 @@ TEST(batch_loader_cpio_cache, integration) {
     // the block_num.  The only way two consequetive calls are the same
     // is if the cache is working properly
 
-    RandomBatchLoader loader;
-    BatchLoaderCPIOCache cache("/tmp/", &loader);
+    BatchLoaderCPIOCache cache(
+        "/tmp/", shared_ptr<RandomBatchLoader>(new RandomBatchLoader)
+    );
 
     ASSERT_EQ(load_string(cache), load_string(cache));
 }

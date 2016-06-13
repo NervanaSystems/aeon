@@ -13,17 +13,29 @@
  limitations under the License.
 */
 
-#pragma once
+#include <math.h>
 
 #include "buffer.hpp"
 
-/*
- * A BatchLoader is something which can load blocks of data into a
- * BufferPair
- */
+#include "batch_iterator.hpp"
 
-class BatchLoader {
-public:
-    virtual void loadBlock(BufferPair& dest, uint block_num, uint block_size) = 0;
-    virtual uint objectCount() = 0;
+BatchIterator::BatchIterator(shared_ptr<BatchLoader> loader, uint block_size)
+    : _loader(loader), _block_size(block_size) {
+    _i = 0;
+
+    _count = ceil((float)_loader->objectCount() / (float)_block_size);
 };
+
+void BatchIterator::read(BufferPair& dest) {
+    _loader->loadBlock(dest, _i, _block_size);
+
+    _i += 1;
+
+    if(_i >= _count) {
+        _i = 0;
+    }
+}
+
+void BatchIterator::reset() {
+    _i = 0;
+}

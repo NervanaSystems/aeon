@@ -20,8 +20,7 @@
 using namespace std;
 
 TEST(blocked_file_loader, constructor) {
-    Manifest m("manifest.txt");
-    BatchFileLoader bfl(&m);
+    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest("manifest.txt")));
 }
 
 TEST(blocked_file_loader, loadBlock) {
@@ -29,9 +28,7 @@ TEST(blocked_file_loader, loadBlock) {
     uint object_size = 16;
     uint target_size = 16;
 
-    Manifest m(tmp_manifest_file(4, object_size, target_size));
-
-    BatchFileLoader bfl(&m);
+    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmp_manifest_file(4, object_size, target_size))));
 
     // TODO: move this initialization which is copied from buffer.cpp
     // into constructor and destructor of BufferPair

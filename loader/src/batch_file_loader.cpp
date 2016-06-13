@@ -22,17 +22,19 @@
 
 using namespace std;
 
-BatchFileLoader::BatchFileLoader(Manifest* manifest)
+BatchFileLoader::BatchFileLoader(shared_ptr<Manifest> manifest)
 : _manifest(manifest) {
 }
 
 void BatchFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_size) {
     // NOTE: thread safe so long as you aren't modifying the manifest
     // NOTE: dest memory must already be allocated at the correct size
+    // NOTE: end_i - begin_i may not be a full block for the last
+    // block_num
 
-    uint begin_i = block_num * block_size;
-    uint end_i = (block_num + 1) * block_size;
-
+    size_t begin_i = block_num * block_size;
+    size_t end_i = min((block_num + 1) * (size_t)block_size, _manifest->getSize());
+    
     // ensure we stay within bounds of manifest
     assert(begin_i <= _manifest->getSize());
     assert(end_i <= _manifest->getSize());
@@ -56,12 +58,12 @@ void BatchFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_siz
 }
 
 void BatchFileLoader::loadFile(Buffer* buff, const string& filename) {
-    off_t size = getSize(filename);
+    off_t size = getFileSize(filename);
     ifstream fin(filename, ios::binary);
     buff->read(fin, size);
 }
 
-off_t BatchFileLoader::getSize(const string& filename) {
+off_t BatchFileLoader::getFileSize(const string& filename) {
     // ensure that filename exists and get its size
 
     struct stat stats;
@@ -73,4 +75,8 @@ off_t BatchFileLoader::getSize(const string& filename) {
     }
 
     return stats.st_size;
+}
+
+uint BatchFileLoader::objectCount() {
+    return _manifest->getSize();
 }

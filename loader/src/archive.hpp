@@ -120,8 +120,7 @@ public:
                   int subsetPercent,
                   MediaParams* params,
                   MediaParams* ingestParams,
-                  int targetTypeSize,
-                  int targetConversion);
+                  int targetTypeSize);
 
     virtual ~ArchiveReader();
 

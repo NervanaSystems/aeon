@@ -38,7 +38,8 @@ extern void* start(int* itemCount, int batchSize,
                                     targetSize, targetTypeSize,
                                     targetConversion,
                                     subsetPercent,
-                                    mediaParams, deviceParams, ingestParams);
+                                    mediaParams, deviceParams, ingestParams, 
+                                    "", "");
         int result = loader->start();
         if (result != 0) {
             printf("Could not start data loader. Error %d", result);

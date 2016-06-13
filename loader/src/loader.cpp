@@ -27,6 +27,7 @@
 #include "matrix.hpp"
 #include "device.hpp"
 #include "loader.hpp"
+#include "batch_loader_cpio_cache.hpp"
 
 using namespace std;
 
@@ -229,24 +230,22 @@ void DecodeThreadPool::manage() {
     _managerStopped = true;
 }
 
-ReadThread::ReadThread(const shared_ptr<BufferPool>& out, const shared_ptr<Reader>& reader)
-: ThreadPool(1), _out(out), _reader(reader) {
+ReadThread::ReadThread(const shared_ptr<BufferPool>& out, const shared_ptr<BatchIterator>& batch_iterator)
+: ThreadPool(1), _out(out), _batch_iterator(batch_iterator) {
     assert(_count == 1);
 }
 
 void ReadThread::work(int id) {
     // Fill input buffers.
+    // TODO: make sure this locking still makes sense with new
+    // BatchIterator
     {
         unique_lock<mutex> lock(_out->getMutex());
         while (_out->full() == true) {
             _out->waitForNonFull(lock);
         }
         BufferPair& bufPair = _out->getForWrite();
-        int result = _reader->read(bufPair);
-        if (result == -1) {
-            _done = true;
-            throw std::runtime_error("Could not read data\n");
-        }
+        _batch_iterator->read(bufPair);
         _out->advanceWritePos();
     }
     _out->signalNonEmpty();
@@ -262,20 +261,37 @@ Loader::Loader(int* itemCount, int batchSize,
        int targetConversion, int subsetPercent,
        MediaParams* mediaParams,
        DeviceParams* deviceParams,
-       MediaParams* ingestParams)
+       MediaParams* ingestParams,
+       const char* manifestFilename,
+       const char* cacheDir)
 : _first(true),
   _batchSize(batchSize),
   _datumSize(datumSize), _datumTypeSize(datumTypeSize),
   _targetSize(targetSize), _targetTypeSize(targetTypeSize),
   _readBufs(nullptr), _decodeBufs(nullptr), _readThread(nullptr), _decodeThreads(nullptr),
-  _device(nullptr), _reader(nullptr), _mediaParams(mediaParams) {
+  _device(nullptr), _batch_iterator(nullptr), _mediaParams(mediaParams)
+  {
+    // TODO: not a constant
+    uint _macroBatchSize = 1024;
     _device = Device::create(deviceParams);
-    _reader = shared_ptr<ArchiveReader>(new ArchiveReader(itemCount, batchSize, repoDir, archiveDir,
-                                indexFile, archivePrefix,
-                                shuffle, reshuffle,
-                                startFileIdx, subsetPercent,
-                                mediaParams, ingestParams,
-                                targetTypeSize, targetConversion));
+    // TODO: subsetPercent
+    // TODO: shuffle
+    // TODO: reshuffle
+    // TODO: itemCount
+    // TODO: batchSize
+    // TODO: startFileIdx
+    // TODO: mediaParams
+    // TODO: ingestParams
+    // TODO: targetTypeSize
+    // TODO: targetConversion
+    _batch_iterator = shared_ptr<BatchIterator>(new BatchIterator(
+       shared_ptr<BatchLoaderCPIOCache>(new BatchLoaderCPIOCache(
+            cacheDir,
+            shared_ptr<BatchFileLoader>(new BatchFileLoader(
+                shared_ptr<Manifest>(new Manifest(manifestFilename))
+            ))
+        )), _macroBatchSize
+    ));
 }
 
 Loader::~Loader() {
@@ -289,7 +305,7 @@ int Loader::start() {
         // Start the read buffers off with a reasonable size. They will
         // get resized as needed.
         _readBufs = shared_ptr<BufferPool>(new BufferPool(dataLen / 8, targetLen));
-        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _reader));
+        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
         bool pinned = (_device->_type != CPU);
         _decodeBufs = shared_ptr<BufferPool>(new BufferPool(dataLen, targetLen, pinned));
         int numCores = thread::hardware_concurrency();
@@ -328,7 +344,7 @@ void Loader::stop() {
 
 int Loader::reset() {
     stop();
-    _reader->reset();
+    _batch_iterator->reset();
     start();
     return 0;
 }
@@ -364,8 +380,8 @@ void Loader::next() {
     }
 }
 
-std::shared_ptr<Reader> Loader::getReader() {
-    return _reader;
+std::shared_ptr<BatchIterator> Loader::getBatchIterator() {
+    return _batch_iterator;
 }
 
 std::shared_ptr<Device> Loader::getDevice() {

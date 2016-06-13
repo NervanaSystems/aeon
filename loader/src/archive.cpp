@@ -148,8 +148,7 @@ ArchiveReader::ArchiveReader(int* itemCount, int batchSize,
               int subsetPercent,
               MediaParams* params,
               MediaParams* ingestParams,
-              int targetTypeSize,
-              int targetConversion)
+              int targetTypeSize)
 : Reader(batchSize, repoDir, indexFile, shuffle, reshuffle, subsetPercent),
   _archiveDir(archiveDir), _indexFile(indexFile),
   _archivePrefix(archivePrefix),
