@@ -258,7 +258,7 @@ Loader::Loader(int* itemCount, int batchSize,
        int startFileIdx,
        int datumSize, int datumTypeSize,
        int targetSize, int targetTypeSize,
-       int targetConversion, int subsetPercent,
+       int subsetPercent,
        MediaParams* mediaParams,
        DeviceParams* deviceParams,
        MediaParams* ingestParams,
@@ -283,7 +283,6 @@ Loader::Loader(int* itemCount, int batchSize,
     // TODO: mediaParams
     // TODO: ingestParams
     // TODO: targetTypeSize
-    // TODO: targetConversion
     _batch_iterator = shared_ptr<BatchIterator>(new BatchIterator(
        shared_ptr<BatchLoaderCPIOCache>(new BatchLoaderCPIOCache(
             cacheDir,

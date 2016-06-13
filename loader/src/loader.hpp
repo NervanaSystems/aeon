@@ -118,7 +118,7 @@ public:
            int startFileIdx,
            int datumSize, int datumTypeSize,
            int targetSize, int targetTypeSize,
-           int targetConversion, int subsetPercent,
+           int subsetPercent,
            MediaParams* mediaParams,
            DeviceParams* deviceParams,
            MediaParams* ingestParams,

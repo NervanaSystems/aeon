@@ -99,7 +99,6 @@ int test(const char* repoDir, const char* indexFile,
     int targetSize = 1;
     int datumTypeSize = 1;
     int targetTypeSize = 4;
-    int targetConversion = 1;
     int epochCount = 2;
     int minibatchCount = 65;
     int itemCount = 0;
@@ -122,7 +121,7 @@ int test(const char* repoDir, const char* indexFile,
     Loader loader(&itemCount, batchSize, repoDir, archiveDir.c_str(),
                   indexFile, "archive-",
                   false, false, 0, datumSize, datumTypeSize,
-                  targetSize, targetTypeSize, targetConversion, 100,
+                  targetSize, targetTypeSize, 100,
                   &mediaParams, &deviceParams, &ingestParams, "", "");
     unsigned int singleSum = single(&loader, epochCount,
                                     minibatchCount, batchSize,
