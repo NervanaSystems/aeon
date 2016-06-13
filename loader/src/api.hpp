@@ -24,8 +24,7 @@ extern void* start(int* itemCount, int batchSize,
                    int targetSize, int targetTypeSize,
                    int subsetPercent,
                    MediaParams* mediaParams,
-                   DeviceParams* deviceParams,
-                   MediaParams* ingestParams) {
+                   DeviceParams* deviceParams) {
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
         Loader* loader = new Loader(itemCount, batchSize,
@@ -36,7 +35,7 @@ extern void* start(int* itemCount, int batchSize,
                                     datumSize, datumTypeSize,
                                     targetSize, targetTypeSize,
                                     subsetPercent,
-                                    mediaParams, deviceParams, ingestParams, 
+                                    mediaParams, deviceParams,
                                     "", "");
         int result = loader->start();
         if (result != 0) {

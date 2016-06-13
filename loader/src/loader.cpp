@@ -261,7 +261,6 @@ Loader::Loader(int* itemCount, int batchSize,
        int subsetPercent,
        MediaParams* mediaParams,
        DeviceParams* deviceParams,
-       MediaParams* ingestParams,
        const char* manifestFilename,
        const char* cacheDir)
 : _first(true),
@@ -275,10 +274,7 @@ Loader::Loader(int* itemCount, int batchSize,
     uint _macroBatchSize = 1024;
     _device = Device::create(deviceParams);
     // TODO: reshuffle
-    // TODO: batchSize
     // TODO: startFileIdx
-    // TODO: mediaParams
-    // TODO: ingestParams
     auto manifest = shared_ptr<Manifest>(new Manifest(manifestFilename, shuffle));
 
     *itemCount = manifest->getSize();

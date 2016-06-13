@@ -121,7 +121,6 @@ public:
            int subsetPercent,
            MediaParams* mediaParams,
            DeviceParams* deviceParams,
-           MediaParams* ingestParams,
            const char* manifestFilename,
            const char* cacheDir);
 
