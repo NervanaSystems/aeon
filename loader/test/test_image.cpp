@@ -364,7 +364,7 @@ TEST(etl, multi_crop_noresize) {
         EXPECT_EQ(224,image.size().width);
         EXPECT_EQ(224,image.size().height);
 
-        EXPECT_EQ(transformed->size(), 5);
+        EXPECT_EQ(transformed->get_image_count(), 5);
         // First image in transformed should be the center crop, unflipped
         EXPECT_TRUE(check_value(transformed,   0,   0,  16,  16));
         EXPECT_TRUE(check_value(transformed, 223, 223, 239, 239));

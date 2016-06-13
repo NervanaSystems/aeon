@@ -111,7 +111,7 @@ namespace nervana {
         bool add(cv::Mat img) {
             _images.push_back(img);
             return test_image_sizes();
-       }
+        }
         bool add(const std::vector<cv::Mat>& images) {
             for( auto mat : images ) {
                 _images.push_back(mat);
@@ -120,7 +120,6 @@ namespace nervana {
         }
         virtual ~decoded() override {}
 
-        void add(cv::Mat img) { _images.push_back(img); }
         virtual MediaType get_type() override { return MediaType::IMAGE; }
         cv::Mat& get_image(int index) { return _images[index]; }
         cv::Size2i get_image_size() const {return _images[0].size(); }
