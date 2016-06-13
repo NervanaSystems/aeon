@@ -107,18 +107,32 @@ namespace nervana {
     class image::decoded : public decoded_media {
     public:
         decoded() {}
-        decoded(cv::Mat img) : _img(img) { _images.push_back(_img); }
-        decoded(const std::vector<cv::Mat>& images) { _images = images; }
+        decoded(cv::Mat img) { _images.push_back(img); }
+        bool add(cv::Mat img) {
+            _images.push_back(img);
+            return test_image_sizes();
+       }
+        bool add(const std::vector<cv::Mat>& images) {
+            for( auto mat : images ) {
+                _images.push_back(mat);
+            }
+            return test_image_sizes();
+        }
         virtual ~decoded() override {}
 
         void add(cv::Mat img) { _images.push_back(img); }
         virtual MediaType get_type() override { return MediaType::IMAGE; }
         cv::Mat& get_image(int index) { return _images[index]; }
         cv::Size2i get_image_size() const {return _images[0].size(); }
-        size_t size() const { return _images.size(); }
+        size_t get_image_count() const { return _images.size(); }
 
     private:
-        cv::Mat _img;
+        bool test_image_sizes() {
+            for( int i=1; i<_images.size(); i++ ) {
+                if(_images[0].size()!=_images[i].size()) return false;
+            }
+            return true;
+        }
         std::vector<cv::Mat> _images;
     };
 

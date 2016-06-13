@@ -35,7 +35,9 @@ shared_ptr<image::decoded> image::extractor::extract(char* inbuf, int insize)
     cv::Mat output_img;
     cv::Mat input_img(1, insize, _pixel_type, inbuf);
     cv::imdecode(input_img, _color_mode, &output_img);
-    return make_shared<image::decoded>(output_img);
+    auto rc = make_shared<image::decoded>();
+    rc->add(output_img);    // don't need to check return for single image
+    return rc;
 }
 
 
@@ -70,7 +72,7 @@ shared_ptr<image::decoded> image::transformer::transform(
                                                  shared_ptr<image::decoded> img)
 {
     vector<cv::Mat> finalImageList;
-    for(int i=0; i<img->size(); i++) {
+    for(int i=0; i<img->get_image_count(); i++) {
         cv::Mat rotatedImage;
         rotate(img->get_image(i), rotatedImage, img_xform->angle);
         cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
@@ -89,7 +91,11 @@ shared_ptr<image::decoded> image::transformer::transform(
         finalImageList.push_back(*finalImage);
     }
 
-    return make_shared<image::decoded>(finalImageList);
+    auto rc = make_shared<image::decoded>();
+    if(rc->add(finalImageList) == false) {
+        rc = nullptr;
+    }
+    return rc;
 }
 
 void image::transformer::rotate(const cv::Mat& input, cv::Mat& output, int angle)
@@ -289,6 +295,7 @@ image::loader::loader(shared_ptr<const image::config> cfg)
 
 void image::loader::load(char* outbuf, int outsize, shared_ptr<image::decoded> input)
 {
+    // for (int i=0; i<input->get_image_size(); i++ )
     auto img = input->get_image(0);
     int all_pixels = img.channels() * img.total();
 

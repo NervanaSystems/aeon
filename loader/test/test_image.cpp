@@ -132,7 +132,7 @@ void test_image(vector<unsigned char>& img, int channels) {
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
     ASSERT_NE(nullptr,decoded);
-    EXPECT_EQ(1,decoded->size());
+    EXPECT_EQ(1,decoded->get_image_count());
     cv::Size2i size = decoded->get_image_size();
     EXPECT_EQ(256,size.width);
     EXPECT_EQ(256,size.height);
@@ -153,6 +153,24 @@ void test_image(vector<unsigned char>& img, int channels) {
     //         }
     //     }
     // }
+}
+
+TEST(etl, decoded_image) {
+    cv::Mat img1 = cv::Mat( 256, 256, CV_8UC3 );
+    cv::Mat img2 = cv::Mat( 256, 256, CV_8UC3 );
+    cv::Mat img3 = cv::Mat( 256, 256, CV_8UC3 );
+    cv::Mat img4 = cv::Mat( 100, 100, CV_8UC3 );
+
+    vector<cv::Mat> v1{ img1, img2, img3 };
+    vector<cv::Mat> v2{ img4 };
+
+    image::decoded decoded;
+    EXPECT_TRUE(decoded.add(img1));
+    EXPECT_TRUE(decoded.add(img2));
+    EXPECT_TRUE(decoded.add(img3));
+    EXPECT_TRUE(decoded.add(v1));
+    EXPECT_FALSE(decoded.add(img4));    // image size does not match
+    EXPECT_FALSE(decoded.add(v2));
 }
 
 TEST(etl, image_config) {
