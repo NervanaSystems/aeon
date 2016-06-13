@@ -140,7 +140,7 @@ namespace nervana {
     public:
         extractor(std::shared_ptr<const image::config>);
         ~extractor() {}
-        virtual std::shared_ptr<image::decoded> extract(char*, int) override;
+        virtual std::shared_ptr<image::decoded> extract(const char*, int) override;
 
         const int get_channel_count() {return _color_mode == CV_LOAD_IMAGE_COLOR ? 3 : 1;}
     private:

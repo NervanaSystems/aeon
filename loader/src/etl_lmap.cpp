@@ -23,7 +23,7 @@ nervana::lmap::extractor::extractor( std::istream& in ) {
     }
 }
 
-shared_ptr<nervana::lmap::decoded> nervana::lmap::extractor::extract(char* data, int size) {
+shared_ptr<nervana::lmap::decoded> nervana::lmap::extractor::extract(const char* data, int size) {
     auto rc = make_shared<decoded>();
     stringstream ss( string(data, size) );
     string label;

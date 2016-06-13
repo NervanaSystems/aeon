@@ -25,7 +25,7 @@ nervana::bbox::extractor::extractor( const vector<string>& labels ) {
     }
 }
 
-shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(char* data, int size) {
+shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(const char* data, int size) {
     shared_ptr<decoded> rc = make_shared<decoded>();
     string buffer( data, size );
     json j = json::parse(buffer);

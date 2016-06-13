@@ -57,7 +57,7 @@ class nervana::bbox::extractor : public nervana::interface::extractor<nervana::b
 public:
     extractor( const std::vector<std::string>& label_list );
     virtual ~extractor(){}
-    virtual std::shared_ptr<bbox::decoded> extract(char*, int) override;
+    virtual std::shared_ptr<bbox::decoded> extract(const char*, int) override;
     static nlohmann::json create_box( const cv::Rect& rect, const std::string& label );
     static nlohmann::json create_metadata( const std::vector<nlohmann::json>& boxes );
 private:

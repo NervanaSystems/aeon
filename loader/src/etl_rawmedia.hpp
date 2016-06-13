@@ -62,7 +62,7 @@ namespace nervana {
         bool validate() {}
 
         std::unordered_map<std::string, AVMediaType> _avtype_map = {{"audio", AVMEDIA_TYPE_AUDIO},
-                                                                    {"video", AVMEDIA_TYPE_AUDIO}};
+                                                                    {"video", AVMEDIA_TYPE_VIDEO}};
 
     };
 
@@ -109,7 +109,7 @@ namespace nervana {
         }
 
         ~extractor() {}
-        virtual std::shared_ptr<rawmedia::decoded> extract(char*, int) override;
+        virtual std::shared_ptr<rawmedia::decoded> extract(const char*, int) override;
 
     private:
         void decode_frame(AVPacket* packet,

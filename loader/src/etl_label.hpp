@@ -96,12 +96,12 @@ namespace nervana {
 
         ~extractor() {}
 
-        std::shared_ptr<label::decoded> extract(char* buf, int bufSize) override
+        std::shared_ptr<label::decoded> extract(const char* buf, int bufSize) override
         {
             if (bufSize != 4) {
                 throw runtime_error("Only 4 byte buffers can be loaded as int32");
             }
-            return make_shared<label::decoded>(*reinterpret_cast<int *>(buf) + _ex_offset);
+            return make_shared<label::decoded>(*reinterpret_cast<const int *>(buf) + _ex_offset);
         }
 
     private:

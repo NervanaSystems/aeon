@@ -13,7 +13,7 @@ namespace nervana {
 template<typename T> class nervana::interface::extractor {
 public:
     virtual ~extractor() {}
-    virtual std::shared_ptr<T> extract(char*, int) = 0;
+    virtual std::shared_ptr<T> extract(const char*, int) = 0;
 };
 
 template<typename T, typename S> class nervana::interface::transformer {

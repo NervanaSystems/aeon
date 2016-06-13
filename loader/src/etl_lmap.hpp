@@ -42,7 +42,7 @@ public:
     extractor( const std::vector<std::string>& labels );
     extractor( std::istream& in );
     virtual ~extractor(){}
-    virtual std::shared_ptr<nervana::lmap::decoded> extract(char*, int) override;
+    virtual std::shared_ptr<nervana::lmap::decoded> extract(const char*, int) override;
 
     std::unordered_map<std::string,int>  get_data() { return _dictionary; }
 

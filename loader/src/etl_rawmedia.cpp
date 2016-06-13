@@ -45,9 +45,9 @@ void rawmedia::decoded::grow_bufs(int grow)
     _buf_size += grow;
 }
 
-shared_ptr<rawmedia::decoded> rawmedia::extractor::extract(char* item, int item_size)
+shared_ptr<rawmedia::decoded> rawmedia::extractor::extract(const char* item, int item_size)
 {
-    auto _raw->= make_shared<rawmedia::decoded>();
+    auto _raw = make_shared<rawmedia::decoded>();
 
     _format = avformat_alloc_context();
     if (_format == 0) {

@@ -146,7 +146,7 @@ namespace nervana {
     public:
         extractor(std::shared_ptr<const specgram::config>);
         ~extractor() {}
-        virtual std::shared_ptr<specgram::decoded> extract(char*, int) override;
+        virtual std::shared_ptr<specgram::decoded> extract(const char*, int) override;
 
     private:
         const float PI = 3.1415927;
