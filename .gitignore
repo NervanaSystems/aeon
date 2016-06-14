@@ -33,6 +33,7 @@
 *.files
 *.includes
 *.user
+*.autosave
 
 .DS_Store
 @eaDir/
