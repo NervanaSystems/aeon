@@ -104,6 +104,11 @@ private:
     std::shared_ptr<Media>      _media;
 };
 
+/* ArchiveReader
+ *
+ * The ArchiveReader should take a set of cpio files and load them into
+ * a BufferPair on each invocation of read()
+ */
 class ArchiveReader : public Reader {
 public:
     ArchiveReader(int* itemCount, int batchSize,
@@ -115,8 +120,7 @@ public:
                   int subsetPercent,
                   MediaParams* params,
                   MediaParams* ingestParams,
-                  int targetTypeSize,
-                  int targetConversion);
+                  int targetTypeSize);
 
     virtual ~ArchiveReader();
 
@@ -124,6 +128,8 @@ public:
 
     int reset();
 
+    // TODO: is this actually used anywhere?  Do we need to continue
+    // supporting it?
     void addFiles( const std::vector<std::string>& files );
 
 private:

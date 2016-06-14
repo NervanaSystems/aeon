@@ -27,6 +27,13 @@
 #include <utility>
 #include <algorithm>
 
+/* ThreadPool
+ *
+ * A collection of a constant number of threads implemented
+ * using std::thread.  Methods are provided to start, stop and join all
+ * N threads simultaneously.
+ *
+ */
 class ThreadPool {
 public:
     explicit ThreadPool(int count)

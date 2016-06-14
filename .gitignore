@@ -41,3 +41,7 @@ bin/
 *.log
 output/
 *.png
+
+# vim
+*.swp
+*.swo

@@ -135,7 +135,10 @@ void BatchFileTrailer::read(IfStream& ifs) {
 
 
 BatchFileReader::BatchFileReader() : _fileHeaderOffset(0)  {
-    _ifs.exceptions(_ifs.failbit);
+    // this causes ifs.open to raise an exception which we don't
+    // actually want since we can just check after opening to see if the
+    // file was successfully opened or not
+    // _ifs.exceptions(_ifs.failbit);
 }
 
 BatchFileReader::BatchFileReader(const string& fileName) {
@@ -147,6 +150,7 @@ BatchFileReader::~BatchFileReader() {
 }
 
 void BatchFileReader::open(const string& fileName) {
+    // TODO: depricate?
     assert(_ifs.is_open() == false);
     _ifs.open(fileName, IfStream::binary);
     uint fileSize;
@@ -155,37 +159,37 @@ void BatchFileReader::open(const string& fileName) {
     _fileHeader.read(_ifs);
 }
 
+bool BatchFileReader::tryOpen(const string& fileName) {
+    // returns true if file was opened successfully.
+    assert(_ifs.is_open() == false);
+    _ifs.open(fileName, IfStream::binary);
+    if(!_ifs) {
+        return false;
+    }
+
+    uint fileSize;
+    _recordHeader.read(_ifs, &fileSize);
+    if(fileSize != sizeof(_fileHeader)) {
+        return false;
+    }
+
+    _fileHeader.read(_ifs);
+
+    return true;
+}
+
 void BatchFileReader::close() {
     if (_ifs.is_open() == true) {
         _ifs.close();
     }
 }
 
-// void BatchFileReader::readItem(BufferPair& buffers) {
-//     uint datumSize;
-//     uint targetSize;
-//     _recordHeader.read(_ifs, &datumSize);
-//     buffers.first->read(_ifs, datumSize);
-//     _ifs.readPadding(datumSize);
-//     _recordHeader.read(_ifs, &targetSize);
-//     buffers.second->read(_ifs, targetSize);
-//     _ifs.readPadding(targetSize);
-// }
-
-// DataPair BatchFileReader::readItem() {
-//     uint datumSize = 0;
-//     _recordHeader.read(_ifs, &datumSize);
-//     unique_ptr<ByteVect> datum(new ByteVect((size_t) datumSize));
-//     _ifs.read(&(*datum)[0], datumSize);
-//     _ifs.readPadding(datumSize);
-
-//     uint targetSize = 0;
-//     _recordHeader.read(_ifs, &targetSize);
-//     unique_ptr<ByteVect> target(new ByteVect((size_t) targetSize));
-//     _ifs.read(&(*target)[0], targetSize);
-//     _ifs.readPadding(targetSize);
-//     return DataPair(std::move(datum), std::move(target));
-// }
+void BatchFileReader::readToBuffer(Buffer& dest) {
+    uint datumSize;
+    _recordHeader.read(_ifs, &datumSize);
+    dest.read(_ifs, datumSize);
+    _ifs.readPadding(datumSize);
+}
 
 shared_ptr<ByteVect> BatchFileReader::read() {
     uint datumSize = 0;
@@ -195,6 +199,7 @@ shared_ptr<ByteVect> BatchFileReader::read() {
     _ifs.readPadding(datumSize);
     return datum;
 }
+
 int BatchFileReader::itemCount() {
     return _fileHeader._itemCount;
 }

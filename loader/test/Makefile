@@ -26,7 +26,12 @@ SRCS := \
 	test_image.cpp \
 	test_lmap.cpp \
 	test_provider.cpp \
-	test_util.cpp
+	test_util.cpp \
+	manifest_test.cpp \
+	manifest_maker.cpp \
+	batch_file_loader_test.cpp \
+	batch_loader_cpio_cache.cpp
+
 TOBJS 			= $(subst .cpp,.o,$(SRCS))
 OBJS 			= $(subst .c,.o,$(TOBJS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -DCURDIR=\"$(CURDIR)\"

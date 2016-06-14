@@ -29,28 +29,42 @@
 
 #include "streams.hpp"
 
+using namespace std;
+
+/* Buffer
+ *
+ * Buffer contains an ordered list of items in contiguous memory.  The
+ * position of each item in the memory is recorded in _items and the
+ * length of each item is stored in _lens.
+ */
 class Buffer {
 public:
     explicit Buffer(int size, bool pinned = false);
     Buffer(char* data, int size);
     virtual ~Buffer();
-    void reset();
-    void dump();
-    void pushItem(int len);
-    char* getItem(int index, int& len);
-    int getItemCount();
-    char* getCurrent();
-    uint getSize();
-    uint getLevel();
+
+    void read(ifstream& ifs, int size);
     void read(IfStream& ifs, int size);
-    void read(char* src, int size);
+    void read(const char* src, int size);
+    void reset();
+    char* getItem(int index, int& len);
+
+    void dump();
+
+    int getItemCount();
+    uint getSize();
 
 private:
     Buffer() = delete;
-    void resizeIfNeeded(int inc);
-    void resize(int inc);
     char* alloc();
     void dealloc(char* data);
+    void resize(int inc);
+
+    uint getLevel();
+    void resizeIfNeeded(int inc);
+
+    void pushItem(int len);
+    char* getCurrent();
 
 public:
     char*                       _data;
