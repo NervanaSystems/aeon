@@ -265,7 +265,9 @@ void ArchiveReader::readThread() {
             _fileListMutex.lock();
             if( _fileListIndex >= _fileList.size() ) {
                 _fileListIndex = 0;
-                shuffleFileList();
+                if(_shuffle) {
+                    shuffleFileList();
+                }
             }
             string fileName = _fileList[ _fileListIndex++ ];
             _fileListMutex.unlock();
