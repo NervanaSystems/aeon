@@ -36,6 +36,10 @@ bool sorted(vector<string> words) {
 }
 
 TEST(buffer, shuffle) {
+    // create a buffer with lots of words in sorted order.  assert
+    // that they are sorted, then shuffle, then assert that they are
+    // not sorted
+
     Buffer b(0);
 
     b.read("abc", 3);
