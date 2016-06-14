@@ -18,6 +18,8 @@
 #include <cuda.h>
 #endif
 
+#include <random>
+#include <algorithm>
 #include <vector>
 #include <thread>
 #include <mutex>
@@ -49,6 +51,15 @@ void Buffer::reset() {
     _idx = 0;
     _items.clear();
     _lens.clear();
+}
+
+void Buffer::shuffle(uint seed) {
+    // TODO: instead of reseeed the shuffle, store these in a pair
+    std::minstd_rand0 rand_items(seed);
+    std::shuffle(_items.begin(), _items.end(), rand_items);
+
+    std::minstd_rand0 rand_lens(seed);
+    std::shuffle(_lens.begin(), _lens.end(), rand_lens);
 }
 
 void Buffer::dump() {

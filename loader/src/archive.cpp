@@ -288,6 +288,7 @@ void ArchiveReader::readThread() {
                 tmpBuffer[i] = DataPair(datum,target);
             }
             b.close();
+            // shuffle the vector of shared pointers
             if(_shuffle) shuffle(tmpBuffer.begin(), tmpBuffer.end(), rand);
             _readQueueMutex.lock();
             for( size_t i=0; i<tmpBuffer.size(); i++ ) {

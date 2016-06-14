@@ -50,6 +50,7 @@ public:
     char* getItem(int index, int& len);
 
     void dump();
+    void shuffle(uint seed);
 
     int getItemCount();
     uint getSize();

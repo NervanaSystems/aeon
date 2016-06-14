@@ -24,6 +24,7 @@ public:
         read(reinterpret_cast<char*>(data), sizeof(T));
     }
 
+    // TODO: why does this need to exist?
     void read(char* data, int len) {
         std::ifstream::read(data, len);
     }
@@ -45,10 +46,12 @@ public:
         write(reinterpret_cast<char*>(data), sizeof(T));
     }
 
+    // TODO: why does this need to exist?
     void write(char* data, int len) {
         std::ofstream::write(data, len);
     }
 
+    // TODO: move to CPIO file writing
     void writePadding(uint length) {
         // Write a byte if length is odd.
         if (length % 2 == 0) {

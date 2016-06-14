@@ -273,6 +273,7 @@ Loader::Loader(int* itemCount, int batchSize,
     uint _macroBatchSize = 1024;
     _device = Device::create(deviceParams);
     // TODO: reshuffle
+    // TODO: shuffle seeds
     // TODO: startFileIdx
     auto manifest = shared_ptr<Manifest>(new Manifest(manifestFilename, shuffle));
 
