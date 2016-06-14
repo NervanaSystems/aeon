@@ -13,20 +13,29 @@
  limitations under the License.
 */
 
-#pragma once
+#include <math.h>
 
-#include "batch_loader.hpp"
+#include "buffer.hpp"
 
-class BatchIterator {
-public:
-    BatchIterator(shared_ptr<BatchLoader> loader, uint block_size);
+#include "sequential_batch_iterator.hpp"
 
-    void read(BufferPair& dest);
-    void reset();
+SequentialBatchIterator::SequentialBatchIterator(shared_ptr<BatchLoader> loader, uint block_size)
+    : _loader(loader), _block_size(block_size) {
+    _i = 0;
 
-private:
-    shared_ptr<BatchLoader> _loader;
-    uint _i;
-    uint _block_size;
-    uint _count;
+    _count = ceil((float)_loader->objectCount() / (float)_block_size);
 };
+
+void SequentialBatchIterator::read(BufferPair& dest) {
+    _loader->loadBlock(dest, _i, _block_size);
+
+    _i += 1;
+
+    if(_i >= _count) {
+        _i = 0;
+    }
+}
+
+void SequentialBatchIterator::reset() {
+    _i = 0;
+}

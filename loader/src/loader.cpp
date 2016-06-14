@@ -230,7 +230,7 @@ void DecodeThreadPool::manage() {
     _managerStopped = true;
 }
 
-ReadThread::ReadThread(const shared_ptr<BufferPool>& out, const shared_ptr<BatchIterator>& batch_iterator)
+ReadThread::ReadThread(const shared_ptr<BufferPool>& out, const shared_ptr<SequentialBatchIterator>& batch_iterator)
 : ThreadPool(1), _out(out), _batch_iterator(batch_iterator) {
     assert(_count == 1);
 }
@@ -279,7 +279,7 @@ Loader::Loader(int* itemCount, int batchSize,
 
     *itemCount = manifest->getSize();
 
-    _batch_iterator = shared_ptr<BatchIterator>(new BatchIterator(
+    _batch_iterator = shared_ptr<SequentialBatchIterator>(new SequentialBatchIterator(
        shared_ptr<BatchLoaderCPIOCache>(new BatchLoaderCPIOCache(
             cacheDir,
             shared_ptr<BatchFileLoader>(new BatchFileLoader(
@@ -375,7 +375,7 @@ void Loader::next() {
     }
 }
 
-std::shared_ptr<BatchIterator> Loader::getBatchIterator() {
+std::shared_ptr<SequentialBatchIterator> Loader::getBatchIterator() {
     return _batch_iterator;
 }
 

@@ -36,8 +36,8 @@ SRCS            := \
 	manifest.cpp \
 	batch_file_loader.cpp \
 	batch_loader_cpio_cache.cpp \
-	batch_iterator.cpp
-
+	batch_iterator.cpp \
+	sequential_batch_iterator.cpp
 OBJS 			= $(subst .cpp,.o,$(SRCS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -fPIC
 CFLAGSDBG       := -g -Wall -O0 -std=c++11

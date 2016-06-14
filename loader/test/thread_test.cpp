@@ -35,7 +35,7 @@ int single(Loader* loader, int epochCount, int minibatchCount,
            int batchSize, int datumSize, int targetSize,
            ImageParams* mediaParams, ImageIngestParams* ingestParams) {
     unsigned int sm = 0;
-    shared_ptr<BatchIterator> reader = loader->getBatchIterator();
+    shared_ptr<SequentialBatchIterator> reader = loader->getBatchIterator();
     shared_ptr<Media> media = Media::create(mediaParams, ingestParams, 0);
     unique_ptr<char> dataBuf = unique_ptr<char>(new char[datumSize]);
     memset(dataBuf.get(), 0, datumSize);
