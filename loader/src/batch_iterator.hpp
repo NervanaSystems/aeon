@@ -15,19 +15,11 @@
 
 #pragma once
 
-#include "batch_loader.hpp"
-#include "batch_iterator.hpp"
+#include "buffer.hpp"
 
-class SequentialBatchIterator : public BatchIterator {
+class BatchIterator
+{
 public:
-    SequentialBatchIterator(shared_ptr<BatchLoader> loader, uint block_size);
-
-    void read(BufferPair& dest);
-    void reset();
-
-private:
-    shared_ptr<BatchLoader> _loader;
-    uint _i;
-    uint _block_size;
-    uint _count;
+    virtual void read(BufferPair& dest) = 0;
+    virtual void reset() = 0;
 };

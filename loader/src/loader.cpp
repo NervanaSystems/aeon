@@ -28,6 +28,7 @@
 #include "device.hpp"
 #include "loader.hpp"
 #include "batch_loader_cpio_cache.hpp"
+#include "sequential_batch_iterator.hpp"
 
 using namespace std;
 
@@ -230,7 +231,7 @@ void DecodeThreadPool::manage() {
     _managerStopped = true;
 }
 
-ReadThread::ReadThread(const shared_ptr<BufferPool>& out, const shared_ptr<SequentialBatchIterator>& batch_iterator)
+ReadThread::ReadThread(const shared_ptr<BufferPool>& out, const shared_ptr<BatchIterator>& batch_iterator)
 : ThreadPool(1), _out(out), _batch_iterator(batch_iterator) {
     assert(_count == 1);
 }
@@ -375,7 +376,7 @@ void Loader::next() {
     }
 }
 
-std::shared_ptr<SequentialBatchIterator> Loader::getBatchIterator() {
+std::shared_ptr<BatchIterator> Loader::getBatchIterator() {
     return _batch_iterator;
 }
 
