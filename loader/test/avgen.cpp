@@ -87,8 +87,6 @@ void audio_encode_example(const char *filename)
     float t, tincr;
     uint8_t *outbuf;
 
-    printf("Audio encoding\n");
-
     /* find the MP2 encoder */
     codec = avcodec_find_encoder(CODEC_ID_MP2);
     if (!codec) {
@@ -96,7 +94,9 @@ void audio_encode_example(const char *filename)
         exit(1);
     }
 
-    c= avcodec_alloc_context3(codec);
+    c = avcodec_alloc_context3(codec);
+
+    c->sample_fmt = c->codec->sample_fmts[0];
 
     /* put sample parameters */
     c->bit_rate = 64000;
