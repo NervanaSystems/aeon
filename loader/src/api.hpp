@@ -20,8 +20,6 @@
 extern "C" {
 
 extern void* start(int* itemCount, int miniBatchSize,
-                   const char* repoDir, const char* archiveDir,
-                   const char* indexFile, const char* archivePrefix,
                    bool shuffleManifest, bool shuffleEveryEpoch,
                    int datumSize, int datumTypeSize,
                    int targetSize, int targetTypeSize,
@@ -34,8 +32,6 @@ extern void* start(int* itemCount, int miniBatchSize,
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
         Loader* loader = new Loader(itemCount, miniBatchSize,
-                                    repoDir, archiveDir,
-                                    indexFile, archivePrefix,
                                     shuffleManifest, shuffleEveryEpoch,
                                     datumSize, datumTypeSize,
                                     targetSize, targetTypeSize,

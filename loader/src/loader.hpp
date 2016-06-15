@@ -111,9 +111,7 @@ private:
  */
 class Loader {
 public:
-    Loader(int* itemCount, int _miniBatchSize,
-           const char* repoDir, const char* archiveDir,
-           const char* indexFile, const char* archivePrefix,
+    Loader(int* itemCount, int miniBatchSize,
            bool shuffleManifest, bool shuffleEveryEpoch,
            int datumSize, int datumTypeSize,
            int targetSize, int targetTypeSize,

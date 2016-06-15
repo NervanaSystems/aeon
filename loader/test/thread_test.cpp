@@ -118,8 +118,7 @@ int test(const char* repoDir, const char* indexFile,
     //archiveDir += "-ingested";
     CpuParams deviceParams(0, 0, dataBuffer, targetBuffer);
     ImageIngestParams ingestParams(false, true, 0, 0);
-    Loader loader(&itemCount, batchSize, repoDir, archiveDir.c_str(),
-                  indexFile, "archive-",
+    Loader loader(&itemCount, batchSize,
                   false, false, datumSize, datumTypeSize,
                   targetSize, targetTypeSize, 100,
                   &mediaParams, &deviceParams, "", 128, "");

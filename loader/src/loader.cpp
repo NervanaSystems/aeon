@@ -250,8 +250,6 @@ void ReadThread::work(int id) {
 }
 
 Loader::Loader(int* itemCount, int miniBatchSize,
-       const char* repoDir, const char* archiveDir,
-       const char* indexFile, const char* archivePrefix,
        bool shuffleManifest, bool shuffleEveryEpoch,
        int datumSize, int datumTypeSize,
        int targetSize, int targetTypeSize,
