@@ -122,7 +122,7 @@ public:
            MediaParams* mediaParams,
            DeviceParams* deviceParams,
            const char* manifestFilename,
-           const char* cacheDir);
+           const char* rootCacheDir);
 
     virtual ~Loader();
     int start();

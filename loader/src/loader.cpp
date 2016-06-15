@@ -29,6 +29,7 @@
 #include "loader.hpp"
 #include "batch_loader_cpio_cache.hpp"
 #include "sequential_batch_iterator.hpp"
+#include "shuffled_batch_iterator.hpp"
 
 using namespace std;
 
@@ -262,7 +263,7 @@ Loader::Loader(int* itemCount, int batchSize,
        MediaParams* mediaParams,
        DeviceParams* deviceParams,
        const char* manifestFilename,
-       const char* cacheDir)
+       const char* rootCacheDir)
 : _first(true),
   _batchSize(batchSize),
   _datumSize(datumSize), _datumTypeSize(datumTypeSize),
@@ -270,24 +271,38 @@ Loader::Loader(int* itemCount, int batchSize,
   _readBufs(nullptr), _decodeBufs(nullptr), _readThread(nullptr), _decodeThreads(nullptr),
   _device(nullptr), _batch_iterator(nullptr), _mediaParams(mediaParams)
   {
+    // TODO: rename to shuffleManifest and shuffleEveryEpoch
     // TODO: not a constant
     uint _macroBatchSize = 1024;
-    _device = Device::create(deviceParams);
-    // TODO: reshuffle
-    // TODO: shuffle seeds
-    // TODO: startFileIdx
-    auto manifest = shared_ptr<Manifest>(new Manifest(manifestFilename, shuffle));
+    // TODO: not a constant
+    uint _seed = 0;
 
+    _device = Device::create(deviceParams);
+
+    auto manifest = shared_ptr<Manifest>(new Manifest(manifestFilename, shuffle));
     *itemCount = manifest->getSize();
 
-    _batch_iterator = shared_ptr<SequentialBatchIterator>(new SequentialBatchIterator(
-       shared_ptr<BatchLoaderCPIOCache>(new BatchLoaderCPIOCache(
-            cacheDir,
-            shared_ptr<BatchFileLoader>(new BatchFileLoader(
-                manifest, subsetPercent
-            ))
-        )), _macroBatchSize
+    // build cacheDir from rootCacheDir and a hash of the manifest
+    stringstream cacheDirStream;
+    cacheDirStream << rootCacheDir << '/' << manifest->hash();
+    string cacheDir = cacheDirStream.str();
+
+    auto batchLoader = shared_ptr<BatchLoaderCPIOCache>(new BatchLoaderCPIOCache(
+        cacheDir.c_str(),
+        shared_ptr<BatchFileLoader>(new BatchFileLoader(
+            manifest, subsetPercent
+        ))
     ));
+
+    if(reshuffle) {
+        _batch_iterator = shared_ptr<ShuffledBatchIterator>(new ShuffledBatchIterator(
+             batchLoader, _macroBatchSize, _seed
+        ));
+    } else {
+        _batch_iterator = shared_ptr<SequentialBatchIterator>(new SequentialBatchIterator(
+             batchLoader, _macroBatchSize
+        ));
+    }
 }
 
 Loader::~Loader() {
