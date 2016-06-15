@@ -27,12 +27,12 @@ extern "C" {
 
 #include "gtest/gtest.h"
 
-#include "datagen.hpp"
+#include "imagegen.hpp"
 #include "avgen.hpp"
 
 using namespace std;
 
-DataGen _datagen;
+image_gen _datagen;
 
 static void CreateImageDataset() {
     std::chrono::high_resolution_clock timer;

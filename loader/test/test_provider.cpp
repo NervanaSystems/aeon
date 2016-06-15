@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "argtype.hpp"
-#include "datagen.hpp"
+#include "imagegen.hpp"
 #include "batchfile.hpp"
 
 #include "params.hpp"
@@ -12,7 +12,7 @@
 #include "provider.hpp"
 #include "json.hpp"
 
-extern DataGen _datagen;
+extern image_gen _datagen;
 
 using namespace std;
 using namespace nervana;
