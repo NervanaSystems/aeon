@@ -50,26 +50,44 @@ extern "C" {
 
 using namespace std;
 
-std::vector<unsigned char> gen_audio::render_target( int datumNumber ) {
-
+gen_audio::gen_audio() :
+    r{42}
+{
 }
 
-std::vector<unsigned char> gen_audio::render_datum( int datumNumber ) {
+vector<unsigned char> gen_audio::render_target( int datumNumber ) {
+    std::poisson_distribution<int> _word_count(3);
+    std::uniform_int_distribution<int> _word(0,vocab.size()-1);
+    vector<unsigned char> rc;
 
+    int word_count = _word_count(r)+1;
+    for(int i=0; i<word_count; i++) {
+        int word = _word(r);
+        string w = vocab[word];
+        if( i > 0 ) rc.push_back(' ');
+        rc.insert( rc.end(), w.begin(), w.end() );
+    }
+//    string result((char*)rc.data(),rc.size());
+//    cout << "'" << result << "'\n";
+    return rc;
+}
+
+vector<unsigned char> gen_audio::render_datum( int datumNumber ) {
+    int frequency = ((datumNumber % 7) + 1) * 1000;
+    return encode(frequency, 2000);
 }
 
 /*
  * Audio encoding example
  */
-void gen_audio::encode(const std::string& filename, float frequencyHz )
-{
+vector<unsigned char> gen_audio::encode(float frequencyHz, int duration) {
     AVCodec *codec;
-    AVCodecContext *c= NULL;
+    AVCodecContext *c= nullptr;
     int frame_size, i, j, out_size, outbuf_size;
-    FILE *f;
     short *samples;
     float t, tincr;
     uint8_t *outbuf;
+    vector<unsigned char> rc;
 
     /* find the MP2 encoder */
     codec = avcodec_find_encoder(CODEC_ID_MP2);
@@ -95,23 +113,16 @@ void gen_audio::encode(const std::string& filename, float frequencyHz )
 
     /* the codec gives us the frame size, in samples */
     frame_size = c->frame_size;
+    float frame_duration = (float)(c->frame_size) / (float)(c->sample_rate);
+    int frames = ceil((float)duration / frame_duration / 1000.);
     samples = (short*)malloc(frame_size * 2 * c->channels);
     outbuf_size = 10000;
     outbuf = (uint8_t*)malloc(outbuf_size);
 
-    f = fopen(filename.c_str(), "wb");
-    if (!f) {
-        fprintf(stderr, "could not open %s\n", filename.c_str());
-        exit(1);
-    }
-
     /* encode a single tone sound */
-    cout << "generate " << frequencyHz << " Hz tone" << endl;
     t = 0;
     tincr = 2 * M_PI * frequencyHz / c->sample_rate;
-    cout << "tincr " << tincr << endl;
-    cout << "frame size " << frame_size << endl;
-    for(i=0;i<200;i++) {
+    for(i=0;i<frames;i++) {
         for(j=0;j<frame_size;j++) {
             samples[2*j] = (int)(sin(t) * 10000);
             samples[2*j+1] = samples[2*j];
@@ -119,14 +130,29 @@ void gen_audio::encode(const std::string& filename, float frequencyHz )
         }
         /* encode the samples */
         out_size = avcodec_encode_audio(c, outbuf, outbuf_size, samples);
-        fwrite(outbuf, 1, out_size, f);
+        for(int i=0; i<out_size; i++) { rc.push_back(outbuf[i]); }
     }
-    fclose(f);
     free(outbuf);
     free(samples);
 
     avcodec_close(c);
     av_free(c);
+
+    return rc;
+}
+
+void gen_audio::encode(const std::string& filename, float frequencyHz, int duration)
+{
+    FILE* f;
+    f = fopen(filename.c_str(), "wb");
+    if (!f) {
+        fprintf(stderr, "could not open %s\n", filename.c_str());
+        exit(1);
+    }
+
+    vector<unsigned char> data = encode(frequencyHz,duration);
+    fwrite(data.data(), 1, data.size(), f);
+    fclose(f);
 }
 
 /*

@@ -20,12 +20,16 @@
 
 #include <string>
 #include <vector>
+#include <random>
 
 #include "dataset.hpp"
 
 class gen_audio : public dataset<gen_audio> {
 public:
-    void encode(const std::string& filename, float frequencyHz);
+    gen_audio();
+
+    std::vector<unsigned char> encode(float frequencyHz, int duration);
+    void encode(const std::string& filename, float frequencyHz, int duration);
     void decode(const std::string& outfilename, const std::string& filename);
 
     static std::vector<std::string> get_codec_list();
@@ -36,6 +40,11 @@ private:
 
     static const char* Encoder_GetNextCodecName();
     static const char* Encoder_GetFirstCodecName();
+
+    const std::vector<std::string> vocab = {"a","and","the","quick","fox","cow","dog","blue",
+        "black","brown","happy","lazy","skip","jumped","run","under","over","around"};
+
+    std::minstd_rand0 r;
 };
 
 

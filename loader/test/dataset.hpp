@@ -21,37 +21,37 @@ public:
         _setSize(100000),
         _pathExisted(false)
     {
-    
+
     }
 
     T& Directory( const std::string& dir ) {
         _path = dir;
         return *(T*)this;
     }
-    
+
     T& Prefix( const std::string& prefix ) {
         _prefix = prefix;
         return *(T*)this;
     }
-    
+
     T& MacrobatchMaxItems( int max ) {
         assert(max>0);
         _maxItems = max;
         return *(T*)this;
     }
-    
+
     T& MacrobatchMaxSize( int max ) {
         assert(max>0);
         _maxSize = max;
         return *(T*)this;
     }
-    
+
     T& DatasetSize( int size ) {
         assert(size>0);
         _setSize = size;
         return *(T*)this;
     }
-    
+
     int Create() {
         int rc = -1;
         int fileNo = 0;
@@ -79,7 +79,7 @@ public:
         }
         return rc;
     }
-    
+
     void Delete() {
         for( const string& f : _fileList ) {
             remove(f.c_str());
@@ -89,11 +89,11 @@ public:
             remove(_path.c_str());
         }
     }
-    
+
     std::string GetDatasetPath() {
         return _path;
     }
-    
+
     std::vector<std::string> GetFiles() {
         return _fileList;
     }
@@ -115,7 +115,7 @@ private:
     int         _maxSize;
     int         _setSize;
     bool        _pathExisted;
-    
+
     std::vector<std::string> _fileList;
 };
 

@@ -40,7 +40,7 @@ gen_video _video_dataset;
 static void CreateImageDataset() {
     std::chrono::high_resolution_clock timer;
     auto start = timer.now();
-    _datagen.Directory("dataset")
+    _datagen.Directory("image_data")
             .Prefix("archive-")
             .MacrobatchMaxItems(500)
             // SetSize must be a multiple of (minibatchCount*batchSize) which is 8320 currently
@@ -48,25 +48,44 @@ static void CreateImageDataset() {
             .ImageSize(128,128)
             .Create();
     auto end = timer.now();
-    cout << "datagen " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
+    cout << "image dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
 static void CreateAudioDataset() {
-    _audio_dataset.encode("test1.mp2",2000);
+//    _audio_dataset.encode("test1.mp2",2000,1000);
+    std::chrono::high_resolution_clock timer;
+    auto start = timer.now();
+    _audio_dataset.Directory("audio_data")
+            .Prefix("archive-")
+            .MacrobatchMaxItems(500)
+            .DatasetSize(100)
+            .Create();
+    auto end = timer.now();
+    cout << "audio dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
 static void CreateVideoDataset() {
-
+    std::chrono::high_resolution_clock timer;
+    auto start = timer.now();
+    _video_dataset.Directory("video_data")
+            .Prefix("archive-")
+            .MacrobatchMaxItems(500)
+            .DatasetSize(100)
+            .Create();
+    auto end = timer.now();
+    cout << "audio dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
 static void DeleteDataset() {
     _datagen.Delete();
+    _audio_dataset.Delete();
+    _video_dataset.Delete();
 }
 
 extern "C" int main( int argc, char** argv ) {
     CreateImageDataset();
     CreateAudioDataset();
-    CreateVideoDataset();
+//    CreateVideoDataset();
 
     ::testing::InitGoogleTest(&argc, argv);
     int rc = RUN_ALL_TESTS();
