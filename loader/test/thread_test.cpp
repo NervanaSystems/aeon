@@ -120,7 +120,7 @@ int test(const char* repoDir, const char* indexFile,
     ImageIngestParams ingestParams(false, true, 0, 0);
     Loader loader(&itemCount, batchSize, repoDir, archiveDir.c_str(),
                   indexFile, "archive-",
-                  false, false, 0, datumSize, datumTypeSize,
+                  false, false, datumSize, datumTypeSize,
                   targetSize, targetTypeSize, 100,
                   &mediaParams, &deviceParams, "", "");
     unsigned int singleSum = single(&loader, epochCount,

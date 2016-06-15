@@ -115,7 +115,6 @@ public:
            const char* repoDir, const char* archiveDir,
            const char* indexFile, const char* archivePrefix,
            bool shuffle, bool reshuffle,
-           int startFileIdx,
            int datumSize, int datumTypeSize,
            int targetSize, int targetTypeSize,
            int subsetPercent,
