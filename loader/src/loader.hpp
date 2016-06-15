@@ -101,7 +101,7 @@ private:
     ReadThread();
     ReadThread(const ReadThread&);
     std::shared_ptr<BufferPool> _out;
-    std::shared_ptr<BatchIterator> _batch_iterator;
+    std::shared_ptr<BatchIterator> _batchIterator;
 };
 
 /* Loader

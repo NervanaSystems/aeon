@@ -232,7 +232,7 @@ void DecodeThreadPool::manage() {
 }
 
 ReadThread::ReadThread(const shared_ptr<BufferPool>& out, const shared_ptr<BatchIterator>& batch_iterator)
-: ThreadPool(1), _out(out), _batch_iterator(batch_iterator) {
+: ThreadPool(1), _out(out), _batchIterator(batch_iterator) {
     assert(_count == 1);
 }
 
@@ -243,7 +243,7 @@ void ReadThread::work(int id) {
         while (_out->full() == true) {
             _out->waitForNonFull(lock);
         }
-        _batch_iterator->read(_out->getForWrite());
+        _batchIterator->read(_out->getForWrite());
         _out->advanceWritePos();
     }
     _out->signalNonEmpty();
