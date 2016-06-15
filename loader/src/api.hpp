@@ -19,7 +19,7 @@
 
 extern "C" {
 
-extern void* start(int* itemCount, int batchSize,
+extern void* start(int* itemCount, int miniBatchSize,
                    const char* repoDir, const char* archiveDir,
                    const char* indexFile, const char* archivePrefix,
                    bool shuffleManifest, bool shuffleEveryEpoch,
@@ -27,10 +27,13 @@ extern void* start(int* itemCount, int batchSize,
                    int targetSize, int targetTypeSize,
                    int subsetPercent,
                    MediaParams* mediaParams,
-                   DeviceParams* deviceParams) {
+                   DeviceParams* deviceParams,
+                   const char* manifestFilename,
+                   int macroBatchSize,
+                   const char* rootCacheDir) {
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
-        Loader* loader = new Loader(itemCount, batchSize,
+        Loader* loader = new Loader(itemCount, miniBatchSize,
                                     repoDir, archiveDir,
                                     indexFile, archivePrefix,
                                     shuffleManifest, shuffleEveryEpoch,
@@ -38,7 +41,9 @@ extern void* start(int* itemCount, int batchSize,
                                     targetSize, targetTypeSize,
                                     subsetPercent,
                                     mediaParams, deviceParams,
-                                    "", "");
+                                    manifestFilename,
+                                    macroBatchSize,
+                                    rootCacheDir);
         int result = loader->start();
         if (result != 0) {
             printf("Could not start data loader. Error %d", result);

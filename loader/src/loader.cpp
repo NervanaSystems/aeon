@@ -249,7 +249,7 @@ void ReadThread::work(int id) {
     _out->signalNonEmpty();
 }
 
-Loader::Loader(int* itemCount, int batchSize,
+Loader::Loader(int* itemCount, int miniBatchSize,
        const char* repoDir, const char* archiveDir,
        const char* indexFile, const char* archivePrefix,
        bool shuffleManifest, bool shuffleEveryEpoch,
@@ -259,16 +259,15 @@ Loader::Loader(int* itemCount, int batchSize,
        MediaParams* mediaParams,
        DeviceParams* deviceParams,
        const char* manifestFilename,
+       int macroBatchSize,
        const char* rootCacheDir)
 : _first(true),
-  _batchSize(batchSize),
+  _miniBatchSize(miniBatchSize),
   _datumSize(datumSize), _datumTypeSize(datumTypeSize),
   _targetSize(targetSize), _targetTypeSize(targetTypeSize),
   _readBufs(nullptr), _decodeBufs(nullptr), _readThread(nullptr), _decodeThreads(nullptr),
   _device(nullptr), _batchIterator(nullptr), _mediaParams(mediaParams)
   {
-    // TODO: not a constant
-    uint _macroBatchSize = 1024;
     // TODO: not a constant
     uint _seed = 0;
 
@@ -293,11 +292,11 @@ Loader::Loader(int* itemCount, int batchSize,
     // the batchLoader
     if(shuffleEveryEpoch) {
         _batchIterator = make_shared<ShuffledBatchIterator>(
-             batchLoader, _macroBatchSize, _seed
+             batchLoader, macroBatchSize, _seed
         );
     } else {
         _batchIterator = make_shared<SequentialBatchIterator>(
-             batchLoader, _macroBatchSize
+             batchLoader, macroBatchSize
         );
     }
 }
@@ -308,8 +307,8 @@ Loader::~Loader() {
 int Loader::start() {
     _first = true;
     try {
-        int dataLen = _batchSize * _datumSize * _datumTypeSize;
-        int targetLen = _batchSize * _targetSize * _targetTypeSize;
+        int dataLen = _miniBatchSize * _datumSize * _datumTypeSize;
+        int targetLen = _miniBatchSize * _targetSize * _targetTypeSize;
         // Start the read buffers off with a reasonable size. They will
         // get resized as needed.
         _readBufs = make_shared<BufferPool>(dataLen / 8, targetLen);
@@ -317,10 +316,10 @@ int Loader::start() {
         bool pinned = (_device->_type != CPU);
         _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, pinned);
         int numCores = thread::hardware_concurrency();
-        int itemsPerThread = (_batchSize - 1) /  numCores + 1;
-        int threadCount =  (_batchSize - 1) / itemsPerThread + 1;
-        threadCount = std::min(threadCount, _batchSize);
-        _decodeThreads = unique_ptr<DecodeThreadPool>(new DecodeThreadPool(threadCount, _batchSize,
+        int itemsPerThread = (_miniBatchSize - 1) /  numCores + 1;
+        int threadCount =  (_miniBatchSize - 1) / itemsPerThread + 1;
+        threadCount = std::min(threadCount, _miniBatchSize);
+        _decodeThreads = unique_ptr<DecodeThreadPool>(new DecodeThreadPool(threadCount, _miniBatchSize,
                 _datumSize, _datumTypeSize,
                 _targetSize, _targetTypeSize,
                 _readBufs, _decodeBufs, _device, _mediaParams));

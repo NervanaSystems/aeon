@@ -122,7 +122,7 @@ int test(const char* repoDir, const char* indexFile,
                   indexFile, "archive-",
                   false, false, datumSize, datumTypeSize,
                   targetSize, targetTypeSize, 100,
-                  &mediaParams, &deviceParams, "", "");
+                  &mediaParams, &deviceParams, "", 128, "");
     unsigned int singleSum = single(&loader, epochCount,
                                     minibatchCount, batchSize,
                                     datumLen, targetLen,

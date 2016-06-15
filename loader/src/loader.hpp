@@ -111,7 +111,7 @@ private:
  */
 class Loader {
 public:
-    Loader(int* itemCount, int batchSize,
+    Loader(int* itemCount, int _miniBatchSize,
            const char* repoDir, const char* archiveDir,
            const char* indexFile, const char* archivePrefix,
            bool shuffleManifest, bool shuffleEveryEpoch,
@@ -121,6 +121,7 @@ public:
            MediaParams* mediaParams,
            DeviceParams* deviceParams,
            const char* manifestFilename,
+           int macroBatchSize,
            const char* rootCacheDir);
 
     virtual ~Loader();
@@ -139,7 +140,7 @@ private:
     Loader();
     Loader(const Loader&);
     bool                                _first;
-    int                                 _batchSize;
+    int                                 _miniBatchSize;
     int                                 _datumSize;
     int                                 _datumTypeSize;
     int                                 _targetSize;
