@@ -22,7 +22,6 @@
 #include <utility>
 #include <algorithm>
 
-#include "threadpool.hpp"
 #include "media.hpp"
 #include "matrix.hpp"
 #include "device.hpp"
@@ -278,6 +277,7 @@ Loader::Loader(int* itemCount, int batchSize,
 
     _device = Device::create(deviceParams);
 
+    // the manifest defines which data should be included in the dataset
     auto manifest = shared_ptr<Manifest>(new Manifest(manifestFilename, shuffle));
     *itemCount = manifest->getSize();
 
@@ -286,6 +286,7 @@ Loader::Loader(int* itemCount, int batchSize,
     cacheDirStream << rootCacheDir << '/' << manifest->hash();
     string cacheDir = cacheDirStream.str();
 
+    // batch loader provdes random access to blocks of data in the manifest
     auto batchLoader = shared_ptr<BatchLoaderCPIOCache>(new BatchLoaderCPIOCache(
         cacheDir.c_str(),
         shared_ptr<BatchFileLoader>(new BatchFileLoader(
@@ -293,6 +294,8 @@ Loader::Loader(int* itemCount, int batchSize,
         ))
     ));
 
+    // _batch_iterator provides an unending iterator (shuffled or not) over
+    // the batchLoader
     if(reshuffle) {
         _batch_iterator = shared_ptr<ShuffledBatchIterator>(new ShuffledBatchIterator(
              batchLoader, _macroBatchSize, _seed
