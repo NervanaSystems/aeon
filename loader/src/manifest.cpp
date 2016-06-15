@@ -55,7 +55,8 @@ void Manifest::parseStream(istream& is) {
     string line;
     pair<string, string> filename_pair;
 
-    // TODO: could probably do this more cleanly ...
+    // read in each line, then from that istringstream, read in up to
+    // the comma, then everything after.
     while(std::getline(is, line)) {
         istringstream lineis(line);
         std::getline(lineis, filename_pair.first, ',');
@@ -64,13 +65,12 @@ void Manifest::parseStream(istream& is) {
         _filename_pairs.push_back(filename_pair);
     }
 
-    // TODO: only optionally shuffle.  If we don't need to shuffle,
-    // there may be small performance benefits in some situations to
-    // stream the filename_pairs instead of loading them all at once.
-    // That said, in the event that there is no cache and we are
-    // resuming training at a specific epoch, we may need to be able to
-    // jump around and read random blocks of the file, so a purely
-    // stream based interface is not sufficient.
+    // If we don't need to shuffle, there may be small performance
+    // benefits in some situations to stream the filename_pairs instead
+    // of loading them all at once.  That said, in the event that there
+    // is no cache and we are resuming training at a specific epoch, we
+    // may need to be able to jump around and read random blocks of the
+    // file, so a purely stream based interface is not sufficient.
     if(_shuffle) {
         shuffleFilenamePairs();
     }
