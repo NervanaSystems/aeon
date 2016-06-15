@@ -35,8 +35,13 @@ string Manifest::hash() {
 }
 
 void Manifest::parse() {
-    // TODO: handle case where file doesn't exist
     ifstream infile(_filename);
+
+    if(!infile.is_open()) {
+        stringstream ss;
+        ss << "Manifest file " << _filename << " doesnt exit.";
+        throw std::runtime_error(ss.str());
+    }
 
     parseStream(infile);
 }

@@ -24,17 +24,26 @@
 using namespace std;
 
 TEST(manifest, constructor) {
-    Manifest manifest("manfiest.txt", false);
+    string tmpname = tmp_manifest_file(0, 0, 0);
+    Manifest manifest(tmpname, false);
+}
+
+TEST(manifest, no_file) {
+    ASSERT_THROW(Manifest manifest(
+        "/tmp/jsdkfjsjkfdjaskdfj_doesnt_exist", false
+    ), std::runtime_error);
 }
 
 TEST(manifest, hash) {
     // TODO not 42
-    Manifest manifest("manifest.txt", false);
+    string tmpname = tmp_manifest_file(0, 0, 0);
+    Manifest manifest(tmpname, false);
     ASSERT_EQ(manifest.hash(), "42");
 }
 
 TEST(manifest, parse_file_doesnt_exist) {
-    Manifest manifest("manifest.txt", false);
+    string tmpname = tmp_manifest_file(0, 0, 0);
+    Manifest manifest(tmpname, false);
 
     ASSERT_EQ(manifest.getSize(), 0);
 }

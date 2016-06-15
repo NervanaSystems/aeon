@@ -20,7 +20,8 @@
 using namespace std;
 
 TEST(blocked_file_loader, constructor) {
-    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest("manifest.txt", true)), 100);
+    string tmpname = tmp_manifest_file(0, 0, 0);
+    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmpname, true)), 100);
 }
 
 TEST(blocked_file_loader, loadBlock) {
