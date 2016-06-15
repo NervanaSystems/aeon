@@ -114,7 +114,7 @@ public:
     Loader(int* itemCount, int batchSize,
            const char* repoDir, const char* archiveDir,
            const char* indexFile, const char* archivePrefix,
-           bool shuffle, bool reshuffle,
+           bool shuffleManifest, bool shuffleEveryEpoch,
            int datumSize, int datumTypeSize,
            int targetSize, int targetTypeSize,
            int subsetPercent,

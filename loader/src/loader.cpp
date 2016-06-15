@@ -252,7 +252,7 @@ void ReadThread::work(int id) {
 Loader::Loader(int* itemCount, int batchSize,
        const char* repoDir, const char* archiveDir,
        const char* indexFile, const char* archivePrefix,
-       bool shuffle, bool reshuffle,
+       bool shuffleManifest, bool shuffleEveryEpoch,
        int datumSize, int datumTypeSize,
        int targetSize, int targetTypeSize,
        int subsetPercent,
@@ -267,7 +267,6 @@ Loader::Loader(int* itemCount, int batchSize,
   _readBufs(nullptr), _decodeBufs(nullptr), _readThread(nullptr), _decodeThreads(nullptr),
   _device(nullptr), _batchIterator(nullptr), _mediaParams(mediaParams)
   {
-    // TODO: rename to shuffleManifest and shuffleEveryEpoch
     // TODO: not a constant
     uint _macroBatchSize = 1024;
     // TODO: not a constant
@@ -276,7 +275,7 @@ Loader::Loader(int* itemCount, int batchSize,
     _device = Device::create(deviceParams);
 
     // the manifest defines which data should be included in the dataset
-    auto manifest = make_shared<Manifest>(manifestFilename, shuffle);
+    auto manifest = make_shared<Manifest>(manifestFilename, shuffleManifest);
     *itemCount = manifest->getSize();
 
     // build cacheDir from rootCacheDir and a hash of the manifest
@@ -292,7 +291,7 @@ Loader::Loader(int* itemCount, int batchSize,
 
     // _batch_iterator provides an unending iterator (shuffled or not) over
     // the batchLoader
-    if(reshuffle) {
+    if(shuffleEveryEpoch) {
         _batchIterator = make_shared<ShuffledBatchIterator>(
              batchLoader, _macroBatchSize, _seed
         );
