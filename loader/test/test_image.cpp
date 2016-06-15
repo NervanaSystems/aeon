@@ -304,7 +304,7 @@ TEST(etl, image_transform_flip) {
     EXPECT_TRUE(check_value(transformed,0,19,119,169));
 }
 
-TEST(etl, multi_crop_noresize) {
+TEST(etl, multi_crop) {
     auto indexed = generate_indexed_image();  // 256 x 256
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
@@ -374,9 +374,43 @@ TEST(etl, multi_crop_noresize) {
         EXPECT_TRUE(check_value(transformed,   0,   0,   0,  32, 2));
         EXPECT_TRUE(check_value(transformed,   0,   0,  32,   0, 3));
         EXPECT_TRUE(check_value(transformed,   0,   0,  32,  32, 4));
-
-
-        // EXPECT_TRUE(check_value(transformed, 223, 223,  16, 239, 1));
-
     }
+    // Multi crop, scale
+    {
+        auto jsstring = R"(
+            {
+                "width": 112,
+                "height": 112,
+                "scales": [0.875],
+                "flip": false
+            }
+        )";
+        using namespace cv;
+        using idxPt = std::pair<int, Point2i>;
+
+        auto mc_config_ptr = make_shared<multicrop::config>(jsstring);
+
+        multicrop::transformer trans{mc_config_ptr};
+        shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
+
+
+        EXPECT_EQ(transformed->get_image_count(), 5);
+
+        Mat resize_crop;
+        Size2i out_sz(112, 112), crp_sz(224, 224);
+
+        std::vector<idxPt> vip {{0, Point2i(16, 16)},
+                                {1, Point2i( 0,  0)},
+                                {2, Point2i( 0, 32)},
+                                {3, Point2i(32,  0)},
+                                {4, Point2i(32, 32)}};
+
+        for (const idxPt &pp: vip) {
+            Rect box(pp.second, crp_sz);
+            Mat image = transformed->get_image(pp.first);
+            cv::resize(indexed(box), resize_crop, out_sz, 0, 0, CV_INTER_AREA);
+            EXPECT_EQ(cv::sum(image != resize_crop), Scalar(0,0,0,0));
+        }
+    }
+
 }
