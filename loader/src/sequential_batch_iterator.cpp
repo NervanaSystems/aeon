@@ -21,7 +21,7 @@
 
 SequentialBatchIterator::SequentialBatchIterator(shared_ptr<BatchLoader> loader, uint block_size)
     : _loader(loader), _block_size(block_size) {
-    _count = ceil((float)_loader->objectCount() / (float)_block_size);
+    _count = _loader->blockCount(block_size);
 
     reset();
 };

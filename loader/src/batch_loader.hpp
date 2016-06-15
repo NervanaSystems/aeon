@@ -24,9 +24,8 @@
 
 class BatchLoader {
 public:
-    // TODO: this interface could instead take block_size in the
-    // constructor, and then either implement block_num as an iterator
-    // or at least provide a blockCount function
     virtual void loadBlock(BufferPair& dest, uint block_num, uint block_size) = 0;
     virtual uint objectCount() = 0;
+
+    uint blockCount(uint block_size);
 };

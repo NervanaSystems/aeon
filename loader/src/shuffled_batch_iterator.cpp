@@ -9,7 +9,7 @@ ShuffledBatchIterator::ShuffledBatchIterator(shared_ptr<BatchLoader> loader, uin
 
     // fill indices with integers from  0 to _count.  indices can then be
     // shuffled and used to iterate randomly through the blocks.
-    uint _count = ceil((float)_loader->objectCount() / (float)_block_size);
+    uint _count = _loader->blockCount(block_size);
     for(uint i = 0; i < _count; ++i) {
         _indices.push_back(i);
     }
