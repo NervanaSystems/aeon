@@ -26,6 +26,7 @@
 #undef HAVE_AV_CONFIG_H
 #endif
 
+#include "avgen.hpp"
 
 extern "C" {
     #include <libavformat/avformat.h>
@@ -46,38 +47,12 @@ extern "C" {
 #define AUDIO_INBUF_SIZE 20480
 #define AUDIO_REFILL_THRESH 4096
 
-
-static AVCodec* current_codec = NULL;
-
-const char* Encoder_GetNextCodecName()
-{
-    current_codec = av_codec_next(current_codec);
-    while (current_codec != NULL)
-    {
-        /* this is optional...
-        if (!av_codec_is_encoder(current_codec))
-        {
-            current_codec = av_codec_next(current_codec);
-            continue;
-        }
-        */
-        return current_codec->name;
-    }
-    return nullptr;
-}
-
-const char* Encoder_GetFirstCodecName()
-{
-    current_codec = NULL;
-    return Encoder_GetNextCodecName();
-}
-
-
+using namespace std;
 
 /*
  * Audio encoding example
  */
-void audio_encode_example(const char *filename)
+void avgen::audio_encode(const char *filename)
 {
     AVCodec *codec;
     AVCodecContext *c= NULL;
@@ -145,7 +120,7 @@ void audio_encode_example(const char *filename)
 /*
  * Audio decoding.
  */
-static void audio_decode_example(const char *outfilename, const char *filename)
+void avgen::audio_decode(const char *outfilename, const char *filename)
 {
     AVCodec *codec;
     AVCodecContext *c= NULL;
@@ -229,7 +204,7 @@ static void audio_decode_example(const char *outfilename, const char *filename)
 /*
  * Video encoding example
  */
-static void video_encode_example(const char *filename)
+void avgen::video_encode(const char *filename)
 {
     AVCodec *codec;
     AVCodecContext *c= NULL;
@@ -340,7 +315,7 @@ static void video_encode_example(const char *filename)
  * Video decoding example
  */
 
-static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
+void avgen::pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
                      char *filename)
 {
     FILE *f;
@@ -353,7 +328,7 @@ static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
     fclose(f);
 }
 
-static void video_decode_example(const char *outfilename, const char *filename)
+void avgen::video_decode(const char *outfilename, const char *filename)
 {
     AVCodec *codec;
     AVCodecContext *c= NULL;
@@ -470,6 +445,22 @@ static void video_decode_example(const char *outfilename, const char *filename)
     av_free(c);
     av_free(picture);
     printf("\n");
+}
+
+vector<string> avgen::get_codec_list() {
+    vector<string> rc;
+    AVCodec* current_codec = av_codec_next(nullptr);
+    while (current_codec != NULL)
+    {
+        if (!av_codec_is_encoder(current_codec))
+        {
+            current_codec = av_codec_next(current_codec);
+            continue;
+        }
+        rc.push_back(string(current_codec->name));
+        current_codec = av_codec_next(current_codec);
+    }
+    return rc;
 }
 
 //int main(int argc, char **argv)

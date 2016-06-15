@@ -53,15 +53,7 @@ static void DeleteDataset() {
 }
 
 extern "C" int main( int argc, char** argv ) {
-
-//    const char* name = Encoder_GetFirstCodecName();
-//    while(name) {
-//        cout << "codec " << name << endl;
-//        name = Encoder_GetNextCodecName();
-//    }
-
-
-    audio_encode_example("test.mp2");
+    avgen::audio_encode("test.mp2");
 
     CreateDataset();
 
