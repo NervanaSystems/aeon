@@ -15,25 +15,10 @@
 
 #include "gtest/gtest.h"
 
-#include <algorithm>
-
 #include "buffer.hpp"
+#include "helpers.hpp"
 
 using namespace std;
-
-vector<string> buffer_to_vector_of_strings(Buffer& b) {
-    vector<string> words;
-    int len;
-    for(auto i = 0; i != b.getItemCount(); ++i) {
-        words.push_back(b.getItem(i, len));
-    }
-
-    return words;
-}
-
-bool sorted(vector<string> words) {
-    return std::is_sorted(words.begin(), words.end());
-}
 
 TEST(buffer, shuffle) {
     // create a buffer with lots of words in sorted order.  assert
