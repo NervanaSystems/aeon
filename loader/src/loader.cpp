@@ -278,7 +278,7 @@ Loader::Loader(int* itemCount, int batchSize,
     _device = Device::create(deviceParams);
 
     // the manifest defines which data should be included in the dataset
-    auto manifest = shared_ptr<Manifest>(new Manifest(manifestFilename, shuffle));
+    auto manifest = make_shared<Manifest>(manifestFilename, shuffle);
     *itemCount = manifest->getSize();
 
     // build cacheDir from rootCacheDir and a hash of the manifest
@@ -287,23 +287,21 @@ Loader::Loader(int* itemCount, int batchSize,
     string cacheDir = cacheDirStream.str();
 
     // batch loader provdes random access to blocks of data in the manifest
-    auto batchLoader = shared_ptr<BatchLoaderCPIOCache>(new BatchLoaderCPIOCache(
+    auto batchLoader = make_shared<BatchLoaderCPIOCache>(
         cacheDir.c_str(),
-        shared_ptr<BatchFileLoader>(new BatchFileLoader(
-            manifest, subsetPercent
-        ))
-    ));
+        make_shared<BatchFileLoader>(manifest, subsetPercent)
+    );
 
     // _batch_iterator provides an unending iterator (shuffled or not) over
     // the batchLoader
     if(reshuffle) {
-        _batch_iterator = shared_ptr<ShuffledBatchIterator>(new ShuffledBatchIterator(
+        _batch_iterator = make_shared<ShuffledBatchIterator>(
              batchLoader, _macroBatchSize, _seed
-        ));
+        );
     } else {
-        _batch_iterator = shared_ptr<SequentialBatchIterator>(new SequentialBatchIterator(
+        _batch_iterator = make_shared<SequentialBatchIterator>(
              batchLoader, _macroBatchSize
-        ));
+        );
     }
 }
 
@@ -317,10 +315,10 @@ int Loader::start() {
         int targetLen = _batchSize * _targetSize * _targetTypeSize;
         // Start the read buffers off with a reasonable size. They will
         // get resized as needed.
-        _readBufs = shared_ptr<BufferPool>(new BufferPool(dataLen / 8, targetLen));
+        _readBufs = make_shared<BufferPool>(dataLen / 8, targetLen);
         _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
         bool pinned = (_device->_type != CPU);
-        _decodeBufs = shared_ptr<BufferPool>(new BufferPool(dataLen, targetLen, pinned));
+        _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, pinned);
         int numCores = thread::hardware_concurrency();
         int itemsPerThread = (_batchSize - 1) /  numCores + 1;
         int threadCount =  (_batchSize - 1) / itemsPerThread + 1;
