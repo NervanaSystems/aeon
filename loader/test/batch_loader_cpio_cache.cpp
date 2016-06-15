@@ -69,7 +69,7 @@ TEST(batch_loader_cpio_cache, integration) {
     // is if the cache is working properly
 
     BatchLoaderCPIOCache cache(
-        "/tmp/", shared_ptr<RandomBatchLoader>(new RandomBatchLoader)
+        "/tmp", shared_ptr<RandomBatchLoader>(new RandomBatchLoader)
     );
 
     ASSERT_EQ(load_string(cache), load_string(cache));

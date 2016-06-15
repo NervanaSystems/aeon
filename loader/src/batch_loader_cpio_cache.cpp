@@ -81,7 +81,7 @@ void BatchLoaderCPIOCache::writeBlockToCache(BufferPair& buff, uint block_num, u
 
 string BatchLoaderCPIOCache::blockFilename(uint block_num, uint block_size) {
     stringstream s;
-    s << _cacheDir << block_num << "-" << block_size << ".cpio";
+    s << _cacheDir << "/" << block_num << "-" << block_size << ".cpio";
     return s.str();
 }
 
