@@ -13,6 +13,10 @@
  limitations under the License.
 */
 
+#pragma once
+
+#include "batchfile.hpp"
+
 extern "C" {
 
 extern void* start(int* itemCount, int batchSize,

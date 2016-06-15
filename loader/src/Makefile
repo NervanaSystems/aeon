@@ -20,7 +20,6 @@ SRCS            := \
     device.cpp \
     batchfile.cpp \
     image.cpp \
-    archive.cpp \
     reader.cpp \
     buffer.cpp \
     loader.cpp \
