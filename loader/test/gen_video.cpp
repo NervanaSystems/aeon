@@ -50,17 +50,17 @@ extern "C" {
 
 
 std::vector<unsigned char> gen_video::render_target( int datumNumber ) {
-    
+
 }
 
 std::vector<unsigned char> gen_video::render_datum( int datumNumber ) {
-    
-}  
+
+}
 
 /*
  * Video encoding example
  */
-void gen_video::encode(const std::string& filename)
+void gen_video::encode(const std::string& filename, int duration)
 {
     AVCodec *codec;
     AVCodecContext *c= NULL;
@@ -118,7 +118,8 @@ void gen_video::encode(const std::string& filename)
     picture->linesize[2] = c->width / 2;
 
     /* encode 1 second of video */
-    for(i=0;i<25;i++) {
+    int frames = ((float)duration / 1000.) / ((float)(c->time_base.num) / (float)(c->time_base.den));
+    for(i=0;i<frames;i++) {
         fflush(stdout);
         /* prepare a dummy image */
         /* Y */
@@ -138,7 +139,6 @@ void gen_video::encode(const std::string& filename)
 
         /* encode the image */
         out_size = avcodec_encode_video(c, outbuf, outbuf_size, picture);
-        printf("encoding frame %3d (size=%5d)\n", i, out_size);
         fwrite(outbuf, 1, out_size, f);
     }
 

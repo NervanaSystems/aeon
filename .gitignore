@@ -43,6 +43,7 @@ bin/
 output/
 *.png
 *.mp2
+*.mpg
 
 # vim
 *.swp

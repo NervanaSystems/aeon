@@ -25,9 +25,9 @@
 
 class gen_video : public dataset<gen_video> {
 public:
-    void encode(const std::string& filename);
+    void encode(const std::string& filename, int duration);
     void decode(const std::string& outfilename, const std::string& filename);
-    
+
 private:
     std::vector<unsigned char> render_target( int datumNumber ) override;
     std::vector<unsigned char> render_datum( int datumNumber ) override;
