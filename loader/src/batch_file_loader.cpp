@@ -35,7 +35,7 @@ void BatchFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_siz
 
     size_t begin_i = block_num * block_size;
     size_t end_i = min((block_num + 1) * (size_t)block_size, _manifest->getSize());
-    
+
     if (_subsetPercent != 100) {
         // adjust end_i in relation to begin_i.  We want to scale (end_i
         // - begin_i) by _subsetPercent.  In the case of a smaller block
