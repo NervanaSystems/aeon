@@ -21,18 +21,18 @@
 
 SequentialBatchIterator::SequentialBatchIterator(shared_ptr<BatchLoader> loader, uint block_size)
     : _loader(loader), _block_size(block_size) {
-    _i = 0;
-
     _count = ceil((float)_loader->objectCount() / (float)_block_size);
+
+    reset();
 };
 
 void SequentialBatchIterator::read(BufferPair& dest) {
     _loader->loadBlock(dest, _i, _block_size);
 
-    _i += 1;
+    ++_i;
 
-    if(_i >= _count) {
-        _i = 0;
+    if(_i != _count) {
+        reset();
     }
 }
 
