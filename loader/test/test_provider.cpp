@@ -6,7 +6,7 @@
 #include "params.hpp"
 #include "etl_interface.hpp"
 #include "etl_image.hpp"
-#include "etl_label.hpp"
+#include "etl_label_test.hpp"
 #include "etl_bbox.hpp"
 #include "etl_lmap.hpp"
 #include "provider.hpp"
@@ -50,12 +50,12 @@ TEST(provider, argtype) {
 
         // output the random parameters
         default_random_engine r_eng(0);
-        image::param_factory img_prm_maker(itpj);
+        image::param_factory img_prm_maker(itpj, r_eng);
         auto imgt = make_shared<image::transformer>(itpj);
 
         auto input_img_ptr = make_shared<image::decoded>(cv::Mat(256, 320, CV_8UC3));
 
-        auto its = img_prm_maker.make_params(input_img_ptr, r_eng);
+        auto its = img_prm_maker.make_params(input_img_ptr);
         its->dump();
     }
 
@@ -68,7 +68,7 @@ TEST(provider, argtype) {
                 "dist_params/transform shift":  [-5, 5]
             }
         )";
-        auto lblcfg = make_shared<label::config>(cfgString);
+        auto lblcfg = make_shared<label_test::config>(cfgString);
 
         auto dataFiles = _datagen.GetFiles();
         ASSERT_GT(dataFiles.size(),0);
@@ -80,12 +80,11 @@ TEST(provider, argtype) {
         auto labels = bf.read();
         bf.close();
 
-
-        label::param_factory lbl_prm_maker(lblcfg);
-
         default_random_engine r_eng(0);
+        label_test::param_factory lbl_prm_maker(lblcfg, r_eng);
+
         // Note we don't need the media to get params
-        auto lstg = lbl_prm_maker.make_params(nullptr, r_eng);
+        auto lstg = lbl_prm_maker.make_params(nullptr);
 
         cout << "Set scale: " << lstg->scale << " ";
         cout << "Set shift: " << lstg->shift << endl;
@@ -93,15 +92,15 @@ TEST(provider, argtype) {
         int reference = ((int) (*labels)[0] + lblcfg->ex_offset)* lstg->scale + lstg->shift;
 
         // Take the int and do provision with it.
-        auto lble = make_shared<label::extractor>(lblcfg);
-        auto lblt = make_shared<label::transformer>(lblcfg);
+        auto lble = make_shared<label_test::extractor>(lblcfg);
+        auto lblt = make_shared<label_test::transformer>(lblcfg);
 
         {
-            auto lbll = make_shared<label::loader>(lblcfg);
+            auto lbll = make_shared<label_test::loader>(lblcfg);
 
             int reference_target = reference;
             int loaded_target = 0;
-            provider<label::decoded, label::params> pp{lble, lblt, lbll};
+            provider<label_test::decoded, label_test::params> pp{lble, lblt, lbll};
             pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }
@@ -114,13 +113,13 @@ TEST(provider, argtype) {
                     "load offset": 0.8
                 }
             )";
-            auto flt_lbl_config = make_shared<label::config>(lArgString);
+            auto flt_lbl_config = make_shared<label_test::config>(lArgString);
 
-            auto lbll = make_shared<label::loader>(flt_lbl_config);
+            auto lbll = make_shared<label_test::loader>(flt_lbl_config);
 
             float reference_target = reference + 0.8;
             float loaded_target = 0.0;
-            provider<label::decoded, label::params> pp{lble, lblt, lbll};
+            provider<label_test::decoded, label_test::params> pp{lble, lblt, lbll};
             pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }

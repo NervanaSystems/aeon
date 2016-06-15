@@ -44,18 +44,18 @@ namespace nervana {
         std::vector<float> photometric;  // contrast, brightness, saturation
     };
 
-    class image::param_factory {
+    class image::param_factory : public interface::param_factory<image::decoded, image::params> {
     public:
-        param_factory(std::shared_ptr<image::config>);
+        param_factory(std::shared_ptr<image::config> cfg,
+                      std::default_random_engine& dre) : _cfg{cfg}, _dre{dre} {}
         ~param_factory() {}
 
-        std::shared_ptr<image::params> make_params(std::shared_ptr<const decoded>,
-                                                   std::default_random_engine&);
+        std::shared_ptr<image::params> make_params(std::shared_ptr<const decoded>);
     private:
         void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
 
-        bool _do_area_scale;
-        std::shared_ptr<image::config> _icp;
+        std::shared_ptr<image::config> _cfg;
+        std::default_random_engine& _dre;
     };
 
     class image::config : public json_config_parser {

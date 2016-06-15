@@ -169,43 +169,35 @@ void image::transformer::cbsjitter(cv::Mat& inout, const vector<float>& photomet
     }
 }
 
-image::param_factory::param_factory(shared_ptr<image::config> cfg)
-{
-    _do_area_scale = cfg->do_area_scale;
-    _icp = cfg;
-}
-
 shared_ptr<image::params>
-image::param_factory::make_params(
-                            shared_ptr<const decoded> input,
-                            default_random_engine& dre )
+image::param_factory::make_params(shared_ptr<const decoded> input)
 {
     auto imgstgs = make_shared<image::params>();
 
-    imgstgs->output_size = cv::Size2i(_icp->width, _icp->height);
+    imgstgs->output_size = cv::Size2i(_cfg->width, _cfg->height);
 
-    imgstgs->angle = _icp->angle(dre);
-    imgstgs->flip  = _icp->flip(dre);
+    imgstgs->angle = _cfg->angle(_dre);
+    imgstgs->flip  = _cfg->flip(_dre);
 
     cv::Size2f in_size = input->get_image_size();
 
-    float scale = _icp->scale(dre);
-    float aspect_ratio = _icp->aspect_ratio(dre);
+    float scale = _cfg->scale(_dre);
+    float aspect_ratio = _cfg->aspect_ratio(_dre);
     scale_cropbox(in_size, imgstgs->cropbox, aspect_ratio, scale);
 
-    float c_off_x = _icp->crop_offset(dre);
-    float c_off_y = _icp->crop_offset(dre);
+    float c_off_x = _cfg->crop_offset(_dre);
+    float c_off_y = _cfg->crop_offset(_dre);
     shift_cropbox(in_size, imgstgs->cropbox, c_off_x, c_off_y);
 
-    if (_icp->lighting.stddev() != 0) {
+    if (_cfg->lighting.stddev() != 0) {
         for( int i=0; i<3; i++ ) {
-            imgstgs->lighting.push_back(_icp->lighting(dre));
+            imgstgs->lighting.push_back(_cfg->lighting(_dre));
         }
-        imgstgs->color_noise_std = _icp->lighting.stddev();
+        imgstgs->color_noise_std = _cfg->lighting.stddev();
     }
-    if (_icp->photometric.a()!=_icp->photometric.b()) {
+    if (_cfg->photometric.a()!=_cfg->photometric.b()) {
         for( int i=0; i<3; i++ ) {
-            imgstgs->photometric.push_back(_icp->photometric(dre));
+            imgstgs->photometric.push_back(_cfg->photometric(_dre));
         }
     }
     return imgstgs;
@@ -224,12 +216,12 @@ void image::param_factory::scale_cropbox(
                             float tgt_scale )
 {
 
-    float out_a_r = static_cast<float>(_icp->width) / _icp->height;
+    float out_a_r = static_cast<float>(_cfg->width) / _cfg->height;
     float in_a_r  = in_size.width / in_size.height;
 
     float crop_a_r = out_a_r * tgt_aspect_ratio;
 
-    if (_do_area_scale) {
+    if (_cfg->do_area_scale) {
         // Area scaling -- use pctge of original area subject to aspect ratio constraints
         float max_scale = in_a_r > crop_a_r ? crop_a_r /  in_a_r : in_a_r / crop_a_r;
         float tgt_area  = std::min(tgt_scale, max_scale) * in_size.area();
