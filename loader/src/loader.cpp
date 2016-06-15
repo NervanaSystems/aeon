@@ -238,8 +238,6 @@ ReadThread::ReadThread(const shared_ptr<BufferPool>& out, const shared_ptr<Batch
 
 void ReadThread::work(int id) {
     // Fill input buffers.
-    // TODO: make sure this locking still makes sense with new
-    // BatchIterator
     {
         unique_lock<mutex> lock(_out->getMutex());
         while (_out->full() == true) {
