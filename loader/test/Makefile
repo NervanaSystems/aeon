@@ -21,6 +21,7 @@ SRCS := \
     main.cpp \
     thread_test.cpp \
     datagen.cpp \
+    avgen.c \
     argtype_test.cpp \
     test_bbox.cpp \
     test_image.cpp \
@@ -36,6 +37,7 @@ SRCS := \
     helpers.cpp
 TOBJS            = $(subst .cpp,.o,$(SRCS))
 OBJS             = $(subst .c,.o,$(TOBJS))
+
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=gnu11 -DCURDIR=\"$(CURDIR)\"
 CXXFLAGS        := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -DCURDIR=\"$(CURDIR)\"
 CFLAGSDBG       := -g -Wall -O0 -std=c++11

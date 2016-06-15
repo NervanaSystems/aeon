@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
 
 #ifdef HAVE_AV_CONFIG_H
 #undef HAVE_AV_CONFIG_H
@@ -52,7 +53,7 @@ using namespace std;
 /*
  * Audio encoding example
  */
-void avgen::audio_encode(const char *filename)
+void avgen::audio_encode(const std::string& filename, float frequencyHz )
 {
     AVCodec *codec;
     AVCodecContext *c= NULL;
@@ -90,15 +91,18 @@ void avgen::audio_encode(const char *filename)
     outbuf_size = 10000;
     outbuf = (uint8_t*)malloc(outbuf_size);
 
-    f = fopen(filename, "wb");
+    f = fopen(filename.c_str(), "wb");
     if (!f) {
-        fprintf(stderr, "could not open %s\n", filename);
+        fprintf(stderr, "could not open %s\n", filename.c_str());
         exit(1);
     }
 
     /* encode a single tone sound */
+    cout << "generate " << frequencyHz << " Hz tone" << endl;
     t = 0;
-    tincr = 2 * M_PI * 440.0 / c->sample_rate;
+    tincr = 2 * M_PI * frequencyHz / c->sample_rate;
+    cout << "tincr " << tincr << endl;
+    cout << "frame size " << frame_size << endl;
     for(i=0;i<200;i++) {
         for(j=0;j<frame_size;j++) {
             samples[2*j] = (int)(sin(t) * 10000);
@@ -120,7 +124,7 @@ void avgen::audio_encode(const char *filename)
 /*
  * Audio decoding.
  */
-void avgen::audio_decode(const char *outfilename, const char *filename)
+void avgen::audio_decode(const std::string& outfilename, const std::string& filename)
 {
     AVCodec *codec;
     AVCodecContext *c= NULL;
@@ -151,12 +155,12 @@ void avgen::audio_decode(const char *outfilename, const char *filename)
 
     outbuf = (uint8_t*)malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE);
 
-    f = fopen(filename, "rb");
+    f = fopen(filename.c_str(), "rb");
     if (!f) {
-        fprintf(stderr, "could not open %s\n", filename);
+        fprintf(stderr, "could not open %s\n", filename.c_str());
         exit(1);
     }
-    outfile = fopen(outfilename, "wb");
+    outfile = fopen(outfilename.c_str(), "wb");
     if (!outfile) {
         av_free(c);
         exit(1);
@@ -204,7 +208,7 @@ void avgen::audio_decode(const char *outfilename, const char *filename)
 /*
  * Video encoding example
  */
-void avgen::video_encode(const char *filename)
+void avgen::video_encode(const std::string& filename)
 {
     AVCodec *codec;
     AVCodecContext *c= NULL;
@@ -242,9 +246,9 @@ void avgen::video_encode(const char *filename)
         exit(1);
     }
 
-    f = fopen(filename, "wb");
+    f = fopen(filename.c_str(), "wb");
     if (!f) {
-        fprintf(stderr, "could not open %s\n", filename);
+        fprintf(stderr, "could not open %s\n", filename.c_str());
         exit(1);
     }
 
@@ -328,7 +332,7 @@ void avgen::pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
     fclose(f);
 }
 
-void avgen::video_decode(const char *outfilename, const char *filename)
+void avgen::video_decode(const std::string& outfilename, const std::string& filename)
 {
     AVCodec *codec;
     AVCodecContext *c= NULL;
@@ -371,9 +375,9 @@ void avgen::video_decode(const char *outfilename, const char *filename)
 
     /* the codec gives us the frame size, in samples */
 
-    f = fopen(filename, "rb");
+    f = fopen(filename.c_str(), "rb");
     if (!f) {
-        fprintf(stderr, "could not open %s\n", filename);
+        fprintf(stderr, "could not open %s\n", filename.c_str());
         exit(1);
     }
 
@@ -411,7 +415,7 @@ void avgen::video_decode(const char *outfilename, const char *filename)
 
                 /* the picture is allocated by the decoder. no need to
                    free it */
-                snprintf(buf, sizeof(buf), outfilename, frame);
+                snprintf(buf, sizeof(buf), outfilename.c_str(), frame);
                 pgm_save(picture->data[0], picture->linesize[0],
                          c->width, c->height, buf);
                 frame++;
@@ -433,7 +437,7 @@ void avgen::video_decode(const char *outfilename, const char *filename)
 
         /* the picture is allocated by the decoder. no need to
            free it */
-        snprintf(buf, sizeof(buf), outfilename, frame);
+        snprintf(buf, sizeof(buf), outfilename.c_str(), frame);
         pgm_save(picture->data[0], picture->linesize[0],
                  c->width, c->height, buf);
         frame++;

@@ -79,3 +79,37 @@ TEST(util, unpack_be) {
         EXPECT_EQ(0,actual);
     }
 }
+
+
+TEST(util, pack_le) {
+    {
+        char actual[] = {0,0,0,0};
+        char expected[] = {1,0,0,0};
+        pack_le<int>(actual,1);
+        EXPECT_EQ(*(unsigned int*)expected,*(unsigned int*)actual);
+    }
+    {
+        char actual[] = {0,0,0,0};
+        char expected[] = {0,1,0,0};
+        pack_le<int>(actual,0x00000100);
+        EXPECT_EQ(*(unsigned int*)expected,*(unsigned int*)actual);
+    }
+    {
+        char actual[] = {0,0,0,0};
+        char expected[] = {0,0,0,1};
+        pack_le<int>(actual,0x01000000);
+        EXPECT_EQ(*(unsigned int*)expected,*(unsigned int*)actual);
+    }
+//    {
+//        char actual[] = {0,0,0,0};
+//        char expected[] = {0,0,0,1};
+//        pack_le<int>(actual,0,3);
+//        EXPECT_EQ(expected,actual);
+//    }
+//    {
+//        char actual[] = {0,0,0,0};
+//        char expected[] = {0,0,0,1};
+//        pack_le<int>(actual,0x00010000,1,3);
+//        EXPECT_EQ(expected,actual);
+//    }
+}

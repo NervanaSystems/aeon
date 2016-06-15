@@ -26,17 +26,17 @@ public:
     /*
      * Audio encoding example
      */
-    static void audio_encode(const char *filename);
+    static void audio_encode(const std::string& filename, float frequencyHz);
 
     /*
      * Audio decoding.
      */
-    static void audio_decode(const char *outfilename, const char *filename);
+    static void audio_decode(const std::string& outfilename, const std::string& filename);
 
     /*
      * Video encoding example
      */
-    static void video_encode(const char *filename);
+    static void video_encode(const std::string& filename);
 
     /*
      * Video decoding example
@@ -44,7 +44,7 @@ public:
     static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
                          char *filename);
 
-    static void video_decode(const char *outfilename, const char *filename);
+    static void video_decode(const std::string& outfilename, const std::string& filename);
 
     static std::vector<std::string> get_codec_list();
 

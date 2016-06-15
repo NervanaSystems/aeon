@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include "datagen.hpp"
 #include "batchfile.hpp"
+#include "util.hpp"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -25,46 +26,12 @@
  using namespace std;
 
 DataGen::DataGen() :
-    _path(),
-    _prefix("archive-"),
-    _maxItems(4000),
-    _maxSize(-1),
-    _setSize(100000),
     _imageRows(256),
-    _imageCols(256),
-    _pathExisted(false)
+    _imageCols(256)
 {
 }
 
 DataGen::~DataGen() {
-}
-
-DataGen& DataGen::Directory( const std::string& dir ) {
-    _path = dir;
-    return *this;
-}
-
-DataGen& DataGen::Prefix( const std::string& prefix ) {
-    _prefix = prefix;
-    return *this;
-}
-
-DataGen& DataGen::MacrobatchMaxItems( int max ) {
-    assert(max>0);
-    _maxItems = max;
-    return *this;
-}
-
-DataGen& DataGen::MacrobatchMaxSize( int max ) {
-    assert(max>0);
-    _maxSize = max;
-    return *this;
-}
-
-DataGen& DataGen::DatasetSize( int size ) {
-    assert(size>0);
-    _setSize = size;
-    return *this;
 }
 
 DataGen& DataGen::ImageSize( int rows, int cols ) {
@@ -75,11 +42,11 @@ DataGen& DataGen::ImageSize( int rows, int cols ) {
     return *this;
 }
 
-vector<unsigned char> DataGen::RenderImage( int number, int label ) {
+vector<unsigned char> DataGen::render_datum( int number ) {
     cv::Mat image = cv::Mat( _imageRows, _imageCols, CV_8UC3 );
     image = cv::Scalar(255,255,255);
     auto fontFace = cv::FONT_HERSHEY_PLAIN;
-    string text = to_string(number) + ", " + to_string(label);
+    string text = to_string(number);// + ", " + to_string(label);
     float scale = 2.0 / 256. * _imageRows;
     int thickness = 1;
     int baseline=0;
@@ -94,54 +61,51 @@ vector<unsigned char> DataGen::RenderImage( int number, int label ) {
     return result;
 }
 
-int DataGen::Create() {
-    int rc = -1;
-    int fileNo = 0;
-    _pathExisted = exists(_path);
-    int imageNumber = 0;
-    if( _pathExisted || mkdir(_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0 ) {
-        int remainder = _setSize;
-        while(remainder > 0) {
-            int batchSize = min(remainder,_maxItems);
-            string fileName = _path + "/" + _prefix + to_string(fileNo++) + ".cpio";
-            _fileList.push_back(fileName);
-            BatchFileWriter bf;
-            bf.open(fileName, "");
-            for(int i=0; i<batchSize; i++) {
-                int target = imageNumber + 42;
-                vector<unsigned char> imageData = RenderImage( imageNumber++, target );
-                int imageSize = imageData.size();
-                bf.writeItem((char*)imageData.data(),(char*)&target,(uint)imageSize,(uint)sizeof(target));
-            }
-            bf.close();
-            remainder -= batchSize;
-        }
-    } else {
-        cout << "failed to create path " << _path << endl;
-    }
+vector<unsigned char> DataGen::render_target( int number ) {
+    int target = number + 42;
+    vector<unsigned char> rc(4);
+    nervana::pack_le<int>((char*)&rc[0],target);
+    
+//    for( int i=0; i<4; i++ ) printf( "0x%02X ", rc[i] );
+//    printf( "\n" );
+    
     return rc;
 }
 
-void DataGen::Delete() {
-    for( const string& f : _fileList ) {
-        remove(f.c_str());
-    }
-    if(!_pathExisted) {
-        // delete directory
-        remove(_path.c_str());
-    }
-}
+//int DataGen::Create() {
+//    int rc = -1;
+//    int fileNo = 0;
+//    _pathExisted = exists(_path);
+//    int imageNumber = 0;
+//    if( _pathExisted || mkdir(_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0 ) {
+//        int remainder = _setSize;
+//        while(remainder > 0) {
+//            int batchSize = min(remainder,_maxItems);
+//            string fileName = _path + "/" + _prefix + to_string(fileNo++) + ".cpio";
+//            _fileList.push_back(fileName);
+//            BatchFileWriter bf;
+//            bf.open(fileName, "");
+//            for(int i=0; i<batchSize; i++) {
+//                int target = imageNumber + 42;
+//                vector<unsigned char> imageData = RenderImage( imageNumber++, target );
+//                int imageSize = imageData.size();
+//                bf.writeItem((char*)imageData.data(),(char*)&target,(uint)imageSize,(uint)sizeof(target));
+//            }
+//            bf.close();
+//            remainder -= batchSize;
+//        }
+//    } else {
+//        cout << "failed to create path " << _path << endl;
+//    }
+//    return rc;
+//}
 
-bool DataGen::exists(const string& fileName) {
-    struct stat stats;
-    return stat(fileName.c_str(), &stats) == 0;
-}
-
-std::string DataGen::GetDatasetPath() {
-    return _path;
-}
-
-std::vector<std::string> DataGen::GetFiles() {
-    return _fileList;
-}
-
+//void DataGen::Delete() {
+//    for( const string& f : _fileList ) {
+//        remove(f.c_str());
+//    }
+//    if(!_pathExisted) {
+//        // delete directory
+//        remove(_path.c_str());
+//    }
+//}

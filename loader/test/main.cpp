@@ -34,7 +34,7 @@ using namespace std;
 
 DataGen _datagen;
 
-static void CreateDataset() {
+static void CreateImageDataset() {
     std::chrono::high_resolution_clock timer;
     auto start = timer.now();
     _datagen.Directory("dataset")
@@ -48,14 +48,22 @@ static void CreateDataset() {
     cout << "datagen " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
+static void CreateAudioDataset() {
+    avgen::audio_encode("test1.mp2",2000);
+}
+
+static void CreateVideoDataset() {
+
+}
+
 static void DeleteDataset() {
     _datagen.Delete();
 }
 
 extern "C" int main( int argc, char** argv ) {
-    avgen::audio_encode("test.mp2");
-
-    CreateDataset();
+    CreateImageDataset();
+    CreateAudioDataset();
+    CreateVideoDataset();
 
     ::testing::InitGoogleTest(&argc, argv);
     int rc = RUN_ALL_TESTS();

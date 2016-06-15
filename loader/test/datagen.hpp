@@ -19,35 +19,21 @@
 #include <vector>
 #include <memory>
 
-class DataGen {
+#include "dataset.hpp"
+
+class DataGen : public dataset<DataGen> {
 public:
     DataGen();
     ~DataGen();
 
-    DataGen& Directory( const std::string& dir );
-    DataGen& Prefix( const std::string& prefix );
-    DataGen& MacrobatchMaxItems( int max );
-    DataGen& MacrobatchMaxSize( int max );
-    DataGen& DatasetSize( int size );
     DataGen& ImageSize( int rows, int cols );
-    int Create();
-    void Delete();
-
-    std::string GetDatasetPath();
-    std::vector<std::string> GetFiles();
 
 private:
-    std::string _path;
-    std::string _prefix;
-    int         _maxItems;
-    int         _maxSize;
-    int         _setSize;
     int         _imageRows;
     int         _imageCols;
-    bool        _pathExisted;
 
-    std::vector<std::string> _fileList;
+    std::vector<unsigned char> render_target( int datumNumber ) override;
+    std::vector<unsigned char> render_datum( int datumNumber ) override;
 
-    bool exists(const std::string& fileName);
     std::vector<unsigned char> RenderImage( int number, int label );
 };
