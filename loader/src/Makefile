@@ -15,37 +15,37 @@
 # ----------------------------------------------------------------------------
 
 SRCS            := \
-	media.cpp \
-	event.cpp \
-	device.cpp \
-	batchfile.cpp \
-	image.cpp \
-	archive.cpp \
-	reader.cpp \
-	buffer.cpp \
-	loader.cpp \
-	argtype.cpp \
-	etl_image.cpp \
-	etl_bbox.cpp \
-	etl_lmap.cpp \
-	etl_specgram.cpp \
-	etl_rawmedia.cpp \
-	codec.cpp \
-	video.cpp \
-	util.cpp \
-	manifest.cpp \
-	batch_file_loader.cpp \
-	batch_loader_cpio_cache.cpp \
-	sequential_batch_iterator.cpp \
-	shuffled_batch_iterator.cpp
-OBJS 			= $(subst .cpp,.o,$(SRCS))
+    media.cpp \
+    event.cpp \
+    device.cpp \
+    batchfile.cpp \
+    image.cpp \
+    archive.cpp \
+    reader.cpp \
+    buffer.cpp \
+    loader.cpp \
+    argtype.cpp \
+    etl_image.cpp \
+    etl_bbox.cpp \
+    etl_lmap.cpp \
+    etl_specgram.cpp \
+    etl_rawmedia.cpp \
+    codec.cpp \
+    video.cpp \
+    util.cpp \
+    manifest.cpp \
+    batch_file_loader.cpp \
+    batch_loader_cpio_cache.cpp \
+    sequential_batch_iterator.cpp \
+    shuffled_batch_iterator.cpp
+OBJS             = $(subst .cpp,.o,$(SRCS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -fPIC
 CFLAGSDBG       := -g -Wall -O0 -std=c++11
 CC              := clang++
 LOADER_SO       := ../bin/loader.so
 LOADER_STATIC   := loader.a
 UNAME_S         := $(shell uname -s)
-DEPDIR 			= .d
+DEPDIR             = .d
 $(shell mkdir -p $(DEPDIR) >/dev/null)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
