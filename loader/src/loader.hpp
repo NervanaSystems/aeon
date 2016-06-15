@@ -149,6 +149,6 @@ private:
     std::unique_ptr<ReadThread>         _readThread;
     std::unique_ptr<DecodeThreadPool>   _decodeThreads;
     std::shared_ptr<Device>             _device;
-    std::shared_ptr<BatchIterator>      _batch_iterator;
+    std::shared_ptr<BatchIterator>      _batchIterator;
     MediaParams*                        _mediaParams;
 };

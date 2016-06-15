@@ -265,7 +265,7 @@ Loader::Loader(int* itemCount, int batchSize,
   _datumSize(datumSize), _datumTypeSize(datumTypeSize),
   _targetSize(targetSize), _targetTypeSize(targetTypeSize),
   _readBufs(nullptr), _decodeBufs(nullptr), _readThread(nullptr), _decodeThreads(nullptr),
-  _device(nullptr), _batch_iterator(nullptr), _mediaParams(mediaParams)
+  _device(nullptr), _batchIterator(nullptr), _mediaParams(mediaParams)
   {
     // TODO: rename to shuffleManifest and shuffleEveryEpoch
     // TODO: not a constant
@@ -293,11 +293,11 @@ Loader::Loader(int* itemCount, int batchSize,
     // _batch_iterator provides an unending iterator (shuffled or not) over
     // the batchLoader
     if(reshuffle) {
-        _batch_iterator = make_shared<ShuffledBatchIterator>(
+        _batchIterator = make_shared<ShuffledBatchIterator>(
              batchLoader, _macroBatchSize, _seed
         );
     } else {
-        _batch_iterator = make_shared<SequentialBatchIterator>(
+        _batchIterator = make_shared<SequentialBatchIterator>(
              batchLoader, _macroBatchSize
         );
     }
@@ -314,7 +314,7 @@ int Loader::start() {
         // Start the read buffers off with a reasonable size. They will
         // get resized as needed.
         _readBufs = make_shared<BufferPool>(dataLen / 8, targetLen);
-        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
+        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batchIterator));
         bool pinned = (_device->_type != CPU);
         _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, pinned);
         int numCores = thread::hardware_concurrency();
@@ -353,7 +353,7 @@ void Loader::stop() {
 
 int Loader::reset() {
     stop();
-    _batch_iterator->reset();
+    _batchIterator->reset();
     start();
     return 0;
 }
@@ -390,7 +390,7 @@ void Loader::next() {
 }
 
 std::shared_ptr<BatchIterator> Loader::getBatchIterator() {
-    return _batch_iterator;
+    return _batchIterator;
 }
 
 std::shared_ptr<Device> Loader::getDevice() {
