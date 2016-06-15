@@ -33,7 +33,6 @@ SRCS := \
     batch_file_loader_test.cpp \
     batch_loader_cpio_cache.cpp \
     buffer_test.cpp \
-    shuffled_batch_iterator_test.cpp \
     helpers.cpp
 TOBJS            = $(subst .cpp,.o,$(SRCS))
 OBJS             = $(subst .c,.o,$(TOBJS))

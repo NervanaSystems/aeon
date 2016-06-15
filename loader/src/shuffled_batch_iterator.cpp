@@ -5,8 +5,7 @@
 #include "shuffled_batch_iterator.hpp"
 
 ShuffledBatchIterator::ShuffledBatchIterator(shared_ptr<BatchLoader> loader, uint block_size, uint seed)
-    : _loader(loader), _block_size(block_size), _rand(seed), _seed(seed) {
-    _epoch = 0;
+    : _rand(seed), _loader(loader), _block_size(block_size), _seed(seed), _epoch(0) {
 
     // fill indices with integers from  0 to _count.  indices can then be
     // shuffled and used to iterate randomly through the blocks.

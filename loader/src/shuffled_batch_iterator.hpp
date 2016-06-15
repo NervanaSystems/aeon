@@ -33,9 +33,9 @@ protected:
 private:
     std::minstd_rand0 _rand;
     shared_ptr<BatchLoader> _loader;
-    uint _block_size;
     vector<uint> _indices;
     vector<uint>::iterator _it;
+    uint _block_size;
     uint _seed;
     uint _epoch;
 };

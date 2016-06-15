@@ -44,7 +44,7 @@ TEST(manifest, parse_file) {
 
     Manifest manifest(tmpname, false);
     ASSERT_EQ(manifest.getSize(), 2);
-} 
+}
 
 TEST(manifest, no_shuffle) {
     string filename = tmp_manifest_file(20, 4, 4);
