@@ -19,21 +19,21 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "imagegen.hpp"
+#include "gen_image.hpp"
 #include "util.hpp"
 
 using namespace std;
 
-image_gen::image_gen() :
+gen_image::gen_image() :
     _imageRows(256),
     _imageCols(256)
 {
 }
 
-image_gen::~image_gen() {
+gen_image::~gen_image() {
 }
 
-image_gen& image_gen::ImageSize( int rows, int cols ) {
+gen_image& gen_image::ImageSize( int rows, int cols ) {
     assert(rows>0);
     assert(cols>0);
     _imageRows = rows;
@@ -41,7 +41,7 @@ image_gen& image_gen::ImageSize( int rows, int cols ) {
     return *this;
 }
 
-vector<unsigned char> image_gen::render_datum( int number ) {
+vector<unsigned char> gen_image::render_datum( int number ) {
     cv::Mat image = cv::Mat( _imageRows, _imageCols, CV_8UC3 );
     image = cv::Scalar(255,255,255);
     auto fontFace = cv::FONT_HERSHEY_PLAIN;
@@ -60,7 +60,7 @@ vector<unsigned char> image_gen::render_datum( int number ) {
     return result;
 }
 
-vector<unsigned char> image_gen::render_target( int number ) {
+vector<unsigned char> gen_image::render_target( int number ) {
     int target = number + 42;
     vector<unsigned char> rc(4);
     nervana::pack_le<int>((char*)&rc[0],target);

@@ -27,12 +27,15 @@ extern "C" {
 
 #include "gtest/gtest.h"
 
-#include "imagegen.hpp"
-#include "avgen.hpp"
+#include "gen_image.hpp"
+#include "gen_audio.hpp"
+#include "gen_video.hpp"
 
 using namespace std;
 
-image_gen _datagen;
+gen_image _datagen;
+gen_audio _audio_dataset;
+gen_video _video_dataset;
 
 static void CreateImageDataset() {
     std::chrono::high_resolution_clock timer;
@@ -49,7 +52,7 @@ static void CreateImageDataset() {
 }
 
 static void CreateAudioDataset() {
-    avgen::audio_encode("test1.mp2",2000);
+    _audio_dataset.encode("test1.mp2",2000);
 }
 
 static void CreateVideoDataset() {

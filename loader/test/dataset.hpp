@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <cassert>
+#include <sys/stat.h>
 
 #include "batchfile.hpp"
 

@@ -15,10 +15,10 @@
 
 #include "loader.hpp"
 #include "image.hpp"
-#include "imagegen.hpp"
+#include "gen_image.hpp"
 #include "gtest/gtest.h"
 
-extern image_gen _datagen;
+extern gen_image _datagen;
 
 // Code for unit testing.
 using namespace std;

@@ -27,7 +27,7 @@
 #undef HAVE_AV_CONFIG_H
 #endif
 
-#include "avgen.hpp"
+#include "gen_video.hpp"
 
 extern "C" {
     #include <libavformat/avformat.h>
@@ -48,167 +48,19 @@ extern "C" {
 #define AUDIO_INBUF_SIZE 20480
 #define AUDIO_REFILL_THRESH 4096
 
-using namespace std;
 
-/*
- * Audio encoding example
- */
-void avgen::audio_encode(const std::string& filename, float frequencyHz )
-{
-    AVCodec *codec;
-    AVCodecContext *c= NULL;
-    int frame_size, i, j, out_size, outbuf_size;
-    FILE *f;
-    short *samples;
-    float t, tincr;
-    uint8_t *outbuf;
-
-    /* find the MP2 encoder */
-    codec = avcodec_find_encoder(CODEC_ID_MP2);
-    if (!codec) {
-        fprintf(stderr, "codec not found\n");
-        exit(1);
-    }
-
-    c = avcodec_alloc_context3(codec);
-
-    c->sample_fmt = c->codec->sample_fmts[0];
-
-    /* put sample parameters */
-    c->bit_rate = 64000;
-    c->sample_rate = 44100;
-    c->channels = 2;
-
-    /* open it */
-    if (avcodec_open2(c, codec, nullptr) < 0) {
-        fprintf(stderr, "could not open codec\n");
-        exit(1);
-    }
-
-    /* the codec gives us the frame size, in samples */
-    frame_size = c->frame_size;
-    samples = (short*)malloc(frame_size * 2 * c->channels);
-    outbuf_size = 10000;
-    outbuf = (uint8_t*)malloc(outbuf_size);
-
-    f = fopen(filename.c_str(), "wb");
-    if (!f) {
-        fprintf(stderr, "could not open %s\n", filename.c_str());
-        exit(1);
-    }
-
-    /* encode a single tone sound */
-    cout << "generate " << frequencyHz << " Hz tone" << endl;
-    t = 0;
-    tincr = 2 * M_PI * frequencyHz / c->sample_rate;
-    cout << "tincr " << tincr << endl;
-    cout << "frame size " << frame_size << endl;
-    for(i=0;i<200;i++) {
-        for(j=0;j<frame_size;j++) {
-            samples[2*j] = (int)(sin(t) * 10000);
-            samples[2*j+1] = samples[2*j];
-            t += tincr;
-        }
-        /* encode the samples */
-        out_size = avcodec_encode_audio(c, outbuf, outbuf_size, samples);
-        fwrite(outbuf, 1, out_size, f);
-    }
-    fclose(f);
-    free(outbuf);
-    free(samples);
-
-    avcodec_close(c);
-    av_free(c);
+std::vector<unsigned char> gen_video::render_target( int datumNumber ) {
+    
 }
 
-/*
- * Audio decoding.
- */
-void avgen::audio_decode(const std::string& outfilename, const std::string& filename)
-{
-    AVCodec *codec;
-    AVCodecContext *c= NULL;
-    int out_size, len;
-    FILE *f, *outfile;
-    uint8_t *outbuf;
-    uint8_t inbuf[AUDIO_INBUF_SIZE + FF_INPUT_BUFFER_PADDING_SIZE];
-    AVPacket avpkt;
-
-    av_init_packet(&avpkt);
-
-    printf("Audio decoding\n");
-
-    /* find the mpeg audio decoder */
-    codec = avcodec_find_decoder(CODEC_ID_MP2);
-    if (!codec) {
-        fprintf(stderr, "codec not found\n");
-        exit(1);
-    }
-
-    c= avcodec_alloc_context3(codec);
-
-    /* open it */
-    if (avcodec_open2(c, codec, nullptr) < 0) {
-        fprintf(stderr, "could not open codec\n");
-        exit(1);
-    }
-
-    outbuf = (uint8_t*)malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE);
-
-    f = fopen(filename.c_str(), "rb");
-    if (!f) {
-        fprintf(stderr, "could not open %s\n", filename.c_str());
-        exit(1);
-    }
-    outfile = fopen(outfilename.c_str(), "wb");
-    if (!outfile) {
-        av_free(c);
-        exit(1);
-    }
-
-    /* decode until eof */
-    avpkt.data = inbuf;
-    avpkt.size = fread(inbuf, 1, AUDIO_INBUF_SIZE, f);
-
-    while (avpkt.size > 0) {
-        out_size = AVCODEC_MAX_AUDIO_FRAME_SIZE;
-        len = avcodec_decode_audio3(c, (short *)outbuf, &out_size, &avpkt);
-        if (len < 0) {
-            fprintf(stderr, "Error while decoding\n");
-            exit(1);
-        }
-        if (out_size > 0) {
-            /* if a frame has been decoded, output it */
-            fwrite(outbuf, 1, out_size, outfile);
-        }
-        avpkt.size -= len;
-        avpkt.data += len;
-        if (avpkt.size < AUDIO_REFILL_THRESH) {
-            /* Refill the input buffer, to avoid trying to decode
-             * incomplete frames. Instead of this, one could also use
-             * a parser, or use a proper container format through
-             * libavformat. */
-            memmove(inbuf, avpkt.data, avpkt.size);
-            avpkt.data = inbuf;
-            len = fread(avpkt.data + avpkt.size, 1,
-                        AUDIO_INBUF_SIZE - avpkt.size, f);
-            if (len > 0)
-                avpkt.size += len;
-        }
-    }
-
-    fclose(outfile);
-    fclose(f);
-    free(outbuf);
-
-    avcodec_close(c);
-    av_free(c);
-}
+std::vector<unsigned char> gen_video::render_datum( int datumNumber ) {
+    
+}  
 
 /*
  * Video encoding example
  */
-void avgen::video_encode(const std::string& filename)
+void gen_video::encode(const std::string& filename)
 {
     AVCodec *codec;
     AVCodecContext *c= NULL;
@@ -319,7 +171,7 @@ void avgen::video_encode(const std::string& filename)
  * Video decoding example
  */
 
-void avgen::pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
+void gen_video::pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
                      char *filename)
 {
     FILE *f;
@@ -332,7 +184,7 @@ void avgen::pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
     fclose(f);
 }
 
-void avgen::video_decode(const std::string& outfilename, const std::string& filename)
+void gen_video::decode(const std::string& outfilename, const std::string& filename)
 {
     AVCodec *codec;
     AVCodecContext *c= NULL;
@@ -450,45 +302,3 @@ void avgen::video_decode(const std::string& outfilename, const std::string& file
     av_free(picture);
     printf("\n");
 }
-
-vector<string> avgen::get_codec_list() {
-    vector<string> rc;
-    AVCodec* current_codec = av_codec_next(nullptr);
-    while (current_codec != NULL)
-    {
-        if (!av_codec_is_encoder(current_codec))
-        {
-            current_codec = av_codec_next(current_codec);
-            continue;
-        }
-        rc.push_back(string(current_codec->name));
-        current_codec = av_codec_next(current_codec);
-    }
-    return rc;
-}
-
-//int main(int argc, char **argv)
-//{
-//    const char *filename;
-
-//    /* must be called before using avcodec lib */
-////    avcodec_init();
-
-//    /* register all the codecs */
-//    avcodec_register_all();
-
-//    if (argc <= 1) {
-//        audio_encode_example("/tmp/test.mp2");
-//        audio_decode_example("/tmp/test.sw", "/tmp/test.mp2");
-
-//        video_encode_example("/tmp/test.mpg");
-//        filename = "/tmp/test.mpg";
-//    } else {
-//        filename = argv[1];
-//    }
-
-//    //    audio_decode_example("/tmp/test.sw", filename);
-//    video_decode_example("/tmp/test%d.pgm", filename);
-
-//    return 0;
-//}

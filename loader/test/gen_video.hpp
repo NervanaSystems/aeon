@@ -21,36 +21,17 @@
 #include <string>
 #include <vector>
 
-class avgen {
+#include "dataset.hpp"
+
+class gen_video : public dataset<gen_video> {
 public:
-    /*
-     * Audio encoding example
-     */
-    static void audio_encode(const std::string& filename, float frequencyHz);
-
-    /*
-     * Audio decoding.
-     */
-    static void audio_decode(const std::string& outfilename, const std::string& filename);
-
-    /*
-     * Video encoding example
-     */
-    static void video_encode(const std::string& filename);
-
-    /*
-     * Video decoding example
-     */
-    static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
-                         char *filename);
-
-    static void video_decode(const std::string& outfilename, const std::string& filename);
-
-    static std::vector<std::string> get_codec_list();
-
+    void encode(const std::string& filename);
+    void decode(const std::string& outfilename, const std::string& filename);
+    
 private:
-    static const char* Encoder_GetNextCodecName();
-    static const char* Encoder_GetFirstCodecName();
+    std::vector<unsigned char> render_target( int datumNumber ) override;
+    std::vector<unsigned char> render_datum( int datumNumber ) override;
+
+    void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
+                         char *filename);
 };
-
-

@@ -21,12 +21,12 @@
 
 #include "dataset.hpp"
 
-class image_gen : public dataset<image_gen> {
+class gen_image : public dataset<gen_image> {
 public:
-    image_gen();
-    ~image_gen();
+    gen_image();
+    ~gen_image();
 
-    image_gen& ImageSize( int rows, int cols );
+    gen_image& ImageSize( int rows, int cols );
 
 private:
     int         _imageRows;
