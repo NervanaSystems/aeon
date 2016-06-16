@@ -39,7 +39,7 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(BufferPair& dest, uint block_num, 
     // true.
     BatchFileReader reader;
 
-    if(!reader.tryOpen(blockFilename(block_num, block_size))) {
+    if(!reader.open(blockFilename(block_num, block_size))) {
         // couldn't load the file
         return false;
     }

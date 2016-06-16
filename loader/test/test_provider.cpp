@@ -70,11 +70,10 @@ TEST(provider, argtype) {
         )";
         auto lblcfg = make_shared<label::config>(cfgString);
 
-        BatchFileReader bf;
         auto dataFiles = _datagen.GetFiles();
         ASSERT_GT(dataFiles.size(),0);
         string batchFileName = dataFiles[0];
-        bf.open(batchFileName);
+        BatchFileReader bf(batchFileName);
 
         // Just get a single item
         auto data = bf.read();

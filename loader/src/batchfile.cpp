@@ -138,24 +138,18 @@ BatchFileReader::BatchFileReader() {
 }
 
 BatchFileReader::BatchFileReader(const string& fileName) {
-    open(fileName);
+    if(!open(fileName)) {
+        stringstream ss;
+        ss << "couldn't open " << fileName;
+        throw std::runtime_error(ss.str());
+    }
 }
 
 BatchFileReader::~BatchFileReader() {
     close();
 }
 
-void BatchFileReader::open(const string& fileName) {
-    // TODO: depricate?
-    assert(_ifs.is_open() == false);
-    _ifs.open(fileName, IfStream::binary);
-    uint fileSize;
-    _recordHeader.read(_ifs, &fileSize);
-    assert(fileSize == sizeof(_fileHeader));
-    _fileHeader.read(_ifs);
-}
-
-bool BatchFileReader::tryOpen(const string& fileName) {
+bool BatchFileReader::open(const string& fileName) {
     // returns true if file was opened successfully.
     assert(_ifs.is_open() == false);
     _ifs.open(fileName, IfStream::binary);

@@ -128,8 +128,7 @@ public:
     BatchFileReader(const std::string& fileName);
     ~BatchFileReader() ;
 
-    void open(const std::string& fileName);
-    bool tryOpen(const std::string& fileName);
+    bool open(const std::string& fileName);
     void close();
 
     void readToBuffer(Buffer& dest);

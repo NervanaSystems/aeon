@@ -126,10 +126,15 @@ extern void write_raw(char *outfile, const int numData,
 
 extern int read_max_item(char *batchfile) {
     BatchFileReader bf;
-    bf.open(batchfile);
-    int maxItemSize = bf.maxDatumSize();
-    bf.close();
-    return maxItemSize;
+    if(bf.open(batchfile)) {
+        int maxItemSize = bf.maxDatumSize();
+        bf.close();
+        return maxItemSize;
+    } else {
+        stringstream ss;
+        ss << "couldn't open " << batchfile;
+        throw std::runtime_error(ss.str());
+    }
 }
 
 }
