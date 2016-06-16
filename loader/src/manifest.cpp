@@ -23,10 +23,20 @@
 
 using namespace std;
 
-Manifest::Manifest(string filename, const bool shuffle)
-: _filename(filename), _shuffle(shuffle) {
+const int makeRandomSeed() {
+    // helper for deligated constructor below
+    std::random_device rd;
+    return rd();
+}
+
+Manifest::Manifest(string filename, bool shuffle, const int randomSeed)
+: _filename(filename), _shuffle(shuffle), _randomSeed(randomSeed) {
     // for now parse the entire manifest on creation
     parse();
+}
+
+Manifest::Manifest(string filename, bool shuffle)
+    : Manifest(filename, shuffle, makeRandomSeed()) {
 }
 
 string Manifest::hash() {
@@ -80,8 +90,7 @@ void Manifest::shuffleFilenamePairs() {
     // shuffles _filename_pairs.  It is possible that the order of the
     // filenames in the manifest file were in some sorted order and we
     // don't want our blocks to be biased by that order.
-    std::random_device rd;
-    std::shuffle(_filename_pairs.begin(), _filename_pairs.end(), std::mt19937(rd()));
+    std::shuffle(_filename_pairs.begin(), _filename_pairs.end(), std::mt19937(_randomSeed));
 }
 
 Manifest::iter Manifest::begin() const {

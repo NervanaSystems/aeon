@@ -271,7 +271,7 @@ Loader::Loader(int* itemCount, int miniBatchSize,
     _device = Device::create(deviceParams);
 
     // the manifest defines which data should be included in the dataset
-    auto manifest = make_shared<Manifest>(manifestFilename, shuffleManifest);
+    auto manifest = make_shared<Manifest>(manifestFilename, shuffleManifest, randomSeed);
     *itemCount = manifest->getSize();
 
     // build cacheDir from rootCacheDir and a hash of the manifest
