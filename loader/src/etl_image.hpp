@@ -75,10 +75,8 @@ namespace nervana {
         bool channel_major = true;
         int channels = 3;
 
-        config(std::string argString)
+        bool set_config(nlohmann::json js) override
         {
-            auto js = nlohmann::json::parse(argString);
-
             parse_req(height, "height", js);
             parse_req(width, "width", js);
 
@@ -94,7 +92,7 @@ namespace nervana {
             parse_dist(photometric, "photometric", dist_params);
             parse_dist(crop_offset, "crop_offset", dist_params);
             parse_dist(flip, "flip", dist_params);
-            validate();
+            return validate();
         }
 
     private:
@@ -190,10 +188,8 @@ namespace nervana {
         std::vector<cv::Point2f> offsets;
         cv::Size2i output_size;
 
-        config(std::string argString)
+        bool set_config(nlohmann::json js) override
         {
-            auto js = nlohmann::json::parse(argString);
-
             // Parse required and optional variables
             parse_req(height, "height", js);
             parse_req(width, "width", js);
@@ -214,6 +210,7 @@ namespace nervana {
                 offsets.push_back(cv::Point2f(1.0, 1.0)); // SE
             }
             output_size = cv::Size2i(height, width);
+            return validate();
         }
 
     private:

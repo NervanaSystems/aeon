@@ -79,10 +79,8 @@ namespace nervana {
         std::string media_type;
         AVMediaType av_media_type = AVMEDIA_TYPE_UNKNOWN;
 
-        config(std::string argString)
+        bool set_config(nlohmann::json js) override
         {
-            auto js = nlohmann::json::parse(argString);
-
             parse_req(media_type, "media_type", js);
 
             auto avt = _avtype_map.find(media_type);
@@ -92,7 +90,7 @@ namespace nervana {
                 av_media_type = avt->second;
             }
 
-            validate();
+            return validate();
         }
 
     private:

@@ -19,14 +19,20 @@ using namespace nervana;
 TEST(provider, argtype) {
 
     {
+        cout << __FILE__ << " " << __LINE__ << endl;
         /* Create extractor with default num channels param */
         string cfgString = "{\"height\":10, \"width\":10}";
-        auto ic = make_shared<image::extractor>(make_shared<image::config>(cfgString));
+        auto js = nlohmann::json::parse(cfgString);
+        auto cfg = make_shared<image::config>();
+        cfg->set_config(js);
+        auto ic = make_shared<image::extractor>(cfg);
         EXPECT_EQ(ic->get_channel_count(), 3);
+        cout << __FILE__ << " " << __LINE__ << endl;
     }
 
 
     {
+        cout << __FILE__ << " " << __LINE__ << endl;
         string cfgString = R"(
             {
                 "height": 30,
@@ -41,7 +47,9 @@ TEST(provider, argtype) {
             }
         )";
 
-        auto itpj = make_shared<image::config>(cfgString);
+
+        auto itpj = make_shared<image::config>();
+        itpj->set_config(nlohmann::json::parse(cfgString));
 
         // output the fixed parameters
         EXPECT_EQ(30,itpj->height);
@@ -56,10 +64,12 @@ TEST(provider, argtype) {
 
         auto its = img_prm_maker.make_params(input_img_ptr);
         its->dump();
+        cout << __FILE__ << " " << __LINE__ << endl;
     }
 
 
     {
+        cout << __FILE__ << " " << __LINE__ << endl;
         string cfgString = R"(
             {
                 "extract offset":  20,
@@ -67,7 +77,8 @@ TEST(provider, argtype) {
                 "dist_params/transform shift":  [-5, 5]
             }
         )";
-        auto lblcfg = make_shared<label_test::config>(cfgString);
+        auto lblcfg = make_shared<label_test::config>();
+        lblcfg->set_config(nlohmann::json::parse(cfgString));
 
         auto dataFiles = _datagen.GetFiles();
         ASSERT_GT(dataFiles.size(),0);
@@ -116,7 +127,8 @@ TEST(provider, argtype) {
                     "load offset": 0.8
                 }
             )";
-            auto flt_lbl_config = make_shared<label_test::config>(lArgString);
+            auto flt_lbl_config = make_shared<label_test::config>();
+            flt_lbl_config->set_config(nlohmann::json::parse(lArgString));
 
             auto lbll = make_shared<label_test::loader>(flt_lbl_config);
 
@@ -126,5 +138,6 @@ TEST(provider, argtype) {
             pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }
+        cout << __FILE__ << " " << __LINE__ << endl;
     }
 }

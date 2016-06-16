@@ -28,16 +28,20 @@ namespace nervana {
         float ld_offset = 0.0;
         bool ld_dofloat = false;
 
-        config(std::string argString)
+        bool set_config(nlohmann::json js) override
         {
-            auto js = nlohmann::json::parse(argString);
-
             // Optionals with some standard defaults
             parse_opt(ex_offset,  "extract offset",  js);
             parse_dist(tx_scale,  "dist_params/transform scale", js);
             parse_dist(tx_shift,  "dist_params/transform shift", js);
             parse_opt(ld_offset,  "load offset",     js);
             parse_opt(ld_dofloat, "load do float",   js);
+            return validate();
+        }
+
+    private:
+        bool validate() {
+            return true;
         }
     };
 

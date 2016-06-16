@@ -33,6 +33,8 @@ using namespace nervana;
 
 class image_config_builder {
 public:
+    image_config_builder() { height(30); width(30); }
+
     image_config_builder& height(int val) { obj.height = val; return *this; }
     image_config_builder& width(int val) { obj.width = val; return *this; }
     image_config_builder& do_area_scale(bool val) { obj.do_area_scale = val; return *this; }
@@ -58,14 +60,18 @@ public:
             {"crop_offset",{obj.crop_offset.a(),obj.crop_offset.b()}},
             {"flip",{obj.flip.p()!=0}}
         }}};
-        return make_shared<image::config>(js.dump());
+        auto rc = make_shared<image::config>();
+        rc->set_config(js);
+        return rc;
     }
 private:
-    image::config obj{ R"({"height":30,"width":30})" };
+    image::config obj;
 };
 
 class multicrop_config_builder {
 public:
+    multicrop_config_builder() { height(30); width(30); }
+
     multicrop_config_builder& height(int val) { obj.height = val; return *this; }
     multicrop_config_builder& width(int val) { obj.width = val; return *this; }
 
@@ -77,10 +83,12 @@ public:
     shared_ptr<multicrop::config> dump(int tab=4) {
         nlohmann::json js = {{"height",obj.height},{"width",obj.width},{"scales",obj.scales},
         {"flip",obj.flip},{"crops_per_scale",obj.crops_per_scale}};
-        return make_shared<multicrop::config>(js.dump());
+        auto rc = make_shared<multicrop::config>();
+        rc->set_config(js);
+        return rc;
     }
 private:
-    multicrop::config obj{ R"({"height":30,"width":30})" };
+    multicrop::config obj;
 };
 
 class image_params_builder {
@@ -124,9 +132,9 @@ void test_image(vector<unsigned char>& img, int channels) {
         {"aspect_ratio",{0.75,1.33}},
         {"flip",{false}}
     }}};
-    string cfgString = js.dump(4);
 
-    auto itpj = make_shared<image::config>(cfgString);
+    auto itpj = make_shared<image::config>();
+    itpj->set_config(js);
 
     image::extractor ext{itpj};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
@@ -182,11 +190,9 @@ TEST(etl, image_config) {
         {"aspect_ratio",{0.75,1.33}},
         {"flip",{false}}
     }}};
-    string cfgString = js.dump(4);
 
-    // cout << cfgString << endl;
-
-    auto config = make_shared<image::config>(cfgString);
+    auto config = make_shared<image::config>();
+    config->set_config(js);
     EXPECT_EQ(30,config->height);
     EXPECT_EQ(30,config->width);
     EXPECT_FALSE(config->do_area_scale);
@@ -325,7 +331,9 @@ TEST(etl, multi_crop) {
                 "crops_per_scale": 1
             }
         )";
-        auto mc_config_ptr = make_shared<multicrop::config>(jsstring);
+        auto js = nlohmann::json::parse(jsstring);
+        auto mc_config_ptr = make_shared<multicrop::config>();
+        mc_config_ptr->set_config(js);
 
         multicrop::transformer trans{mc_config_ptr};
         shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
@@ -355,7 +363,9 @@ TEST(etl, multi_crop) {
             }
         )";
 
-        auto mc_config_ptr = make_shared<multicrop::config>(jsstring);
+        auto js = nlohmann::json::parse(jsstring);
+        auto mc_config_ptr = make_shared<multicrop::config>();
+        mc_config_ptr->set_config(js);
 
         multicrop::transformer trans{mc_config_ptr};
         shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
@@ -388,7 +398,9 @@ TEST(etl, multi_crop) {
         using namespace cv;
         using idxPt = std::pair<int, Point2i>;
 
-        auto mc_config_ptr = make_shared<multicrop::config>(jsstring);
+        auto js = nlohmann::json::parse(jsstring);
+        auto mc_config_ptr = make_shared<multicrop::config>();
+        mc_config_ptr->set_config(js);
 
         multicrop::transformer trans{mc_config_ptr};
         shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
