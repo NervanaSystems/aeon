@@ -30,6 +30,7 @@
 #include "device.hpp"
 #include "batch_iterator.hpp"
 #include "manifest.hpp"
+#include "provider_image_class.hpp"
 
 /* DecodeThreadPool
  *
@@ -45,7 +46,8 @@ public:
                      int targetSize, int targetTypeSize,
                      const std::shared_ptr<BufferPool>& in, const std::shared_ptr<BufferPool>& out,
                      const std::shared_ptr<Device>& device,
-                     MediaParams* mediaParams);
+                     std::string configString);
+                     // MediaParams* mediaParams);
     virtual ~DecodeThreadPool();
     virtual void start();
     virtual void stop();
@@ -83,12 +85,13 @@ private:
     int                         _datumTypeSize;
     int                         _targetSize;
     int                         _targetTypeSize;
-    // Datum length in bytes.
+    // Datum length in bytes. (should we start using size_t for these?)
     int                         _datumLen;
     // Target length in bytes.
     int                         _targetLen;
     std::shared_ptr<Device>     _device;
-    std::vector<std::shared_ptr<Media> > _media;
+    // std::vector<std::shared_ptr<Media>> _media;
+    std::vector<std::shared_ptr<nervana::image_decoder>> _providers;
 };
 
 class ReadThread: public ThreadPool {
@@ -102,7 +105,7 @@ private:
     ReadThread();
     ReadThread(const ReadThread&);
     std::shared_ptr<BufferPool> _out;
-    std::shared_ptr<BatchIterator> _batchIterator;
+    std::shared_ptr<BatchIterator> _batch_iterator;
 };
 
 /* Loader
@@ -117,7 +120,8 @@ public:
            int datumSize, int datumTypeSize,
            int targetSize, int targetTypeSize,
            int subsetPercent,
-           MediaParams* mediaParams,
+           const char* mediaConfigString,
+           // MediaParams* mediaParams,
            DeviceParams* deviceParams,
            const char* manifestFilename,
            int macroBatchSize,
@@ -151,7 +155,8 @@ private:
     std::unique_ptr<ReadThread>         _readThread;
     std::unique_ptr<DecodeThreadPool>   _decodeThreads;
     std::shared_ptr<Device>             _device;
-    std::shared_ptr<BatchIterator>      _batchIterator;
+    std::shared_ptr<BatchIterator>      _batch_iterator;
     std::shared_ptr<Manifest>           _manifest;
-    MediaParams*                        _mediaParams;
+    std::string                         _mediaConfigString;
+    // MediaParams*                        _mediaParams;
 };

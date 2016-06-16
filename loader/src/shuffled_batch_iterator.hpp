@@ -14,7 +14,7 @@
 */
 
 #pragma once
-
+#include <random>
 #include "batch_loader.hpp"
 #include "batch_iterator.hpp"
 

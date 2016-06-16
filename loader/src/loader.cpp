@@ -22,7 +22,7 @@
 #include <utility>
 #include <algorithm>
 
-#include "media.hpp"
+// #include "media.hpp"
 #include "matrix.hpp"
 #include "device.hpp"
 #include "loader.hpp"
@@ -37,7 +37,8 @@ DecodeThreadPool::DecodeThreadPool(int count, int batchSize,
                  int targetSize, int targetTypeSize,
                  const std::shared_ptr<BufferPool>& in, const std::shared_ptr<BufferPool>& out,
                  const std::shared_ptr<Device>& device,
-                 MediaParams* mediaParams)
+                 std::string configString)
+                 // MediaParams* mediaParams)
 : ThreadPool(count),
   _itemsPerThread((batchSize - 1) / count + 1),
   _in(in), _out(out), _endSignaled(0),
@@ -51,7 +52,9 @@ DecodeThreadPool::DecodeThreadPool(int count, int batchSize,
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
     for (int i = 0; i < count; i++) {
-        _media.push_back(Media::create(mediaParams, 0, i));
+        // _media.push_back(Media::create(mediaParams, 0, i));
+        auto prov = make_shared<nervana::image_decoder>(configString, _datumLen, _targetLen);
+        _providers.push_back(prov);
         _startSignaled.push_back(0);
         _startInds.push_back(0);
         _endInds.push_back(0);
@@ -136,24 +139,28 @@ void DecodeThreadPool::work(int id) {
     char* dataBuf = outBuf.first->_data + _dataOffsets[id];
     char* targetBuf = outBuf.second->_data + _targetOffsets[id];
     for (int i = start; i < end; i++) {
-        // Handle the data.
-        int itemSize = 0;
-        char* item = _inputBuf->first->getItem(i, itemSize);
-        if (item == 0) {
-            return;
-        }
-        _media[id]->transform(item, itemSize, dataBuf, _datumLen);
+        _providers[id]->provide_pair(i, _inputBuf, dataBuf, targetBuf);
         dataBuf += _datumLen;
-
-        // Handle the targets.
-        int targetLen = 0;
-        char* target = _inputBuf->second->getItem(i, targetLen);
-        memcpy(targetBuf, target, targetLen);
-        if (_targetLen > targetLen) {
-            // Pad the rest of the buffer with zeros.
-            memset(targetBuf + targetLen, 0, _targetLen - targetLen);
-        }
         targetBuf += _targetLen;
+
+        // // Handle the data.
+        // int itemSize = 0;
+        // char* item = _inputBuf->first->getItem(i, itemSize);
+        // if (item == 0) {
+        //     return;
+        // }
+        // _media[id]->transform(item, itemSize, dataBuf, _datumLen);
+        // dataBuf += _datumLen;
+
+        // // Handle the targets.
+        // int targetLen = 0;
+        // char* target = _inputBuf->second->getItem(i, targetLen);
+        // memcpy(targetBuf, target, targetLen);
+        // if (_targetLen > targetLen) {
+        //     // Pad the rest of the buffer with zeros.
+        //     memset(targetBuf + targetLen, 0, _targetLen - targetLen);
+        // }
+        // targetBuf += _targetLen;
     }
 
     {
@@ -232,7 +239,7 @@ void DecodeThreadPool::manage() {
 }
 
 ReadThread::ReadThread(const shared_ptr<BufferPool>& out, const shared_ptr<BatchIterator>& batch_iterator)
-: ThreadPool(1), _out(out), _batchIterator(batch_iterator) {
+: ThreadPool(1), _out(out), _batch_iterator(batch_iterator) {
     assert(_count == 1);
 }
 
@@ -243,7 +250,7 @@ void ReadThread::work(int id) {
         while (_out->full() == true) {
             _out->waitForNonFull(lock);
         }
-        _batchIterator->read(_out->getForWrite());
+        _batch_iterator->read(_out->getForWrite());
         _out->advanceWritePos();
     }
     _out->signalNonEmpty();
@@ -254,7 +261,8 @@ Loader::Loader(int miniBatchSize,
        int datumSize, int datumTypeSize,
        int targetSize, int targetTypeSize,
        int subsetPercent,
-       MediaParams* mediaParams,
+       const char* mediaConfigString,
+       // MediaParams* mediaParams,
        DeviceParams* deviceParams,
        const char* manifestFilename,
        int macroBatchSize,
@@ -265,7 +273,7 @@ Loader::Loader(int miniBatchSize,
   _datumSize(datumSize), _datumTypeSize(datumTypeSize),
   _targetSize(targetSize), _targetTypeSize(targetTypeSize),
   _readBufs(nullptr), _decodeBufs(nullptr), _readThread(nullptr), _decodeThreads(nullptr),
-  _device(nullptr), _batchIterator(nullptr), _mediaParams(mediaParams)
+  _device(nullptr), _batch_iterator(nullptr), _mediaConfigString{mediaConfigString}
   {
 
     _device = Device::create(deviceParams);
@@ -282,11 +290,11 @@ Loader::Loader(int miniBatchSize,
     // _batch_iterator provides an unending iterator (shuffled or not) over
     // the batchLoader
     if(shuffleEveryEpoch) {
-        _batchIterator = make_shared<ShuffledBatchIterator>(
+        _batch_iterator = make_shared<ShuffledBatchIterator>(
              batchLoader, macroBatchSize, randomSeed
         );
     } else {
-        _batchIterator = make_shared<SequentialBatchIterator>(
+        _batch_iterator = make_shared<SequentialBatchIterator>(
              batchLoader, macroBatchSize
         );
     }
@@ -303,7 +311,7 @@ int Loader::start() {
         // Start the read buffers off with a reasonable size. They will
         // get resized as needed.
         _readBufs = make_shared<BufferPool>(dataLen / 8, targetLen);
-        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batchIterator));
+        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
         bool pinned = (_device->_type != CPU);
         _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, pinned);
         int numCores = thread::hardware_concurrency();
@@ -313,7 +321,7 @@ int Loader::start() {
         _decodeThreads = unique_ptr<DecodeThreadPool>(new DecodeThreadPool(threadCount, _miniBatchSize,
                 _datumSize, _datumTypeSize,
                 _targetSize, _targetTypeSize,
-                _readBufs, _decodeBufs, _device, _mediaParams));
+                _readBufs, _decodeBufs, _device, _mediaConfigString));
     } catch(std::bad_alloc&) {
         return -1;
     }
@@ -342,7 +350,7 @@ void Loader::stop() {
 
 int Loader::reset() {
     stop();
-    _batchIterator->reset();
+    _batch_iterator->reset();
     start();
     return 0;
 }
@@ -379,7 +387,7 @@ void Loader::next() {
 }
 
 std::shared_ptr<BatchIterator> Loader::getBatchIterator() {
-    return _batchIterator;
+    return _batch_iterator;
 }
 
 std::shared_ptr<Device> Loader::getDevice() {

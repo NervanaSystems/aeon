@@ -106,6 +106,13 @@ int test(const char* repoDir, const char* indexFile,
 
     ImageParams mediaParams(nchan, height, width, true, false, 0, 0, 100, 100,
                             0, 0, 0, false, 0, 0, 0, 0);
+    string mediaConfigString = R"(
+        {
+            "height" : 100,
+            "width"  : 100
+        }
+    )";
+
     char* dataBuffer[2];
     char* targetBuffer[2];
     for (int i = 0; i < 2; i++) {
@@ -120,7 +127,7 @@ int test(const char* repoDir, const char* indexFile,
     Loader loader(batchSize,
                   false, false, datumSize, datumTypeSize,
                   targetSize, targetTypeSize, 100,
-                  &mediaParams, &deviceParams, "", 128, "", 0);
+                  mediaConfigString.c_str(), &deviceParams, "", 128, "", 0);
     unsigned int singleSum = single(&loader, epochCount,
                                     minibatchCount, batchSize,
                                     datumLen, targetLen,

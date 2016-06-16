@@ -81,7 +81,9 @@ TEST(provider, argtype) {
         bf.close();
 
         default_random_engine r_eng(0);
-        label_test::param_factory lbl_prm_maker(lblcfg, r_eng);
+        default_random_engine r_eng_copy(0);
+        auto prm_fcty = make_shared<label_test::param_factory>(lblcfg, r_eng);
+        label_test::param_factory lbl_prm_maker(lblcfg, r_eng_copy);
 
         // Note we don't need the media to get params
         auto lstg = lbl_prm_maker.make_params(nullptr);
@@ -100,8 +102,10 @@ TEST(provider, argtype) {
 
             int reference_target = reference;
             int loaded_target = 0;
-            provider<label_test::decoded, label_test::params> pp{lble, lblt, lbll};
-            pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
+            provider<label_test::decoded, label_test::params> pp{lble, lblt, lbll, prm_fcty};
+            auto ls2 = pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, nullptr);
+            EXPECT_EQ(ls2->scale, lstg->scale);
+            EXPECT_EQ(ls2->shift, lstg->shift);
             EXPECT_EQ(reference_target, loaded_target);
         }
 

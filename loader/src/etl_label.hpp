@@ -8,19 +8,12 @@ using namespace std;
 namespace nervana {
 
     namespace label {
-        class config;
         class decoded;
 
         class extractor;
         class transformer;
         class loader;
     }
-
-    class label::config : public json_config_parser {
-    public:
-        config(std::string argString) {}
-    };
-
 
     class label::decoded : public decoded_media {
     public:
@@ -39,7 +32,7 @@ namespace nervana {
 
     class label::extractor : public interface::extractor<label::decoded> {
     public:
-        extractor(shared_ptr<const label::config> cfg) {}
+        extractor(std::shared_ptr<const json_config_parser> = nullptr) {}
 
         ~extractor() {}
 
@@ -48,13 +41,13 @@ namespace nervana {
             if (bufSize != 4) {
                 throw runtime_error("Only 4 byte buffers can be loaded as int32");
             }
-            return make_shared<label::decoded>(unpack_le<int>(buf));
+            return std::make_shared<label::decoded>(unpack_le<int>(buf));
         }
     };
 
     class label::transformer : public interface::transformer<label::decoded, nervana::params> {
     public:
-        transformer(shared_ptr<const label::config>) {}
+        transformer(std::shared_ptr<const json_config_parser> = nullptr) {}
 
         ~transformer() {}
 
@@ -65,13 +58,13 @@ namespace nervana {
 
     class label::loader : public interface::loader<label::decoded> {
     public:
-        loader(shared_ptr<const label::config> cfg) {}
+        loader(std::shared_ptr<const json_config_parser> = nullptr) {}
 
         ~loader() {}
 
         void load(char* buf, int bufSize, std::shared_ptr<label::decoded> mp) override
         {
-            int index = static_pointer_cast<label::decoded>(mp)->get_index();
+            int index = mp->get_index();
             memcpy(buf, &index, bufSize);
         }
     };

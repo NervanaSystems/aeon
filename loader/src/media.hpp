@@ -22,7 +22,7 @@
 #include <sstream>
 #include <memory>
 
-enum MediaType {
+enum MediaTypeOld {
     UNKNOWN = -1,
     IMAGE = 0,
     VIDEO = 1,

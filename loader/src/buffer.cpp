@@ -202,7 +202,8 @@ BufferPool::~BufferPool() {
     }
 }
 
-BufferPair& BufferPool::getForWrite() {
+BufferPair& BufferPool::getForWrite()
+{
     _bufs[_writePos].first->reset();
     _bufs[_writePos].second->reset();
     return _bufs[_writePos];
