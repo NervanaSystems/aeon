@@ -3,8 +3,6 @@
 #include "params.hpp"
 #include "util.hpp"
 
-using namespace std;
-
 namespace nervana {
 
     namespace label {
@@ -39,7 +37,7 @@ namespace nervana {
         std::shared_ptr<label::decoded> extract(const char* buf, int bufSize) override
         {
             if (bufSize != 4) {
-                throw runtime_error("Only 4 byte buffers can be loaded as int32");
+                throw std::runtime_error("Only 4 byte buffers can be loaded as int32");
             }
             return std::make_shared<label::decoded>(unpack_le<int>(buf));
         }

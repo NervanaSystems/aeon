@@ -22,11 +22,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-using cv::Mat;
-using cv::Range;
-using cv::Size;
-using std::stringstream;
-
 class Specgram {
 public:
     Specgram(SignalParams* params, int id)
@@ -50,9 +45,9 @@ public:
 
         _maxSignalSize = params->_clipDuration * params->_samplingFreq / 1000;
         _buf = new char[4 *  _maxSignalSize];
-        _image = new Mat(_timeSteps, _numFreqs, CV_8UC1);
+        _image = new cv::Mat(_timeSteps, _numFreqs, CV_8UC1);
         if (params->_windowType != 0) {
-            _window = new Mat(1, _windowSize, CV_32FC1);
+            _window = new cv::Mat(1, _windowSize, CV_32FC1);
             createWindow(params->_windowType);
             hann(_windowSize - 1);
         }
@@ -76,36 +71,36 @@ public:
         addNoise(raw);
         int rows = stridedSignal(raw);
         assert(rows <= _timeSteps);
-        Mat signal(rows, _windowSize, CV_16SC1, (short*) _buf);
-        Mat input;
+        cv::Mat signal(rows, _windowSize, CV_16SC1, (short*) _buf);
+        cv::Mat input;
         signal.convertTo(input, CV_32FC1);
 
         applyWindow(input);
-        Mat planes[] = {input, Mat::zeros(input.size(), CV_32FC1)};
-        Mat compx;
+        cv::Mat planes[] = {input, cv::Mat::zeros(input.size(), CV_32FC1)};
+        cv::Mat compx;
         cv::merge(planes, 2, compx);
 
         cv::dft(compx, compx, cv::DFT_ROWS);
-        compx = compx(Range::all(), Range(0, _numFreqs));
+        compx = compx(cv::Range::all(), cv::Range(0, _numFreqs));
 
         cv::split(compx, planes);
         cv::magnitude(planes[0], planes[1], planes[0]);
-        Mat mag = planes[0];
+        cv::Mat mag = planes[0];
 
-        cv::normalize(mag, (*_image)(Range(0, rows), Range::all()), 0, 255,
+        cv::normalize(mag, (*_image)(cv::Range(0, rows), cv::Range::all()), 0, 255,
                       CV_MINMAX, CV_8UC1);
         // Pad the rest with zeros.
-        (*_image)(Range(rows, _image->rows), Range::all()) = cv::Scalar::all(0);
+        (*_image)(cv::Range(rows, _image->rows), cv::Range::all()) = cv::Scalar::all(0);
 
         // Rotate by 90 degrees.
-        Mat result(_numFreqs, _timeSteps, CV_8UC1, buf);
+        cv::Mat result(_numFreqs, _timeSteps, CV_8UC1, buf);
         cv::transpose(*_image, result);
         cv::flip(result, result, 0);
         randomize(result);
     }
 
 private:
-    void randomize(Mat& img) {
+    void randomize(cv::Mat& img) {
         if (_scaleBy > 0) {
             float fx = _rng.uniform(_scaleMin, _scaleMax);
             resize(img, fx);
@@ -124,16 +119,16 @@ private:
         }
     }
 
-    void resize(Mat& img, float fx) {
-        Mat dst;
+    void resize(cv::Mat& img, float fx) {
+        cv::Mat dst;
         int inter = (fx > 1.0) ? CV_INTER_CUBIC : CV_INTER_AREA;
-        cv::resize(img, dst, Size(), fx, 1.0, inter);
+        cv::resize(img, dst, cv::Size(), fx, 1.0, inter);
         assert(img.rows == dst.rows);
         if (img.cols > dst.cols) {
-            dst.copyTo(img(Range::all(), Range(0, dst.cols)));
-            img(Range::all(), Range(dst.cols, img.cols)) = cv::Scalar::all(0);
+            dst.copyTo(img(cv::Range::all(), cv::Range(0, dst.cols)));
+            img(cv::Range::all(), cv::Range(dst.cols, img.cols)) = cv::Scalar::all(0);
         } else {
-            dst(Range::all(), Range(0, img.cols)).copyTo(img);
+            dst(cv::Range::all(), cv::Range(0, img.cols)).copyTo(img);
         }
     }
 
@@ -187,7 +182,7 @@ private:
         (this->*(funcs[windowType]))(steps);
     }
 
-    void applyWindow(Mat& signal) {
+    void applyWindow(cv::Mat& signal) {
         if (_window == 0) {
             return;
         }
@@ -231,8 +226,8 @@ private:
     float                       _scaleMax;
     bool                        _addNoise;
     char*                       _buf;
-    Mat*                        _image;
-    Mat*                        _window;
+    cv::Mat*                    _image;
+    cv::Mat*                    _window;
     cv::RNG                     _rng;
     constexpr static double     PI = 3.14159265358979323846;
 };

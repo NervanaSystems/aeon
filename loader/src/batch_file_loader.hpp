@@ -26,15 +26,15 @@
  */
 class BatchFileLoader : public BatchLoader {
 public:
-    BatchFileLoader(shared_ptr<Manifest> manifest, uint subsetPercent);
+    BatchFileLoader(std::shared_ptr<Manifest> manifest, uint subsetPercent);
 
     void loadBlock(BufferPair& dest, uint block_num, uint block_size);
-    void loadFile(Buffer* buff, const string& filename);
+    void loadFile(Buffer* buff, const std::string& filename);
     uint objectCount();
 
 private:
-    off_t getFileSize(const string& filename);
-    
-    const shared_ptr<Manifest> _manifest;
+    off_t getFileSize(const std::string& filename);
+
+    const std::shared_ptr<Manifest> _manifest;
     uint _subsetPercent;
 };

@@ -4,8 +4,6 @@
 #include "params.hpp"
 #include "util.hpp"
 
-using namespace std;
-
 namespace nervana {
 
     namespace label_test {
@@ -62,7 +60,7 @@ namespace nervana {
         std::shared_ptr<label_test::params>
         make_params(std::shared_ptr<const decoded> lbl)
         {
-            auto sptr = make_shared<label_test::params>();
+            auto sptr = std::make_shared<label_test::params>();
             sptr->scale = _cfg->tx_scale(_dre);
             sptr->shift = _cfg->tx_shift(_dre);
             return sptr;
@@ -92,7 +90,7 @@ namespace nervana {
 
     class label_test::extractor : public interface::extractor<label_test::decoded> {
     public:
-        extractor(shared_ptr<const label_test::config> cfg) {
+        extractor(std::shared_ptr<const label_test::config> cfg) {
             _ex_offset = cfg->ex_offset;
         }
 
@@ -101,9 +99,9 @@ namespace nervana {
         std::shared_ptr<label_test::decoded> extract(const char* buf, int bufSize) override
         {
             if (bufSize != 4) {
-                throw runtime_error("Only 4 byte buffers can be loaded as int32");
+                throw std::runtime_error("Only 4 byte buffers can be loaded as int32");
             }
-            return make_shared<label_test::decoded>(unpack_le<int>(buf)+_ex_offset);
+            return std::make_shared<label_test::decoded>(unpack_le<int>(buf)+_ex_offset);
         }
 
     private:
@@ -113,7 +111,7 @@ namespace nervana {
 
     class label_test::transformer : public interface::transformer<label_test::decoded, label_test::params> {
     public:
-        transformer(shared_ptr<const label_test::config>) {}
+        transformer(std::shared_ptr<const label_test::config>) {}
 
         ~transformer() {}
 
@@ -121,8 +119,8 @@ namespace nervana {
                             std::shared_ptr<label_test::params> txs,
                             std::shared_ptr<label_test::decoded> mp) override
         {
-            int old_index = static_pointer_cast<label_test::decoded>(mp)->get_index();
-            return make_shared<label_test::decoded>( old_index * txs->scale + txs->shift );
+            int old_index = std::static_pointer_cast<label_test::decoded>(mp)->get_index();
+            return std::make_shared<label_test::decoded>( old_index * txs->scale + txs->shift );
         }
 
     };
@@ -130,7 +128,7 @@ namespace nervana {
 
     class label_test::loader : public interface::loader<label_test::decoded> {
     public:
-        loader(shared_ptr<const label_test::config> cfg)
+        loader(std::shared_ptr<const label_test::config> cfg)
         {
             _ld_offset = cfg->ld_offset;
             _ld_dofloat = cfg->ld_dofloat;

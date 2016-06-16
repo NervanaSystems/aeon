@@ -152,7 +152,7 @@ extern int read_max_item(char *batchfile) {
         bf.close();
         return maxItemSize;
     } else {
-        stringstream ss;
+        std::stringstream ss;
         ss << "couldn't open " << batchfile;
         throw std::runtime_error(ss.str());
     }

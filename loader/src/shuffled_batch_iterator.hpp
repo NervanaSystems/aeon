@@ -22,7 +22,7 @@
 // well as shuffling the data in the buffers.
 class ShuffledBatchIterator : public BatchIterator {
 public:
-    ShuffledBatchIterator(shared_ptr<BatchLoader> loader, uint block_size, uint seed);
+    ShuffledBatchIterator(std::shared_ptr<BatchLoader> loader, uint block_size, uint seed);
 
     void read(BufferPair& dest);
     void reset();
@@ -32,9 +32,9 @@ protected:
 
 private:
     std::minstd_rand0 _rand;
-    shared_ptr<BatchLoader> _loader;
-    vector<uint> _indices;
-    vector<uint>::iterator _it;
+    std::shared_ptr<BatchLoader> _loader;
+    std::vector<uint> _indices;
+    std::vector<uint>::iterator _it;
     uint _block_size;
     uint _seed;
     uint _epoch;

@@ -19,8 +19,6 @@
 
 #include "batch_file_loader.hpp"
 
-using namespace std;
-
 /* BatchLoaderCPIOCache
  *
  * caches loadBlock function in BatchLoader out to cpio files in
@@ -40,7 +38,7 @@ public:
 private:
     bool loadBlockFromCache(BufferPair& dest, uint block_num, uint block_size);
     void writeBlockToCache(BufferPair& dest, uint block_num, uint block_size);
-    string blockFilename(uint block_num, uint block_size);
+    std::string blockFilename(uint block_num, uint block_size);
 
     void invalidateOldCache(const string& rootCacheDir, const string& hash, const string& version);
     bool filenameHoldsInvalidCache(const string& filename, const string& hash, const string& version);

@@ -60,7 +60,7 @@ public:
         if( _pathExisted || mkdir(_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0 ) {
             int remainder = _setSize;
             while(remainder > 0) {
-                int batchSize = min(remainder,_maxItems);
+                int batchSize = std::min(remainder,_maxItems);
                 std::string fileName = _path + "/" + _prefix + std::to_string(fileNo++) + ".cpio";
                 _fileList.push_back(fileName);
                 BatchFileWriter bf;
@@ -81,7 +81,7 @@ public:
     }
 
     void Delete() {
-        for( const string& f : _fileList ) {
+        for( const std::string& f : _fileList ) {
             remove(f.c_str());
         }
         if(!_pathExisted) {

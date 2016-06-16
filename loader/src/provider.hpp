@@ -12,34 +12,34 @@ namespace nervana {
 template<typename T, typename S> class nervana::provider {
 public:
     provider() {}
-    provider(shared_ptr<interface::extractor<T>> ex,
-             shared_ptr<interface::transformer<T, S>> tr,
-             shared_ptr<interface::loader<T>> lo,
-             shared_ptr<interface::param_factory<T, S>> fa = nullptr)
+    provider(std::shared_ptr<interface::extractor<T>> ex,
+             std::shared_ptr<interface::transformer<T, S>> tr,
+             std::shared_ptr<interface::loader<T>> lo,
+             std::shared_ptr<interface::param_factory<T, S>> fa = nullptr)
     : _extractor(ex), _transformer(tr), _loader(lo), _factory(fa) {}
 
-    shared_ptr<S> provide(char *inbuf, int insize,
+    std::shared_ptr<S> provide(char *inbuf, int insize,
                           char *outbuf, int outsize,
-                          shared_ptr<S> pptr = nullptr)
+                          std::shared_ptr<S> pptr = nullptr)
     {
-        shared_ptr<T> dec = _extractor->extract(inbuf, insize);
-        shared_ptr<S> optr = _factory == nullptr ? pptr : _factory->make_params(dec);
+        std::shared_ptr<T> dec = _extractor->extract(inbuf, insize);
+        std::shared_ptr<S> optr = _factory == nullptr ? pptr : _factory->make_params(dec);
         _loader->load(outbuf, outsize, _transformer->transform(optr, dec));
         return optr;
     }
 
-    shared_ptr<interface::extractor<T>>        _extractor;
-    shared_ptr<interface::transformer<T, S>>   _transformer;
-    shared_ptr<interface::loader<T>>           _loader;
-    shared_ptr<interface::param_factory<T, S>> _factory;
+    std::shared_ptr<interface::extractor<T>>        _extractor;
+    std::shared_ptr<interface::transformer<T, S>>   _transformer;
+    std::shared_ptr<interface::loader<T>>           _loader;
+    std::shared_ptr<interface::param_factory<T, S>> _factory;
 };
 
 template<typename D, typename T> class nervana::train_provider {
 public:
     train_provider() {}
-    train_provider(const string& datum_cfg, const string& tgt_cfg) {
-        _dprov = make_shared<D>(datum_cfg);
-        _tprov = make_shared<T>(tgt_cfg);
+    train_provider(const std::string& datum_cfg, const std::string& tgt_cfg) {
+        _dprov = std::make_shared<D>(datum_cfg);
+        _tprov = std::make_shared<T>(tgt_cfg);
     }
 
     void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out)
@@ -57,10 +57,10 @@ public:
         _tprov->provide(target_in, tsz_in, tgt_out, _tsz_out, pptr);
     }
 
-    shared_ptr<D> _dprov;
-    shared_ptr<T> _tprov;
-    int           _dsz_out;
-    int           _tsz_out;
+    std::shared_ptr<D> _dprov;
+    std::shared_ptr<T> _tprov;
+    int                _dsz_out;
+    int                _tsz_out;
 };
 
 

@@ -29,8 +29,6 @@
 
 #include "streams.hpp"
 
-using namespace std;
-
 /* Buffer
  *
  * Buffer contains an ordered list of items in contiguous memory.  The
@@ -43,7 +41,7 @@ public:
     Buffer(char* data, int size);
     virtual ~Buffer();
 
-    void read(ifstream& ifs, int size);
+    void read(std::ifstream& ifs, int size);
     void read(IfStream& ifs, int size);
     void read(const char* src, int size);
     void reset();

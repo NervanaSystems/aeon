@@ -65,7 +65,6 @@ public:
 #if HAS_GPU
 #include <cuda.h>
 #include <cuda_runtime.h>
-using std::runtime_error;
 
 #define checkCudaErrors(val) check( (val), cudaSuccess, #val, __FILE__, __LINE__)
 #define checkDriverErrors(val) check( (val), CUDA_SUCCESS, #val, __FILE__, __LINE__)

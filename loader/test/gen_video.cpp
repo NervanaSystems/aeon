@@ -38,6 +38,8 @@ extern "C" {
     #include <libavutil/opt.h>
 }
 
+using namespace std;
+
 // this stuff makes me cranky!
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55,28,1)
 #define av_frame_alloc  avcodec_alloc_frame

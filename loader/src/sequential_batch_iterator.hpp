@@ -20,13 +20,13 @@
 
 class SequentialBatchIterator : public BatchIterator {
 public:
-    SequentialBatchIterator(shared_ptr<BatchLoader> loader, uint block_size);
+    SequentialBatchIterator(std::shared_ptr<BatchLoader> loader, uint block_size);
 
     void read(BufferPair& dest);
     void reset();
 
 private:
-    shared_ptr<BatchLoader> _loader;
+    std::shared_ptr<BatchLoader> _loader;
     uint _i;
     uint _block_size;
     uint _count;

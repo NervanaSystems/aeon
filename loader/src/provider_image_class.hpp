@@ -14,7 +14,7 @@ namespace nervana {
 
     class image::randomizing_provider : public provider<image::decoded, image::params> {
     public:
-        randomizing_provider(string& cfg_str, int seed=0)
+        randomizing_provider(std::string& cfg_str, int seed=0)
         {
             _cfg         = std::make_shared<image::config>(cfg_str);
             _r_eng       = std::default_random_engine(seed);
@@ -44,7 +44,7 @@ namespace nervana {
 
     class image_decoder : public train_provider<image::randomizing_provider, label::binary_provider> {
     public:
-        image_decoder(string& img_cfg_str, int img_out_sz, int tgt_out_sz, int seed=0)
+        image_decoder(std::string& img_cfg_str, int img_out_sz, int tgt_out_sz, int seed=0)
         {
             _dprov = std::make_shared<image::randomizing_provider>(img_cfg_str, seed);
             _tprov = std::make_shared<label::binary_provider>();

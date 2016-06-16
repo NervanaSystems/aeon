@@ -19,9 +19,7 @@
 #include <string>
 #include <random>
 
-using namespace std;
-
-typedef pair<string, string> FilenamePair;
+typedef std::pair<std::string, std::string> FilenamePair;
 
 /* Manifest
  *
@@ -40,10 +38,10 @@ typedef pair<string, string> FilenamePair;
  */
 class Manifest {
 public:
-    Manifest(string filename, bool shuffle, const int randomSeed);
-    Manifest(string filename, bool shuffle);
+    Manifest(std::string filename, bool shuffle, const int randomSeed);
+    Manifest(std::string filename, bool shuffle);
 
-    typedef vector<FilenamePair>::const_iterator iter;
+    typedef std::vector<FilenamePair>::const_iterator iter;
 
     string hash();
     string version();
@@ -55,14 +53,14 @@ public:
 
 protected:
     void parse();
-    void parseStream(istream& is);
+    void parseStream(std::istream& is);
     void shuffleFilenamePairs();
 
 private:
-    const string _filename;
+    const std::string _filename;
     const bool _shuffle;
     const int _randomSeed;
 
-    vector<FilenamePair> _filename_pairs;
+    std::vector<FilenamePair> _filename_pairs;
 };
 

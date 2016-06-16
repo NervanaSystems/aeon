@@ -4,6 +4,8 @@
 
 #include "shuffled_batch_iterator.hpp"
 
+using namespace std;
+
 ShuffledBatchIterator::ShuffledBatchIterator(shared_ptr<BatchLoader> loader, uint block_size, uint seed)
     : _rand(seed), _loader(loader), _block_size(block_size), _seed(seed), _epoch(0) {
 
