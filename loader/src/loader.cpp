@@ -273,15 +273,9 @@ Loader::Loader(int miniBatchSize,
     // the manifest defines which data should be included in the dataset
     _manifest = make_shared<Manifest>(manifestFilename, shuffleManifest, randomSeed);
 
-    // TODO: do this elsewhere ...
-    // build cacheDir from rootCacheDir and a hash of the manifest
-    stringstream cacheDirStream;
-    cacheDirStream << rootCacheDir << '/' << _manifest->hash();
-    string cacheDir = cacheDirStream.str();
-
     // batch loader provdes random access to blocks of data in the manifest
     auto batchLoader = make_shared<BatchLoaderCPIOCache>(
-        cacheDir, _manifest->hash(), _manifest->version(),
+        rootCacheDir, _manifest->hash(), _manifest->version(),
         make_shared<BatchFileLoader>(_manifest, subsetPercent)
     );
 
