@@ -22,6 +22,8 @@
 #include <sstream>
 #include <memory>
 
+#include "provider.hpp"
+
 enum MediaTypeOld {
     UNKNOWN = -1,
     IMAGE = 0,
@@ -71,10 +73,12 @@ public:
     }
 
 public:
-    virtual void transform(char* item, int itemSize, char* buf, int bufSize) = 0;
-    virtual void ingest(char** dataBuf, int* dataBufLen, int* dataLen) = 0;
+//    virtual void transform(char* item, int itemSize, char* buf, int bufSize) = 0;
+//    virtual void ingest(char** dataBuf, int* dataBufLen, int* dataLen) = 0;
 
-    static std::shared_ptr<Media> create(MediaParams* params, MediaParams* ingestParams, int id);
+//    static std::shared_ptr<Media> create(MediaParams* params, MediaParams* ingestParams, int id);
+    static std::shared_ptr<nervana::train_base> create(const std::string& configString);
+    static std::shared_ptr<nervana::train_base> create(nlohmann::json configJs);
 };
 
 class RawMedia {

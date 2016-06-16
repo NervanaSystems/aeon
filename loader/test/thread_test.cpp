@@ -17,6 +17,7 @@
 #include "image.hpp"
 #include "gen_image.hpp"
 #include "gtest/gtest.h"
+#include "simple_loader.hpp"
 
 extern gen_image _datagen;
 
@@ -31,66 +32,67 @@ unsigned int sum(char* data, unsigned int len) {
     return result;
 }
 
-int single(Loader* loader, int epochCount, int minibatchCount,
+void single(simple_loader* loader, int epochCount, int minibatchCount,
            int batchSize, int datumSize, int targetSize,
-           ImageParams* mediaParams, ImageIngestParams* ingestParams) {
-    unsigned int sm = 0;
-    shared_ptr<BatchIterator> reader = loader->getBatchIterator();
-    shared_ptr<Media> media = Media::create(mediaParams, ingestParams, 0);
+           ImageParams* mediaParams, ImageIngestParams* ingestParams, unsigned int& sm) {
+    BatchIterator* reader = loader;
+//    string configString = R"({"media":"image","config":{}})";
+//    auto js = nlohmann::json::parse(configString);
+    nlohmann::json js = {{"media","image"},{"data_config",{{"height",128},{"width",128}}},{"target_config",{}}};
+    cout << js.dump(4) << endl;
+    shared_ptr<nervana::train_base> media = Media::create(js);
+    cout << __FILE__ << " " << __LINE__ << endl;
+    ASSERT_NE(nullptr,media.get());
     unique_ptr<char> dataBuf = unique_ptr<char>(new char[datumSize]);
     memset(dataBuf.get(), 0, datumSize);
-    Buffer dataBuffer(0);
-    Buffer targetBuffer(0);
-    BufferPair bufPair = make_pair(&dataBuffer, &targetBuffer);
-    for (int epoch = 0; epoch < epochCount; epoch++) {
-        reader->reset();
-        for (int i = 0; i < minibatchCount; i++) {
-            bufPair.first->reset();
-            bufPair.second->reset();
-            reader->read(bufPair);
-            for (int j = 0; j < batchSize; j++) {
-                int itemSize = 0;
-                char* item = bufPair.first->getItem(j, itemSize);
-                assert(item != 0);
-                media->transform(item, itemSize, dataBuf.get(), datumSize);
-                sm += sum(dataBuf.get(), datumSize);
-                int targetChunkSize = 0;
-                char* targets = bufPair.second->getItem(j, targetChunkSize);
-                sm += sum(targets, targetSize);
-            }
-        }
-    }
-
-    return sm;
+//    Buffer dataBuffer(0);
+//    Buffer targetBuffer(0);
+//    BufferPair bufPair = make_pair(&dataBuffer, &targetBuffer);
+//    for (int epoch = 0; epoch < epochCount; epoch++) {
+//        reader->reset();
+//        for (int i = 0; i < minibatchCount; i++) {
+//            bufPair.first->reset();
+//            bufPair.second->reset();
+//            reader->read(bufPair);
+//            for (int j = 0; j < batchSize; j++) {
+////                int itemSize = 0;
+////                char* item = bufPair.first->getItem(j, itemSize);
+////                assert(item != 0);
+////                media->transform(item, itemSize, dataBuf.get(), datumSize);
+////                sm += sum(dataBuf.get(), datumSize);
+////                int targetChunkSize = 0;
+////                char* targets = bufPair.second->getItem(j, targetChunkSize);
+////                sm += sum(targets, targetSize);
+//            }
+//        }
+//    }
 }
 
-int multi(Loader* loader, int epochCount, int minibatchCount,
-          int batchSize, int datumSize, int targetSize) {
-    int result = loader->start();
-    assert(result == 0);
-    unsigned int sm = 0;
-    int dataSize = batchSize * datumSize;
-    int targetsSize = batchSize * targetSize;
-    char* data = new char[dataSize];
-    char* targets = new char[targetsSize];
-    memset(data, 0, dataSize);
-    memset(targets, 0, targetsSize);
-    shared_ptr<Device> device = loader->getDevice();
-    for (int epoch = 0; epoch < epochCount; epoch++) {
-        loader->reset();
-        for (int i = 0; i < minibatchCount; i++) {
-            loader->next();
-            int bufIdx = i % 2;
-            device->copyDataBack(bufIdx, data, dataSize);
-            device->copyLabelsBack(bufIdx, targets, targetsSize);
-            sm += sum(data, dataSize);
-            sm += sum(targets, targetsSize);
-        }
-    }
-    loader->stop();
-    delete[] data;
-    delete[] targets;
-    return sm;
+void multi(simple_loader* loader, int epochCount, int minibatchCount,
+          int batchSize, int datumSize, int targetSize, unsigned int& sm) {
+//    int result = loader->start();
+//    assert(result == 0);
+//    int dataSize = batchSize * datumSize;
+//    int targetsSize = batchSize * targetSize;
+//    char* data = new char[dataSize];
+//    char* targets = new char[targetsSize];
+//    memset(data, 0, dataSize);
+//    memset(targets, 0, targetsSize);
+//    shared_ptr<Device> device = loader->getDevice();
+//    for (int epoch = 0; epoch < epochCount; epoch++) {
+//        loader->reset();
+//        for (int i = 0; i < minibatchCount; i++) {
+////            loader->next();
+////            int bufIdx = i % 2;
+////            device->copyDataBack(bufIdx, data, dataSize);
+////            device->copyLabelsBack(bufIdx, targets, targetsSize);
+////            sm += sum(data, dataSize);
+////            sm += sum(targets, targetsSize);
+//        }
+//    }
+//    loader->stop();
+//    delete[] data;
+//    delete[] targets;
 }
 
 int test(const char* repoDir, const char* indexFile,
@@ -124,17 +126,20 @@ int test(const char* repoDir, const char* indexFile,
     //archiveDir += "-ingested";
     CpuParams deviceParams(0, 0, dataBuffer, targetBuffer);
     ImageIngestParams ingestParams(false, true, 0, 0);
-    Loader loader(batchSize,
-                  false, false, datumSize, datumTypeSize,
-                  targetSize, targetTypeSize, 100,
-                  mediaConfigString.c_str(), &deviceParams, "", 128, "", 0);
-    unsigned int singleSum = single(&loader, epochCount,
+//    simple_loader loader(batchSize,
+//                  false, false, datumSize, datumTypeSize,
+//                  targetSize, targetTypeSize, 100,
+//                  mediaConfigString.c_str(), &deviceParams, "", 128, "", 0);
+    simple_loader loader(repoDir);
+    unsigned int singleSum = 0;
+    single(&loader, epochCount,
                                     minibatchCount, batchSize,
                                     datumLen, targetLen,
-                                    &mediaParams, &ingestParams);
-    unsigned int multiSum = multi(&loader, epochCount,
+                                    &mediaParams, &ingestParams, singleSum);
+    unsigned int multiSum = 0;
+    multi(&loader, epochCount,
                                   minibatchCount, batchSize,
-                                  datumLen, targetLen);
+                                  datumLen, targetLen, multiSum);
     for (int i = 0; i < 2; i++) {
         delete[] dataBuffer[i];
         delete[] targetBuffer[i];
@@ -146,13 +151,13 @@ int test(const char* repoDir, const char* indexFile,
     return 0;
 }
 
-// TEST(thread,loader) {
-//     int nchan = 3;
-//     int height = 128;
-//     int width = 128;
-//     int batchSize = 16;
-//     const char* repoDir = _datagen.GetDatasetPath().c_str();
-//     const char* indexFile = "";
+ TEST(thread,loader) {
+     int nchan = 3;
+     int height = 128;
+     int width = 128;
+     int batchSize = 16;
+     const char* repoDir = _datagen.GetDatasetPath().c_str();
+     const char* indexFile = "";
 
-//     test(repoDir, indexFile, batchSize, nchan, height, width);
-// }
+     test(repoDir, indexFile, batchSize, nchan, height, width);
+ }

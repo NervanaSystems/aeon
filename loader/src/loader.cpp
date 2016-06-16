@@ -37,7 +37,7 @@ DecodeThreadPool::DecodeThreadPool(int count, int batchSize,
                  int targetSize, int targetTypeSize,
                  const std::shared_ptr<BufferPool>& in, const std::shared_ptr<BufferPool>& out,
                  const std::shared_ptr<Device>& device,
-                 std::string configString)
+                 nlohmann::json configJs)
                  // MediaParams* mediaParams)
 : ThreadPool(count),
   _itemsPerThread((batchSize - 1) / count + 1),
@@ -53,7 +53,8 @@ DecodeThreadPool::DecodeThreadPool(int count, int batchSize,
     assert(_itemsPerThread * (count - 1) < _batchSize);
     for (int i = 0; i < count; i++) {
         // _media.push_back(Media::create(mediaParams, 0, i));
-        auto prov = make_shared<nervana::image_decoder>(configString, _datumLen, _targetLen);
+//        auto prov = make_shared<nervana::image_decoder>(configJs, _datumLen, _targetLen);
+        auto prov = Media::create(configJs);
         _providers.push_back(prov);
         _startSignaled.push_back(0);
         _startInds.push_back(0);

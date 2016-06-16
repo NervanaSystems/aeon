@@ -32,42 +32,62 @@
 
 #include "api.hpp"
 
-std::shared_ptr<Media> Media::create(MediaParams* params, MediaParams* ingestParams, int id) {
-    switch (params->_mtype) {
-    case IMAGE:
-#if HAS_IMGLIB
-        return std::make_shared<Image>(reinterpret_cast<ImageParams*>(params),
-                         reinterpret_cast<ImageIngestParams*>(ingestParams),
-                         id);
-#else
-        {
-            std::string message = "OpenCV " UNSUPPORTED_MEDIA_MESSAGE;
-            throw std::runtime_error(message);
-        }
-#endif
-    case VIDEO:
-#if HAS_VIDLIB
-        return std::make_shared<Video>(reinterpret_cast<VideoParams*>(params), id);
-#else
-        {
-            std::string message = "Video " UNSUPPORTED_MEDIA_MESSAGE;
-            throw std::runtime_error(message);
-        }
-#endif
-    case AUDIO:
-#if HAS_AUDLIB
-        return std::make_shared<Audio>(reinterpret_cast<AudioParams*>(params), id);
-#else
-        {
-            std::string message = "Audio " UNSUPPORTED_MEDIA_MESSAGE;
-            throw std::runtime_error(message);
-        }
-#endif
-    default:
-        throw std::runtime_error("Unknown media type");
-    }
-    return 0;
+using namespace std;
+
+shared_ptr<nervana::train_base> Media::create(const string& configString) {
+    return create(nlohmann::json::parse(configString));
 }
+
+shared_ptr<nervana::train_base> Media::create(nlohmann::json configJs) {
+    shared_ptr<nervana::train_base> rc;
+    string mediaType = configJs["media"];
+    cout << "media type " << mediaType << endl;
+    if( mediaType == "image" ) {
+        rc = make_shared<nervana::image_decoder>(configJs, 100, 100); // wtf: replace constants
+    } else {
+        rc = nullptr;
+    }
+    return rc;
+}
+
+
+
+//std::shared_ptr<Media> Media::create(MediaParams* params, MediaParams* ingestParams, int id) {
+//    switch (params->_mtype) {
+//    case IMAGE:
+//#if HAS_IMGLIB
+//        return std::make_shared<Image>(reinterpret_cast<ImageParams*>(params),
+//                         reinterpret_cast<ImageIngestParams*>(ingestParams),
+//                         id);
+//#else
+//        {
+//            std::string message = "OpenCV " UNSUPPORTED_MEDIA_MESSAGE;
+//            throw std::runtime_error(message);
+//        }
+//#endif
+//    case VIDEO:
+//#if HAS_VIDLIB
+//        return std::make_shared<Video>(reinterpret_cast<VideoParams*>(params), id);
+//#else
+//        {
+//            std::string message = "Video " UNSUPPORTED_MEDIA_MESSAGE;
+//            throw std::runtime_error(message);
+//        }
+//#endif
+//    case AUDIO:
+//#if HAS_AUDLIB
+//        return std::make_shared<Audio>(reinterpret_cast<AudioParams*>(params), id);
+//#else
+//        {
+//            std::string message = "Audio " UNSUPPORTED_MEDIA_MESSAGE;
+//            throw std::runtime_error(message);
+//        }
+//#endif
+//    default:
+//        throw std::runtime_error("Unknown media type");
+//    }
+//    return 0;
+//}
 
 RawMedia::RawMedia() : _bufSize(0), _dataSize(0), _sampleSize(0) {
 }

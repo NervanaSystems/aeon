@@ -46,7 +46,7 @@ public:
                      int targetSize, int targetTypeSize,
                      const std::shared_ptr<BufferPool>& in, const std::shared_ptr<BufferPool>& out,
                      const std::shared_ptr<Device>& device,
-                     std::string configString);
+                     nlohmann::json configJs);
                      // MediaParams* mediaParams);
     virtual ~DecodeThreadPool();
     virtual void start();
@@ -91,7 +91,7 @@ private:
     int                         _targetLen;
     std::shared_ptr<Device>     _device;
     // std::vector<std::shared_ptr<Media>> _media;
-    std::vector<std::shared_ptr<nervana::image_decoder>> _providers;
+    std::vector<std::shared_ptr<nervana::train_base>> _providers;
 };
 
 class ReadThread: public ThreadPool {

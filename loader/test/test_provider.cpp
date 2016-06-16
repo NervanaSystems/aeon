@@ -19,7 +19,6 @@ using namespace nervana;
 TEST(provider, argtype) {
 
     {
-        cout << __FILE__ << " " << __LINE__ << endl;
         /* Create extractor with default num channels param */
         string cfgString = "{\"height\":10, \"width\":10}";
         auto js = nlohmann::json::parse(cfgString);
@@ -27,12 +26,10 @@ TEST(provider, argtype) {
         cfg->set_config(js);
         auto ic = make_shared<image::extractor>(cfg);
         EXPECT_EQ(ic->get_channel_count(), 3);
-        cout << __FILE__ << " " << __LINE__ << endl;
     }
 
 
     {
-        cout << __FILE__ << " " << __LINE__ << endl;
         string cfgString = R"(
             {
                 "height": 30,
@@ -64,12 +61,10 @@ TEST(provider, argtype) {
 
         auto its = img_prm_maker.make_params(input_img_ptr);
         its->dump();
-        cout << __FILE__ << " " << __LINE__ << endl;
     }
 
 
     {
-        cout << __FILE__ << " " << __LINE__ << endl;
         string cfgString = R"(
             {
                 "extract offset":  20,
@@ -97,9 +92,6 @@ TEST(provider, argtype) {
 
         // Note we don't need the media to get params
         auto lstg = lbl_prm_maker.make_params(nullptr);
-
-        cout << "Set scale: " << lstg->scale << " ";
-        cout << "Set shift: " << lstg->shift << endl;
 
         int reference = ((int) (*labels)[0] + lblcfg->ex_offset)* lstg->scale + lstg->shift;
 
@@ -138,6 +130,5 @@ TEST(provider, argtype) {
             pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }
-        cout << __FILE__ << " " << __LINE__ << endl;
     }
 }

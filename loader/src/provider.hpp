@@ -1,11 +1,13 @@
 #pragma once
 #include <memory>
 #include "etl_interface.hpp"
+#include "buffer.hpp"
 
 namespace nervana {
     template<typename T, typename S> class provider;
     template<typename D, typename T> class train_provider;
     class image_decoder;
+    class train_base;
 }
 
 // Do we want to have a vector of transformers so that we can cascade?
@@ -34,7 +36,12 @@ public:
     std::shared_ptr<interface::param_factory<T, S>> _factory;
 };
 
-template<typename D, typename T> class nervana::train_provider {
+class nervana::train_base {
+public:
+    virtual void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) = 0;
+};
+
+template<typename D, typename T> class nervana::train_provider : public train_base {
 public:
     train_provider() {}
     train_provider(const std::string& datum_cfg, const std::string& tgt_cfg) {
@@ -42,7 +49,7 @@ public:
         _tprov = std::make_shared<T>(tgt_cfg);
     }
 
-    void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out)
+    void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) override
     {
         int dsz_in, tsz_in;
 
