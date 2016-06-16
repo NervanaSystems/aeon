@@ -151,7 +151,6 @@ private:
     BatchFileHeader             _fileHeader;
     BatchFileTrailer            _fileTrailer;
     RecordHeader                _recordHeader;
-    int                         _fileHeaderOffset;
     std::string                 _fileName;
     std::string                 _tempName;
 };
