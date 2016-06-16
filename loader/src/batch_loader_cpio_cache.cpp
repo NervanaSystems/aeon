@@ -154,7 +154,9 @@ int rm(const char *path, const struct stat *s, int flag, struct FTW *f) {
 
 void BatchLoaderCPIOCache::removeDirectory(const string& dir) {
     // see http://stackoverflow.com/a/1149837/2093984
-    if(nftw(dir.c_str(), rm, OPEN_MAX, FTW_DEPTH)) {
+    // FTW_DEPTH: handle directories after its contents
+    // FTW_PHYS: do not follow symbolic links
+    if(nftw(dir.c_str(), rm, OPEN_MAX, FTW_DEPTH | FTW_PHYS)) {
         stringstream message;
         message << "error deleting directory " << dir;
         throw std::runtime_error(message.str());
