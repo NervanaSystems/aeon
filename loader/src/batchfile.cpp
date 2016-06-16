@@ -135,10 +135,6 @@ void BatchFileTrailer::read(IfStream& ifs) {
 
 
 BatchFileReader::BatchFileReader() {
-    // this causes ifs.open to raise an exception which we don't
-    // actually want since we can just check after opening to see if the
-    // file was successfully opened or not
-    // _ifs.exceptions(_ifs.failbit);
 }
 
 BatchFileReader::BatchFileReader(const string& fileName) {
