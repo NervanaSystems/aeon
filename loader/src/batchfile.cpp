@@ -225,19 +225,11 @@ int BatchFileReader::maxTargetSize() {
 
 
 
-BatchFileWriter::BatchFileWriter() : _fileHeaderOffset(0)  {
-    _ofs.exceptions(_ofs.failbit);
-}
-
-BatchFileWriter::BatchFileWriter(const string& fileName, const string& dataType) {
-    open(fileName, dataType);
-}
-
 BatchFileWriter::~BatchFileWriter() {
     close();
 }
 
-void BatchFileWriter::open(const string& fileName, const string& dataType) {
+void BatchFileWriter::open(const std::string& fileName, const std::string& dataType) {
     static_assert(sizeof(_fileHeader) == 64, "file header is not 64 bytes");
     _fileName = fileName;
     _tempName = fileName + ".tmp";

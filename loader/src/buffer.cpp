@@ -54,7 +54,7 @@ void Buffer::reset() {
 }
 
 void Buffer::shuffle(uint seed) {
-    // TODO: instead of reseeed the shuffle, store these in a pair
+    // TODO: instead of reseeding the shuffle, store these in a pair
     std::minstd_rand0 rand_items(seed);
     std::shuffle(_items.begin(), _items.end(), rand_items);
 

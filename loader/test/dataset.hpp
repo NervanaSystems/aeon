@@ -63,7 +63,7 @@ public:
                 std::string fileName = _path + "/" + _prefix + std::to_string(fileNo++) + ".cpio";
                 _fileList.push_back(fileName);
                 BatchFileWriter bf;
-                bf.open(fileName, "");
+                bf.open(fileName);
                 for(int i=0; i<batchSize; i++) {
                     std::vector<unsigned char> target = render_target( datumNumber );
                     std::vector<unsigned char> datum = render_datum( datumNumber );

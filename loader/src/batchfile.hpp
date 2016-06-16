@@ -156,12 +156,9 @@ private:
 
 class BatchFileWriter {
 public:
-    BatchFileWriter();
-    BatchFileWriter(const std::string& fileName);
-    BatchFileWriter(const std::string& fileName, const std::string& dataType);
-    ~BatchFileWriter() ;
+    ~BatchFileWriter();
 
-    void open(const std::string& fileName, const std::string& dataType);
+    void open(const std::string& fileName, const std::string& dataType = "");
     void close();
 
     void writeItem(char* datum, char* target,

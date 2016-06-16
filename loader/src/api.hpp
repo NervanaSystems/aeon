@@ -120,7 +120,7 @@ extern void write_raw(char *outfile, const int numData,
     }
     BatchFileWriter bf;
     uint32_t tgtSize = sizeof(uint32_t);
-    bf.open(outfile, "imgclass");
+    bf.open(outfile);
     for (int i=0; i<numData; i++) {
         bf.writeItem(jpgdata[i], (char *) &targets[i], jpglens[i], tgtSize);
     }

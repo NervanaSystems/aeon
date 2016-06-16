@@ -58,8 +58,8 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(BufferPair& dest, uint block_num, 
 }
 
 void BatchLoaderCPIOCache::writeBlockToCache(BufferPair& buff, uint block_num, uint block_size) {
-    // TODO: why do we have to pass in a dataType if its always empty?
-    BatchFileWriter bfw(blockFilename(block_num, block_size), "");
+    BatchFileWriter bfw;
+    bfw.open(blockFilename(block_num, block_size));
 
     // would be nice if this was taken care of the BufferPair
     assert(buff.first->getItemCount() == buff.second->getItemCount());
