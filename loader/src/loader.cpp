@@ -258,7 +258,8 @@ Loader::Loader(int* itemCount, int miniBatchSize,
        DeviceParams* deviceParams,
        const char* manifestFilename,
        int macroBatchSize,
-       const char* rootCacheDir)
+       const char* rootCacheDir,
+       uint randomSeed)
 : _first(true),
   _miniBatchSize(miniBatchSize),
   _datumSize(datumSize), _datumTypeSize(datumTypeSize),
@@ -266,8 +267,6 @@ Loader::Loader(int* itemCount, int miniBatchSize,
   _readBufs(nullptr), _decodeBufs(nullptr), _readThread(nullptr), _decodeThreads(nullptr),
   _device(nullptr), _batchIterator(nullptr), _mediaParams(mediaParams)
   {
-    // TODO: not a constant
-    uint _seed = 0;
 
     _device = Device::create(deviceParams);
 
@@ -290,7 +289,7 @@ Loader::Loader(int* itemCount, int miniBatchSize,
     // the batchLoader
     if(shuffleEveryEpoch) {
         _batchIterator = make_shared<ShuffledBatchIterator>(
-             batchLoader, macroBatchSize, _seed
+             batchLoader, macroBatchSize, randomSeed
         );
     } else {
         _batchIterator = make_shared<SequentialBatchIterator>(

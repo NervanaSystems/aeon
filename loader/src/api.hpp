@@ -28,7 +28,8 @@ extern void* start(int* itemCount, int miniBatchSize,
                    DeviceParams* deviceParams,
                    const char* manifestFilename,
                    int macroBatchSize,
-                   const char* rootCacheDir) {
+                   const char* rootCacheDir,
+                   int randomSeed) {
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
         Loader* loader = new Loader(itemCount, miniBatchSize,
@@ -39,7 +40,8 @@ extern void* start(int* itemCount, int miniBatchSize,
                                     mediaParams, deviceParams,
                                     manifestFilename,
                                     macroBatchSize,
-                                    rootCacheDir);
+                                    rootCacheDir,
+                                    randomSeed);
         int result = loader->start();
         if (result != 0) {
             printf("Could not start data loader. Error %d", result);

@@ -121,7 +121,7 @@ int test(const char* repoDir, const char* indexFile,
     Loader loader(&itemCount, batchSize,
                   false, false, datumSize, datumTypeSize,
                   targetSize, targetTypeSize, 100,
-                  &mediaParams, &deviceParams, "", 128, "");
+                  &mediaParams, &deviceParams, "", 128, "", 0);
     unsigned int singleSum = single(&loader, epochCount,
                                     minibatchCount, batchSize,
                                     datumLen, targetLen,

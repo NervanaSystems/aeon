@@ -120,7 +120,8 @@ public:
            DeviceParams* deviceParams,
            const char* manifestFilename,
            int macroBatchSize,
-           const char* rootCacheDir);
+           const char* rootCacheDir,
+           uint randomSeed);
 
     virtual ~Loader();
     int start();
