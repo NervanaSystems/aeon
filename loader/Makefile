@@ -19,14 +19,14 @@ print-%  : ; @echo $* = $($*)
 HAS_GPU := $(shell nvcc --version > /dev/null 2>&1 && echo true)
 
 bin/loader.so: Makefile
-	@cd src && make ../bin/loader.so HAS_GPU=$(HAS_GPU)
+	@cd src && make ../bin/loader.so HAS_GPU=$(HAS_GPU) -j8
 
 test: build_test
 	@test/test $(ARGS)
 
 build_test: Makefile
-	@cd src && make loader.a HAS_GPU=$(HAS_GPU)
-	@cd test && make test HAS_GPU=$(HAS_GPU)
+	@cd src && make loader.a HAS_GPU=$(HAS_GPU) -j8
+	@cd test && make test HAS_GPU=$(HAS_GPU) -j8
 
 .PHONY: all test bin/loader.so build_test
 
