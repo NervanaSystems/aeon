@@ -1,6 +1,7 @@
 #ifndef DATASET_H
 #define DATASET_H
 
+#include <sys/stat.h>
 #include <string>
 #include <vector>
 #include <cassert>
