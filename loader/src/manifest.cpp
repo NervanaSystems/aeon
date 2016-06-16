@@ -13,6 +13,9 @@
  limitations under the License.
 */
 
+
+#include <sys/stat.h>
+
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -40,8 +43,27 @@ Manifest::Manifest(string filename, bool shuffle)
 }
 
 string Manifest::hash() {
-    // TODO
-    return "42";
+    // returns a hash of the _filename
+    std::size_t h = std::hash<std::string>()(_filename);
+    stringstream ss;
+    ss << std::hex << h;
+    return ss.str();
+}
+
+string Manifest::version() {
+    // return the manifest version.  In this case it is just the timestamp
+    // on the file
+    struct stat stats;
+    int result = stat(_filename.c_str(), &stats);
+    if (result == -1) {
+        stringstream ss;
+        ss << "Could not find manifest file " << _filename;
+        throw std::runtime_error(ss.str());
+    }
+
+    stringstream ss;
+    ss << stats.st_mtime;
+    return ss.str();
 }
 
 void Manifest::parse() {

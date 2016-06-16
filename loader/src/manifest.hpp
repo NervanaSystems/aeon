@@ -46,6 +46,7 @@ public:
     typedef vector<FilenamePair>::const_iterator iter;
 
     string hash();
+    string version();
     size_t getSize() const;
 
     // begin and end provide iterators over the FilenamePairs

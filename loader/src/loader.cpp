@@ -273,6 +273,7 @@ Loader::Loader(int miniBatchSize,
     // the manifest defines which data should be included in the dataset
     _manifest = make_shared<Manifest>(manifestFilename, shuffleManifest, randomSeed);
 
+    // TODO: do this elsewhere ...
     // build cacheDir from rootCacheDir and a hash of the manifest
     stringstream cacheDirStream;
     cacheDirStream << rootCacheDir << '/' << _manifest->hash();
