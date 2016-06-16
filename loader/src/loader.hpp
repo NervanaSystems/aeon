@@ -29,6 +29,7 @@
 #include "matrix.hpp"
 #include "device.hpp"
 #include "batch_iterator.hpp"
+#include "manifest.hpp"
 
 /* DecodeThreadPool
  *
@@ -111,7 +112,7 @@ private:
  */
 class Loader {
 public:
-    Loader(int* itemCount, int miniBatchSize,
+    Loader(int miniBatchSize,
            bool shuffleManifest, bool shuffleEveryEpoch,
            int datumSize, int datumTypeSize,
            int targetSize, int targetTypeSize,
@@ -131,6 +132,7 @@ public:
     void next();
     std::shared_ptr<Device> getDevice();
     std::shared_ptr<BatchIterator> getBatchIterator();
+    int itemCount();
 
 private:
     void drain();
@@ -150,5 +152,6 @@ private:
     std::unique_ptr<DecodeThreadPool>   _decodeThreads;
     std::shared_ptr<Device>             _device;
     std::shared_ptr<BatchIterator>      _batchIterator;
+    std::shared_ptr<Manifest>           _manifest;
     MediaParams*                        _mediaParams;
 };

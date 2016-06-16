@@ -32,7 +32,7 @@ extern void* start(int* itemCount, int miniBatchSize,
                    int randomSeed) {
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
-        Loader* loader = new Loader(itemCount, miniBatchSize,
+        Loader* loader = new Loader(miniBatchSize,
                                     shuffleManifest, shuffleEveryEpoch,
                                     datumSize, datumTypeSize,
                                     targetSize, targetTypeSize,
@@ -48,6 +48,7 @@ extern void* start(int* itemCount, int miniBatchSize,
             delete loader;
             exit(-1);
         }
+        *itemCount = loader->itemCount();
         return reinterpret_cast<void*>(loader);
     } catch(std::exception& ex) {
         printf("Exception at %s:%d %s\n", __FILE__, __LINE__, ex.what());

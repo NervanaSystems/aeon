@@ -249,7 +249,7 @@ void ReadThread::work(int id) {
     _out->signalNonEmpty();
 }
 
-Loader::Loader(int* itemCount, int miniBatchSize,
+Loader::Loader(int miniBatchSize,
        bool shuffleManifest, bool shuffleEveryEpoch,
        int datumSize, int datumTypeSize,
        int targetSize, int targetTypeSize,
@@ -271,18 +271,17 @@ Loader::Loader(int* itemCount, int miniBatchSize,
     _device = Device::create(deviceParams);
 
     // the manifest defines which data should be included in the dataset
-    auto manifest = make_shared<Manifest>(manifestFilename, shuffleManifest, randomSeed);
-    *itemCount = manifest->getSize();
+    _manifest = make_shared<Manifest>(manifestFilename, shuffleManifest, randomSeed);
 
     // build cacheDir from rootCacheDir and a hash of the manifest
     stringstream cacheDirStream;
-    cacheDirStream << rootCacheDir << '/' << manifest->hash();
+    cacheDirStream << rootCacheDir << '/' << _manifest->hash();
     string cacheDir = cacheDirStream.str();
 
     // batch loader provdes random access to blocks of data in the manifest
     auto batchLoader = make_shared<BatchLoaderCPIOCache>(
         cacheDir.c_str(),
-        make_shared<BatchFileLoader>(manifest, subsetPercent)
+        make_shared<BatchFileLoader>(_manifest, subsetPercent)
     );
 
     // _batch_iterator provides an unending iterator (shuffled or not) over
@@ -390,6 +389,10 @@ std::shared_ptr<BatchIterator> Loader::getBatchIterator() {
 
 std::shared_ptr<Device> Loader::getDevice() {
     return _device;
+}
+
+int Loader::itemCount() {
+    return _manifest->getSize();
 }
 
 void Loader::drain() {

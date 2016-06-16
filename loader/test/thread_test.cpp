@@ -101,7 +101,6 @@ int test(const char* repoDir, const char* indexFile,
     int targetTypeSize = 4;
     int epochCount = 2;
     int minibatchCount = 65;
-    int itemCount = 0;
     int datumLen = datumSize * datumTypeSize;
     int targetLen = targetSize * targetTypeSize;
 
@@ -118,7 +117,7 @@ int test(const char* repoDir, const char* indexFile,
     //archiveDir += "-ingested";
     CpuParams deviceParams(0, 0, dataBuffer, targetBuffer);
     ImageIngestParams ingestParams(false, true, 0, 0);
-    Loader loader(&itemCount, batchSize,
+    Loader loader(batchSize,
                   false, false, datumSize, datumTypeSize,
                   targetSize, targetTypeSize, 100,
                   &mediaParams, &deviceParams, "", 128, "", 0);
