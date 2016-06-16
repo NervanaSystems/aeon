@@ -3,7 +3,6 @@
 #include <random>
 #include <stdexcept>      // std::invalid_argument
 
-#include "argtype.hpp"
 #include "json.hpp"
 
 namespace nervana {

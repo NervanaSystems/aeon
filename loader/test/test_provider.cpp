@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include "argtype.hpp"
 #include "gen_image.hpp"
 #include "batchfile.hpp"
 
