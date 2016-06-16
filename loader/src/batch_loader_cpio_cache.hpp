@@ -30,7 +30,9 @@ using namespace std;
 
 class BatchLoaderCPIOCache : public BatchLoader {
 public:
-    BatchLoaderCPIOCache(const char* cacheDir, shared_ptr<BatchLoader> loader);
+    BatchLoaderCPIOCache(const string& rootCacheDir,
+                         const string& hash, const string& version,
+                         shared_ptr<BatchLoader> loader);
 
     void loadBlock(BufferPair& dest, uint block_num, uint block_size);
     uint objectCount();
@@ -39,6 +41,11 @@ private:
     bool loadBlockFromCache(BufferPair& dest, uint block_num, uint block_size);
     void writeBlockToCache(BufferPair& dest, uint block_num, uint block_size);
     string blockFilename(uint block_num, uint block_size);
+
+    void invalidateOldCache(const string& rootCacheDir, const string& hash, const string& version);
+    bool filenameHoldsInvalidCache(const string& filename, const string& hash, const string& version);
+    void removeDirectory(const string& dir);
+    void makeDirectory(const string& dir);
 
     string _cacheDir;
     shared_ptr<BatchLoader> _loader;

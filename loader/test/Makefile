@@ -31,7 +31,7 @@ SRCS := \
     manifest_test.cpp \
     manifest_maker.cpp \
     batch_file_loader_test.cpp \
-    batch_loader_cpio_cache.cpp \
+    batch_loader_cpio_cache_test.cpp \
     buffer_test.cpp \
     shuffled_batch_iterator_test.cpp \
     helpers.cpp \

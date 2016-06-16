@@ -281,7 +281,7 @@ Loader::Loader(int miniBatchSize,
 
     // batch loader provdes random access to blocks of data in the manifest
     auto batchLoader = make_shared<BatchLoaderCPIOCache>(
-        cacheDir.c_str(),
+        cacheDir, _manifest->hash(), _manifest->version(),
         make_shared<BatchFileLoader>(_manifest, subsetPercent)
     );
 

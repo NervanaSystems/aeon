@@ -13,15 +13,29 @@
  limitations under the License.
 */
 
+#include <errno.h>
+#include <dirent.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <ftw.h>
+
 #include "batchfile.hpp"
 #include "batch_loader_cpio_cache.hpp"
 
-BatchLoaderCPIOCache::BatchLoaderCPIOCache(const char* cacheDir, shared_ptr<BatchLoader> loader)
-: _cacheDir(cacheDir), _loader(loader) {
-    // add '/' to end of cacheDir if one is not already there
-    if(_cacheDir.back() != '/') {
-        _cacheDir += '/';
-    }
+// maximum number of files opened by nftw file enumeration function
+#define OPEN_MAX 128
+
+BatchLoaderCPIOCache::BatchLoaderCPIOCache(const string& rootCacheDir,
+                                           const string& hash,
+                                           const string& version,
+                                           shared_ptr<BatchLoader> loader)
+: _loader(loader) {
+    invalidateOldCache(rootCacheDir, hash, version);
+
+    _cacheDir = rootCacheDir + "/" + hash + "_" + version;
+
+    makeDirectory(_cacheDir);
 }
 
 void BatchLoaderCPIOCache::loadBlock(BufferPair& dest, uint block_num, uint block_size) {
@@ -43,7 +57,6 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(BufferPair& dest, uint block_num, 
         // couldn't load the file
         return false;
     }
-
     // load cpio file into dest one item at a time
     for(int i=0; i < reader.itemCount(); ++i) {
         reader.readToBuffer(*dest.first);
@@ -77,6 +90,88 @@ void BatchLoaderCPIOCache::writeBlockToCache(BufferPair& buff, uint block_num, u
     }
 
     bfw.close();
+}
+
+void BatchLoaderCPIOCache::invalidateOldCache(const string& rootCacheDir,
+                                              const string& hash,
+                                              const string& version) {
+    // remove cache directories that match rootCacheDir and hash but not version
+
+    DIR *dir;
+    struct dirent *ent;
+    if((dir = opendir(rootCacheDir.c_str())) != NULL) {
+        while((ent = readdir(dir)) != NULL) {
+            if(filenameHoldsInvalidCache(ent->d_name, hash, version)) {
+                removeDirectory(rootCacheDir + "/" + ent->d_name);
+            }
+        }
+        closedir(dir);
+    }
+    else {
+        stringstream message;
+        message << "error enumerating old cache in " << rootCacheDir;
+        throw std::runtime_error(message.str());
+    }
+}
+
+bool BatchLoaderCPIOCache::filenameHoldsInvalidCache(const string& filename,
+                                                     const string& hash,
+                                                     const string& version) {
+    // in order for `filename` to hold invalid cache, it must begin with
+    // `hash`, but not contain `version`
+
+    if(filename.find(hash) != 0) {
+        // filename doesn't start with hash, dont remove it
+        return false;
+    }
+    if(filename.find(version) == string::npos) {
+        // filename does start with hash, but doesnt have version, invalidate
+        return true;
+    }
+    // filename does start with hash and does have version, keep, its valid
+    return false;
+}
+
+int rm(const char *path, const struct stat *s, int flag, struct FTW *f) {
+    // see http://stackoverflow.com/a/1149837/2093984
+    // Call unlink or rmdir on the path, as appropriate.
+    int (*rm_func)(const char *);
+
+    switch(flag) {
+        default:     rm_func = unlink; break;
+        case FTW_DP: rm_func = rmdir;
+    }
+
+    int status = rm_func(path);
+    if(status != 0) {
+        stringstream message;
+        message << "error deleting file " << path;
+        throw std::runtime_error(message.str());
+    }
+
+    return status;
+}
+
+void BatchLoaderCPIOCache::removeDirectory(const string& dir) {
+    // see http://stackoverflow.com/a/1149837/2093984
+    if(nftw(dir.c_str(), rm, OPEN_MAX, FTW_DEPTH)) {
+        stringstream message;
+        message << "error deleting directory " << dir;
+        throw std::runtime_error(message.str());
+    }
+}
+
+void BatchLoaderCPIOCache::makeDirectory(const string& dir) {
+    if(mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) {
+        if(errno == EEXIST) {
+            // not really an error, the directory already exists
+            return;
+        }
+        stringstream message;
+        message << "error making directory " << dir;
+        message << " " << strerror(errno);
+        throw std::runtime_error(message.str());
+    }
 }
 
 string BatchLoaderCPIOCache::blockFilename(uint block_num, uint block_size) {

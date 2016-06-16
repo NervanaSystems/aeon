@@ -47,7 +47,7 @@ public:
     }
 };
 
-string load_string(BatchLoaderCPIOCache& cache) {
+string load_string(BatchLoaderCPIOCache cache) {
     // call loadBlock from cache and cast the resulting item to a uint
 
     Buffer* dataBuffer = new Buffer(0);
@@ -62,15 +62,43 @@ string load_string(BatchLoaderCPIOCache& cache) {
     return str;
 }
 
+BatchLoaderCPIOCache make_cache(const string& rootCacheDir,
+                                const string& hash,
+                                const string& version) {
+    BatchLoaderCPIOCache cache(
+        rootCacheDir, hash, version, make_shared<RandomBatchLoader>()
+    );
+    return cache;
+}
+
 TEST(batch_loader_cpio_cache, integration) {
     // load the same block twice and make sure it has the same value.
     // RandomBatchLoader always returns a different uint value no matter
     // the block_num.  The only way two consequetive calls are the same
     // is if the cache is working properly
 
-    BatchLoaderCPIOCache cache(
-        "/tmp", shared_ptr<RandomBatchLoader>(new RandomBatchLoader)
-    );
+    auto cache = make_cache("/tmp", "hashabc", "version123");
 
     ASSERT_EQ(load_string(cache), load_string(cache));
+}
+
+TEST(batch_loader_cpio_cache, same_version) {
+    ASSERT_EQ(
+        load_string(make_cache("/tmp", "hashabc", "version123")),
+        load_string(make_cache("/tmp", "hashabc", "version123"))
+    );
+}
+
+TEST(batch_loader_cpio_cache, differnt_version) {
+    ASSERT_NE(
+        load_string(make_cache("/tmp", "hashabc", "version123")),
+        load_string(make_cache("/tmp", "hashabc", "version456"))
+    );
+}
+
+TEST(batch_loader_cpio_cache, differnt_has) {
+    ASSERT_NE(
+        load_string(make_cache("/tmp", "hashabc", "version123")),
+        load_string(make_cache("/tmp", "hashdef", "version123"))
+    );
 }
