@@ -20,12 +20,15 @@
 
 #include <string>
 #include <vector>
+#include <random>
 
 #include "dataset.hpp"
 
 class gen_video : public dataset<gen_video> {
 public:
+    gen_video();
     void encode(const std::string& filename, int duration);
+    std::vector<unsigned char> encode(int duration);
     void decode(const std::string& outfilename, const std::string& filename);
 
 private:
@@ -34,4 +37,9 @@ private:
 
     void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
                          char *filename);
+
+    const std::vector<std::string> vocab = {"a","and","the","quick","fox","cow","dog","blue",
+        "black","brown","happy","lazy","skip","jumped","run","under","over","around"};
+
+    std::minstd_rand0 r;
 };

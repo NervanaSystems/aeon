@@ -128,3 +128,6 @@ clean:
 	@rm -vf *.o
 	@rm -f test
 	@rm -rf $(DEPDIR)
+	@rm -rf audio_data
+	@rm -rf video_data
+	@rm -rf image_data

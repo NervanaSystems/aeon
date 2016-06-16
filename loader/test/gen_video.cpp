@@ -48,28 +48,37 @@ extern "C" {
 #define AUDIO_INBUF_SIZE 20480
 #define AUDIO_REFILL_THRESH 4096
 
+gen_video::gen_video() :
+    r{42}
+{
+}
 
 std::vector<unsigned char> gen_video::render_target( int datumNumber ) {
+    std::poisson_distribution<int> _word_count(3);
+    std::uniform_int_distribution<int> _word(0,vocab.size()-1);
+    vector<unsigned char> rc;
 
+    int word_count = _word_count(r)+1;
+    for(int i=0; i<word_count; i++) {
+        int word = _word(r);
+        string w = vocab[word];
+        if( i > 0 ) rc.push_back(' ');
+        rc.insert( rc.end(), w.begin(), w.end() );
+    }
+    return rc;
 }
 
 std::vector<unsigned char> gen_video::render_datum( int datumNumber ) {
-
+    return encode(2000);    // two second clip
 }
 
-/*
- * Video encoding example
- */
-void gen_video::encode(const std::string& filename, int duration)
-{
+vector<unsigned char> gen_video::encode(int duration) {
     AVCodec *codec;
     AVCodecContext *c= NULL;
     int i, out_size, size, x, y, outbuf_size;
-    FILE *f;
     AVFrame *picture;
     uint8_t *outbuf, *picture_buf;
-
-    printf("Video encoding\n");
+    vector<unsigned char> rc;
 
     /* find the mpeg1 video encoder */
     codec = avcodec_find_encoder(CODEC_ID_MPEG1VIDEO);
@@ -98,12 +107,6 @@ void gen_video::encode(const std::string& filename, int duration)
         exit(1);
     }
 
-    f = fopen(filename.c_str(), "wb");
-    if (!f) {
-        fprintf(stderr, "could not open %s\n", filename.c_str());
-        exit(1);
-    }
-
     /* alloc image and output buffer */
     outbuf_size = 100000;
     outbuf = (uint8_t*)malloc(outbuf_size);
@@ -120,7 +123,6 @@ void gen_video::encode(const std::string& filename, int duration)
     /* encode 1 second of video */
     int frames = ((float)duration / 1000.) / ((float)(c->time_base.num) / (float)(c->time_base.den));
     for(i=0;i<frames;i++) {
-        fflush(stdout);
         /* prepare a dummy image */
         /* Y */
         for(y=0;y<c->height;y++) {
@@ -139,16 +141,13 @@ void gen_video::encode(const std::string& filename, int duration)
 
         /* encode the image */
         out_size = avcodec_encode_video(c, outbuf, outbuf_size, picture);
-        fwrite(outbuf, 1, out_size, f);
+        for(int i=0; i<out_size; i++) { rc.push_back(outbuf[i]); }
     }
 
     /* get the delayed frames */
     for(; out_size; i++) {
-        fflush(stdout);
-
         out_size = avcodec_encode_video(c, outbuf, outbuf_size, NULL);
-        printf("write frame %3d (size=%5d)\n", i, out_size);
-        fwrite(outbuf, 1, out_size, f);
+        for(int i=0; i<out_size; i++) { rc.push_back(outbuf[i]); }
     }
 
     /* add sequence end code to have a real mpeg file */
@@ -156,15 +155,29 @@ void gen_video::encode(const std::string& filename, int duration)
     outbuf[1] = 0x00;
     outbuf[2] = 0x01;
     outbuf[3] = 0xb7;
-    fwrite(outbuf, 1, 4, f);
-    fclose(f);
+    for(int i=0; i<out_size; i++) { rc.push_back(outbuf[i]); }
     free(picture_buf);
     free(outbuf);
 
     avcodec_close(c);
     av_free(c);
     av_free(picture);
-    printf("\n");
+
+    return rc;
+}
+
+void gen_video::encode(const std::string& filename, int duration)
+{
+    FILE* f;
+    f = fopen(filename.c_str(), "wb");
+    if (!f) {
+        fprintf(stderr, "could not open %s\n", filename.c_str());
+        exit(1);
+    }
+
+    vector<unsigned char> data = encode(duration);
+    fwrite(data.data(), 1, data.size(), f);
+    fclose(f);
 }
 
 /*

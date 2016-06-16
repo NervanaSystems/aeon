@@ -69,11 +69,11 @@ static void CreateVideoDataset() {
     auto start = timer.now();
     _video_dataset.Directory("video_data")
             .Prefix("archive-")
-            .MacrobatchMaxItems(500)
-            .DatasetSize(100)
+            .MacrobatchMaxItems(50)
+            .DatasetSize(5)
             .Create();
     auto end = timer.now();
-    cout << "audio dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
+    cout << "video dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
 static void DeleteDataset() {
@@ -85,7 +85,9 @@ static void DeleteDataset() {
 extern "C" int main( int argc, char** argv ) {
     CreateImageDataset();
     CreateAudioDataset();
-//    CreateVideoDataset();
+    CreateVideoDataset();
+
+//    _video_dataset.encode("video.mpg",5000);
 
     ::testing::InitGoogleTest(&argc, argv);
     int rc = RUN_ALL_TESTS();
