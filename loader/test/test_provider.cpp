@@ -40,10 +40,12 @@ TEST(provider,image) {
 
     BatchFileReader reader(files[0]);
     for (int i=0; i<reader.itemCount()/2; i++ ) {
-        shared_ptr<vector<char>> data = reader.read();
-        shared_ptr<vector<char>> target = reader.read();
-        Buffer data_p(&(*data)[0],data->size());
-        Buffer target_p(&(*target)[0],target->size());
+        Buffer data_p(0);
+        reader.read(data_p);
+
+        Buffer target_p(0);
+        reader.read(target_p);
+        
         BufferPair bp(&data_p, &target_p);
         media->provide_pair(0,&bp,&dbuffer[0],&tbuffer[0]);
 
@@ -148,7 +150,7 @@ TEST(provider, argtype) {
             int reference_target = reference;
             int loaded_target = 0;
             provider<label_test::decoded, label_test::params> pp{lble, lblt, lbll, prm_fcty};
-            auto ls2 = pp.provide(labels_data, 4, (char *)(&loaded_target), 4, nullptr);
+            auto ls2 = pp.provide(labels._data, 4, (char *)(&loaded_target), 4, nullptr);
             EXPECT_EQ(ls2->scale, lstg->scale);
             EXPECT_EQ(ls2->shift, lstg->shift);
             EXPECT_EQ(reference_target, loaded_target);
