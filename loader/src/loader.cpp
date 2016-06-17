@@ -288,7 +288,7 @@ Loader::Loader(int miniBatchSize,
         make_shared<BatchFileLoader>(_manifest, subsetPercent)
     );
 
-    // _batch_iterator provides an unending iterator (shuffled or not) over
+    // _batchIterator provides an unending iterator (shuffled or not) over
     // the batchLoader
     if(shuffleEveryEpoch) {
         _batch_iterator = make_shared<ShuffledBatchIterator>(
