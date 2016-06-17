@@ -19,6 +19,12 @@
 
 extern "C" {
 
+static string last_error_message;
+
+extern const char* get_error_message() {
+    return last_error_message.c_str();
+}
+
 extern void* start(int* itemCount, int miniBatchSize,
                    bool shuffleManifest, bool shuffleEveryEpoch,
                    int datumSize, int datumTypeSize,
@@ -44,15 +50,26 @@ extern void* start(int* itemCount, int miniBatchSize,
                                     randomSeed);
         int result = loader->start();
         if (result != 0) {
-            printf("Could not start data loader. Error %d", result);
+            stringstream ss;
+            ss << "Could not start data loader. Error " << result;
+            last_error_message = ss.str();
             delete loader;
-            exit(-1);
+            return 0;
         }
         *itemCount = loader->itemCount();
         return reinterpret_cast<void*>(loader);
     } catch(std::exception& ex) {
-        printf("Exception at %s:%d %s\n", __FILE__, __LINE__, ex.what());
+        last_error_message = ex.what();
         return 0;
+    }
+}
+
+extern int error() {
+    try {
+        throw std::runtime_error("abc error");
+    } catch(std::exception& ex) {
+        last_error_message = ex.what();
+        return -1;
     }
 }
 
@@ -61,7 +78,7 @@ extern int next(Loader* loader) {
         loader->next();
         return 0;
     } catch(std::exception& ex) {
-        printf("Exception at %s:%d %s\n", __FILE__, __LINE__, ex.what());
+        last_error_message = ex.what();
         return -1;
     }
 }
@@ -70,7 +87,7 @@ extern int reset(Loader* loader) {
     try {
         return loader->reset();
     } catch(std::exception& ex) {
-        printf("Exception at %s:%d %s\n", __FILE__, __LINE__, ex.what());
+        last_error_message = ex.what();
         return -1;
     }
 }
@@ -81,7 +98,7 @@ extern int stop(Loader* loader) {
         delete loader;
         return 0;
     } catch(std::exception& ex) {
-        printf("Exception at %s:%d %s\n", __FILE__, __LINE__, ex.what());
+        last_error_message = ex.what();
         return -1;
     }
 }
