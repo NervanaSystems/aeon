@@ -121,8 +121,11 @@ TEST(provider, argtype) {
         BatchFileReader bf(batchFileName);
 
         // Just get a single item
-        auto data = bf.read();
-        auto labels = bf.read();
+        Buffer data(0);
+        Buffer labels(0);
+        bf.readToBuffer(data);
+        bf.readToBuffer(labels);
+
         bf.close();
 
         default_random_engine r_eng(0);
@@ -133,7 +136,7 @@ TEST(provider, argtype) {
         // Note we don't need the media to get params
         auto lstg = lbl_prm_maker.make_params(nullptr);
 
-        int reference = ((int) (*labels)[0] + lblcfg->ex_offset)* lstg->scale + lstg->shift;
+        int reference = ((int) *((int*)labels._data) + lblcfg->ex_offset)* lstg->scale + lstg->shift;
 
         // Take the int and do provision with it.
         auto lble = make_shared<label_test::extractor>(lblcfg);
@@ -145,7 +148,7 @@ TEST(provider, argtype) {
             int reference_target = reference;
             int loaded_target = 0;
             provider<label_test::decoded, label_test::params> pp{lble, lblt, lbll, prm_fcty};
-            auto ls2 = pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, nullptr);
+            auto ls2 = pp.provide(labels_data, 4, (char *)(&loaded_target), 4, nullptr);
             EXPECT_EQ(ls2->scale, lstg->scale);
             EXPECT_EQ(ls2->shift, lstg->shift);
             EXPECT_EQ(reference_target, loaded_target);
@@ -167,7 +170,7 @@ TEST(provider, argtype) {
             float reference_target = reference + 0.8;
             float loaded_target = 0.0;
             provider<label_test::decoded, label_test::params> pp{lble, lblt, lbll};
-            pp.provide(labels->data(), 4, (char *)(&loaded_target), 4, lstg);
+            pp.provide(labels._data, 4, (char *)(&loaded_target), 4, lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }
     }
