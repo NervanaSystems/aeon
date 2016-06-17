@@ -31,8 +31,6 @@ TEST(blocked_file_loader, loadBlock) {
 
     BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmp_manifest_file(4, object_size, target_size), true)), 100);
 
-    // TODO: move this initialization which is copied from buffer.cpp
-    // into constructor and destructor of BufferPair
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
     BufferPair bp = make_pair(dataBuffer, targetBuffer);
