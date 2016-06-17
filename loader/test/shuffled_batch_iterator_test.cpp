@@ -64,7 +64,7 @@ TEST(shuffled_batch_iterator, sequential_batch_loader) {
 
 TEST(shuffled_batch_iterator, shuffled_block) {
     ShuffledBatchIterator sbi(
-        shared_ptr<SequentialBatchLoader>(new SequentialBatchLoader()),
+        make_shared<SequentialBatchLoader>(),
         3,
         0
     );

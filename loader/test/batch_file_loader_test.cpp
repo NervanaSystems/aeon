@@ -21,7 +21,7 @@ using namespace std;
 
 TEST(blocked_file_loader, constructor) {
     string tmpname = tmp_manifest_file(0, 0, 0);
-    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmpname, true)), 100);
+    BatchFileLoader bfl(make_shared<Manifest>(tmpname, true), 100);
 }
 
 TEST(blocked_file_loader, loadBlock) {
@@ -29,7 +29,7 @@ TEST(blocked_file_loader, loadBlock) {
     uint object_size = 16;
     uint target_size = 16;
 
-    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmp_manifest_file(4, object_size, target_size), true)), 100);
+    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(4, object_size, target_size), true), 100);
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
@@ -59,7 +59,7 @@ TEST(blocked_file_loader, subsetPercent) {
     uint object_size = 16;
     uint target_size = 16;
 
-    BatchFileLoader bfl(shared_ptr<Manifest>(new Manifest(tmp_manifest_file(10, object_size, target_size), true)), 50);
+    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(10, object_size, target_size), true), 50);
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
