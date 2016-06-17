@@ -36,7 +36,8 @@
  *
  * DecodeThreadPool takes data from the BufferPool `in`, transforms it
  * using `count` threads with a Media::transform built from
- * `mediaParams`.  Each minibatch is transposed by a manager thread.
+ * `mediaParams`.  Each minibatch is transposed by a manager thread and
+ * then copied to the `device`.
  *
  */
 class DecodeThreadPool : public ThreadPool {
@@ -94,6 +95,12 @@ private:
     std::vector<std::shared_ptr<nervana::train_base>> _providers;
 };
 
+/*
+ * The ReadThread wraps BatchIterator in a thread an coordinates work
+ * with other threads via locks on the output BufferPool `out`
+ *
+ */
+
 class ReadThread: public ThreadPool {
 public:
     ReadThread(const std::shared_ptr<BufferPool>& out, const std::shared_ptr<BatchIterator>& batch_iterator);
@@ -110,8 +117,11 @@ private:
 
 /* Loader
  *
- * The job of the Loader is to copy data from BufferPair shared with
- * an ArchiveReader
+ * The Loader instantiates and then coordinates the effort of
+ * loading ingested data, caching blocks of it in contiguous
+ * disk (using cpio file format), transforming the data and
+ * finally loading the data into device memory
+ *
  */
 class Loader {
 public:
