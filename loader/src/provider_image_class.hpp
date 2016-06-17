@@ -45,15 +45,18 @@ namespace nervana {
 
     class image_decoder : public train_provider<image::randomizing_provider, label::binary_provider> {
     public:
-        image_decoder(nlohmann::json js, int img_out_sz, int tgt_out_sz, int seed=0)
+        image_decoder(nlohmann::json js, int seed=0)
         {
             auto data_config = js["data_config"];
             auto target_config = js["target_config"];
 
+            int image_width = data_config["width"];
+            int image_height = data_config["height"];
+
             _dprov = std::make_shared<image::randomizing_provider>(data_config, seed);
             _tprov = std::make_shared<label::binary_provider>();
-            _dsz_out = img_out_sz;
-            _tsz_out = tgt_out_sz;
+            _dsz_out = image_width * image_height * 3;
+            _tsz_out = 4;
         }
     };
 }

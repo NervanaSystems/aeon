@@ -57,6 +57,7 @@ public:
         char* target_in = in_buf->second->getItem(idx, tsz_in);
 
         if (datum_in == 0) {
+            std::cout << "no data " << idx << std::endl;
             return;
         }
 

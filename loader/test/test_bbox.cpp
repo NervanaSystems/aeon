@@ -31,7 +31,7 @@
 #include "provider.hpp"
 #include "json.hpp"
 
-extern gen_image _datagen;
+extern gen_image image_dataset;
 
 using namespace std;
 using namespace nervana;

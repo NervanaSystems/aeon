@@ -10,11 +10,51 @@
 #include "etl_lmap.hpp"
 #include "provider.hpp"
 #include "json.hpp"
+#include "media.hpp"
+#include "batchfile.hpp"
+#include "util.hpp"
 
-extern gen_image _datagen;
+extern gen_image image_dataset;
 
 using namespace std;
 using namespace nervana;
+
+TEST(provider,image) {
+    nlohmann::json js = {{"media","image"},
+                         {"data_config",{{"height",128},{"width",128},{"channel_major",false},{"flip",true}}},
+                         {"target_config",{}}};
+    cout << js.dump(4) << endl;
+    shared_ptr<nervana::train_base> media = Media::create(js);
+
+    auto data_config = js["data_config"];
+    int height = data_config["height"];
+    int width = data_config["width"];
+    size_t dsize = height * width * 3;
+    size_t tsize = 4;
+
+    vector<char> dbuffer(dsize);
+    vector<char> tbuffer(tsize);
+
+    auto files = image_dataset.GetFiles();
+    ASSERT_NE(0,files.size());
+
+    BatchFileReader reader(files[0]);
+    for (int i=0; i<reader.itemCount()/2; i++ ) {
+        shared_ptr<vector<char>> data = reader.read();
+        shared_ptr<vector<char>> target = reader.read();
+        Buffer data_p(&(*data)[0],data->size());
+        Buffer target_p(&(*target)[0],target->size());
+        BufferPair bp(&data_p, &target_p);
+        media->provide_pair(0,&bp,&dbuffer[0],&tbuffer[0]);
+
+        int target_value = unpack_le<int>(&tbuffer[0]);
+        EXPECT_EQ(42+i,target_value);
+//        cv::Mat mat(width,height,CV_8UC3,&dbuffer[0]);
+//        string filename = "data" + to_string(i) + ".png";
+//        cv::imwrite(filename,mat);
+    }
+    cout << "cpio contains " << reader.itemCount() << endl;
+}
 
 TEST(provider, argtype) {
 
@@ -75,7 +115,7 @@ TEST(provider, argtype) {
         auto lblcfg = make_shared<label_test::config>();
         lblcfg->set_config(nlohmann::json::parse(cfgString));
 
-        auto dataFiles = _datagen.GetFiles();
+        auto dataFiles = image_dataset.GetFiles();
         ASSERT_GT(dataFiles.size(),0);
         string batchFileName = dataFiles[0];
         BatchFileReader bf(batchFileName);
@@ -132,3 +172,4 @@ TEST(provider, argtype) {
         }
     }
 }
+

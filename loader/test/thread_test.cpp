@@ -19,7 +19,7 @@
 #include "gtest/gtest.h"
 #include "simple_loader.hpp"
 
-extern gen_image _datagen;
+extern gen_image image_dataset;
 
 // Code for unit testing.
 using namespace std;
@@ -156,7 +156,7 @@ int test(const char* repoDir, const char* indexFile,
      int height = 128;
      int width = 128;
      int batchSize = 16;
-     const char* repoDir = _datagen.GetDatasetPath().c_str();
+     const char* repoDir = image_dataset.GetDatasetPath().c_str();
      const char* indexFile = "";
 
      test(repoDir, indexFile, batchSize, nchan, height, width);

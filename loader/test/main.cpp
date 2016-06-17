@@ -33,14 +33,14 @@ extern "C" {
 
 using namespace std;
 
-gen_image _datagen;
-gen_audio _audio_dataset;
-gen_video _video_dataset;
+gen_image image_dataset;
+gen_audio audio_dataset;
+gen_video video_dataset;
 
 static void CreateImageDataset() {
     std::chrono::high_resolution_clock timer;
     auto start = timer.now();
-    _datagen.Directory("image_data")
+    image_dataset.Directory("image_data")
             .Prefix("archive-")
             .MacrobatchMaxItems(500)
             // SetSize must be a multiple of (minibatchCount*batchSize) which is 8320 currently
@@ -55,7 +55,7 @@ static void CreateAudioDataset() {
 //    _audio_dataset.encode("test1.mp2",2000,1000);
     std::chrono::high_resolution_clock timer;
     auto start = timer.now();
-    _audio_dataset.Directory("audio_data")
+    audio_dataset.Directory("audio_data")
             .Prefix("archive-")
             .MacrobatchMaxItems(500)
             .DatasetSize(100)
@@ -67,7 +67,7 @@ static void CreateAudioDataset() {
 static void CreateVideoDataset() {
     std::chrono::high_resolution_clock timer;
     auto start = timer.now();
-    _video_dataset.Directory("video_data")
+    video_dataset.Directory("video_data")
             .Prefix("archive-")
             .MacrobatchMaxItems(50)
             .DatasetSize(5)
@@ -77,9 +77,9 @@ static void CreateVideoDataset() {
 }
 
 static void DeleteDataset() {
-    _datagen.Delete();
-    _audio_dataset.Delete();
-    _video_dataset.Delete();
+    image_dataset.Delete();
+    audio_dataset.Delete();
+    video_dataset.Delete();
 }
 
 extern "C" int main( int argc, char** argv ) {

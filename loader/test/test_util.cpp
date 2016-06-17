@@ -50,6 +50,11 @@ TEST(util, unpack_le) {
         int actual = unpack_le<int>(data,1,3);
         EXPECT_EQ(0x00010000,actual);
     }
+    {
+        char data[] = {(char)0x80,0,0,0};
+        int actual = unpack_le<int>(data);
+        EXPECT_EQ(128,actual);
+    }
 }
 
 TEST(util, unpack_be) {

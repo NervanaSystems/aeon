@@ -8,7 +8,7 @@ namespace nervana {
     template<typename T> T unpack_le(const char* data, int offset=0, int count=sizeof(T)) {
         T rc = 0;
         for(int i=0; i<count; i++) {
-            rc += data[offset+i] << (8*i);
+            rc += (unsigned char)data[offset+i] << (8*i);
         }
         return rc;
     }
@@ -17,7 +17,7 @@ namespace nervana {
     template<typename T> T unpack_be(const char* data, int offset=0, int count=sizeof(T)) {
         T rc = 0;
         for(int i=0; i<count; i++) {
-            rc += data[offset+i] << (8*(count-i-1));
+            rc += (unsigned char)data[offset+i] << (8*(count-i-1));
         }
         return rc;
     }
