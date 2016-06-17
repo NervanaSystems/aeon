@@ -28,9 +28,9 @@
 
 class BatchLoaderCPIOCache : public BatchLoader {
 public:
-    BatchLoaderCPIOCache(const string& rootCacheDir,
-                         const string& hash, const string& version,
-                         shared_ptr<BatchLoader> loader);
+    BatchLoaderCPIOCache(const std::string& rootCacheDir,
+                         const std::string& hash, const std::string& version,
+                         std::shared_ptr<BatchLoader> loader);
 
     void loadBlock(BufferPair& dest, uint block_num, uint block_size);
     uint objectCount();
@@ -40,11 +40,11 @@ private:
     void writeBlockToCache(BufferPair& dest, uint block_num, uint block_size);
     std::string blockFilename(uint block_num, uint block_size);
 
-    void invalidateOldCache(const string& rootCacheDir, const string& hash, const string& version);
-    bool filenameHoldsInvalidCache(const string& filename, const string& hash, const string& version);
-    void removeDirectory(const string& dir);
-    void makeDirectory(const string& dir);
+    void invalidateOldCache(const std::string& rootCacheDir, const std::string& hash, const std::string& version);
+    bool filenameHoldsInvalidCache(const std::string& filename, const std::string& hash, const std::string& version);
+    void removeDirectory(const std::string& dir);
+    void makeDirectory(const std::string& dir);
 
-    string _cacheDir;
-    shared_ptr<BatchLoader> _loader;
+    std::string _cacheDir;
+    std::shared_ptr<BatchLoader> _loader;
 };

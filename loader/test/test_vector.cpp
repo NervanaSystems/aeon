@@ -25,13 +25,10 @@ using namespace std;
 using namespace nervana;
 
 TEST(vector,basic) {
+    // get rid of warning from gtest
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
     nervana::vector v1(100);
 
-    for (int i=0; i<10000; i++) {
-        v1[i] = i;
-    }
-
-    for (int i=0; i<10000; i++) {
-        cout << v1[i] << endl;
-    }
+    EXPECT_DEATH(v1[200],".*");
 }

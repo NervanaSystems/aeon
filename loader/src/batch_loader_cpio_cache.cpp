@@ -23,6 +23,8 @@
 #include "batchfile.hpp"
 #include "batch_loader_cpio_cache.hpp"
 
+using namespace std;
+
 // maximum number of files opened by nftw file enumeration function
 #define OPEN_MAX 128
 

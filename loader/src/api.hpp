@@ -19,7 +19,7 @@
 
 extern "C" {
 
-static string last_error_message;
+static std::string last_error_message;
 
 extern const char* get_error_message() {
     return last_error_message.c_str();
@@ -51,7 +51,7 @@ extern void* start(int* itemCount, int miniBatchSize,
                                     randomSeed);
         int result = loader->start();
         if (result != 0) {
-            stringstream ss;
+            std::stringstream ss;
             ss << "Could not start data loader. Error " << result;
             last_error_message = ss.str();
             delete loader;
