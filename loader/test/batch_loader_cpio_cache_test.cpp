@@ -77,28 +77,30 @@ TEST(batch_loader_cpio_cache, integration) {
     // the block_num.  The only way two consequetive calls are the same
     // is if the cache is working properly
 
-    auto cache = make_cache("/tmp", "hashabc", "version123");
+    auto cache = make_cache("/tmp", randomString(), "version123");
 
     ASSERT_EQ(load_string(cache), load_string(cache));
 }
 
 TEST(batch_loader_cpio_cache, same_version) {
+    string hash = randomString();
     ASSERT_EQ(
-        load_string(make_cache("/tmp", "hashabc", "version123")),
-        load_string(make_cache("/tmp", "hashabc", "version123"))
+        load_string(make_cache("/tmp", hash, "version123")),
+        load_string(make_cache("/tmp", hash, "version123"))
     );
 }
 
 TEST(batch_loader_cpio_cache, differnt_version) {
+    string hash = randomString();
     ASSERT_NE(
-        load_string(make_cache("/tmp", "hashabc", "version123")),
-        load_string(make_cache("/tmp", "hashabc", "version456"))
+        load_string(make_cache("/tmp", hash, "version123")),
+        load_string(make_cache("/tmp", hash, "version456"))
     );
 }
 
-TEST(batch_loader_cpio_cache, differnt_has) {
+TEST(batch_loader_cpio_cache, differnt_hash) {
     ASSERT_NE(
-        load_string(make_cache("/tmp", "hashabc", "version123")),
-        load_string(make_cache("/tmp", "hashdef", "version123"))
+        load_string(make_cache("/tmp", randomString(), "version123")),
+        load_string(make_cache("/tmp", randomString(), "version123"))
     );
 }
