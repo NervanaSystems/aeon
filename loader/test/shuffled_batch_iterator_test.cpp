@@ -64,9 +64,7 @@ TEST(shuffled_batch_iterator, sequential_batch_loader) {
 
 TEST(shuffled_batch_iterator, shuffled_block) {
     ShuffledBatchIterator sbi(
-        make_shared<SequentialBatchLoader>(),
-        3,
-        0
+        make_shared<SequentialBatchLoader>(), 3, 0
     );
 
     Buffer* dataBuffer = new Buffer(0);
