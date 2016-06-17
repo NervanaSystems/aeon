@@ -123,8 +123,8 @@ TEST(provider, argtype) {
         // Just get a single item
         Buffer data(0);
         Buffer labels(0);
-        bf.readToBuffer(data);
-        bf.readToBuffer(labels);
+        bf.read(data);
+        bf.read(labels);
 
         bf.close();
 

@@ -174,7 +174,7 @@ void BatchFileReader::close() {
     }
 }
 
-void BatchFileReader::readToBuffer(Buffer& dest) {
+void BatchFileReader::read(Buffer& dest) {
     uint datumSize;
     _recordHeader.read(_ifs, &datumSize);
     dest.read(_ifs, datumSize);

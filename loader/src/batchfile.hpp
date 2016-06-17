@@ -131,7 +131,7 @@ public:
     bool open(const std::string& fileName);
     void close();
 
-    void readToBuffer(Buffer& dest);
+    void read(Buffer& dest);
 
     int itemCount() ;
 

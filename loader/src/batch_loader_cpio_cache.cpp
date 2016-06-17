@@ -61,8 +61,8 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(BufferPair& dest, uint block_num, 
     }
     // load cpio file into dest one item at a time
     for(int i=0; i < reader.itemCount(); ++i) {
-        reader.readToBuffer(*dest.first);
-        reader.readToBuffer(*dest.second);
+        reader.read(*dest.first);
+        reader.read(*dest.second);
     }
 
     reader.close();
