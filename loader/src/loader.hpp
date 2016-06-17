@@ -132,7 +132,6 @@ public:
     int start();
     void stop();
     int reset();
-    void next(Buffer* dataBuf, Buffer* targetsBuf);
     void next();
     std::shared_ptr<Device> getDevice();
     std::shared_ptr<BatchIterator> getBatchIterator();
