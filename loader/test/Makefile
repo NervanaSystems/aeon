@@ -37,6 +37,7 @@ SRCS := \
     shuffled_batch_iterator_test.cpp \
     helpers.cpp \
     simple_loader.cpp \
+    test_vector.cpp \
 
 TOBJS            = $(subst .cpp,.o,$(SRCS))
 OBJS             = $(subst .c,.o,$(TOBJS))

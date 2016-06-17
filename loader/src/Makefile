@@ -37,6 +37,7 @@ SRCS            := \
     sequential_batch_iterator.cpp \
     shuffled_batch_iterator.cpp \
     batch_loader.cpp \
+    vector.cpp \
 
 OBJS             = $(subst .cpp,.o,$(SRCS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -fPIC
