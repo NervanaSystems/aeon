@@ -181,15 +181,6 @@ void BatchFileReader::readToBuffer(Buffer& dest) {
     _ifs.readPadding(datumSize);
 }
 
-shared_ptr<ByteVect> BatchFileReader::read() {
-    uint datumSize = 0;
-    _recordHeader.read(_ifs, &datumSize);
-    shared_ptr<ByteVect> datum = make_shared<ByteVect>(datumSize);
-    _ifs.read(datum->data(), datumSize);
-    _ifs.readPadding(datumSize);
-    return datum;
-}
-
 int BatchFileReader::itemCount() {
     return _fileHeader._itemCount;
 }
