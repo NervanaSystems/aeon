@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-
 import ctypes as ct
 import logging
 import numpy as np
 import os
 import atexit
 
-from media import MediaParams
-from indexer import Indexer
-from dataiterator import NervanaDataIterator
+from .media import MediaParams
+from .indexer import Indexer
+from .dataiterator import NervanaDataIterator
 
 logger = logging.getLogger(__name__)
 
@@ -33,17 +32,80 @@ class DeviceParams(ct.Structure):
     _fields_ = [('type', ct.c_int),
                 ('id', ct.c_int),
                 ('data', BufferPair),
-                ('targets', BufferPair)]
+                ('targets', BufferPair),
+                ('meta', BufferPair)]
 
 
 class DataLoader(NervanaDataIterator):
     """
     Encapsulates the data loader library and exposes an API to iterate over
-    minibatches of generic data.
+    generic data (images, video or audio given in compressed form). An index
+    file that maps the data examples to their targets is expected to be provided
+    in CSV format.
+
+    Arguments:
+        set_name (str):
+            Name of this dataset partition.  This is used as prefix for
+            directories and index files that may be created while ingesting.
+        repo_dir (str):
+            Directory to find the data.  This may also be used as the output
+            directory to store ingested data.
+        media_params (MediaParams):
+            Parameters specific to the media type of the input data.
+        target_size (int):
+            The size of the targets.  For example: if the target is a class
+            label, set this parameter to 1, indicating a single integer.  If
+            the target is a mask image, the number of pixels in that image
+            should be specified.
+        target_conversion (str, optional):
+            Specifies the method to be used for converting the targets that are
+            provided in the index file.  The options are "no_conversion",
+            "ascii_to_binary", "char_to_index" and "read_contents".  If this
+            parameter is set to "read_contents", the targets given in the index
+            file are treated as pathnames and their contents read in.  Defaults
+            to "ascii_to_binary".
+        index_file (str, optional):
+            CSV formatted index file that defines the mapping between each
+            example and its target.  The first line in the index file is
+            assumed to be a header and is ignored.  Two columns are expected in
+            the index.  The first column should be the file system path to
+            individual data examples.  The second column may contain the actual
+            label or the pathname of a file that contains the labels (e.g. a
+            mask image).  If this parameter is not specified, creation of an
+            index file is attempted.  Automaitic index generation can only be
+            performed if the dataset is organized into subdirectories, which
+            also represent labels.
+        shuffle (boolean, optional):
+            Whether to shuffle the order of data examples as the data is
+            ingested.
+        reshuffle (boolean, optional):
+            Whether to reshuffle the order of data examples as they are loaded.
+            If this is set to True, the order is reshuffled for each epoch.
+            Useful for batch normalization.  Defaults to False.
+        datum_type (data-type, optional):
+            Data type of input data.  Defaults to np.uint8.
+        target_type (data-type, optional):
+            Data type of targets.  Defaults to np.int32.
+        onehot (boolean, optional):
+            If the targets are categorical and have to be converted to a one-hot
+            representation.
+        nclasses (int, optional):
+            Number of classes, if this dataset is intended for a classification
+            problem.
+        subset_percent (int, optional):
+            Value between 0 and 100 indicating what percentage of the dataset
+            partition to use.  Defaults to 100.
+        ingest_params (IngestParams):
+            Parameters to specify special handling for ingesting data.
+        alphabet (str, optional):
+            Alphabet to use for converting string labels.  This is only
+            applicable if target_conversion is set to "char_to_index".
     """
 
     _converters_ = {'no_conversion': 0,
-                    'ascii_to_binary': 1}
+                    'ascii_to_binary': 1,
+                    'char_to_index': 2,
+                    'read_contents': 3}
 
     def __init__(self, set_name, repo_dir,
                  media_params, target_size,
@@ -52,7 +114,8 @@ class DataLoader(NervanaDataIterator):
                  shuffle=False, reshuffle=False,
                  datum_dtype=np.uint8, target_dtype=np.int32,
                  onehot=True, nclasses=None, subset_percent=100,
-                 ingest_params=None):
+                 ingest_params=None,
+                 alphabet=None):
         if onehot is True and nclasses is None:
             raise ValueError('nclasses must be specified for one-hot labels')
         if target_conversion not in self._converters_:
@@ -90,6 +153,10 @@ class DataLoader(NervanaDataIterator):
         self.nclasses = nclasses
         self.subset_percent = int(subset_percent)
         self.ingest_params = ingest_params
+        if alphabet is None:
+            self.alphabet = None
+        else:
+            self.alphabet = ct.c_char_p(alphabet)
         self.load_library()
         self.alloc()
         self.start()
@@ -118,10 +185,13 @@ class DataLoader(NervanaDataIterator):
 
         self.data = alloc_bufs(self.datum_size, self.datum_dtype)
         self.targets = alloc_bufs(self.target_size, self.target_dtype)
+        self.meta = alloc_bufs(2, np.int32)
+        self.media_params.alloc(self)
         self.device_params = DeviceParams(self.be.device_type,
                                           self.be.device_id,
                                           cast_bufs(self.data),
-                                          cast_bufs(self.targets))
+                                          cast_bufs(self.targets),
+                                          cast_bufs(self.meta))
         if self.onehot:
             self.onehot_labels = self.be.iobuf(self.nclasses,
                                                dtype=self.be.default_dtype)
@@ -148,24 +218,25 @@ class DataLoader(NervanaDataIterator):
         datum_dtype_size = np.dtype(self.datum_dtype).itemsize
         target_dtype_size = np.dtype(self.target_dtype).itemsize
         if self.ingest_params is None:
-            ingest_params = None
+            ingest_params = ct.POINTER(MediaParams)()
         else:
             ingest_params = ct.POINTER(MediaParams)(self.ingest_params)
         self.loader = self.loaderlib.start(
             ct.byref(self.item_count), self.bsz,
-            ct.c_char_p(self.repo_dir),
-            ct.c_char_p(self.archive_dir),
-            ct.c_char_p(self.index_file),
-            ct.c_char_p(self.archive_prefix),
+            ct.c_char_p(self.repo_dir.encode()),
+            ct.c_char_p(self.archive_dir.encode()),
+            ct.c_char_p(self.index_file.encode()),
+            ct.c_char_p(self.archive_prefix.encode()),
             self.shuffle, self.reshuffle,
             self.macro_start,
-            self.datum_size, datum_dtype_size,
-            self.target_size, target_dtype_size,
-            self.target_conversion,
+            ct.c_int(self.datum_size), ct.c_int(datum_dtype_size),
+            ct.c_int(self.target_size), ct.c_int(target_dtype_size),
+            ct.c_int(self.target_conversion),
             self.subset_percent,
             ct.POINTER(MediaParams)(self.media_params),
             ct.POINTER(DeviceParams)(self.device_params),
-            ingest_params)
+            ingest_params,
+            self.alphabet)
         self.ndata = self.item_count.value
         if self.loader is None:
             raise RuntimeError('Failed to start data loader.')
@@ -196,7 +267,6 @@ class DataLoader(NervanaDataIterator):
             # Convert data to the required precision.
             self.backend_data[:] = self.data[self.buffer_id]
             data = self.backend_data
-        self.media_params.process(data)
 
         if self.onehot:
             # Convert labels to one-hot encoding.
@@ -206,8 +276,9 @@ class DataLoader(NervanaDataIterator):
         else:
             targets = self.targets[self.buffer_id]
 
+        meta = self.meta[self.buffer_id]
         self.buffer_id = 1 if self.buffer_id == 0 else 0
-        return data, targets
+        return self.media_params.process(self, data, targets, meta)
 
     def __iter__(self):
         for start in range(self.start_idx, self.ndata, self.bsz):
