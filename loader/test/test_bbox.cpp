@@ -36,7 +36,7 @@ extern gen_image image_dataset;
 using namespace std;
 using namespace nervana;
 
-static vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea","bicycle"};
+static vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea","bicycle","hovercraft"};
 
 static string read_file( const string& path ) {
     ifstream f(path);
@@ -45,14 +45,28 @@ static string read_file( const string& path ) {
     return ss.str();
 }
 
-shared_ptr<image::params> make_image_params() {
-    auto decoded = make_shared<image::decoded>();
-    cv::Mat mat_image(1, 1, CV_8UC3, 0.0);
-    decoded->add(mat_image);
-    auto config = make_shared<image::config>();
-    std::default_random_engine dre;
-    image::param_factory factory(config, dre);
-    return factory.make_params(decoded);
+static nlohmann::json create_box( const cv::Rect& rect, const string& label ) {
+    nlohmann::json j = {{"bndbox",{{"xmax",rect.x+rect.width},{"xmin",rect.x},{"ymax",rect.y+rect.height},{"ymin",rect.y}}},{"name",label}};
+    return j;
+}
+
+static nlohmann::json create_metadata( const vector<nlohmann::json>& boxes, int width, int height ) {
+    nlohmann::json j = nlohmann::json::object();
+    j["object"] = boxes;
+    j["size"] = {{"depth",3},{"height",height},{"width",width}};
+    return j;
+}
+
+cv::Mat draw( int width, int height, const vector<bbox::box>& blist, cv::Rect crop=cv::Rect() ) {
+    cv::Mat image = cv::Mat( width, height, CV_8UC3 );
+    image = cv::Scalar(255,255,255);
+    for( auto box : blist ) {
+        cv::rectangle(image, box.rect(), cv::Scalar(255,0,0));
+    }
+    if(crop != cv::Rect()) {
+        cv::rectangle(image, crop, cv::Scalar(0,0,255));
+    }
+    return image;
 }
 
 TEST(etl, bbox_extractor) {
@@ -115,10 +129,10 @@ TEST(etl, bbox) {
     cv::Rect r0 = cv::Rect( 0, 0, 10, 15 );
     cv::Rect r1 = cv::Rect( 10, 10, 12, 13 );
     cv::Rect r2 = cv::Rect( 100, 100, 120, 130 );
-    auto list = {bbox::extractor::create_box( r0, "rat" ),
-                  bbox::extractor::create_box( r1, "flea" ),
-                  bbox::extractor::create_box( r2, "tick")};
-    auto j = bbox::extractor::create_metadata(list);
+    auto list = {create_box( r0, "rat" ),
+                  create_box( r1, "flea" ),
+                  create_box( r2, "tick")};
+    auto j = create_metadata(list,256,256);
     // cout << std::setw(4) << j << endl;
 
     string buffer = j.dump();
@@ -141,7 +155,7 @@ TEST(etl, bbox) {
     auto tx = transform.transform( iparam, decoded );
 }
 
-TEST(etl, bbox_transform) {
+TEST(etl, bbox_crop) {
     // Create test metadata
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
     cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
@@ -151,15 +165,16 @@ TEST(etl, bbox_transform) {
     cv::Rect r5 = cv::Rect( 30, 70, 10, 10 );   // result[3]
     cv::Rect r6 = cv::Rect( 70, 70, 10, 10 );   // result[4]
     cv::Rect r7 = cv::Rect( 30, 30, 80, 80 );   // result[5]
-    auto list = {bbox::extractor::create_box( r0, "lion" ),
-                  bbox::extractor::create_box( r1, "tiger" ),
-                  bbox::extractor::create_box( r2, "eel" ),
-                  bbox::extractor::create_box( r3, "eel" ),
-                  bbox::extractor::create_box( r4, "eel" ),
-                  bbox::extractor::create_box( r5, "eel" ),
-                  bbox::extractor::create_box( r6, "eel" ),
-                  bbox::extractor::create_box( r7, "eel" )};
-    auto j = bbox::extractor::create_metadata(list);
+    auto list = {create_box( r0, "lion" ),
+                  create_box( r1, "tiger" ),
+                  create_box( r2, "eel" ),
+                  create_box( r3, "eel" ),
+                  create_box( r4, "eel" ),
+                  create_box( r5, "eel" ),
+                  create_box( r6, "eel" ),
+                  create_box( r7, "eel" )};
+    auto j = create_metadata(list,256,256);
+
     // cout << std::setw(4) << j << endl;
 
     string buffer = j.dump();
@@ -174,6 +189,12 @@ TEST(etl, bbox_transform) {
     bbox::transformer transform;
     auto iparam = make_image_params();
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
+
+    auto d = draw(256,256,decoded->boxes(),iparam->cropbox);
+    cv::imwrite("bbox_crop.png",d);
+
+
+    iparam->output_size = cv::Size(256, 256);
     auto tx = transform.transform( iparam, decoded );
     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
     vector<bbox::box> tx_boxes = tx_decoded->boxes();
@@ -186,11 +207,57 @@ TEST(etl, bbox_transform) {
     EXPECT_EQ(cv::Rect(35,35,40,40),tx_boxes[5].rect());
 }
 
+TEST(etl, bbox_rescale) {
+    // Create test metadata
+    cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
+    cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
+    cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]
+    cv::Rect r3 = cv::Rect( 70, 30, 10, 10 );   // result[2]
+    cv::Rect r4 = cv::Rect( 90, 35, 10, 10 );   // outside
+    cv::Rect r5 = cv::Rect( 30, 70, 10, 10 );   // result[3]
+    cv::Rect r6 = cv::Rect( 70, 70, 10, 10 );   // result[4]
+    cv::Rect r7 = cv::Rect( 30, 30, 80, 80 );   // result[5]
+    auto list = {create_box( r0, "lion" ),
+                  create_box( r1, "tiger" ),
+                  create_box( r2, "eel" ),
+                  create_box( r3, "eel" ),
+                  create_box( r4, "eel" ),
+                  create_box( r5, "eel" ),
+                  create_box( r6, "eel" ),
+                  create_box( r7, "eel" )};
+    auto j = create_metadata(list,256,256);
+    // cout << std::setw(4) << j << endl;
+
+    string buffer = j.dump();
+
+    bbox::extractor extractor{label_list};
+    auto data = extractor.extract( &buffer[0], buffer.size() );
+    shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
+    vector<bbox::box> boxes = decoded->boxes();
+
+    ASSERT_EQ(8,boxes.size());
+
+    bbox::transformer transform;
+    shared_ptr<image::params> iparam = make_shared<image::params>();
+    iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
+    iparam->output_size = cv::Size(512, 1024);
+    auto tx = transform.transform( iparam, decoded );
+    shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
+    vector<bbox::box> tx_boxes = tx_decoded->boxes();
+    ASSERT_EQ(6,tx_boxes.size());
+    EXPECT_EQ(cv::Rect(35*2,35*4,5*2,5*4),tx_boxes[0].rect());
+    EXPECT_EQ(cv::Rect(50*2,50*4,10*2,10*4),tx_boxes[1].rect());
+    EXPECT_EQ(cv::Rect(70*2,35*4,5*2,5*4),tx_boxes[2].rect());
+    EXPECT_EQ(cv::Rect(35*2,70*4,5*2,5*4),tx_boxes[3].rect());
+    EXPECT_EQ(cv::Rect(70*2,70*4,5*2,5*4),tx_boxes[4].rect());
+    EXPECT_EQ(cv::Rect(35*2,35*4,40*2,40*4),tx_boxes[5].rect());
+}
+
 TEST(etl, bbox_angle) {
     // Create test metadata
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );
-    auto list = {bbox::extractor::create_box( r0, "puma" )};
-    auto j = bbox::extractor::create_metadata(list);
+    auto list = {create_box( r0, "puma" )};
+    auto j = create_metadata(list,256,256);
 
     string buffer = j.dump();
 

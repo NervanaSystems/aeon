@@ -29,6 +29,7 @@ shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(const char*
     shared_ptr<decoded> rc = make_shared<decoded>();
     string buffer( data, size );
     json j = json::parse(buffer);
+//    cout << j.dump(4) << endl;
     if( j["object"].is_null() ) { rc = nullptr; return rc; }
     if( j["size"].is_null() ) { rc = nullptr; return rc; }
     auto object_list = j["object"];
@@ -68,18 +69,6 @@ shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(const char*
     return rc;
 }
 
-json nervana::bbox::extractor::create_box( const cv::Rect& rect, const string& label ) {
-    json j = {{"bndbox",{{"xmax",rect.x+rect.width},{"xmin",rect.x},{"ymax",rect.y+rect.height},{"ymin",rect.y}}},{"name",label}};
-    return j;
-}
-
-json nervana::bbox::extractor::create_metadata( const vector<json>& boxes ) {
-    json j = json::object();
-    j["object"] = boxes;
-    j["size"] = {{"depth",3},{"height",256},{"width",256}};
-    return j;
-}
-
 nervana::bbox::transformer::transformer() {}
 
 shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(shared_ptr<image::params> pptr, shared_ptr<bbox::decoded> boxes) {
@@ -88,12 +77,14 @@ shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(shared_ptr<image
     }
     shared_ptr<bbox::decoded> rc = make_shared<bbox::decoded>();
     cv::Rect crop = pptr->cropbox;
+    float x_scale = (float)(pptr->output_size.width)  / (float)(boxes->width());
+    float y_scale = (float)(pptr->output_size.height) / (float)(boxes->height());
     for( box tmp : boxes->boxes() ) {
         box b = tmp;
-        if( b.xmax <= crop.x ) {           // outside left
-        } else if( b.xmin >= crop.x + crop.width ) {      // outside right
-        } else if( b.ymax <= crop.y ) {   // outside above
-        } else if( b.ymin >= crop.y + crop.height ) {     // outside below
+        if( b.xmax <= crop.x ) {                      // outside left
+        } else if( b.xmin >= crop.x + crop.width ) {  // outside right
+        } else if( b.ymax <= crop.y ) {               // outside above
+        } else if( b.ymin >= crop.y + crop.height ) { // outside below
         } else {
             if( b.xmin < crop.x ) {
                 b.xmin = crop.x;
@@ -107,6 +98,13 @@ shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(shared_ptr<image
             if( b.ymax > crop.y + crop.height ) {
                 b.ymax = crop.y + crop.height;
             }
+
+            // now rescale box
+            b.xmin = (decltype(b.xmin))round((float)b.xmin * x_scale);
+            b.xmax = (decltype(b.xmax))round((float)b.xmax * x_scale);
+            b.ymin = (decltype(b.ymin))round((float)b.ymin * y_scale);
+            b.ymax = (decltype(b.ymax))round((float)b.ymax * y_scale);
+
             rc->_boxes.push_back( b );
         }
         // cout << b.rect << ", " << b.label << endl;

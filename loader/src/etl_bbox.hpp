@@ -58,8 +58,6 @@ public:
     extractor( const std::vector<std::string>& label_list );
     virtual ~extractor(){}
     virtual std::shared_ptr<bbox::decoded> extract(const char*, int) override;
-    static nlohmann::json create_box( const cv::Rect& rect, const std::string& label );
-    static nlohmann::json create_metadata( const std::vector<nlohmann::json>& boxes );
 private:
      std::unordered_map<std::string,int> label_map;
 };
