@@ -241,9 +241,11 @@ namespace nervana {
     public:
         loader(std::shared_ptr<const image::config>);
         ~loader() {}
-        virtual void load(char*, int, std::shared_ptr<image::decoded>) override;
+        virtual void load(char*, std::shared_ptr<image::decoded>) override;
+        int get_load_size() override { return _loadsz; }
 
     private:
+        int  _loadsz;
         void split(cv::Mat&, char*);
         bool _channel_major;
     };

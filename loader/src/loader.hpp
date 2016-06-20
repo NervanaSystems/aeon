@@ -43,16 +43,13 @@
 class DecodeThreadPool : public ThreadPool {
 public:
     DecodeThreadPool(int count, int batchSize,
-                     int datumSize, int datumTypeSize,
-                     int targetSize, int targetTypeSize,
-                     const std::shared_ptr<BufferPool>& in, const std::shared_ptr<BufferPool>& out,
                      const std::shared_ptr<Device>& device,
                      nlohmann::json configJs);
-                     // MediaParams* mediaParams);
     virtual ~DecodeThreadPool();
     virtual void start();
     virtual void stop();
-
+    void set_buffers(const std::shared_ptr<BufferPool>& in,
+                     const std::shared_ptr<BufferPool>& out);
 protected:
     virtual void run(int id);
     virtual void work(int id);
@@ -82,6 +79,8 @@ private:
     std::vector<int>            _endInds;
     std::vector<int>            _dataOffsets;
     std::vector<int>            _targetOffsets;
+
+
     int                         _datumSize;
     int                         _datumTypeSize;
     int                         _targetSize;
@@ -131,7 +130,6 @@ public:
            int targetSize, int targetTypeSize,
            int subsetPercent,
            const char* mediaConfigString,
-           // MediaParams* mediaParams,
            DeviceParams* deviceParams,
            const char* manifestFilename,
            int macroBatchSize,
@@ -167,5 +165,4 @@ private:
     std::shared_ptr<BatchIterator>      _batch_iterator;
     std::shared_ptr<Manifest>           _manifest;
     std::string                         _mediaConfigString;
-    // MediaParams*                        _mediaParams;
 };

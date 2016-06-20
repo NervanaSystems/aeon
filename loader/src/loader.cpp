@@ -32,29 +32,19 @@
 
 using namespace std;
 
-DecodeThreadPool::DecodeThreadPool(int count, int batchSize,
-                 int datumSize, int datumTypeSize,
-                 int targetSize, int targetTypeSize,
-                 const std::shared_ptr<BufferPool>& in, const std::shared_ptr<BufferPool>& out,
+DecodeThreadPool::DecodeThreadPool(int count, int batchSize
                  const std::shared_ptr<Device>& device,
                  nlohmann::json configJs)
-                 // MediaParams* mediaParams)
 : ThreadPool(count),
   _itemsPerThread((batchSize - 1) / count + 1),
-  _in(in), _out(out), _endSignaled(0),
-  _manager(0), _stopManager(false), _managerStopped(false), _inputBuf(0),
+  _endSignaled(0),
+  _manager(0), _stopManager(false), _managerStopped(false),
+  _inputBuf(0),
   _bufferIndex(0), _batchSize(batchSize),
-  _datumSize(datumSize), _datumTypeSize(datumTypeSize),
-  _targetSize(targetSize), _targetTypeSize(targetTypeSize),
-  _datumLen(datumSize * datumTypeSize),
-  _targetLen(targetSize * targetTypeSize),
   _device(device) {
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
     for (int i = 0; i < count; i++) {
-        // _media.push_back(Media::create(mediaParams, 0, i));
-//        auto prov = make_shared<nervana::image_decoder>(configJs, _datumLen, _targetLen);
-        auto prov = Media::create(configJs);
         _providers.push_back(prov);
         _startSignaled.push_back(0);
         _startInds.push_back(0);
@@ -62,6 +52,13 @@ DecodeThreadPool::DecodeThreadPool(int count, int batchSize,
         _dataOffsets.push_back(0);
         _targetOffsets.push_back(0);
     }
+}
+
+void DecodeThreadPool::set_buffers(const std::shared_ptr<BufferPool>& in,
+                                   const std::shared_ptr<BufferPool>& out)
+{
+    _in = in;
+    _out = out;
 }
 
 DecodeThreadPool::~DecodeThreadPool() {
@@ -143,25 +140,6 @@ void DecodeThreadPool::work(int id) {
         _providers[id]->provide_pair(i, _inputBuf, dataBuf, targetBuf);
         dataBuf += _datumLen;
         targetBuf += _targetLen;
-
-        // // Handle the data.
-        // int itemSize = 0;
-        // char* item = _inputBuf->first->getItem(i, itemSize);
-        // if (item == 0) {
-        //     return;
-        // }
-        // _media[id]->transform(item, itemSize, dataBuf, _datumLen);
-        // dataBuf += _datumLen;
-
-        // // Handle the targets.
-        // int targetLen = 0;
-        // char* target = _inputBuf->second->getItem(i, targetLen);
-        // memcpy(targetBuf, target, targetLen);
-        // if (_targetLen > targetLen) {
-        //     // Pad the rest of the buffer with zeros.
-        //     memset(targetBuf + targetLen, 0, _targetLen - targetLen);
-        // }
-        // targetBuf += _targetLen;
     }
 
     {
@@ -195,15 +173,11 @@ void DecodeThreadPool::produce() {
         }
         // At this point, we have decoded data for the whole minibatch.
         BufferPair& outBuf = _out->getForWrite();
-        Matrix::transpose(outBuf.first->_data, _batchSize,
-                          _datumSize, _datumTypeSize);
-        Matrix::transpose(outBuf.second->_data, _batchSize,
-                          _targetSize, _targetTypeSize);
+        Matrix::transpose(outBuf.first->_data, _batchSize, _datumSize, _datumTypeSize);
+        Matrix::transpose(outBuf.second->_data, _batchSize, _targetSize, _targetTypeSize);
         // Copy to device.
-        _device->copyData(_bufferIndex, outBuf.first->_data,
-                          outBuf.first->_size);
-        _device->copyLabels(_bufferIndex, outBuf.second->_data,
-                            outBuf.second->_size);
+        _device->copyData(_bufferIndex, outBuf.first->_data, outBuf.first->_size);
+        _device->copyLabels(_bufferIndex, outBuf.second->_data, outBuf.second->_size);
         _bufferIndex = (_bufferIndex == 0) ? 1 : 0;
         _out->advanceWritePos();
     }
@@ -263,7 +237,6 @@ Loader::Loader(int miniBatchSize,
        int targetSize, int targetTypeSize,
        int subsetPercent,
        const char* mediaConfigString,
-       // MediaParams* mediaParams,
        DeviceParams* deviceParams,
        const char* manifestFilename,
        int macroBatchSize,
@@ -292,11 +265,11 @@ Loader::Loader(int miniBatchSize,
     // the batchLoader
     if(shuffleEveryEpoch) {
         _batch_iterator = make_shared<ShuffledBatchIterator>(
-             batchLoader, macroBatchSize, randomSeed
+            batchLoader, macroBatchSize, randomSeed
         );
     } else {
         _batch_iterator = make_shared<SequentialBatchIterator>(
-             batchLoader, macroBatchSize
+            batchLoader, macroBatchSize
         );
     }
 }
@@ -319,10 +292,11 @@ int Loader::start() {
         int itemsPerThread = (_miniBatchSize - 1) /  numCores + 1;
         int threadCount =  (_miniBatchSize - 1) / itemsPerThread + 1;
         threadCount = std::min(threadCount, _miniBatchSize);
-        _decodeThreads = unique_ptr<DecodeThreadPool>(new DecodeThreadPool(threadCount, _miniBatchSize,
-                _datumSize, _datumTypeSize,
-                _targetSize, _targetTypeSize,
-                _readBufs, _decodeBufs, _device, _mediaConfigString));
+        _decodeThreads = unique_ptr<DecodeThreadPool>(
+            new DecodeThreadPool(threadCount, _miniBatchSize
+                                 _readBufs, _decodeBufs,
+                                 _device, _mediaConfigString)
+            );
     } catch(std::bad_alloc&) {
         return -1;
     }

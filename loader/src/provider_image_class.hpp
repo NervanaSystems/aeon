@@ -47,11 +47,11 @@ namespace nervana {
     public:
         image_decoder(nlohmann::json js, int seed=0)
         {
-            auto data_config = js["data_config"];
+            auto data_config   = js["data_config"];
             auto target_config = js["target_config"];
 
-            int image_width = data_config["width"];
-            int image_height = data_config["height"];
+            int image_width    = data_config["width"];
+            int image_height   = data_config["height"];
 
             _dprov = std::make_shared<image::randomizing_provider>(data_config, seed);
             _tprov = std::make_shared<label::binary_provider>();

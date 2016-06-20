@@ -20,13 +20,12 @@ public:
              std::shared_ptr<interface::param_factory<T, S>> fa = nullptr)
     : _extractor(ex), _transformer(tr), _loader(lo), _factory(fa) {}
 
-    std::shared_ptr<S> provide(char *inbuf, int insize,
-                          char *outbuf, int outsize,
-                          std::shared_ptr<S> pptr = nullptr)
+    std::shared_ptr<S> provide(char *inbuf, int insize, char *outbuf,
+                               std::shared_ptr<S> pptr = nullptr)
     {
         std::shared_ptr<T> dec = _extractor->extract(inbuf, insize);
         std::shared_ptr<S> optr = _factory == nullptr ? pptr : _factory->make_params(dec);
-        _loader->load(outbuf, outsize, _transformer->transform(optr, dec));
+        _loader->load(outbuf, _transformer->transform(optr, dec));
         return optr;
     }
 
@@ -49,6 +48,8 @@ public:
         _tprov = std::make_shared<T>(tgt_cfg);
     }
 
+    virtual int get_dsize() = 0;
+    virtual int get_tsize() = 0;
     void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) override
     {
         int dsz_in, tsz_in;
@@ -61,8 +62,8 @@ public:
             return;
         }
 
-        auto pptr = _dprov->provide(datum_in, dsz_in, datum_out, _dsz_out);
-        _tprov->provide(target_in, tsz_in, tgt_out, _tsz_out, pptr);
+        auto pptr = _dprov->provide(datum_in, dsz_in, datum_out);
+        _tprov->provide(target_in, tsz_in, tgt_out, pptr);
     }
 
     std::shared_ptr<D> _dprov;

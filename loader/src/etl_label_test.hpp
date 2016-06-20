@@ -140,6 +140,8 @@ namespace nervana {
 
         ~loader() {}
 
+        int get_load_size() override { return _loadsz; }
+
         void load(char* buf, int bufSize, std::shared_ptr<label_test::decoded> mp) override
         {
             int index = mp->get_index();
@@ -149,11 +151,11 @@ namespace nervana {
             } else {
                 memcpy(buf, &index, bufSize);
             }
-
         }
 
     private:
-        float _ld_offset;
-        bool _ld_dofloat;
+        int     _loadsz = 4;
+        float   _ld_offset;
+        bool    _ld_dofloat;
     };
 }

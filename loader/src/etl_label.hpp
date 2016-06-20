@@ -60,10 +60,14 @@ namespace nervana {
 
         ~loader() {}
 
-        void load(char* buf, int bufSize, std::shared_ptr<label::decoded> mp) override
+        int get_load_size() override { return _loadsz; }
+
+        void load(char* buf, std::shared_ptr<label::decoded> mp) override
         {
             int index = mp->get_index();
-            memcpy(buf, &index, bufSize);
+            memcpy(buf, &index, _loadsz);
         }
+    private:
+        int _loadsz = 4;
     };
 }
