@@ -172,17 +172,15 @@ namespace nervana {
     };
 
 
-    class multicrop::config : public json_config_parser {
+    class multicrop::config : public image::config {
     public:
 
         // Required config variables
-        int height;
-        int width;
-        std::vector<float> scales;
+        std::vector<float> multicrop_scales;
 
         // Optional config variables
         int crops_per_scale = 5;
-        bool flip = true;
+        bool include_flips = true;
 
         // Derived config variables
         std::vector<cv::Point2f> offsets;
@@ -190,12 +188,11 @@ namespace nervana {
 
         bool set_config(nlohmann::json js) override
         {
+            image::config::set_config(js);
             // Parse required and optional variables
-            parse_req(height, "height", js);
-            parse_req(width, "width", js);
-            parse_req(scales, "scales", js);
+            parse_req(multicrop_scales, "multicrop_scales", js);
             parse_opt(crops_per_scale, "crops_per_scale", js);
-            parse_opt(flip, "flip", js);
+            parse_opt(include_flips, "include_flips", js);
 
             if (!validate()) {
                 throw std::runtime_error("invalid configuration values");
@@ -219,7 +216,7 @@ namespace nervana {
             bool isvalid = true;
             isvalid &= ( crops_per_scale == 5 || crops_per_scale == 1);
 
-            for (const float &s: scales) {
+            for (const float &s: multicrop_scales) {
                 isvalid &= ( (0.0 < s) && (s < 1.0));
             }
             return isvalid;
