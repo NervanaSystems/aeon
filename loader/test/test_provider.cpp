@@ -45,9 +45,9 @@ TEST(provider,image) {
 
         Buffer target_p(0);
         reader.read(target_p);
-        
+
         BufferPair bp(&data_p, &target_p);
-        media->provide_pair(0,&bp,&dbuffer[0],&tbuffer[0]);
+        media->provide_pair(0, &bp, &dbuffer[0], &tbuffer[0]);
 
         int target_value = unpack_le<int>(&tbuffer[0]);
         EXPECT_EQ(42+i,target_value);
@@ -150,7 +150,7 @@ TEST(provider, argtype) {
             int reference_target = reference;
             int loaded_target = 0;
             provider<label_test::decoded, label_test::params> pp{lble, lblt, lbll, prm_fcty};
-            auto ls2 = pp.provide(labels._data, 4, (char *)(&loaded_target), 4, nullptr);
+            auto ls2 = pp.provide(labels._data, 4, (char *)(&loaded_target), nullptr);
             EXPECT_EQ(ls2->scale, lstg->scale);
             EXPECT_EQ(ls2->shift, lstg->shift);
             EXPECT_EQ(reference_target, loaded_target);
@@ -172,7 +172,7 @@ TEST(provider, argtype) {
             float reference_target = reference + 0.8;
             float loaded_target = 0.0;
             provider<label_test::decoded, label_test::params> pp{lble, lblt, lbll};
-            pp.provide(labels._data, 4, (char *)(&loaded_target), 4, lstg);
+            pp.provide(labels._data, 4, (char *)(&loaded_target), lstg);
             EXPECT_EQ(reference_target, loaded_target);
         }
     }

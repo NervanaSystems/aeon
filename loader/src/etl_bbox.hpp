@@ -79,7 +79,7 @@ class nervana::bbox::loader : public nervana::interface::loader<nervana::bbox::d
 public:
     loader();
     virtual ~loader(){}
-    virtual void load(char*, int, std::shared_ptr<bbox::decoded>) override;
+    virtual void load(char*, std::shared_ptr<bbox::decoded>) override;
     size_t get_load_count() override { return _load_count; }
     size_t get_load_size () override { return _load_size; }
 private:

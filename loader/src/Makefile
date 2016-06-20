@@ -19,7 +19,6 @@ SRCS            := \
     event.cpp \
     device.cpp \
     batchfile.cpp \
-    image.cpp \
     buffer.cpp \
     loader.cpp \
     argtype.cpp \
@@ -28,8 +27,6 @@ SRCS            := \
     etl_lmap.cpp \
     etl_specgram.cpp \
     etl_rawmedia.cpp \
-    codec.cpp \
-    video.cpp \
     util.cpp \
     manifest.cpp \
     batch_file_loader.cpp \

@@ -32,7 +32,7 @@ public:
 template<typename T> class nervana::interface::loader {
 public:
     virtual ~loader() {}
-    virtual void load(char*, int, std::shared_ptr<T>) = 0;
+    virtual void load(char*, std::shared_ptr<T>) = 0;
     virtual size_t get_load_count() = 0;
     virtual size_t get_load_size () = 0;
 };

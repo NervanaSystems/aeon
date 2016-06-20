@@ -114,7 +114,7 @@ shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(shared_ptr<image
     return rc;
 }
 
-void nervana::bbox::loader::load(char* data, int size, shared_ptr<bbox::decoded> boxes) {
+void nervana::bbox::loader::load(char* data, shared_ptr<bbox::decoded> boxes) {
 
 }
 

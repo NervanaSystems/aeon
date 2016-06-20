@@ -95,7 +95,7 @@ namespace nervana {
             return validate();
         }
 
-        virtual int num_crops() { return 1; }
+        virtual int num_crops() const { return 1; }
 
     private:
         bool validate() {
@@ -216,7 +216,7 @@ namespace nervana {
             return validate();
         }
 
-        int num_crops() override { return static_cast<int>(multicrop_scales.size()); }
+        int num_crops() const override { return static_cast<int>(multicrop_scales.size()); }
 
     private:
         bool validate()

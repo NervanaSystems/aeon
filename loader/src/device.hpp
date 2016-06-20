@@ -24,11 +24,17 @@ enum DeviceType { CPU=0, GPU=1 };
 
 class DeviceParams {
 public:
-    DeviceParams(int type, int id) : _type(type), _id(id) {}
+    DeviceParams(int type, int id)
+    : _type(type), _id(id), _dataCount(0), _dataSize(0), _targetCount(0), _targetSize(0)
+    {}
 
 public:
     int                         _type;
     int                         _id;
+    int                         _dataCount;
+    int                         _dataSize;
+    int                         _targetCount;
+    int                         _targetSize;
 };
 
 class CpuParams : public DeviceParams {
@@ -57,7 +63,7 @@ public:
     virtual int copyLabelsBack(int idx, char* data, int size) = 0;
 
     static std::shared_ptr<Device> create(DeviceParams* params);
-    static std::shared_ptr<Device> create(DeviceType type, int id, int dataSize, int targetSize);
+    static std::shared_ptr<Device> create(DeviceParams* params, int dataSize, int targetSize);
 
 public:
     int                         _type;
@@ -171,12 +177,14 @@ private:
 
 class Cpu : public Device {
 public:
-    Cpu(int id, int dataSize, int targetSize)
+    Cpu(CpuParams *params, int dataSize, int targetSize)
     : Device(CPU), _alloc(true) {
         init();
         for (int i = 0; i < 2; i++) {
             _data[i] = new char[dataSize];
             _targets[i] = new char[targetSize];
+            params->_targets[i] = _targets[i];
+            params->_data[i]    = _data[i];
         }
     }
 

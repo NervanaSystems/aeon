@@ -14,7 +14,6 @@
 */
 
 #include "loader.hpp"
-#include "image.hpp"
 #include "gen_image.hpp"
 #include "gtest/gtest.h"
 #include "simple_loader.hpp"
@@ -33,8 +32,7 @@ unsigned int sum(char* data, unsigned int len) {
 }
 
 void single(simple_loader* loader, int epochCount, int minibatchCount,
-           int batchSize, int datumSize, int targetSize,
-           ImageParams* mediaParams, ImageIngestParams* ingestParams, unsigned int& sm) {
+           int batchSize, int datumSize, int targetSize, unsigned int& sm) {
     BatchIterator* reader = loader;
 //    string configString = R"({"media":"image","config":{}})";
 //    auto js = nlohmann::json::parse(configString);
@@ -95,8 +93,9 @@ void multi(simple_loader* loader, int epochCount, int minibatchCount,
 //    delete[] targets;
 }
 
-int test(const char* repoDir, const char* indexFile,
-         int batchSize, int nchan, int height, int width) {
+int test(const char* repoDir, const char* indexFile, int batchSize,
+         int nchan, int height, int width)
+{
     int datumSize = nchan * height * width;
     int targetSize = 1;
     int datumTypeSize = 1;
@@ -106,8 +105,6 @@ int test(const char* repoDir, const char* indexFile,
     int datumLen = datumSize * datumTypeSize;
     int targetLen = targetSize * targetTypeSize;
 
-    ImageParams mediaParams(nchan, height, width, true, false, 0, 0, 100, 100,
-                            0, 0, 0, false, 0, 0, 0, 0);
     string mediaConfigString = R"(
         {
             "height" : 100,
@@ -125,21 +122,15 @@ int test(const char* repoDir, const char* indexFile,
     string archiveDir(repoDir);
     //archiveDir += "-ingested";
     CpuParams deviceParams(0, 0, dataBuffer, targetBuffer);
-    ImageIngestParams ingestParams(false, true, 0, 0);
 //    simple_loader loader(batchSize,
 //                  false, false, datumSize, datumTypeSize,
 //                  targetSize, targetTypeSize, 100,
 //                  mediaConfigString.c_str(), &deviceParams, "", 128, "", 0);
     simple_loader loader(repoDir);
     unsigned int singleSum = 0;
-    single(&loader, epochCount,
-                                    minibatchCount, batchSize,
-                                    datumLen, targetLen,
-                                    &mediaParams, &ingestParams, singleSum);
+    single(&loader, epochCount, minibatchCount, batchSize, datumLen, targetLen, singleSum);
     unsigned int multiSum = 0;
-    multi(&loader, epochCount,
-                                  minibatchCount, batchSize,
-                                  datumLen, targetLen, multiSum);
+    multi(&loader, epochCount, minibatchCount, batchSize, datumLen, targetLen, multiSum);
     for (int i = 0; i < 2; i++) {
         delete[] dataBuffer[i];
         delete[] targetBuffer[i];

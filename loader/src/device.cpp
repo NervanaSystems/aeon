@@ -34,12 +34,12 @@ shared_ptr<Device> Device::create(DeviceParams* params) {
 shared_ptr<Device> Device::create(DeviceParams* params, int dataSize, int targetSize)
 {
 #if HAS_GPU
-    if (type == CPU) {
+    if (params->_type == CPU) {
         return make_shared<Cpu>(reinterpret_cast<CpuParams*>(params), dataSize, targetSize);
     }
     return make_shared<Gpu>(reinterpret_cast<GpuParams*>(params), dataSize, targetSize);
 #else
-    assert(type == CPU);
+    assert(params->_type == CPU);
     return make_shared<Cpu>(reinterpret_cast<CpuParams*>(params), dataSize, targetSize);
 #endif
 }

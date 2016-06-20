@@ -143,14 +143,14 @@ namespace nervana {
         size_t get_load_count() override { return _load_count; }
         size_t get_load_size () override { return _load_size; }
 
-        void load(char* buf, int bufSize, std::shared_ptr<label_test::decoded> mp) override
+        void load(char* buf, std::shared_ptr<label_test::decoded> mp) override
         {
             int index = mp->get_index();
             if (_ld_dofloat) {
                 float ld_index = index + _ld_offset;
-                memcpy(buf, &ld_index, bufSize);
+                memcpy(buf, &ld_index, sizeof(ld_index));
             } else {
-                memcpy(buf, &index, bufSize);
+                memcpy(buf, &index, sizeof(index));
             }
         }
 
