@@ -17,6 +17,21 @@
 
 #include "etl_image.hpp"
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+extern "C" {
+    #include <libavformat/avformat.h>
+    #include <libavutil/imgutils.h>
+    #include <libswscale/swscale.h>
+}
+
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55, 28, 1)
+#define av_frame_alloc  avcodec_alloc_frame
+#define av_frame_free avcodec_free_frame
+#endif
+
 namespace nervana {
     namespace video {
         class config;
@@ -31,6 +46,8 @@ namespace nervana {
         class loader;
     }
 
+    class video::config : public nervana::image::config { };
+
     class video::params : public nervana::params {
     public:
         params() {}
@@ -40,20 +57,27 @@ namespace nervana {
         int _framesPerClip;
     };
 
-    class video::decoded : public decoded_media {
+    class video::decoded : public image::decoded {
     public:
-        decoded() {}
-        virtual ~decoded() override {}
-
         virtual MediaType get_type() override { return MediaType::VIDEO; }
-    protected:
-        nervana::image::decoded _images;
     };
 
     class video::extractor : public interface::extractor<video::decoded> {
+    public:
         extractor(std::shared_ptr<const video::config>);
-        ~extractor() {}
+        ~extractor();
 
-        virtual std::shared_ptr<video::decoded> extract(const char*, int) override;
+        virtual std::shared_ptr<video::decoded> extract(const char* item, int itemSize) override;
+
+    protected:
+        void decode_video_frame(AVCodecContext* codecCtx, AVPacket& packet);
+        int findVideoStream(AVCodecContext* &codecCtx, AVFormatContext* formatCtx);
+        void convertFrameFormat(AVCodecContext* codecCtx, AVPixelFormat pFormat,
+                                AVFrame* &pFrame);
+
+        std::shared_ptr<video::decoded> _out;
+        AVPixelFormat _pFormat;
+        AVFrame* _pFrameRGB;
+        AVFrame* _pFrame;
     };
 }

@@ -15,10 +15,19 @@
 
 #include "gtest/gtest.h"
 
+#include "etl_video.hpp"
+#include "gen_video.hpp"
+
 using namespace std;
 using namespace nervana;
 
 TEST(etl, video_integration) {
-    video::config conf;
+    // 1 second video at 25 FPS
+    vector<unsigned char> vid = gen_video().encode(1000);
 
+    auto config = make_shared<video::config>();
+    video::extractor extractor = video::extractor(config);
+    auto decoded_vid = extractor.extract((char*)vid.data(), vid.size());
+
+    ASSERT_EQ(decoded_vid->get_image_count(), 25);
 }

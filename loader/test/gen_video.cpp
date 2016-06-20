@@ -124,6 +124,7 @@ vector<unsigned char> gen_video::encode(int duration) {
 
     /* encode 1 second of video */
     int frames = ((float)duration / 1000.) / ((float)(c->time_base.num) / (float)(c->time_base.den));
+    int j = 0;
     for(i=0;i<frames;i++) {
         /* prepare a dummy image */
         /* Y */
@@ -144,6 +145,8 @@ vector<unsigned char> gen_video::encode(int duration) {
         /* encode the image */
         out_size = avcodec_encode_video(c, outbuf, outbuf_size, picture);
         for(int i=0; i<out_size; i++) { rc.push_back(outbuf[i]); }
+
+        ++j;
     }
 
     /* get the delayed frames */

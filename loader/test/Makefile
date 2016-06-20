@@ -29,6 +29,7 @@ SRCS := \
     test_lmap.cpp \
     test_provider.cpp \
     test_util.cpp \
+	test_video.cpp \
     manifest_test.cpp \
     manifest_maker.cpp \
     batch_file_loader_test.cpp \

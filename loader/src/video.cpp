@@ -157,6 +157,7 @@ void Video::writeFrameToBuf(cv::Mat frame, char* buf, int frameIdx, int channelS
     _imgDecoder->transformDecodedImage(frame, imageBuf, _decodedSize);
     cv::Mat decodedBuf = cv::Mat(1, _decodedSize, CV_8U, imageBuf);
 
+    // transform data to image x channel x imgSize
     for(int c = 0; c < _params->_frameParams._channelCount; c++) {
         cv::Mat channel = decodedBuf.colRange(c * _imgSize, (c + 1) * _imgSize);
         std::copy(channel.data, channel.data + _imgSize,
