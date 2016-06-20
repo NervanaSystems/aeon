@@ -107,8 +107,9 @@ int video::extractor::findVideoStream(AVCodecContext* &codecCtx, AVFormatContext
 
 void video::extractor::convertFrameFormat(AVCodecContext* codecCtx, AVPixelFormat pFormat,
                                           AVFrame* &pFrame) {
+    // supposedly, some codecs allow the raw parameters like the frame size
+    // to be changed at any frame, so we cant reuse this imgConvertCtx
 
-    // TODO: dont do this every frame
     struct SwsContext* imgConvertCtx = sws_getContext(
         codecCtx->width, codecCtx->height, codecCtx->pix_fmt,
         codecCtx->width, codecCtx->height,
