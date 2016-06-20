@@ -28,6 +28,7 @@ SRCS            := \
     etl_lmap.cpp \
     etl_specgram.cpp \
     etl_rawmedia.cpp \
+    etl_video.cpp \
     codec.cpp \
     video.cpp \
     util.cpp \

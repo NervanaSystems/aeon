@@ -148,9 +148,11 @@ void Video::convertFrameFormat(AVCodecContext* codecCtx, AVPixelFormat pFormat,
 }
 
 void Video::writeFrameToBuf(cv::Mat frame, char* buf, int frameIdx, int channelSize) {
+    // transform frame with _imgDecoder and then copy it into buf
     if (frameIdx == 0) {
         _imgDecoder->createRandomAugParams(frame.size());
     }
+    // transform frame into imageBuf
     char* imageBuf = new char[_decodedSize];
     _imgDecoder->transformDecodedImage(frame, imageBuf, _decodedSize);
     cv::Mat decodedBuf = cv::Mat(1, _decodedSize, CV_8U, imageBuf);
