@@ -21,13 +21,29 @@
 using namespace std;
 using namespace nervana;
 
-TEST(etl, video_integration) {
+TEST(etl, video_extract_transform) {
     // 1 second video at 25 FPS
     vector<unsigned char> vid = gen_video().encode(1000);
 
+    // extract
     auto config = make_shared<video::config>();
+    config->width = 352;
+    config->height = 288;
+
     video::extractor extractor = video::extractor(config);
     auto decoded_vid = extractor.extract((char*)vid.data(), vid.size());
 
     ASSERT_EQ(decoded_vid->get_image_count(), 25);
+    ASSERT_EQ(decoded_vid->get_image_size(), cv::Size2i(352, 288));
+
+    // transform
+    video::transformer transformer = video::transformer(config);
+    auto imageParams = make_shared<image::params>();
+    imageParams->output_size = cv::Size2i(352/2, 288/2);
+    auto params = make_shared<video::params>(imageParams);
+    auto transformed_vid = transformer.transform(params, decoded_vid);
+
+    // just make sure we still have the same number of images
+    ASSERT_EQ(decoded_vid->get_image_count(), 25);
+    ASSERT_EQ(decoded_vid->get_image_size(), cv::Size2i(352/2, 288/2));
 }

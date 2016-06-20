@@ -7,9 +7,13 @@
 using namespace std;
 using namespace nervana;
 
+video::params::params(std::shared_ptr<image::params> imageParams)
+    : _imageParams(imageParams) {
+}
+
 void video::params::dump(ostream & ostr) {
     ostr << "FrameParams: ";
-    _frameParams.dump(ostr);
+    _imageParams->dump(ostr);
 
     ostr << "Frames Per Clip: " << _framesPerClip << " ";
 }
@@ -20,6 +24,9 @@ video::extractor::extractor(std::shared_ptr<const video::config>)
     _pFrame = av_frame_alloc();
 
     // TODO: pull necessary config from here
+    // it looks like the only config we may want here (from image) is
+    // color vs black and white.  This will involve changing _pFormat
+    // https://ffmpeg.org/doxygen/2.1/pixfmt_8h.html#a9a8e335cf3be472042bc9f0cf80cd4c5
 }
 
 video::extractor::~extractor() {
@@ -88,8 +95,7 @@ void video::extractor::decode_video_frame(AVCodecContext* codecCtx, AVPacket& pa
 
         cv::Mat frame(_pFrame->height, _pFrame->width, CV_8UC3, _pFrameRGB->data[0]);
 
-        // TODO: adjust image color
-        // TODO: transform to image x channel x imgSize
+        // TODO: transform to image x channel x imgSize?
 
         _out->add(frame);
     }
@@ -112,9 +118,8 @@ void video::extractor::convertFrameFormat(AVCodecContext* codecCtx, AVPixelForma
 
     struct SwsContext* imgConvertCtx = sws_getContext(
         codecCtx->width, codecCtx->height, codecCtx->pix_fmt,
-        codecCtx->width, codecCtx->height,
-        pFormat, SWS_BICUBIC,
-        NULL, NULL, NULL
+        codecCtx->width, codecCtx->height, pFormat,
+        SWS_BICUBIC, NULL, NULL, NULL
     );
 
     sws_scale(
@@ -123,4 +128,17 @@ void video::extractor::convertFrameFormat(AVCodecContext* codecCtx, AVPixelForma
     );
 
     sws_freeContext(imgConvertCtx);
+}
+
+video::transformer::transformer(std::shared_ptr<const video::config> config)
+    : _imageTransformer(config) {
+}
+
+std::shared_ptr<video::decoded> video::transformer::transform(
+    std::shared_ptr<video::params> params,
+    std::shared_ptr<video::decoded> decoded) {
+    // simple wrapper around image::transformer for now
+    return std::dynamic_pointer_cast<video::decoded>(_imageTransformer.transform(
+        params->_imageParams, decoded
+    ));
 }

@@ -50,10 +50,10 @@ namespace nervana {
 
     class video::params : public nervana::params {
     public:
-        params() {}
+        params(std::shared_ptr<image::params>);
         void dump(std::ostream & = std::cout);
 
-        nervana::image::params _frameParams;
+        std::shared_ptr<image::params> _imageParams;
         int _framesPerClip;
     };
 
@@ -79,5 +79,17 @@ namespace nervana {
         AVPixelFormat _pFormat;
         AVFrame* _pFrameRGB;
         AVFrame* _pFrame;
+    };
+
+    // simple wrapper around image::transformer for now
+    class video::transformer : public interface::transformer<video::decoded, video::params> {
+    public:
+        transformer(std::shared_ptr<const video::config>);
+        ~transformer() {}
+        virtual std::shared_ptr<video::decoded> transform(
+                                                std::shared_ptr<video::params>,
+                                                std::shared_ptr<video::decoded>) override;
+    protected:
+        image::transformer _imageTransformer;
     };
 }
