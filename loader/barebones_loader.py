@@ -30,8 +30,7 @@ class DeviceParams(ct.Structure):
     _fields_ = [('type', ct.c_int),
                 ('id', ct.c_int),
                 ('data', BufferPair),
-                ('targets', BufferPair),
-                ('meta', BufferPair)]
+                ('targets', BufferPair)]
 
 
 class DataLoader(object):
@@ -156,23 +155,17 @@ class DataLoader(object):
         def cast_bufs(buffers):
             return BufferPair(ct_cast(buffers, 0), ct_cast(buffers, 1))
 
-        self.data = alloc_bufs(self.datum_size, self.datum_dtype)
-        self.targets = alloc_bufs(self.target_size, self.target_dtype)
-        self.meta = alloc_bufs(2, np.int32)
+        # self.data = alloc_bufs(self.datum_size, self.datum_dtype)
+        # self.targets = alloc_bufs(self.target_size, self.target_dtype)
         self.media_params.alloc(self)
-        self.device_params = DeviceParams(self.be.device_type,
-                                          self.be.device_id,
-                                          cast_bufs(self.data),
-                                          cast_bufs(self.targets),
-                                          cast_bufs(self.meta))
+        self.device_params = DeviceParams(self.be.device_type, self.be.device_id)
         if self.onehot:
-            self.onehot_labels = self.be.iobuf(self.nclasses,
-                                               dtype=self.be.default_dtype)
+            self.onehot_labels = self.be.iobuf(self.nclasses, dtype=self.be.default_dtype)
+
         if self.datum_dtype == self.be.default_dtype:
             self.backend_data = None
         else:
-            self.backend_data = self.be.iobuf(self.datum_size,
-                                              dtype=self.be.default_dtype)
+            self.backend_data = self.be.iobuf(self.datum_size, dtype=self.be.default_dtype)
 
     @property
     def nbatches(self):
@@ -185,8 +178,6 @@ class DataLoader(object):
         self.loader = self.loaderlib.start(
             ct.byref(self.item_count), ct.c_int(self.bsz),
             self.shuffle, self.reshuffle,
-            ct.c_int(self.datum_size), ct.c_int(datum_dtype_size),
-            ct.c_int(self.target_size), ct.c_int(target_dtype_size),
             ct.c_int(self.subset_percent),
             ct.POINTER(DeviceParams)(self.device_params),
             ct.c_char_p(self.manifest_file.encode()),

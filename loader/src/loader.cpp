@@ -32,19 +32,17 @@
 
 using namespace std;
 
-DecodeThreadPool::DecodeThreadPool(int count, int batchSize
-                 const std::shared_ptr<Device>& device,
-                 nlohmann::json configJs)
+DecodeThreadPool::DecodeThreadPool(int count, int batchSize, nlohmann::json configJs)
 : ThreadPool(count),
   _itemsPerThread((batchSize - 1) / count + 1),
   _endSignaled(0),
-  _manager(0), _stopManager(false), _managerStopped(false),
-  _inputBuf(0),
-  _bufferIndex(0), _batchSize(batchSize),
-  _device(device) {
+  _manager(0), _stopManager(false), _managerStopped(false), _inputBuf(0),
+  _bufferIndex(0), _batchSize(batchSize)
+{
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
     for (int i = 0; i < count; i++) {
+        auto prov = Media::create(configJs);
         _providers.push_back(prov);
         _startSignaled.push_back(0);
         _startInds.push_back(0);
@@ -52,13 +50,11 @@ DecodeThreadPool::DecodeThreadPool(int count, int batchSize
         _dataOffsets.push_back(0);
         _targetOffsets.push_back(0);
     }
-}
 
-void DecodeThreadPool::set_buffers(const std::shared_ptr<BufferPool>& in,
-                                   const std::shared_ptr<BufferPool>& out)
-{
-    _in = in;
-    _out = out;
+    _datumCount = _providers[0]->get_d_count();
+    _datumSize  = _providers[0]->get_d_size();
+    _targetCount = _providers[0]->get_t_count();
+    _targetSize  = _providers[0]->get_t_size();
 }
 
 DecodeThreadPool::~DecodeThreadPool() {
@@ -68,6 +64,15 @@ DecodeThreadPool::~DecodeThreadPool() {
     }
     // The other thread objects are freed in the destructor
     // of the parent class.
+}
+
+void DecodeThreadPool::set_io_buffers(const std::shared_ptr<BufferPool>& in,
+                                      const std::shared_ptr<Device>& device,
+                                      const std::shared_ptr<BufferPool>& out)
+{
+    _in = in;
+    _device = device;
+    _out = out;
 }
 
 void DecodeThreadPool::start() {
@@ -106,8 +111,8 @@ void DecodeThreadPool::run(int id) {
     }
 
     _endInds[id] = _startInds[id] + itemCount;
-    _dataOffsets[id] = _startInds[id] * _datumLen;
-    _targetOffsets[id] = _startInds[id] * _targetLen;
+    _dataOffsets[id] = _startInds[id] * _datumSize * _datumCount;
+    _targetOffsets[id] = _startInds[id] * _targetSize * _targetCount;
     while (_done == false) {
         work(id);
     }
@@ -138,8 +143,8 @@ void DecodeThreadPool::work(int id) {
     char* targetBuf = outBuf.second->_data + _targetOffsets[id];
     for (int i = start; i < end; i++) {
         _providers[id]->provide_pair(i, _inputBuf, dataBuf, targetBuf);
-        dataBuf += _datumLen;
-        targetBuf += _targetLen;
+        dataBuf += _datumSize * _datumCount;
+        targetBuf += _targetSize * _targetCount;
     }
 
     {
@@ -173,8 +178,8 @@ void DecodeThreadPool::produce() {
         }
         // At this point, we have decoded data for the whole minibatch.
         BufferPair& outBuf = _out->getForWrite();
-        Matrix::transpose(outBuf.first->_data, _batchSize, _datumSize, _datumTypeSize);
-        Matrix::transpose(outBuf.second->_data, _batchSize, _targetSize, _targetTypeSize);
+        Matrix::transpose(outBuf.first->_data, _batchSize, _datumCount, _datumSize);
+        Matrix::transpose(outBuf.second->_data, _batchSize, _targetCount, _targetSize);
         // Copy to device.
         _device->copyData(_bufferIndex, outBuf.first->_data, outBuf.first->_size);
         _device->copyLabels(_bufferIndex, outBuf.second->_data, outBuf.second->_size);
@@ -233,8 +238,6 @@ void ReadThread::work(int id) {
 
 Loader::Loader(int miniBatchSize,
        bool shuffleManifest, bool shuffleEveryEpoch,
-       int datumSize, int datumTypeSize,
-       int targetSize, int targetTypeSize,
        int subsetPercent,
        const char* mediaConfigString,
        DeviceParams* deviceParams,
@@ -244,13 +247,10 @@ Loader::Loader(int miniBatchSize,
        uint randomSeed)
 : _first(true),
   _miniBatchSize(miniBatchSize),
-  _datumSize(datumSize), _datumTypeSize(datumTypeSize),
-  _targetSize(targetSize), _targetTypeSize(targetTypeSize),
+  _deviceParams(deviceParams),
   _readBufs(nullptr), _decodeBufs(nullptr), _readThread(nullptr), _decodeThreads(nullptr),
   _device(nullptr), _batch_iterator(nullptr), _mediaConfigString{mediaConfigString}
   {
-
-    _device = Device::create(deviceParams);
 
     // the manifest defines which data should be included in the dataset
     _manifest = make_shared<Manifest>(manifestFilename, shuffleManifest, randomSeed);
@@ -261,16 +261,11 @@ Loader::Loader(int miniBatchSize,
         make_shared<BatchFileLoader>(_manifest, subsetPercent)
     );
 
-    // _batchIterator provides an unending iterator (shuffled or not) over
-    // the batchLoader
+    // _batchIterator provides an unending iterator (shuffled or not) over the batchLoader
     if(shuffleEveryEpoch) {
-        _batch_iterator = make_shared<ShuffledBatchIterator>(
-            batchLoader, macroBatchSize, randomSeed
-        );
+        _batch_iterator = make_shared<ShuffledBatchIterator>(batchLoader, macroBatchSize, randomSeed);
     } else {
-        _batch_iterator = make_shared<SequentialBatchIterator>(
-            batchLoader, macroBatchSize
-        );
+        _batch_iterator = make_shared<SequentialBatchIterator>(batchLoader, macroBatchSize);
     }
 }
 
@@ -280,23 +275,30 @@ Loader::~Loader() {
 int Loader::start() {
     _first = true;
     try {
-        int dataLen = _miniBatchSize * _datumSize * _datumTypeSize;
-        int targetLen = _miniBatchSize * _targetSize * _targetTypeSize;
-        // Start the read buffers off with a reasonable size. They will
-        // get resized as needed.
-        _readBufs = make_shared<BufferPool>(dataLen / 8, targetLen);
-        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
-        bool pinned = (_device->_type != CPU);
-        _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, pinned);
+
         int numCores = thread::hardware_concurrency();
         int itemsPerThread = (_miniBatchSize - 1) /  numCores + 1;
         int threadCount =  (_miniBatchSize - 1) / itemsPerThread + 1;
         threadCount = std::min(threadCount, _miniBatchSize);
+
+        // Create the decode threads first, which interpret the config string to know output sizes
         _decodeThreads = unique_ptr<DecodeThreadPool>(
-            new DecodeThreadPool(threadCount, _miniBatchSize
-                                 _readBufs, _decodeBufs,
-                                 _device, _mediaConfigString)
+            new DecodeThreadPool(threadCount, _miniBatchSize, _mediaConfigString)
             );
+        int dataLen = _decodeThreads->get_datum_len();
+        int targetLen = _decodeThreads->get_target_len();
+
+        // Start the read buffers off with a reasonable size. They will get resized as needed.
+        _readBufs = make_shared<BufferPool>(dataLen / 8, targetLen);
+        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
+
+        _device = Device::create(_deviceParams, dataLen, targetLen);
+
+        bool pinned = (_device->_type != CPU);
+        _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, pinned);
+
+        _decodeThreads->set_io_buffers(_readBufs, _device, _decodeBufs);
+
     } catch(std::bad_alloc&) {
         return -1;
     }

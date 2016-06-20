@@ -42,7 +42,7 @@ void single(simple_loader* loader, int epochCount, int minibatchCount,
     cout << js.dump(4) << endl;
     shared_ptr<nervana::train_base> media = Media::create(js);
     cout << __FILE__ << " " << __LINE__ << endl;
-    ASSERT_NE(nullptr,media.get());
+    ASSERT_NE(nullptr, media.get());
     unique_ptr<char> dataBuf = unique_ptr<char>(new char[datumSize]);
     memset(dataBuf.get(), 0, datumSize);
 //    Buffer dataBuffer(0);

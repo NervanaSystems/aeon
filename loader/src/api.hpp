@@ -27,8 +27,6 @@ extern const char* get_error_message() {
 
 extern void* start(int* itemCount, int miniBatchSize,
                    bool shuffleManifest, bool shuffleEveryEpoch,
-                   int datumSize, int datumTypeSize,
-                   int targetSize, int targetTypeSize,
                    int subsetPercent,
                    const char* mediaConfigString,
                    DeviceParams* deviceParams,
@@ -40,10 +38,9 @@ extern void* start(int* itemCount, int miniBatchSize,
     try {
         Loader* loader = new Loader(miniBatchSize,
                                     shuffleManifest, shuffleEveryEpoch,
-                                    datumSize, datumTypeSize,
-                                    targetSize, targetTypeSize,
                                     subsetPercent,
-                                    mediaConfigString, deviceParams,
+                                    mediaConfigString,
+                                    deviceParams,
                                     manifestFilename,
                                     macroBatchSize,
                                     rootCacheDir,
@@ -100,60 +97,6 @@ extern int stop(Loader* loader) {
     } catch(std::exception& ex) {
         last_error_message = ex.what();
         return -1;
-    }
-}
-
-extern void write_batch(char *outfile, const int numData,
-                        char **jpgfiles, uint32_t *targets,
-                        int maxDim) {
-#if HAS_IMGLIB
-    if (numData == 0) {
-        return;
-    }
-    BatchFileWriter bf;
-    bf.open(outfile, "imgclass");
-    for (int i=0; i<numData; i++) {
-        ByteVect inp;
-        readFileBytes(jpgfiles[i], inp);
-        if (maxDim != 0) {
-            resizeInput(inp, maxDim);
-        }
-        ByteVect tgt(sizeof(uint32_t));
-        memcpy(&tgt[0], &(targets[i]), sizeof(uint32_t));
-        bf.writeItem(inp, tgt);
-    }
-    bf.close();
-#else
-    std::string message = "OpenCV " UNSUPPORTED_MEDIA_MESSAGE;
-    throw std::runtime_error(message);
-#endif
-}
-
-extern void write_raw(char *outfile, const int numData,
-                  char **jpgdata, uint32_t *jpglens,
-                  uint32_t *targets) {
-    if (numData == 0) {
-        return;
-    }
-    BatchFileWriter bf;
-    uint32_t tgtSize = sizeof(uint32_t);
-    bf.open(outfile);
-    for (int i=0; i<numData; i++) {
-        bf.writeItem(jpgdata[i], (char *) &targets[i], jpglens[i], tgtSize);
-    }
-    bf.close();
-}
-
-extern int read_max_item(char *batchfile) {
-    BatchFileReader bf;
-    if(bf.open(batchfile)) {
-        int maxItemSize = bf.maxDatumSize();
-        bf.close();
-        return maxItemSize;
-    } else {
-        std::stringstream ss;
-        ss << "couldn't open " << batchfile;
-        throw std::runtime_error(ss.str());
     }
 }
 

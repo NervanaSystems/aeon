@@ -17,7 +17,7 @@
 
 #include "device.hpp"
 
- using namespace std;
+using namespace std;
 
 shared_ptr<Device> Device::create(DeviceParams* params) {
 #if HAS_GPU
@@ -28,5 +28,18 @@ shared_ptr<Device> Device::create(DeviceParams* params) {
 #else
     assert(params->_type == CPU);
     return make_shared<Cpu>(reinterpret_cast<CpuParams*>(params));
+#endif
+}
+
+shared_ptr<Device> Device::create(DeviceParams* params, int dataSize, int targetSize)
+{
+#if HAS_GPU
+    if (type == CPU) {
+        return make_shared<Cpu>(reinterpret_cast<CpuParams*>(params), dataSize, targetSize);
+    }
+    return make_shared<Gpu>(reinterpret_cast<GpuParams*>(params), dataSize, targetSize);
+#else
+    assert(type == CPU);
+    return make_shared<Cpu>(reinterpret_cast<CpuParams*>(params), dataSize, targetSize);
 #endif
 }

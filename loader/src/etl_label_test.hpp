@@ -140,7 +140,8 @@ namespace nervana {
 
         ~loader() {}
 
-        int get_load_size() override { return _loadsz; }
+        size_t get_load_count() override { return _load_count; }
+        size_t get_load_size () override { return _load_size; }
 
         void load(char* buf, int bufSize, std::shared_ptr<label_test::decoded> mp) override
         {
@@ -154,7 +155,8 @@ namespace nervana {
         }
 
     private:
-        int     _loadsz = 4;
+        size_t _load_count = 1;
+        size_t _load_size  = 4;  // int32 has 4 bytes
         float   _ld_offset;
         bool    _ld_dofloat;
     };

@@ -55,8 +55,6 @@ namespace nervana {
 
             _dprov = std::make_shared<image::randomizing_provider>(data_config, seed);
             _tprov = std::make_shared<label::binary_provider>();
-            _dsz_out = image_width * image_height * 3;
-            _tsz_out = 4;
         }
     };
 }

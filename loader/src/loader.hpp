@@ -42,14 +42,17 @@
  */
 class DecodeThreadPool : public ThreadPool {
 public:
-    DecodeThreadPool(int count, int batchSize,
-                     const std::shared_ptr<Device>& device,
-                     nlohmann::json configJs);
+    DecodeThreadPool(int count, int batchSize, nlohmann::json configJs);
     virtual ~DecodeThreadPool();
     virtual void start();
     virtual void stop();
-    void set_buffers(const std::shared_ptr<BufferPool>& in,
-                     const std::shared_ptr<BufferPool>& out);
+    void set_io_buffers(const std::shared_ptr<BufferPool>& in,
+                        const std::shared_ptr<Device>& device,
+                        const std::shared_ptr<BufferPool>& out);
+
+    int get_datum_len() { return _datumSize * _datumCount * _batchSize; }
+    int get_target_len() { return _targetSize * _targetCount * _batchSize; }
+
 protected:
     virtual void run(int id);
     virtual void work(int id);
@@ -80,15 +83,11 @@ private:
     std::vector<int>            _dataOffsets;
     std::vector<int>            _targetOffsets;
 
-
     int                         _datumSize;
-    int                         _datumTypeSize;
+    int                         _datumCount;
     int                         _targetSize;
-    int                         _targetTypeSize;
-    // Datum length in bytes. (should we start using size_t for these?)
-    int                         _datumLen;
-    // Target length in bytes.
-    int                         _targetLen;
+    int                         _targetCount;
+
     std::shared_ptr<Device>     _device;
     // std::vector<std::shared_ptr<Media>> _media;
     std::vector<std::shared_ptr<nervana::train_base>> _providers;
@@ -102,7 +101,8 @@ private:
 
 class ReadThread: public ThreadPool {
 public:
-    ReadThread(const std::shared_ptr<BufferPool>& out, const std::shared_ptr<BatchIterator>& batch_iterator);
+    ReadThread(const std::shared_ptr<BufferPool>& out,
+               const std::shared_ptr<BatchIterator>& batch_iterator);
 
 protected:
     virtual void work(int id);
@@ -126,8 +126,6 @@ class Loader {
 public:
     Loader(int miniBatchSize,
            bool shuffleManifest, bool shuffleEveryEpoch,
-           int datumSize, int datumTypeSize,
-           int targetSize, int targetTypeSize,
            int subsetPercent,
            const char* mediaConfigString,
            DeviceParams* deviceParams,
@@ -157,6 +155,7 @@ private:
     int                                 _datumTypeSize;
     int                                 _targetSize;
     int                                 _targetTypeSize;
+    DeviceParams*                       _deviceParams;
     std::shared_ptr<BufferPool>         _readBufs;
     std::shared_ptr<BufferPool>         _decodeBufs;
     std::unique_ptr<ReadThread>         _readThread;

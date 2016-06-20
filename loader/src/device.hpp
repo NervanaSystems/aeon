@@ -57,6 +57,7 @@ public:
     virtual int copyLabelsBack(int idx, char* data, int size) = 0;
 
     static std::shared_ptr<Device> create(DeviceParams* params);
+    static std::shared_ptr<Device> create(DeviceType type, int id, int dataSize, int targetSize);
 
 public:
     int                         _type;
@@ -87,12 +88,14 @@ public:
 
 class Gpu : public Device {
 public:
-    Gpu(int id, int dataSize, int targetSize)
-    : Device(GPU), _alloc(true), _id(id) {
+    Gpu(GpuParams* params, int dataSize, int targetSize)
+    : Device(GPU), _alloc(true), _id(params->_id) {
         init();
         for (int i = 0; i < 2; i++) {
             checkDriverErrors(cuMemAlloc(&_data[i], dataSize));
             checkDriverErrors(cuMemAlloc(&_targets[i], targetSize));
+            params->_targets[i] = _targets[i];
+            params->_data[i]    = _data[i];
         }
     }
 

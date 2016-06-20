@@ -95,12 +95,17 @@ namespace nervana {
             return validate();
         }
 
+        virtual int num_crops() { return 1; }
+
     private:
         bool validate() {
             return crop_offset.param().a() <= crop_offset.param().b();
         }
     };
 
+// ===============================================================================================
+// Decoded
+// ===============================================================================================
 
     class image::decoded : public decoded_media {
     public:
@@ -132,6 +137,7 @@ namespace nervana {
         }
         std::vector<cv::Mat> _images;
     };
+
 
 
     class image::extractor : public interface::extractor<image::decoded> {
@@ -210,6 +216,8 @@ namespace nervana {
             return validate();
         }
 
+        int num_crops() override { return static_cast<int>(multicrop_scales.size()); }
+
     private:
         bool validate()
         {
@@ -242,10 +250,13 @@ namespace nervana {
         loader(std::shared_ptr<const image::config>);
         ~loader() {}
         virtual void load(char*, std::shared_ptr<image::decoded>) override;
-        int get_load_size() override { return _loadsz; }
+
+        size_t get_load_count() override { return _load_count; }
+        size_t get_load_size () override { return _load_size; }
 
     private:
-        int  _loadsz;
+        size_t _load_count;
+        size_t _load_size;
         void split(cv::Mat&, char*);
         bool _channel_major;
     };

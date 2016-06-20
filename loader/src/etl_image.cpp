@@ -287,17 +287,15 @@ void multicrop::transformer::add_resized_crops(
 image::loader::loader(shared_ptr<const image::config> cfg)
 {
     _channel_major = cfg->channel_major;
+    _load_size     = 1;
+    _load_count    = cfg->width * cfg->height * cfg->channels * cfg->num_crops();
 }
 
-void image::loader::load(char* outbuf, int outsize, shared_ptr<image::decoded> input)
+void image::loader::load(char* outbuf, shared_ptr<image::decoded> input)
 {
-    // for (int i=0; i<input->get_image_size(); i++ )
+    // TODO: Generalize this to also handle multi_crop case
     auto img = input->get_image(0);
     int all_pixels = img.channels() * img.total();
-
-    if (all_pixels > outsize) {
-        throw std::runtime_error("Load failed - buffer too small");
-    }
 
     if (_channel_major) {
         this->split(img, outbuf);
