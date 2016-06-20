@@ -23,7 +23,6 @@ TEST(provider,image) {
     nlohmann::json js = {{"media","image"},
                          {"data_config",{{"height",128},{"width",128},{"channel_major",false},{"flip",true}}},
                          {"target_config",{}}};
-    cout << js.dump(4) << endl;
     shared_ptr<nervana::train_base> media = Media::create(js);
 
     auto data_config = js["data_config"];
@@ -55,7 +54,6 @@ TEST(provider,image) {
 //        string filename = "data" + to_string(i) + ".png";
 //        cv::imwrite(filename,mat);
     }
-    cout << "cpio contains " << reader.itemCount() << endl;
 }
 
 TEST(provider, argtype) {

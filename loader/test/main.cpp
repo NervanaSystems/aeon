@@ -48,7 +48,7 @@ static void CreateImageDataset() {
             .ImageSize(128,128)
             .Create();
     auto end = timer.now();
-    cout << "image dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
+//    cout << "image dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
 static void CreateAudioDataset() {
@@ -61,10 +61,11 @@ static void CreateAudioDataset() {
             .DatasetSize(100)
             .Create();
     auto end = timer.now();
-    cout << "audio dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
+//    cout << "audio dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
 static void CreateVideoDataset() {
+//    _video_dataset.encode("video.mpg",5000);
     std::chrono::high_resolution_clock timer;
     auto start = timer.now();
     video_dataset.Directory("video_data")
@@ -73,7 +74,7 @@ static void CreateVideoDataset() {
             .DatasetSize(5)
             .Create();
     auto end = timer.now();
-    cout << "video dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
+//    cout << "video dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
 static void DeleteDataset() {
@@ -86,8 +87,6 @@ extern "C" int main( int argc, char** argv ) {
     CreateImageDataset();
     CreateAudioDataset();
     CreateVideoDataset();
-
-//    _video_dataset.encode("video.mpg",5000);
 
     ::testing::InitGoogleTest(&argc, argv);
     int rc = RUN_ALL_TESTS();

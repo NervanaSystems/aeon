@@ -58,7 +58,7 @@ public:
 
 static ParamList1 _ParamList1;
 
-TEST(loader,argtype) {
+TEST(DISABLED_loader,argtype) {
     map<string,shared_ptr<interface_ArgType> > args = _ParamList1.get_args();
     ASSERT_EQ(12, args.size());
 

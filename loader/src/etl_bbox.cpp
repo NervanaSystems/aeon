@@ -29,13 +29,13 @@ shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(const char*
     shared_ptr<decoded> rc = make_shared<decoded>();
     string buffer( data, size );
     json j = json::parse(buffer);
-    if( j["object"].is_null() ) return rc;
-    if( j["size"].is_null() ) return rc;
+    if( j["object"].is_null() ) { rc = nullptr; return rc; }
+    if( j["size"].is_null() ) { rc = nullptr; return rc; }
     auto object_list = j["object"];
     auto image_size = j["size"];
-    if( image_size["width"].is_null() ) return rc;
-    if( image_size["height"].is_null() ) return rc;
-    if( image_size["depth"].is_null() ) return rc;
+    if( image_size["width"].is_null() ) { rc = nullptr; return rc; }
+    if( image_size["height"].is_null() ) { rc = nullptr; return rc; }
+    if( image_size["depth"].is_null() ) { rc = nullptr; return rc; }
     rc->_height = image_size["height"];
     rc->_width = image_size["width"];
     rc->_depth = image_size["depth"];
