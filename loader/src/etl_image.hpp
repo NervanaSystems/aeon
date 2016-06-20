@@ -108,13 +108,13 @@ namespace nervana {
         decoded(cv::Mat img) { _images.push_back(img); }
         bool add(cv::Mat img) {
             _images.push_back(img);
-            return test_image_sizes();
+            return all_images_are_same_size();
         }
         bool add(const std::vector<cv::Mat>& images) {
             for( auto mat : images ) {
                 _images.push_back(mat);
             }
-            return test_image_sizes();
+            return all_images_are_same_size();
         }
         virtual ~decoded() override {}
 
@@ -124,7 +124,7 @@ namespace nervana {
         size_t get_image_count() const { return _images.size(); }
 
     protected:
-        bool test_image_sizes() {
+        bool all_images_are_same_size() {
             for( int i=1; i<_images.size(); i++ ) {
                 if(_images[0].size()!=_images[i].size()) return false;
             }
