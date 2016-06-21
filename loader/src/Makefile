@@ -92,11 +92,11 @@ all: ../bin/loader.so $(LOADER_SO) $(LOADER_STATIC) Makefile
 print-%  : ; @echo $* = $($*)
 
 %.o : %.c $(DEPDIR)/%.d
-	$(CC) -c -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
+	$(CC) -c -o $@ $(CFLAGSDBG) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
 	$(POSTCOMPILE)
 
 %.o : %.cpp $(DEPDIR)/%.d
-	$(CC) -c -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
+	$(CC) -c -fPIC -o $@ $(CFLAGSDBG) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
 	$(POSTCOMPILE)
 
 $(DEPDIR)/%.d: ;
@@ -108,6 +108,7 @@ $(LOADER_SO): $(OBJS)
 	@echo "Building $@..."
 	@mkdir -p ../bin
 	$(CC) -shared -o $@ $(OBJS) $(LDIR) $(LIBS)
+#	$(CC) -shared -o $@ -fPIC $(OBJS) $(CFLAGSDBG) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $< $(LDIR) $(LIBS)
 
 $(LOADER_STATIC): $(OBJS)
 	@echo "Building $@..."

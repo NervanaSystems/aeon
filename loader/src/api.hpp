@@ -36,6 +36,8 @@ extern void* start(int* itemCount, int miniBatchSize,
                    int randomSeed) {
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
+        printf("Ate the args\n");
+
         Loader* loader = new Loader(miniBatchSize,
                                     shuffleManifest, shuffleEveryEpoch,
                                     subsetPercent,
@@ -45,6 +47,7 @@ extern void* start(int* itemCount, int miniBatchSize,
                                     macroBatchSize,
                                     rootCacheDir,
                                     randomSeed);
+        printf("Created the loader\n");
         int result = loader->start();
         if (result != 0) {
             std::stringstream ss;

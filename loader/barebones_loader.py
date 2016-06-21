@@ -84,7 +84,7 @@ class DataLoader(object):
                  device_type, device_id,
                  batch_size,
                  shuffle=False, reshuffle=False,
-                 onehot=True, nclasses=None, subset_percent=100):
+                 onehot=False, nclasses=None, subset_percent=100):
         if onehot is True and nclasses is None:
             raise ValueError('nclasses must be specified for one-hot labels')
 
@@ -96,6 +96,9 @@ class DataLoader(object):
         self.cache_dir = cache_dir
         parent_dir = os.path.split(cache_dir)[0]
         self.manifest_file = manifest_file
+
+
+        self.device_type, self.device_id, self.default_dtype = device_type, device_id, np.float32
 
         self.item_count = ct.c_int(0)
         self.batch_size = batch_size
@@ -115,7 +118,7 @@ class DataLoader(object):
 
     def load_library(self):
         path = os.path.dirname(os.path.realpath(__file__))
-        libpath = os.path.join(path, os.pardir, os.pardir, 'loader', 'bin', 'loader.so')
+        libpath = os.path.join(path, 'bin', 'loader.so')
         self.loaderlib = ct.cdll.LoadLibrary(libpath)
         self.loaderlib.start.restype = ct.c_void_p
         self.loaderlib.next.argtypes = [ct.c_void_p]
@@ -135,13 +138,13 @@ class DataLoader(object):
 
         # self.data = alloc_bufs(self.datum_size, self.datum_dtype)
         # self.targets = alloc_bufs(self.target_size, self.target_dtype)
-        self.media_params.alloc(self)
-        self.device_params = DeviceParams(self.be.device_type, self.be.device_id)
+        # self.media_params.alloc(self)
+        self.device_params = DeviceParams(self.device_type, self.device_id)
 
-        if self.datum_dtype == self.be.default_dtype:
-            self.backend_data = None
-        else:
-            self.backend_data = self.be.iobuf(self.datum_size, dtype=self.be.default_dtype)
+        # if self.datum_dtype == self.be.default_dtype:
+        #     self.backend_data = None
+        # else:
+        #     self.backend_data = self.be.iobuf(self.datum_size, dtype=self.be.default_dtype)
 
     @property
     def nbatches(self):
@@ -200,3 +203,25 @@ class DataLoader(object):
     def __iter__(self):
         for start in range(self.start_idx, self.ndata, self.batch_size):
             yield self.next(start)
+
+cfg_string = r"""{{"media","image"},
+                  {"data_config",
+                     {{"height",128},
+                      {"width",128},
+                      {"channel_major",false},
+                      {"flip",true}}},
+                  {"target_config",
+                     {{"binary", true}}}
+                     }"""
+
+dloader_args = dict(set_name='tag_test',
+                    cache_dir='/scratch/alex/dloader_test',
+                    media_cfg_string=cfg_string,
+                    manifest_file='/scratch/alex/dloader_test/cifar_manifest.txt',
+                    device_type=0, device_id=0, batch_size=128)
+dd = DataLoader(**dloader_args)
+
+
+for x, t in dd:
+    print(x)
+
