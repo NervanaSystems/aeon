@@ -39,6 +39,7 @@ SRCS := \
     helpers.cpp \
     simple_loader.cpp \
     test_vector.cpp \
+    test_localization.cpp \
 
 TOBJS            = $(subst .cpp,.o,$(SRCS))
 OBJS             = $(subst .c,.o,$(TOBJS))

@@ -38,8 +38,8 @@ gen_audio audio_dataset;
 gen_video video_dataset;
 
 static void CreateImageDataset() {
-    std::chrono::high_resolution_clock timer;
-    auto start = timer.now();
+//    std::chrono::high_resolution_clock timer;
+//    auto start = timer.now();
     image_dataset.Directory("image_data")
             .Prefix("archive-")
             .MacrobatchMaxItems(500)
@@ -47,33 +47,33 @@ static void CreateImageDataset() {
             .DatasetSize(1500)
             .ImageSize(128,128)
             .Create();
-    auto end = timer.now();
+//    auto end = timer.now();
 //    cout << "image dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
 static void CreateAudioDataset() {
 //    _audio_dataset.encode("test1.mp2",2000,1000);
-    std::chrono::high_resolution_clock timer;
-    auto start = timer.now();
+//    std::chrono::high_resolution_clock timer;
+//    auto start = timer.now();
     audio_dataset.Directory("audio_data")
             .Prefix("archive-")
             .MacrobatchMaxItems(500)
             .DatasetSize(100)
             .Create();
-    auto end = timer.now();
+//    auto end = timer.now();
 //    cout << "audio dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
 static void CreateVideoDataset() {
 //    _video_dataset.encode("video.mpg",5000);
-    std::chrono::high_resolution_clock timer;
-    auto start = timer.now();
+//    std::chrono::high_resolution_clock timer;
+//    auto start = timer.now();
     video_dataset.Directory("video_data")
             .Prefix("archive-")
             .MacrobatchMaxItems(50)
             .DatasetSize(5)
             .Create();
-    auto end = timer.now();
+//    auto end = timer.now();
 //    cout << "video dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 

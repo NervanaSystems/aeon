@@ -25,6 +25,7 @@ SRCS            := \
     etl_lmap.cpp \
     etl_specgram.cpp \
     etl_rawmedia.cpp \
+    etl_localization.cpp \
     etl_video.cpp \
     util.cpp \
     manifest.cpp \
