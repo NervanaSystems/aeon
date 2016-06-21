@@ -291,23 +291,27 @@ image::loader::loader(shared_ptr<const image::config> cfg)
 
 void image::loader::load(char* outbuf, int outsize, shared_ptr<image::decoded> input)
 {
-    // for (int i=0; i<input->get_image_size(); i++ )
-    auto img = input->get_image(0);
-    int all_pixels = img.channels() * img.total();
-
-    if (all_pixels > outsize) {
-        throw std::runtime_error("Load failed - buffer too small");
+    if(input->get_size() > outsize) {
+        throw std::runtime_error("Load failed insize > outsize");
     }
 
-    if (_channel_major) {
-        this->split(img, outbuf);
-    } else {
-        memcpy(outbuf, img.data, all_pixels);
+    auto img = input->get_image(0);
+    int image_size = img.channels() * img.total();
+
+    for (int i=0; i < input->get_image_count(); i++) {
+        auto outbuf_i = outbuf + (i * image_size);
+
+        if (_channel_major) {
+            this->split(img, outbuf_i);
+        } else {
+            memcpy(outbuf_i, img.data, image_size);
+        }
     }
 }
 
 void image::loader::split(cv::Mat& img, char* buf)
 {
+    // split `img` into individual channels so that buf is in c
     int pix_per_channel = img.total();
     int num_channels = img.channels();
 
@@ -323,6 +327,4 @@ void image::loader::split(cv::Mat& img, char* buf)
         cv::Mat channels[3] = {b, g, r};
         cv::split(img, channels);
     }
-
 }
-
