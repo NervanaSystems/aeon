@@ -122,7 +122,11 @@ namespace nervana {
         virtual MediaType get_type() override { return MediaType::IMAGE; }
         cv::Mat& get_image(int index) { return _images[index]; }
         cv::Size2i get_image_size() const {return _images[0].size(); }
+        int get_image_channels() const { return _images[0].channels(); }
         size_t get_image_count() const { return _images.size(); }
+        size_t get_size() const {
+            return get_image_size().area() * get_image_channels() * get_image_count();
+        }
 
     protected:
         bool all_images_are_same_size() {
