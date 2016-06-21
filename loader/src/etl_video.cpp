@@ -95,8 +95,6 @@ void video::extractor::decode_video_frame(AVCodecContext* codecCtx, AVPacket& pa
 
         cv::Mat frame(_pFrame->height, _pFrame->width, CV_8UC3, _pFrameRGB->data[0]);
 
-        // TODO: transform to image x channel x imgSize?
-
         _out->add(frame);
     }
 }

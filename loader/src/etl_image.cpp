@@ -27,7 +27,6 @@ image::extractor::extractor(shared_ptr<const image::config> cfg)
         _pixel_type = cfg->channels == 1 ? CV_8UC1 : CV_8UC3;
         _color_mode = cfg->channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR;
     }
-
 }
 
 shared_ptr<image::decoded> image::extractor::extract(const char* inbuf, int insize)
@@ -78,13 +77,9 @@ shared_ptr<image::decoded> image::transformer::transform(
     vector<cv::Mat> finalImageList;
     for(int i=0; i<img->get_image_count(); i++) {
         cv::Mat rotatedImage;
-        cout << "i " << img->get_image(i).size() << endl;
         rotate(img->get_image(i), rotatedImage, img_xform->angle);
-        cout << "r " << rotatedImage.size() << endl;
 
-        cout << "cropbox: " << img_xform->cropbox << endl;
         cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
-        cout << "c " << croppedImage.size() << endl;
 
         cv::Mat resizedImage;
         image::resize(croppedImage, resizedImage, img_xform->output_size);
@@ -124,10 +119,7 @@ void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size
         output = input;
     } else {
         int inter = input.size().area() < size.area() ? CV_INTER_CUBIC : CV_INTER_AREA;
-        cout << "i " << input.size() << " " << input.size().area() << endl;
-        cout << "pre " << inter << " " << output.size() << endl;
         cv::resize(input, output, size, 0, 0, inter);
-        cout << "post" << output.size() << endl;
     }
 }
 
