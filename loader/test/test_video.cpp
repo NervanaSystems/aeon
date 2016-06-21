@@ -80,3 +80,60 @@ TEST(etl, video_image_transform) {
 
     _imageTransformer.transform(imageParams, decoded_image);
 }
+
+unsigned char expected_value(int d, int h, int w, int c) {
+    // set up expected_value in final outbuf so that viewed in
+    // order in memory you see 0, 1, 2, 3, ...
+    // the expected value of outbuf at index expected_value is expected_value
+    return (((((c * 5) + d) * 4) + h) * 2) + w;
+}
+
+TEST(etl, video_loader) {
+    // set up video::decoded with specific values
+    // the color of any pixel channel should
+    // = channel
+    // + width * 3
+    // + height * 2 * 3
+    // + depth * 4 * 2 * 3
+    // each dimension is unique to help debug and detect incorrect
+    // dimension ordering
+    int channels = 3;
+    int width = 2;
+    int height = 4;
+    int depth = 5;
+
+    shared_ptr<video::decoded> decoded = make_shared<video::decoded>();
+
+    for(int d = 0; d < depth; ++d) {
+        cv::Mat image(height, width, CV_8UC3, 0.0);
+        for(int w = 0; w < width; ++w) {
+            for(int h = 0; h < height; ++h) {
+                for(int c = 0; c < channels; ++c) {
+                    image.at<cv::Vec3b>(h, w).val[c] = expected_value(d, h, w, c);
+                }
+            }
+        }
+        decoded->add(image);
+    }
+
+    // now run the loader
+    vector<unsigned char> outbuf;
+
+    int outbuf_size = channels * width * height * depth;
+    outbuf.resize(outbuf_size);
+
+    video::loader loader;
+    loader.load((char*)outbuf.data(), outbuf_size, decoded);
+
+    // make sure outbuf has data in it like we expect
+    for(int c = 0; c < channels; ++c) {
+        for(int d = 0; d < depth; ++d) {
+            for(int h = 0; h < height; ++h) {
+                for(int w = 0; w < width; ++w) {
+                    unsigned char v = expected_value(d, h, w, c);
+                    ASSERT_EQ(outbuf[v], v);
+                }
+            }
+        }
+    }
+}

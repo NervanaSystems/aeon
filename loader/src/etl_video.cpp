@@ -144,6 +144,7 @@ std::shared_ptr<video::decoded> video::transformer::transform(
 void video::loader::load(char* outbuf, int outsize, shared_ptr<video::decoded> input)
 {
     // loads in channel x depth(frame) x height x width
+
     if(input->get_size() > outsize) {
         throw std::runtime_error("Load failed insize > outsize");
     }
@@ -160,7 +161,7 @@ void video::loader::load(char* outbuf, int outsize, shared_ptr<video::decoded> i
         if (num_channels == 1) {
             memcpy(outbuf + image_offset, img.data, image_size.area());
         } else {
-            // Split into separate channels
+            // create views into outbuf for the 3 channels to be copied into
             cv::Mat b(image_size, CV_8U, outbuf + 0 * channel_size + image_offset);
             cv::Mat g(image_size, CV_8U, outbuf + 1 * channel_size + image_offset);
             cv::Mat r(image_size, CV_8U, outbuf + 2 * channel_size + image_offset);
