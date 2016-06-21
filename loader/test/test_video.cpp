@@ -22,28 +22,61 @@ using namespace std;
 using namespace nervana;
 
 TEST(etl, video_extract_transform) {
+    int width = 352;
+    int height = 288;
+
     // 1 second video at 25 FPS
     vector<unsigned char> vid = gen_video().encode(1000);
 
     // extract
     auto config = make_shared<video::config>();
-    config->width = 352;
-    config->height = 288;
+    config->width = width;
+    config->height = height;
 
     video::extractor extractor = video::extractor(config);
     auto decoded_vid = extractor.extract((char*)vid.data(), vid.size());
 
     ASSERT_EQ(decoded_vid->get_image_count(), 25);
-    ASSERT_EQ(decoded_vid->get_image_size(), cv::Size2i(352, 288));
+    ASSERT_EQ(decoded_vid->get_image_size(), cv::Size2i(width, height));
 
     // transform
     video::transformer transformer = video::transformer(config);
-    auto imageParams = make_shared<image::params>();
-    imageParams->output_size = cv::Size2i(352/2, 288/2);
+
+    std::default_random_engine dre;
+    image::param_factory factory(config, dre);
+    auto imageParams = factory.make_params(decoded_vid);
+
+    imageParams->output_size = cv::Size2i(width/2, height/2);
     auto params = make_shared<video::params>(imageParams);
     auto transformed_vid = transformer.transform(params, decoded_vid);
+    ASSERT_NE(nullptr, transformed_vid);
 
-    // just make sure we still have the same number of images
-    ASSERT_EQ(decoded_vid->get_image_count(), 25);
-    ASSERT_EQ(decoded_vid->get_image_size(), cv::Size2i(352/2, 288/2));
+    // make sure we still have the same number of images and that the
+    // size has been reduced
+    ASSERT_EQ(transformed_vid->get_image_count(), 25);
+    ASSERT_EQ(transformed_vid->get_image_size(), cv::Size2i(width/2, height/2));
+}
+
+TEST(etl, video_image_transform) {
+    int width = 352;
+    int height = 288;
+
+    auto decoded_image = make_shared<image::decoded>();
+    cv::Mat mat_image(width, height, CV_8UC3, 0.0);
+    cout << "mat_image " << mat_image.size() << endl;
+    decoded_image->add(mat_image);
+    cout << "d " << decoded_image->get_image_size() << endl;
+
+    auto config = make_shared<image::config>();
+    config->width = width;
+    config->height = height;
+
+    image::transformer _imageTransformer(config);
+
+    std::default_random_engine dre;
+    image::param_factory factory(config, dre);
+    auto imageParams = factory.make_params(decoded_image);
+    imageParams->output_size = cv::Size2i(width/2, height/2);
+
+    _imageTransformer.transform(imageParams, decoded_image);
 }

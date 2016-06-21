@@ -45,6 +45,16 @@ static string read_file( const string& path ) {
     return ss.str();
 }
 
+shared_ptr<image::params> make_image_params() {
+    auto decoded = make_shared<image::decoded>();
+    cv::Mat mat_image(1, 1, CV_8UC3, 0.0);
+    decoded->add(mat_image);
+    auto config = make_shared<image::config>();
+    std::default_random_engine dre;
+    image::param_factory factory(config, dre);
+    return factory.make_params(decoded);
+}
+
 TEST(etl, bbox_extractor) {
     {
         string data = read_file(CURDIR"/test_data/000001.json");
@@ -127,7 +137,7 @@ TEST(etl, bbox) {
     EXPECT_EQ(7,boxes[2].label);
 
     bbox::transformer transform;
-    shared_ptr<image::params> iparam = make_shared<image::params>();
+    auto iparam = make_image_params();
     auto tx = transform.transform( iparam, decoded );
 }
 
@@ -162,7 +172,7 @@ TEST(etl, bbox_transform) {
     ASSERT_EQ(8,boxes.size());
 
     bbox::transformer transform;
-    shared_ptr<image::params> iparam = make_shared<image::params>();
+    auto iparam = make_image_params();
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
     auto tx = transform.transform( iparam, decoded );
     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
@@ -192,7 +202,7 @@ TEST(etl, bbox_angle) {
     ASSERT_EQ(1,boxes.size());
 
     bbox::transformer transform;
-    shared_ptr<image::params> iparam = make_shared<image::params>();
+    auto iparam = make_image_params();
     iparam->angle = 5;
     auto tx = transform.transform( iparam, decoded );
     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);

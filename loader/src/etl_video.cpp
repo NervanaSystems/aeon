@@ -138,7 +138,7 @@ std::shared_ptr<video::decoded> video::transformer::transform(
     std::shared_ptr<video::params> params,
     std::shared_ptr<video::decoded> decoded) {
     // simple wrapper around image::transformer for now
-    return std::dynamic_pointer_cast<video::decoded>(_imageTransformer.transform(
+    return std::static_pointer_cast<video::decoded>(_imageTransformer.transform(
         params->_imageParams, decoded
     ));
 }

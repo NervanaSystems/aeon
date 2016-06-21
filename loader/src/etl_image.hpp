@@ -30,16 +30,17 @@ namespace nervana {
     }
 
     class image::params : public nervana::params {
+        friend class image::param_factory;
+        params() {}
     public:
 
-        params() {}
         void dump(std::ostream & = std::cout);
 
         cv::Rect cropbox;
         cv::Size2i output_size;
         int angle = 0;
         bool flip = false;
-        std::vector<float> lighting;  //pixelwise random values
+        std::vector<float> lighting;  // pixelwise random values
         float color_noise_std = 0;
         std::vector<float> photometric;  // contrast, brightness, saturation
     };

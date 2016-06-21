@@ -93,20 +93,22 @@ private:
 
 class image_params_builder {
 public:
-    image_params_builder& cropbox( int x, int y, int w, int h ) { obj.cropbox = cv::Rect(x,y,w,h); return *this; }
-    image_params_builder& output_size( int w, int h ) { obj.output_size = cv::Size2i(w,h); return *this; }
-    image_params_builder& angle( int val ) { obj.angle = val; return *this; }
-    image_params_builder& flip( bool val ) { obj.flip = val; return *this; }
-    image_params_builder& lighting( float f1, float f2, float f3 ) { obj.lighting = {f1,f2,f3}; return *this; }
-    image_params_builder& color_noise_std(float f) { obj.color_noise_std = f; return *this; }
-    image_params_builder& photometric( float f1, float f2, float f3 ) { obj.photometric = {f1,f2,f3}; return *this; }
+    image_params_builder(shared_ptr<image::params> _obj) { obj = _obj; }
+
+    image_params_builder& cropbox( int x, int y, int w, int h ) { obj->cropbox = cv::Rect(x,y,w,h); return *this; }
+    image_params_builder& output_size( int w, int h ) { obj->output_size = cv::Size2i(w,h); return *this; }
+    image_params_builder& angle( int val ) { obj->angle = val; return *this; }
+    image_params_builder& flip( bool val ) { obj->flip = val; return *this; }
+    image_params_builder& lighting( float f1, float f2, float f3 ) { obj->lighting = {f1,f2,f3}; return *this; }
+    image_params_builder& color_noise_std(float f) { obj->color_noise_std = f; return *this; }
+    image_params_builder& photometric( float f1, float f2, float f3 ) { obj->photometric = {f1,f2,f3}; return *this; }
 
     operator shared_ptr<image::params>() const {
-        return make_shared<image::params>(obj);
+        return obj;
     }
 
 private:
-    image::params obj;
+    shared_ptr<image::params> obj;
 };
 
 cv::Mat generate_indexed_image() {
@@ -266,11 +268,14 @@ TEST(etl, image_transform_crop) {
     image_config_builder config;
     shared_ptr<image::config> config_ptr = config.width(256).height(256).dump();
 
-    image_params_builder builder;
-    shared_ptr<image::params> params_ptr = builder.cropbox( 100, 150, 20, 30 ).output_size(20, 30);
-
     image::extractor ext{config_ptr};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    std::default_random_engine dre;
+    image::param_factory factory(config_ptr, dre);
+
+    image_params_builder builder(factory.make_params(decoded));
+    shared_ptr<image::params> params_ptr = builder.cropbox( 100, 150, 20, 30 ).output_size(20, 30);
 
     image::transformer trans{config_ptr};
     shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
@@ -292,11 +297,14 @@ TEST(etl, image_transform_flip) {
     image_config_builder config;
     shared_ptr<image::config> config_ptr = config.width(256).height(256).dump();
 
-    image_params_builder builder;
-    shared_ptr<image::params> params_ptr = builder.cropbox( 100, 150, 20, 20 ).output_size(20, 20).flip(true);
-
     image::extractor ext{config_ptr};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    std::default_random_engine dre;
+    image::param_factory factory(config_ptr, dre);
+
+    image_params_builder builder(factory.make_params(decoded));
+    shared_ptr<image::params> params_ptr = builder.cropbox( 100, 150, 20, 20 ).output_size(20, 20).flip(true);
 
     image::transformer trans{config_ptr};
     shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
