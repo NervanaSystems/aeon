@@ -140,3 +140,35 @@ std::shared_ptr<video::decoded> video::transformer::transform(
         params->_imageParams, decoded
     ));
 }
+
+void video::loader::load(char* outbuf, int outsize, shared_ptr<video::decoded> input)
+{
+    // loads in channel x depth(frame) x height x width
+    if(input->get_size() > outsize) {
+        throw std::runtime_error("Load failed insize > outsize");
+    }
+
+    int num_channels = input->get_image_channels();
+    int channel_size = input->get_image_count() * input->get_image_size().area();
+    cv::Size2i image_size = input->get_image_size();
+
+    for (int i=0; i < input->get_image_count(); i++) {
+        auto img = input->get_image(i);
+
+        auto image_offset = image_size.area() * i;
+
+        if (num_channels == 1) {
+            memcpy(outbuf + image_offset, img.data, image_size.area());
+        } else {
+            // Split into separate channels
+            cv::Mat b(image_size, CV_8U, outbuf + 0 * channel_size + image_offset);
+            cv::Mat g(image_size, CV_8U, outbuf + 1 * channel_size + image_offset);
+            cv::Mat r(image_size, CV_8U, outbuf + 2 * channel_size + image_offset);
+
+            cv::Mat channels[3] = {b, g, r};
+            // cv::split will split img into component channels and copy
+            // them into the addresses at b, g, r
+            cv::split(img, channels);
+        }
+    }
+}

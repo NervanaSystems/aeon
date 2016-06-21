@@ -92,4 +92,14 @@ namespace nervana {
     protected:
         image::transformer _imageTransformer;
     };
+
+    class video::loader : public interface::loader<video::decoded> {
+    public:
+        loader() {}
+        ~loader() {}
+        virtual void load(char*, int, std::shared_ptr<video::decoded>) override;
+
+    private:
+        void split(cv::Mat&, char*);
+    };
 }
