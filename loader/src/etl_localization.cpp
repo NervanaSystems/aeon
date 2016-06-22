@@ -11,6 +11,59 @@ template<typename T> string join(const T& v, const string& sep) {
     return ss.str();
 }
 
+nervana::localization::transformer::transformer(shared_ptr<const json_config_parser>) {
+    add_anchors();
+}
+
+void nervana::localization::transformer::add_anchors() {
+    cv::Mat anchors = generate_anchors(16,{0.5, 1., 2.},{8,16,32});
+    int num_anchors = anchors.rows;
+
+      // generate shifts to apply to anchors
+      // note: 1/self.SCALE is the feature stride
+    vector<float> shift_x;
+    vector<float> shift_y;
+    for(float i=0; i<conv_size; i++) {
+        shift_x.push_back(i * 1. / SCALE);
+        shift_y.push_back(i * 1. / SCALE);
+    }
+
+    cv::Mat shifts(conv_size*conv_size, 4, CV_32FC1);
+    float* fp = shifts.ptr<float>();
+    for(int y=0; y<shift_y.size(); y++) {
+        for(int x=0; x<shift_x.size(); x++) {
+            fp[0] = shift_x[x];
+            fp[1] = shift_y[y];
+            fp[2] = shift_x[x];
+            fp[3] = shift_y[y];
+            fp += 4;
+        }
+    }
+
+    // add K anchors (1, K, 4) to A shifts (A, 1, 4) to get
+    // shift anchors (A, K, 4), then reshape to (A*K, 4) shifted anchors
+    int K = num_anchors;
+    int A = shifts.rows;
+
+    cv::Mat all_anchors(A*K, 4, CV_32FC1);
+    float* aap = all_anchors.ptr<float>();
+    for(int anchor_row=0; anchor_row<anchors.rows; anchor_row++) {
+        const float* anchor_data = anchors.ptr<float>(anchor_row);
+        for(int i=0; i<shifts.rows; i++) {
+            const float* row_data = shifts.ptr<float>(i);
+            aap[0] = row_data[0]+anchor_data[0];
+            aap[1] = row_data[1]+anchor_data[1];
+            aap[2] = row_data[2]+anchor_data[2];
+            aap[3] = row_data[3]+anchor_data[3];
+            aap += 4;
+        }
+    }
+//    cout << "all_anchors\n" << all_anchors << endl;
+    total_anchors = all_anchors.rows;
+
+    cout << "total_anchors " << total_anchors << endl;
+}
+
 cv::Mat nervana::localization::transformer::generate_anchors(int base_size, const vector<float>& ratios, const vector<float>& scales) {
     vector<float> anchor = {0.,0.,(float)(base_size-1),(float)(base_size-1)};
     cv::Mat ratio_anchors = ratio_enum(anchor, ratios);

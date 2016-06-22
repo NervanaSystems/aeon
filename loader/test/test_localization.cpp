@@ -75,3 +75,7 @@ TEST(localization,generate_anchors) {
     }
 }
 
+TEST(localization,transform) {
+    nervana::localization::transformer trans{};
+}
+
