@@ -20,6 +20,7 @@ void video::params::dump(ostream & ostr) {
 
 video::extractor::extractor(std::shared_ptr<const video::config>)
     : _pFormat(AV_PIX_FMT_BGR24) {
+    // AV_PIX_FMT_BGR24 in ffmpeg corresponds to CV_8UC3 in opencv
     _pFrameRGB = av_frame_alloc();
     _pFrame = av_frame_alloc();
 
