@@ -42,7 +42,7 @@
  */
 class DecodeThreadPool : public ThreadPool {
 public:
-    DecodeThreadPool(int count, int batchSize, nlohmann::json configJs);
+    DecodeThreadPool(int count, int batchSize, std::string config_string, DeviceParams *dp);
     virtual ~DecodeThreadPool();
     virtual void start();
     virtual void stop();
@@ -50,8 +50,8 @@ public:
                         const std::shared_ptr<Device>& device,
                         const std::shared_ptr<BufferPool>& out);
 
-    int get_datum_len() { return _datumSize * _datumCount * _batchSize; }
-    int get_target_len() { return _targetSize * _targetCount * _batchSize; }
+    int get_datum_len() { return _datumLen; }
+    int get_target_len() { return _targetLen; }
 
 protected:
     virtual void run(int id);
@@ -83,8 +83,11 @@ private:
     std::vector<int>            _dataOffsets;
     std::vector<int>            _targetOffsets;
 
+    int                         _datumLen;
     int                         _datumSize;
     int                         _datumCount;
+
+    int                         _targetLen;
     int                         _targetSize;
     int                         _targetCount;
 

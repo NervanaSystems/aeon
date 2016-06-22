@@ -32,13 +32,14 @@
 
 using namespace std;
 
-DecodeThreadPool::DecodeThreadPool(int count, int batchSize, nlohmann::json configJs)
+DecodeThreadPool::DecodeThreadPool(int count, int batchSize, std::string config_string, DeviceParams *dp)
 : ThreadPool(count),
   _itemsPerThread((batchSize - 1) / count + 1),
   _endSignaled(0),
   _manager(0), _stopManager(false), _managerStopped(false), _inputBuf(0),
   _bufferIndex(0), _batchSize(batchSize)
 {
+    auto configJs = nlohmann::json::parse(config_string);
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
     for (int i = 0; i < count; i++) {
@@ -51,10 +52,13 @@ DecodeThreadPool::DecodeThreadPool(int count, int batchSize, nlohmann::json conf
         _targetOffsets.push_back(0);
     }
 
-    _datumCount = _providers[0]->get_d_count();
-    _datumSize  = _providers[0]->get_d_size();
-    _targetCount = _providers[0]->get_t_count();
-    _targetSize  = _providers[0]->get_t_size();
+    dp->_dataCount   = _datumCount  = _providers[0]->get_d_count();
+    dp->_dataSize    = _datumSize   =  _providers[0]->get_d_size();
+    dp->_targetCount = _targetCount = _providers[0]->get_t_count();
+    dp->_targetSize  = _targetSize  = _providers[0]->get_t_size();
+
+    _datumLen = _datumCount * _datumSize * _batchSize;
+    _targetLen = _targetCount * _targetSize * _batchSize;
 }
 
 DecodeThreadPool::~DecodeThreadPool() {
@@ -111,8 +115,8 @@ void DecodeThreadPool::run(int id) {
     }
 
     _endInds[id] = _startInds[id] + itemCount;
-    _dataOffsets[id] = _startInds[id] * _datumSize * _datumCount;
-    _targetOffsets[id] = _startInds[id] * _targetSize * _targetCount;
+    _dataOffsets[id] = _startInds[id] * _datumLen;
+    _targetOffsets[id] = _startInds[id] * _targetLen;
     while (_done == false) {
         work(id);
     }
@@ -143,8 +147,8 @@ void DecodeThreadPool::work(int id) {
     char* targetBuf = outBuf.second->_data + _targetOffsets[id];
     for (int i = start; i < end; i++) {
         _providers[id]->provide_pair(i, _inputBuf, dataBuf, targetBuf);
-        dataBuf += _datumSize * _datumCount;
-        targetBuf += _targetSize * _targetCount;
+        dataBuf += _datumLen;
+        targetBuf += _targetLen;
     }
 
     {
@@ -283,7 +287,7 @@ int Loader::start() {
 
         // Create the decode threads first, which interpret the config string to know output sizes
         _decodeThreads = unique_ptr<DecodeThreadPool>(
-            new DecodeThreadPool(threadCount, _miniBatchSize, _mediaConfigString)
+            new DecodeThreadPool(threadCount, _miniBatchSize, _mediaConfigString, _deviceParams)
             );
         int dataLen = _decodeThreads->get_datum_len();
         int targetLen = _decodeThreads->get_target_len();
@@ -292,7 +296,7 @@ int Loader::start() {
         _readBufs = make_shared<BufferPool>(dataLen / 8, targetLen);
         _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
 
-        _device = Device::create(_deviceParams, dataLen, targetLen);
+        _device = Device::create(_deviceParams, true);  // Do the allocation in here
 
         bool pinned = (_device->_type != CPU);
         _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, pinned);

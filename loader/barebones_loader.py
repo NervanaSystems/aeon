@@ -97,7 +97,7 @@ class DataLoader(object):
         parent_dir = os.path.split(cache_dir)[0]
         self.manifest_file = manifest_file
 
-
+        self.media_cfg_string = media_cfg_string
         self.device_type, self.device_id, self.default_dtype = device_type, device_id, np.float32
 
         self.item_count = ct.c_int(0)
@@ -120,10 +120,15 @@ class DataLoader(object):
         path = os.path.dirname(os.path.realpath(__file__))
         libpath = os.path.join(path, 'bin', 'loader.so')
         self.loaderlib = ct.cdll.LoadLibrary(libpath)
+        # self.loaderlib.test_printer.argtypes = [ct.c_char_p, ct.c_char_p]
+        self.loaderlib.get_error_message.restype = ct.c_char_p
         self.loaderlib.start.restype = ct.c_void_p
+
         self.loaderlib.next.argtypes = [ct.c_void_p]
         self.loaderlib.stop.argtypes = [ct.c_void_p]
         self.loaderlib.reset.argtypes = [ct.c_void_p]
+
+
 
     def alloc(self):
 
@@ -140,7 +145,6 @@ class DataLoader(object):
         # self.targets = alloc_bufs(self.target_size, self.target_dtype)
         # self.media_params.alloc(self)
         self.device_params = DeviceParams(self.device_type, self.device_id)
-
         # if self.datum_dtype == self.be.default_dtype:
         #     self.backend_data = None
         # else:
@@ -154,18 +158,28 @@ class DataLoader(object):
         """
         Launch background threads for loading the data.
         """
+
+        # import pdb; pdb.set_trace()
         self.loader = self.loaderlib.start(
-            ct.byref(self.item_count), ct.c_int(self.batch_size),
-            self.shuffle, self.reshuffle,
-            ct.c_int(self.subset_percent),
+            ct.byref(self.item_count),
+            ct.c_char_p(self.manifest_file),
+            ct.c_char_p(self.cache_dir),
+            ct.c_char_p(self.media_cfg_string),
             ct.POINTER(DeviceParams)(self.device_params),
-            ct.c_char_p(self.manifest_file.encode()),
+            ct.c_int(self.batch_size),
+            ct.c_int(self.subset_percent),
             ct.c_int(self.macrobatchsize),
-            ct.c_char_p(self.cache_dir.encode()),
-            ct.c_int(0))
+            ct.c_int(0),
+            ct.c_bool(self.shuffle),
+            ct.c_bool(self.reshuffle)
+            )
         self.ndata = self.item_count.value
         if self.loader is None:
+            a = self.loaderlib.get_error_message()
+            print a
             raise RuntimeError('Failed to start data loader.')
+
+        import pdb; pdb.set_trace()
 
     def stop(self):
         """
@@ -204,24 +218,26 @@ class DataLoader(object):
         for start in range(self.start_idx, self.ndata, self.batch_size):
             yield self.next(start)
 
-cfg_string = r"""{{"media","image"},
-                  {"data_config",
-                     {{"height",128},
-                      {"width",128},
-                      {"channel_major",false},
-                      {"flip",true}}},
-                  {"target_config",
-                     {{"binary", true}}}
-                     }"""
+cfg_string = r"""{"media":"image",
+                  "data_config":
+                     {"height":        40,
+                      "width":         40,
+                      "channel_major": false,
+                      "flip":          true},
+                  "target_config":
+                     {"binary": true}
+                     }
+                     """
 
-dloader_args = dict(set_name='tag_test',
-                    cache_dir='/scratch/alex/dloader_test',
+dloader_args = dict(set_name="tag_test",
+                    cache_dir="/scratch/alex/dloader_test",
                     media_cfg_string=cfg_string,
-                    manifest_file='/scratch/alex/dloader_test/cifar_manifest.txt',
+                    manifest_file="/scratch/alex/dloader_test/cifar_manifest.txt",
                     device_type=0, device_id=0, batch_size=128)
 dd = DataLoader(**dloader_args)
 
 
 for x, t in dd:
+    import pdb; pdb.set_trace()
     print(x)
 

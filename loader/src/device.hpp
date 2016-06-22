@@ -62,8 +62,7 @@ public:
     virtual int copyDataBack(int idx, char* data, int size) = 0;
     virtual int copyLabelsBack(int idx, char* data, int size) = 0;
 
-    static std::shared_ptr<Device> create(DeviceParams* params);
-    static std::shared_ptr<Device> create(DeviceParams* params, int dataSize, int targetSize);
+    static std::shared_ptr<Device> create(DeviceParams* params, bool alloc);
 
 public:
     int                         _type;
@@ -94,22 +93,21 @@ public:
 
 class Gpu : public Device {
 public:
-    Gpu(GpuParams* params, int dataSize, int targetSize)
-    : Device(GPU), _alloc(true), _id(params->_id) {
-        init();
-        for (int i = 0; i < 2; i++) {
-            checkDriverErrors(cuMemAlloc(&_data[i], dataSize));
-            checkDriverErrors(cuMemAlloc(&_targets[i], targetSize));
-            params->_targets[i] = _targets[i];
-            params->_data[i]    = _data[i];
-        }
-    }
-
-    Gpu(GpuParams* params)
-    : Device(GPU), _alloc(false), _id(params->_id) {
-        for (int i = 0; i < 2; i++) {
-            _data[i] = params->_data[i];
-            _targets[i] = params->_targets[i];
+    Gpu(GpuParams* params, bool alloc)
+    : Device(GPU), _alloc(alloc), _id(params->_id) {
+        if (_alloc) {
+            init();
+            for (int i = 0; i < 2; i++) {
+                checkDriverErrors(cuMemAlloc(&_data[i], params->_dataCount * params->_dataSize));
+                checkDriverErrors(cuMemAlloc(&_targets[i], params->_targetCount * params->_targetSize));
+                params->_targets[i] = _targets[i];
+                params->_data[i]    = _data[i];
+            }
+        } else {
+            for (int i = 0; i < 2; i++) {
+                _data[i] = params->_data[i];
+                _targets[i] = params->_targets[i];
+            }
         }
     }
 
@@ -177,22 +175,21 @@ private:
 
 class Cpu : public Device {
 public:
-    Cpu(CpuParams *params, int dataSize, int targetSize)
-    : Device(CPU), _alloc(true) {
-        init();
-        for (int i = 0; i < 2; i++) {
-            _data[i] = new char[dataSize];
-            _targets[i] = new char[targetSize];
-            params->_targets[i] = _targets[i];
-            params->_data[i]    = _data[i];
-        }
-    }
-
-    Cpu(CpuParams* params)
-    : Device(CPU), _alloc(false) {
-        for (int i = 0; i < 2; i++) {
-            _data[i] = params->_data[i];
-            _targets[i] = params->_targets[i];
+    Cpu(CpuParams* params, bool alloc)
+    : Device(CPU), _alloc(alloc) {
+        if (_alloc) {
+            init();
+            for (int i = 0; i < 2; i++) {
+                _data[i] = new char[params->_dataCount * params->_dataSize];
+                _targets[i] = new char[params->_targetCount * params->_targetSize];
+                params->_targets[i] = _targets[i];
+                params->_data[i]    = _data[i];
+            }
+        } else {
+            for (int i = 0; i < 2; i++) {
+                _data[i] = params->_data[i];
+                _targets[i] = params->_targets[i];
+            }
         }
     }
 

@@ -37,8 +37,8 @@ SRCS            := \
     vector.cpp \
 
 OBJS             = $(subst .cpp,.o,$(SRCS))
-CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -fPIC
-CFLAGSDBG       := -g -Wall -O0 -std=c++11
+CFLAGS          := -Wall -Wno-deprecated-declarations -O2 -g -std=c++11 -fPIC
+CFLAGSDBG       := -g -Wall -O0 -std=c++11 -fPIC
 CC              := clang++
 LOADER_SO       := ../bin/loader.so
 LOADER_STATIC   := loader.a
@@ -92,11 +92,11 @@ all: ../bin/loader.so $(LOADER_SO) $(LOADER_STATIC) Makefile
 print-%  : ; @echo $* = $($*)
 
 %.o : %.c $(DEPDIR)/%.d
-	$(CC) -c -o $@ $(CFLAGSDBG) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
+	$(CC) -c -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
 	$(POSTCOMPILE)
 
 %.o : %.cpp $(DEPDIR)/%.d
-	$(CC) -c -fPIC -o $@ $(CFLAGSDBG) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
+	$(CC) -c -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
 	$(POSTCOMPILE)
 
 $(DEPDIR)/%.d: ;
@@ -108,7 +108,7 @@ $(LOADER_SO): $(OBJS)
 	@echo "Building $@..."
 	@mkdir -p ../bin
 	$(CC) -shared -o $@ $(OBJS) $(LDIR) $(LIBS)
-#	$(CC) -shared -o $@ -fPIC $(OBJS) $(CFLAGSDBG) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $< $(LDIR) $(LIBS)
+#	$(CC) -shared -o $@ -fPIC $(OBJS) $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $< $(LDIR) $(LIBS)
 
 $(LOADER_STATIC): $(OBJS)
 	@echo "Building $@..."
