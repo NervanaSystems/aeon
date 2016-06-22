@@ -1,6 +1,5 @@
 #include <string>
 #include <unordered_map>
-#include <opencv2/core/core.hpp>
 
 #include "etl_interface.hpp"
 #include "etl_image.hpp"

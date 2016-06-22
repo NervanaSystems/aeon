@@ -21,6 +21,10 @@
 #include "gtest/gtest.h"
 #include "gen_image.hpp"
 
+
+#define private public
+
+
 #include "params.hpp"
 #include "etl_image.hpp"
 #include "etl_localization.hpp"
@@ -28,6 +32,16 @@
 
 using namespace std;
 using namespace nervana;
+using namespace nervana::localization;
+
+static vector<string> label_list = {"person","dog","lion","tiger","eel","puma","rat","tick","flea","bicycle","hovercraft"};
+
+static string read_file( const string& path ) {
+    ifstream f(path);
+    stringstream ss;
+    ss << f.rdbuf();
+    return ss.str();
+}
 
 TEST(localization,generate_anchors) {
     // Verify that we compute the same anchors as Shaoqing's matlab implementation:
@@ -47,35 +61,80 @@ TEST(localization,generate_anchors) {
     //
     // base_size 16, ratios [0.5, 1, 2], scales [ 8 16 32]
 
-    vector<float> data = {  -83.0,  -39.0, 100.0,   56.0,
-                           -175.0,  -87.0, 192.0,  104.0,
-                           -359.0, -183.0, 376.0,  200.0,
-                            -55.0,  -55.0,  72.0,   72.0,
-                           -119.0, -119.0, 136.0,  136.0,
-                           -247.0, -247.0, 264.0,  264.0,
-                            -35.0,  -79.0,  52.0,   96.0,
-                            -79.0, -167.0,  96.0,  184.0,
-                           -167.0, -343.0, 184.0,  360.0 };
-    cv::Mat expected = cv::Mat(9,4,CV_32FC1,&data[0]);
+    vector<anchor::box> expected =
+                        {{  -83.0-1.0,  -39.0-1.0, 100.0-1.0,  56.0-1.0},
+                         { -175.0-1.0,  -87.0-1.0, 192.0-1.0, 104.0-1.0},
+                         { -359.0-1.0, -183.0-1.0, 376.0-1.0, 200.0-1.0},
+                         {  -55.0-1.0,  -55.0-1.0,  72.0-1.0,  72.0-1.0},
+                         { -119.0-1.0, -119.0-1.0, 136.0-1.0, 136.0-1.0},
+                         { -247.0-1.0, -247.0-1.0, 264.0-1.0, 264.0-1.0},
+                         {  -35.0-1.0,  -79.0-1.0,  52.0-1.0,  96.0-1.0},
+                         {  -79.0-1.0, -167.0-1.0,  96.0-1.0, 184.0-1.0},
+                         { -167.0-1.0, -343.0-1.0, 184.0-1.0, 360.0-1.0}};
 
     // subtract 1 from the expected vector as it was generated with 1's based matlab
-    expected -= 1;
+//    expected -= 1;
 
     int base_size = 16;
     vector<float> ratios = {0.5, 1, 2};
     vector<float> scales = {8, 16, 32};
 
-    cv::Mat actual = nervana::localization::transformer::generate_anchors(base_size, ratios, scales);
+    anchor _anchor{1000,800};
+    vector<anchor::box> actual = _anchor.generate_anchors(base_size, ratios, scales);
     ASSERT_EQ(expected.size(),actual.size());
-    ASSERT_EQ(expected.type(),actual.type());
-    float* actual_ptr = actual.ptr<float>();
-    float* expected_ptr = expected.ptr<float>();
-    for(int i=0; i<expected.size().area(); i++) {
-        EXPECT_EQ((int)expected_ptr[i], (int)actual_ptr[i]);
+    for(int i=0; i<expected.size(); i++) {
+        EXPECT_EQ(expected[i], actual[i]);
     }
 }
 
-TEST(localization,transform) {
-    nervana::localization::transformer trans{};
+TEST(localization, t1) {
+    anchor _anchor{1000,800};
+
+    _anchor.add_anchors();
 }
+
+TEST(localization,calculate_scale_shape) {
+    localization::transformer transformer;
+    cv::Size size{500,375};
+    float scale;
+    tie(scale,size) = transformer.calculate_scale_shape(size);
+    EXPECT_FLOAT_EQ(1.6,scale);
+    EXPECT_EQ(800,size.width);
+    EXPECT_EQ(600,size.height);
+}
+
+
+TEST(localization, transform) {
+//    {
+//        string data = read_file(CURDIR"/test_data/000001.json");
+//        localization::extractor extractor{label_list};
+//        localization::transformer transformer;
+//        auto mdata = extractor.extract(&data[0],data.size());
+//        auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);
+//        ASSERT_NE(nullptr,decoded);
+//        auto params = make_shared<image::params>();
+//        transformer.transform(params, decoded);
+//        auto boxes = decoded->boxes();
+//    }
+    {
+        string data = read_file(CURDIR"/test_data/006637.json");
+        localization::extractor extractor{label_list};
+        localization::transformer transformer;
+        auto mdata = extractor.extract(&data[0],data.size());
+        auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);
+        ASSERT_NE(nullptr,decoded);
+        auto params = make_shared<image::params>();
+        transformer.transform(params, decoded);
+        auto boxes = decoded->boxes();
+    }
+//    {
+//        string data = read_file(CURDIR"/test_data/009952.json");
+//        localization::extractor extractor{label_list};
+//        auto mdata = extractor.extract(&data[0],data.size());
+//        auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);
+//        ASSERT_NE(nullptr,decoded);
+//        auto boxes = decoded->boxes();
+//    }
+}
+
 
