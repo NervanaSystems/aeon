@@ -1,4 +1,8 @@
 #pragma once
+
+#include <vector>
+#include <tuple>
+
 #include "etl_interface.hpp"
 #include "etl_bbox.hpp"
 #include "params.hpp"
@@ -53,6 +57,23 @@ namespace nervana {
         std::shared_ptr<localization::decoded> transform(
                             std::shared_ptr<nervana::params> txs,
                             std::shared_ptr<localization::decoded> mp) override { return mp; }
+
+        //    Generate anchor (reference) windows by enumerating aspect ratios X
+        //    scales wrt a reference (0, 0, 15, 15) window.
+        static cv::Mat generate_anchors(int base_size, const std::vector<float>& ratios, const std::vector<float>& scales);
+    private:
+        //    Enumerate a set of anchors for each aspect ratio wrt an anchor.
+        static cv::Mat ratio_enum(const std::vector<float>& anchor, const std::vector<float>& ratios);
+
+        //    Given a vector of widths (ws) and heights (hs) around a center
+        //    (x_ctr, y_ctr), output a set of anchors (windows).
+        static cv::Mat mkanchors(const std::vector<float>& ws, const std::vector<float>& hs, float x_ctr, float y_ctr);
+
+        //    Enumerate a set of anchors for each scale wrt an anchor.
+        static cv::Mat scale_enum(const std::vector<float>& anchor, const std::vector<float>& scales);
+
+        //    Return width, height, x center, and y center for an anchor (window).
+        static std::tuple<float,float,float,float> whctrs(const std::vector<float>&);
     };
 
     class localization::loader : public interface::loader<localization::decoded> {
