@@ -55,7 +55,10 @@ DecodeThreadPool::DecodeThreadPool(int count,
     }
 
     _deviceParams->_batchSize = _batchSize;
-    _providers[0]->fill_params(&(_deviceParams->_dtmInfo), &(_deviceParams->_tgtInfo));
+    // _providers[0]->fill_params(&(_deviceParams->_dtmInfo), &(_deviceParams->_tgtInfo));
+
+    _providers[0]->fill_dtm_load_info(&(_deviceParams->_dtmInfo));
+    _providers[0]->fill_tgt_load_info(&(_deviceParams->_tgtInfo));
 
     _datumLen  = _deviceParams->_dtmInfo.size * _deviceParams->_dtmInfo.count;
     _targetLen = _deviceParams->_tgtInfo.size * _deviceParams->_tgtInfo.count;

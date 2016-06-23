@@ -84,25 +84,20 @@ namespace nervana {
     class label::loader : public interface::loader<label::decoded> {
     public:
         loader(std::shared_ptr<const label::config> = nullptr) {}
-
         ~loader() {}
 
-        void fill_params(int* count, int* type_size, char* type_char) override
+        void fill_info(count_size_type* cst) override
         {
-            *count     = _load_count;
-            *type_size = _load_size;
-            *type_char = _load_char;
+            cst->count   = 1;
+            cst->size    = 4;
+            cst->type[0] = 'i';
         }
 
         void load(char* buf, std::shared_ptr<label::decoded> mp) override
         {
             int index = mp->get_index();
-            memcpy(buf, &index, _load_size);
+            memcpy(buf, &index, sizeof(int32_t));
         }
 
-    private:
-        size_t _load_count = 1;
-        size_t _load_size  = 4;
-        char   _load_char  = 'i';
     };
 }

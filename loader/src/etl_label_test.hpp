@@ -137,14 +137,13 @@ namespace nervana {
             _ld_offset = cfg->ld_offset;
             _ld_dofloat = cfg->ld_dofloat;
         }
-
         ~loader() {}
 
-        void fill_params(int* count, int* type_size, char* type_char) override
+        void fill_info(count_size_type* cst) override
         {
-            *count     = _load_count;
-            *type_size = _load_size;
-            *type_char = _ld_dofloat ? 'f' : 'i';
+            cst->count   = 1;
+            cst->size    = 4;
+            cst->type[0] = _ld_dofloat ? 'f' : 'i';
         }
 
         void load(char* buf, std::shared_ptr<label_test::decoded> mp) override
@@ -159,8 +158,6 @@ namespace nervana {
         }
 
     private:
-        size_t _load_count = 1;
-        size_t _load_size  = 4;  // int32 has 4 bytes
         float   _ld_offset;
         bool    _ld_dofloat;
     };

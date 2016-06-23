@@ -41,8 +41,8 @@ public:
 class nervana::train_base {
 public:
     virtual void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) = 0;
-    virtual void fill_params(nervana::count_size_type* d, nervana::count_size_type* t) = 0;
-
+    virtual void fill_dtm_load_info(nervana::count_size_type* d) = 0;
+    virtual void fill_tgt_load_info(nervana::count_size_type* t) = 0;
 };
 
 template<typename D, typename T> class nervana::train_provider : public train_base {
@@ -53,11 +53,8 @@ public:
         _tprov = std::make_shared<T>(tgt_cfg);
     }
 
-    void fill_params(nervana::count_size_type* d, nervana::count_size_type* t) override
-    {
-        _dprov->get_loader()->fill_params(&(d->count), &(d->size), &(d->type[0]));
-        _tprov->get_loader()->fill_params(&(t->count), &(t->size), &(t->type[0]));
-    }
+    void fill_dtm_load_info(count_size_type* d) override { _dprov->get_loader()->fill_info(d); }
+    void fill_tgt_load_info(count_size_type* t) override { _tprov->get_loader()->fill_info(t); }
 
     void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) override
     {
