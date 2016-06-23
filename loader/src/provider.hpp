@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include "util.hpp"
 #include "etl_interface.hpp"
 #include "buffer.hpp"
 
@@ -20,15 +21,16 @@ public:
              std::shared_ptr<interface::param_factory<T, S>> fa = nullptr)
     : _extractor(ex), _transformer(tr), _loader(lo), _factory(fa) {}
 
-    std::shared_ptr<S> provide(char *inbuf, int insize,
-                          char *outbuf, int outsize,
-                          std::shared_ptr<S> pptr = nullptr)
+    std::shared_ptr<S> provide(char *inbuf, int insize, char *outbuf,
+                               std::shared_ptr<S> pptr = nullptr)
     {
         std::shared_ptr<T> dec = _extractor->extract(inbuf, insize);
         std::shared_ptr<S> optr = _factory == nullptr ? pptr : _factory->make_params(dec);
-        _loader->load(outbuf, outsize, _transformer->transform(optr, dec));
+        _loader->load(outbuf, _transformer->transform(optr, dec));
         return optr;
     }
+
+    const std::shared_ptr<interface::loader<T>> get_loader() { return _loader; }
 
     std::shared_ptr<interface::extractor<T>>        _extractor;
     std::shared_ptr<interface::transformer<T, S>>   _transformer;
@@ -39,6 +41,8 @@ public:
 class nervana::train_base {
 public:
     virtual void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) = 0;
+    virtual void fill_dtm_load_info(nervana::count_size_type* d) = 0;
+    virtual void fill_tgt_load_info(nervana::count_size_type* t) = 0;
 };
 
 template<typename D, typename T> class nervana::train_provider : public train_base {
@@ -48,6 +52,9 @@ public:
         _dprov = std::make_shared<D>(datum_cfg);
         _tprov = std::make_shared<T>(tgt_cfg);
     }
+
+    void fill_dtm_load_info(count_size_type* d) override { _dprov->get_loader()->fill_info(d); }
+    void fill_tgt_load_info(count_size_type* t) override { _tprov->get_loader()->fill_info(t); }
 
     void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) override
     {
@@ -61,14 +68,12 @@ public:
             return;
         }
 
-        auto pptr = _dprov->provide(datum_in, dsz_in, datum_out, _dsz_out);
-        _tprov->provide(target_in, tsz_in, tgt_out, _tsz_out, pptr);
+        auto pptr = _dprov->provide(datum_in, dsz_in, datum_out);
+        _tprov->provide(target_in, tsz_in, tgt_out, pptr);
     }
 
     std::shared_ptr<D> _dprov;
     std::shared_ptr<T> _tprov;
-    int                _dsz_out;
-    int                _tsz_out;
 };
 
 

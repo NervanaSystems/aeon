@@ -18,17 +18,17 @@
 
 #include "loader.hpp"
 
-#if HAS_IMGLIB
-#include "image.hpp"
-#endif
+// #if HAS_IMGLIB
+// #include "image.hpp"
+// #endif
 
-#if HAS_VIDLIB
-#include "video.hpp"
-#endif
+// #if HAS_VIDLIB
+// #include "video.hpp"
+// #endif
 
-#if HAS_AUDLIB
-#include "audio.hpp"
-#endif
+// #if HAS_AUDLIB
+// #include "audio.hpp"
+// #endif
 
 #include "api.hpp"
 

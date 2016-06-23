@@ -13,7 +13,7 @@
  limitations under the License.
 */
 
- #pragma once
+#pragma once
 
 #if HAS_IMGLIB
 #include <opencv2/core/core.hpp>

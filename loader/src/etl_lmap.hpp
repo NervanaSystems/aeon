@@ -64,6 +64,8 @@ class nervana::lmap::loader : public nervana::interface::loader<nervana::lmap::d
 public:
     loader();
     virtual ~loader(){}
-    virtual void load(char*, int, std::shared_ptr<nervana::lmap::decoded>) override;
+    void fill_info(count_size_type* cst) override {}
+
+    virtual void load(char*, std::shared_ptr<nervana::lmap::decoded>) override;
 private:
 };

@@ -68,29 +68,6 @@ private:
     image::config obj;
 };
 
-class multicrop_config_builder {
-public:
-    multicrop_config_builder() { height(30); width(30); }
-
-    multicrop_config_builder& height(int val) { obj.height = val; return *this; }
-    multicrop_config_builder& width(int val) { obj.width = val; return *this; }
-
-    // FIXME:  need to be able to properly set a vector type
-    multicrop_config_builder& scales(vector<float> val) { obj.scales = val; return *this; }
-    multicrop_config_builder& flip(bool val) { obj.flip = val; return *this; }
-    multicrop_config_builder& crops_per_scale(int val) { obj.crops_per_scale = val; return *this; }
-
-    shared_ptr<multicrop::config> dump(int tab=4) {
-        nlohmann::json js = {{"height",obj.height},{"width",obj.width},{"scales",obj.scales},
-        {"flip",obj.flip},{"crops_per_scale",obj.crops_per_scale}};
-        auto rc = make_shared<multicrop::config>();
-        rc->set_config(js);
-        return rc;
-    }
-private:
-    multicrop::config obj;
-};
-
 class image_params_builder {
 public:
     image_params_builder(shared_ptr<image::params> _obj) { obj = _obj; }
@@ -335,7 +312,7 @@ TEST(etl, multi_crop) {
             {
                 "width": 224,
                 "height": 224,
-                "scales": [0.875],
+                "multicrop_scales": [0.875],
                 "crops_per_scale": 1
             }
         )";
@@ -366,8 +343,8 @@ TEST(etl, multi_crop) {
             {
                 "width": 224,
                 "height": 224,
-                "scales": [0.875],
-                "flip": false
+                "multicrop_scales": [0.875],
+                "include_flips": false
             }
         )";
 
@@ -399,8 +376,8 @@ TEST(etl, multi_crop) {
             {
                 "width": 112,
                 "height": 112,
-                "scales": [0.875],
-                "flip": false
+                "multicrop_scales": [0.875],
+                "include_flips": false
             }
         )";
         using namespace cv;

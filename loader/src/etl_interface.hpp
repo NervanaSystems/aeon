@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include "params.hpp"
+#include "util.hpp"
 
 namespace nervana {
     namespace interface {
@@ -32,5 +33,6 @@ public:
 template<typename T> class nervana::interface::loader {
 public:
     virtual ~loader() {}
-    virtual void load(char*, int, std::shared_ptr<T>) = 0;
+    virtual void load(char*, std::shared_ptr<T>) = 0;
+    virtual void fill_info(nervana::count_size_type*) = 0;
 };

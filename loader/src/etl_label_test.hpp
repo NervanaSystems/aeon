@@ -137,23 +137,28 @@ namespace nervana {
             _ld_offset = cfg->ld_offset;
             _ld_dofloat = cfg->ld_dofloat;
         }
-
         ~loader() {}
 
-        void load(char* buf, int bufSize, std::shared_ptr<label_test::decoded> mp) override
+        void fill_info(count_size_type* cst) override
+        {
+            cst->count   = 1;
+            cst->size    = 4;
+            cst->type[0] = _ld_dofloat ? 'f' : 'i';
+        }
+
+        void load(char* buf, std::shared_ptr<label_test::decoded> mp) override
         {
             int index = mp->get_index();
             if (_ld_dofloat) {
                 float ld_index = index + _ld_offset;
-                memcpy(buf, &ld_index, bufSize);
+                memcpy(buf, &ld_index, sizeof(ld_index));
             } else {
-                memcpy(buf, &index, bufSize);
+                memcpy(buf, &index, sizeof(index));
             }
-
         }
 
     private:
-        float _ld_offset;
-        bool _ld_dofloat;
+        float   _ld_offset;
+        bool    _ld_dofloat;
     };
 }

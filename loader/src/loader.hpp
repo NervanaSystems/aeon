@@ -42,16 +42,15 @@
  */
 class DecodeThreadPool : public ThreadPool {
 public:
-    DecodeThreadPool(int count, int batchSize,
-                     int datumSize, int datumTypeSize,
-                     int targetSize, int targetTypeSize,
-                     const std::shared_ptr<BufferPool>& in, const std::shared_ptr<BufferPool>& out,
-                     const std::shared_ptr<Device>& device,
-                     nlohmann::json configJs);
-                     // MediaParams* mediaParams);
+    DecodeThreadPool(int count, int batchSize, nlohmann::json config, DeviceParams *dp);
     virtual ~DecodeThreadPool();
     virtual void start();
     virtual void stop();
+    int get_dtm_len() { return _datumLen; }
+    int get_tgt_len() { return _targetLen; }
+    void set_io_buffers(const std::shared_ptr<BufferPool>& in,
+                        const std::shared_ptr<Device>& device,
+                        const std::shared_ptr<BufferPool>& out);
 
 protected:
     virtual void run(int id);
@@ -82,16 +81,12 @@ private:
     std::vector<int>            _endInds;
     std::vector<int>            _dataOffsets;
     std::vector<int>            _targetOffsets;
-    int                         _datumSize;
-    int                         _datumTypeSize;
-    int                         _targetSize;
-    int                         _targetTypeSize;
-    // Datum length in bytes. (should we start using size_t for these?)
+
     int                         _datumLen;
-    // Target length in bytes.
     int                         _targetLen;
+
     std::shared_ptr<Device>     _device;
-    // std::vector<std::shared_ptr<Media>> _media;
+    DeviceParams*               _deviceParams;
     std::vector<std::shared_ptr<nervana::train_base>> _providers;
 };
 
@@ -103,7 +98,8 @@ private:
 
 class ReadThread: public ThreadPool {
 public:
-    ReadThread(const std::shared_ptr<BufferPool>& out, const std::shared_ptr<BatchIterator>& batch_iterator);
+    ReadThread(const std::shared_ptr<BufferPool>& out,
+               const std::shared_ptr<BatchIterator>& batch_iterator);
 
 protected:
     virtual void work(int id);
@@ -113,6 +109,36 @@ private:
     ReadThread(const ReadThread&);
     std::shared_ptr<BufferPool> _out;
     std::shared_ptr<BatchIterator> _batch_iterator;
+};
+
+
+class LoaderConfig : public nervana::json_config_parser {
+public:
+    std::string manifest_filename;
+    std::string cache_directory;
+    int macrobatch_size;
+
+    bool shuffle_every_epoch = false;
+    bool shuffle_manifest    = false;
+    int subset_percent        = 100;
+    int random_seed           = 0;
+
+    bool set_config(nlohmann::json js) override
+    {
+        parse_req(manifest_filename, "manifest_filename", js);
+        parse_req(cache_directory,   "cache_directory", js);
+        parse_req(macrobatch_size,   "macrobatch_size", js);
+
+        parse_opt(shuffle_every_epoch, "shuffle_every_epoch", js);
+        parse_opt(shuffle_manifest,    "shuffle_manifest", js);
+        parse_opt(subset_percent,      "subset_percent", js);
+        parse_opt(random_seed,         "random_seed", js);
+
+        return validate();
+    }
+
+private:
+    bool validate() { return true; }
 };
 
 /* Loader
@@ -125,27 +151,27 @@ private:
  */
 class Loader {
 public:
-    Loader(int miniBatchSize,
-           bool shuffleManifest, bool shuffleEveryEpoch,
-           int datumSize, int datumTypeSize,
-           int targetSize, int targetTypeSize,
-           int subsetPercent,
-           const char* mediaConfigString,
-           // MediaParams* mediaParams,
-           DeviceParams* deviceParams,
-           const char* manifestFilename,
-           int macroBatchSize,
-           const char* rootCacheDir,
-           uint randomSeed);
+    Loader(int miniBatchSize, const char* loaderConfigString, DeviceParams *deviceParams);
+    // Loader(int miniBatchSize,
+    //        bool shuffleManifest,
+    //        bool shuffleEveryEpoch,
+    //        int subsetPercent,
+    //        const char* mediaConfigString,
+    //        DeviceParams* deviceParams,
+    //        const char* manifestFilename,
+    //        int macroBatchSize,
+    //        const char* rootCacheDir,
+    //        uint randomSeed);
 
-    virtual ~Loader();
+    virtual ~Loader() {}
     int start();
     void stop();
     int reset();
     void next();
-    std::shared_ptr<Device> getDevice();
-    std::shared_ptr<BatchIterator> getBatchIterator();
-    int itemCount();
+
+    std::shared_ptr<BatchIterator> getBatchIterator() { return _batch_iterator; }
+    std::shared_ptr<Device> getDevice() { return _device; }
+    int itemCount() { return _manifest->getSize(); }
 
 private:
     void drain();
@@ -159,6 +185,7 @@ private:
     int                                 _datumTypeSize;
     int                                 _targetSize;
     int                                 _targetTypeSize;
+    DeviceParams*                       _deviceParams;
     std::shared_ptr<BufferPool>         _readBufs;
     std::shared_ptr<BufferPool>         _decodeBufs;
     std::unique_ptr<ReadThread>         _readThread;
@@ -166,6 +193,5 @@ private:
     std::shared_ptr<Device>             _device;
     std::shared_ptr<BatchIterator>      _batch_iterator;
     std::shared_ptr<Manifest>           _manifest;
-    std::string                         _mediaConfigString;
-    // MediaParams*                        _mediaParams;
+    nlohmann::json                      _loaderConfigJson;
 };

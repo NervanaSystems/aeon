@@ -200,7 +200,8 @@ namespace nervana {
     public:
         loader(std::shared_ptr<const specgram::config>);
         ~loader() {}
-        virtual void load(char*, int, std::shared_ptr<specgram::decoded>) override;
+        virtual void load(char*, std::shared_ptr<specgram::decoded>) override;
+        void fill_info(count_size_type* cst) override {}
 
     private:
         void split(cv::Mat&, char*);

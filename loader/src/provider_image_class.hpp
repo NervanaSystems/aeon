@@ -9,7 +9,7 @@ namespace nervana {
         class randomizing_provider;
     }
     namespace label {
-        class binary_provider;
+        class int_provider;
     }
 
     class image::randomizing_provider : public provider<image::decoded, image::params> {
@@ -31,32 +31,26 @@ namespace nervana {
         std::shared_ptr<image::config> _cfg;
     };
 
-    class label::binary_provider : public provider<label::decoded, nervana::params> {
+    class label::int_provider : public provider<label::decoded, nervana::params> {
     public:
-        binary_provider()
+        int_provider(nlohmann::json js)
         {
-            _extractor   = std::make_shared<label::extractor>();
+            auto cfg     = std::make_shared<label::config>();
+            cfg->set_config(js);
+            _extractor   = std::make_shared<label::extractor>(cfg);
             _transformer = std::make_shared<label::transformer>();
             _loader      = std::make_shared<label::loader>();
             _factory     = nullptr;
         }
-        ~binary_provider() {}
+        ~int_provider() {}
     };
 
-    class image_decoder : public train_provider<image::randomizing_provider, label::binary_provider> {
+    class image_decoder : public train_provider<image::randomizing_provider, label::int_provider> {
     public:
         image_decoder(nlohmann::json js, int seed=0)
         {
-            auto data_config = js["data_config"];
-            auto target_config = js["target_config"];
-
-            int image_width = data_config["width"];
-            int image_height = data_config["height"];
-
-            _dprov = std::make_shared<image::randomizing_provider>(data_config, seed);
-            _tprov = std::make_shared<label::binary_provider>();
-            _dsz_out = image_width * image_height * 3;
-            _tsz_out = 4;
+            _dprov = std::make_shared<image::randomizing_provider>(js["data_config"], seed);
+            _tprov = std::make_shared<label::int_provider>(js["target_config"]);
         }
     };
 }

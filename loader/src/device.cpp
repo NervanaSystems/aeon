@@ -17,16 +17,16 @@
 
 #include "device.hpp"
 
- using namespace std;
+using namespace std;
 
-shared_ptr<Device> Device::create(DeviceParams* params) {
+shared_ptr<Device> Device::create(DeviceParams* params, bool alloc) {
 #if HAS_GPU
     if (params->_type == CPU) {
-        return make_shared<Cpu>(reinterpret_cast<CpuParams*>(params));
+        return make_shared<Cpu>(reinterpret_cast<CpuParams*>(params), alloc);
     }
-    return make_shared<Gpu>(reinterpret_cast<GpuParams*>(params));
+    return make_shared<Gpu>(reinterpret_cast<GpuParams*>(params), alloc);
 #else
     assert(params->_type == CPU);
-    return make_shared<Cpu>(reinterpret_cast<CpuParams*>(params));
+    return make_shared<Cpu>(reinterpret_cast<CpuParams*>(params), alloc);
 #endif
 }

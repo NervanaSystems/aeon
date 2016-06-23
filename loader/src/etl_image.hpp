@@ -96,12 +96,17 @@ namespace nervana {
             return validate();
         }
 
+        virtual int num_crops() const { return 1; }
+
     private:
         bool validate() {
             return crop_offset.param().a() <= crop_offset.param().b();
         }
     };
 
+// ===============================================================================================
+// Decoded
+// ===============================================================================================
 
     class image::decoded : public decoded_media {
     public:
@@ -137,6 +142,7 @@ namespace nervana {
         }
         std::vector<cv::Mat> _images;
     };
+
 
 
     class image::extractor : public interface::extractor<image::decoded> {
@@ -177,17 +183,15 @@ namespace nervana {
     };
 
 
-    class multicrop::config : public json_config_parser {
+    class multicrop::config : public image::config {
     public:
 
         // Required config variables
-        int height;
-        int width;
-        std::vector<float> scales;
+        std::vector<float> multicrop_scales;
 
         // Optional config variables
         int crops_per_scale = 5;
-        bool flip = true;
+        bool include_flips = true;
 
         // Derived config variables
         std::vector<cv::Point2f> offsets;
@@ -195,12 +199,11 @@ namespace nervana {
 
         bool set_config(nlohmann::json js) override
         {
+            image::config::set_config(js);
             // Parse required and optional variables
-            parse_req(height, "height", js);
-            parse_req(width, "width", js);
-            parse_req(scales, "scales", js);
+            parse_req(multicrop_scales, "multicrop_scales", js);
             parse_opt(crops_per_scale, "crops_per_scale", js);
-            parse_opt(flip, "flip", js);
+            parse_opt(include_flips, "include_flips", js);
 
             if (!validate()) {
                 throw std::runtime_error("invalid configuration values");
@@ -218,13 +221,15 @@ namespace nervana {
             return validate();
         }
 
+        int num_crops() const override { return static_cast<int>(multicrop_scales.size()); }
+
     private:
         bool validate()
         {
             bool isvalid = true;
             isvalid &= ( crops_per_scale == 5 || crops_per_scale == 1);
 
-            for (const float &s: scales) {
+            for (const float &s: multicrop_scales) {
                 isvalid &= ( (0.0 < s) && (s < 1.0));
             }
             return isvalid;
@@ -245,13 +250,23 @@ namespace nervana {
         void add_resized_crops(const cv::Mat&, std::shared_ptr<image::decoded>&, std::vector<cv::Rect>&);
     };
 
+
     class image::loader : public interface::loader<image::decoded> {
     public:
         loader(std::shared_ptr<const image::config>);
         ~loader() {}
-        virtual void load(char*, int, std::shared_ptr<image::decoded>) override;
+        virtual void load(char*, std::shared_ptr<image::decoded>) override;
+
+        void fill_info(count_size_type* cst) override
+        {
+            cst->count   = _load_count;
+            cst->size    = _load_size;
+            cst->type[0] = 'u';
+        }
 
     private:
+        size_t _load_count;
+        size_t _load_size;
         void split(cv::Mat&, char*);
         bool _channel_major;
     };

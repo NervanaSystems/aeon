@@ -19,16 +19,22 @@
 #include <cstring>
 #include <stdexcept>
 #include <memory>
+#include "util.hpp"
 
 enum DeviceType { CPU=0, GPU=1 };
 
 class DeviceParams {
 public:
-    DeviceParams(int type, int id) : _type(type), _id(id) {}
+    DeviceParams(int type, int id)
+    : _type(type), _id(id)
+    {}
 
 public:
     int                         _type;
     int                         _id;
+    int                         _batchSize;
+    nervana::count_size_type    _dtmInfo;
+    nervana::count_size_type    _tgtInfo;
 };
 
 class CpuParams : public DeviceParams {
@@ -56,10 +62,12 @@ public:
     virtual int copyDataBack(int idx, char* data, int size) = 0;
     virtual int copyLabelsBack(int idx, char* data, int size) = 0;
 
-    static std::shared_ptr<Device> create(DeviceParams* params);
+    static std::shared_ptr<Device> create(DeviceParams* params, bool alloc);
 
 public:
     int                         _type;
+    int                         _dlen;
+    int                         _tlen;
 };
 
 #if HAS_GPU
@@ -87,20 +95,23 @@ public:
 
 class Gpu : public Device {
 public:
-    Gpu(int id, int dataSize, int targetSize)
-    : Device(GPU), _alloc(true), _id(id) {
-        init();
-        for (int i = 0; i < 2; i++) {
-            checkDriverErrors(cuMemAlloc(&_data[i], dataSize));
-            checkDriverErrors(cuMemAlloc(&_targets[i], targetSize));
-        }
-    }
-
-    Gpu(GpuParams* params)
-    : Device(GPU), _alloc(false), _id(params->_id) {
-        for (int i = 0; i < 2; i++) {
-            _data[i] = params->_data[i];
-            _targets[i] = params->_targets[i];
+    Gpu(GpuParams* params, bool alloc)
+    : Device(GPU), _alloc(alloc), _id(params->_id) {
+        _dlen = params->_dtmInfo.count * params->_dtmInfo.size * params->_batchSize;
+        _tlen = params->_tgtInfo.count * params->_tgtInfo.size * params->_batchSize;
+        if (_alloc) {
+            init();
+            for (int i = 0; i < 2; i++) {
+                checkDriverErrors(cuMemAlloc(&_data[i], _dlen));
+                checkDriverErrors(cuMemAlloc(&_targets[i], _tlen));
+                params->_targets[i] = _targets[i];
+                params->_data[i]    = _data[i];
+            }
+        } else {
+            for (int i = 0; i < 2; i++) {
+                _data[i] = params->_data[i];
+                _targets[i] = params->_targets[i];
+            }
         }
     }
 
@@ -168,20 +179,23 @@ private:
 
 class Cpu : public Device {
 public:
-    Cpu(int id, int dataSize, int targetSize)
-    : Device(CPU), _alloc(true) {
-        init();
-        for (int i = 0; i < 2; i++) {
-            _data[i] = new char[dataSize];
-            _targets[i] = new char[targetSize];
-        }
-    }
-
-    Cpu(CpuParams* params)
-    : Device(CPU), _alloc(false) {
-        for (int i = 0; i < 2; i++) {
-            _data[i] = params->_data[i];
-            _targets[i] = params->_targets[i];
+    Cpu(CpuParams* params, bool alloc)
+    : Device(CPU), _alloc(alloc) {
+        _dlen = params->_dtmInfo.count * params->_dtmInfo.size * params->_batchSize;
+        _tlen = params->_tgtInfo.count * params->_tgtInfo.size * params->_batchSize;
+        if (_alloc) {
+            init();
+            for (int i = 0; i < 2; i++) {
+                _data[i] = new char[_dlen];
+                _targets[i] = new char[_tlen];
+                params->_targets[i] = _targets[i];
+                params->_data[i]    = _data[i];
+            }
+        } else {
+            for (int i = 0; i < 2; i++) {
+                _data[i] = params->_data[i];
+                _targets[i] = params->_targets[i];
+            }
         }
     }
 

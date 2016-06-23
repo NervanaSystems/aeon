@@ -52,7 +52,7 @@ shared_ptr<nervana::lmap::decoded> nervana::lmap::transformer::transform(
     return rc;
 }
 
-void nervana::lmap::loader::load(char* data, int size, shared_ptr<nervana::lmap::decoded> media) {
+void nervana::lmap::loader::load(char* data, shared_ptr<nervana::lmap::decoded> media) {
 
 }
 
