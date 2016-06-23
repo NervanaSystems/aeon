@@ -97,10 +97,17 @@ TEST(etl, video_loader) {
     // + depth * 4 * 2 * 3
     // each dimension is unique to help debug and detect incorrect
     // dimension ordering
-    int channels = 3;
-    int width = 2;
-    int height = 4;
-    int depth = 5;
+    // extract
+    auto vconfig = make_shared<video::config>();
+    vconfig->set_config({{"height",4},{"width",2},{"channels",3},{"num_frames",5}});
+
+    auto chwd   = std::tuple<int, int, int, int>(vconfig->channels,
+                                                 vconfig->height,
+                                                 vconfig->width,
+                                                 vconfig->num_frames);
+
+    int channels, height, width, depth;
+    std::tie(channels, height, width, depth) = chwd;
 
     shared_ptr<video::decoded> decoded = make_shared<video::decoded>();
 
@@ -122,8 +129,8 @@ TEST(etl, video_loader) {
     int outbuf_size = channels * width * height * depth;
     outbuf.resize(outbuf_size);
 
-    video::loader loader;
-    loader.load((char*)outbuf.data(), outbuf_size, decoded);
+    video::loader loader(vconfig);
+    loader.load((char*)outbuf.data(), decoded);
 
     // make sure outbuf has data in it like we expect
     for(int c = 0; c < channels; ++c) {
