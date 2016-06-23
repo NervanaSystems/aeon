@@ -135,20 +135,22 @@ video::transformer::transformer(std::shared_ptr<const video::config> config)
 
 std::shared_ptr<video::decoded> video::transformer::transform(
     std::shared_ptr<video::params> params,
-    std::shared_ptr<video::decoded> decoded) {
+    std::shared_ptr<video::decoded> decoded)
+{
     // simple wrapper around image::transformer for now
     return std::static_pointer_cast<video::decoded>(_imageTransformer.transform(
         params->_imageParams, decoded
     ));
 }
 
-void video::loader::load(char* outbuf, int outsize, shared_ptr<video::decoded> input)
+video::loader::loader(shared_ptr<const video::config> cfg)
+{
+    _load_count = cfg->width * cfg->height * cfg->channels * cfg->num_frames;
+}
+
+void video::loader::load(char* outbuf, shared_ptr<video::decoded> input)
 {
     // loads in channel x depth(frame) x height x width
-
-    if(input->get_size() > outsize) {
-        throw std::runtime_error("Load failed insize > outsize");
-    }
 
     int num_channels = input->get_image_channels();
     int channel_size = input->get_image_count() * input->get_image_size().area();

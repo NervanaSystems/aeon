@@ -46,7 +46,17 @@ namespace nervana {
         class loader;
     }
 
-    class video::config : public nervana::image::config { };
+    class video::config : public nervana::image::config {
+    public:
+        int num_frames;
+
+        bool set_config(nlohmann::json js) override
+        {
+            image::config::set_config(js);
+            parse_req(num_frames, "num_frames", js);
+            return validate();
+        }
+    };
 
     class video::params : public nervana::params {
     public:
@@ -95,11 +105,19 @@ namespace nervana {
 
     class video::loader : public interface::loader<video::decoded> {
     public:
-        loader() {}
+        loader(std::shared_ptr<const video::config>);
         ~loader() {}
-        virtual void load(char*, int, std::shared_ptr<video::decoded>) override;
+        virtual void load(char*, std::shared_ptr<video::decoded>) override;
+
+        void fill_info(count_size_type* cst) override
+        {
+            cst->count   = _load_count;
+            cst->size    = 1;
+            cst->type[0] = 'u';
+        }
 
     private:
+        size_t _load_count;
         void split(cv::Mat&, char*);
     };
 }

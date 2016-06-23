@@ -28,7 +28,6 @@ SRCS            := \
     etl_specgram.cpp \
     etl_rawmedia.cpp \
     etl_video.cpp \
-    codec.cpp \
     util.cpp \
     manifest.cpp \
     batch_file_loader.cpp \
@@ -110,7 +109,7 @@ $(LOADER_SO): $(OBJS)
 	@echo "Building $@..."
 	@mkdir -p ../bin
 	$(CC) -shared -o $@ $(OBJS) $(LDIR) $(LIBS)
-#	$(CC) -shared -o $@ -fPIC $(OBJS) $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $< $(LDIR) $(LIBS)
+	# $(CC) -shared -o $@ -fPIC $(OBJS) $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $< $(LDIR) $(LIBS)
 
 $(LOADER_STATIC): $(OBJS)
 	@echo "Building $@..."

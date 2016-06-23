@@ -32,40 +32,40 @@ enum MediaTypeOld {
     TEXT = 3,
 };
 
-class MediaParams {
-public:
-    MediaParams(int mtype) : _mtype(mtype) {
-    }
+// class MediaParams {
+// public:
+//     MediaParams(int mtype) : _mtype(mtype) {
+//     }
 
-    // Do not make this virtual. The object passed down from Python will not
-    // have the virtual function table filled in.
-    void dump() {
-        printf("mtype %d\n", _mtype);
-    }
+//     // Do not make this virtual. The object passed down from Python will not
+//     // have the virtual function table filled in.
+//     void dump() {
+//         printf("mtype %d\n", _mtype);
+//     }
 
-public:
-    int                         _mtype;
-};
+// public:
+//     int                         _mtype;
+// };
 
-class SignalParams : public MediaParams {
-public:
-    int                         _samplingFreq;
-    bool                        _resample;
-    int                         _clipDuration;
-    int                         _frameDuration;
-    int                         _overlapPercent;
-    char                        _windowFunc[16];
-    float                       _timeScaleFactor;
-    float                       _freqScaleFactor;
-    float                       _randomizeTimeScaleBy;
-    bool                        _addNoise;
-    int                         _windowSize;
-    int                         _overlap;
-    int                         _stride;
-    int                         _timeSteps;
-    int                         _numFreqs;
-    int                         _windowType;
-};
+// class SignalParams : public MediaParams {
+// public:
+//     int                         _samplingFreq;
+//     bool                        _resample;
+//     int                         _clipDuration;
+//     int                         _frameDuration;
+//     int                         _overlapPercent;
+//     char                        _windowFunc[16];
+//     float                       _timeScaleFactor;
+//     float                       _freqScaleFactor;
+//     float                       _randomizeTimeScaleBy;
+//     bool                        _addNoise;
+//     int                         _windowSize;
+//     int                         _overlap;
+//     int                         _stride;
+//     int                         _timeSteps;
+//     int                         _numFreqs;
+//     int                         _windowType;
+// };
 
 class Media {
 public:
@@ -81,25 +81,25 @@ public:
     static std::shared_ptr<nervana::train_base> create(nlohmann::json configJs);
 };
 
-class RawMedia {
-public:
-    RawMedia();
-    virtual ~RawMedia();
-    void reset();
-    void addBufs(int count, int size);
-    void fillBufs(char** frames, int frameSize);
-    void growBufs(int grow);
-    void setSampleSize(int sampleSize);
-    int size();
-    char* getBuf(int idx);
-    int bufSize();
-    int dataSize();
-    int sampleSize();
-    void copyData(char* buf, int bufSize);
+// class RawMedia {
+// public:
+//     RawMedia();
+//     virtual ~RawMedia();
+//     void reset();
+//     void addBufs(int count, int size);
+//     void fillBufs(char** frames, int frameSize);
+//     void growBufs(int grow);
+//     void setSampleSize(int sampleSize);
+//     int size();
+//     char* getBuf(int idx);
+//     int bufSize();
+//     int dataSize();
+//     int sampleSize();
+//     void copyData(char* buf, int bufSize);
 
-private:
-    std::vector<char*>          _bufs;
-    int                         _bufSize;
-    int                         _dataSize;
-    int                         _sampleSize;
-};
+// private:
+//     std::vector<char*>          _bufs;
+//     int                         _bufSize;
+//     int                         _dataSize;
+//     int                         _sampleSize;
+// };

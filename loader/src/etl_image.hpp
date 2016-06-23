@@ -23,6 +23,9 @@ namespace nervana {
         void resize(const cv::Mat&, cv::Mat&, const cv::Size2i& );
         void shift_cropbox(const cv::Size2f &, cv::Rect &, float, float);
     }
+    namespace video {
+        class config;     // Forward decl for friending
+    }
 
     namespace multicrop {
         class config;
@@ -60,6 +63,7 @@ namespace nervana {
     };
 
     class image::config : public json_config_parser {
+        friend class video::config;
     public:
         int height;
         int width;
