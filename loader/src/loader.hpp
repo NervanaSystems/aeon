@@ -42,16 +42,15 @@
  */
 class DecodeThreadPool : public ThreadPool {
 public:
-    DecodeThreadPool(int count, int batchSize, std::string config_string, DeviceParams *dp);
+    DecodeThreadPool(int count, int batchSize, nlohmann::json config, DeviceParams *dp);
     virtual ~DecodeThreadPool();
     virtual void start();
     virtual void stop();
+    int get_dtm_len() { return _datumLen; }
+    int get_tgt_len() { return _targetLen; }
     void set_io_buffers(const std::shared_ptr<BufferPool>& in,
                         const std::shared_ptr<Device>& device,
                         const std::shared_ptr<BufferPool>& out);
-
-    int get_datum_len() { return _datumLen; }
-    int get_target_len() { return _targetLen; }
 
 protected:
     virtual void run(int id);
@@ -84,15 +83,10 @@ private:
     std::vector<int>            _targetOffsets;
 
     int                         _datumLen;
-    int                         _datumSize;
-    int                         _datumCount;
-
     int                         _targetLen;
-    int                         _targetSize;
-    int                         _targetCount;
 
     std::shared_ptr<Device>     _device;
-    // std::vector<std::shared_ptr<Media>> _media;
+    DeviceParams*               _deviceParams;
     std::vector<std::shared_ptr<nervana::train_base>> _providers;
 };
 
@@ -117,6 +111,36 @@ private:
     std::shared_ptr<BatchIterator> _batch_iterator;
 };
 
+
+class LoaderConfig : public nervana::json_config_parser {
+public:
+    std::string manifest_filename;
+    std::string cache_directory;
+    int macrobatch_size;
+
+    bool shuffle_every_epoch = false;
+    bool shuffle_manifest    = false;
+    int subset_percent        = 100;
+    int random_seed           = 0;
+
+    bool set_config(nlohmann::json js) override
+    {
+        parse_req(manifest_filename, "manifest_filename", js);
+        parse_req(cache_directory,   "cache_directory", js);
+        parse_req(macrobatch_size,   "macrobatch_size", js);
+
+        parse_opt(shuffle_every_epoch, "shuffle_every_epoch", js);
+        parse_opt(shuffle_manifest,    "shuffle_manifest", js);
+        parse_opt(subset_percent,      "subset_percent", js);
+        parse_opt(random_seed,         "random_seed", js);
+
+        return validate();
+    }
+
+private:
+    bool validate() { return true; }
+};
+
 /* Loader
  *
  * The Loader instantiates and then coordinates the effort of
@@ -127,24 +151,27 @@ private:
  */
 class Loader {
 public:
-    Loader(int miniBatchSize,
-           bool shuffleManifest, bool shuffleEveryEpoch,
-           int subsetPercent,
-           const char* mediaConfigString,
-           DeviceParams* deviceParams,
-           const char* manifestFilename,
-           int macroBatchSize,
-           const char* rootCacheDir,
-           uint randomSeed);
+    Loader(int miniBatchSize, const char* loaderConfigString, DeviceParams *deviceParams);
+    // Loader(int miniBatchSize,
+    //        bool shuffleManifest,
+    //        bool shuffleEveryEpoch,
+    //        int subsetPercent,
+    //        const char* mediaConfigString,
+    //        DeviceParams* deviceParams,
+    //        const char* manifestFilename,
+    //        int macroBatchSize,
+    //        const char* rootCacheDir,
+    //        uint randomSeed);
 
-    virtual ~Loader();
+    virtual ~Loader() {}
     int start();
     void stop();
     int reset();
     void next();
-    std::shared_ptr<Device> getDevice();
-    std::shared_ptr<BatchIterator> getBatchIterator();
-    int itemCount();
+
+    std::shared_ptr<BatchIterator> getBatchIterator() { return _batch_iterator; }
+    std::shared_ptr<Device> getDevice() { return _device; }
+    int itemCount() { return _manifest->getSize(); }
 
 private:
     void drain();
@@ -166,5 +193,5 @@ private:
     std::shared_ptr<Device>             _device;
     std::shared_ptr<BatchIterator>      _batch_iterator;
     std::shared_ptr<Manifest>           _manifest;
-    std::string                         _mediaConfigString;
+    nlohmann::json                      _loaderConfigJson;
 };

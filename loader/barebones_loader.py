@@ -17,21 +17,24 @@ import logging
 import numpy as np
 import os
 import atexit
-
+import json
 
 logger = logging.getLogger(__name__)
 
 
 BufferPair = (ct.c_void_p) * 2
 
+class CountSizeType(ct.Structure):
+    _fields_ = [('Count', ct.c_int),
+                ('Size', ct.c_int),
+                ('Type', ct.c_char * 4)]
 
 class DeviceParams(ct.Structure):
     _fields_ = [('type', ct.c_int),
                 ('id', ct.c_int),
-                ('dataCount', ct.c_int),
-                ('dataSize', ct.c_int),
-                ('targetCount', ct.c_int),
-                ('targetSize', ct.c_int),
+                ('batchSize', ct.c_int),
+                ('dtmInfo', CountSizeType),
+                ('tgtInfo', CountSizeType),
                 ('data', BufferPair),
                 ('targets', BufferPair)]
 
@@ -58,61 +61,39 @@ class DataLoader(object):
             individual data examples.  The second column may contain the actual
             label or the pathname of a file that contains the labels (e.g. a
             mask image).  If this parameter is not specified, creation of an
-            index file is attempted.  Automaitic index generation can only be
+            index file is attempted.  Automatic index generation can only be
             performed if the dataset is organized into subdirectories, which
             also represent labels.
-        shuffle (boolean, optional):
-            Whether to shuffle the order of data examples as the data is
-            ingested.
-        reshuffle (boolean, optional):
-            Whether to reshuffle the order of data examples as they are loaded.
-            If this is set to True, the order is reshuffled for each epoch.
-            Useful for batch normalization.  Defaults to False.
         onehot (boolean, optional):
             If the targets are categorical and have to be converted to a one-hot
             representation.
         nclasses (int, optional):
             Number of classes, if this dataset is intended for a classification
             problem.
-        subset_percent (int, optional):
-            Value between 0 and 100 indicating what percentage of the dataset
-            partition to use.  Defaults to 100.
     """
 
-    def __init__(self, set_name, cache_dir,
-                 media_cfg_string, manifest_file,
+    def __init__(self, set_name,
+                 loader_cfg_string,
                  device_type, device_id,
                  batch_size,
-                 shuffle=False, reshuffle=False,
-                 onehot=False, nclasses=None, subset_percent=100):
+                 onehot=False, nclasses=None):
         if onehot is True and nclasses is None:
             raise ValueError('nclasses must be specified for one-hot labels')
 
         self.set_name = set_name
-        cache_dir = os.path.expandvars(os.path.expanduser(cache_dir))
-        if not os.path.exists(cache_dir):
-            raise IOError('Directory not found: %s' % cache_dir)
-        self.macrobatchsize = 5000
-        self.cache_dir = cache_dir
-        parent_dir = os.path.split(cache_dir)[0]
-        self.manifest_file = manifest_file
-
-        self.media_cfg_string = media_cfg_string
+        self.loader_cfg_string = loader_cfg_string
         self.device_type, self.device_id, self.default_dtype = device_type, device_id, np.float32
+        self.device_params = DeviceParams(self.device_type, self.device_id)
+        self.batch_size = batch_size
+        self.onehot = onehot
+        self.nclasses = nclasses
 
         self.item_count = ct.c_int(0)
-        self.batch_size = batch_size
         self.buffer_id = 0
         self.start_idx = 0
 
-        self.shuffle = shuffle
-        self.reshuffle = reshuffle
-
-        self.onehot = onehot
-        self.nclasses = nclasses
-        self.subset_percent = int(subset_percent)
+        self.backend_data = None
         self.load_library()
-        self.alloc()
         self.start()
         atexit.register(self.stop)
 
@@ -120,7 +101,6 @@ class DataLoader(object):
         path = os.path.dirname(os.path.realpath(__file__))
         libpath = os.path.join(path, 'bin', 'loader.so')
         self.loaderlib = ct.cdll.LoadLibrary(libpath)
-        # self.loaderlib.test_printer.argtypes = [ct.c_char_p, ct.c_char_p]
         self.loaderlib.get_error_message.restype = ct.c_char_p
         self.loaderlib.start.restype = ct.c_void_p
 
@@ -128,10 +108,7 @@ class DataLoader(object):
         self.loaderlib.stop.argtypes = [ct.c_void_p]
         self.loaderlib.reset.argtypes = [ct.c_void_p]
 
-
-
-    def alloc(self):
-
+    # def alloc(self):
         # def alloc_bufs(dim0, dtype):
         #     return [self.be.iobuf(dim0=dim0, dtype=dtype) for _ in range(2)]
 
@@ -144,7 +121,6 @@ class DataLoader(object):
         # self.data = alloc_bufs(self.datum_size, self.datum_dtype)
         # self.targets = alloc_bufs(self.target_size, self.target_dtype)
         # self.media_params.alloc(self)
-        self.device_params = DeviceParams(self.device_type, self.device_id)
         # if self.datum_dtype == self.be.default_dtype:
         #     self.backend_data = None
         # else:
@@ -159,27 +135,43 @@ class DataLoader(object):
         Launch background threads for loading the data.
         """
 
-        # import pdb; pdb.set_trace()
         self.loader = self.loaderlib.start(
-            ct.byref(self.item_count),
-            ct.c_char_p(self.manifest_file),
-            ct.c_char_p(self.cache_dir),
-            ct.c_char_p(self.media_cfg_string),
-            ct.POINTER(DeviceParams)(self.device_params),
-            ct.c_int(self.batch_size),
-            ct.c_int(self.subset_percent),
-            ct.c_int(self.macrobatchsize),
-            ct.c_int(0),
-            ct.c_bool(self.shuffle),
-            ct.c_bool(self.reshuffle)
-            )
+                ct.byref(self.item_count),
+                ct.c_int(self.batch_size),
+                ct.c_char_p(self.loader_cfg_string),
+                ct.POINTER(DeviceParams)(self.device_params)
+                )
+
         self.ndata = self.item_count.value
         if self.loader is None:
             a = self.loaderlib.get_error_message()
-            print a
-            raise RuntimeError('Failed to start data loader.')
+            raise RuntimeError('Failed to start data loader.' + a)
+
+        self.data = self.attach_typeinfo(self.device_params.dtmInfo, self.device_params.data)
+        self.targets = self.attach_typeinfo(self.device_params.tgtInfo, self.device_params.targets)
 
         import pdb; pdb.set_trace()
+
+    def attach_typeinfo(self, typeinfo, pointers):
+        """
+        Takes the data and target buffers allocated by loaderlib and wraps them as numpy
+        tensors with the appropriate datatypes
+        """
+
+        buf_interface = ct.pythonapi.PyBuffer_FromMemory
+        buf_interface.restype = ct.py_object
+
+        typename = np.dtype('{}{}'.format(typeinfo.Type[0], typeinfo.Size)).name
+        ctdtype = ct.POINTER(getattr(ct, 'c_{}'.format(typename)))
+        npdtype = getattr(np, typename)
+        bufsize = typeinfo.Count * typeinfo.Size * self.batch_size
+        shape = (typeinfo.Count, self.batch_size)
+
+        res = []
+        for dptr in pointers:
+            b = buf_interface(ct.cast(dptr, ctdtype), bufsize)
+            res.append(np.frombuffer(b, dtype=npdtype).reshape(shape))
+        return res
 
     def stop(self):
         """
@@ -199,6 +191,8 @@ class DataLoader(object):
         end = min(start + self.batch_size, self.ndata)
         if end == self.ndata:
             self.start_idx = self.batch_size - (self.ndata - start)
+        import pdb; pdb.set_trace()
+
         self.loaderlib.next(self.loader)
 
         if self.backend_data is None:
@@ -218,21 +212,21 @@ class DataLoader(object):
         for start in range(self.start_idx, self.ndata, self.batch_size):
             yield self.next(start)
 
-cfg_string = r"""{"media":"image",
-                  "data_config":
-                     {"height":        40,
-                      "width":         40,
-                      "channel_major": false,
-                      "flip":          true},
-                  "target_config":
-                     {"binary": true}
-                     }
-                     """
+
+dcfg = dict(height=40, width=40, channel_major=False, flip=True)
+tcfg = dict(binary=True)
+
+cfg_dict = dict(media="image",
+                data_config=dcfg,
+                target_config=tcfg,
+                manifest_filename="/scratch/alex/dloader_test/cifar_manifest.txt",
+                cache_directory="/scratch/alex/dloader_test",
+                macrobatch_size=5000)
+
+cfg_string = json.dumps(cfg_dict)
 
 dloader_args = dict(set_name="tag_test",
-                    cache_dir="/scratch/alex/dloader_test",
-                    media_cfg_string=cfg_string,
-                    manifest_file="/scratch/alex/dloader_test/cifar_manifest.txt",
+                    loader_cfg_string=cfg_string,
                     device_type=0, device_id=0, batch_size=128)
 dd = DataLoader(**dloader_args)
 

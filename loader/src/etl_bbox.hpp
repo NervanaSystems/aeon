@@ -80,8 +80,13 @@ public:
     loader();
     virtual ~loader(){}
     virtual void load(char*, std::shared_ptr<bbox::decoded>) override;
-    size_t get_load_count() override { return _load_count; }
-    size_t get_load_size () override { return _load_size; }
+    void fill_params(int* count, int* type_size, char* type_char) override
+    {
+        *count     = _load_count;
+        *type_size = _load_size;
+        *type_char = 'f';
+    }
+
 private:
     size_t _load_count;
     size_t _load_size;

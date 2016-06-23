@@ -87,16 +87,22 @@ namespace nervana {
 
         ~loader() {}
 
-        size_t get_load_count() override { return _load_count; }
-        size_t get_load_size () override { return _load_size; }
+        void fill_params(int* count, int* type_size, char* type_char) override
+        {
+            *count     = _load_count;
+            *type_size = _load_size;
+            *type_char = _load_char;
+        }
 
         void load(char* buf, std::shared_ptr<label::decoded> mp) override
         {
             int index = mp->get_index();
             memcpy(buf, &index, _load_size);
         }
+
     private:
         size_t _load_count = 1;
-        size_t _load_size  = 4;  // int32 has 4 bytes
+        size_t _load_size  = 4;
+        char   _load_char  = 'i';
     };
 }

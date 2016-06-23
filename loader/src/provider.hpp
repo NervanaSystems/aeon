@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include "util.hpp"
 #include "etl_interface.hpp"
 #include "buffer.hpp"
 
@@ -40,11 +41,8 @@ public:
 class nervana::train_base {
 public:
     virtual void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) = 0;
-    virtual size_t get_d_size() = 0;
-    virtual size_t get_t_size() = 0;
+    virtual void fill_params(nervana::count_size_type* d, nervana::count_size_type* t) = 0;
 
-    virtual size_t get_d_count() = 0;
-    virtual size_t get_t_count() = 0;
 };
 
 template<typename D, typename T> class nervana::train_provider : public train_base {
@@ -55,12 +53,11 @@ public:
         _tprov = std::make_shared<T>(tgt_cfg);
     }
 
-    size_t get_d_size() override {return _dprov->get_loader()->get_load_size();}
-    size_t get_t_size() override {return _tprov->get_loader()->get_load_size();}
-
-    size_t get_d_count() override {return _dprov->get_loader()->get_load_count();}
-    size_t get_t_count() override {return _tprov->get_loader()->get_load_count();}
-
+    void fill_params(nervana::count_size_type* d, nervana::count_size_type* t) override
+    {
+        _dprov->get_loader()->fill_params(&(d->count), &(d->size), &(d->type[0]));
+        _tprov->get_loader()->fill_params(&(t->count), &(t->size), &(t->type[0]));
+    }
 
     void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) override
     {

@@ -27,43 +27,15 @@ extern const char* get_error_message() {
 
 extern void* start(
                    int* itemCount,
-                   const char* manifestFilename,
-                   const char* rootCacheDir,
-                   const char* mediaConfigString,
-                   DeviceParams* deviceParams,
                    int miniBatchSize,
-                   int subsetPercent,
-                   int macroBatchSize,
-                   int randomSeed=0,
-                   bool shuffleManifest=false,
-                   bool shuffleEveryEpoch=false
+                   const char* loaderConfigString,
+                   DeviceParams* deviceParams
                    ) {
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
-        // std::cout << manifestFilename << std::endl;
-        // std::cout << rootCacheDir << std::endl;
-        // std::cout << mediaConfigString << std::endl;
-        // std::cout << miniBatchSize << std::endl;
-        // std::cout << subsetPercent << std::endl;
-        // std::cout << deviceParams << std::endl;
-        // std::cout << macroBatchSize << std::endl;
-        // std::cout << randomSeed << std::endl;
-        // std::cout << shuffleManifest << std::endl;
-        // std::cout << shuffleEveryEpoch << std::endl;
 
-        nlohmann::json js = nlohmann::json::parse(mediaConfigString);
-        // std::cout << "jsd " << js.dump(4) << std::endl;
+        Loader* loader = new Loader(miniBatchSize, loaderConfigString, deviceParams);
 
-        Loader* loader = new Loader(miniBatchSize,
-                                    shuffleManifest,
-                                    shuffleEveryEpoch,
-                                    subsetPercent,
-                                    mediaConfigString,
-                                    deviceParams,
-                                    manifestFilename,
-                                    macroBatchSize,
-                                    rootCacheDir,
-                                    randomSeed);
         int result = loader->start();
         if (result != 0) {
             std::stringstream ss;

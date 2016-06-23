@@ -245,14 +245,19 @@ namespace nervana {
         void add_resized_crops(const cv::Mat&, std::shared_ptr<image::decoded>&, std::vector<cv::Rect>&);
     };
 
+
     class image::loader : public interface::loader<image::decoded> {
     public:
         loader(std::shared_ptr<const image::config>);
         ~loader() {}
         virtual void load(char*, std::shared_ptr<image::decoded>) override;
 
-        size_t get_load_count() override { return _load_count; }
-        size_t get_load_size () override { return _load_size; }
+        void fill_params(int* count, int* type_size, char* type_char) override
+        {
+            *count     = _load_count;
+            *type_size = _load_size;
+            *type_char = 'u';
+        }
 
     private:
         size_t _load_count;

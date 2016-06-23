@@ -140,8 +140,12 @@ namespace nervana {
 
         ~loader() {}
 
-        size_t get_load_count() override { return _load_count; }
-        size_t get_load_size () override { return _load_size; }
+        void fill_params(int* count, int* type_size, char* type_char) override
+        {
+            *count     = _load_count;
+            *type_size = _load_size;
+            *type_char = _ld_dofloat ? 'f' : 'i';
+        }
 
         void load(char* buf, std::shared_ptr<label_test::decoded> mp) override
         {

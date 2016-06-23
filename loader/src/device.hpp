@@ -19,22 +19,22 @@
 #include <cstring>
 #include <stdexcept>
 #include <memory>
+#include "util.hpp"
 
 enum DeviceType { CPU=0, GPU=1 };
 
 class DeviceParams {
 public:
     DeviceParams(int type, int id)
-    : _type(type), _id(id), _dataCount(0), _dataSize(0), _targetCount(0), _targetSize(0)
+    : _type(type), _id(id)
     {}
 
 public:
     int                         _type;
     int                         _id;
-    int                         _dataCount;
-    int                         _dataSize;
-    int                         _targetCount;
-    int                         _targetSize;
+    int                         _batchSize;
+    nervana::count_size_type    _dtmInfo;
+    nervana::count_size_type    _tgtInfo;
 };
 
 class CpuParams : public DeviceParams {
@@ -66,6 +66,8 @@ public:
 
 public:
     int                         _type;
+    int                         _dlen;
+    int                         _tlen;
 };
 
 #if HAS_GPU
@@ -95,11 +97,13 @@ class Gpu : public Device {
 public:
     Gpu(GpuParams* params, bool alloc)
     : Device(GPU), _alloc(alloc), _id(params->_id) {
+        _dlen = params->_dtmInfo.count * params->_dtmInfo.size * params->_batchSize;
+        _tlen = params->_tgtInfo.count * params->_tgtInfo.size * params->_batchSize;
         if (_alloc) {
             init();
             for (int i = 0; i < 2; i++) {
-                checkDriverErrors(cuMemAlloc(&_data[i], params->_dataCount * params->_dataSize));
-                checkDriverErrors(cuMemAlloc(&_targets[i], params->_targetCount * params->_targetSize));
+                checkDriverErrors(cuMemAlloc(&_data[i], _dlen));
+                checkDriverErrors(cuMemAlloc(&_targets[i], _tlen));
                 params->_targets[i] = _targets[i];
                 params->_data[i]    = _data[i];
             }
@@ -177,11 +181,13 @@ class Cpu : public Device {
 public:
     Cpu(CpuParams* params, bool alloc)
     : Device(CPU), _alloc(alloc) {
+        _dlen = params->_dtmInfo.count * params->_dtmInfo.size * params->_batchSize;
+        _tlen = params->_tgtInfo.count * params->_tgtInfo.size * params->_batchSize;
         if (_alloc) {
             init();
             for (int i = 0; i < 2; i++) {
-                _data[i] = new char[params->_dataCount * params->_dataSize];
-                _targets[i] = new char[params->_targetCount * params->_targetSize];
+                _data[i] = new char[_dlen];
+                _targets[i] = new char[_tlen];
                 params->_targets[i] = _targets[i];
                 params->_data[i]    = _data[i];
             }
