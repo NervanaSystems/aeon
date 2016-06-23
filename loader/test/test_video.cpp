@@ -101,13 +101,11 @@ TEST(etl, video_loader) {
     auto vconfig = make_shared<video::config>();
     vconfig->set_config({{"height",4},{"width",2},{"channels",3},{"num_frames",5}});
 
-    auto chwd   = std::tuple<int, int, int, int>(vconfig->channels,
-                                                 vconfig->height,
-                                                 vconfig->width,
-                                                 vconfig->num_frames);
-
     int channels, height, width, depth;
-    std::tie(channels, height, width, depth) = chwd;
+    tie(channels, height, width, depth) = make_tuple(vconfig->channels,
+                                                     vconfig->height,
+                                                     vconfig->width,
+                                                     vconfig->num_frames);
 
     shared_ptr<video::decoded> decoded = make_shared<video::decoded>();
 
