@@ -11,11 +11,6 @@ ostream& operator<<(ostream& out, const nervana::bbox::box& b) {
     return out;
 }
 
-cv::Rect nervana::bbox::box::rect() const {
-    return cv::Rect(xmin,ymin,xmax-xmin,ymax-ymin);
-}
-
-
 nervana::bbox::decoded::decoded() {
 }
 

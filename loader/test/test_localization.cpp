@@ -61,7 +61,7 @@ TEST(localization,generate_anchors) {
     //
     // base_size 16, ratios [0.5, 1, 2], scales [ 8 16 32]
 
-    vector<anchor::box> expected =
+    vector<box> expected =
                         {{  -83.0-1.0,  -39.0-1.0, 100.0-1.0,  56.0-1.0},
                          { -175.0-1.0,  -87.0-1.0, 192.0-1.0, 104.0-1.0},
                          { -359.0-1.0, -183.0-1.0, 376.0-1.0, 200.0-1.0},
@@ -80,7 +80,7 @@ TEST(localization,generate_anchors) {
     vector<float> scales = {8, 16, 32};
 
     anchor _anchor{1000,800};
-    vector<anchor::box> actual = _anchor.generate_anchors(base_size, ratios, scales);
+    vector<box> actual = _anchor.generate_anchors(base_size, ratios, scales);
     ASSERT_EQ(expected.size(),actual.size());
     for(int i=0; i<expected.size(); i++) {
         EXPECT_EQ(expected[i], actual[i]);

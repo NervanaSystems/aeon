@@ -7,6 +7,7 @@
 #include "etl_bbox.hpp"
 #include "params.hpp"
 #include "util.hpp"
+#include "box.hpp"
 
 namespace nervana {
 
@@ -21,26 +22,6 @@ namespace nervana {
 
     class localization::anchor {
     public:
-        class box {
-        public:
-            float xmin;
-            float ymin;
-            float xmax;
-            float ymax;
-
-            box(float _xmin, float _ymin, float _xmax, float _ymax) :
-                xmin{_xmin}, ymin{_ymin}, xmax{_xmax}, ymax{_ymax}
-            {}
-
-            box operator+(const box& b) const {
-                return box(xmin+b.xmin, ymin+b.ymin, xmax+b.xmax, ymax+b.ymax);
-            }
-
-            bool operator==(const box& b) const {
-                return xmin==b.xmin && ymin==b.ymin && xmax==b.xmax && ymax==b.ymax;
-            }
-        };
-
         anchor(int max_size, int min_size);
 
         std::vector<box> inside_im_bounds(int width, int height);
@@ -114,7 +95,8 @@ namespace nervana {
 
     private:
         std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size);
-        cv::Mat bbox_overlaps(const std::vector<anchor::box>& boxes, const std::vector<anchor::box>& query_boxes);
+        cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<box>& query_boxes);
+        void compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
 
         int MAX_SIZE = 1000;
         int MIN_SIZE = 600;
@@ -137,5 +119,3 @@ namespace nervana {
         }
     };
 }
-
-std::ostream& operator<<(std::ostream& out, const nervana::localization::anchor::box& b);

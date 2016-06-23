@@ -1,4 +1,5 @@
 #include "etl_localization.hpp"
+#include "box.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -10,18 +11,6 @@ template<typename T> string join(const T& v, const string& sep) {
         ss << x;
     }
     return ss.str();
-}
-
-ostream& operator<<(ostream& out, const localization::anchor::box& b) {
-    out << "[" << b.xmin << "," << b.ymin << "," << b.xmax << "," << b.ymax << "]";
-    return out;
-}
-
-ostream& operator<<(ostream& out, const vector<localization::anchor::box>& list) {
-    for( const localization::anchor::box& b : list ) {
-        out << "[" << b.xmin << "," << b.ymin << "," << b.xmax << "," << b.ymax << "]\n";
-    }
-    return out;
 }
 
 localization::transformer::transformer(shared_ptr<const json_config_parser>) :
@@ -37,14 +26,10 @@ shared_ptr<localization::decoded> localization::transformer::transform(
                     shared_ptr<nervana::params> txs,
                     shared_ptr<localization::decoded> mp) {
     cv::Size im_size{mp->width(), mp->height()};
-    cout << "bbox count " << mp->boxes().size() << endl;
     float im_scale;
-    cout << "start size " << im_size << endl;
     tie(im_scale, im_size) = calculate_scale_shape(im_size);
-    cout << "im_scale=" << im_scale << ", im_size=" << im_size << endl;
 
-    vector<anchor::box> anchors = _anchor.inside_im_bounds(im_size.width, im_size.height);
-    cout << "inside anchors " << anchors.size() << endl;
+    vector<box> anchors = _anchor.inside_im_bounds(im_size.width, im_size.height);
 
     vector<float> labels(anchors.size());
     fill_n(labels.begin(),anchors.size(),-1.);
@@ -52,9 +37,9 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     // compute bbox overlaps
 //    overlaps = bbox_overlaps(np.ascontiguousarray(anchors, dtype=np.float),
 //                         np.ascontiguousarray(db['gt_bb'] * im_scale, dtype=np.float))
-    vector<anchor::box> scaled_bbox;
+    vector<box> scaled_bbox;
     for(const bbox::box& b : mp->boxes()) {
-        anchor::box r{
+        box r{
         (float)b.xmin * im_scale,
         (float)b.ymin * im_scale,
         (float)b.xmax * im_scale,
@@ -104,7 +89,6 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     // 2. any anchor above the overlap threshold with any gt box
     for(int row=0; row<overlaps.rows; row++) {
         if(row_max[row] >= POSITIVE_OVERLAP) {
-            cout << "row POSITIVE_OVERLAP " << row << endl;
             labels[row] = 1;
         }
     }
@@ -113,10 +97,85 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 //        cout << i << "   " << labels[i] << endl;
 //    }
 
+
+    // For every anchor, compute the regression target compared
+    // to the gt box that it has the highest overlap with
+    // the indicies of labels should match these targets
+    vector<box> argmax;
+    for(int row=0; row<overlaps.rows; row++) {
+        int index = 0;
+        float max = 0;
+        for(int col=0; col<overlaps.cols; col++) {
+            auto value = overlaps.at<float>(row,col);
+            if(value > max) {
+                index = col;
+                max = value;
+            }
+        }
+        argmax.push_back(scaled_bbox[index]);
+    }
+//    cout << argmax << endl;
+
+//bbox_targets = np.zeros((len(idx_inside), 4), dtype=np.float32)
+//bbox_targets = _compute_targets(db['gt_bb'][overlaps.argmax(axis=1), :] * im_scale, anchors)
+    compute_targets(argmax, anchors);
+
+
+
     return mp;
 }
 
-cv::Mat localization::transformer::bbox_overlaps(const vector<anchor::box>& boxes, const vector<anchor::box>& query_boxes) {
+//def _compute_targets(gt_bb, rp_bb):
+void localization::transformer::compute_targets(const vector<box>& gt_bb, const vector<box>& rp_bb) {
+    //  Given ground truth bounding boxes and proposed boxes, compute the regresssion
+    //  targets according to:
+
+    //  t_x = (x_gt - x) / w
+    //  t_y = (y_gt - y) / h
+    //  t_w = log(w_gt / w)
+    //  t_h = log(h_gt / h)
+
+    //  where (x,y) are bounding box centers and (w,h) are the box dimensions
+
+    // calculate the region proposal centers and width/height
+//    (x, y, w, h) = _get_xywh(rp_bb)
+//    (x_gt, y_gt, w_gt, h_gt) = _get_xywh(gt_bb)
+    cout << "gt_bb.size() " << gt_bb.size() << endl;
+    cout << "rp_bb.size() " << rp_bb.size() << endl;
+
+    // the target will be how to adjust the bbox's center and width/height
+    // note that the targets are generated based on the original RP, which has not
+    // been scaled by the image resizing
+    vector<float> targets_dx;
+    vector<float> targets_dy;
+    vector<float> targets_dw;
+    vector<float> targets_dh;
+    for(int i=0; i<gt_bb.size(); i++) {
+        const box& gt = gt_bb[i];
+        const box& rp = rp_bb[i];
+//    targets_dx = (x_gt - x) / w
+        targets_dx.push_back((gt.xcenter() - rp.xcenter()) / rp.width());
+//    targets_dy = (y_gt - y) / h
+        targets_dy.push_back((gt.ycenter() - rp.ycenter()) / rp.height());
+//    targets_dw = np.log(w_gt / w)
+        targets_dw.push_back(log(gt.width() / rp.width()));
+//    targets_dh = np.log(h_gt / h)
+        targets_dh.push_back(log(gt.height() / rp.height()));
+
+        cout << i << "   " << targets_dx[i] << "," << targets_dy[i] << "," << targets_dw[i] << "," << targets_dh[i] << endl;
+    }
+
+//    targets = np.concatenate((targets_dx[:, np.newaxis],
+//                              targets_dy[:, np.newaxis],
+//                              targets_dw[:, np.newaxis],
+//                              targets_dh[:, np.newaxis],
+//                              ), axis=1)
+
+//    return targets
+}
+
+
+cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const vector<box>& query_boxes) {
 //def bbox_overlaps(
 //        np.ndarray[DTYPE_t, ndim=2] boxes,
 //        np.ndarray[DTYPE_t, ndim=2] query_boxes):
@@ -144,7 +203,7 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<anchor::box>& boxe
     uint32_t k, n;
 //    for k in range(K):
     k = 0;
-    for(const anchor::box& query_box : query_boxes) {
+    for(const box& query_box : query_boxes) {
 //        box_area = (
 //            (query_boxes[k, 2] - query_boxes[k, 0] + 1) *
 //            (query_boxes[k, 3] - query_boxes[k, 1] + 1)
@@ -153,21 +212,21 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<anchor::box>& boxe
                    (query_box.ymax - query_box.ymin + 1);
 //        for n in range(N):
         n = 0;
-        for(const anchor::box& box : boxes ) {
+        for(const box& b : boxes ) {
 //            iw = (
 //                min(boxes[n, 2], query_boxes[k, 2]) -
 //                max(boxes[n, 0], query_boxes[k, 0]) + 1
 //            )
-            iw = min(box.xmax, query_box.xmax) -
-                 max(box.xmin, query_box.xmin) + 1;
+            iw = min(b.xmax, query_box.xmax) -
+                 max(b.xmin, query_box.xmin) + 1;
 //            if iw > 0:
             if(iw > 0) {
 //                ih = (
 //                    min(boxes[n, 3], query_boxes[k, 3]) -
 //                    max(boxes[n, 1], query_boxes[k, 1]) + 1
 //                )
-                ih = min(box.ymax, query_box.ymax) -
-                     max(box.ymin, query_box.ymin) + 1;
+                ih = min(b.ymax, query_box.ymax) -
+                     max(b.ymin, query_box.ymin) + 1;
 //                if ih > 0:
                 if(ih > 0) {
 //                    ua = float(
@@ -175,8 +234,8 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<anchor::box>& boxe
 //                        (boxes[n, 3] - boxes[n, 1] + 1) +
 //                        box_area - iw * ih
 //                    )
-                    ua = (box.xmax - box.xmin + 1.) *
-                         (box.ymax - box.ymin + 1.) +
+                    ua = (b.xmax - b.xmin + 1.) *
+                         (b.ymax - b.ymin + 1.) +
                           box_area - iw * ih;
 //                    overlaps[n, k] = iw * ih / ua
                     overlaps.at<float>(n, k) = iw * ih / ua;
@@ -215,7 +274,7 @@ localization::anchor::anchor(int max_size, int min_size) :
     all_anchors = add_anchors();
 }
 
-vector<localization::anchor::box> localization::anchor::inside_im_bounds(int width, int height) {
+vector<box> localization::anchor::inside_im_bounds(int width, int height) {
     vector<box> rc;
 //    cout << all_anchors << endl;
     cout << "all_anchors size " << all_anchors.size() << endl;
@@ -228,7 +287,7 @@ vector<localization::anchor::box> localization::anchor::inside_im_bounds(int wid
 }
 
 
-vector<localization::anchor::box> localization::anchor::add_anchors() {
+vector<box> localization::anchor::add_anchors() {
     vector<box> anchors = generate_anchors(16,{0.5, 1., 2.},{8,16,32});
 
       // generate shifts to apply to anchors
@@ -262,7 +321,7 @@ vector<localization::anchor::box> localization::anchor::add_anchors() {
     return all_anchors;
 }
 
-vector<localization::anchor::box> localization::anchor::generate_anchors(int base_size, const vector<float>& ratios, const vector<float>& scales) {
+vector<box> localization::anchor::generate_anchors(int base_size, const vector<float>& ratios, const vector<float>& scales) {
     box anchor{0.,0.,(float)(base_size-1),(float)(base_size-1)};
     vector<box> ratio_anchors = ratio_enum(anchor, ratios);
 
@@ -276,7 +335,7 @@ vector<localization::anchor::box> localization::anchor::generate_anchors(int bas
     return result;
 }
 
-vector<localization::anchor::box> localization::anchor::mkanchors(const vector<float>& ws, const vector<float>& hs, float x_ctr, float y_ctr) {
+vector<box> localization::anchor::mkanchors(const vector<float>& ws, const vector<float>& hs, float x_ctr, float y_ctr) {
     vector<box> rc;
     for(int i=0; i<ws.size(); i++) {
         rc.emplace_back(x_ctr - 0.5 *(ws[i]-1),
@@ -287,7 +346,7 @@ vector<localization::anchor::box> localization::anchor::mkanchors(const vector<f
     return rc;
 }
 
-vector<localization::anchor::box> localization::anchor::ratio_enum(const box& anchor, const vector<float>& ratios) {
+vector<box> localization::anchor::ratio_enum(const box& anchor, const vector<float>& ratios) {
     float w;
     float h;
     float x_ctr;
@@ -305,7 +364,7 @@ vector<localization::anchor::box> localization::anchor::ratio_enum(const box& an
     return mkanchors(ws, hs, x_ctr, y_ctr);
 }
 
-vector<localization::anchor::box> localization::anchor::scale_enum(const box& anchor, const vector<float>& scales) {
+vector<box> localization::anchor::scale_enum(const box& anchor, const vector<float>& scales) {
     float w;
     float h;
     float x_ctr;

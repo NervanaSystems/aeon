@@ -4,6 +4,7 @@
 #include "etl_interface.hpp"
 #include "etl_image.hpp"
 #include "json.hpp"
+#include "box.hpp"
 
 namespace nervana {
     namespace bbox {
@@ -15,17 +16,11 @@ namespace nervana {
     }
 }
 
-class nervana::bbox::box {
+class nervana::bbox::box : public nervana::box {
 public:
-    int xmax = 0;
-    int xmin = 0;
-    int ymax = 0;
-    int ymin = 0;
     bool difficult = false;
     bool truncated = false;
     int label;
-
-    cv::Rect rect() const;
 };
 
 std::ostream& operator<<(std::ostream&,const nervana::bbox::box&);
