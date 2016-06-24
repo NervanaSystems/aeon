@@ -15,8 +15,6 @@
 # ----------------------------------------------------------------------------
 
 SRCS            := \
-    media.cpp \
-    event.cpp \
     device.cpp \
     batchfile.cpp \
     buffer.cpp \
@@ -30,12 +28,13 @@ SRCS            := \
     etl_video.cpp \
     util.cpp \
     manifest.cpp \
+    provider_factory.cpp \
     batch_file_loader.cpp \
     batch_loader_cpio_cache.cpp \
     sequential_batch_iterator.cpp \
     shuffled_batch_iterator.cpp \
     batch_loader.cpp \
-    vector.cpp \
+    vector.cpp
 
 OBJS             = $(subst .cpp,.o,$(SRCS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O2 -g -std=c++11 -fPIC
@@ -109,7 +108,7 @@ $(LOADER_SO): $(OBJS)
 	@echo "Building $@..."
 	@mkdir -p ../bin
 	$(CC) -shared -o $@ $(OBJS) $(LDIR) $(LIBS)
-	# $(CC) -shared -o $@ -fPIC $(OBJS) $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $< $(LDIR) $(LIBS)
+	# $(CC) -shared -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $< $(LDIR) $(LIBS)
 
 $(LOADER_STATIC): $(OBJS)
 	@echo "Building $@..."

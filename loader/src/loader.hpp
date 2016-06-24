@@ -25,12 +25,11 @@
 #include <algorithm>
 
 #include "threadpool.hpp"
-#include "media.hpp"
 #include "matrix.hpp"
 #include "device.hpp"
 #include "batch_iterator.hpp"
 #include "manifest.hpp"
-#include "provider_image_class.hpp"
+#include "provider_factory.hpp"
 
 /* DecodeThreadPool
  *
@@ -152,16 +151,6 @@ private:
 class Loader {
 public:
     Loader(int miniBatchSize, const char* loaderConfigString, DeviceParams *deviceParams);
-    // Loader(int miniBatchSize,
-    //        bool shuffleManifest,
-    //        bool shuffleEveryEpoch,
-    //        int subsetPercent,
-    //        const char* mediaConfigString,
-    //        DeviceParams* deviceParams,
-    //        const char* manifestFilename,
-    //        int macroBatchSize,
-    //        const char* rootCacheDir,
-    //        uint randomSeed);
 
     virtual ~Loader() {}
     int start();
