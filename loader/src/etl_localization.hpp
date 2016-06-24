@@ -125,9 +125,8 @@ namespace nervana {
 
         virtual std::shared_ptr<localization::decoded> extract(const char* data, int size) override {
             auto rc = std::make_shared<localization::decoded>();
-            bbox::decoded* p = &*rc;
-//            rc->bbox_decoded = bbox_extractor.extract(data, size);
-            *p = *bbox_extractor.extract(data, size);
+            auto bb = std::static_pointer_cast<bbox::decoded>(rc);
+            bbox_extractor.extract(data, size, bb);
             return rc;
         }
 

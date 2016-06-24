@@ -42,6 +42,7 @@ class nervana::bbox::decoded : public decoded_media {
     friend class extractor;
 public:
     decoded();
+    bool extract(const char* data, int size, const std::unordered_map<std::string,int>& label_map);
     virtual ~decoded() {}
 
     MediaType get_type() override { return MediaType::TARGET; }
@@ -64,6 +65,7 @@ public:
     extractor(std::shared_ptr<const bbox::config>);
     virtual ~extractor(){}
     virtual std::shared_ptr<bbox::decoded> extract(const char*, int) override;
+    void extract(const char*, int, std::shared_ptr<bbox::decoded>&);
 private:
      std::unordered_map<std::string,int> label_map;
 };

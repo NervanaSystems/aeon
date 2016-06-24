@@ -34,29 +34,27 @@ nervana::bbox::extractor::extractor(shared_ptr<const config> cfg) :
 {
 }
 
-shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(const char* data, int size) {
-    shared_ptr<decoded> rc = make_shared<decoded>();
+void nervana::bbox::extractor::extract(const char* data, int size, std::shared_ptr<bbox::decoded>& rc) {
     string buffer( data, size );
     json j = json::parse(buffer);
-//    cout << j.dump(4) << endl;
-    if( j["object"].is_null() ) { rc = nullptr; return rc; }
-    if( j["size"].is_null() ) { rc = nullptr; return rc; }
+    if( j["object"].is_null() ) { rc = nullptr; return; }
+    if( j["size"].is_null() ) { rc = nullptr; return; }
     auto object_list = j["object"];
     auto image_size = j["size"];
-    if( image_size["width"].is_null() ) { rc = nullptr; return rc; }
-    if( image_size["height"].is_null() ) { rc = nullptr; return rc; }
-    if( image_size["depth"].is_null() ) { rc = nullptr; return rc; }
+    if( image_size["width"].is_null() ) { rc = nullptr; return; }
+    if( image_size["height"].is_null() ) { rc = nullptr; return; }
+    if( image_size["depth"].is_null() ) { rc = nullptr; return; }
     rc->_height = image_size["height"];
     rc->_width = image_size["width"];
     rc->_depth = image_size["depth"];
     for( auto object : object_list ) {
         auto bndbox = object["bndbox"];
         box b;
-        if( bndbox["xmax"].is_null() ) { rc = nullptr; return rc; }
-        if( bndbox["xmin"].is_null() ) { rc = nullptr; return rc; }
-        if( bndbox["ymax"].is_null() ) { rc = nullptr; return rc; }
-        if( bndbox["ymin"].is_null() ) { rc = nullptr; return rc; }
-        if( object["name"].is_null() ) { rc = nullptr; return rc; }
+        if( bndbox["xmax"].is_null() ) { rc = nullptr; return; }
+        if( bndbox["xmin"].is_null() ) { rc = nullptr; return; }
+        if( bndbox["ymax"].is_null() ) { rc = nullptr; return; }
+        if( bndbox["ymin"].is_null() ) { rc = nullptr; return; }
+        if( object["name"].is_null() ) { rc = nullptr; return; }
         b.xmax = bndbox["xmax"];
         b.xmin = bndbox["xmin"];
         b.ymax = bndbox["ymax"];
@@ -75,6 +73,11 @@ shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(const char*
         }
         rc->_boxes.push_back(b);
     }
+}
+
+shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(const char* data, int size) {
+    shared_ptr<decoded> rc = make_shared<decoded>();
+    extract(data, size, rc);
     return rc;
 }
 
