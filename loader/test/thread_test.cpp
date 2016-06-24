@@ -38,7 +38,7 @@ void single(simple_loader* loader, int epochCount, int minibatchCount,
 //    auto js = nlohmann::json::parse(configString);
     nlohmann::json js = {{"media","image"},{"data_config",{{"height",128},{"width",128}}},{"target_config",{}}};
     cout << js.dump(4) << endl;
-    shared_ptr<nervana::train_base> media = Media::create(js);
+    shared_ptr<nervana::train_base> media = nervana::train_provider_factory::create(js);
     cout << __FILE__ << " " << __LINE__ << endl;
     ASSERT_NE(nullptr, media.get());
     unique_ptr<char> dataBuf = unique_ptr<char>(new char[datumSize]);

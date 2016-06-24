@@ -22,7 +22,6 @@
 #include <utility>
 #include <algorithm>
 
-// #include "media.hpp"
 #include "matrix.hpp"
 #include "device.hpp"
 #include "loader.hpp"
@@ -45,7 +44,7 @@ DecodeThreadPool::DecodeThreadPool(int count,
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
     for (int i = 0; i < count; i++) {
-        auto prov = Media::create(configJs);
+        auto prov = nervana::train_provider_factory::create(configJs);
         _providers.push_back(prov);
         _startSignaled.push_back(0);
         _startInds.push_back(0);
@@ -55,7 +54,6 @@ DecodeThreadPool::DecodeThreadPool(int count,
     }
 
     _deviceParams->_batchSize = _batchSize;
-    // _providers[0]->fill_params(&(_deviceParams->_dtmInfo), &(_deviceParams->_tgtInfo));
 
     _providers[0]->fill_dtm_load_info(&(_deviceParams->_dtmInfo));
     _providers[0]->fill_tgt_load_info(&(_deviceParams->_tgtInfo));
