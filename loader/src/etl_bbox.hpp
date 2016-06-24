@@ -5,10 +5,12 @@
 #include "etl_image.hpp"
 #include "json.hpp"
 #include "box.hpp"
+#include "params.hpp"
 
 namespace nervana {
     namespace bbox {
         class decoded;
+        class config;
         class extractor;
         class transformer;
         class loader;
@@ -24,6 +26,16 @@ public:
 };
 
 std::ostream& operator<<(std::ostream&,const nervana::bbox::box&);
+
+class nervana::bbox::config : public json_config_parser {
+public:
+    std::unordered_map<std::string,int> label_map;
+
+    bool set_config(nlohmann::json js) override;
+
+private:
+    bool validate();
+};
 
 class nervana::bbox::decoded : public decoded_media {
     friend class transformer;
@@ -49,7 +61,7 @@ private:
 
 class nervana::bbox::extractor : public nervana::interface::extractor<nervana::bbox::decoded> {
 public:
-    extractor( const std::vector<std::string>& label_list );
+    extractor(std::shared_ptr<const bbox::config>);
     virtual ~extractor(){}
     virtual std::shared_ptr<bbox::decoded> extract(const char*, int) override;
 private:

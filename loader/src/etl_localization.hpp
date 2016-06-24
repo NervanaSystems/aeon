@@ -13,6 +13,8 @@ namespace nervana {
 
     namespace localization {
         class decoded;
+        class params;
+        class config;
 
         class extractor;
         class transformer;
@@ -63,6 +65,31 @@ namespace nervana {
         std::vector<box> all_anchors;
     };
 
+
+    class localization::params : public nervana::params {
+    public:
+
+        params() {}
+        void dump(std::ostream & = std::cout);
+
+        cv::Rect cropbox;
+        cv::Size2i output_size;
+        int angle = 0;
+        bool flip = false;
+        std::vector<float> lighting;  //pixelwise random values
+        float color_noise_std = 0;
+        std::vector<float> photometric;  // contrast, brightness, saturation
+        std::vector<std::string> label_list;
+    };
+
+    class localization::config : public bbox::config {
+    public:
+        bool set_config(nlohmann::json js) override;
+
+    private:
+        bool validate();
+    };
+
     class localization::decoded : public bbox::decoded {
     public:
         decoded(int index) {}
@@ -75,10 +102,7 @@ namespace nervana {
 
     class localization::extractor : public nervana::bbox::extractor {
     public:
-        extractor( const std::vector<std::string>& label_list ) :
-            bbox::extractor::extractor{label_list}
-        {
-        }
+        extractor(std::shared_ptr<const localization::config>);
 
         virtual ~extractor() {}
     };
@@ -94,9 +118,20 @@ namespace nervana {
                             std::shared_ptr<localization::decoded> mp) override;
 
     private:
+        class target {
+        public:
+            target(float x, float y, float w, float h) :
+                dx{x}, dy{y}, dw{w}, dh{h} {}
+            float dx;
+            float dy;
+            float dw;
+            float dh;
+        };
+
         std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size);
         cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<box>& query_boxes);
-        void compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
+        std::vector<target> compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
+        void sample_anchors();
 
         int MAX_SIZE = 1000;
         int MIN_SIZE = 600;

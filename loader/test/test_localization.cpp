@@ -43,6 +43,14 @@ static string read_file( const string& path ) {
     return ss.str();
 }
 
+static shared_ptr<localization::config> make_extractor_cfg() {
+    auto cfg = make_shared<localization::config>();
+    auto obj = nlohmann::json::object();
+    obj["labels"] = label_list;
+    cfg->set_config(obj);
+    return cfg;
+}
+
 TEST(localization,generate_anchors) {
     // Verify that we compute the same anchors as Shaoqing's matlab implementation:
     //    >> load output/rpn_cachedir/faster_rcnn_VOC2007_ZF_stage1_rpn/anchors.mat
@@ -118,7 +126,8 @@ TEST(localization, transform) {
 //    }
     {
         string data = read_file(CURDIR"/test_data/006637.json");
-        localization::extractor extractor{label_list};
+        auto cfg = make_extractor_cfg();
+        localization::extractor extractor{cfg};
         localization::transformer transformer;
         auto mdata = extractor.extract(&data[0],data.size());
         auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);

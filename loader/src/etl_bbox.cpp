@@ -11,13 +11,27 @@ ostream& operator<<(ostream& out, const nervana::bbox::box& b) {
     return out;
 }
 
+bool nervana::bbox::config::set_config(nlohmann::json js)
+{
+    label_map.clear();
+    vector<string> label_list = js["labels"];
+    for( int i=0; i<label_list.size(); i++ ) {
+        label_map.insert({label_list[i],i});
+    }
+    return validate();
+}
+
+bool nervana::bbox::config::validate() {
+    return true;
+}
+
+
 nervana::bbox::decoded::decoded() {
 }
 
-nervana::bbox::extractor::extractor( const vector<string>& labels ) {
-    for( int i=0; i<labels.size(); i++ ) {
-        label_map.insert({labels[i],i});
-    }
+nervana::bbox::extractor::extractor(shared_ptr<const config> cfg) :
+    label_map{cfg->label_map}
+{
 }
 
 shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(const char* data, int size) {

@@ -13,6 +13,23 @@ template<typename T> string join(const T& v, const string& sep) {
     return ss.str();
 }
 
+bool nervana::localization::config::set_config(nlohmann::json js)
+{
+    bbox::config::set_config(js);
+    return validate();
+}
+
+bool nervana::localization::config::validate() {
+    return true;
+}
+
+localization::extractor::extractor(std::shared_ptr<const localization::config> cfg) :
+    bbox::extractor{cfg}
+{
+
+}
+
+
 localization::transformer::transformer(shared_ptr<const json_config_parser>) :
     _anchor{MAX_SIZE,MIN_SIZE}
 {
@@ -118,15 +135,37 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 
 //bbox_targets = np.zeros((len(idx_inside), 4), dtype=np.float32)
 //bbox_targets = _compute_targets(db['gt_bb'][overlaps.argmax(axis=1), :] * im_scale, anchors)
-    compute_targets(argmax, anchors);
+    auto bbox_targets = compute_targets(argmax, anchors);
 
-
+    // results
+    // labels
+    // bbox_targets
 
     return mp;
 }
 
+
+//def _sample_anchors(self, db, nrois, fg_fractions):
+void localization::transformer::sample_anchors() {
+
+    // subsample labels if needed
+//    num_fg = int(fg_fractions * nrois)
+//    fg_idx = np.where(db['labels'] == 1)[0]
+//    bg_idx = np.where(db['labels'] == 0)[0]
+
+//    fg_idx = self.be.rng.choice(fg_idx, size=min(num_fg, len(fg_idx)), replace=False)
+//    bg_idx = self.be.rng.choice(bg_idx, size=min(nrois - len(fg_idx), len(bg_idx)),
+//                                replace=False)
+
+//    idx = np.hstack([fg_idx, bg_idx])
+//    assert len(idx) == nrois
+
+//    # return labels, bbox_targets, and anchor indicies
+//    return (db['labels'][idx], db['bbox_targets'][idx, :], idx[:])
+}
+
 //def _compute_targets(gt_bb, rp_bb):
-void localization::transformer::compute_targets(const vector<box>& gt_bb, const vector<box>& rp_bb) {
+vector<localization::transformer::target> localization::transformer::compute_targets(const vector<box>& gt_bb, const vector<box>& rp_bb) {
     //  Given ground truth bounding boxes and proposed boxes, compute the regresssion
     //  targets according to:
 
@@ -137,41 +176,23 @@ void localization::transformer::compute_targets(const vector<box>& gt_bb, const 
 
     //  where (x,y) are bounding box centers and (w,h) are the box dimensions
 
-    // calculate the region proposal centers and width/height
-//    (x, y, w, h) = _get_xywh(rp_bb)
-//    (x_gt, y_gt, w_gt, h_gt) = _get_xywh(gt_bb)
-    cout << "gt_bb.size() " << gt_bb.size() << endl;
-    cout << "rp_bb.size() " << rp_bb.size() << endl;
-
     // the target will be how to adjust the bbox's center and width/height
     // note that the targets are generated based on the original RP, which has not
     // been scaled by the image resizing
-    vector<float> targets_dx;
-    vector<float> targets_dy;
-    vector<float> targets_dw;
-    vector<float> targets_dh;
+    vector<target> targets;
     for(int i=0; i<gt_bb.size(); i++) {
         const box& gt = gt_bb[i];
         const box& rp = rp_bb[i];
-//    targets_dx = (x_gt - x) / w
-        targets_dx.push_back((gt.xcenter() - rp.xcenter()) / rp.width());
-//    targets_dy = (y_gt - y) / h
-        targets_dy.push_back((gt.ycenter() - rp.ycenter()) / rp.height());
-//    targets_dw = np.log(w_gt / w)
-        targets_dw.push_back(log(gt.width() / rp.width()));
-//    targets_dh = np.log(h_gt / h)
-        targets_dh.push_back(log(gt.height() / rp.height()));
+        float dx = (gt.xcenter() - rp.xcenter()) / rp.width();
+        float dy = (gt.ycenter() - rp.ycenter()) / rp.height();
+        float dw = log(gt.width() / rp.width());
+        float dh = log(gt.height() / rp.height());
+        targets.emplace_back(dx, dy, dw, dh);
 
-        cout << i << "   " << targets_dx[i] << "," << targets_dy[i] << "," << targets_dw[i] << "," << targets_dh[i] << endl;
+        cout << i << "   " << dx << "," << dy << "," << dw << "," << dh << endl;
     }
 
-//    targets = np.concatenate((targets_dx[:, np.newaxis],
-//                              targets_dy[:, np.newaxis],
-//                              targets_dw[:, np.newaxis],
-//                              targets_dh[:, np.newaxis],
-//                              ), axis=1)
-
-//    return targets
+    return targets;
 }
 
 

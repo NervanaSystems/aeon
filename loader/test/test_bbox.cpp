@@ -57,6 +57,14 @@ static nlohmann::json create_metadata( const vector<nlohmann::json>& boxes, int 
     return j;
 }
 
+static shared_ptr<bbox::config> make_extractor_cfg() {
+    auto cfg = make_shared<bbox::config>();
+    auto obj = nlohmann::json::object();
+    obj["labels"] = label_list;
+    cfg->set_config(obj);
+    return cfg;
+}
+
 cv::Mat draw( int width, int height, const vector<bbox::box>& blist, cv::Rect crop=cv::Rect() ) {
     cv::Mat image = cv::Mat( width, height, CV_8UC3 );
     image = cv::Scalar(255,255,255);
@@ -72,7 +80,8 @@ cv::Mat draw( int width, int height, const vector<bbox::box>& blist, cv::Rect cr
 TEST(etl, bbox_extractor) {
     {
         string data = read_file(CURDIR"/test_data/000001.json");
-        bbox::extractor extractor{label_list};
+        auto cfg = make_extractor_cfg();
+        bbox::extractor extractor{cfg};
         auto mdata = extractor.extract(&data[0],data.size());
         auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
         ASSERT_NE(nullptr,decoded);
@@ -97,7 +106,8 @@ TEST(etl, bbox_extractor) {
     }
     {
         string data = read_file(CURDIR"/test_data/006637.json");
-        bbox::extractor extractor{label_list};
+        auto cfg = make_extractor_cfg();
+        bbox::extractor extractor{cfg};
         auto mdata = extractor.extract(&data[0],data.size());
         auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
         ASSERT_NE(nullptr,decoded);
@@ -115,7 +125,8 @@ TEST(etl, bbox_extractor) {
     }
     {
         string data = read_file(CURDIR"/test_data/009952.json");
-        bbox::extractor extractor{label_list};
+        auto cfg = make_extractor_cfg();
+        bbox::extractor extractor{cfg};
         auto mdata = extractor.extract(&data[0],data.size());
         auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
         ASSERT_NE(nullptr,decoded);
@@ -138,7 +149,8 @@ TEST(etl, bbox) {
     string buffer = j.dump();
     // cout << "boxes\n" << buffer << endl;
 
-    bbox::extractor extractor{label_list};
+    auto cfg = make_extractor_cfg();
+    bbox::extractor extractor{cfg};
     auto data = extractor.extract( &buffer[0], buffer.size() );
     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
     vector<bbox::box> boxes = decoded->boxes();
@@ -179,7 +191,8 @@ TEST(etl, bbox_crop) {
 
     string buffer = j.dump();
 
-    bbox::extractor extractor{label_list};
+    auto cfg = make_extractor_cfg();
+    bbox::extractor extractor{cfg};
     auto data = extractor.extract( &buffer[0], buffer.size() );
     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
     vector<bbox::box> boxes = decoded->boxes();
@@ -230,7 +243,8 @@ TEST(etl, bbox_rescale) {
 
     string buffer = j.dump();
 
-    bbox::extractor extractor{label_list};
+    auto cfg = make_extractor_cfg();
+    bbox::extractor extractor{cfg};
     auto data = extractor.extract( &buffer[0], buffer.size() );
     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
     vector<bbox::box> boxes = decoded->boxes();
@@ -261,7 +275,8 @@ TEST(etl, bbox_angle) {
 
     string buffer = j.dump();
 
-    bbox::extractor extractor{label_list};
+    auto cfg = make_extractor_cfg();
+    bbox::extractor extractor{cfg};
     auto data = extractor.extract( &buffer[0], buffer.size() );
     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
     vector<bbox::box> boxes = decoded->boxes();
