@@ -16,6 +16,10 @@ template<typename T> string join(const T& v, const string& sep) {
 bool nervana::localization::config::set_config(nlohmann::json js)
 {
     bbox::config::set_config(js);
+
+    parse_opt(images_per_batch, "images_per_batch", js);
+    parse_opt(rois_per_image, "rois_per_image", js);
+
     return validate();
 }
 
@@ -24,14 +28,15 @@ bool nervana::localization::config::validate() {
 }
 
 localization::extractor::extractor(std::shared_ptr<const localization::config> cfg) :
-    bbox::extractor{cfg}
+    bbox_extractor{cfg}
 {
 
 }
 
 
-localization::transformer::transformer(shared_ptr<const json_config_parser>) :
-    _anchor{MAX_SIZE,MIN_SIZE}
+localization::transformer::transformer(std::shared_ptr<const localization::config> cfg) :
+    _anchor{MAX_SIZE,MIN_SIZE},
+    rois_per_image{cfg->rois_per_image}
 {
 //    cout << "anchors " << anchors.size() << endl;
 //    for(const anchor::box& b : anchors) {
@@ -93,7 +98,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 
     // assigning fg labels
     // 1. for each gt box, anchor with higher overlaps [including ties]
-    for(float f : column_max) { cout << f << "   "; } cout << endl;
+//    for(float f : column_max) { cout << f << "   "; } cout << endl;
     for(int row=0; row<overlaps.rows; row++) {
         for(int col=0; col<overlaps.cols; col++) {
             // This should be fixed as it is comparing floats
@@ -133,39 +138,72 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     }
 //    cout << argmax << endl;
 
-//bbox_targets = np.zeros((len(idx_inside), 4), dtype=np.float32)
-//bbox_targets = _compute_targets(db['gt_bb'][overlaps.argmax(axis=1), :] * im_scale, anchors)
     auto bbox_targets = compute_targets(argmax, anchors);
 
     // results
     // labels
     // bbox_targets
+    tie(mp->labels, mp->bbox_targets, mp->anchor_index) = sample_anchors(labels, bbox_targets);
+
+//    cout << "result_idx\n"; for(int i=0; i<result_idx.size(); i++) { cout << "   " << i << "  " << result_idx[i] << endl; }
 
     return mp;
 }
 
 
 //def _sample_anchors(self, db, nrois, fg_fractions):
-void localization::transformer::sample_anchors() {
-
+tuple<vector<float>,vector<localization::target>,vector<int>>
+    localization::transformer::sample_anchors(const vector<float>& labels,
+                                              const vector<target>& bbox_targets) {
+    cout << "sample_anchors labels " << labels.size() << " bbox_targets " << bbox_targets.size()  << endl;
     // subsample labels if needed
-//    num_fg = int(fg_fractions * nrois)
-//    fg_idx = np.where(db['labels'] == 1)[0]
-//    bg_idx = np.where(db['labels'] == 0)[0]
+    int num_fg = int(FG_FRACTION * rois_per_image);
+    cout << "num_fg " << num_fg << endl;
+    cout << "rois_per_image " << rois_per_image << endl;
+    vector<int> fg_idx;
+    vector<int> bg_idx;
+    for(int i=0; i<labels.size(); i++) {
+        if(labels[i] == 1.) {
+            fg_idx.push_back(i);
+        } else if(labels[i] == 0.) {
+            bg_idx.push_back(i);
+        }
+    }
+    cout << "fg_idx.size() " << fg_idx.size() << endl;
+    cout << "bg_idx.size() " << bg_idx.size() << endl;
+    if(fg_idx.size() > num_fg) {
+        shuffle(fg_idx.begin(), fg_idx.end(),random);
+        fg_idx.resize(num_fg);
+    }
+    int remainder = rois_per_image-fg_idx.size();
+    if(bg_idx.size() > remainder) {
+        shuffle(bg_idx.begin(), bg_idx.end(),random);
+        bg_idx.resize(remainder);
+    }
+    cout << "post fg_idx.size() " << fg_idx.size() << endl;
+    cout << "post bg_idx.size() " << bg_idx.size() << endl;
 
-//    fg_idx = self.be.rng.choice(fg_idx, size=min(num_fg, len(fg_idx)), replace=False)
-//    bg_idx = self.be.rng.choice(bg_idx, size=min(nrois - len(fg_idx), len(bg_idx)),
-//                                replace=False)
-
+    vector<int> result_idx;
+    result_idx.insert(result_idx.begin(), fg_idx.begin(), fg_idx.end());
+    result_idx.insert(result_idx.begin(), bg_idx.begin(), bg_idx.end());
 //    idx = np.hstack([fg_idx, bg_idx])
 //    assert len(idx) == nrois
+    cout << "post result_idx.size() " << result_idx.size() << endl;
+
+    vector<float>  result_labels;
+    vector<target> result_targets;
+    for(int i : result_idx) {
+        result_labels.push_back(labels[i]);
+        result_targets.push_back(bbox_targets[i]);
+    }
 
 //    # return labels, bbox_targets, and anchor indicies
 //    return (db['labels'][idx], db['bbox_targets'][idx, :], idx[:])
+    return make_tuple(result_labels, result_targets, result_idx);
 }
 
 //def _compute_targets(gt_bb, rp_bb):
-vector<localization::transformer::target> localization::transformer::compute_targets(const vector<box>& gt_bb, const vector<box>& rp_bb) {
+vector<localization::target> localization::transformer::compute_targets(const vector<box>& gt_bb, const vector<box>& rp_bb) {
     //  Given ground truth bounding boxes and proposed boxes, compute the regresssion
     //  targets according to:
 
@@ -189,7 +227,7 @@ vector<localization::transformer::target> localization::transformer::compute_tar
         float dh = log(gt.height() / rp.height());
         targets.emplace_back(dx, dy, dw, dh);
 
-        cout << i << "   " << dx << "," << dy << "," << dw << "," << dh << endl;
+//        cout << i << "   " << dx << "," << dy << "," << dw << "," << dh << endl;
     }
 
     return targets;
@@ -197,68 +235,35 @@ vector<localization::transformer::target> localization::transformer::compute_tar
 
 
 cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const vector<box>& query_boxes) {
-//def bbox_overlaps(
-//        np.ndarray[DTYPE_t, ndim=2] boxes,
-//        np.ndarray[DTYPE_t, ndim=2] query_boxes):
-//    """
-//    Parameters
-//    ----------
-//    boxes: (N, 4) ndarray of float
-//    query_boxes: (K, 4) ndarray of float
-//    Returns
-//    -------
-//    overlaps: (N, K) ndarray of overlap between boxes and query_boxes
-//    """
-//    cdef unsigned int N = boxes.shape[0]
-//    cdef unsigned int K = query_boxes.shape[0]
+    // Parameters
+    // ----------
+    // boxes: (N, 4) ndarray of float
+    // query_boxes: (K, 4) ndarray of float
+    // Returns
+    // -------
+    // overlaps: (N, K) ndarray of overlap between boxes and query_boxes
     uint32_t N = boxes.size();
     uint32_t K = query_boxes.size();
-//    cdef np.ndarray[DTYPE_t, ndim=2] overlaps = np.zeros((N, K), dtype=DTYPE)
     cv::Mat overlaps(N,K,CV_32FC1);
     overlaps = 0.;
-//    cdef DTYPE_t iw, ih, box_area
-//    cdef DTYPE_t ua
-//    cdef unsigned int k, n
     float iw, ih, box_area;
     float ua;
     uint32_t k, n;
-//    for k in range(K):
     k = 0;
     for(const box& query_box : query_boxes) {
-//        box_area = (
-//            (query_boxes[k, 2] - query_boxes[k, 0] + 1) *
-//            (query_boxes[k, 3] - query_boxes[k, 1] + 1)
-//        )
         box_area = (query_box.xmax - query_box.xmin + 1) *
                    (query_box.ymax - query_box.ymin + 1);
-//        for n in range(N):
         n = 0;
         for(const box& b : boxes ) {
-//            iw = (
-//                min(boxes[n, 2], query_boxes[k, 2]) -
-//                max(boxes[n, 0], query_boxes[k, 0]) + 1
-//            )
             iw = min(b.xmax, query_box.xmax) -
                  max(b.xmin, query_box.xmin) + 1;
-//            if iw > 0:
             if(iw > 0) {
-//                ih = (
-//                    min(boxes[n, 3], query_boxes[k, 3]) -
-//                    max(boxes[n, 1], query_boxes[k, 1]) + 1
-//                )
                 ih = min(b.ymax, query_box.ymax) -
                      max(b.ymin, query_box.ymin) + 1;
-//                if ih > 0:
                 if(ih > 0) {
-//                    ua = float(
-//                        (boxes[n, 2] - boxes[n, 0] + 1) *
-//                        (boxes[n, 3] - boxes[n, 1] + 1) +
-//                        box_area - iw * ih
-//                    )
                     ua = (b.xmax - b.xmin + 1.) *
                          (b.ymax - b.ymin + 1.) +
                           box_area - iw * ih;
-//                    overlaps[n, k] = iw * ih / ua
                     overlaps.at<float>(n, k) = iw * ih / ua;
                 }
             }
@@ -289,16 +294,12 @@ localization::anchor::anchor(int max_size, int min_size) :
     MIN_SIZE{min_size},
     conv_size{int(std::floor(MAX_SIZE * SCALE))}
 {
-    cout << "MAX_SIZE " << MAX_SIZE << endl;
-    cout << "MIN_SIZE " << MIN_SIZE << endl;
-    cout << "conv_size " << conv_size << endl;
     all_anchors = add_anchors();
+    cout << "all_anchors " << all_anchors.size() << endl;
 }
 
 vector<box> localization::anchor::inside_im_bounds(int width, int height) {
     vector<box> rc;
-//    cout << all_anchors << endl;
-    cout << "all_anchors size " << all_anchors.size() << endl;
     for(const box& b : all_anchors) {
         if( b.xmin >= 0 && b.ymin >= 0 && b.xmax < width && b.ymax < height ) {
             rc.emplace_back(b);
@@ -311,8 +312,8 @@ vector<box> localization::anchor::inside_im_bounds(int width, int height) {
 vector<box> localization::anchor::add_anchors() {
     vector<box> anchors = generate_anchors(16,{0.5, 1., 2.},{8,16,32});
 
-      // generate shifts to apply to anchors
-      // note: 1/self.SCALE is the feature stride
+    // generate shifts to apply to anchors
+    // note: 1/self.SCALE is the feature stride
     vector<float> shift_x;
     vector<float> shift_y;
     for(float i=0; i<conv_size; i++) {
@@ -336,8 +337,6 @@ vector<box> localization::anchor::add_anchors() {
 //            }
         }
     }
-
-    cout << "all_anchors size at add_anchors " << all_anchors.size() << endl;
 
     return all_anchors;
 }

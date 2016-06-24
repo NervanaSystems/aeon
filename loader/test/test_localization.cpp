@@ -43,7 +43,7 @@ static string read_file( const string& path ) {
     return ss.str();
 }
 
-static shared_ptr<localization::config> make_extractor_cfg() {
+static shared_ptr<localization::config> make_localization_config() {
     auto cfg = make_shared<localization::config>();
     auto obj = nlohmann::json::object();
     obj["labels"] = label_list;
@@ -102,7 +102,9 @@ TEST(localization, t1) {
 }
 
 TEST(localization,calculate_scale_shape) {
-    localization::transformer transformer;
+
+    auto cfg = make_localization_config();
+    localization::transformer transformer(cfg);
     cv::Size size{500,375};
     float scale;
     tie(scale,size) = transformer.calculate_scale_shape(size);
@@ -126,9 +128,9 @@ TEST(localization, transform) {
 //    }
     {
         string data = read_file(CURDIR"/test_data/006637.json");
-        auto cfg = make_extractor_cfg();
+        auto cfg = make_localization_config();
         localization::extractor extractor{cfg};
-        localization::transformer transformer;
+        localization::transformer transformer{cfg};
         auto mdata = extractor.extract(&data[0],data.size());
         auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);
         ASSERT_NE(nullptr,decoded);

@@ -57,7 +57,7 @@ static nlohmann::json create_metadata( const vector<nlohmann::json>& boxes, int 
     return j;
 }
 
-static shared_ptr<bbox::config> make_extractor_cfg() {
+static shared_ptr<bbox::config> make_bbox_config() {
     auto cfg = make_shared<bbox::config>();
     auto obj = nlohmann::json::object();
     obj["labels"] = label_list;
@@ -80,7 +80,7 @@ cv::Mat draw( int width, int height, const vector<bbox::box>& blist, cv::Rect cr
 TEST(etl, bbox_extractor) {
     {
         string data = read_file(CURDIR"/test_data/000001.json");
-        auto cfg = make_extractor_cfg();
+        auto cfg = make_bbox_config();
         bbox::extractor extractor{cfg};
         auto mdata = extractor.extract(&data[0],data.size());
         auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
@@ -106,7 +106,7 @@ TEST(etl, bbox_extractor) {
     }
     {
         string data = read_file(CURDIR"/test_data/006637.json");
-        auto cfg = make_extractor_cfg();
+        auto cfg = make_bbox_config();
         bbox::extractor extractor{cfg};
         auto mdata = extractor.extract(&data[0],data.size());
         auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
@@ -125,7 +125,7 @@ TEST(etl, bbox_extractor) {
     }
     {
         string data = read_file(CURDIR"/test_data/009952.json");
-        auto cfg = make_extractor_cfg();
+        auto cfg = make_bbox_config();
         bbox::extractor extractor{cfg};
         auto mdata = extractor.extract(&data[0],data.size());
         auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
@@ -149,7 +149,7 @@ TEST(etl, bbox) {
     string buffer = j.dump();
     // cout << "boxes\n" << buffer << endl;
 
-    auto cfg = make_extractor_cfg();
+    auto cfg = make_bbox_config();
     bbox::extractor extractor{cfg};
     auto data = extractor.extract( &buffer[0], buffer.size() );
     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
@@ -191,7 +191,7 @@ TEST(etl, bbox_crop) {
 
     string buffer = j.dump();
 
-    auto cfg = make_extractor_cfg();
+    auto cfg = make_bbox_config();
     bbox::extractor extractor{cfg};
     auto data = extractor.extract( &buffer[0], buffer.size() );
     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
@@ -243,7 +243,7 @@ TEST(etl, bbox_rescale) {
 
     string buffer = j.dump();
 
-    auto cfg = make_extractor_cfg();
+    auto cfg = make_bbox_config();
     bbox::extractor extractor{cfg};
     auto data = extractor.extract( &buffer[0], buffer.size() );
     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
@@ -275,7 +275,7 @@ TEST(etl, bbox_angle) {
 
     string buffer = j.dump();
 
-    auto cfg = make_extractor_cfg();
+    auto cfg = make_bbox_config();
     bbox::extractor extractor{cfg};
     auto data = extractor.extract( &buffer[0], buffer.size() );
     shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);

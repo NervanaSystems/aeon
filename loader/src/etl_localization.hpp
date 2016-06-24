@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <tuple>
+#include <random>
 
 #include "etl_interface.hpp"
 #include "etl_bbox.hpp"
@@ -15,12 +16,23 @@ namespace nervana {
         class decoded;
         class params;
         class config;
+        class target;
+        class anchor;
 
         class extractor;
         class transformer;
         class loader;
-        class anchor;
     }
+
+    class localization::target {
+    public:
+        target(float x, float y, float w, float h) :
+            dx{x}, dy{y}, dw{w}, dh{h} {}
+        float dx;
+        float dy;
+        float dw;
+        float dh;
+    };
 
     class localization::anchor {
     public:
@@ -84,6 +96,9 @@ namespace nervana {
 
     class localization::config : public bbox::config {
     public:
+        int images_per_batch = 1;
+        int rois_per_image = 256;
+
         bool set_config(nlohmann::json js) override;
 
     private:
@@ -92,24 +107,38 @@ namespace nervana {
 
     class localization::decoded : public bbox::decoded {
     public:
-        decoded(int index) {}
+        decoded() {}
         virtual ~decoded() override {}
 
+        // from transformer
+        std::vector<float>  labels;
+        std::vector<target> bbox_targets;
+        std::vector<int>    anchor_index;
+
     private:
-        decoded() = delete;
     };
 
 
-    class localization::extractor : public nervana::bbox::extractor {
+    class localization::extractor : public nervana::interface::extractor<localization::decoded> {
     public:
         extractor(std::shared_ptr<const localization::config>);
 
+        virtual std::shared_ptr<localization::decoded> extract(const char* data, int size) override {
+            auto rc = std::make_shared<localization::decoded>();
+            bbox::decoded* p = &*rc;
+//            rc->bbox_decoded = bbox_extractor.extract(data, size);
+            *p = *bbox_extractor.extract(data, size);
+            return rc;
+        }
+
         virtual ~extractor() {}
+    private:
+        bbox::extractor bbox_extractor;
     };
 
     class localization::transformer : public interface::transformer<localization::decoded, nervana::params> {
     public:
-        transformer(std::shared_ptr<const json_config_parser> = nullptr);
+        transformer(std::shared_ptr<const localization::config> cfg);
 
         virtual ~transformer() {}
 
@@ -118,20 +147,10 @@ namespace nervana {
                             std::shared_ptr<localization::decoded> mp) override;
 
     private:
-        class target {
-        public:
-            target(float x, float y, float w, float h) :
-                dx{x}, dy{y}, dw{w}, dh{h} {}
-            float dx;
-            float dy;
-            float dw;
-            float dh;
-        };
-
         std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size);
         cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<box>& query_boxes);
         std::vector<target> compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
-        void sample_anchors();
+        std::tuple<std::vector<float>,std::vector<target>,std::vector<int>> sample_anchors(const std::vector<float>& labels, const std::vector<target>& bbox_targets);
 
         int MAX_SIZE = 1000;
         int MIN_SIZE = 600;
@@ -141,11 +160,13 @@ namespace nervana {
         float FG_FRACTION = 0.5;  // at most, positive anchors are 0.5 of the total rois
 
         anchor  _anchor;
+        int rois_per_image;
+        std::minstd_rand0 random;
     };
 
     class localization::loader : public interface::loader<localization::decoded> {
     public:
-        loader(std::shared_ptr<const json_config_parser> = nullptr) {}
+        loader(std::shared_ptr<const localization::config> cfg) {}
 
         virtual ~loader() {}
 
