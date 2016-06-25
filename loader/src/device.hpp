@@ -35,6 +35,7 @@ public:
     int                         _batchSize;
     nervana::count_size_type    _dtmInfo;
     nervana::count_size_type    _tgtInfo;
+    intptr_t                    _ctx_strm[2];
 };
 
 class CpuParams : public DeviceParams {

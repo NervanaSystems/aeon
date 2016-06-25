@@ -18,6 +18,7 @@
 #include "batchfile.hpp"
 
 extern "C" {
+#include <Python.h>
 
 static std::string last_error_message;
 
@@ -58,6 +59,23 @@ extern int error() {
     } catch(std::exception& ex) {
         last_error_message = ex.what();
         return -1;
+    }
+}
+
+extern void gpu_alloc(DeviceParams* dp)
+{
+    CUdeviceptr data[2];
+    CUdeviceptr targets[2];
+
+    int dlen = params->_dtmInfo.count * params->_dtmInfo.size * params->_batchSize;
+    int tlen = params->_tgtInfo.count * params->_tgtInfo.size * params->_batchSize;
+    cuCtxAttach(static_cast<CUcontext *>(params->_ctx_strm[0]))
+    init();
+    for (int i = 0; i < 2; i++) {
+        checkDriverErrors(cuMemAlloc(&data[i],    dlen));
+        checkDriverErrors(cuMemAlloc(&targets[i], tlen));
+        params->_targets[i] = targets[i];
+        params->_data[i]    = data[i];
     }
 }
 
