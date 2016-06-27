@@ -34,7 +34,6 @@ namespace nervana {
 
     class image::params : public nervana::params {
         friend class image::param_factory;
-        params() {}
     public:
 
         void dump(std::ostream & = std::cout);
@@ -46,6 +45,8 @@ namespace nervana {
         std::vector<float> lighting;  // pixelwise random values
         float color_noise_std = 0;
         std::vector<float> photometric;  // contrast, brightness, saturation
+    private:
+        params() {}
     };
 
     class image::param_factory : public interface::param_factory<image::decoded, image::params> {

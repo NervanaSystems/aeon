@@ -22,6 +22,8 @@
 #include "gen_image.hpp"
 #include "batchfile.hpp"
 
+#define private public
+
 #include "params.hpp"
 #include "etl_interface.hpp"
 #include "etl_image.hpp"
@@ -163,7 +165,7 @@ TEST(etl, bbox) {
     EXPECT_EQ(7,boxes[2].label);
 
     bbox::transformer transform;
-    auto iparam = make_image_params();
+    shared_ptr<image::params> iparam = make_shared<image::params>();
     auto tx = transform.transform( iparam, decoded );
 }
 
@@ -200,7 +202,7 @@ TEST(etl, bbox_crop) {
     ASSERT_EQ(8,boxes.size());
 
     bbox::transformer transform;
-    auto iparam = make_image_params();
+    shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
 
     auto d = draw(256,256,decoded->boxes(),iparam->cropbox);
@@ -284,7 +286,7 @@ TEST(etl, bbox_angle) {
     ASSERT_EQ(1,boxes.size());
 
     bbox::transformer transform;
-    auto iparam = make_image_params();
+    shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->angle = 5;
     auto tx = transform.transform( iparam, decoded );
     shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);

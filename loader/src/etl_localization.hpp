@@ -169,7 +169,7 @@ namespace nervana {
 
         virtual ~loader() {}
 
-        void load(char* buf, int bufSize, std::shared_ptr<localization::decoded> mp) override
+        void load(char* buf, std::shared_ptr<localization::decoded> mp) override
         {
         }
     };
