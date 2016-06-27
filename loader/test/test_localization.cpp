@@ -45,9 +45,20 @@ static string read_file( const string& path ) {
 
 static shared_ptr<localization::config> make_localization_config() {
     auto cfg = make_shared<localization::config>();
-    auto obj = nlohmann::json::object();
-    obj["labels"] = label_list;
-    cfg->set_config(obj);
+    nlohmann::json js;
+    js["labels"] = label_list;
+    js["images_per_batch"] = 5;
+    js["rois_per_image"] = 300;
+    js["min_size"] = 300;
+    js["max_size"] = 400;
+    js["base_size"] = 16;
+    js["scale"] = 300;
+    js["ratios"] = {1, 2, 4};
+    js["scales"] = {4, 8, 16};
+    js["negative_overlap"] = 0.25;
+    js["positive_overlap"] = 0.75;
+    js["foreground_fraction"] = 0.25;
+    cfg->set_config(js);
     return cfg;
 }
 
@@ -84,6 +95,7 @@ TEST(localization,generate_anchors) {
 //    expected -= 1;
 
     int base_size = 16;
+    float scale = 1.0 / 16.;  // scaling factor of the image layers (e.g. VGG)
     vector<float> ratios = {0.5, 1, 2};
     vector<float> scales = {8, 16, 32};
 
@@ -95,10 +107,14 @@ TEST(localization,generate_anchors) {
     }
 }
 
-TEST(localization, t1) {
-    anchor _anchor{1000,800};
+TEST(localization,config) {
+    nlohmann::json js;
+    js["labels"] = label_list;
 
-    _anchor.add_anchors();
+    cout << js.dump(4) << endl;
+
+    localization::config cfg;
+    EXPECT_TRUE(cfg.set_config(js));
 }
 
 TEST(localization,calculate_scale_shape) {

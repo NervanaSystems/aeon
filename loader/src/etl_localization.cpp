@@ -19,13 +19,26 @@ bool nervana::localization::config::set_config(nlohmann::json js)
 
     parse_opt(images_per_batch, "images_per_batch", js);
     parse_opt(rois_per_image, "rois_per_image", js);
+    parse_opt(min_size, "min_size", js);
+    parse_opt(max_size, "max_size", js);
+    parse_opt(base_size, "base_size", js);
+    parse_opt(scale, "scale", js);
+    parse_opt(ratios, "ratios", js);
+    parse_opt(scales, "scales", js);
+    parse_opt(negative_overlap, "negative_overlap", js);
+    parse_opt(positive_overlap, "positive_overlap", js);
+    parse_opt(foreground_fraction, "foreground_fraction", js);
 
     return validate();
 }
 
 bool nervana::localization::config::validate() {
-    return true;
-}
+    return max_size > min_size &&
+           negative_overlap >= 0.0 &&
+           negative_overlap <= 1.0 &&
+           positive_overlap >= 0.0 &&
+           positive_overlap <= 1.0 &&
+           foreground_fraction <= 1.0;}
 
 localization::extractor::extractor(std::shared_ptr<const localization::config> cfg) :
     bbox_extractor{cfg}

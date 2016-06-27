@@ -14,7 +14,8 @@ ostream& operator<<(ostream& out, const nervana::bbox::box& b) {
 bool nervana::bbox::config::set_config(nlohmann::json js)
 {
     label_map.clear();
-    vector<string> label_list = js["labels"];
+    vector<string> label_list;
+    parse_req(label_list, "labels", js);
     for( int i=0; i<label_list.size(); i++ ) {
         label_map.insert({label_list[i],i});
     }

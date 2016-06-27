@@ -71,6 +71,7 @@ namespace nervana {
         std::vector<float> RATIOS = {0.5, 1, 2};  // aspect ratios to generate
         std::vector<float> SCALES = {128, 256, 512};  // box areas to generate
 
+        int base_size;
         int conv_size;
 //        float feat_stride = 1 / float(SCALE);
 
@@ -98,6 +99,15 @@ namespace nervana {
     public:
         int images_per_batch = 1;
         int rois_per_image = 256;
+        int min_size = 600;
+        int max_size = 1000;
+        int base_size = 16;
+        float scale = 1.0 / 16.;
+        std::vector<float> ratios = {0.5, 1, 2};
+        std::vector<float> scales = {128, 256, 512};
+        float negative_overlap = 0.3;  // negative anchors have < 0.3 overlap with any gt box
+        float positive_overlap = 0.7;  // positive anchors have > 0.7 overlap with at least one gt box
+        float foreground_fraction = 0.5;  // at most, positive anchors are 0.5 of the total rois
 
         bool set_config(nlohmann::json js) override;
 
