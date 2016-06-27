@@ -95,6 +95,64 @@ TEST(localization,generate_anchors) {
     EXPECT_EQ(34596,_anchor.all_anchors.size());
 }
 
+void plot(const vector<box>& list) {
+    float xmin = 0.0;
+    float xmax = 0.0;
+    float ymin = 0.0;
+    float ymax = 0.0;
+    for(const box& b : list) {
+        xmin = std::min(xmin,b.xmin);
+        xmax = std::max(xmax,b.xmax);
+        ymin = std::min(ymin,b.ymin);
+        ymax = std::max(ymax,b.ymax);
+    }
+
+    cv::Mat img(ymax-ymin, xmax-xmin, CV_8UC3);
+    img = cv::Scalar(255,255,255);
+
+    for( box b : list ) {
+        b.xmin -= xmin;
+        b.xmax -= xmin;
+        b.ymin -= ymin;
+        b.ymax -= ymin;
+        cv::rectangle(img, b.rect(), cv::Scalar(255,0,0));
+    }
+    box b = list[0];
+    b.xmin -= xmin;
+    b.xmax -= xmin;
+    b.ymin -= ymin;
+    b.ymax -= ymin;
+
+    cv::rectangle(img, b.rect(), cv::Scalar(0,0,255));
+
+    string fname = to_string(int(list[0].width())) + "x" + to_string(int(list[0].height())) + ".png";
+    cv::imwrite(fname,img);
+}
+
+TEST(localization,plot) {
+    auto cfg = make_localization_config();
+
+    anchor _anchor{cfg};
+    vector<box> actual = _anchor.generate_anchors();
+
+    vector<box> an = _anchor.all_anchors;
+
+    int last_width = 0;
+    int last_height = 0;
+    vector<box> list;
+    for(const box& b : _anchor.all_anchors) {
+        if(last_width != b.width() || last_height != b.height()) {
+            if(list.size() > 0) {
+                plot(list);
+                list.clear();
+            }
+        }
+        list.push_back(b);
+        last_width = b.width();
+        last_height = b.height();
+    }
+}
+
 TEST(localization,config) {
     nlohmann::json js;
     js["labels"] = label_list;
