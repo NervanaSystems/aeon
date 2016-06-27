@@ -36,7 +36,7 @@ namespace nervana {
 
     class localization::anchor {
     public:
-        anchor(int max_size, int min_size);
+        anchor(std::shared_ptr<const localization::config>);
 
         std::vector<box> inside_im_bounds(int width, int height);
 
@@ -60,20 +60,8 @@ namespace nervana {
         std::tuple<float,float,float,float> whctrs(const box&);
 
 
-        int MAX_SIZE;
-        int MIN_SIZE;
-//        int ROI_PER_IMAGE = 256;  // number of anchors per image
-//        int IMG_PER_BATCH = 1;  // number of images per batch
-        std::vector<std::string> CLASSES;  // list of CLASSES e.g. ['__background__', 'car', 'people',..]
-        float SCALE = 1.0 / 16.;  // scaling factor of the image layers (e.g. VGG)
-
-        // anchor variables
-        std::vector<float> RATIOS = {0.5, 1, 2};  // aspect ratios to generate
-        std::vector<float> SCALES = {128, 256, 512};  // box areas to generate
-
-        int base_size;
+        std::shared_ptr<const localization::config> cfg;
         int conv_size;
-//        float feat_stride = 1 / float(SCALE);
 
         std::vector<box> all_anchors;
     };
@@ -102,7 +90,7 @@ namespace nervana {
         int min_size = 600;
         int max_size = 1000;
         int base_size = 16;
-        float scale = 1.0 / 16.;
+        float scaling_factor = 1.0 / 16.;
         std::vector<float> ratios = {0.5, 1, 2};
         std::vector<float> scales = {128, 256, 512};
         float negative_overlap = 0.3;  // negative anchors have < 0.3 overlap with any gt box
@@ -161,16 +149,9 @@ namespace nervana {
         std::vector<target> compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
         std::tuple<std::vector<float>,std::vector<target>,std::vector<int>> sample_anchors(const std::vector<float>& labels, const std::vector<target>& bbox_targets);
 
-        int MAX_SIZE = 1000;
-        int MIN_SIZE = 600;
-
-        float NEGATIVE_OVERLAP = 0.3;  // negative anchors have < 0.3 overlap with any gt box
-        float POSITIVE_OVERLAP = 0.7;  // positive anchors have > 0.7 overlap with at least one gt box
-        float FG_FRACTION = 0.5;  // at most, positive anchors are 0.5 of the total rois
-
-        anchor  _anchor;
-        int rois_per_image;
+        std::shared_ptr<const localization::config> cfg;
         std::minstd_rand0 random;
+        anchor  _anchor;
     };
 
     class localization::loader : public interface::loader<localization::decoded> {

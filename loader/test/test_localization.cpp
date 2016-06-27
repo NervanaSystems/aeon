@@ -47,17 +47,6 @@ static shared_ptr<localization::config> make_localization_config() {
     auto cfg = make_shared<localization::config>();
     nlohmann::json js;
     js["labels"] = label_list;
-    js["images_per_batch"] = 5;
-    js["rois_per_image"] = 300;
-    js["min_size"] = 300;
-    js["max_size"] = 400;
-    js["base_size"] = 16;
-    js["scale"] = 300;
-    js["ratios"] = {1, 2, 4};
-    js["scales"] = {4, 8, 16};
-    js["negative_overlap"] = 0.25;
-    js["positive_overlap"] = 0.75;
-    js["foreground_fraction"] = 0.25;
     cfg->set_config(js);
     return cfg;
 }
@@ -99,7 +88,9 @@ TEST(localization,generate_anchors) {
     vector<float> ratios = {0.5, 1, 2};
     vector<float> scales = {8, 16, 32};
 
-    anchor _anchor{1000,800};
+    auto cfg = make_localization_config();
+
+    anchor _anchor{cfg};
     vector<box> actual = _anchor.generate_anchors(base_size, ratios, scales);
     ASSERT_EQ(expected.size(),actual.size());
     for(int i=0; i<expected.size(); i++) {

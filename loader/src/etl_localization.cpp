@@ -22,7 +22,7 @@ bool nervana::localization::config::set_config(nlohmann::json js)
     parse_opt(min_size, "min_size", js);
     parse_opt(max_size, "max_size", js);
     parse_opt(base_size, "base_size", js);
-    parse_opt(scale, "scale", js);
+    parse_opt(scaling_factor, "scaling_factor", js);
     parse_opt(ratios, "ratios", js);
     parse_opt(scales, "scales", js);
     parse_opt(negative_overlap, "negative_overlap", js);
@@ -47,9 +47,9 @@ localization::extractor::extractor(std::shared_ptr<const localization::config> c
 }
 
 
-localization::transformer::transformer(std::shared_ptr<const localization::config> cfg) :
-    _anchor{MAX_SIZE,MIN_SIZE},
-    rois_per_image{cfg->rois_per_image}
+localization::transformer::transformer(std::shared_ptr<const localization::config> _cfg) :
+    cfg{_cfg},
+    _anchor{cfg}
 {
 //    cout << "anchors " << anchors.size() << endl;
 //    for(const anchor::box& b : anchors) {
@@ -104,7 +104,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     }
 
     for(int row=0; row<overlaps.rows; row++) {
-        if(row_max[row] < NEGATIVE_OVERLAP) {
+        if(row_max[row] < cfg->negative_overlap) {
             labels[row] = 0;
         }
     }
@@ -123,7 +123,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 
     // 2. any anchor above the overlap threshold with any gt box
     for(int row=0; row<overlaps.rows; row++) {
-        if(row_max[row] >= POSITIVE_OVERLAP) {
+        if(row_max[row] >= cfg->positive_overlap) {
             labels[row] = 1;
         }
     }
@@ -170,9 +170,9 @@ tuple<vector<float>,vector<localization::target>,vector<int>>
                                               const vector<target>& bbox_targets) {
     cout << "sample_anchors labels " << labels.size() << " bbox_targets " << bbox_targets.size()  << endl;
     // subsample labels if needed
-    int num_fg = int(FG_FRACTION * rois_per_image);
+    int num_fg = int(cfg->foreground_fraction * cfg->rois_per_image);
     cout << "num_fg " << num_fg << endl;
-    cout << "rois_per_image " << rois_per_image << endl;
+    cout << "rois_per_image " << cfg->rois_per_image << endl;
     vector<int> fg_idx;
     vector<int> bg_idx;
     for(int i=0; i<labels.size(); i++) {
@@ -188,7 +188,7 @@ tuple<vector<float>,vector<localization::target>,vector<int>>
         shuffle(fg_idx.begin(), fg_idx.end(),random);
         fg_idx.resize(num_fg);
     }
-    int remainder = rois_per_image-fg_idx.size();
+    int remainder = cfg->rois_per_image-fg_idx.size();
     if(bg_idx.size() > remainder) {
         shuffle(bg_idx.begin(), bg_idx.end(),random);
         bg_idx.resize(remainder);
@@ -291,10 +291,10 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const
 tuple<float,cv::Size> localization::transformer::calculate_scale_shape(cv::Size size) {
     int im_size_min = std::min(size.width,size.height);
     int im_size_max = max(size.width,size.height);
-    float im_scale = float(MIN_SIZE) / float(im_size_min);
+    float im_scale = float(cfg->min_size) / float(im_size_min);
     // Prevent the biggest axis from being more than FRCN_MAX_SIZE
-    if(round(im_scale * im_size_max) > MAX_SIZE) {
-        im_scale = float(MAX_SIZE) / float(im_size_max);
+    if(round(im_scale * im_size_max) > cfg->max_size) {
+        im_scale = float(cfg->max_size) / float(im_size_max);
     }
     cv::Size im_shape{int(round(size.width*im_scale)), int(round(size.height*im_scale))};
     return make_tuple(im_scale, im_shape);
@@ -302,10 +302,9 @@ tuple<float,cv::Size> localization::transformer::calculate_scale_shape(cv::Size 
 
 
 
-localization::anchor::anchor(int max_size, int min_size) :
-    MAX_SIZE{max_size},
-    MIN_SIZE{min_size},
-    conv_size{int(std::floor(MAX_SIZE * SCALE))}
+localization::anchor::anchor(std::shared_ptr<const localization::config> _cfg) :
+    cfg{_cfg},
+    conv_size{int(std::floor(cfg->max_size * cfg->scaling_factor))}
 {
     all_anchors = add_anchors();
     cout << "all_anchors " << all_anchors.size() << endl;
@@ -330,8 +329,8 @@ vector<box> localization::anchor::add_anchors() {
     vector<float> shift_x;
     vector<float> shift_y;
     for(float i=0; i<conv_size; i++) {
-        shift_x.push_back(i * 1. / SCALE);
-        shift_y.push_back(i * 1. / SCALE);
+        shift_x.push_back(i * 1. / cfg->scaling_factor);
+        shift_y.push_back(i * 1. / cfg->scaling_factor);
     }
 
     vector<box> shifts;
