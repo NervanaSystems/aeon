@@ -18,7 +18,9 @@ SRCS            := \
     device.cpp \
     batchfile.cpp \
     buffer.cpp \
-    loader.cpp \
+    pyBackendWrapper.cpp \
+    pyLoader.cpp \
+    api_pversion.cpp \
     argtype.cpp \
     etl_image.cpp \
     etl_bbox.cpp \
@@ -82,6 +84,9 @@ endif
 	endif
 	LIBS        := -lcuda -lcudart $(LIBS)
 endif
+
+INC             := -I/home/users/alex/Code/neon/.venv2/include/python2.7/ $(INC)
+LIBS            := -lpython2.7 $(LIBS)
 
 .PHONY: clean
 

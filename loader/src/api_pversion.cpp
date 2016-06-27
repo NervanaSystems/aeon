@@ -12,29 +12,22 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-
-#pragma once
-
-#include "batchfile.hpp"
+#include "api_pversion.hpp"
 
 extern "C" {
-
-static std::string last_error_message;
 
 extern const char* get_error_message() {
     return last_error_message.c_str();
 }
 
-extern void* start(
-                   int* itemCount,
-                   int miniBatchSize,
+extern void* start(int* itemCount,
                    const char* loaderConfigString,
-                   DeviceParams* deviceParams
+                   PyObject* pbackend
                    ) {
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
 
-        Loader* loader = new Loader(miniBatchSize, loaderConfigString, deviceParams);
+        PyLoader* loader = new PyLoader(loaderConfigString, pbackend);
 
         int result = loader->start();
         if (result != 0) {
@@ -61,24 +54,7 @@ extern int error() {
     }
 }
 
-extern void gpu_alloc(DeviceParams* dp)
-{
-    CUdeviceptr data[2];
-    CUdeviceptr targets[2];
-
-    int dlen = params->_dtmInfo.count * params->_dtmInfo.size * params->_batchSize;
-    int tlen = params->_tgtInfo.count * params->_tgtInfo.size * params->_batchSize;
-    cuCtxAttach(static_cast<CUcontext *>(params->_ctx_strm[0]))
-    init();
-    for (int i = 0; i < 2; i++) {
-        checkDriverErrors(cuMemAlloc(&data[i],    dlen));
-        checkDriverErrors(cuMemAlloc(&targets[i], tlen));
-        params->_targets[i] = targets[i];
-        params->_data[i]    = data[i];
-    }
-}
-
-extern int next(Loader* loader) {
+extern int next(PyLoader* loader) {
     try {
         loader->next();
         return 0;
@@ -88,7 +64,7 @@ extern int next(Loader* loader) {
     }
 }
 
-extern int reset(Loader* loader) {
+extern int reset(PyLoader* loader) {
     try {
         return loader->reset();
     } catch(std::exception& ex) {
@@ -97,7 +73,7 @@ extern int reset(Loader* loader) {
     }
 }
 
-extern int stop(Loader* loader) {
+extern int stop(PyLoader* loader) {
     try {
         loader->stop();
         delete loader;

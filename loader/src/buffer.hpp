@@ -87,6 +87,7 @@ public:
     BufferPair& getForWrite();
     BufferPair& getForRead();
     BufferPair& getPair(int bufIdx);
+    int getCount() { return _count;}
 
     void advanceReadPos();
     void advanceWritePos();

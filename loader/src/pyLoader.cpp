@@ -33,11 +33,14 @@ using namespace std;
 pyDecodeThreadPool::pyDecodeThreadPool(int count,
                                        const shared_ptr<BufferPool>& in,
                                        const shared_ptr<BufferPool>& out,
-                                       int batchSize, int datumLen, int targetLen)
-: ThreadPool(count), _in(in), _out(out),
- _itemsPerThread((batchSize - 1) / count + 1),
-  _batchSize(batchSize), _datumLen(datumLen), _targetLen(targetLen)
+                                       const shared_ptr<pyBackendWrapper>& pbe)
+: ThreadPool(count), _in(in), _out(out), _pbe(pbe)
 {
+    _batchSize = _pbe->_batchSize;
+    _itemsPerThread = (_batchSize - 1) / _count + 1;
+    _datumLen = _pbe->_dtmInfo->size * _pbe->_dtmInfo->count;
+    _targetLen = _pbe->_tgtInfo->size * _pbe->_tgtInfo->count;
+
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
 }
@@ -47,6 +50,7 @@ void pyDecodeThreadPool::add_provider(std::shared_ptr<nervana::train_base> prov)
 {
     _providers.push_back(prov);
     _startSignaled.push_back(0);
+
     _startInds.push_back(0);
     _endInds.push_back(0);
     _dataOffsets.push_back(0);
@@ -171,8 +175,11 @@ void pyDecodeThreadPool::produce()
         BufferPair& outBuf = _out->getForWrite();
 
         // Copy to device.
-        _device->copyData(_bufferIndex, outBuf.first->_data, outBuf.first->_size);
-        _device->copyLabels(_bufferIndex, outBuf.second->_data, outBuf.second->_size);
+        _pbe->call_backend_transfer(outBuf, _bufferIndex);
+
+        // callBackendTransferFunc(_pbe, _host_dnparrays[_bufferIndex], _host_tnparrays[_bufferIndex], _bufferIndex);
+        // _device->copyData(_bufferIndex, outBuf.first->_data, outBuf.first->_size);
+        // _device->copyLabels(_bufferIndex, outBuf.second->_data, outBuf.second->_size);
 
         _bufferIndex = (_bufferIndex == 0) ? 1 : 0;
         _out->advanceWritePos();
@@ -201,7 +208,8 @@ void pyDecodeThreadPool::consume()
 void pyDecodeThreadPool::manage()
 {
     // Thread function.
-    int result = _device->init();
+    // int result = _device->init();
+    int result = 0;
     if (result != 0) {
         _stopManager = true;
     }
@@ -211,10 +219,33 @@ void pyDecodeThreadPool::manage()
     _managerStopped = true;
 }
 
-PyLoader::PyLoader(PyObject *pBackend, const char* pyloaderConfigString)
-: _pBackend(pBackend)
+
+ReadThread::ReadThread(const shared_ptr<BufferPool>& out,
+                       const shared_ptr<BatchIterator>& batch_iterator)
+: ThreadPool(1), _out(out), _batch_iterator(batch_iterator)
 {
-    _lcfg = make_shared<pyloaderConfig>();
+    assert(_count == 1);
+}
+
+void ReadThread::work(int id)
+{
+    // Fill input buffers.
+    {
+        unique_lock<mutex> lock(_out->getMutex());
+        while (_out->full() == true) {
+            _out->waitForNonFull(lock);
+        }
+        _batch_iterator->read(_out->getForWrite());
+        _out->advanceWritePos();
+    }
+    _out->signalNonEmpty();
+}
+
+
+PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
+: _pbe(pbe)
+{
+    _lcfg = make_shared<pyLoaderConfig>();
     _lcfg_json = nlohmann::json::parse(pyloaderConfigString);
     _lcfg->set_config(_lcfg_json);
 
@@ -241,24 +272,7 @@ PyLoader::PyLoader(PyObject *pBackend, const char* pyloaderConfigString)
     }
 }
 
-bool pyLoader::use_pinned_memory(PyObject *pb)
-{
-    PyObject *pinned_mem = PyObject_GetAttrString(pb, "use_pinned_mem");
-    bool result = false;
-
-    if (pinned_mem != NULL && PyBool_Check(pinned_mem)) {
-        result = (pinned_mem == Py_True) ? true : false;
-    }
-    Py_XDECREF(pinned_mem);
-    return result;
-}
-
-PyObject *pyLoader::wrap_decode_bufs(const shared_ptr<BufferPool>& decodeBufs)
-{
-
-}
-
-int pyLoader::start()
+int PyLoader::start()
 {
     _first = true;
     try {
@@ -277,14 +291,16 @@ int pyLoader::start()
         int dataLen   = dtmLen * _batchSize;
         int targetLen = tgtLen * _batchSize;
 
+        // Bind the python backend here
+        _pyBackend = make_shared<pyBackendWrapper>(_pbe, &_dtmInfo, &_tgtInfo, _batchSize);
+
         // Start the read buffers off with a reasonable size. They will get resized as needed.
         _readBufs = make_shared<BufferPool>(dataLen / 8, targetLen);
         _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
 
-        _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, use_pinned_memory(_pBackend));
+        _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, _pyBackend->use_pinned_memory());
         _decodeThreads = unique_ptr<pyDecodeThreadPool>(
-                                new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs,
-                                                       _batchSize, dtmLen, tgtLen));
+                            new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs, _pyBackend));
 
         // Now add on the already created provider and add on the additional ones
         _decodeThreads->add_provider(prov);
@@ -300,7 +316,7 @@ int pyLoader::start()
     return 0;
 }
 
-void pyLoader::stop()
+void PyLoader::stop()
 {
     _readThread->stop();
     while (_readThread->stopped() == false) {
@@ -317,9 +333,10 @@ void pyLoader::stop()
     _readThread    = nullptr;
     _decodeBufs    = nullptr;
     _decodeThreads = nullptr;
+    _pyBackend     = nullptr;
 }
 
-int pyLoader::reset()
+int PyLoader::reset()
 {
     stop();
     _batch_iterator->reset();
@@ -327,7 +344,7 @@ int pyLoader::reset()
     return 0;
 }
 
-void pyLoader::next()
+void PyLoader::next()
 {
     unique_lock<mutex> lock(_decodeBufs->getMutex());
     if (_first == true) {
@@ -342,7 +359,7 @@ void pyLoader::next()
     }
 }
 
-void pyLoader::drain()
+void PyLoader::drain()
 {
     {
         unique_lock<mutex> lock(_decodeBufs->getMutex());

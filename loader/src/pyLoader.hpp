@@ -23,15 +23,13 @@
 #include <chrono>
 #include <utility>
 #include <algorithm>
-#include "Python.h"
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
 
+#include "pyBackendWrapper.hpp"
 #include "threadpool.hpp"
-#include "loader.hpp"
 #include "batch_iterator.hpp"
 #include "manifest.hpp"
 #include "provider_factory.hpp"
+
 
 /* DecodeThreadPool
  *
@@ -46,7 +44,8 @@ public:
     pyDecodeThreadPool(int count,
                        const std::shared_ptr<BufferPool>& in,
                        const std::shared_ptr<BufferPool>& out,
-                       int batchSize, int datumLen, int targetLen);
+                       const std::shared_ptr<pyBackendWrapper>& pbe);
+
     virtual ~pyDecodeThreadPool();
     virtual void start();
     virtual void stop();
@@ -66,6 +65,7 @@ private:
     int                         _itemsPerThread;
     std::shared_ptr<BufferPool> _in;
     std::shared_ptr<BufferPool> _out;
+    std::shared_ptr<pyBackendWrapper> _pbe;
     std::mutex                  _mutex;
     std::condition_variable     _started;
     std::condition_variable     _ended;
@@ -87,28 +87,60 @@ private:
 
     int                         _datumLen;
     int                         _targetLen;
-
-    PyObject*                   _pBackend;
-    std::vector<PyObject *>     _hostDataTuple;
-
-    PyObject*                   _dataTuple;
-    PyObject*                   _targetTuple;
-    PyObject*                   _f_consume;
-    PyObject*                   _f_empty_like;
 };
 
-class pyLoaderConfig : public LoaderConfig {
+class pyLoaderConfig : public nervana::json_config_parser {
 public:
+    std::string manifest_filename;
+    std::string cache_directory;
+    int macrobatch_size;
     int minibatch_size;
+
+    bool shuffle_every_epoch = false;
+    bool shuffle_manifest    = false;
+    int subset_percent        = 100;
+    int random_seed           = 0;
+
     bool set_config(nlohmann::json js) override
     {
+        parse_req(manifest_filename, "manifest_filename", js);
+        parse_req(cache_directory,   "cache_directory", js);
+        parse_req(macrobatch_size,   "macrobatch_size", js);
         parse_req(minibatch_size,   "minibatch_size", js);
+
+        parse_opt(shuffle_every_epoch, "shuffle_every_epoch", js);
+        parse_opt(shuffle_manifest,    "shuffle_manifest", js);
+        parse_opt(subset_percent,      "subset_percent", js);
+        parse_opt(random_seed,         "random_seed", js);
+
         return validate();
     }
 
 private:
     bool validate() { return true; }
 };
+
+/*
+ * The ReadThread wraps BatchIterator in a thread an coordinates work
+ * with other threads via locks on the output BufferPool `out`
+ *
+ */
+
+class ReadThread: public ThreadPool {
+public:
+    ReadThread(const std::shared_ptr<BufferPool>& out,
+               const std::shared_ptr<BatchIterator>& batch_iterator);
+
+protected:
+    virtual void work(int id);
+
+private:
+    ReadThread();
+    ReadThread(const ReadThread&);
+    std::shared_ptr<BufferPool> _out;
+    std::shared_ptr<BatchIterator> _batch_iterator;
+};
+
 
 /* PyLoader
  *
@@ -119,7 +151,7 @@ private:
 
 class PyLoader {
 public:
-    PyLoader(PyObject *pBackend, const char* PyloaderConfigString);
+    PyLoader(const char* PyloaderConfigString, PyObject *pbe);
 
     virtual ~PyLoader() {}
     int start();
@@ -136,7 +168,6 @@ private:
 private:
     PyLoader();
     PyLoader(const PyLoader&);
-    bool use_pinned_memory(PyObject *pb);
 
     bool                                _first = true;
 
@@ -152,5 +183,6 @@ private:
     int                                 _batchSize;
     std::shared_ptr<pyLoaderConfig>     _lcfg;
     nlohmann::json                      _lcfg_json;
-    PyObject*                           _pBackend;
+    PyObject*                           _pbe;
+    std::shared_ptr<pyBackendWrapper>   _pyBackend;
 };
