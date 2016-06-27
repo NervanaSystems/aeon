@@ -70,8 +70,6 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     fill_n(labels.begin(),anchors.size(),-1.);
 
     // compute bbox overlaps
-//    overlaps = bbox_overlaps(np.ascontiguousarray(anchors, dtype=np.float),
-//                         np.ascontiguousarray(db['gt_bb'] * im_scale, dtype=np.float))
     vector<box> scaled_bbox;
     for(const bbox::box& b : mp->boxes()) {
         box r{
@@ -111,7 +109,6 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 
     // assigning fg labels
     // 1. for each gt box, anchor with higher overlaps [including ties]
-//    for(float f : column_max) { cout << f << "   "; } cout << endl;
     for(int row=0; row<overlaps.rows; row++) {
         for(int col=0; col<overlaps.cols; col++) {
             // This should be fixed as it is comparing floats
@@ -131,7 +128,6 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 //    for(int i=0; i<labels.size(); i++) {
 //        cout << i << "   " << labels[i] << endl;
 //    }
-
 
     // For every anchor, compute the regression target compared
     // to the gt box that it has the highest overlap with
@@ -163,8 +159,6 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     return mp;
 }
 
-
-//def _sample_anchors(self, db, nrois, fg_fractions):
 tuple<vector<float>,vector<localization::target>,vector<int>>
     localization::transformer::sample_anchors(const vector<float>& labels,
                                               const vector<target>& bbox_targets) {
@@ -199,8 +193,6 @@ tuple<vector<float>,vector<localization::target>,vector<int>>
     vector<int> result_idx;
     result_idx.insert(result_idx.begin(), fg_idx.begin(), fg_idx.end());
     result_idx.insert(result_idx.begin(), bg_idx.begin(), bg_idx.end());
-//    idx = np.hstack([fg_idx, bg_idx])
-//    assert len(idx) == nrois
     cout << "post result_idx.size() " << result_idx.size() << endl;
 
     vector<float>  result_labels;
@@ -210,12 +202,9 @@ tuple<vector<float>,vector<localization::target>,vector<int>>
         result_targets.push_back(bbox_targets[i]);
     }
 
-//    # return labels, bbox_targets, and anchor indicies
-//    return (db['labels'][idx], db['bbox_targets'][idx, :], idx[:])
     return make_tuple(result_labels, result_targets, result_idx);
 }
 
-//def _compute_targets(gt_bb, rp_bb):
 vector<localization::target> localization::transformer::compute_targets(const vector<box>& gt_bb, const vector<box>& rp_bb) {
     //  Given ground truth bounding boxes and proposed boxes, compute the regresssion
     //  targets according to:
@@ -239,8 +228,6 @@ vector<localization::target> localization::transformer::compute_targets(const ve
         float dw = log(gt.width() / rp.width());
         float dh = log(gt.height() / rp.height());
         targets.emplace_back(dx, dy, dw, dh);
-
-//        cout << i << "   " << dx << "," << dy << "," << dw << "," << dh << endl;
     }
 
     return targets;
@@ -284,7 +271,6 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const
         }
         k++;
     }
-//    return overlaps
     return overlaps;
 }
 
@@ -307,7 +293,6 @@ localization::anchor::anchor(std::shared_ptr<const localization::config> _cfg) :
     conv_size{int(std::floor(cfg->max_size * cfg->scaling_factor))}
 {
     all_anchors = add_anchors();
-    cout << "all_anchors " << all_anchors.size() << endl;
 }
 
 vector<box> localization::anchor::inside_im_bounds(int width, int height) {
@@ -322,7 +307,7 @@ vector<box> localization::anchor::inside_im_bounds(int width, int height) {
 
 
 vector<box> localization::anchor::add_anchors() {
-    vector<box> anchors = generate_anchors(16,{0.5, 1., 2.},{8,16,32});
+    vector<box> anchors = generate_anchors();
 
     // generate shifts to apply to anchors
     // note: 1/self.SCALE is the feature stride
@@ -353,13 +338,13 @@ vector<box> localization::anchor::add_anchors() {
     return all_anchors;
 }
 
-vector<box> localization::anchor::generate_anchors(int base_size, const vector<float>& ratios, const vector<float>& scales) {
-    box anchor{0.,0.,(float)(base_size-1),(float)(base_size-1)};
-    vector<box> ratio_anchors = ratio_enum(anchor, ratios);
+vector<box> localization::anchor::generate_anchors() {
+    box anchor{0.,0.,(float)(cfg->base_size-1),(float)(cfg->base_size-1)};
+    vector<box> ratio_anchors = ratio_enum(anchor, cfg->ratios);
 
     vector<box> result;
     for(const box& ratio_anchor : ratio_anchors) {
-        for(const box& b : scale_enum(ratio_anchor, scales)) {
+        for(const box& b : scale_enum(ratio_anchor, cfg->scales)) {
             result.push_back(b);
         }
     }

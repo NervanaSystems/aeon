@@ -81,28 +81,23 @@ TEST(localization,generate_anchors) {
                          { -167.0-1.0, -343.0-1.0, 184.0-1.0, 360.0-1.0}};
 
     // subtract 1 from the expected vector as it was generated with 1's based matlab
-//    expected -= 1;
-
-    int base_size = 16;
-    float scale = 1.0 / 16.;  // scaling factor of the image layers (e.g. VGG)
-    vector<float> ratios = {0.5, 1, 2};
-    vector<float> scales = {8, 16, 32};
+    //    expected -= 1;
 
     auto cfg = make_localization_config();
 
     anchor _anchor{cfg};
-    vector<box> actual = _anchor.generate_anchors(base_size, ratios, scales);
+    vector<box> actual = _anchor.generate_anchors();
     ASSERT_EQ(expected.size(),actual.size());
     for(int i=0; i<expected.size(); i++) {
         EXPECT_EQ(expected[i], actual[i]);
     }
+
+    EXPECT_EQ(34596,_anchor.all_anchors.size());
 }
 
 TEST(localization,config) {
     nlohmann::json js;
     js["labels"] = label_list;
-
-    cout << js.dump(4) << endl;
 
     localization::config cfg;
     EXPECT_TRUE(cfg.set_config(js));

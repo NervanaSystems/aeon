@@ -44,7 +44,7 @@ namespace nervana {
 
         //    Generate anchor (reference) windows by enumerating aspect ratios X
         //    scales wrt a reference (0, 0, 15, 15) window.
-        std::vector<box> generate_anchors(int base_size, const std::vector<float>& ratios, const std::vector<float>& scales);
+        std::vector<box> generate_anchors();
     private:
         //    Enumerate a set of anchors for each aspect ratio wrt an anchor.
         std::vector<box> ratio_enum(const box& anchor, const std::vector<float>& ratios);
@@ -92,7 +92,7 @@ namespace nervana {
         int base_size = 16;
         float scaling_factor = 1.0 / 16.;
         std::vector<float> ratios = {0.5, 1, 2};
-        std::vector<float> scales = {128, 256, 512};
+        std::vector<float> scales = {8, 16, 32};
         float negative_overlap = 0.3;  // negative anchors have < 0.3 overlap with any gt box
         float positive_overlap = 0.7;  // positive anchors have > 0.7 overlap with at least one gt box
         float foreground_fraction = 0.5;  // at most, positive anchors are 0.5 of the total rois
