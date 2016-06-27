@@ -31,8 +31,8 @@
 using namespace std;
 
 pyDecodeThreadPool::pyDecodeThreadPool(int count,
-                                       const std::shared_ptr<BufferPool>& in,
-                                       const std::shared_ptr<BufferPool>& out,
+                                       const shared_ptr<BufferPool>& in,
+                                       const shared_ptr<BufferPool>& out,
                                        int batchSize, int datumLen, int targetLen)
 : ThreadPool(count), _in(in), _out(out),
  _itemsPerThread((batchSize - 1) / count + 1),
@@ -239,6 +239,23 @@ PyLoader::PyLoader(PyObject *pBackend, const char* pyloaderConfigString)
         _batch_iterator = make_shared<SequentialBatchIterator>(batchCacheLoader,
                                                                _lcfg->macrobatch_size);
     }
+}
+
+bool pyLoader::use_pinned_memory(PyObject *pb)
+{
+    PyObject *pinned_mem = PyObject_GetAttrString(pb, "use_pinned_mem");
+    bool result = false;
+
+    if (pinned_mem != NULL && PyBool_Check(pinned_mem)) {
+        result = (pinned_mem == Py_True) ? true : false;
+    }
+    Py_XDECREF(pinned_mem);
+    return result;
+}
+
+PyObject *pyLoader::wrap_decode_bufs(const shared_ptr<BufferPool>& decodeBufs)
+{
+
 }
 
 int pyLoader::start()

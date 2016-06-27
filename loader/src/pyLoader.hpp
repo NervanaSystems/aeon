@@ -88,6 +88,13 @@ private:
     int                         _datumLen;
     int                         _targetLen;
 
+    PyObject*                   _pBackend;
+    std::vector<PyObject *>     _hostDataTuple;
+
+    PyObject*                   _dataTuple;
+    PyObject*                   _targetTuple;
+    PyObject*                   _f_consume;
+    PyObject*                   _f_empty_like;
 };
 
 class pyLoaderConfig : public LoaderConfig {
@@ -129,6 +136,8 @@ private:
 private:
     PyLoader();
     PyLoader(const PyLoader&);
+    bool use_pinned_memory(PyObject *pb);
+
     bool                                _first = true;
 
     std::shared_ptr<BufferPool>         _readBufs = nullptr;

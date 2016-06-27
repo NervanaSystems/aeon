@@ -61,6 +61,7 @@ static PyObject *chromicorn_call(PyObject *self, PyObject *args)
 
     /* Clean up. */
     Py_XDECREF(pArgs);
+    Py_XDECREF(consumeFunc);
     delete[] data;
     PyObject *ret = Py_BuildValue("i", 1);
     return ret;

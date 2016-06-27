@@ -86,6 +86,8 @@ public:
     virtual ~BufferPool();
     BufferPair& getForWrite();
     BufferPair& getForRead();
+    BufferPair& getPair(int bufIdx);
+
     void advanceReadPos();
     void advanceWritePos();
     bool empty();

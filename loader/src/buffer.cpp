@@ -214,6 +214,11 @@ BufferPair& BufferPool::getForRead() {
     return _bufs[_readPos];
 }
 
+BufferPair& BufferPool::getPair(int bufIdx) {
+    assert(bufIdx >= 0 && bufIdx < _count);
+    return _bufs[bufIdx];
+}
+
 void BufferPool::advanceReadPos() {
     _used--;
     advance(_readPos);
