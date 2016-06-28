@@ -92,10 +92,10 @@ TEST(localization,generate_anchors) {
         EXPECT_EQ(expected[i], actual[i]);
     }
 
-    EXPECT_EQ(34596,_anchor.all_anchors.size());
+    EXPECT_EQ(17680,_anchor.all_anchors.size());
 }
 
-void plot(const vector<box>& list) {
+void plot(const vector<box>& list, const string& prefix) {
     float xmin = 0.0;
     float xmax = 0.0;
     float ymin = 0.0;
@@ -126,10 +126,12 @@ void plot(const vector<box>& list) {
     cv::rectangle(img, b.rect(), cv::Scalar(0,0,255));
 
     string fname = to_string(int(list[0].width())) + "x" + to_string(int(list[0].height())) + ".png";
+    fname = prefix + fname;
     cv::imwrite(fname,img);
 }
 
 void plot(const string& path) {
+    string prefix = path.substr(path.size()-11, 6) + "-";
     string data = read_file(path);
     auto cfg = make_localization_config();
     localization::extractor extractor{cfg};
@@ -148,7 +150,7 @@ void plot(const string& path) {
     for(const box& b : an) {
         if(last_width != b.width() || last_height != b.height()) {
             if(list.size() > 0) {
-                plot(list);
+                plot(list, prefix);
                 list.clear();
             }
         }
@@ -177,7 +179,7 @@ void plot(const string& path) {
             b = b * mdata->image_scale;
             cv::rectangle(img, b.rect(), cv::Scalar(255,0,0));
         }
-        cv::imwrite("fg.png",img);
+        cv::imwrite(prefix+"fg.png",img);
     }
 
     {
@@ -196,7 +198,7 @@ void plot(const string& path) {
             b = b * mdata->image_scale;
             cv::rectangle(img, b.rect(), cv::Scalar(255,0,0));
         }
-        cv::imwrite("bg.png",img);
+        cv::imwrite(prefix+"bg.png",img);
     }
 }
 

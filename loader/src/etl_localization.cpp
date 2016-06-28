@@ -301,9 +301,13 @@ vector<box> localization::anchor::add_anchors() {
     for(const box& anchor_data : anchors ) {
         for(const box& row_data : shifts ) {
             box b = row_data+anchor_data;
-//            if(b.xmin>=0 && b.ymin>=0) {
+            if(b.xmin >= 0 &&
+               b.ymin >= 0 &&
+               b.xmax <= cfg->max_size &&
+               b.ymax <= cfg->max_size)
+            {
                 all_anchors.push_back(b);
-//            }
+            }
         }
     }
 
