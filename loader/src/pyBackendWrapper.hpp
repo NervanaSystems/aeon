@@ -51,7 +51,7 @@ public:
 
 private:
     pyBackendWrapper() {};
-    void initPyList(PyObject *pylist, int length=2);
+    PyObject* initPyList(int length=2);
     void wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
                           nervana::count_size_type *typeInfo);
 

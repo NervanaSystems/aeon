@@ -29,7 +29,7 @@ extern void* start(int* itemCount,
 
         int d = PyEval_ThreadsInitialized();
         std::cout << "Eval threads state: " << d << std::endl;
-        PyEval_InitThreads();
+        // PyEval_InitThreads();
         PyLoader* loader = new PyLoader(loaderConfigString, pbackend);
 
         int result = loader->start();

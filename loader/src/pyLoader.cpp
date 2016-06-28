@@ -43,6 +43,10 @@ pyDecodeThreadPool::pyDecodeThreadPool(int count,
 
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
+    // int d = PyEval_ThreadsInitialized();
+    // printf("Eval threads state: %d\n", d);
+    // _main_state = PyThreadState_Get();
+    // _main_interpreter_state = _main_state->interp;
 }
 
 
@@ -175,8 +179,14 @@ void pyDecodeThreadPool::produce()
         BufferPair& outBuf = _out->getForWrite();
 
         // Copy to device.
+        // PyEval_RestoreThread(_manager_state);
+        PyGILState_STATE gstate;
+        gstate = PyGILState_Ensure();
+        // printf("gil state %d\n", gstate);
         _pbe->call_backend_transfer(outBuf, _bufferIndex);
+        PyGILState_Release(gstate);
 
+        // PyEval_SaveThread();
         // callBackendTransferFunc(_pbe, _host_dnparrays[_bufferIndex], _host_tnparrays[_bufferIndex], _bufferIndex);
         // _device->copyData(_bufferIndex, outBuf.first->_data, outBuf.first->_size);
         // _device->copyLabels(_bufferIndex, outBuf.second->_data, outBuf.second->_size);
@@ -210,6 +220,7 @@ void pyDecodeThreadPool::manage()
     // Thread function.
     // int result = _device->init();
     int result = 0;
+    _manager_state = PyThreadState_New(_main_interpreter_state);
     if (result != 0) {
         _stopManager = true;
     }

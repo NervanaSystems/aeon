@@ -28,18 +28,19 @@ pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
         throw std::runtime_error("Backend 'consume' function does not exist or is not callable");
     }
 
-    initPyList(_host_dlist);
-    initPyList(_host_tlist);
-    initPyList(_dev_dlist);
-    initPyList(_dev_tlist);
+    _host_dlist = initPyList();
+    _host_tlist = initPyList();
+    _dev_dlist  = initPyList();
+    _dev_tlist  = initPyList();
+    printf("List check result %d, %d\n", PyList_Check(_host_dlist), __LINE__);
 
     // PyGILState_Release(gstate);
 
 }
 
-void pyBackendWrapper::initPyList(PyObject *pylist, int length)
+PyObject* pyBackendWrapper::initPyList(int length)
 {
-    pylist = PyList_New(length);
+    PyObject* pylist = PyList_New(length);
     for (int i=0; i<length; ++i) {
         Py_INCREF(Py_None);
         if (PyList_SetItem(pylist, i, Py_None) != 0) {
@@ -47,6 +48,7 @@ void pyBackendWrapper::initPyList(PyObject *pylist, int length)
         }
     }
     printf("Completed init for list\n");
+    return pylist;
 }
 
 pyBackendWrapper::~pyBackendWrapper()
@@ -83,9 +85,13 @@ bool pyBackendWrapper::use_pinned_memory()
 void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
 {
     // PyThreadState tstate = PyEval_SaveThread();
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-
+    // PyGILState_STATE gstate;
+    // gstate = PyGILState_Ensure();
+    // printf("gil state %d\n", gstate);
+    // PyGILState_Release(gstate);
+    printf("Hey look here %d \n", __LINE__);
+    // int len_dlist = (int) PyList_Size(_host_dlist);
+    // printf("Length of list %d\n", len_dlist);
     wrap_buffer_pool(_host_dlist, outBuf.first, bufIdx, _dtmInfo);
     wrap_buffer_pool(_host_tlist, outBuf.second, bufIdx, _tgtInfo);
 
@@ -101,7 +107,6 @@ void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
     PyObject* tRes = PyObject_CallObject(_f_consume, tArgs);
     Py_XDECREF(tArgs);
     Py_XDECREF(tRes);
-    PyGILState_Release(gstate);
 
 }
 
@@ -124,7 +129,10 @@ PyObject* pyBackendWrapper::get_dtm_tgt_pair(int bufIdx)
 void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
                                         count_size_type *typeInfo)
 {
+    printf("Hey look here %d \n", __LINE__);
     PyObject *hdItem = PyList_GetItem(list, bufIdx);
+    printf("Hey look here %d \n", __LINE__);
+
     if (hdItem == NULL) {
         throw std::runtime_error("Bad Index");
     }
