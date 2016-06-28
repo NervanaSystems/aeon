@@ -39,7 +39,7 @@ public:
     Buffer(char* data, int size);
     virtual ~Buffer();
 
-    void read(std::ifstream& ifs, int size);
+    void read(std::istream& is, int size);
     void read(const char* src, int size);
     void reset();
     char* getItem(int index, int& len);

@@ -118,10 +118,10 @@ uint Buffer::getLevel() {
     return _idx;
 }
 
-void Buffer::read(ifstream& ifs, int size) {
+void Buffer::read(istream& is, int size) {
     // read `size` bytes out of `ifs` and push into buffer
     resizeIfNeeded(size);
-    ifs.read(_cur, size);
+    is.read(_cur, size);
     pushItem(size);
 }
 

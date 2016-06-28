@@ -70,9 +70,9 @@ public:
 
     void saveDoubleShort(ushort* dst, uint src);
 
-    void read(std::ifstream& ifs, uint* fileSize);
+    void read(std::istream& ifs, uint* fileSize);
 
-    void write(std::ofstream& ofs, uint fileSize, const char* fileName);
+    void write(std::ostream& ofs, uint fileSize, const char* fileName);
 
 public:
     ushort                      _magic;
@@ -93,8 +93,8 @@ friend class BatchFileReader;
 friend class BatchFileWriter;
 public:
     BatchFileHeader();
-    void read(std::ifstream& ifs);
-    void write(std::ofstream& ofs);
+    void read(std::istream& ifs);
+    void write(std::ostream& ofs);
 
 private:
 #pragma pack(1)
@@ -114,8 +114,8 @@ private:
 class BatchFileTrailer {
 public:
     BatchFileTrailer() ;
-    void write(std::ofstream& ofs);
-    void read(std::ifstream& ifs);
+    void write(std::ostream& ofs);
+    void read(std::istream& ifs);
 
 private:
     uint                        _unused[4];
@@ -124,6 +124,7 @@ private:
 class BatchFileReader {
 public:
     BatchFileReader();
+    BatchFileReader(std::istream* is);
     BatchFileReader(const std::string& fileName);
     ~BatchFileReader() ;
 
@@ -143,7 +144,13 @@ public:
     int maxTargetSize();
 
 private:
+    void readHeader();
+
+    // _is holds a pointer to the istream that is read from
+    std::istream*               _is;
+    // _ifs is used only if BatchFileReader(string) or open(string) are called
     std::ifstream               _ifs;
+
     BatchFileHeader             _fileHeader;
     BatchFileTrailer            _fileTrailer;
     RecordHeader                _recordHeader;
