@@ -56,6 +56,7 @@ SRCS := \
     buffer_pool_in.cpp \
     buffer_pool_out.cpp \
     cap_mjpeg_decoder.cpp \
+	nds_batch_loader.cpp \
 
 OBJS             = $(subst .cpp,.o,$(SRCS))
 LOADER_SO       := ../bin/loader.so
