@@ -7,7 +7,7 @@
 #include <cassert>
 #include <sys/stat.h>
 
-#include "batchfile.hpp"
+#include "cpio.hpp"
 
 template<typename T>
 class dataset
@@ -63,15 +63,15 @@ public:
                 int batchSize = std::min(remainder,_maxItems);
                 std::string fileName = _path + "/" + _prefix + std::to_string(fileNo++) + ".cpio";
                 _fileList.push_back(fileName);
-                BatchFileWriter bf;
-                bf.open(fileName);
+                CPIOFileWriter writer;
+                writer.open(fileName);
                 for(int i=0; i<batchSize; i++) {
                     std::vector<unsigned char> target = render_target( datumNumber );
                     std::vector<unsigned char> datum = render_datum( datumNumber );
-                    bf.writeItem((char*)datum.data(),(char*)target.data(),(uint)datum.size(),(uint)target.size());
+                    writer.writeItem((char*)datum.data(),(char*)target.data(),(uint)datum.size(),(uint)target.size());
                     datumNumber++;
                 }
-                bf.close();
+                writer.close();
                 remainder -= batchSize;
             }
         } else {

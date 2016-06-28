@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <ftw.h>
 
-#include "batchfile.hpp"
+#include "cpio.hpp"
 #include "batch_loader_cpio_cache.hpp"
 
 using namespace std;
@@ -53,7 +53,7 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(BufferPair& dest, uint block_num, 
     // load a block from cpio cache into dest.  If file doesn't exist,
     // return false.  If loading from cpio cache was successful return
     // true.
-    BatchFileReader reader;
+    CPIOFileReader reader;
 
     if(!reader.open(blockFilename(block_num, block_size))) {
         // couldn't load the file
@@ -73,8 +73,8 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(BufferPair& dest, uint block_num, 
 }
 
 void BatchLoaderCPIOCache::writeBlockToCache(BufferPair& buff, uint block_num, uint block_size) {
-    BatchFileWriter bfw;
-    bfw.open(blockFilename(block_num, block_size));
+    CPIOFileWriter writer;
+    writer.open(blockFilename(block_num, block_size));
 
     // would be nice if this was taken care of the BufferPair
     assert(buff.first->getItemCount() == buff.second->getItemCount());
@@ -88,10 +88,10 @@ void BatchLoaderCPIOCache::writeBlockToCache(BufferPair& buff, uint block_num, u
         int target_len;
         char* target = buff.second->getItem(i, target_len);
 
-        bfw.writeItem(datum, target, datum_len, target_len);
+        writer.writeItem(datum, target, datum_len, target_len);
     }
 
-    bfw.close();
+    writer.close();
 }
 
 void BatchLoaderCPIOCache::invalidateOldCache(const string& rootCacheDir,

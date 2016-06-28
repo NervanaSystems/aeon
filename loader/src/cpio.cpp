@@ -13,7 +13,7 @@
  limitations under the License.
 */
 
-#include "batchfile.hpp"
+#include "cpio.hpp"
 
 using namespace std;
 
@@ -104,7 +104,7 @@ void RecordHeader::write(ostream& ofs, uint fileSize, const char* fileName) {
     writePadding(ofs, _namesize);
 }
 
-BatchFileHeader::BatchFileHeader()
+CPIOHeader::CPIOHeader()
 : _formatVersion(FORMAT_VERSION), _writerVersion(WRITER_VERSION),
   _itemCount(0), _maxDatumSize(0), _maxTargetSize(0),
   _totalDataSize(0), _totalTargetsSize(0) {
@@ -112,7 +112,7 @@ BatchFileHeader::BatchFileHeader()
     memset(_unused, 0, sizeof(_unused));
 }
 
-void BatchFileHeader::read(istream& ifs) {
+void CPIOHeader::read(istream& ifs) {
     read_single_value(ifs, &_magic);
     if (strncmp(_magic, MAGIC_STRING, 4) != 0) {
         throw std::runtime_error("Unrecognized format\n");
@@ -128,7 +128,7 @@ void BatchFileHeader::read(istream& ifs) {
     read_single_value(ifs, &_unused);
 }
 
-void BatchFileHeader::write(ostream& ofs) {
+void CPIOHeader::write(ostream& ofs) {
     ofs.write((char*) MAGIC_STRING, strlen(MAGIC_STRING));
     write_single_value(ofs, &_formatVersion);
     write_single_value(ofs, &_writerVersion);
@@ -141,15 +141,15 @@ void BatchFileHeader::write(ostream& ofs) {
     write_single_value(ofs, &_unused);
 }
 
-BatchFileTrailer::BatchFileTrailer() {
+CPIOTrailer::CPIOTrailer() {
     memset(_unused, 0, sizeof(_unused));
 }
 
-void BatchFileTrailer::write(ostream& ofs) {
+void CPIOTrailer::write(ostream& ofs) {
     write_single_value(ofs, &_unused);
 }
 
-void BatchFileTrailer::read(istream& ifs) {
+void CPIOTrailer::read(istream& ifs) {
     read_single_value(ifs, &_unused);
 }
 
@@ -160,62 +160,62 @@ void BatchFileTrailer::read(istream& ifs) {
 
 
 
-BatchReader::BatchReader() {
+CPIOReader::CPIOReader() {
 }
 
-BatchReader::BatchReader(istream* is) {
+CPIOReader::CPIOReader(istream* is) {
     _is = is;
     readHeader();
 }
 
-void BatchReader::readHeader() {
+void CPIOReader::readHeader() {
     uint fileSize;
     _recordHeader.read(*_is, &fileSize);
-    if(fileSize != sizeof(_fileHeader)) {
+    if(fileSize != sizeof(_header)) {
         stringstream ss;
-        ss << "unexpected header size.  expected " << sizeof(_fileHeader);
+        ss << "unexpected header size.  expected " << sizeof(_header);
         ss << " found " << fileSize;
         throw std::runtime_error(ss.str());
     }
 
-    _fileHeader.read(*_is);
+    _header.read(*_is);
 }
 
-void BatchReader::read(Buffer& dest) {
+void CPIOReader::read(Buffer& dest) {
     uint datumSize;
     _recordHeader.read(*_is, &datumSize);
     dest.read(*_is, datumSize);
     readPadding(*_is, datumSize);
 }
 
-int BatchReader::itemCount() {
-    return _fileHeader._itemCount;
+int CPIOReader::itemCount() {
+    return _header._itemCount;
 }
 
-int BatchReader::totalDataSize() {
-    return _fileHeader._totalDataSize;
+int CPIOReader::totalDataSize() {
+    return _header._totalDataSize;
 }
 
-int BatchReader::totalTargetsSize() {
-    return _fileHeader._totalTargetsSize;
+int CPIOReader::totalTargetsSize() {
+    return _header._totalTargetsSize;
 }
 
-int BatchReader::maxDatumSize() {
-    return _fileHeader._maxDatumSize;
+int CPIOReader::maxDatumSize() {
+    return _header._maxDatumSize;
 }
 
-int BatchReader::maxTargetSize() {
-    return _fileHeader._maxTargetSize;
+int CPIOReader::maxTargetSize() {
+    return _header._maxTargetSize;
 }
 
-BatchFileReader::BatchFileReader() {
+CPIOFileReader::CPIOFileReader() {
 }
 
-BatchFileReader::~BatchFileReader() {
+CPIOFileReader::~CPIOFileReader() {
     close();
 }
 
-bool BatchFileReader::open(const string& fileName) {
+bool CPIOFileReader::open(const string& fileName) {
     // returns true if file was opened successfully.
     assert(_ifs.is_open() == false);
 
@@ -231,7 +231,7 @@ bool BatchFileReader::open(const string& fileName) {
     return true;
 }
 
-void BatchFileReader::close() {
+void CPIOFileReader::close() {
     if (_ifs.is_open() == true) {
         _ifs.close();
     }
@@ -252,36 +252,36 @@ void BatchFileReader::close() {
 
 
 
-BatchFileWriter::~BatchFileWriter() {
+CPIOFileWriter::~CPIOFileWriter() {
     close();
 }
 
-void BatchFileWriter::open(const std::string& fileName, const std::string& dataType) {
-    static_assert(sizeof(_fileHeader) == 64, "file header is not 64 bytes");
+void CPIOFileWriter::open(const std::string& fileName, const std::string& dataType) {
+    static_assert(sizeof(_header) == 64, "file header is not 64 bytes");
     _fileName = fileName;
     _tempName = fileName + ".tmp";
     assert(_ofs.is_open() == false);
     _ofs.open(_tempName, ostream::binary);
     _recordHeader.write(_ofs, 64, "cpiohdr");
     _fileHeaderOffset = _ofs.tellp();
-    memset(_fileHeader._dataType, ' ', sizeof(_fileHeader._dataType));
-    memcpy(_fileHeader._dataType, dataType.c_str(),
+    memset(_header._dataType, ' ', sizeof(_header._dataType));
+    memcpy(_header._dataType, dataType.c_str(),
            std::min(8, (int) dataType.length()));
     // This will be incomplete until the write on close()
-    _fileHeader.write(_ofs);
+    _header.write(_ofs);
 }
 
-void BatchFileWriter::close() {
+void CPIOFileWriter::close() {
     if (_ofs.is_open() == true) {
         // Write the trailer.
-        static_assert(sizeof(_fileTrailer) == 16,
+        static_assert(sizeof(_trailer) == 16,
                       "file trailer is not 16 bytes");
         _recordHeader.write(_ofs, 16, "cpiotlr");
-        _fileTrailer.write(_ofs);
+        _trailer.write(_ofs);
         _recordHeader.write(_ofs, 0, CPIO_FOOTER);
         // Need to write back the max size values before cleaning up
         _ofs.seekp(_fileHeaderOffset, _ofs.beg);
-        _fileHeader.write(_ofs);
+        _header.write(_ofs);
         _ofs.close();
         int result = rename(_tempName.c_str(), _fileName.c_str());
         if (result != 0) {
@@ -292,30 +292,30 @@ void BatchFileWriter::close() {
     }
 }
 
-void BatchFileWriter::writeItem(char* datum, char* target,
+void CPIOFileWriter::writeItem(char* datum, char* target,
                uint datumSize, uint targetSize) {
     char fileName[16];
     // Write the datum.
-    sprintf(fileName, "cpiodtm%d",  _fileHeader._itemCount);
+    sprintf(fileName, "cpiodtm%d",  _header._itemCount);
     _recordHeader.write(_ofs, datumSize, fileName);
     _ofs.write(datum, datumSize);
     writePadding(_ofs, datumSize);
     // Write the target.
-    sprintf(fileName, "cpiotgt%d",  _fileHeader._itemCount);
+    sprintf(fileName, "cpiotgt%d",  _header._itemCount);
     _recordHeader.write(_ofs, targetSize, fileName);
     _ofs.write(target, targetSize);
     writePadding(_ofs, targetSize);
 
-    _fileHeader._maxDatumSize =
-            std::max(datumSize, _fileHeader._maxDatumSize);
-    _fileHeader._maxTargetSize =
-            std::max(targetSize, _fileHeader._maxTargetSize);
-    _fileHeader._totalDataSize += datumSize;
-    _fileHeader._totalTargetsSize += targetSize;
-    _fileHeader._itemCount++;
+    _header._maxDatumSize =
+            std::max(datumSize, _header._maxDatumSize);
+    _header._maxTargetSize =
+            std::max(targetSize, _header._maxTargetSize);
+    _header._totalDataSize += datumSize;
+    _header._totalTargetsSize += targetSize;
+    _header._itemCount++;
 }
 
-void BatchFileWriter::writeItem(ByteVect &datum, ByteVect &target) {
+void CPIOFileWriter::writeItem(ByteVect &datum, ByteVect &target) {
     uint    datumSize = datum.size();
     uint    targetSize = target.size();
     writeItem(&datum[0], &target[0], datumSize, targetSize);

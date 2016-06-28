@@ -20,7 +20,7 @@
 
 #include "gtest/gtest.h"
 #include "gen_image.hpp"
-#include "batchfile.hpp"
+#include "cpio.hpp"
 
 #include "params.hpp"
 #include "etl_interface.hpp"

@@ -88,11 +88,11 @@ public:
     ushort                      _filesize[2];
 };
 
-class BatchFileHeader {
-friend class BatchReader;
-friend class BatchFileWriter;
+class CPIOHeader {
+friend class CPIOReader;
+friend class CPIOFileWriter;
 public:
-    BatchFileHeader();
+    CPIOHeader();
     void read(std::istream& ifs);
     void write(std::ostream& ofs);
 
@@ -111,9 +111,9 @@ private:
 #pragma pack()
 };
 
-class BatchFileTrailer {
+class CPIOTrailer {
 public:
-    BatchFileTrailer() ;
+    CPIOTrailer() ;
     void write(std::ostream& ofs);
     void read(std::istream& ifs);
 
@@ -121,10 +121,10 @@ private:
     uint                        _unused[4];
 };
 
-class BatchReader {
+class CPIOReader {
 public:
-    BatchReader();
-    BatchReader(std::istream* is);
+    CPIOReader();
+    CPIOReader(std::istream* is);
 
     void read(Buffer& dest);
 
@@ -143,22 +143,22 @@ protected:
 
     std::istream*               _is;
 
-    BatchFileHeader             _fileHeader;
-    BatchFileTrailer            _fileTrailer;
+    CPIOHeader                  _header;
+    CPIOTrailer                 _trailer;
     RecordHeader                _recordHeader;
     std::string                 _fileName;
     std::string                 _tempName;
 };
 
 /*
- * BatchFileReader wraps file opening around the more generic BatchReader
+ * CPIOFileReader wraps file opening around the more generic CPIOReader
  * which only deals in istreams
  */
 
-class BatchFileReader : public BatchReader {
+class CPIOFileReader : public CPIOReader {
 public:
-    BatchFileReader();
-    ~BatchFileReader();
+    CPIOFileReader();
+    ~CPIOFileReader();
 
     bool open(const std::string& fileName);
     void close();
@@ -167,9 +167,9 @@ private:
     std::ifstream               _ifs;
 };
 
-class BatchFileWriter {
+class CPIOFileWriter {
 public:
-    ~BatchFileWriter();
+    ~CPIOFileWriter();
 
     void open(const std::string& fileName, const std::string& dataType = "");
     void close();
@@ -181,8 +181,8 @@ public:
 
 private:
     std::ofstream               _ofs;
-    BatchFileHeader             _fileHeader;
-    BatchFileTrailer            _fileTrailer;
+    CPIOHeader                  _header;
+    CPIOTrailer                 _trailer;
     RecordHeader                _recordHeader;
     int                         _fileHeaderOffset;
     std::string                 _fileName;

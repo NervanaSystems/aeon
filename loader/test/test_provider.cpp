@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include "gen_image.hpp"
-#include "batchfile.hpp"
 
 #include "params.hpp"
 #include "etl_interface.hpp"
@@ -10,7 +9,7 @@
 #include "etl_lmap.hpp"
 #include "provider.hpp"
 #include "json.hpp"
-#include "batchfile.hpp"
+#include "cpio.hpp"
 #include "util.hpp"
 #include "provider_factory.hpp"
 
@@ -38,7 +37,7 @@ TEST(provider,image) {
     auto files = image_dataset.GetFiles();
     ASSERT_NE(0,files.size());
 
-    BatchFileReader reader;
+    CPIOFileReader reader;
     EXPECT_EQ(reader.open(files[0]), true);
     for (int i=0; i<reader.itemCount()/2; i++ ) {
         Buffer data_p(0);
@@ -121,16 +120,16 @@ TEST(provider, argtype) {
         auto dataFiles = image_dataset.GetFiles();
         ASSERT_GT(dataFiles.size(),0);
         string batchFileName = dataFiles[0];
-        BatchFileReader bf;
-        EXPECT_EQ(bf.open(batchFileName), true);
+        CPIOFileReader reader;
+        EXPECT_EQ(reader.open(batchFileName), true);
 
         // Just get a single item
         Buffer data(0);
         Buffer labels(0);
-        bf.read(data);
-        bf.read(labels);
+        reader.read(data);
+        reader.read(labels);
 
-        bf.close();
+        reader.close();
 
         default_random_engine r_eng(0);
         default_random_engine r_eng_copy(0);

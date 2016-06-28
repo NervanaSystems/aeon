@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "batchfile.hpp"
+#include "cpio.hpp"
 
 extern "C" {
 

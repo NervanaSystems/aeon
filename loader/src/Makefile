@@ -16,7 +16,7 @@
 
 SRCS            := \
     device.cpp \
-    batchfile.cpp \
+    cpio.cpp \
     buffer.cpp \
     loader.cpp \
     argtype.cpp \
