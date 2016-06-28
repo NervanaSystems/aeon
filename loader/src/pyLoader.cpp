@@ -311,7 +311,7 @@ int PyLoader::start()
         _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, _pyBackend->use_pinned_memory());
         _decodeThreads = unique_ptr<pyDecodeThreadPool>(
                             new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs, _pyBackend));
-        printf("Hey look here %s %d \n", __FILE__, __LINE__);
+        printf("Hey look here %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 
         // Now add on the already created provider and add on the additional ones
         _decodeThreads->add_provider(prov);

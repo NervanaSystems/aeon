@@ -117,7 +117,7 @@ void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    printf("Hey look here %s %d \n", __FILE__, __LINE__);
+    printf("Hey look here %s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     wrap_buffer_pool(_host_dlist, outBuf.first, bufIdx, _dtmInfo);
     wrap_buffer_pool(_host_tlist, outBuf.second, bufIdx, _tgtInfo);
 
