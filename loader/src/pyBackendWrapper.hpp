@@ -41,13 +41,8 @@ public:
     pyBackendWrapper(PyObject*, nervana::count_size_type*, nervana::count_size_type*, int);
     bool use_pinned_memory();
     void call_backend_transfer(BufferPair &outBuf, int bufIdx);
+    PyObject* get_dtm_tgt_pair(int bufIdx);
 
-    void wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
-                          nervana::count_size_type *typeInfo);
-
-    // void call_backend_transfer(const std::shared_ptr<BufferPool>& b_pool, int bufIdx);
-    // void wrap_buffer_pool(PyObject* list, nervana::count_size_type *type_info,
-    //                       const std::shared_ptr<BufferPool>& b_pool, bool is_datum);
     ~pyBackendWrapper();
 
     nervana::count_size_type*   _dtmInfo;
@@ -57,6 +52,8 @@ public:
 private:
     pyBackendWrapper() {};
     void initPyList(PyObject *pylist, int length=2);
+    void wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
+                          nervana::count_size_type *typeInfo);
 
     PyObject*                   _pBackend;
 

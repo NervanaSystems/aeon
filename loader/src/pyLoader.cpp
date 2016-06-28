@@ -344,7 +344,7 @@ int PyLoader::reset()
     return 0;
 }
 
-void PyLoader::next()
+PyObject* PyLoader::next(int bufIdx)
 {
     unique_lock<mutex> lock(_decodeBufs->getMutex());
     if (_first == true) {
@@ -357,6 +357,7 @@ void PyLoader::next()
     while (_decodeBufs->empty()) {
         _decodeBufs->waitForNonEmpty(lock);
     }
+    return _pyBackend->get_dtm_tgt_pair(bufIdx);
 }
 
 void PyLoader::drain()

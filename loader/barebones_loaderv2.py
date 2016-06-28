@@ -24,12 +24,19 @@ logger = logging.getLogger(__name__)
 
 class ProtoBackend(object):
     def __init__(self):
-        return
+        self.use_pinned_mem = True
+        self.test_string = "Hey look at me"
 
-    def consume(self, hostlist, devlist, buf_index):
-        assert(buf_index < 2, "Can only double buffer")
+    def consume(self, buf_index, hostlist, devlist):
+        if buf_index >= 2:
+            raise ValueError('Can only double buffer')
         if devlist[buf_index] is None:
+            devlist[buf_index] = self.empty_like(hostlist[buf_index])
+        print devlist[buf_index].shape, hostlist[buf_index.shape]
+        devlist[buf_index][:] = hostlist[buf_index].T
 
+    def empty_like(self, npary):
+        return np.empty_like(npary.T)
 
 
 class DataLoader(object):
@@ -43,9 +50,6 @@ class DataLoader(object):
         set_name (str):
             Name of this dataset partition.  This is used as prefix for
             directories and index files that may be created while ingesting.
-        cache_dir (str):
-            Directory to find the data.  This may also be used as the output
-            directory to store ingested data.
         manifest_file (str, optional):
             CSV formatted index file that defines the mapping between each
             example and its target.  The first line in the index file is
@@ -82,6 +86,7 @@ class DataLoader(object):
         self.start_idx = 0
 
         self.backend_data = None
+        self.backend = ProtoBackend()
         self.load_library()
         self.start()
         atexit.register(self.stop)
@@ -93,7 +98,9 @@ class DataLoader(object):
         self.loaderlib.get_error_message.restype = ct.c_char_p
         self.loaderlib.start.restype = ct.c_void_p
 
-        self.loaderlib.next.argtypes = [ct.c_void_p]
+        self.loaderlib.next.argtypes = [ct.c_void_p, ct.c_int]
+        self.loaderlib.next.restype = ct.py_object
+
         self.loaderlib.stop.argtypes = [ct.c_void_p]
         self.loaderlib.reset.argtypes = [ct.c_void_p]
 
@@ -105,12 +112,10 @@ class DataLoader(object):
         """
         Launch background threads for loading the data.
         """
-
         self.loader = self.loaderlib.start(
                 ct.byref(self.item_count),
-                ct.c_int(self.batch_size),
                 ct.c_char_p(self.loader_cfg_string),
-                ct.POINTER(DeviceParams)(self.device_params)
+                ct.py_object(self.backend)
                 )
 
         self.ndata = self.item_count.value
@@ -118,31 +123,9 @@ class DataLoader(object):
             a = self.loaderlib.get_error_message()
             raise RuntimeError('Failed to start data loader.' + a)
 
-        self.data = self.attach_typeinfo(self.device_params.dtmInfo, self.device_params.data)
-        self.targets = self.attach_typeinfo(self.device_params.tgtInfo, self.device_params.targets)
 
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
 
-    def attach_typeinfo(self, typeinfo, pointers):
-        """
-        Takes the data and target buffers allocated by loaderlib and wraps them as numpy
-        tensors with the appropriate datatypes
-        """
-
-        buf_interface = ct.pythonapi.PyBuffer_FromMemory
-        buf_interface.restype = ct.py_object
-
-        typename = np.dtype('{}{}'.format(typeinfo.Type[0], typeinfo.Size)).name
-        ctdtype = ct.POINTER(getattr(ct, 'c_{}'.format(typename)))
-        npdtype = getattr(np, typename)
-        bufsize = typeinfo.Count * typeinfo.Size * self.batch_size
-        shape = (typeinfo.Count, self.batch_size)
-
-        res = []
-        for dptr in pointers:
-            b = buf_interface(ct.cast(dptr, ctdtype), bufsize)
-            res.append(np.frombuffer(b, dtype=npdtype).reshape(shape))
-        return res
 
     def stop(self):
         """
@@ -162,9 +145,14 @@ class DataLoader(object):
         end = min(start + self.batch_size, self.ndata)
         if end == self.ndata:
             self.start_idx = self.batch_size - (self.ndata - start)
+
+
+        (data, targets) = self.loaderlib.next(self.loader, ct.c_int(self.buffer_id))
         import pdb; pdb.set_trace()
 
-        self.loaderlib.next(self.loader)
+        # (data, targets) = self.loaderlib.get_dtm_tgt(self.buffer_id)
+
+
 
         if self.backend_data is None:
             data = self.data[self.buffer_id]
@@ -192,15 +180,17 @@ cfg_dict = dict(media="image",
                 target_config=tcfg,
                 manifest_filename="/scratch/alex/dloader_test/cifar_manifest.txt",
                 cache_directory="/scratch/alex/dloader_test",
-                macrobatch_size=5000)
+                macrobatch_size=5000, minibatch_size=128)
 
 
 
 cfg_string = json.dumps(cfg_dict)
 
 dloader_args = dict(set_name="tag_test",
-                    loader_cfg_string=cfg_string,
-                    device_type=0, device_id=0, batch_size=128)
+                    batch_size=cfg_dict['minibatch_size'],
+                    loader_cfg_string=cfg_string)
+# print threading.current_thread()
+# print threading.enumerate()
 dd = DataLoader(**dloader_args)
 
 

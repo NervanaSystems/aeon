@@ -24,7 +24,7 @@ static std::string last_error_message;
 extern const char* get_error_message();
 extern int error();
 extern void* start(int* itemCount, const char* loaderConfigString, PyObject* pbackend);
-extern int next(PyLoader* loader);
+extern PyObject* next(PyLoader* loader, int bufIdx);
 extern int reset(PyLoader* loader);
 extern int stop(PyLoader* loader);
 

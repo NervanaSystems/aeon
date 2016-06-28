@@ -27,6 +27,9 @@ extern void* start(int* itemCount,
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
 
+        int d = PyEval_ThreadsInitialized();
+        std::cout << "Eval threads state: " << d << std::endl;
+        PyEval_InitThreads();
         PyLoader* loader = new PyLoader(loaderConfigString, pbackend);
 
         int result = loader->start();
@@ -54,13 +57,13 @@ extern int error() {
     }
 }
 
-extern int next(PyLoader* loader) {
+extern PyObject* next(PyLoader* loader, int bufIdx) {
     try {
-        loader->next();
-        return 0;
+        return loader->next(bufIdx);
+        // return 0;
     } catch(std::exception& ex) {
         last_error_message = ex.what();
-        return -1;
+        return NULL;
     }
 }
 

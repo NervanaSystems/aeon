@@ -39,7 +39,7 @@ SRCS            := \
     vector.cpp
 
 OBJS             = $(subst .cpp,.o,$(SRCS))
-CFLAGS          := -Wall -Wno-deprecated-declarations -O2 -g -std=c++11 -fPIC
+CFLAGS          := -Wall -Wno-deprecated-declarations -O0 -g -std=c++11 -fPIC
 CFLAGSDBG       := -g -Wall -O0 -std=c++11 -fPIC
 CC              := clang++
 LOADER_SO       := ../bin/loader.so

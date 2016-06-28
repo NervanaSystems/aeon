@@ -157,7 +157,8 @@ public:
     int start();
     void stop();
     int reset();
-    void next();
+    // void next();
+    PyObject* next(int bufIdx);
 
     std::shared_ptr<BatchIterator> getBatchIterator() { return _batch_iterator; }
     int itemCount() { return _manifest->getSize(); }
