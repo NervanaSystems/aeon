@@ -25,6 +25,10 @@ public:
         return box(xmin+b.xmin, ymin+b.ymin, xmax+b.xmax, ymax+b.ymax);
     }
 
+    box operator*(float v) const {
+        return box(xmin*v, ymin*v, xmax*v, ymax*v);
+    }
+
     bool operator==(const box& b) const {
         return xmin==b.xmin && ymin==b.ymin && xmax==b.xmax && ymax==b.ymax;
     }

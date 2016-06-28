@@ -51,10 +51,6 @@ localization::transformer::transformer(std::shared_ptr<const localization::confi
     cfg{_cfg},
     _anchor{cfg}
 {
-//    cout << "anchors " << anchors.size() << endl;
-//    for(const anchor::box& b : anchors) {
-//        cout << "[" << b.xmin << "," << b.ymin << "," << b.xmax-b.xmin << "," << b.ymax-b.ymin << "]" << endl;
-//    }
 }
 
 shared_ptr<localization::decoded> localization::transformer::transform(
@@ -63,8 +59,9 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     cv::Size im_size{mp->width(), mp->height()};
     float im_scale;
     tie(im_scale, im_size) = calculate_scale_shape(im_size);
+    cout << "im_scale " << im_scale << ", im_size " << im_size << endl;
 
-    vector<box> anchors = _anchor.inside_im_bounds(im_size.width, im_size.height);
+    vector<box> anchors = _anchor.inside_image_bounds(im_size.width, im_size.height);
 
     vector<float> labels(anchors.size());
     fill_n(labels.begin(),anchors.size(),-1.);
@@ -72,11 +69,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     // compute bbox overlaps
     vector<box> scaled_bbox;
     for(const bbox::box& b : mp->boxes()) {
-        box r{
-        (float)b.xmin * im_scale,
-        (float)b.ymin * im_scale,
-        (float)b.xmax * im_scale,
-        (float)b.ymax * im_scale};
+        box r = b*im_scale;
         scaled_bbox.push_back(r);
     }
     cv::Mat overlaps = bbox_overlaps(anchors, scaled_bbox);
@@ -149,9 +142,6 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 
     auto bbox_targets = compute_targets(argmax, anchors);
 
-    // results
-    // labels
-    // bbox_targets
     tie(mp->labels, mp->bbox_targets, mp->anchor_index) = sample_anchors(labels, bbox_targets);
 
 //    cout << "result_idx\n"; for(int i=0; i<result_idx.size(); i++) { cout << "   " << i << "  " << result_idx[i] << endl; }
@@ -162,11 +152,8 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 tuple<vector<float>,vector<localization::target>,vector<int>>
     localization::transformer::sample_anchors(const vector<float>& labels,
                                               const vector<target>& bbox_targets) {
-    cout << "sample_anchors labels " << labels.size() << " bbox_targets " << bbox_targets.size()  << endl;
     // subsample labels if needed
     int num_fg = int(cfg->foreground_fraction * cfg->rois_per_image);
-    cout << "num_fg " << num_fg << endl;
-    cout << "rois_per_image " << cfg->rois_per_image << endl;
     vector<int> fg_idx;
     vector<int> bg_idx;
     for(int i=0; i<labels.size(); i++) {
@@ -176,24 +163,19 @@ tuple<vector<float>,vector<localization::target>,vector<int>>
             bg_idx.push_back(i);
         }
     }
-    cout << "fg_idx.size() " << fg_idx.size() << endl;
-    cout << "bg_idx.size() " << bg_idx.size() << endl;
+    shuffle(fg_idx.begin(), fg_idx.end(),random);
     if(fg_idx.size() > num_fg) {
-        shuffle(fg_idx.begin(), fg_idx.end(),random);
         fg_idx.resize(num_fg);
     }
     int remainder = cfg->rois_per_image-fg_idx.size();
+    shuffle(bg_idx.begin(), bg_idx.end(),random);
     if(bg_idx.size() > remainder) {
-        shuffle(bg_idx.begin(), bg_idx.end(),random);
         bg_idx.resize(remainder);
     }
-    cout << "post fg_idx.size() " << fg_idx.size() << endl;
-    cout << "post bg_idx.size() " << bg_idx.size() << endl;
 
     vector<int> result_idx;
-    result_idx.insert(result_idx.begin(), fg_idx.begin(), fg_idx.end());
-    result_idx.insert(result_idx.begin(), bg_idx.begin(), bg_idx.end());
-    cout << "post result_idx.size() " << result_idx.size() << endl;
+    result_idx.insert(result_idx.end(), fg_idx.begin(), fg_idx.end());
+    result_idx.insert(result_idx.end(), bg_idx.begin(), bg_idx.end());
 
     vector<float>  result_labels;
     vector<target> result_targets;
@@ -248,13 +230,12 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const
     overlaps = 0.;
     float iw, ih, box_area;
     float ua;
-    uint32_t k, n;
-    k = 0;
-    for(const box& query_box : query_boxes) {
+    for(uint32_t k=0; k<query_boxes.size(); k++) {
+        const box& query_box = query_boxes[k];
         box_area = (query_box.xmax - query_box.xmin + 1) *
                    (query_box.ymax - query_box.ymin + 1);
-        n = 0;
-        for(const box& b : boxes ) {
+        for(uint32_t n=0; n<boxes.size(); n++) {
+            const box& b = boxes[n];
             iw = min(b.xmax, query_box.xmax) -
                  max(b.xmin, query_box.xmin) + 1;
             if(iw > 0) {
@@ -267,9 +248,7 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const
                     overlaps.at<float>(n, k) = iw * ih / ua;
                 }
             }
-            n++;
         }
-        k++;
     }
     return overlaps;
 }
@@ -286,8 +265,6 @@ tuple<float,cv::Size> localization::transformer::calculate_scale_shape(cv::Size 
     return make_tuple(im_scale, im_shape);
 }
 
-
-
 localization::anchor::anchor(std::shared_ptr<const localization::config> _cfg) :
     cfg{_cfg},
     conv_size{int(std::floor(cfg->max_size * cfg->scaling_factor))}
@@ -295,7 +272,7 @@ localization::anchor::anchor(std::shared_ptr<const localization::config> _cfg) :
     all_anchors = add_anchors();
 }
 
-vector<box> localization::anchor::inside_im_bounds(int width, int height) {
+vector<box> localization::anchor::inside_image_bounds(int width, int height) {
     vector<box> rc;
     for(const box& b : all_anchors) {
         if( b.xmin >= 0 && b.ymin >= 0 && b.xmax < width && b.ymax < height ) {
@@ -304,7 +281,6 @@ vector<box> localization::anchor::inside_im_bounds(int width, int height) {
     }
     return rc;
 }
-
 
 vector<box> localization::anchor::add_anchors() {
     vector<box> anchors = generate_anchors();

@@ -38,14 +38,12 @@ namespace nervana {
     public:
         anchor(std::shared_ptr<const localization::config>);
 
-        std::vector<box> inside_im_bounds(int width, int height);
-
-        std::vector<box> add_anchors();
-
+        std::vector<box> inside_image_bounds(int width, int height);
+    private:
         //    Generate anchor (reference) windows by enumerating aspect ratios X
         //    scales wrt a reference (0, 0, 15, 15) window.
         std::vector<box> generate_anchors();
-    private:
+
         //    Enumerate a set of anchors for each aspect ratio wrt an anchor.
         std::vector<box> ratio_enum(const box& anchor, const std::vector<float>& ratios);
 
@@ -59,6 +57,7 @@ namespace nervana {
         //    Return width, height, x center, and y center for an anchor (window).
         std::tuple<float,float,float,float> whctrs(const box&);
 
+        std::vector<box> add_anchors();
 
         std::shared_ptr<const localization::config> cfg;
         int conv_size;

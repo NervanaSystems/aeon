@@ -130,17 +130,22 @@ void plot(const vector<box>& list) {
 }
 
 TEST(localization,plot) {
+    string data = read_file(CURDIR"/test_data/006637.json");
     auto cfg = make_localization_config();
+    localization::extractor extractor{cfg};
+    localization::transformer transformer{cfg};
+    auto mdata = extractor.extract(&data[0],data.size());
+    auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);
+    ASSERT_NE(nullptr,decoded);
+    auto params = make_shared<image::params>();
+    shared_ptr<localization::decoded> transformed = transformer.transform(params, decoded);
 
-    anchor _anchor{cfg};
-    vector<box> actual = _anchor.generate_anchors();
-
-    vector<box> an = _anchor.all_anchors;
+    vector<box> an = transformer._anchor.all_anchors;
 
     int last_width = 0;
     int last_height = 0;
     vector<box> list;
-    for(const box& b : _anchor.all_anchors) {
+    for(const box& b : an) {
         if(last_width != b.width() || last_height != b.height()) {
             if(list.size() > 0) {
                 plot(list);
@@ -150,6 +155,31 @@ TEST(localization,plot) {
         list.push_back(b);
         last_width = b.width();
         last_height = b.height();
+    }
+
+    vector<float>  labels       = transformed->labels;
+    vector<target> bbox_targets = transformed->bbox_targets;
+    vector<int>    anchor_index = transformed->anchor_index;
+
+    cout << "labels       size " << labels.size()       << endl;
+    cout << "bbox_targets size " << bbox_targets.size() << endl;
+    cout << "anchor_index size " << anchor_index.size() << endl;
+
+    cv::Mat img(mdata->height(), mdata->width(), CV_8UC3);
+    img = cv::Scalar(255,255,255);
+    for(const box& b : mdata->boxes()) {
+        cv::rectangle(img, b.rect(), cv::Scalar(255,0,0));
+    }
+    cv::imwrite("bbox.png",img);
+
+    for(int i : anchor_index) {
+        box abox = an[i];
+        int label = int(round(labels[i]));
+        if(label==1) {
+            cv::rectangle(img, abox.rect(), cv::Scalar(0,255,0));
+        } else {
+            cv::rectangle(img, abox.rect(), cv::Scalar(0,0,255));
+        }
     }
 }
 
