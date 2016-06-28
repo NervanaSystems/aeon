@@ -27,7 +27,6 @@
 #include <cstring>
 #include <sstream>
 
-#include "streams.hpp"
 #include "buffer.hpp"
 
 #define FORMAT_VERSION  1
@@ -71,9 +70,9 @@ public:
 
     void saveDoubleShort(ushort* dst, uint src);
 
-    void read(IfStream& ifs, uint* fileSize);
+    void read(std::ifstream& ifs, uint* fileSize);
 
-    void write(OfStream& ofs, uint fileSize, const char* fileName);
+    void write(std::ofstream& ofs, uint fileSize, const char* fileName);
 
 public:
     ushort                      _magic;
@@ -94,8 +93,8 @@ friend class BatchFileReader;
 friend class BatchFileWriter;
 public:
     BatchFileHeader();
-    void read(IfStream& ifs);
-    void write(OfStream& ofs);
+    void read(std::ifstream& ifs);
+    void write(std::ofstream& ofs);
 
 private:
 #pragma pack(1)
@@ -115,8 +114,8 @@ private:
 class BatchFileTrailer {
 public:
     BatchFileTrailer() ;
-    void write(OfStream& ofs);
-    void read(IfStream& ifs);
+    void write(std::ofstream& ofs);
+    void read(std::ifstream& ifs);
 
 private:
     uint                        _unused[4];
@@ -144,7 +143,7 @@ public:
     int maxTargetSize();
 
 private:
-    IfStream                    _ifs;
+    std::ifstream               _ifs;
     BatchFileHeader             _fileHeader;
     BatchFileTrailer            _fileTrailer;
     RecordHeader                _recordHeader;
@@ -166,7 +165,7 @@ public:
 
 
 private:
-    OfStream                    _ofs;
+    std::ofstream               _ofs;
     BatchFileHeader             _fileHeader;
     BatchFileTrailer            _fileTrailer;
     RecordHeader                _recordHeader;

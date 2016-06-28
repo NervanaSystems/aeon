@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <sstream>
+#include <fstream>
 
 #include "batch_file_loader.hpp"
 

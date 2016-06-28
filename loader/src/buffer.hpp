@@ -27,8 +27,6 @@
 #include <cstring>
 #include <iostream>
 
-#include "streams.hpp"
-
 /* Buffer
  *
  * Buffer contains an ordered list of items in contiguous memory.  The

@@ -17,6 +17,34 @@
 
 using namespace std;
 
+template <typename T>
+void read_single_value(ifstream& ifs, T* data) {
+    ifs.read(reinterpret_cast<char*>(data), sizeof(T));
+}
+
+void readPadding(ifstream& ifs, uint length) {
+    // Read a byte if length is odd.
+    if (length % 2 == 0) {
+        return;
+    }
+    char byte = 0;
+    read_single_value(ifs, &byte);
+}
+
+template <typename T>
+void write_single_value(ofstream& ofs, T* data) {
+    ofs.write(reinterpret_cast<char*>(data), sizeof(T));
+}
+
+void writePadding(ofstream& ofs, uint length) {
+    // Write a byte if length is odd.
+    if (length % 2 == 0) {
+        return;
+    }
+    char byte = 0;
+    write_single_value(ofs, &byte);
+}
+
 RecordHeader::RecordHeader()
 : _magic(070707), _dev(0), _ino(0), _mode(0100644), _uid(0), _gid(0),
   _nlink(0), _rdev(0), _namesize(0) {
@@ -33,47 +61,47 @@ void RecordHeader::saveDoubleShort(ushort* dst, uint src) {
     dst[1] = (ushort) src;
 }
 
-void RecordHeader::read(IfStream& ifs, uint* fileSize) {
-    ifs.read(&_magic);
+void RecordHeader::read(ifstream& ifs, uint* fileSize) {
+    read_single_value(ifs, &_magic);
     assert(_magic == 070707);
-    ifs.read(&_dev);
-    ifs.read(&_ino);
-    ifs.read(&_mode);
-    ifs.read(&_uid);
-    ifs.read(&_gid);
-    ifs.read(&_nlink);
-    ifs.read(&_rdev);
+    read_single_value(ifs, &_dev);
+    read_single_value(ifs, &_ino);
+    read_single_value(ifs, &_mode);
+    read_single_value(ifs, &_uid);
+    read_single_value(ifs, &_gid);
+    read_single_value(ifs, &_nlink);
+    read_single_value(ifs, &_rdev);
     uint mtime;
-    ifs.read(&_mtime);
+    read_single_value(ifs, &_mtime);
     loadDoubleShort(&mtime, _mtime);
-    ifs.read(&_namesize);
-    ifs.read(&_filesize);
+    read_single_value(ifs, &_namesize);
+    read_single_value(ifs, &_filesize);
     loadDoubleShort(fileSize, _filesize);
     // Skip over filename.
     ifs.seekg(_namesize, ifs.cur);
-    ifs.readPadding(_namesize);
+    readPadding(ifs, _namesize);
 }
 
-void RecordHeader::write(OfStream& ofs, uint fileSize, const char* fileName) {
+void RecordHeader::write(ofstream& ofs, uint fileSize, const char* fileName) {
     _namesize = strlen(fileName) + 1;
-    ofs.write(&_magic);
-    ofs.write(&_dev);
-    ofs.write(&_ino);
-    ofs.write(&_mode);
-    ofs.write(&_uid);
-    ofs.write(&_gid);
-    ofs.write(&_nlink);
-    ofs.write(&_rdev);
+    write_single_value(ofs, &_magic);
+    write_single_value(ofs, &_dev);
+    write_single_value(ofs, &_ino);
+    write_single_value(ofs, &_mode);
+    write_single_value(ofs, &_uid);
+    write_single_value(ofs, &_gid);
+    write_single_value(ofs, &_nlink);
+    write_single_value(ofs, &_rdev);
     time_t mtime;
     time(&mtime);
     saveDoubleShort(_mtime, mtime);
-    ofs.write(&_mtime);
-    ofs.write(&_namesize);
+    write_single_value(ofs, &_mtime);
+    write_single_value(ofs, &_namesize);
     saveDoubleShort(_filesize, fileSize);
-    ofs.write(&_filesize);
+    write_single_value(ofs, &_filesize);
     // Write filename.
     ofs.write((char*) fileName, _namesize);
-    ofs.writePadding(_namesize);
+    writePadding(ofs, _namesize);
 }
 
 BatchFileHeader::BatchFileHeader()
@@ -84,45 +112,45 @@ BatchFileHeader::BatchFileHeader()
     memset(_unused, 0, sizeof(_unused));
 }
 
-void BatchFileHeader::read(IfStream& ifs) {
-    ifs.read(&_magic);
+void BatchFileHeader::read(ifstream& ifs) {
+    read_single_value(ifs, &_magic);
     if (strncmp(_magic, MAGIC_STRING, 4) != 0) {
         throw std::runtime_error("Unrecognized format\n");
     }
-    ifs.read(&_formatVersion);
-    ifs.read(&_writerVersion);
-    ifs.read(&_dataType);
-    ifs.read(&_itemCount);
-    ifs.read(&_maxDatumSize);
-    ifs.read(&_maxTargetSize);
-    ifs.read(&_totalDataSize);
-    ifs.read(&_totalTargetsSize);
-    ifs.read(&_unused);
+    read_single_value(ifs, &_formatVersion);
+    read_single_value(ifs, &_writerVersion);
+    read_single_value(ifs, &_dataType);
+    read_single_value(ifs, &_itemCount);
+    read_single_value(ifs, &_maxDatumSize);
+    read_single_value(ifs, &_maxTargetSize);
+    read_single_value(ifs, &_totalDataSize);
+    read_single_value(ifs, &_totalTargetsSize);
+    read_single_value(ifs, &_unused);
 }
 
-void BatchFileHeader::write(OfStream& ofs) {
+void BatchFileHeader::write(ofstream& ofs) {
     ofs.write((char*) MAGIC_STRING, strlen(MAGIC_STRING));
-    ofs.write(&_formatVersion);
-    ofs.write(&_writerVersion);
-    ofs.write(&_dataType);
-    ofs.write(&_itemCount);
-    ofs.write(&_maxDatumSize);
-    ofs.write(&_maxTargetSize);
-    ofs.write(&_totalDataSize);
-    ofs.write(&_totalTargetsSize);
-    ofs.write(&_unused);
+    write_single_value(ofs, &_formatVersion);
+    write_single_value(ofs, &_writerVersion);
+    write_single_value(ofs, &_dataType);
+    write_single_value(ofs, &_itemCount);
+    write_single_value(ofs, &_maxDatumSize);
+    write_single_value(ofs, &_maxTargetSize);
+    write_single_value(ofs, &_totalDataSize);
+    write_single_value(ofs, &_totalTargetsSize);
+    write_single_value(ofs, &_unused);
 }
 
 BatchFileTrailer::BatchFileTrailer() {
     memset(_unused, 0, sizeof(_unused));
 }
 
-void BatchFileTrailer::write(OfStream& ofs) {
-    ofs.write(&_unused);
+void BatchFileTrailer::write(ofstream& ofs) {
+    write_single_value(ofs, &_unused);
 }
 
-void BatchFileTrailer::read(IfStream& ifs) {
-    ifs.read(&_unused);
+void BatchFileTrailer::read(ifstream& ifs) {
+    read_single_value(ifs, &_unused);
 }
 
 
@@ -152,7 +180,7 @@ BatchFileReader::~BatchFileReader() {
 bool BatchFileReader::open(const string& fileName) {
     // returns true if file was opened successfully.
     assert(_ifs.is_open() == false);
-    _ifs.open(fileName, IfStream::binary);
+    _ifs.open(fileName, ifstream::binary);
     if(!_ifs) {
         return false;
     }
@@ -178,7 +206,7 @@ void BatchFileReader::read(Buffer& dest) {
     uint datumSize;
     _recordHeader.read(_ifs, &datumSize);
     dest.read(_ifs, datumSize);
-    _ifs.readPadding(datumSize);
+    readPadding(_ifs, datumSize);
 }
 
 int BatchFileReader::itemCount() {
@@ -225,7 +253,7 @@ void BatchFileWriter::open(const std::string& fileName, const std::string& dataT
     _fileName = fileName;
     _tempName = fileName + ".tmp";
     assert(_ofs.is_open() == false);
-    _ofs.open(_tempName, OfStream::binary);
+    _ofs.open(_tempName, ofstream::binary);
     _recordHeader.write(_ofs, 64, "cpiohdr");
     _fileHeaderOffset = _ofs.tellp();
     memset(_fileHeader._dataType, ' ', sizeof(_fileHeader._dataType));
@@ -263,12 +291,12 @@ void BatchFileWriter::writeItem(char* datum, char* target,
     sprintf(fileName, "cpiodtm%d",  _fileHeader._itemCount);
     _recordHeader.write(_ofs, datumSize, fileName);
     _ofs.write(datum, datumSize);
-    _ofs.writePadding(datumSize);
+    writePadding(_ofs, datumSize);
     // Write the target.
     sprintf(fileName, "cpiotgt%d",  _fileHeader._itemCount);
     _recordHeader.write(_ofs, targetSize, fileName);
     _ofs.write(target, targetSize);
-    _ofs.writePadding(targetSize);
+    writePadding(_ofs, targetSize);
 
     _fileHeader._maxDatumSize =
             std::max(datumSize, _fileHeader._maxDatumSize);

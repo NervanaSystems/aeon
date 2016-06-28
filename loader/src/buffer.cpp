@@ -24,11 +24,11 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <fstream>
 
 #include "buffer.hpp"
-#include "streams.hpp"
 
- using namespace std;
+using namespace std;
 
 Buffer::Buffer(int size, bool pinned)
 : _size(size), _idx(0), _alloc(true), _pinned(pinned) {
