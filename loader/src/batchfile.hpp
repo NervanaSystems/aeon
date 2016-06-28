@@ -89,7 +89,7 @@ public:
 };
 
 class BatchFileHeader {
-friend class BatchFileReader;
+friend class BatchReader;
 friend class BatchFileWriter;
 public:
     BatchFileHeader();
@@ -121,15 +121,10 @@ private:
     uint                        _unused[4];
 };
 
-class BatchFileReader {
+class BatchReader {
 public:
-    BatchFileReader();
-    BatchFileReader(std::istream* is);
-    BatchFileReader(const std::string& fileName);
-    ~BatchFileReader() ;
-
-    bool open(const std::string& fileName);
-    void close();
+    BatchReader();
+    BatchReader(std::istream* is);
 
     void read(Buffer& dest);
 
@@ -143,19 +138,33 @@ public:
 
     int maxTargetSize();
 
-private:
+protected:
     void readHeader();
 
-    // _is holds a pointer to the istream that is read from
     std::istream*               _is;
-    // _ifs is used only if BatchFileReader(string) or open(string) are called
-    std::ifstream               _ifs;
 
     BatchFileHeader             _fileHeader;
     BatchFileTrailer            _fileTrailer;
     RecordHeader                _recordHeader;
     std::string                 _fileName;
     std::string                 _tempName;
+};
+
+/*
+ * BatchFileReader wraps file opening around the more generic BatchReader
+ * which only deals in istreams
+ */
+
+class BatchFileReader : public BatchReader {
+public:
+    BatchFileReader();
+    ~BatchFileReader();
+
+    bool open(const std::string& fileName);
+    void close();
+
+private:
+    std::ifstream               _ifs;
 };
 
 class BatchFileWriter {
@@ -169,7 +178,6 @@ public:
                    uint datumSize, uint targetSize);
 
     void writeItem(ByteVect &datum, ByteVect &target);
-
 
 private:
     std::ofstream               _ofs;

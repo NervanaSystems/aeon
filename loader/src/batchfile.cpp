@@ -160,16 +160,55 @@ void BatchFileTrailer::read(istream& ifs) {
 
 
 
-BatchFileReader::BatchFileReader() {
+BatchReader::BatchReader() {
 }
 
-BatchFileReader::BatchFileReader(istream* is) {
+BatchReader::BatchReader(istream* is) {
     _is = is;
     readHeader();
 }
 
-BatchFileReader::BatchFileReader(const string& fileName) {
-    open(fileName);
+void BatchReader::readHeader() {
+    uint fileSize;
+    _recordHeader.read(*_is, &fileSize);
+    if(fileSize != sizeof(_fileHeader)) {
+        stringstream ss;
+        ss << "unexpected header size.  expected " << sizeof(_fileHeader);
+        ss << " found " << fileSize;
+        throw std::runtime_error(ss.str());
+    }
+
+    _fileHeader.read(*_is);
+}
+
+void BatchReader::read(Buffer& dest) {
+    uint datumSize;
+    _recordHeader.read(*_is, &datumSize);
+    dest.read(*_is, datumSize);
+    readPadding(*_is, datumSize);
+}
+
+int BatchReader::itemCount() {
+    return _fileHeader._itemCount;
+}
+
+int BatchReader::totalDataSize() {
+    return _fileHeader._totalDataSize;
+}
+
+int BatchReader::totalTargetsSize() {
+    return _fileHeader._totalTargetsSize;
+}
+
+int BatchReader::maxDatumSize() {
+    return _fileHeader._maxDatumSize;
+}
+
+int BatchReader::maxTargetSize() {
+    return _fileHeader._maxTargetSize;
+}
+
+BatchFileReader::BatchFileReader() {
 }
 
 BatchFileReader::~BatchFileReader() {
@@ -192,50 +231,10 @@ bool BatchFileReader::open(const string& fileName) {
     return true;
 }
 
-void BatchFileReader::readHeader() {
-    uint fileSize;
-    _recordHeader.read(*_is, &fileSize);
-    if(fileSize != sizeof(_fileHeader)) {
-        stringstream ss;
-        ss << "unexpected header size.  expected " << sizeof(_fileHeader);
-        ss << " found " << fileSize;
-        throw std::runtime_error(ss.str());
-    }
-
-    _fileHeader.read(*_is);
-}
-
 void BatchFileReader::close() {
     if (_ifs.is_open() == true) {
         _ifs.close();
     }
-}
-
-void BatchFileReader::read(Buffer& dest) {
-    uint datumSize;
-    _recordHeader.read(*_is, &datumSize);
-    dest.read(*_is, datumSize);
-    readPadding(*_is, datumSize);
-}
-
-int BatchFileReader::itemCount() {
-    return _fileHeader._itemCount;
-}
-
-int BatchFileReader::totalDataSize() {
-    return _fileHeader._totalDataSize;
-}
-
-int BatchFileReader::totalTargetsSize() {
-    return _fileHeader._totalTargetsSize;
-}
-
-int BatchFileReader::maxDatumSize() {
-    return _fileHeader._maxDatumSize;
-}
-
-int BatchFileReader::maxTargetSize() {
-    return _fileHeader._maxTargetSize;
 }
 
 

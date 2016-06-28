@@ -38,7 +38,8 @@ TEST(provider,image) {
     auto files = image_dataset.GetFiles();
     ASSERT_NE(0,files.size());
 
-    BatchFileReader reader(files[0]);
+    BatchFileReader reader;
+    EXPECT_EQ(reader.open(files[0]), true);
     for (int i=0; i<reader.itemCount()/2; i++ ) {
         Buffer data_p(0);
         reader.read(data_p);
@@ -120,7 +121,8 @@ TEST(provider, argtype) {
         auto dataFiles = image_dataset.GetFiles();
         ASSERT_GT(dataFiles.size(),0);
         string batchFileName = dataFiles[0];
-        BatchFileReader bf(batchFileName);
+        BatchFileReader bf;
+        EXPECT_EQ(bf.open(batchFileName), true);
 
         // Just get a single item
         Buffer data(0);
