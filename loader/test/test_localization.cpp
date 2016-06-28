@@ -129,8 +129,8 @@ void plot(const vector<box>& list) {
     cv::imwrite(fname,img);
 }
 
-TEST(localization,plot) {
-    string data = read_file(CURDIR"/test_data/006637.json");
+void plot(const string& path) {
+    string data = read_file(path);
     auto cfg = make_localization_config();
     localization::extractor extractor{cfg};
     localization::transformer transformer{cfg};
@@ -140,7 +140,7 @@ TEST(localization,plot) {
     auto params = make_shared<image::params>();
     shared_ptr<localization::decoded> transformed = transformer.transform(params, decoded);
 
-    vector<box> an = transformer._anchor.all_anchors;
+    const vector<box>& an = mdata->anchors;
 
     int last_width = 0;
     int last_height = 0;
@@ -157,30 +157,51 @@ TEST(localization,plot) {
         last_height = b.height();
     }
 
-    vector<float>  labels       = transformed->labels;
+    vector<int>    labels       = transformed->labels;
     vector<target> bbox_targets = transformed->bbox_targets;
     vector<int>    anchor_index = transformed->anchor_index;
 
-    cout << "labels       size " << labels.size()       << endl;
-    cout << "bbox_targets size " << bbox_targets.size() << endl;
-    cout << "anchor_index size " << anchor_index.size() << endl;
-
-    cv::Mat img(mdata->height(), mdata->width(), CV_8UC3);
-    img = cv::Scalar(255,255,255);
-    for(const box& b : mdata->boxes()) {
-        cv::rectangle(img, b.rect(), cv::Scalar(255,0,0));
-    }
-    cv::imwrite("bbox.png",img);
-
-    for(int i : anchor_index) {
-        box abox = an[i];
-        int label = int(round(labels[i]));
-        if(label==1) {
-            cv::rectangle(img, abox.rect(), cv::Scalar(0,255,0));
-        } else {
-            cv::rectangle(img, abox.rect(), cv::Scalar(0,0,255));
+    {
+        cv::Mat img(mdata->image_size, CV_8UC3);
+        img = cv::Scalar(255,255,255);
+        // Draw foreground boxes
+        for(int i=0; i<labels.size(); i++) {
+            box abox = an[anchor_index[i]];
+            if(labels[i]==1) {
+                cv::rectangle(img, abox.rect(), cv::Scalar(0,255,0));
+            }
         }
+
+        // Draw bounding boxes
+        for( box b : mdata->boxes()) {
+            b = b * mdata->image_scale;
+            cv::rectangle(img, b.rect(), cv::Scalar(255,0,0));
+        }
+        cv::imwrite("fg.png",img);
     }
+
+    {
+        cv::Mat img(mdata->image_size, CV_8UC3);
+        img = cv::Scalar(255,255,255);
+        // Draw background boxes
+        for(int i=0; i<labels.size(); i++) {
+            box abox = an[anchor_index[i]];
+            if(labels[i]==0) {
+                cv::rectangle(img, abox.rect(), cv::Scalar(0,0,255));
+            }
+        }
+
+        // Draw bounding boxes
+        for( box b : mdata->boxes()) {
+            b = b * mdata->image_scale;
+            cv::rectangle(img, b.rect(), cv::Scalar(255,0,0));
+        }
+        cv::imwrite("bg.png",img);
+    }
+}
+
+TEST(localization,plot) {
+    plot(CURDIR"/test_data/009952.json");
 }
 
 TEST(localization,config) {

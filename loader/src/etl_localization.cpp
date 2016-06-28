@@ -59,11 +59,12 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     cv::Size im_size{mp->width(), mp->height()};
     float im_scale;
     tie(im_scale, im_size) = calculate_scale_shape(im_size);
-    cout << "im_scale " << im_scale << ", im_size " << im_size << endl;
+    mp->image_scale = im_scale;
+    mp->image_size = im_size;
 
     vector<box> anchors = _anchor.inside_image_bounds(im_size.width, im_size.height);
 
-    vector<float> labels(anchors.size());
+    vector<int> labels(anchors.size());
     fill_n(labels.begin(),anchors.size(),-1.);
 
     // compute bbox overlaps
@@ -84,7 +85,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     // assign bg labels first
     vector<float> row_max(overlaps.rows);
     vector<float> column_max(overlaps.cols);
-    fill_n(row_max.begin(),overlaps.cols,0);
+    fill_n(row_max.begin(),overlaps.rows,0);
     fill_n(column_max.begin(),overlaps.cols,0);
     for(int row=0; row<overlaps.rows; row++) {
         for(int col=0; col<overlaps.cols; col++) {
@@ -118,10 +119,6 @@ shared_ptr<localization::decoded> localization::transformer::transform(
         }
     }
 
-//    for(int i=0; i<labels.size(); i++) {
-//        cout << i << "   " << labels[i] << endl;
-//    }
-
     // For every anchor, compute the regression target compared
     // to the gt box that it has the highest overlap with
     // the indicies of labels should match these targets
@@ -138,28 +135,28 @@ shared_ptr<localization::decoded> localization::transformer::transform(
         }
         argmax.push_back(scaled_bbox[index]);
     }
-//    cout << argmax << endl;
 
     auto bbox_targets = compute_targets(argmax, anchors);
 
     tie(mp->labels, mp->bbox_targets, mp->anchor_index) = sample_anchors(labels, bbox_targets);
+    mp->anchors = anchors;
 
 //    cout << "result_idx\n"; for(int i=0; i<result_idx.size(); i++) { cout << "   " << i << "  " << result_idx[i] << endl; }
 
     return mp;
 }
 
-tuple<vector<float>,vector<localization::target>,vector<int>>
-    localization::transformer::sample_anchors(const vector<float>& labels,
+tuple<vector<int>,vector<localization::target>,vector<int>>
+    localization::transformer::sample_anchors(const vector<int>& labels,
                                               const vector<target>& bbox_targets) {
     // subsample labels if needed
     int num_fg = int(cfg->foreground_fraction * cfg->rois_per_image);
     vector<int> fg_idx;
     vector<int> bg_idx;
     for(int i=0; i<labels.size(); i++) {
-        if(labels[i] == 1.) {
+        if(labels[i] >= 1) {
             fg_idx.push_back(i);
-        } else if(labels[i] == 0.) {
+        } else if(labels[i] == 0) {
             bg_idx.push_back(i);
         }
     }
@@ -177,7 +174,7 @@ tuple<vector<float>,vector<localization::target>,vector<int>>
     result_idx.insert(result_idx.end(), fg_idx.begin(), fg_idx.end());
     result_idx.insert(result_idx.end(), bg_idx.begin(), bg_idx.end());
 
-    vector<float>  result_labels;
+    vector<int>    result_labels;
     vector<target> result_targets;
     for(int i : result_idx) {
         result_labels.push_back(labels[i]);
@@ -215,8 +212,7 @@ vector<localization::target> localization::transformer::compute_targets(const ve
     return targets;
 }
 
-
-cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const vector<box>& query_boxes) {
+cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const vector<box>& bounding_boxes) {
     // Parameters
     // ----------
     // boxes: (N, 4) ndarray of float
@@ -225,22 +221,22 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const
     // -------
     // overlaps: (N, K) ndarray of overlap between boxes and query_boxes
     uint32_t N = boxes.size();
-    uint32_t K = query_boxes.size();
+    uint32_t K = bounding_boxes.size();
     cv::Mat overlaps(N,K,CV_32FC1);
     overlaps = 0.;
     float iw, ih, box_area;
     float ua;
-    for(uint32_t k=0; k<query_boxes.size(); k++) {
-        const box& query_box = query_boxes[k];
-        box_area = (query_box.xmax - query_box.xmin + 1) *
-                   (query_box.ymax - query_box.ymin + 1);
+    for(uint32_t k=0; k<bounding_boxes.size(); k++) {
+        const box& bounding_box = bounding_boxes[k];
+        box_area = (bounding_box.xmax - bounding_box.xmin + 1) *
+                   (bounding_box.ymax - bounding_box.ymin + 1);
         for(uint32_t n=0; n<boxes.size(); n++) {
             const box& b = boxes[n];
-            iw = min(b.xmax, query_box.xmax) -
-                 max(b.xmin, query_box.xmin) + 1;
+            iw = min(b.xmax, bounding_box.xmax) -
+                 max(b.xmin, bounding_box.xmin) + 1;
             if(iw > 0) {
-                ih = min(b.ymax, query_box.ymax) -
-                     max(b.ymin, query_box.ymin) + 1;
+                ih = min(b.ymax, bounding_box.ymax) -
+                     max(b.ymin, bounding_box.ymin) + 1;
                 if(ih > 0) {
                     ua = (b.xmax - b.xmin + 1.) *
                          (b.ymax - b.ymin + 1.) +
