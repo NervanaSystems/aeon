@@ -85,11 +85,10 @@ bool pyBackendWrapper::use_pinned_memory()
 void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
 {
     // PyThreadState tstate = PyEval_SaveThread();
-    // PyGILState_STATE gstate;
-    // gstate = PyGILState_Ensure();
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
     // printf("gil state %d\n", gstate);
-    // PyGILState_Release(gstate);
-    printf("Hey look here %d \n", __LINE__);
+    printf("Hey look here %s %d \n", __FILE__, __LINE__);
     // int len_dlist = (int) PyList_Size(_host_dlist);
     // printf("Length of list %d\n", len_dlist);
     wrap_buffer_pool(_host_dlist, outBuf.first, bufIdx, _dtmInfo);
@@ -107,6 +106,7 @@ void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
     PyObject* tRes = PyObject_CallObject(_f_consume, tArgs);
     Py_XDECREF(tArgs);
     Py_XDECREF(tRes);
+    PyGILState_Release(gstate);
 
 }
 

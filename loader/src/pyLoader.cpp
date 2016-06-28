@@ -180,11 +180,10 @@ void pyDecodeThreadPool::produce()
 
         // Copy to device.
         // PyEval_RestoreThread(_manager_state);
-        PyGILState_STATE gstate;
-        gstate = PyGILState_Ensure();
+
         // printf("gil state %d\n", gstate);
         _pbe->call_backend_transfer(outBuf, _bufferIndex);
-        PyGILState_Release(gstate);
+
 
         // PyEval_SaveThread();
         // callBackendTransferFunc(_pbe, _host_dnparrays[_bufferIndex], _host_tnparrays[_bufferIndex], _bufferIndex);
@@ -220,7 +219,7 @@ void pyDecodeThreadPool::manage()
     // Thread function.
     // int result = _device->init();
     int result = 0;
-    _manager_state = PyThreadState_New(_main_interpreter_state);
+    // _manager_state = PyThreadState_New(_main_interpreter_state);
     if (result != 0) {
         _stopManager = true;
     }
