@@ -125,13 +125,6 @@ void Buffer::read(ifstream& ifs, int size) {
     pushItem(size);
 }
 
-void Buffer::read(IfStream& ifs, int size) {
-    // read `size` bytes out of `ifs` and push into buffer
-    resizeIfNeeded(size);
-    ifs.read(_cur, size);
-    pushItem(size);
-}
-
 void Buffer::read(const char* src, int size) {
     // read `size` bytes out of `src` and push into buffer
     resizeIfNeeded(size);
