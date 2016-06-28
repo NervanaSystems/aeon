@@ -146,8 +146,6 @@ protected:
     CPIOHeader                  _header;
     CPIOTrailer                 _trailer;
     RecordHeader                _recordHeader;
-    std::string                 _fileName;
-    std::string                 _tempName;
 };
 
 /*
