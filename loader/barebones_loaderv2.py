@@ -148,22 +148,22 @@ class DataLoader(object):
         if end == self.ndata:
             self.start_idx = self.batch_size - (self.ndata - start)
 
+        import pdb; pdb.set_trace()
 
         (data, targets) = self.loaderlib.next(self.loader, ct.c_int(self.buffer_id))
-        import pdb; pdb.set_trace()
 
         # (data, targets) = self.loaderlib.get_dtm_tgt(self.buffer_id)
 
 
 
-        if self.backend_data is None:
-            data = self.data[self.buffer_id]
-        else:
-            # Convert data to the required precision.
-            self.backend_data[:] = self.data[self.buffer_id]
-            data = self.backend_data
+        # if self.backend_data is None:
+        #     data = self.data[self.buffer_id]
+        # else:
+        #     # Convert data to the required precision.
+        #     self.backend_data[:] = self.data[self.buffer_id]
+        #     data = self.backend_data
 
-        targets = self.targets[self.buffer_id]
+        # targets = self.targets[self.buffer_id]
 
         self.buffer_id = 1 if self.buffer_id == 0 else 0
 
@@ -194,7 +194,7 @@ dloader_args = dict(set_name="tag_test",
 # print threading.current_thread()
 # print threading.enumerate()
 dd = DataLoader(**dloader_args)
-
+print "I'm out"
 
 for x, t in dd:
     import pdb; pdb.set_trace()
