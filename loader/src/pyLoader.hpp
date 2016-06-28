@@ -85,9 +85,6 @@ private:
     std::vector<int>            _dataOffsets;
     std::vector<int>            _targetOffsets;
 
-    // PyThreadState*              _manager_state;
-    // PyThreadState*              _main_state;
-    // PyInterpreterState*         _main_interpreter_state;
     int                         _datumLen;
     int                         _targetLen;
 };

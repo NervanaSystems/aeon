@@ -1,6 +1,33 @@
 #include "pyBackendWrapper.hpp"
 using namespace nervana;
 
+static std::map<char, int> npy_type_map = {{NPY_BOOLLTR, NPY_BOOL},
+                                           {NPY_BYTELTR, NPY_BYTE},
+                                           {NPY_UBYTELTR, NPY_UBYTE},
+                                           {NPY_SHORTLTR, NPY_SHORT},
+                                           {NPY_USHORTLTR, NPY_USHORT},
+                                           {NPY_INTLTR, NPY_INT},
+                                           {NPY_UINTLTR, NPY_UINT},
+                                           {NPY_LONGLTR, NPY_LONG},
+                                           {NPY_ULONGLTR, NPY_ULONG},
+                                           {NPY_LONGLONGLTR, NPY_LONGLONG},
+                                           {NPY_ULONGLONGLTR, NPY_ULONGLONG},
+                                           {NPY_HALFLTR, NPY_HALF},
+                                           {NPY_FLOATLTR, NPY_FLOAT},
+                                           {NPY_DOUBLELTR, NPY_DOUBLE},
+                                           {NPY_LONGDOUBLELTR, NPY_LONGDOUBLE},
+                                           {NPY_CFLOATLTR, NPY_CFLOAT},
+                                           {NPY_CDOUBLELTR, NPY_CDOUBLE},
+                                           {NPY_CLONGDOUBLELTR, NPY_CLONGDOUBLE},
+                                           {NPY_OBJECTLTR, NPY_OBJECT},
+                                           {NPY_STRINGLTR, NPY_STRING},
+                                           {NPY_STRINGLTR2, NPY_STRING},
+                                           {NPY_UNICODELTR, NPY_UNICODE},
+                                           {NPY_VOIDLTR, NPY_VOID},
+                                           {NPY_DATETIMELTR, NPY_DATETIME},
+                                           {NPY_TIMEDELTALTR, NPY_TIMEDELTA},
+                                           {NPY_CHARLTR, NPY_CHAR}};
+
 pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
                                    count_size_type* dtmInfo,
                                    count_size_type* tgtInfo,
@@ -27,6 +54,7 @@ pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
         printf("Backend 'consume' function does not exist or is not callable\n");
         throw std::runtime_error("Backend 'consume' function does not exist or is not callable");
     }
+    import_array();
 
     _host_dlist = initPyList();
     _host_tlist = initPyList();
@@ -34,6 +62,9 @@ pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
     _dev_tlist  = initPyList();
     printf("List check result %d, %d\n", PyList_Check(_host_dlist), __LINE__);
 
+    for (auto ii: npy_type_map) {
+        std::cout << ii.first << " " << ii.second << std::endl;
+    }
     // PyGILState_Release(gstate);
 
 }
@@ -84,13 +115,9 @@ bool pyBackendWrapper::use_pinned_memory()
 // Copy to device.
 void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
 {
-    // PyThreadState tstate = PyEval_SaveThread();
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    // printf("gil state %d\n", gstate);
     printf("Hey look here %s %d \n", __FILE__, __LINE__);
-    // int len_dlist = (int) PyList_Size(_host_dlist);
-    // printf("Length of list %d\n", len_dlist);
     wrap_buffer_pool(_host_dlist, outBuf.first, bufIdx, _dtmInfo);
     wrap_buffer_pool(_host_tlist, outBuf.second, bufIdx, _tgtInfo);
 
@@ -129,9 +156,11 @@ PyObject* pyBackendWrapper::get_dtm_tgt_pair(int bufIdx)
 void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
                                         count_size_type *typeInfo)
 {
-    printf("Hey look here %d \n", __LINE__);
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     PyObject *hdItem = PyList_GetItem(list, bufIdx);
-    printf("Hey look here %d \n", __LINE__);
+    printf("Hey look here %s %d \n", __FILE__, __LINE__);
 
     if (hdItem == NULL) {
         throw std::runtime_error("Bad Index");
@@ -141,8 +170,12 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
     }
     int nd = 2;
     npy_intp dims[2] = {_batchSize, typeInfo->count};
-    int nptype  = npy_type_map[typeInfo->type[0]];
+    printf("Hey look here %s %d %c\n", __FILE__, __LINE__, typeInfo->type[0]);
 
+    int nptype  = npy_type_map[typeInfo->type[0]];
+    // float *tmpdata = new float[dims[0]*dims[1]];
+    // PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, NPY_FLOAT,
+    //                                               static_cast<void *>(tmpdata));
     PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, nptype,
                                                   static_cast<void *>(buf->_data));
     if (p_array == NULL) {
@@ -153,5 +186,8 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
     if (PyList_SetItem(list, bufIdx, p_array) != 0) {
         throw std::runtime_error("Unable to add python array to list");
     }
+
+    PyGILState_Release(gstate);
+
 }
 

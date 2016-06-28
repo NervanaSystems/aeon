@@ -265,7 +265,7 @@ namespace nervana {
         {
             cst->count   = _load_count;
             cst->size    = _load_size;
-            cst->type[0] = 'u';
+            cst->type[0] = 'B';
         }
 
     private:

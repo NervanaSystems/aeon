@@ -30,6 +30,7 @@ class ProtoBackend(object):
     def consume(self, buf_index, hostlist, devlist):
         if buf_index >= 2:
             raise ValueError('Can only double buffer')
+        print "test print", hostlist[0]
         if devlist[buf_index] is None:
             devlist[buf_index] = self.empty_like(hostlist[buf_index])
         print devlist[buf_index].shape, hostlist[buf_index.shape]
@@ -94,7 +95,8 @@ class DataLoader(object):
     def load_library(self):
         path = os.path.dirname(os.path.realpath(__file__))
         libpath = os.path.join(path, 'bin', 'loader.so')
-        self.loaderlib = ct.cdll.LoadLibrary(libpath)
+        self.loaderlib = ct.PyDLL(libpath)
+        # self.loaderlib = ct.cdll.LoadLibrary(libpath)
         self.loaderlib.get_error_message.restype = ct.c_char_p
         self.loaderlib.start.restype = ct.c_void_p
 

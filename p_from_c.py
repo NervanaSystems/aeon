@@ -4,10 +4,11 @@ import numpy as np
 
 class BBex(object):
     def consume(self, ary):
-        self.ary = np.zeros_like(ary)
+        self.ary = np.zeros(ary.T.shape)
+        print ary
         self.ary[:] = ary.T
 
 be = BBex()
-_chromicorn.chromicorn(2, 2, be)
+_chromicorn.chromicorn(3, 2, be)
 
 print be.ary
