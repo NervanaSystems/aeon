@@ -43,10 +43,6 @@ pyDecodeThreadPool::pyDecodeThreadPool(int count,
 
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
-    // int d = PyEval_ThreadsInitialized();
-    // printf("Eval threads state: %d\n", d);
-    // _main_state = PyThreadState_Get();
-    // _main_interpreter_state = _main_state->interp;
 }
 
 
@@ -179,14 +175,7 @@ void pyDecodeThreadPool::produce()
         BufferPair& outBuf = _out->getForWrite();
 
         // Copy to device.
-        // PyEval_RestoreThread(_manager_state);
-
-        // printf("gil state %d\n", gstate);
         _pbe->call_backend_transfer(outBuf, _bufferIndex);
-
-
-        // PyEval_SaveThread();
-        // callBackendTransferFunc(_pbe, _host_dnparrays[_bufferIndex], _host_tnparrays[_bufferIndex], _bufferIndex);
         // _device->copyData(_bufferIndex, outBuf.first->_data, outBuf.first->_size);
         // _device->copyLabels(_bufferIndex, outBuf.second->_data, outBuf.second->_size);
 
@@ -299,7 +288,6 @@ int PyLoader::start()
 
         int dataLen   = dtmLen * _batchSize;
         int targetLen = tgtLen * _batchSize;
-        printf("Hey look here %s %d \n", __FILE__, __LINE__);
 
         // Bind the python backend here
         _pyBackend = make_shared<pyBackendWrapper>(_pbe, &_dtmInfo, &_tgtInfo, _batchSize);
@@ -311,7 +299,7 @@ int PyLoader::start()
         _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, _pyBackend->use_pinned_memory());
         _decodeThreads = unique_ptr<pyDecodeThreadPool>(
                             new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs, _pyBackend));
-        printf("Hey look here %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
+        printf("**Marker %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 
         // Now add on the already created provider and add on the additional ones
         _decodeThreads->add_provider(prov);

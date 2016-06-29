@@ -24,16 +24,16 @@ logger = logging.getLogger(__name__)
 
 class ProtoBackend(object):
     def __init__(self):
-        self.use_pinned_mem = True
-        self.test_string = "Hey look at me"
+        self.use_pinned_mem = False
 
     def consume(self, buf_index, hostlist, devlist):
         if buf_index >= 2:
             raise ValueError('Can only double buffer')
-        print "test print", hostlist[0]
+        # print "test print", hostlist[0]
         if devlist[buf_index] is None:
             devlist[buf_index] = self.empty_like(hostlist[buf_index])
-        print devlist[buf_index].shape, hostlist[buf_index.shape]
+        # print devlist[buf_index].shape, hostlist[buf_index.shape]
+        print hostlist[buf_index]
         devlist[buf_index][:] = hostlist[buf_index].T
 
     def empty_like(self, npary):
@@ -86,7 +86,6 @@ class DataLoader(object):
         self.buffer_id = 0
         self.start_idx = 0
 
-        self.backend_data = None
         self.backend = ProtoBackend()
         self.load_library()
         self.start()
@@ -95,8 +94,7 @@ class DataLoader(object):
     def load_library(self):
         path = os.path.dirname(os.path.realpath(__file__))
         libpath = os.path.join(path, 'bin', 'loader.so')
-        self.loaderlib = ct.PyDLL(libpath)
-        # self.loaderlib = ct.cdll.LoadLibrary(libpath)
+        self.loaderlib = ct.cdll.LoadLibrary(libpath)
         self.loaderlib.get_error_message.restype = ct.c_char_p
         self.loaderlib.start.restype = ct.c_void_p
 
@@ -126,9 +124,6 @@ class DataLoader(object):
             raise RuntimeError('Failed to start data loader.' + a)
 
 
-        # import pdb; pdb.set_trace()
-
-
     def stop(self):
         """
         Clean up and exit background threads.
@@ -148,24 +143,12 @@ class DataLoader(object):
         if end == self.ndata:
             self.start_idx = self.batch_size - (self.ndata - start)
 
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
 
         (data, targets) = self.loaderlib.next(self.loader, ct.c_int(self.buffer_id))
 
-        # (data, targets) = self.loaderlib.get_dtm_tgt(self.buffer_id)
-
-
-
-        # if self.backend_data is None:
-        #     data = self.data[self.buffer_id]
-        # else:
-        #     # Convert data to the required precision.
-        #     self.backend_data[:] = self.data[self.buffer_id]
-        #     data = self.backend_data
-
-        # targets = self.targets[self.buffer_id]
-
-        self.buffer_id = 1 if self.buffer_id == 0 else 0
+        # Toggle buffer_id between 0 and 1
+        self.buffer_id = 1 - self.buffer_id
 
         return (data, targets)
 
@@ -191,12 +174,13 @@ cfg_string = json.dumps(cfg_dict)
 dloader_args = dict(set_name="tag_test",
                     batch_size=cfg_dict['minibatch_size'],
                     loader_cfg_string=cfg_string)
-# print threading.current_thread()
-# print threading.enumerate()
+
 dd = DataLoader(**dloader_args)
 print "I'm out"
 
-for x, t in dd:
-    import pdb; pdb.set_trace()
-    print(x)
+for i, (x, t) in enumerate(dd):
+    # import pdb; pdb.set_trace()
+    # print "YOOOHOO", t
+    if i == 10:
+        break
 

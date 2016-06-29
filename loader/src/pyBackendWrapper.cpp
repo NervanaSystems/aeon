@@ -38,34 +38,28 @@ pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
         throw std::runtime_error("Python Backend object does not exist");
     }
 
-    // PyObject* tstr = PyObject_GetAttrString(_pBackend, "test_string");
-    // if (!PyString_Check(tstr))
-    //     throw std::runtime_error("Backend string check failed");
-
-    // printf("Got this string from backend object: %s\n", PyString_AsString(tstr));
-    // Py_XDECREF(tstr);
-    // PyThreadState tstate = PyEval_SaveThread();
-    // PyGILState_STATE gstate;
-    // gstate = PyGILState_Ensure();
-
     _f_consume = PyObject_GetAttrString(_pBackend, "consume");
 
     if (!PyCallable_Check(_f_consume)) {
         printf("Backend 'consume' function does not exist or is not callable\n");
         throw std::runtime_error("Backend 'consume' function does not exist or is not callable");
     }
+
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    PyOS_sighandler_t sighandler = PyOS_getsig(SIGINT);
     import_array();
+    PyOS_setsig(SIGINT, sighandler);
+    PyGILState_Release(gstate);
 
     _host_dlist = initPyList();
     _host_tlist = initPyList();
     _dev_dlist  = initPyList();
     _dev_tlist  = initPyList();
-    printf("List check result %d, %d\n", PyList_Check(_host_dlist), __LINE__);
 
-    for (auto ii: npy_type_map) {
-        std::cout << ii.first << " " << ii.second << std::endl;
-    }
-    // PyGILState_Release(gstate);
+    // for (auto ii: npy_type_map) {
+    //     std::cout << ii.first << " " << ii.second << std::endl;
+    // }
 
 }
 
@@ -78,7 +72,6 @@ PyObject* pyBackendWrapper::initPyList(int length)
             throw std::runtime_error("Error initializing list");
         }
     }
-    printf("Completed init for list\n");
     return pylist;
 }
 
@@ -94,22 +87,19 @@ pyBackendWrapper::~pyBackendWrapper()
 
 bool pyBackendWrapper::use_pinned_memory()
 {
-    return false;
-    // PyGILState_STATE gstate;
-    // gstate = PyGILState_Ensure();
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
 
-    // PyObject *pinned_mem = PyObject_GetAttrString(_pBackend, "use_pinned_mem");
-    // if (pinned_mem == NULL)
-    //     return false;
-
-    // bool result = false;
-    // if (PyObject_IsTrue(pinned_mem)) {
-    //     result = true;
-    // }
-    // Py_DECREF(pinned_mem);
-    // PyGILState_Release(gstate);
-
-    // return result;
+    bool result = false;
+    PyObject *pinned_mem = PyObject_GetAttrString(_pBackend, "use_pinned_mem");
+    if (pinned_mem != NULL) {
+        if (PyObject_IsTrue(pinned_mem)) {
+            result = true;
+        }
+        Py_DECREF(pinned_mem);
+    }
+    PyGILState_Release(gstate);
+    return result;
 }
 
 // Copy to device.
@@ -117,7 +107,7 @@ void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    printf("Hey look here %s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
+    printf("**Marker %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
     wrap_buffer_pool(_host_dlist, outBuf.first, bufIdx, _dtmInfo);
     wrap_buffer_pool(_host_tlist, outBuf.second, bufIdx, _tgtInfo);
 
@@ -156,11 +146,8 @@ PyObject* pyBackendWrapper::get_dtm_tgt_pair(int bufIdx)
 void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
                                         count_size_type *typeInfo)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-
     PyObject *hdItem = PyList_GetItem(list, bufIdx);
-    printf("Hey look here %s %d \n", __FILE__, __LINE__);
+    printf("**Marker %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 
     if (hdItem == NULL) {
         throw std::runtime_error("Bad Index");
@@ -170,12 +157,10 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
     }
     int nd = 2;
     npy_intp dims[2] = {_batchSize, typeInfo->count};
-    printf("Hey look here %s %d %c\n", __FILE__, __LINE__, typeInfo->type[0]);
+    printf("**Marker %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 
     int nptype  = npy_type_map[typeInfo->type[0]];
-    // float *tmpdata = new float[dims[0]*dims[1]];
-    // PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, NPY_FLOAT,
-    //                                               static_cast<void *>(tmpdata));
+
     PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, nptype,
                                                   static_cast<void *>(buf->_data));
     if (p_array == NULL) {
@@ -186,8 +171,5 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
     if (PyList_SetItem(list, bufIdx, p_array) != 0) {
         throw std::runtime_error("Unable to add python array to list");
     }
-
-    PyGILState_Release(gstate);
-
 }
 
