@@ -52,7 +52,7 @@ void NDSBatchLoader::loadBlock(BufferPair &dest, uint block_num, uint block_size
 
     // get data from url and write it into cpio_stream
     stringstream cpio_stream;
-    get(url(block_num, block_size), cpio_stream);
+    get(loadBlockURL(block_num, block_size), cpio_stream);
 
     // parse cpio_stream into dest one object/target pair at a time
     CPIOReader reader(&cpio_stream);
@@ -90,7 +90,7 @@ void NDSBatchLoader::get(const string url, stringstream &stream) {
     }
 }
 
-const string NDSBatchLoader::url(uint block_num, uint block_size) {
+const string NDSBatchLoader::loadBlockURL(uint block_num, uint block_size) {
     stringstream ss;
     ss << _baseurl << "/macrobatch?";
     ss << "macro_batch_index=" << block_num;

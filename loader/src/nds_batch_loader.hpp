@@ -35,7 +35,7 @@ public:
 private:
     void get(const std::string url, std::stringstream& stream);
 
-    const std::string url(uint block_num, uint block_size);
+    const std::string loadBlockURL(uint block_num, uint block_size);
     const std::string _baseurl;
     const int _tag_id;
     const int _shard_count;
