@@ -19,7 +19,6 @@ current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
 SRCS := \
     main.cpp \
-    thread_test.cpp \
     gen_image.cpp \
     gen_audio.cpp \
     gen_video.cpp \

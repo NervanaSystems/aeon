@@ -54,7 +54,7 @@ localization::transformer::transformer(std::shared_ptr<const localization::confi
 }
 
 shared_ptr<localization::decoded> localization::transformer::transform(
-                    shared_ptr<nervana::params> txs,
+                    shared_ptr<image::params> txs,
                     shared_ptr<localization::decoded> mp) {
     cv::Size im_size{mp->width(), mp->height()};
     float im_scale;

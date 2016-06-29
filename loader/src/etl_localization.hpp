@@ -66,21 +66,21 @@ namespace nervana {
     };
 
 
-    class localization::params : public nervana::params {
-    public:
+//    class localization::params : public nervana::params {
+//    public:
 
-        params() {}
-        void dump(std::ostream & = std::cout);
+//        params() {}
+//        void dump(std::ostream & = std::cout);
 
-        cv::Rect cropbox;
-        cv::Size2i output_size;
-        int angle = 0;
-        bool flip = false;
-        std::vector<float> lighting;  //pixelwise random values
-        float color_noise_std = 0;
-        std::vector<float> photometric;  // contrast, brightness, saturation
-        std::vector<std::string> label_list;
-    };
+//        cv::Rect cropbox;
+//        cv::Size2i output_size;
+//        int angle = 0;
+//        bool flip = false;
+//        std::vector<float> lighting;  //pixelwise random values
+//        float color_noise_std = 0;
+//        std::vector<float> photometric;  // contrast, brightness, saturation
+//        std::vector<std::string> label_list;
+//    };
 
     class localization::config : public bbox::config {
     public:
@@ -136,14 +136,14 @@ namespace nervana {
         bbox::extractor bbox_extractor;
     };
 
-    class localization::transformer : public interface::transformer<localization::decoded, nervana::params> {
+    class localization::transformer : public interface::transformer<localization::decoded, image::params> {
     public:
         transformer(std::shared_ptr<const localization::config> cfg);
 
         virtual ~transformer() {}
 
         std::shared_ptr<localization::decoded> transform(
-                            std::shared_ptr<nervana::params> txs,
+                            std::shared_ptr<image::params> txs,
                             std::shared_ptr<localization::decoded> mp) override;
 
     private:
@@ -163,8 +163,12 @@ namespace nervana {
 
         virtual ~loader() {}
 
-        void load(char* buf, std::shared_ptr<localization::decoded> mp) override
-        {
+        void load(char* buf, std::shared_ptr<localization::decoded> mp) override {
+
+        }
+
+        void fill_info(nervana::count_size_type*) override {
+
         }
     };
 }

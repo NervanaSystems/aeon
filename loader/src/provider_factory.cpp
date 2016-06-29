@@ -7,6 +7,7 @@ std::shared_ptr<nervana::train_base> nervana::train_provider_factory::create(nlo
     std::cout << "media type " << mediaType << std::endl;
     if( mediaType == "image_label" ) {
         rc = std::make_shared<nervana::image_decoder>(configJs);
+    } else if( mediaType == "localization" ) {
     } else {
         rc = nullptr;
         throw std::runtime_error("WTF??");
