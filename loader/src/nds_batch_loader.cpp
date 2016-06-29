@@ -49,14 +49,27 @@ void NDSBatchLoader::loadBlock(BufferPair &dest, uint block_num, uint block_size
 
     // get data from url and write it into cpio_stream
     stringstream cpio_stream;
+    get(url(block_num, block_size), cpio_stream);
 
-    curl_easy_setopt(_curl, CURLOPT_URL, url(block_num, block_size).c_str());
+    // parse cpio_stream into dest one object/target pair at a time
+    CPIOReader reader(&cpio_stream);
+    for(int i=0; i < reader.itemCount(); ++i) {
+        reader.read(*dest.first);
+        reader.read(*dest.second);
+    }
+}
+
+void NDSBatchLoader::get(const string url, stringstream &stream) {
+    // given a url, make an HTTP GET request and fill stream with
+    // the body of the response
+
+    curl_easy_setopt(_curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(_curl, CURLOPT_FOLLOWLOCATION, 1L);
     // Prevent "longjmp causes uninitialized stack frame" bug
     curl_easy_setopt(_curl, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(_curl, CURLOPT_ACCEPT_ENCODING, "deflate");
     curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(_curl, CURLOPT_WRITEDATA, &_cpio_stream);
+    curl_easy_setopt(_curl, CURLOPT_WRITEDATA, &stream);
 
     // Perform the request, res will get the return code
     CURLcode res = curl_easy_perform(_curl);
@@ -67,13 +80,6 @@ void NDSBatchLoader::loadBlock(BufferPair &dest, uint block_num, uint block_size
         ss << "curl_easy_perform() failed: ";
         ss << curl_easy_strerror(res);
         throw std::runtime_error(ss.str());
-    }
-
-    // parse cpio stream into dest one item at a time
-    CPIOReader reader(&_cpio_stream);
-    for(int i=0; i < reader.itemCount(); ++i) {
-        reader.read(*dest.first);
-        reader.read(*dest.second);
     }
 }
 

@@ -33,6 +33,8 @@ public:
     uint blockCount(uint block_size);
 
 private:
+    void get(const std::string url, std::stringstream& stream);
+
     const std::string url(uint block_num, uint block_size);
     const std::string _baseurl;
     const int _tag_id;
