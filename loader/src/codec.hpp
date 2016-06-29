@@ -13,22 +13,30 @@
  limitations under the License.
 */
 
+#include <sstream>
+
 #include "media.hpp"
 
 #ifdef __cplusplus
 extern "C"
 {
+    #include <libavformat/avformat.h>
     #include <libavcodec/avcodec.h>
     #include <libavutil/common.h>
     #include <libavutil/error.h>
 }
 #endif
 
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55, 28, 1)
+#define av_frame_alloc  avcodec_alloc_frame
+#define av_frame_free avcodec_free_frame
+#endif
+
 void raise_averror(const char* prefix, int errnum) {
     static char errbuf[512];
     av_strerror(errnum, &errbuf[0], 512);
 
-    stringstream ss;
+    std::stringstream ss;
     ss << prefix << ": " << errbuf;
     throw std::runtime_error(ss.str());
 }
@@ -66,7 +74,7 @@ public:
             _mediaType = AVMEDIA_TYPE_AUDIO;
         }
 
-        lock_guard<mutex> lock(_mutex);
+        std::lock_guard<mutex> lock(_mutex);
         if (_init == 0) {
             av_register_all();
             av_lockmgr_register(lockmgr);

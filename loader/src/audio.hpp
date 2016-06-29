@@ -32,6 +32,97 @@ using std::ifstream;
 using cv::Mat;
 
 
+class IndexElement {
+public:
+    IndexElement() {
+    }
+
+public:
+    std::string                      _fileName;
+    std::vector<std::string>         _targets;
+};
+
+class Index {
+public:
+    Index() : _maxTargetSize(0) {
+    }
+
+    virtual ~Index() {
+        for (auto elem : _elements) {
+            delete elem;
+        }
+    }
+
+    void load(std::string& fileName, bool shuf = false) {
+        ifstream ifs(fileName);
+        if (!ifs) {
+            stringstream ss;
+            ss << "Could not open " << fileName;
+            throw std::ios_base::failure(ss.str());
+        }
+
+        std::string line;
+        // Ignore the header line.
+        std::getline(ifs, line);
+        while (std::getline(ifs, line)) {
+            if (line[0] == '#') {
+                // Ignore comments.
+                continue;
+            }
+            addElement(line);
+        }
+
+        if (shuf == true) {
+            shuffle();
+        }
+
+        if (_elements.size() == 0) {
+            stringstream ss;
+            ss << "Could not load index from " << fileName;
+            throw std::runtime_error(ss.str());
+        }
+    }
+
+    IndexElement* operator[] (int idx) {
+        return _elements[idx];
+    }
+
+    uint size() {
+        return _elements.size();
+    }
+
+private:
+    void addElement(std::string& line) {
+        IndexElement* elem = new IndexElement();
+        std::istringstream ss(line);
+        std::string token;
+        std::getline(ss, token, ',');
+        elem->_fileName = token;
+        while (std::getline(ss, token, ',')) {
+            elem->_targets.push_back(token);
+        }
+
+        // For now, restrict to a single target.
+        assert(elem->_targets.size() <= 1);
+        _elements.push_back(elem);
+        if (elem->_targets.size() == 0) {
+            return;
+        }
+        if (elem->_targets[0].size() > _maxTargetSize) {
+            _maxTargetSize = elem->_targets[0].size();
+        }
+    }
+
+    void shuffle() {
+        std::srand(0);
+        std::random_shuffle(_elements.begin(), _elements.end());
+    }
+
+public:
+    vector<IndexElement*>       _elements;
+    uint                        _maxTargetSize;
+};
+
 class AudioParams : public SignalParams {
 };
 
@@ -121,13 +212,13 @@ private:
         }
     }
 
-    void loadIndex(string& indexFile) {
+    void loadIndex(std::string& indexFile) {
         _index.load(indexFile, true);
     }
 
     void loadData(Codec* codec) {
         for (uint i = 0; i < _index.size(); i++) {
-            string& fileName = _index[i]->_fileName;
+            std::string& fileName = _index[i]->_fileName;
             int len = 0;
             readFile(fileName, &len);
             if (len == 0) {
@@ -140,8 +231,8 @@ private:
         }
     }
 
-    void readFile(string& fileName, int* dataLen) {
-        string path;
+    void readFile(std::string& fileName, int* dataLen) {
+        std::string path;
         if (fileName[0] == '/') {
             path = fileName;
         } else {
@@ -158,7 +249,7 @@ private:
         if (_bufLen < size) {
             resize(size + size / 8);
         }
-        ifstream ifs(path, ios::binary);
+        std::ifstream ifs(path, std::ios::binary);
         ifs.read(_buf, size);
         *dataLen = size;
     }
@@ -170,8 +261,8 @@ private:
     }
 
 private:
-    string                      _indexFile;
-    string                      _indexDir;
+    std::string                 _indexFile;
+    std::string                 _indexDir;
     vector<RawMedia*>           _data;
     Index                       _index;
     char*                       _buf;

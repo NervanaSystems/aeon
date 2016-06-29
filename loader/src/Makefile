@@ -20,6 +20,7 @@ SRCS            := \
     pyBackendWrapper.cpp \
     pyLoader.cpp \
     api_pversion.cpp \
+    etl_audio.cpp \
     etl_image.cpp \
     etl_bbox.cpp \
     etl_lmap.cpp \
