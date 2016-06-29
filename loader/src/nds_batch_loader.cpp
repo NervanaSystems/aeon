@@ -76,8 +76,12 @@ void NDSBatchLoader::get(const string url, stringstream &stream) {
 
     // Check for errors
     if (res != CURLE_OK) {
+        long http_code = 0;
+        curl_easy_getinfo (_curl, CURLINFO_RESPONSE_CODE, &http_code);
+
         stringstream ss;
-        ss << "curl_easy_perform() failed: ";
+        ss << "HTTP GET on " << url << "failed. ";
+        ss << "status code: " << http_code << ". ";
         ss << curl_easy_strerror(res);
         throw std::runtime_error(ss.str());
     }
