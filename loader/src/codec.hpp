@@ -68,9 +68,9 @@ int lockmgr(void **p, enum AVLockOp op)
 class Codec {
 public:
     Codec(MediaParams* params) : _format(0), _codec(0) {
-        if (params->_mtype == VIDEO) {
+        if (params->_mtype == MediaType::VIDEO) {
             _mediaType = AVMEDIA_TYPE_VIDEO;
-        } else if (params->_mtype == AUDIO) {
+        } else if (params->_mtype == MediaType::AUDIO) {
             _mediaType = AVMEDIA_TYPE_AUDIO;
         }
 

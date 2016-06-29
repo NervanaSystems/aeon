@@ -26,17 +26,12 @@
 
 using std::vector;
 
-enum MediaType {
-    UNKNOWN     = -1,
-    IMAGE       =  0,
-    VIDEO       =  1,
-    AUDIO       =  2,
-    TEXT        =  3,
-};
+// for MediaType
+#include "params.hpp"
 
 class MediaParams {
 public:
-    MediaParams(int mtype) : _mtype(mtype) {
+    MediaParams(MediaType mtype) : _mtype(mtype) {
     }
 
     // Do not make this virtual. The object passed down from Python will not
@@ -46,7 +41,7 @@ public:
     }
 
 public:
-    int                         _mtype;
+    MediaType                   _mtype;
 };
 
 class SignalParams : public MediaParams {

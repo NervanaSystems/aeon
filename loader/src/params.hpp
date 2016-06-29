@@ -1,4 +1,5 @@
 #pragma once
+
 #include <memory>
 #include <random>
 #include <stdexcept>      // std::invalid_argument
