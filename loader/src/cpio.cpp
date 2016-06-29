@@ -296,12 +296,12 @@ void CPIOFileWriter::writeItem(char* datum, char* target,
                uint datumSize, uint targetSize) {
     char fileName[16];
     // Write the datum.
-    sprintf(fileName, "cpiodtm%d",  _header._itemCount);
+    sprintf(fileName, "datum_%d",  _header._itemCount);
     _recordHeader.write(_ofs, datumSize, fileName);
     _ofs.write(datum, datumSize);
     writePadding(_ofs, datumSize);
     // Write the target.
-    sprintf(fileName, "cpiotgt%d",  _header._itemCount);
+    sprintf(fileName, "target_%d",  _header._itemCount);
     _recordHeader.write(_ofs, targetSize, fileName);
     _ofs.write(target, targetSize);
     writePadding(_ofs, targetSize);
