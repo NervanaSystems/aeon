@@ -33,8 +33,11 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
     return size * nmemb;
 }
 
-NDSBatchLoader::NDSBatchLoader(const std::string baseurl, int tag_id)
-    : _baseurl(baseurl), _tag_id(tag_id) {
+NDSBatchLoader::NDSBatchLoader(const std::string baseurl, int tag_id, int shard_count, int shard_index)
+    : _baseurl(baseurl), _tag_id(tag_id), _shard_count(shard_count),
+      _shard_index(shard_index) {
+    assert(shard_index < shard_count);
+
     // reuse curl connection across requests
     _curl = curl_easy_init();
 }
@@ -93,6 +96,8 @@ const string NDSBatchLoader::url(uint block_num, uint block_size) {
     ss << "macro_batch_index=" << block_num;
     ss << "&macro_batch_max_size=" << block_size;
     ss << "&tag_id=" << _tag_id;
+    ss << "&shard_count=" << _shard_count;
+    ss << "&shard_index=" << _shard_index;
     return ss.str();
 }
 
