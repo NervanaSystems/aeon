@@ -25,6 +25,9 @@
 using namespace std;
 
 size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
+    // callback used by curl.  writes data from ptr into the
+    // stringstream passed in to `stream`.
+
     string data((const char*) ptr, (size_t) size * nmemb);
     *((stringstream*) stream) << data << endl;
     return size * nmemb;
@@ -32,6 +35,7 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
 
 NDSBatchLoader::NDSBatchLoader(const std::string baseurl, int tag_id)
     : _baseurl(baseurl), _tag_id(tag_id) {
+    // reuse curl connection across requests
     _curl = curl_easy_init();
 }
 

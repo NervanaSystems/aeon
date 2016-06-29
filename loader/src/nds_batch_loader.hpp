@@ -31,12 +31,12 @@ public:
     uint objectCount();
 
     uint blockCount(uint block_size);
+
 private:
     const std::string url(uint block_num, uint block_size);
     const std::string _baseurl;
     const int _tag_id;
 
+    // reuse connection across requests
     void* _curl;
-    std::stringstream _cpio_stream;
-    CPIOReader _cpio_reader;
 };
