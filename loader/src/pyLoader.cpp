@@ -176,8 +176,6 @@ void pyDecodeThreadPool::produce()
 
         // Copy to device.
         _pbe->call_backend_transfer(outBuf, _bufferIndex);
-        // _device->copyData(_bufferIndex, outBuf.first->_data, outBuf.first->_size);
-        // _device->copyLabels(_bufferIndex, outBuf.second->_data, outBuf.second->_size);
 
         _bufferIndex = (_bufferIndex == 0) ? 1 : 0;
         _out->advanceWritePos();

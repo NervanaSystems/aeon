@@ -38,10 +38,10 @@ pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
         throw std::runtime_error("Python Backend object does not exist");
     }
 
+    Py_INCREF(_pBackend);
     _f_consume = PyObject_GetAttrString(_pBackend, "consume");
 
     if (!PyCallable_Check(_f_consume)) {
-        printf("Backend 'consume' function does not exist or is not callable\n");
         throw std::runtime_error("Backend 'consume' function does not exist or is not callable");
     }
 
@@ -56,11 +56,6 @@ pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
     _host_tlist = initPyList();
     _dev_dlist  = initPyList();
     _dev_tlist  = initPyList();
-
-    // for (auto ii: npy_type_map) {
-    //     std::cout << ii.first << " " << ii.second << std::endl;
-    // }
-
 }
 
 PyObject* pyBackendWrapper::initPyList(int length)
@@ -77,12 +72,19 @@ PyObject* pyBackendWrapper::initPyList(int length)
 
 pyBackendWrapper::~pyBackendWrapper()
 {
-    Py_XDECREF(_pBackend);
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    Py_XDECREF(dItem);
+    Py_XDECREF(hItem);
+
     Py_XDECREF(_host_dlist);
     Py_XDECREF(_host_tlist);
     Py_XDECREF(_dev_dlist);
     Py_XDECREF(_dev_tlist);
     Py_XDECREF(_f_consume);
+    Py_XDECREF(_pBackend);
+    PyGILState_Release(gstate);
+
 }
 
 bool pyBackendWrapper::use_pinned_memory()
@@ -113,8 +115,9 @@ void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
 
     PyObject* dArgs  = Py_BuildValue("iOO", bufIdx, _host_dlist, _dev_dlist);
 
-    if (dArgs == NULL)
-        printf("Something went wrong here\n");
+    if (dArgs == NULL) {
+        throw std::runtime_error("Unable to build args");
+    }
     PyObject* dRes = PyObject_CallObject(_f_consume, dArgs);
     Py_XDECREF(dArgs);
     Py_XDECREF(dRes);
@@ -157,8 +160,6 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
     }
     int nd = 2;
     npy_intp dims[2] = {_batchSize, typeInfo->count};
-    printf("**Marker %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
-
     int nptype  = npy_type_map[typeInfo->type[0]];
 
     PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, nptype,
@@ -166,7 +167,6 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
     if (p_array == NULL) {
         throw std::runtime_error("Unable to wrap buffer pool in as python object");
     }
-    Py_INCREF(p_array);
 
     if (PyList_SetItem(list, bufIdx, p_array) != 0) {
         throw std::runtime_error("Unable to add python array to list");

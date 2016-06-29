@@ -32,11 +32,12 @@ class ProtoBackend(object):
         # print "test print", hostlist[0]
         if devlist[buf_index] is None:
             devlist[buf_index] = self.empty_like(hostlist[buf_index])
-        # print devlist[buf_index].shape, hostlist[buf_index.shape]
-        print hostlist[buf_index]
+        print devlist[buf_index].shape, devlist[buf_index].dtype, hostlist[buf_index].shape, hostlist[buf_index].dtype
+        # print hostlist[buf_index]
         devlist[buf_index][:] = hostlist[buf_index].T
 
     def empty_like(self, npary):
+        print "called this again"
         return np.empty_like(npary.T)
 
 
@@ -143,8 +144,6 @@ class DataLoader(object):
         if end == self.ndata:
             self.start_idx = self.batch_size - (self.ndata - start)
 
-        # import pdb; pdb.set_trace()
-
         (data, targets) = self.loaderlib.next(self.loader, ct.c_int(self.buffer_id))
 
         # Toggle buffer_id between 0 and 1
@@ -176,11 +175,9 @@ dloader_args = dict(set_name="tag_test",
                     loader_cfg_string=cfg_string)
 
 dd = DataLoader(**dloader_args)
-print "I'm out"
 
 for i, (x, t) in enumerate(dd):
-    # import pdb; pdb.set_trace()
-    # print "YOOOHOO", t
+    print x
     if i == 10:
         break
 
