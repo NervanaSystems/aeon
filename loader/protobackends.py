@@ -17,28 +17,38 @@ class CpuBackend(object):
     def empty_like(self, npary):
         return np.empty_like(npary.T)
 
+    def get_ary(self, cpu_array):
+        return cpu_array
 
 class GpuBackend(object):
     '''
     Defines the stubs that are necessary for a backend object
     '''
     def __init__(self, device_id=0):
-        self.use_pinned_mem = True
+        self.use_pinned_mem = False
         self.device_id = device_id
         drv.init()
         self.ctx = drv.Device(device_id).make_context()
+        self.ctx.pop()
 
     def consume(self, buf_index, hostlist, devlist):
         assert 0 <= buf_index < 2, 'Can only double buffer'
+        self.ctx.push()
         if devlist[buf_index] is None:
-            devlist[buf_index] = self.empty_like(hostlist[buf_index])
-        devlist[buf_index].set_async(hostlist[buf_index].T)
+            shape, dtype = hostlist[buf_index].shape, hostlist[buf_index].dtype
+            devlist[buf_index] = GPUArray(shape, dtype)
+        devlist[buf_index].set(hostlist[buf_index].T)
+        self.ctx.pop()
 
     def empty_like(self, npary):
-        self.ctx.push()
         dbuf = GPUArray(nparay.shape[::-1], nparay.dtype)
-        self.ctx.pop()
         return dbuf
+
+    def get_ary(self, gpu_array):
+        self.ctx.push()
+        res = gpu_array.get()
+        self.ctx.pop()
+        return res
 
     def __del__(self):
         try:

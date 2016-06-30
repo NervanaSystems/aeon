@@ -106,7 +106,6 @@ void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    printf("**Marker %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
     wrap_buffer_pool(_host_dlist, outBuf.first, bufIdx, _dtmInfo);
     wrap_buffer_pool(_host_tlist, outBuf.second, bufIdx, _tgtInfo);
 
@@ -121,6 +120,10 @@ void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
 
     PyObject* tArgs  = Py_BuildValue("iOO", bufIdx, _host_tlist, _dev_tlist);
     PyObject* tRes = PyObject_CallObject(_f_consume, tArgs);
+    if (!tRes)
+    {
+        PyErr_Print();
+    }
     Py_XDECREF(tArgs);
     Py_XDECREF(tRes);
     PyGILState_Release(gstate);
@@ -154,7 +157,6 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
     if (hdItem != Py_None) {
         return;
     }
-    printf("**Marker %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 
     int nd = 2;
     npy_intp dims[2] = {_batchSize, typeInfo->count};
