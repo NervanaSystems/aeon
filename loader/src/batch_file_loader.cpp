@@ -34,6 +34,8 @@ void BatchFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_siz
     // NOTE: end_i - begin_i may not be a full block for the last
     // block_num
 
+    // begin_i and end_i contain the indexes into the manifest file which
+    // hold the requested block
     size_t begin_i = block_num * block_size;
     size_t end_i = min((block_num + 1) * (size_t)block_size, _manifest->getSize());
 
@@ -52,11 +54,12 @@ void BatchFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_siz
 
     // TODO: move index offset logic and bounds asserts into Manifest
     // interface to more easily support things like offset/limit queries.
-    // It isn't obvious yet what the best interface for this will be ...
-    // perhaps the manifest should know about block_num and block_size itself?
-    // perhaps it should just expose an at(index) method?  Perhaps it should
-    // expose a getCursor(index_begin, index_end) which more closely mirrors most
-    // database query patterns (limit/offset)
+    // It isn't obvious yet what the best interface for this will be.
+    // Some options include:
+    //  - the manifest should know about block_num and block_size itself
+    //  - it should expose an at(index) method instead of begin()/end()
+    //  - it should expose a getCursor(index_begin, index_end) which more
+    //    closely mirrors most database query patterns (limit/offset)
     auto begin_it = _manifest->begin() + begin_i;
     auto end_it = _manifest->begin() + end_i;
 
