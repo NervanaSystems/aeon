@@ -10,9 +10,10 @@ def make_cifar_config(minibatch_size):
     cfg_dict = dict(media="image",
                     data_config=dcfg,
                     target_config=tcfg,
-                    manifest_filename="/scratch/alex/dloader_test/cifar_manifest.txt",
+                    manifest_filename="/scratch/alex/dloader_test/cifar_manifest_shuffle.txt",
                     cache_directory="/scratch/alex/dloader_test",
-                    macrobatch_size=5000, minibatch_size=minibatch_size)
+                    macrobatch_size=5000,
+                    minibatch_size=minibatch_size)
 
     cifar_cfg_string = json.dumps(cfg_dict)
     return cifar_cfg_string

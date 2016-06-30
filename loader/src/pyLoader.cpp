@@ -259,11 +259,11 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
                                                               _manifest->version(),
                                                               batchFileLoader);
     if (_lcfg->shuffle_every_epoch) {
-        _batch_iterator = make_shared<ShuffledBatchIterator>(batchCacheLoader,
+        _batch_iterator = make_shared<ShuffledBatchIterator>(batchFileLoader,
                                                              _lcfg->macrobatch_size,
                                                              _lcfg->random_seed);
     } else {
-        _batch_iterator = make_shared<SequentialBatchIterator>(batchCacheLoader,
+        _batch_iterator = make_shared<SequentialBatchIterator>(batchFileLoader,
                                                                _lcfg->macrobatch_size);
     }
 }

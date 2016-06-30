@@ -120,8 +120,7 @@ void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
 
     PyObject* tArgs  = Py_BuildValue("iOO", bufIdx, _host_tlist, _dev_tlist);
     PyObject* tRes = PyObject_CallObject(_f_consume, tArgs);
-    if (!tRes)
-    {
+    if (!tRes) {
         PyErr_Print();
     }
     Py_XDECREF(tArgs);
