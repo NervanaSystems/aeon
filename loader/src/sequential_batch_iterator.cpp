@@ -33,7 +33,7 @@ void SequentialBatchIterator::read(BufferPair& dest) {
 
     ++_i;
 
-    if(_i != _count) {
+    if(_i == _count) {
         reset();
     }
 }

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "provider.hpp"
 #include "etl_label.hpp"
 #include "etl_image.hpp"
+#include "provider.hpp"
 
 namespace nervana {
     namespace image {

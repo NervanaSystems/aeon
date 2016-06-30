@@ -15,11 +15,11 @@
 # ----------------------------------------------------------------------------
 
 SRCS            := \
-    device.cpp \
     cpio.cpp \
     buffer.cpp \
-    loader.cpp \
-    argtype.cpp \
+    pyBackendWrapper.cpp \
+    pyLoader.cpp \
+    api_pversion.cpp \
     etl_image.cpp \
     etl_bbox.cpp \
     etl_lmap.cpp \
@@ -35,11 +35,11 @@ SRCS            := \
     sequential_batch_iterator.cpp \
     shuffled_batch_iterator.cpp \
     batch_loader.cpp \
-    vector.cpp \
-    box.cpp \
+    box.cpp
+
 
 OBJS             = $(subst .cpp,.o,$(SRCS))
-CFLAGS          := -Wall -Wno-deprecated-declarations -O2 -g -std=c++11 -fPIC
+CFLAGS          := -Wall -Wno-deprecated-declarations -O0 -g -std=c++11 -fPIC
 CFLAGSDBG       := -g -Wall -O0 -std=c++11 -fPIC
 CC              := clang++
 LOADER_SO       := ../bin/loader.so
@@ -85,9 +85,11 @@ endif
 	LIBS        := -lcuda -lcudart $(LIBS)
 endif
 
+INC             := -I/home/users/alex/Code/neon/.venv2/include/python2.7/ $(INC)
+LIBS            := -lpython2.7 $(LIBS)
+
 .PHONY: clean
 
-# g++ -o bin/loader -DSTANDALONE -g -Wall -O0 -std=c++11  -DHAS_IMGLIB -DHAS_VIDLIB  src/loader.cpp -I/usr/include/opencv       -lopencv_calib3d -lopencv_contrib -lopencv_core -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_highgui -lopencv_imgproc -lopencv_legacy -lopencv_ml -lopencv_objdetect -lopencv_ocl -lopencv_photo -lopencv_stitching -lopencv_superres -lopencv_ts -lopencv_video -lopencv_videostab   -lavutil -lavformat -lavcodec -lswscale
 
 all: ../bin/loader.so $(LOADER_SO) $(LOADER_STATIC) Makefile
 
@@ -110,7 +112,6 @@ $(LOADER_SO): $(OBJS)
 	@echo "Building $@..."
 	@mkdir -p ../bin
 	$(CC) -shared -o $@ $(OBJS) $(LDIR) $(LIBS)
-	# $(CC) -shared -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $< $(LDIR) $(LIBS)
 
 $(LOADER_STATIC): $(OBJS)
 	@echo "Building $@..."

@@ -36,7 +36,7 @@ void ShuffledBatchIterator::read(BufferPair &dest) {
 
     ++_it;
 
-    if(_it != _indices.end()) {
+    if(_it == _indices.end()) {
         reset();
     }
 }

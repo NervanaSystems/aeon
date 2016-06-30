@@ -15,7 +15,7 @@ namespace nervana {
 template<typename T, typename S> class nervana::interface::param_factory {
 public:
     virtual ~param_factory() {}
-    virtual std::shared_ptr<S> make_params(std::shared_ptr<const T>);
+    virtual std::shared_ptr<S> make_params(std::shared_ptr<const T>) = 0;
 };
 
 template<typename T> class nervana::interface::extractor {

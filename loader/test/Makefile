@@ -23,7 +23,6 @@ SRCS := \
     gen_image.cpp \
     gen_audio.cpp \
     gen_video.cpp \
-    argtype_test.cpp \
     test_bbox.cpp \
     test_image.cpp \
     test_lmap.cpp \
@@ -38,8 +37,8 @@ SRCS := \
     shuffled_batch_iterator_test.cpp \
     helpers.cpp \
     simple_loader.cpp \
-    test_vector.cpp \
-    test_localization.cpp \
+    test_localization.cpp
+
 
 TOBJS            = $(subst .cpp,.o,$(SRCS))
 OBJS             = $(subst .c,.o,$(TOBJS))

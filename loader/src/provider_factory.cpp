@@ -1,5 +1,3 @@
-#include "loader.hpp"
-#include "api.hpp"
 #include "provider_factory.hpp"
 
 std::shared_ptr<nervana::train_base> nervana::train_provider_factory::create(nlohmann::json configJs)

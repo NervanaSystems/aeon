@@ -12,29 +12,22 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-
-#pragma once
-
-#include "cpio.hpp"
+#include "api_pversion.hpp"
 
 extern "C" {
-
-static std::string last_error_message;
 
 extern const char* get_error_message() {
     return last_error_message.c_str();
 }
 
-extern void* start(
-                   int* itemCount,
-                   int miniBatchSize,
+extern void* start(int* itemCount,
                    const char* loaderConfigString,
-                   DeviceParams* deviceParams
+                   PyObject* pbackend
                    ) {
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
 
-        Loader* loader = new Loader(miniBatchSize, loaderConfigString, deviceParams);
+        PyLoader* loader = new PyLoader(loaderConfigString, pbackend);
 
         int result = loader->start();
         if (result != 0) {
@@ -61,17 +54,16 @@ extern int error() {
     }
 }
 
-extern int next(Loader* loader) {
+extern PyObject* next(PyLoader* loader, int bufIdx) {
     try {
-        loader->next();
-        return 0;
+        return loader->next(bufIdx);
     } catch(std::exception& ex) {
         last_error_message = ex.what();
-        return -1;
+        return NULL;
     }
 }
 
-extern int reset(Loader* loader) {
+extern int reset(PyLoader* loader) {
     try {
         return loader->reset();
     } catch(std::exception& ex) {
@@ -80,7 +72,7 @@ extern int reset(Loader* loader) {
     }
 }
 
-extern int stop(Loader* loader) {
+extern int stop(PyLoader* loader) {
     try {
         loader->stop();
         delete loader;

@@ -13,7 +13,8 @@
  limitations under the License.
 */
 
-#include "loader.hpp"
+#include "json.hpp"
+#include "provider_factory.hpp"
 #include "gen_image.hpp"
 #include "gtest/gtest.h"
 #include "simple_loader.hpp"
@@ -33,7 +34,7 @@ unsigned int sum(char* data, unsigned int len) {
 
 void single(simple_loader* loader, int epochCount, int minibatchCount,
            int batchSize, int datumSize, int targetSize, unsigned int& sm) {
-    BatchIterator* reader = loader;
+    // BatchIterator* reader = loader;
 //    string configString = R"({"media":"image","config":{}})";
 //    auto js = nlohmann::json::parse(configString);
     nlohmann::json js = {{"media","image"},{"data_config",{{"height",128},{"width",128}}},{"target_config",{}}};
@@ -121,7 +122,7 @@ int test(const char* repoDir, const char* indexFile, int batchSize,
 
     string archiveDir(repoDir);
     //archiveDir += "-ingested";
-    CpuParams deviceParams(0, 0, dataBuffer, targetBuffer);
+    // CpuParams deviceParams(0, 0, dataBuffer, targetBuffer);
 //    simple_loader loader(batchSize,
 //                  false, false, datumSize, datumTypeSize,
 //                  targetSize, targetTypeSize, 100,

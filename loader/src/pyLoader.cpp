@@ -23,46 +23,41 @@
 #include <algorithm>
 
 #include "matrix.hpp"
-#include "device.hpp"
-#include "loader.hpp"
+#include "pyLoader.hpp"
 #include "batch_loader_cpio_cache.hpp"
 #include "sequential_batch_iterator.hpp"
 #include "shuffled_batch_iterator.hpp"
 
 using namespace std;
 
-DecodeThreadPool::DecodeThreadPool(int count,
-                                   int batchSize,
-                                   nlohmann::json configJs,
-                                   DeviceParams *dp)
-: ThreadPool(count),
-  _itemsPerThread((batchSize - 1) / count + 1),
-  _endSignaled(0),
-  _manager(0), _stopManager(false), _managerStopped(false), _inputBuf(0),
-  _bufferIndex(0), _batchSize(batchSize), _deviceParams(dp)
+pyDecodeThreadPool::pyDecodeThreadPool(int count,
+                                       const shared_ptr<BufferPool>& in,
+                                       const shared_ptr<BufferPool>& out,
+                                       const shared_ptr<pyBackendWrapper>& pbe)
+: ThreadPool(count), _in(in), _out(out), _pbe(pbe)
 {
+    _batchSize = _pbe->_batchSize;
+    _itemsPerThread = (_batchSize - 1) / _count + 1;
+    _datumLen = _pbe->_dtmInfo->size * _pbe->_dtmInfo->count;
+    _targetLen = _pbe->_tgtInfo->size * _pbe->_tgtInfo->count;
+
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
-    for (int i = 0; i < count; i++) {
-        auto prov = nervana::train_provider_factory::create(configJs);
-        _providers.push_back(prov);
-        _startSignaled.push_back(0);
-        _startInds.push_back(0);
-        _endInds.push_back(0);
-        _dataOffsets.push_back(0);
-        _targetOffsets.push_back(0);
-    }
-
-    _deviceParams->_batchSize = _batchSize;
-
-    _providers[0]->fill_dtm_load_info(&(_deviceParams->_dtmInfo));
-    _providers[0]->fill_tgt_load_info(&(_deviceParams->_tgtInfo));
-
-    _datumLen  = _deviceParams->_dtmInfo.size * _deviceParams->_dtmInfo.count;
-    _targetLen = _deviceParams->_tgtInfo.size * _deviceParams->_tgtInfo.count;
 }
 
-DecodeThreadPool::~DecodeThreadPool()
+
+void pyDecodeThreadPool::add_provider(std::shared_ptr<nervana::train_base> prov)
+{
+    _providers.push_back(prov);
+    _startSignaled.push_back(0);
+
+    _startInds.push_back(0);
+    _endInds.push_back(0);
+    _dataOffsets.push_back(0);
+    _targetOffsets.push_back(0);
+}
+
+pyDecodeThreadPool::~pyDecodeThreadPool()
 {
     if (_manager != 0) {
         _manager->join();
@@ -72,24 +67,15 @@ DecodeThreadPool::~DecodeThreadPool()
     // of the parent class.
 }
 
-void DecodeThreadPool::set_io_buffers(const std::shared_ptr<BufferPool>& in,
-                                      const std::shared_ptr<Device>& device,
-                                      const std::shared_ptr<BufferPool>& out)
-{
-    _in = in;
-    _device = device;
-    _out = out;
-}
-
-void DecodeThreadPool::start()
+void pyDecodeThreadPool::start()
 {
     for (int i = 0; i < _count; i++) {
-        _threads.push_back(new thread(&DecodeThreadPool::run, this, i));
+        _threads.push_back(new thread(&pyDecodeThreadPool::run, this, i));
     }
-    _manager = new thread(&DecodeThreadPool::manage, this);
+    _manager = new thread(&pyDecodeThreadPool::manage, this);
 }
 
-void DecodeThreadPool::stop()
+void pyDecodeThreadPool::stop()
 {
     ThreadPool::stop();
     while (stopped() == false) {
@@ -108,7 +94,7 @@ void DecodeThreadPool::stop()
     }
 }
 
-void DecodeThreadPool::run(int id)
+void pyDecodeThreadPool::run(int id)
 {
     // Initialize worker threads by computing memory offsets for the
     // data this thread should work on
@@ -129,7 +115,7 @@ void DecodeThreadPool::run(int id)
     _stopped[id] = true;
 }
 
-void DecodeThreadPool::work(int id)
+void pyDecodeThreadPool::work(int id)
 {
     // Thread function.
     {
@@ -144,14 +130,12 @@ void DecodeThreadPool::work(int id)
         assert(_startSignaled[id] == 0);
     }
 
-    int start = _startInds[id];
-    int end = _endInds[id];
-    // No locking required because threads
-    // write into non-overlapping regions.
+    // No locking required because threads write into non-overlapping regions.
     BufferPair& outBuf = _out->getForWrite();
-    char* dataBuf = outBuf.first->_data + _dataOffsets[id];
-    char* targetBuf = outBuf.second->_data + _targetOffsets[id];
-    for (int i = start; i < end; i++) {
+    char* dataBuf      = outBuf.first->_data + _dataOffsets[id];
+    char* targetBuf    = outBuf.second->_data + _targetOffsets[id];
+
+    for (int i = _startInds[id]; i < _endInds[id]; i++) {
         _providers[id]->provide_pair(i, _inputBuf, dataBuf, targetBuf);
         dataBuf   += _datumLen;
         targetBuf += _targetLen;
@@ -165,7 +149,7 @@ void DecodeThreadPool::work(int id)
     _ended.notify_one();
 }
 
-void DecodeThreadPool::produce()
+void pyDecodeThreadPool::produce()
 {
     // Produce a minibatch.
     {
@@ -189,20 +173,17 @@ void DecodeThreadPool::produce()
         }
         // At this point, we have decoded data for the whole minibatch.
         BufferPair& outBuf = _out->getForWrite();
-        Matrix::transpose(outBuf.first->_data, _batchSize,
-                          _deviceParams->_dtmInfo.count, _deviceParams->_dtmInfo.size);
-        Matrix::transpose(outBuf.second->_data, _batchSize,
-                          _deviceParams->_tgtInfo.count, _deviceParams->_tgtInfo.size);
+
         // Copy to device.
-        _device->copyData(_bufferIndex, outBuf.first->_data, outBuf.first->_size);
-        _device->copyLabels(_bufferIndex, outBuf.second->_data, outBuf.second->_size);
+        _pbe->call_backend_transfer(outBuf, _bufferIndex);
+
         _bufferIndex = (_bufferIndex == 0) ? 1 : 0;
         _out->advanceWritePos();
     }
     _out->signalNonEmpty();
 }
 
-void DecodeThreadPool::consume()
+void pyDecodeThreadPool::consume()
 {
     // Consume an input buffer.
     {
@@ -220,10 +201,11 @@ void DecodeThreadPool::consume()
     _in->signalNonFull();
 }
 
-void DecodeThreadPool::manage()
+void pyDecodeThreadPool::manage()
 {
     // Thread function.
-    int result = _device->init();
+    // int result = _device->init();
+    int result = 0;
     if (result != 0) {
         _stopManager = true;
     }
@@ -232,6 +214,7 @@ void DecodeThreadPool::manage()
     }
     _managerStopped = true;
 }
+
 
 ReadThread::ReadThread(const shared_ptr<BufferPool>& out,
                        const shared_ptr<BatchIterator>& batch_iterator)
@@ -254,69 +237,73 @@ void ReadThread::work(int id)
     _out->signalNonEmpty();
 }
 
-Loader::Loader(int miniBatchSize, const char* loaderConfigString, DeviceParams *deviceParams)
-: _first(true),
-  _miniBatchSize(miniBatchSize),
-  _deviceParams(deviceParams),
-  _readBufs(nullptr), _decodeBufs(nullptr), _readThread(nullptr), _decodeThreads(nullptr),
-  _device(nullptr), _batch_iterator(nullptr)
-{
-    _loaderConfigJson = nlohmann::json::parse(loaderConfigString);
 
-    LoaderConfig loaderConfig;
-    loaderConfig.set_config(_loaderConfigJson);
+PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
+: _pbe(pbe)
+{
+    _lcfg = make_shared<pyLoaderConfig>();
+    _lcfg_json = nlohmann::json::parse(pyloaderConfigString);
+    _lcfg->set_config(_lcfg_json);
+
+    _batchSize = _lcfg->minibatch_size;
 
     // the manifest defines which data should be included in the dataset
-    _manifest = make_shared<Manifest>(loaderConfig.manifest_filename,
-                                      loaderConfig.shuffle_manifest,
-                                      loaderConfig.random_seed);
+    _manifest = make_shared<Manifest>(_lcfg->manifest_filename,
+                                      _lcfg->shuffle_manifest,
+                                      _lcfg->random_seed);
 
-    auto batchFileLoader = make_shared<BatchFileLoader>(_manifest,
-                                                        loaderConfig.subset_percent);
+    auto batchFileLoader = make_shared<BatchFileLoader>(_manifest, _lcfg->subset_percent);
 
-    auto batchCacheLoader = make_shared<BatchLoaderCPIOCache>(loaderConfig.cache_directory,
+    auto batchCacheLoader = make_shared<BatchLoaderCPIOCache>(_lcfg->cache_directory,
                                                               _manifest->hash(),
                                                               _manifest->version(),
                                                               batchFileLoader);
-    if (loaderConfig.shuffle_every_epoch) {
-        _batch_iterator = make_shared<ShuffledBatchIterator>(batchCacheLoader,
-                                                             loaderConfig.macrobatch_size,
-                                                             loaderConfig.random_seed);
+    if (_lcfg->shuffle_every_epoch) {
+        _batch_iterator = make_shared<ShuffledBatchIterator>(batchFileLoader,
+                                                             _lcfg->macrobatch_size,
+                                                             _lcfg->random_seed);
     } else {
-        _batch_iterator = make_shared<ShuffledBatchIterator>(batchCacheLoader,
-                                                             loaderConfig.macrobatch_size,
-                                                             loaderConfig.random_seed);
+        _batch_iterator = make_shared<SequentialBatchIterator>(batchFileLoader,
+                                                               _lcfg->macrobatch_size);
     }
 }
 
-int Loader::start()
+int PyLoader::start()
 {
     _first = true;
     try {
-        int numCores = thread::hardware_concurrency();
-        int itemsPerThread = (_miniBatchSize - 1) /  numCores + 1;
-        int threadCount =  (_miniBatchSize - 1) / itemsPerThread + 1;
-        threadCount = std::min(threadCount, _miniBatchSize);
+        int ncores         = thread::hardware_concurrency();
+        int itemsPerThread = (_batchSize - 1) /  ncores + 1;
+        int nthreads       = (_batchSize - 1) / itemsPerThread + 1;
+        nthreads           = std::min(nthreads, _batchSize);
 
-        // Create the decode threads first, which interpret the config string to know output sizes
-        _decodeThreads = unique_ptr<DecodeThreadPool>(
-            new DecodeThreadPool(threadCount, _miniBatchSize, _loaderConfigJson, _deviceParams)
-        );
+        auto prov = nervana::train_provider_factory::create(_lcfg_json);
+        prov->fill_dtm_load_info(&_dtmInfo);
+        prov->fill_tgt_load_info(&_tgtInfo);
 
-        int dataLen   = _decodeThreads->get_dtm_len() * _miniBatchSize;
-        int targetLen = _decodeThreads->get_tgt_len() * _miniBatchSize;
+        int dtmLen = _dtmInfo.size * _dtmInfo.count;
+        int tgtLen = _tgtInfo.size * _tgtInfo.count;
+
+        int dataLen   = dtmLen * _batchSize;
+        int targetLen = tgtLen * _batchSize;
+
+        // Bind the python backend here
+        _pyBackend = make_shared<pyBackendWrapper>(_pbe, &_dtmInfo, &_tgtInfo, _batchSize);
 
         // Start the read buffers off with a reasonable size. They will get resized as needed.
         _readBufs = make_shared<BufferPool>(dataLen / 8, targetLen);
         _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
 
-        // Do the allocation in here, set the pointers in _deviceParams
-        _device = Device::create(_deviceParams, true);
+        _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, _pyBackend->use_pinned_memory());
+        _decodeThreads = unique_ptr<pyDecodeThreadPool>(
+                            new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs, _pyBackend));
+        printf("**Marker %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 
-        bool pinned = (_device->_type != CPU);
-        _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, pinned);
-
-        _decodeThreads->set_io_buffers(_readBufs, _device, _decodeBufs);
+        // Now add on the already created provider and add on the additional ones
+        _decodeThreads->add_provider(prov);
+        for (int i=1; i<nthreads; i++) {
+            _decodeThreads->add_provider(nervana::train_provider_factory::create(_lcfg_json));
+        }
 
     } catch(std::bad_alloc&) {
         return -1;
@@ -326,7 +313,7 @@ int Loader::start()
     return 0;
 }
 
-void Loader::stop()
+void PyLoader::stop()
 {
     _readThread->stop();
     while (_readThread->stopped() == false) {
@@ -339,13 +326,14 @@ void Loader::stop()
     }
     _decodeThreads->stop();
 
-    _readBufs = nullptr;
-    _readThread = nullptr;
-    _decodeBufs = nullptr;
+    _readBufs      = nullptr;
+    _readThread    = nullptr;
+    _decodeBufs    = nullptr;
     _decodeThreads = nullptr;
+    _pyBackend     = nullptr;
 }
 
-int Loader::reset()
+int PyLoader::reset()
 {
     stop();
     _batch_iterator->reset();
@@ -353,7 +341,7 @@ int Loader::reset()
     return 0;
 }
 
-void Loader::next()
+PyObject* PyLoader::next(int bufIdx)
 {
     unique_lock<mutex> lock(_decodeBufs->getMutex());
     if (_first == true) {
@@ -366,9 +354,10 @@ void Loader::next()
     while (_decodeBufs->empty()) {
         _decodeBufs->waitForNonEmpty(lock);
     }
+    return _pyBackend->get_dtm_tgt_pair(bufIdx);
 }
 
-void Loader::drain()
+void PyLoader::drain()
 {
     {
         unique_lock<mutex> lock(_decodeBufs->getMutex());

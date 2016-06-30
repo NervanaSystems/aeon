@@ -18,6 +18,7 @@ import numpy as np
 import os
 import atexit
 import json
+import pycuda
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ class DeviceParams(ct.Structure):
                 ('batchSize', ct.c_int),
                 ('dtmInfo', CountSizeType),
                 ('tgtInfo', CountSizeType),
+                ('ctx_strm', BufferPair),
                 ('data', BufferPair),
                 ('targets', BufferPair)]
 
@@ -107,24 +109,6 @@ class DataLoader(object):
         self.loaderlib.next.argtypes = [ct.c_void_p]
         self.loaderlib.stop.argtypes = [ct.c_void_p]
         self.loaderlib.reset.argtypes = [ct.c_void_p]
-
-    # def alloc(self):
-        # def alloc_bufs(dim0, dtype):
-        #     return [self.be.iobuf(dim0=dim0, dtype=dtype) for _ in range(2)]
-
-        # def ct_cast(buffers, idx):
-        #     return ct.cast(int(buffers[idx].raw()), ct.c_void_p)
-
-        # def cast_bufs(buffers):
-        #     return BufferPair(ct_cast(buffers, 0), ct_cast(buffers, 1))
-
-        # self.data = alloc_bufs(self.datum_size, self.datum_dtype)
-        # self.targets = alloc_bufs(self.target_size, self.target_dtype)
-        # self.media_params.alloc(self)
-        # if self.datum_dtype == self.be.default_dtype:
-        #     self.backend_data = None
-        # else:
-        #     self.backend_data = self.be.iobuf(self.datum_size, dtype=self.be.default_dtype)
 
     @property
     def nbatches(self):
@@ -212,7 +196,7 @@ class DataLoader(object):
         for start in range(self.start_idx, self.ndata, self.batch_size):
             yield self.next(start)
 
-
+# This is the configuration for doing random crops on cifar 10
 dcfg = dict(height=40, width=40, channel_major=False, flip=True)
 tcfg = dict(binary=True)
 
@@ -222,6 +206,8 @@ cfg_dict = dict(media="image",
                 manifest_filename="/scratch/alex/dloader_test/cifar_manifest.txt",
                 cache_directory="/scratch/alex/dloader_test",
                 macrobatch_size=5000)
+
+
 
 cfg_string = json.dumps(cfg_dict)
 
