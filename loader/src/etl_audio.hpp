@@ -19,6 +19,7 @@
 #include "params.hpp"
 #include "media.hpp"
 #include "codec.hpp"
+#include "audio.hpp"
 
 namespace nervana {
     namespace audio {
@@ -58,6 +59,29 @@ namespace nervana {
     class audio::config : public json_config_parser {
     public:
         bool set_config(nlohmann::json js) override;
+
+        // TODO: ensure these are still used
+        int                         _randomSeed;
+        int                         _samplingFreq;
+        int                         _clipDuration;
+        int                         _frameDuration;
+        int                         _overlapPercent;
+        char                        _windowType[16];
+        char                        _featureType[16];
+        float                       _randomScalePercent;
+        bool                        _ctcCost;
+        int                         _numFilts;
+        int                         _numCepstra;
+        char*                       _noiseIndexFile;
+        char*                       _noiseDir;
+        int                         _windowSize;
+        int                         _overlap;
+        int                         _stride;
+        int                         _width;
+        int                         _height;
+        int                         _window;
+        int                         _feature;
+        void*                       _noiseClips;
     };
 
     class audio::decoded : public decoded_media {
@@ -66,7 +90,7 @@ namespace nervana {
         MediaType get_type() override;
 
         size_t getSize();
-    protected:
+    // protected:
         RawMedia* _raw;
     };
 
@@ -79,13 +103,15 @@ namespace nervana {
         Codec _codec;
     };
 
-
     class audio::transformer : public interface::transformer<audio::decoded, audio::params> {
     public:
         transformer(std::shared_ptr<const audio::config>);
-        ~transformer() {}
+        ~transformer();
         virtual std::shared_ptr<audio::decoded> transform(
                                                 std::shared_ptr<audio::params>,
                                                 std::shared_ptr<audio::decoded>) override;
+    private:
+        std::shared_ptr<Audio> _audio;
+        Specgram* _specgram;
     };
 }

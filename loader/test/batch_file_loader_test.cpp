@@ -25,6 +25,7 @@ TEST(blocked_file_loader, constructor) {
 }
 
 TEST(blocked_file_loader, loadBlock) {
+    // load one block of size 2
     uint block_size = 2;
     uint object_size = 16;
     uint target_size = 16;

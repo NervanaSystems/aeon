@@ -46,6 +46,8 @@ public:
 
 class SignalParams : public MediaParams {
 public:
+    SignalParams(MediaType mtype) : MediaParams(mtype) {}
+
     int                         _samplingFreq;
     int                         _clipDuration;
     int                         _frameDuration;

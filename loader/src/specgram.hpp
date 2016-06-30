@@ -12,6 +12,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+#pragma once
 
 #include "media.hpp"
 
@@ -42,14 +43,18 @@ static_assert(sizeof(short) == 2, "Unsupported platform");
 class Specgram {
 public:
     Specgram(SignalParams* params, int id)
-    : _feature(params->_feature),
-      _clipDuration(params->_clipDuration), _windowSize(params->_windowSize),
-      _stride(params->_stride), _timeSteps(params->_width),
-      _numFreqs(params->_windowSize / 2 + 1),
-      _height(params->_height), _samplingFreq(params->_samplingFreq),
-      _numFilts(params->_numFilts),
-      _numCepstra(params->_numCepstra),
-      _window(0), _rng(id) {
+    : _feature(     params->_feature),
+      _clipDuration(params->_clipDuration),
+      _windowSize(  params->_windowSize),
+      _stride(      params->_stride),
+      _timeSteps(   params->_width),
+      _numFreqs(    params->_windowSize / 2 + 1),
+      _height(      params->_height),
+      _samplingFreq(params->_samplingFreq),
+      _numFilts(    params->_numFilts),
+      _numCepstra(  params->_numCepstra),
+      _window(      0),
+      _rng(         id) {
         assert(_stride != 0);
         if (powerOfTwo(_windowSize) == false) {
             throw std::runtime_error("Window size must be a power of 2");

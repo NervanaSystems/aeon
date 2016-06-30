@@ -12,6 +12,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+#pragma once
 
 #include <sys/stat.h>
 #include <libgen.h>
@@ -273,13 +274,13 @@ private:
 
 class Audio : public Media {
 public:
-    Audio(AudioParams *params, int id)
+    Audio(AudioParams *params, int randomSeed)
     : _params(params), _noiseClips(0), _loadedNoise(false) {
         _rng.state = 0;
         _codec = new Codec(params);
-        _specgram = new Specgram(params, id);
+        _specgram = new Specgram(params, randomSeed);
         if (params->_noiseIndexFile != 0) {
-            if ((id == 0) && (params->_noiseClips == 0)) {
+            if ((randomSeed == 0) && (params->_noiseClips == 0)) {
                 params->_noiseClips = new NoiseClips(params, _codec);
                 _loadedNoise = true;
             }
@@ -307,7 +308,15 @@ public:
     }
 
     void transform(char* item, int itemSize, char* buf, int bufSize, int* meta) {
-        RawMedia* raw = _codec->decode(item, itemSize);
+        auto raw = decode(item, itemSize);
+        newTransform(raw, buf, bufSize, meta);
+    }
+
+    RawMedia* decode(char* item, int itemSize) {
+        return _codec->decode(item, itemSize);
+    }
+
+    void newTransform(RawMedia* raw, char* buf, int bufSize, int* meta) {
         if (_noiseClips != 0) {
             _noiseClips->addNoise(raw, _rng);
         }
