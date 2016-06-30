@@ -74,9 +74,6 @@ pyBackendWrapper::~pyBackendWrapper()
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    Py_XDECREF(dItem);
-    Py_XDECREF(hItem);
-
     Py_XDECREF(_host_dlist);
     Py_XDECREF(_host_tlist);
     Py_XDECREF(_dev_dlist);
@@ -150,7 +147,6 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
                                         count_size_type *typeInfo)
 {
     PyObject *hdItem = PyList_GetItem(list, bufIdx);
-    printf("**Marker %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 
     if (hdItem == NULL) {
         throw std::runtime_error("Bad Index");
@@ -158,6 +154,8 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
     if (hdItem != Py_None) {
         return;
     }
+    printf("**Marker %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
+
     int nd = 2;
     npy_intp dims[2] = {_batchSize, typeInfo->count};
     int nptype  = npy_type_map[typeInfo->type[0]];

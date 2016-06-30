@@ -60,7 +60,6 @@ extern int error() {
 extern PyObject* next(PyLoader* loader, int bufIdx) {
     try {
         return loader->next(bufIdx);
-        // return 0;
     } catch(std::exception& ex) {
         last_error_message = ex.what();
         return NULL;
