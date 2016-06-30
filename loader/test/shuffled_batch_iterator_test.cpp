@@ -44,6 +44,12 @@ public:
     }
 };
 
+void dump_vector_of_strings(vector<string>& words) {
+    for(auto word = words.begin(); word != words.end(); ++word) {
+        cout << *word << endl;
+    }
+}
+
 TEST(shuffled_batch_iterator, sequential_batch_loader) {
     SequentialBatchLoader bl;
 
@@ -73,11 +79,19 @@ TEST(shuffled_batch_iterator, shuffled_block) {
 
     // ensure that loading successive blocks from SequentialBatchLoader
     // result in sorted strings
-    sbi.read(bp);
-    sbi.read(bp);
-    sbi.read(bp);
+    for(int i = 0; i < 26; ++i) {
+        sbi.read(bp);
+    }
 
     vector<string> words = buffer_to_vector_of_strings(*bp.first);
 
     ASSERT_EQ(sorted(words), false);
+
+    // now sort the words and make sure they are all unique.  We should
+    // have loaded an entire 'epoch' and have no duplicates
+
+    sort(words.begin(), words.end());
+    for(auto word = words.begin(); word != words.end() - 1; ++word) {
+        ASSERT_NE(*word, *(word + 1));
+    }
 }
