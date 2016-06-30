@@ -79,6 +79,9 @@ vector<unsigned char> gen_audio::render_datum( int datumNumber ) {
 
 /*
  * Audio encoding example
+ *
+ * generate an mp2 encoded sin wave with `frequencyHz` and length `duration`
+ * in milliseconds.
  */
 vector<unsigned char> gen_audio::encode(float frequencyHz, int duration) {
     AVCodec *codec;
@@ -141,6 +144,12 @@ vector<unsigned char> gen_audio::encode(float frequencyHz, int duration) {
     return rc;
 }
 
+/*
+ * Audio encoding example
+ *
+ * generate an mp2 encoded sin wave with `frequencyHz` and length `duration`
+ * in milliseconds.  write audio file to `filename`.
+ */
 void gen_audio::encode(const std::string& filename, float frequencyHz, int duration)
 {
     FILE* f;
