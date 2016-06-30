@@ -1,9 +1,9 @@
 from dloader import DataLoader
-from protobackends import GpuBackend
+from protobackends import MultiGpuBackend
 from provider_configs import make_cifar_config
 
 batch_size = 128
-mybackend = GpuBackend()
+mybackend = MultiGpuBackend()
 myconfig = make_cifar_config(batch_size)
 
 dd = DataLoader(backend=mybackend,
@@ -11,10 +11,9 @@ dd = DataLoader(backend=mybackend,
                 batch_size=batch_size)
 
 for i, (x, t) in enumerate(dd):
-    # host_x = mybackend.get_ary(x)
+    host_x = mybackend.get_ary(x)
 
-    # print i, host_x
-    print t[0]
+    print i, host_x
     if i == 10:
         break
 

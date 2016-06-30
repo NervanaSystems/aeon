@@ -83,11 +83,23 @@ class MultiGpuBackend(object):
                 ctx.pop()
 
         # Initiate the transfer
-        for idx, ctx, dbuf, strm in zip(self.device_ids, devlist[buf_index],
-                                        self.ctxs, self.streams):
+        for idx, ctx, dbuf, strm in zip(self.device_ids, self.ctxs, devlist[buf_index],
+                                        self.streams):
             ctx.push()
             dbuf.set_async(hbuf[idx*frag_sz:(idx+1)*frag_sz, :].T, strm)
             ctx.pop()
+
+    def get_ary(self, dbuf):
+        """
+        This grabs the fragments and reassembles a host buffer for inspection
+        """
+        hbuf_out = []
+        # Initiate the transfer
+        for idx, ctx, dbuf, strm in zip(self.device_ids, self.ctxs, dbuf, self.streams):
+            ctx.push()
+            hbuf_out.append(dbuf.get_async(strm))
+            ctx.pop()
+        return np.hstack(hbuf_out)
 
     def synchronize(self):
         for ctx in self.ctxs:
