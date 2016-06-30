@@ -12,7 +12,7 @@ def make_cifar_config(minibatch_size):
                     target_config=tcfg,
                     manifest_filename="/scratch/alex/dloader_test/cifar_manifest_shuffle.txt",
                     cache_directory="/scratch/alex/dloader_test",
-                    macrobatch_size=5000,
+                    macrobatch_size=minibatch_size,
                     minibatch_size=minibatch_size)
 
     cifar_cfg_string = json.dumps(cfg_dict)

@@ -27,9 +27,6 @@ extern void* start(int* itemCount,
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
 
-        int d = PyEval_ThreadsInitialized();
-        std::cout << "Eval threads state: " << d << std::endl;
-
         PyLoader* loader = new PyLoader(loaderConfigString, pbackend);
 
         int result = loader->start();

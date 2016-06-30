@@ -48,7 +48,7 @@ void BatchFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_siz
     // ensure we stay within bounds of manifest
     assert(begin_i <= _manifest->getSize());
     assert(end_i <= _manifest->getSize());
-    cout << begin_i << " " << end_i << endl;
+
     // TODO: move index offset logic and bounds asserts into Manifest
     // interface to more easily support things like offset/limit queries.
     // It isn't obvious yet what the best interface for this will be ...

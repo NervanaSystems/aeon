@@ -106,7 +106,7 @@ public:
         parse_req(manifest_filename, "manifest_filename", js);
         parse_req(cache_directory,   "cache_directory", js);
         parse_req(macrobatch_size,   "macrobatch_size", js);
-        parse_req(minibatch_size,   "minibatch_size", js);
+        parse_req(minibatch_size,    "minibatch_size", js);
 
         parse_opt(shuffle_every_epoch, "shuffle_every_epoch", js);
         parse_opt(shuffle_manifest,    "shuffle_manifest", js);

@@ -15,13 +15,11 @@
 # ----------------------------------------------------------------------------
 
 SRCS            := \
-    device.cpp \
     batchfile.cpp \
     buffer.cpp \
     pyBackendWrapper.cpp \
     pyLoader.cpp \
     api_pversion.cpp \
-    argtype.cpp \
     etl_image.cpp \
     etl_bbox.cpp \
     etl_lmap.cpp \
@@ -35,8 +33,7 @@ SRCS            := \
     batch_loader_cpio_cache.cpp \
     sequential_batch_iterator.cpp \
     shuffled_batch_iterator.cpp \
-    batch_loader.cpp \
-    vector.cpp
+    batch_loader.cpp
 
 OBJS             = $(subst .cpp,.o,$(SRCS))
 CFLAGS          := -Wall -Wno-deprecated-declarations -O0 -g -std=c++11 -fPIC

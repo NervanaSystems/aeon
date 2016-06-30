@@ -2,15 +2,13 @@
 #include "gen_image.hpp"
 #include "batchfile.hpp"
 
-#include "params.hpp"
-#include "etl_interface.hpp"
+#include "provider_factory.hpp"
+
 #include "etl_image.hpp"
 #include "etl_label_test.hpp"
 #include "etl_bbox.hpp"
 #include "etl_lmap.hpp"
-#include "provider.hpp"
 #include "json.hpp"
-#include "media.hpp"
 #include "batchfile.hpp"
 #include "util.hpp"
 
@@ -24,7 +22,7 @@ TEST(provider,image) {
                          {"data_config",{{"height",128},{"width",128},{"channel_major",false},{"flip",true}}},
                          {"target_config",{}}};
     cout << js.dump(4) << endl;
-    shared_ptr<nervana::train_base> media = Media::create(js);
+    auto media = nervana::train_provider_factory::create(js);
 
     auto data_config = js["data_config"];
     int height = data_config["height"];
