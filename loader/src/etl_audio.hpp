@@ -17,6 +17,8 @@
 
 #include "etl_interface.hpp"
 #include "params.hpp"
+#include "media.hpp"
+#include "codec.hpp"
 
 namespace nervana {
     namespace audio {
@@ -60,7 +62,12 @@ namespace nervana {
 
     class audio::decoded : public decoded_media {
     public:
-        decoded() {}
+        decoded(RawMedia* raw);
+        MediaType get_type() override;
+
+        size_t getSize();
+    protected:
+        RawMedia* _raw;
     };
 
     class audio::extractor : public interface::extractor<audio::decoded> {
@@ -68,6 +75,8 @@ namespace nervana {
         extractor(std::shared_ptr<const audio::config>);
         ~extractor() {}
         virtual std::shared_ptr<audio::decoded> extract(const char*, int) override;
+    private:
+        Codec _codec;
     };
 
 

@@ -13,7 +13,10 @@
  limitations under the License.
 */
 
+#pragma once
+
 #include <sstream>
+#include <mutex>
 
 #include "media.hpp"
 
@@ -32,38 +35,11 @@ extern "C"
 #define av_frame_free avcodec_free_frame
 #endif
 
-void raise_averror(const char* prefix, int errnum) {
-    static char errbuf[512];
-    av_strerror(errnum, &errbuf[0], 512);
-
-    std::stringstream ss;
-    ss << prefix << ": " << errbuf;
-    throw std::runtime_error(ss.str());
-}
-
-#include <mutex>
-
+typedef uint8_t uchar;
 using std::mutex;
 
-int lockmgr(void **p, enum AVLockOp op)
-{
-   mutex** mx = (mutex**) p;
-   switch (op) {
-   case AV_LOCK_CREATE:
-      *mx = new mutex;
-       break;
-   case AV_LOCK_OBTAIN:
-       (*mx)->lock();
-       break;
-   case AV_LOCK_RELEASE:
-       (*mx)->unlock();
-       break;
-   case AV_LOCK_DESTROY:
-       delete *mx;
-       break;
-   }
-   return 0;
-}
+void raise_averror(const char* prefix, int errnum);
+int lockmgr(void **p, enum AVLockOp op);
 
 class Codec {
 public:
@@ -83,7 +59,7 @@ public:
         }
     }
 
-    RawMedia* decode(char* item, int itemSize) {
+    RawMedia* decode(const char* item, int itemSize) {
         int errnum;
 
         _format = avformat_alloc_context();
@@ -109,7 +85,7 @@ public:
         _codec = _format->streams[0]->codec;
         int stream = av_find_best_stream(_format, _mediaType, -1, -1, 0, 0);
         if (stream < 0) {
-            throw std::runtime_error("Could not find media stream in input");
+            raise_averror("Could not find media stream in input", stream);
         }
 
         errnum = avcodec_open2(_codec, avcodec_find_decoder(_codec->codec_id), 0);

@@ -119,6 +119,7 @@ public:
     }
 
     void fillBufs(char** frames, int frameSize) {
+        // `frames` should contain one frame per channel of audio
         for (uint i = 0; i < _bufs.size(); i++) {
             memcpy(_bufs[i] + _dataSize, frames[i], frameSize);
         }

@@ -53,6 +53,9 @@ using namespace std;
 gen_audio::gen_audio() :
     r{42}
 {
+    // register all the codecs
+    avcodec_register_all();
+
 }
 
 vector<unsigned char> gen_audio::render_target( int datumNumber ) {
@@ -76,6 +79,9 @@ vector<unsigned char> gen_audio::render_datum( int datumNumber ) {
     int frequency = ((datumNumber % 7) + 1) * 1000;
     return encode(frequency, 2000);
 }
+
+// NOTE: just descovered that this was mostly copy-pasted from here:
+// https://ffmpeg.org/doxygen/trunk/encoding-example_8c-source.html
 
 /*
  * Audio encoding example

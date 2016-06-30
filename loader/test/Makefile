@@ -39,8 +39,8 @@ SRCS := \
     simple_loader.cpp \
     mock_batch_loader.cpp \
     minibatch_iterator_test.cpp \
-    test_localization.cpp
-
+    test_localization.cpp \
+    test_audio.cpp \
 
 TOBJS            = $(subst .cpp,.o,$(SRCS))
 OBJS             = $(subst .c,.o,$(TOBJS))
