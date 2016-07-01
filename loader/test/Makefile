@@ -37,6 +37,7 @@ SRCS := \
     shuffled_batch_iterator_test.cpp \
     helpers.cpp \
     simple_loader.cpp \
+    mock_batch_loader.cpp \
     test_localization.cpp
 
 

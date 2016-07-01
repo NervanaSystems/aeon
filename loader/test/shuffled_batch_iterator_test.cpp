@@ -17,32 +17,9 @@
 
 #include "helpers.hpp"
 #include "shuffled_batch_iterator.hpp"
+#include "mock_batch_loader.hpp"
 
 using namespace std;
-
-class SequentialBatchLoader : public BatchLoader {
-public:
-    void loadBlock(BufferPair &dest, uint block_num, uint block_size) {
-        // load BufferPair with strings.
-        // block_num 0: 'aa', 'ab', 'ac'
-        // block_num 1: 'ba', 'bb', 'bc'
-        // ...
-        assert(block_size == 3);
-        for(uint i = 0; i < block_size; ++i) {
-            stringstream ss;
-            ss << (char)('a' + block_num);
-            ss << (char)('a' + i);
-            string s = ss.str();
-
-            dest.first->read(s.c_str(), s.length());
-            dest.second->read(s.c_str(), s.length());
-        }
-    };
-
-    uint objectCount() {
-        return 26 * 3;
-    }
-};
 
 void dump_vector_of_strings(vector<string>& words) {
     for(auto word = words.begin(); word != words.end(); ++word) {
@@ -51,7 +28,7 @@ void dump_vector_of_strings(vector<string>& words) {
 }
 
 TEST(shuffled_batch_iterator, sequential_batch_loader) {
-    SequentialBatchLoader bl;
+    MockBatchLoader bl;
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
@@ -70,7 +47,7 @@ TEST(shuffled_batch_iterator, sequential_batch_loader) {
 
 TEST(shuffled_batch_iterator, shuffled_block) {
     ShuffledBatchIterator sbi(
-        make_shared<SequentialBatchLoader>(), 3, 0
+        make_shared<MockBatchLoader>(), 3, 0
     );
 
     Buffer* dataBuffer = new Buffer(0);
