@@ -1,8 +1,8 @@
 # Notes for creating a manifest file for cifar10 from the unpacked data
 
 # First make a list of all the images in the train directory
-ROOT_DIR=/scratch/alex/cifar_unc
-find $ROOT_DIR/train -name *.png > cifar_train_manifest.csv
+ROOT_DIR=/usr/local/data/cifar_unc
+find $ROOT_DIR/train -name '*.png' > cifar_train_manifest.csv
 
 # Now make binary label files containing the bin-packed labels
 for i in $(seq 0 9); do echo "0${i}000000" | xxd -r -p > $ROOT_DIR/train/$i.bin; done
