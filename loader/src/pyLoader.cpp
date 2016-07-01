@@ -253,6 +253,10 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
                                       _lcfg->shuffle_manifest,
                                       _lcfg->random_seed);
 
+    if(_manifest->getSize() == 0) {
+        throw std::runtime_error("manifest file is empty");
+    }
+
     auto batchFileLoader = make_shared<BatchFileLoader>(_manifest, _lcfg->subset_percent);
 
     auto batchCacheLoader = make_shared<BatchLoaderCPIOCache>(_lcfg->cache_directory,
