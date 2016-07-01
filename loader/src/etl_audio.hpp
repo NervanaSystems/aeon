@@ -15,6 +15,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "etl_interface.hpp"
 #include "params.hpp"
 #include "media.hpp"
@@ -38,8 +40,11 @@ namespace nervana {
     class audio::params : public nervana::params {
         friend class audio::param_factory;
     public:
-
         void dump(std::ostream & = std::cout);
+
+        int _width;
+        int _height;
+
     private:
         params() {}
     };
@@ -60,7 +65,7 @@ namespace nervana {
     public:
         bool set_config(nlohmann::json js) override;
 
-        // TODO: ensure these are still used
+        // TODO: ensure these are still used and give better names
         int                         _randomSeed;
         int                         _samplingFreq;
         int                         _clipDuration;
@@ -81,7 +86,6 @@ namespace nervana {
         int                         _height;
         int                         _window;
         int                         _feature;
-        void*                       _noiseClips;
     };
 
     class audio::decoded : public decoded_media {
@@ -92,13 +96,14 @@ namespace nervana {
         size_t getSize();
     // protected:
         RawMedia* _raw;
+        vector<char> _buf;
     };
 
     class audio::extractor : public interface::extractor<audio::decoded> {
     public:
         extractor(std::shared_ptr<const audio::config>);
         ~extractor() {}
-        virtual std::shared_ptr<audio::decoded> extract(const char*, int) override;
+        std::shared_ptr<audio::decoded> extract(const char*, int) override;
     private:
         Codec _codec;
     };
@@ -107,11 +112,14 @@ namespace nervana {
     public:
         transformer(std::shared_ptr<const audio::config>);
         ~transformer();
-        virtual std::shared_ptr<audio::decoded> transform(
-                                                std::shared_ptr<audio::params>,
-                                                std::shared_ptr<audio::decoded>) override;
+        std::shared_ptr<audio::decoded> transform(
+            std::shared_ptr<audio::params>,
+            std::shared_ptr<audio::decoded>) override;
     private:
+        Codec _codec;
         std::shared_ptr<Audio> _audio;
         Specgram* _specgram;
+        NoiseClips* _noiseClips;
+        cv::RNG _rng;
     };
 }

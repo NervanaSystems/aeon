@@ -13,7 +13,6 @@
  limitations under the License.
 */
 
-
 #include <sys/stat.h>
 
 #include <algorithm>

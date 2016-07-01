@@ -21,7 +21,9 @@ SRCS            := \
     pyLoader.cpp \
     api_pversion.cpp \
     etl_audio.cpp \
-	codec.cpp \
+    noise_clips.cpp \
+	audio.cpp \
+    codec.cpp \
     etl_image.cpp \
     etl_bbox.cpp \
     etl_lmap.cpp \
