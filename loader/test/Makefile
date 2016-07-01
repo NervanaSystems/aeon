@@ -24,6 +24,7 @@ SRCS := \
     gen_video.cpp \
     test_bbox.cpp \
     test_image.cpp \
+    test_image_var.cpp \
     test_lmap.cpp \
     test_provider.cpp \
     test_util.cpp \

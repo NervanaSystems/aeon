@@ -58,7 +58,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
                     shared_ptr<localization::decoded> mp) {
     cv::Size im_size{mp->width(), mp->height()};
     float im_scale;
-    tie(im_scale, im_size) = calculate_scale_shape(im_size);
+    tie(im_scale, im_size) = calculate_scale_shape(im_size, cfg->min_size, cfg->max_size);
     mp->image_scale = im_scale;
     mp->image_size = im_size;
 
@@ -249,13 +249,13 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const
     return overlaps;
 }
 
-tuple<float,cv::Size> localization::transformer::calculate_scale_shape(cv::Size size) {
+tuple<float,cv::Size> localization::transformer::calculate_scale_shape(cv::Size size, int min_size, int max_size) {
     int im_size_min = std::min(size.width,size.height);
     int im_size_max = max(size.width,size.height);
-    float im_scale = float(cfg->min_size) / float(im_size_min);
+    float im_scale = float(min_size) / float(im_size_min);
     // Prevent the biggest axis from being more than FRCN_MAX_SIZE
-    if(round(im_scale * im_size_max) > cfg->max_size) {
-        im_scale = float(cfg->max_size) / float(im_size_max);
+    if(round(im_scale * im_size_max) > max_size) {
+        im_scale = float(max_size) / float(im_size_max);
     }
     cv::Size im_shape{int(round(size.width*im_scale)), int(round(size.height*im_scale))};
     return make_tuple(im_scale, im_shape);
@@ -301,13 +301,7 @@ vector<box> localization::anchor::add_anchors() {
     for(const box& anchor_data : anchors ) {
         for(const box& row_data : shifts ) {
             box b = row_data+anchor_data;
-            if(b.xmin >= 0 &&
-               b.ymin >= 0 &&
-               b.xmax <= cfg->max_size &&
-               b.ymax <= cfg->max_size)
-            {
-                all_anchors.push_back(b);
-            }
+            all_anchors.push_back(b);
         }
     }
 

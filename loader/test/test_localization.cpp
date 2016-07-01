@@ -92,7 +92,9 @@ TEST(localization,generate_anchors) {
         EXPECT_EQ(expected[i], actual[i]);
     }
 
-    EXPECT_EQ(17680,_anchor.all_anchors.size());
+    EXPECT_EQ(34596,cfg->total_anchors());
+
+    EXPECT_EQ((9 * (62 * 62)),_anchor.all_anchors.size());
 }
 
 void plot(const vector<box>& list, const string& prefix) {
@@ -220,7 +222,7 @@ TEST(localization,calculate_scale_shape) {
     localization::transformer transformer(cfg);
     cv::Size size{500,375};
     float scale;
-    tie(scale,size) = transformer.calculate_scale_shape(size);
+    tie(scale,size) = transformer.calculate_scale_shape(size, cfg->min_size, cfg->max_size);
     EXPECT_FLOAT_EQ(1.6,scale);
     EXPECT_EQ(800,size.width);
     EXPECT_EQ(600,size.height);
@@ -259,6 +261,20 @@ TEST(localization, transform) {
 //        ASSERT_NE(nullptr,decoded);
 //        auto boxes = decoded->boxes();
 //    }
+}
+
+TEST(localization, loader) {
+    string data = read_file(CURDIR"/test_data/006637.json");
+    auto cfg = make_localization_config();
+    localization::extractor extractor{cfg};
+    localization::transformer transformer{cfg};
+    localization::loader loader{cfg};
+    auto mdata = extractor.extract(&data[0],data.size());
+    auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);
+    ASSERT_NE(nullptr,decoded);
+    auto params = make_shared<image::params>();
+    shared_ptr<localization::decoded> transformed = transformer.transform(params, decoded);
+    loader.load(nullptr, transformed);
 }
 
 

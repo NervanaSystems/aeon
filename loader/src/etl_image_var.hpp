@@ -18,10 +18,6 @@ namespace nervana {
         class extractor;
         class transformer;
         class loader;
-
-        // These functions may be common across different transformers
-        void resize(const cv::Mat&, cv::Mat&, const cv::Size2i& );
-        void shift_cropbox(const cv::Size2f &, cv::Rect &, float, float);
     }
 
     class image_var::params : public nervana::params {
@@ -30,11 +26,7 @@ namespace nervana {
 
         void dump(std::ostream & = std::cout);
 
-        cv::Rect cropbox;
         bool flip = false;
-        std::vector<float> lighting;  // pixelwise random values
-        float color_noise_std = 0;
-        std::vector<float> photometric;  // contrast, brightness, saturation
     private:
         params() {}
     };
@@ -58,13 +50,8 @@ namespace nervana {
         int min_size;
         int max_size;
 
-        std::uniform_real_distribution<float> scale{1.0f, 1.0f};
-        std::normal_distribution<float>       lighting{0.0f, 0.0f};
-        std::uniform_real_distribution<float> photometric{0.0f, 0.0f};
-        std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
         std::bernoulli_distribution           flip{0};
 
-        bool do_area_scale = false;
         bool channel_major = true;
         int channels = 3;
 
@@ -73,15 +60,10 @@ namespace nervana {
             parse_req(min_size, "min_size", js);
             parse_req(max_size, "max_size", js);
 
-            parse_opt(do_area_scale, "do_area_scale", js);
             parse_opt(channels, "channels", js);
             parse_opt(channel_major, "channel_major", js);
 
             auto dist_params = js["distribution"];
-            parse_dist(scale, "scale", dist_params);
-            parse_dist(lighting, "lighting", dist_params);
-            parse_dist(photometric, "photometric", dist_params);
-            parse_dist(crop_offset, "crop_offset", dist_params);
             parse_dist(flip, "flip", dist_params);
             return validate();
         }
@@ -90,7 +72,7 @@ namespace nervana {
 
     private:
         bool validate() {
-            return crop_offset.param().a() <= crop_offset.param().b();
+            return max_size >= min_size;
         }
     };
 
@@ -101,36 +83,16 @@ namespace nervana {
     class image_var::decoded : public decoded_media {
     public:
         decoded() {}
-        decoded(cv::Mat img) { _images.push_back(img); }
-        bool add(cv::Mat img) {
-            _images.push_back(img);
-            return all_images_are_same_size();
-        }
-        bool add(const std::vector<cv::Mat>& images) {
-            for( auto mat : images ) {
-                _images.push_back(mat);
-            }
-            return all_images_are_same_size();
-        }
+        decoded(cv::Mat img) : _image{img} {}
         virtual ~decoded() override {}
 
         virtual MediaType get_type() override { return MediaType::IMAGE; }
-        cv::Mat& get_image(int index) { return _images[index]; }
-        cv::Size2i get_image_size() const {return _images[0].size(); }
-        int get_image_channels() const { return _images[0].channels(); }
-        size_t get_image_count() const { return _images.size(); }
-        size_t get_size() const {
-            return get_image_size().area() * get_image_channels() * get_image_count();
-        }
+        cv::Mat& get_image() { return _image; }
+        cv::Size2i get_image_size() const {return _image.size(); }
+        int get_image_channels() const { return _image.channels(); }
 
     protected:
-        bool all_images_are_same_size() {
-            for( int i=1; i<_images.size(); i++ ) {
-                if(_images[0].size()!=_images[i].size()) return false;
-            }
-            return true;
-        }
-        std::vector<cv::Mat> _images;
+        cv::Mat _image;
     };
 
     class image_var::extractor : public interface::extractor<image_var::decoded> {
@@ -140,6 +102,7 @@ namespace nervana {
         virtual std::shared_ptr<image_var::decoded> extract(const char*, int) override;
 
         const int get_channel_count() {return _color_mode == CV_LOAD_IMAGE_COLOR ? 3 : 1;}
+        void resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size);
     private:
         int _pixel_type;
         int _color_mode;
@@ -154,19 +117,8 @@ namespace nervana {
                                                 std::shared_ptr<image_var::decoded>) override;
 
     private:
-        void rotate(const cv::Mat& input, cv::Mat& output, int angle);
-        void lighting(cv::Mat& inout, std::vector<float>, float color_noise_std);
-        void cbsjitter(cv::Mat& inout, const std::vector<float>&);
-
-        // These are the eigenvectors of the pixelwise covariance matrix
-        const float _CPCA[3][3];
-        const cv::Mat CPCA;
-
-        // These are the square roots of the eigenvalues of the pixelwise covariance matrix
-        const cv::Mat CSTD;
-
-        // This is the set of coefficients for converting BGR to grayscale
-        const cv::Mat GSCL;
+        int min_size;
+        int max_size;
     };
 
     class image_var::loader : public interface::loader<image_var::decoded> {

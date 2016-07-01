@@ -26,6 +26,7 @@ namespace nervana {
 
     class localization::target {
     public:
+        target() : target(0,0,0,0){}
         target(float x, float y, float w, float h) :
             dx{x}, dy{y}, dw{w}, dh{h} {}
         float dx;
@@ -39,6 +40,9 @@ namespace nervana {
         anchor(std::shared_ptr<const localization::config>);
 
         std::vector<box> inside_image_bounds(int width, int height);
+//        std::vector<int> inside_image_bounds(int width, int height);
+        int total_anchors() const { return all_anchors.size(); }
+        const std::vector<box>& get_all_anchors() const { return all_anchors; }
     private:
         //    Generate anchor (reference) windows by enumerating aspect ratios X
         //    scales wrt a reference (0, 0, 15, 15) window.
@@ -98,6 +102,11 @@ namespace nervana {
 
         bool set_config(nlohmann::json js) override;
 
+        bool channel_major = true;
+
+        int total_anchors() const {
+            return ratios.size() * scales.size() * (int)pow(int(std::floor(max_size * scaling_factor)),2);
+        }
     private:
         bool validate();
     };
@@ -146,8 +155,8 @@ namespace nervana {
                             std::shared_ptr<image::params> txs,
                             std::shared_ptr<localization::decoded> mp) override;
 
+        static std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size, int min_size, int max_size);
     private:
-        std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size);
         cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<box>& query_boxes);
         std::vector<target> compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
         std::tuple<std::vector<int>,std::vector<target>,std::vector<int>> sample_anchors(const std::vector<int>& labels, const std::vector<target>& bbox_targets);
