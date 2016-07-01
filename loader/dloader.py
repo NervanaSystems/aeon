@@ -54,7 +54,7 @@ class DataLoader(object):
         self.ndata = self.item_count.value
         if self.loader is None:
             a = self.loaderlib.get_error_message()
-            raise RuntimeError('Failed to start data loader.' + a)
+            raise RuntimeError('Failed to start data loader: ' + a)
 
         atexit.register(self.loaderlib.stop, self.loader)
 
