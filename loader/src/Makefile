@@ -34,6 +34,7 @@ SRCS            := \
     batch_loader_cpio_cache.cpp \
     sequential_batch_iterator.cpp \
     shuffled_batch_iterator.cpp \
+    minibatch_iterator.cpp \
     batch_loader.cpp \
     box.cpp
 

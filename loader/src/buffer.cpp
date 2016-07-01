@@ -96,6 +96,9 @@ void Buffer::pushItem(int len) {
 
 char* Buffer::getItem(int index, int& len) {
     if (index >= (int) _items.size()) {
+        // TODO: why not raise exception here?  Is anyone actually
+        // checking the return value of getItem to make sure it is
+        // non-0?
         return 0;
     }
     len = _lens[index];

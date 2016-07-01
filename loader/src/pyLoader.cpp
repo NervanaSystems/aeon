@@ -27,6 +27,7 @@
 #include "batch_loader_cpio_cache.hpp"
 #include "sequential_batch_iterator.hpp"
 #include "shuffled_batch_iterator.hpp"
+#include "minibatch_iterator.hpp"
 
 using namespace std;
 
@@ -266,6 +267,9 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
         _batch_iterator = make_shared<SequentialBatchIterator>(batchFileLoader,
                                                                _lcfg->macrobatch_size);
     }
+
+    _batch_iterator = make_shared<MinibatchIterator>(_batch_iterator,
+                                                     _lcfg->minibatch_size);
 }
 
 int PyLoader::start()

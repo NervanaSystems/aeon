@@ -38,6 +38,7 @@ SRCS := \
     helpers.cpp \
     simple_loader.cpp \
     mock_batch_loader.cpp \
+    minibatch_iterator_test.cpp \
     test_localization.cpp
 
 

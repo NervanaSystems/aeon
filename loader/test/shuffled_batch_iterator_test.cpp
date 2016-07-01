@@ -21,12 +21,6 @@
 
 using namespace std;
 
-void dump_vector_of_strings(vector<string>& words) {
-    for(auto word = words.begin(); word != words.end(); ++word) {
-        cout << *word << endl;
-    }
-}
-
 TEST(shuffled_batch_iterator, sequential_batch_loader) {
     MockBatchLoader bl;
 
@@ -67,8 +61,5 @@ TEST(shuffled_batch_iterator, shuffled_block) {
     // now sort the words and make sure they are all unique.  We should
     // have loaded an entire 'epoch' and have no duplicates
 
-    sort(words.begin(), words.end());
-    for(auto word = words.begin(); word != words.end() - 1; ++word) {
-        ASSERT_NE(*word, *(word + 1));
-    }
+    assert_vector_unique(words);
 }

@@ -1,5 +1,7 @@
 #include "helpers.hpp"
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 
 vector<string> buffer_to_vector_of_strings(Buffer& b) {
@@ -15,4 +17,17 @@ vector<string> buffer_to_vector_of_strings(Buffer& b) {
 
 bool sorted(vector<string> words) {
     return std::is_sorted(words.begin(), words.end());
+}
+
+void dump_vector_of_strings(vector<string>& words) {
+    for(auto word = words.begin(); word != words.end(); ++word) {
+        cout << *word << endl;
+    }
+}
+
+void assert_vector_unique(vector<string>& words) {
+    sort(words.begin(), words.end());
+    for(auto word = words.begin(); word != words.end() - 1; ++word) {
+        ASSERT_NE(*word, *(word + 1));
+    }
 }

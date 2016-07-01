@@ -15,15 +15,26 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
+#include <memory>
 
 #include "buffer.hpp"
+#include "batch_iterator.hpp"
 
-using namespace std;
+// This can inherit from BatchIterator, but should it?
+class MinibatchIterator : public BatchIterator {
+public:
+    MinibatchIterator(std::shared_ptr<BatchIterator> macroBatchIterator, int minibatch_size);
 
-vector<string> buffer_to_vector_of_strings(Buffer& b);
-bool sorted(vector<string> words);
-void dump_vector_of_strings(vector<string>& words);
+    void read(BufferPair& dest);
+    void reset();
+protected:
+    void popItemFromMacrobatch(BufferPair& dest);
+    void transferBufferItem(Buffer* dest, Buffer* src);
 
-void assert_vector_unique(vector<string>& words);
+    std::shared_ptr<BatchIterator> _macroBatchIterator;
+    int _minibatchSize;
+
+    BufferPair _macrobatch;
+    // the index into the _macrobatch to read next
+    int _i;
+};
