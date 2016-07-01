@@ -86,7 +86,8 @@ endif
 	LIBS        := -lcuda -lcudart $(LIBS)
 endif
 
-INC             := -I/home/users/alex/Code/neon/.venv2/include/python2.7/ $(INC)
+INC             := -I$(shell python -c "from distutils.sysconfig import get_python_inc; print get_python_inc()") $(INC)
+INC             := -I$(shell python -c "import numpy; print numpy.get_include()") $(INC)
 LIBS            := -lpython2.7 $(LIBS)
 
 .PHONY: clean
