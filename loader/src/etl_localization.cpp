@@ -62,10 +62,10 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     mp->image_scale = im_scale;
     mp->image_size = im_size;
 
-    vector<box> anchors = _anchor.inside_image_bounds(im_size.width, im_size.height);
-
-    vector<int> labels(anchors.size());
-    fill_n(labels.begin(),anchors.size(),-1.);
+    vector<int> idx_inside = _anchor.inside_image_bounds(im_size.width, im_size.height);
+    const vector<box> all_anchors = _anchor.get_all_anchors();
+    vector<box> anchors_inside;
+    for(int i : idx_inside) anchors_inside.push_back(all_anchors[i]);
 
     // compute bbox overlaps
     vector<box> scaled_bbox;
@@ -73,7 +73,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
         box r = b*im_scale;
         scaled_bbox.push_back(r);
     }
-    cv::Mat overlaps = bbox_overlaps(anchors, scaled_bbox);
+    cv::Mat overlaps = bbox_overlaps(anchors_inside, scaled_bbox);
 //    for(int row=0; row<overlaps.rows; row++) {
 //        cout << row << "   ";
 //        for(int col=0; col<overlaps.cols; col++) {
@@ -81,6 +81,9 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 //        }
 //        cout << endl;
 //    }
+
+    vector<int> labels(overlaps.rows);
+    fill_n(labels.begin(),labels.size(),-1.);
 
     // assign bg labels first
     vector<float> row_max(overlaps.rows);
@@ -136,12 +139,28 @@ shared_ptr<localization::decoded> localization::transformer::transform(
         argmax.push_back(scaled_bbox[index]);
     }
 
-    auto bbox_targets = compute_targets(argmax, anchors);
+    auto bbox_targets = compute_targets(argmax, anchors_inside);
+
+    // map lists to original canvas
+    {
+        vector<int> t_labels(all_anchors.size());
+        fill_n(t_labels.begin(), t_labels.size(), 0);
+        vector<target> t_bbox_targets(all_anchors.size());
+        for(int i=0; i<idx_inside.size(); i++) {
+            int index = idx_inside[i];
+            t_labels[index] = labels[i];
+            t_bbox_targets[index] = bbox_targets[i];
+        }
+        labels = move(t_labels);
+        bbox_targets = move(t_bbox_targets);
+    }
 
     tie(mp->labels, mp->bbox_targets, mp->anchor_index) = sample_anchors(labels, bbox_targets);
-    mp->anchors = anchors;
+    mp->anchors = anchors_inside;
 
-//    cout << "result_idx\n"; for(int i=0; i<result_idx.size(); i++) { cout << "   " << i << "  " << result_idx[i] << endl; }
+//    for(int i=0; i<mp->anchor_index.size(); i++) {
+//        cout << i << " " << mp->anchor_index[i] << endl;
+//    }
 
     return mp;
 }
@@ -268,11 +287,12 @@ localization::anchor::anchor(std::shared_ptr<const localization::config> _cfg) :
     all_anchors = add_anchors();
 }
 
-vector<box> localization::anchor::inside_image_bounds(int width, int height) {
-    vector<box> rc;
-    for(const box& b : all_anchors) {
+vector<int> localization::anchor::inside_image_bounds(int width, int height) {
+    vector<int> rc;
+    for(int i=0; i<all_anchors.size(); i++) {
+        const box& b = all_anchors[i];
         if( b.xmin >= 0 && b.ymin >= 0 && b.xmax < width && b.ymax < height ) {
-            rc.emplace_back(b);
+            rc.emplace_back(i);
         }
     }
     return rc;

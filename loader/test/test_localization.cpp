@@ -144,7 +144,7 @@ void plot(const string& path) {
     auto params = make_shared<image::params>();
     shared_ptr<localization::decoded> transformed = transformer.transform(params, decoded);
 
-    const vector<box>& an = mdata->anchors;
+    vector<box>& an = mdata->anchors;
 
     int last_width = 0;
     int last_height = 0;
@@ -164,6 +164,7 @@ void plot(const string& path) {
     vector<int>    labels       = transformed->labels;
     vector<target> bbox_targets = transformed->bbox_targets;
     vector<int>    anchor_index = transformed->anchor_index;
+    an = transformed->anchors;
 
     {
         cv::Mat img(mdata->image_size, CV_8UC3);

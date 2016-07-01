@@ -39,7 +39,7 @@ namespace nervana {
     public:
         anchor(std::shared_ptr<const localization::config>);
 
-        std::vector<box> inside_image_bounds(int width, int height);
+        std::vector<int> inside_image_bounds(int width, int height);
 //        std::vector<int> inside_image_bounds(int width, int height);
         int total_anchors() const { return all_anchors.size(); }
         const std::vector<box>& get_all_anchors() const { return all_anchors; }
