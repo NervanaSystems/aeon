@@ -74,13 +74,6 @@ shared_ptr<localization::decoded> localization::transformer::transform(
         scaled_bbox.push_back(r);
     }
     cv::Mat overlaps = bbox_overlaps(anchors_inside, scaled_bbox);
-//    for(int row=0; row<overlaps.rows; row++) {
-//        cout << row << "   ";
-//        for(int col=0; col<overlaps.cols; col++) {
-//            cout << setw(12) << overlaps.at<float>(row,col) << ",";
-//        }
-//        cout << endl;
-//    }
 
     vector<int> labels(overlaps.rows);
     fill_n(labels.begin(),labels.size(),-1.);
@@ -144,7 +137,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     // map lists to original canvas
     {
         vector<int> t_labels(all_anchors.size());
-        fill_n(t_labels.begin(), t_labels.size(), 0);
+        fill_n(t_labels.begin(), t_labels.size(), -1);
         vector<target> t_bbox_targets(all_anchors.size());
         for(int i=0; i<idx_inside.size(); i++) {
             int index = idx_inside[i];
@@ -155,19 +148,21 @@ shared_ptr<localization::decoded> localization::transformer::transform(
         bbox_targets = move(t_bbox_targets);
     }
 
-    tie(mp->labels, mp->bbox_targets, mp->anchor_index) = sample_anchors(labels, bbox_targets);
-    mp->anchors = anchors_inside;
+    mp->anchor_index = sample_anchors(labels);
+    mp->anchors = all_anchors;
+    mp->labels = labels;
+    mp->bbox_targets = bbox_targets;
 
+
+//    cout << "labels size " << labels.size() << " all_anchors size " << all_anchors.size() << endl;
 //    for(int i=0; i<mp->anchor_index.size(); i++) {
-//        cout << i << " " << mp->anchor_index[i] << endl;
+//        cout << i << " " << mp->anchor_index[i] << " " << labels[mp->anchor_index[i]] << " " << all_anchors[mp->anchor_index[i]] << endl;
 //    }
 
     return mp;
 }
 
-tuple<vector<int>,vector<localization::target>,vector<int>>
-    localization::transformer::sample_anchors(const vector<int>& labels,
-                                              const vector<target>& bbox_targets) {
+vector<int> localization::transformer::sample_anchors(const vector<int>& labels) {
     // subsample labels if needed
     int num_fg = int(cfg->foreground_fraction * cfg->rois_per_image);
     vector<int> fg_idx;
@@ -193,14 +188,15 @@ tuple<vector<int>,vector<localization::target>,vector<int>>
     result_idx.insert(result_idx.end(), fg_idx.begin(), fg_idx.end());
     result_idx.insert(result_idx.end(), bg_idx.begin(), bg_idx.end());
 
-    vector<int>    result_labels;
-    vector<target> result_targets;
-    for(int i : result_idx) {
-        result_labels.push_back(labels[i]);
-        result_targets.push_back(bbox_targets[i]);
-    }
+//    vector<int>    result_labels;
+//    vector<target> result_targets;
+//    for(int i : result_idx) {
+//        result_labels.push_back(labels[i]);
+//        result_targets.push_back(bbox_targets[i]);
+//    }
 
-    return make_tuple(result_labels, result_targets, result_idx);
+//    return make_tuple(result_labels, result_targets, result_idx);
+    return result_idx;
 }
 
 vector<localization::target> localization::transformer::compute_targets(const vector<box>& gt_bb, const vector<box>& rp_bb) {
@@ -279,6 +275,83 @@ tuple<float,cv::Size> localization::transformer::calculate_scale_shape(cv::Size 
     cv::Size im_shape{int(round(size.width*im_scale)), int(round(size.height*im_scale))};
     return make_tuple(im_scale, im_shape);
 }
+
+
+
+
+
+localization::loader::loader(std::shared_ptr<const localization::config> cfg)
+{
+    _channel_major = cfg->channel_major;
+    _load_size     = 1;
+    total_anchors = cfg->total_anchors();
+//    _load_count    = cfg->width * cfg->height * cfg->channels * cfg->num_crops();
+}
+
+void localization::loader::load(char* buf, std::shared_ptr<localization::decoded> mp) {
+    mp->labels;
+    mp->bbox_targets;
+    mp->anchor_index;
+    mp->anchors;
+
+    cout << "labels size " << mp->labels.size() << endl;
+    cout << "bbox_targets size " << mp->bbox_targets.size() << endl;
+    cout << "anchor_index size " << mp->anchor_index.size() << endl;
+    cout << "anchors size " << mp->anchors.size() << endl;
+
+//    for(auto index : mp->anchor_index) {
+//        cout << "anchor index " << index << endl;
+//    }
+
+
+
+//    # map our labels and bbox_targets back to
+//    # the full canvas (e.g. 9 * (62 * 62))
+//    label.fill(0)
+//    label[anchors_blob, :] = labels_blob[:, np.newaxis]
+    //    for(int i=0; i<mp->anchor_index.size(); i++) labels[mp->anchor_index[i]] = mp->labels[i];
+
+    //    for(int i=0; i<label.size(); i++) { cout << "label " << i << " [" << label[i] << "]" << endl; }
+
+//    self.dev_y_labels_flat[:] = label.reshape((1, -1))
+//    self.dev_y_labels_onehot[:] = self.be.onehot(self.dev_y_labels_flat, axis=0)
+//    self.dev_y_labels = self.dev_y_labels_onehot.reshape((-1, 1))
+
+//    label_mask.fill(0)
+//    label_mask[anchors_blob, :] = 1
+//    self.dev_y_labels_mask[:] = np.vstack([label_mask, label_mask])
+
+//    bbtargets.fill(0)
+//    bbtargets[anchors_blob, :] = bbox_targets_blob
+//    self.dev_y_bbtargets[:] = bbtargets.T.reshape((-1, 1))
+
+//    bbtargets_mask.fill(0)
+//    bbtargets_mask[np.where(label == 1)[0]] = 1
+//    self.dev_y_bbtargets_mask[:] = bbtargets_mask.T.reshape((-1, 1))
+
+//    X = self.dev_X_img
+//    Y = ((self.dev_y_labels, self.dev_y_labels_mask),
+//         (self.dev_y_bbtargets, self.dev_y_bbtargets_mask))
+
+
+//    sizeof dev_y_labels 69192
+//    sizeof dev_y_labels_mask 69192
+//    sizeof dev_y_bbtargets 138384
+//    sizeof dev_y_bbtargets_mask 138384
+
+}
+
+void localization::loader::fill_info(nervana::count_size_type* cst) {
+    cst->count   = _load_count;
+    cst->size    = _load_size;
+    cst->type[0] = 'u';
+}
+
+
+
+
+
+
 
 localization::anchor::anchor(std::shared_ptr<const localization::config> _cfg) :
     cfg{_cfg},

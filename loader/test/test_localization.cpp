@@ -26,7 +26,7 @@
 
 
 #include "params.hpp"
-#include "etl_image.hpp"
+#include "etl_image_var.hpp"
 #include "etl_localization.hpp"
 #include "json.hpp"
 
@@ -138,13 +138,12 @@ void plot(const string& path) {
     auto cfg = make_localization_config();
     localization::extractor extractor{cfg};
     localization::transformer transformer{cfg};
-    auto mdata = extractor.extract(&data[0],data.size());
-    auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);
-    ASSERT_NE(nullptr,decoded);
+    auto extracted_metadata = extractor.extract(&data[0],data.size());
+    ASSERT_NE(nullptr,extracted_metadata);
     auto params = make_shared<image::params>();
-    shared_ptr<localization::decoded> transformed = transformer.transform(params, decoded);
+    shared_ptr<localization::decoded> transformed_metadata = transformer.transform(params, extracted_metadata);
 
-    vector<box>& an = mdata->anchors;
+    vector<box>& an = extracted_metadata->anchors;
 
     int last_width = 0;
     int last_height = 0;
@@ -161,44 +160,54 @@ void plot(const string& path) {
         last_height = b.height();
     }
 
-    vector<int>    labels       = transformed->labels;
-    vector<target> bbox_targets = transformed->bbox_targets;
-    vector<int>    anchor_index = transformed->anchor_index;
-    an = transformed->anchors;
+    vector<int>    labels       = transformed_metadata->labels;
+    vector<target> bbox_targets = transformed_metadata->bbox_targets;
+    vector<int>    anchor_index = transformed_metadata->anchor_index;
+    vector<box>    all_anchors  = transformed_metadata->anchors;
+
+    cout << "all anchors size " << all_anchors.size() << endl;
+    an = transformed_metadata->anchors;
+
+//    for(int i=0; i<transformed_metadata->anchor_index.size(); i++) {
+//        cout << "loader " << i << " " << transformed_metadata->anchor_index[i] << " " << labels[transformed_metadata->anchor_index[i]] << endl;
+//        cout << an[transformed_metadata->anchor_index[i]] << endl;
+//    }
 
     {
-        cv::Mat img(mdata->image_size, CV_8UC3);
+        cv::Mat img(extracted_metadata->image_size, CV_8UC3);
         img = cv::Scalar(255,255,255);
         // Draw foreground boxes
-        for(int i=0; i<labels.size(); i++) {
-            box abox = an[anchor_index[i]];
-            if(labels[i]==1) {
+        for(int i=0; i<anchor_index.size(); i++) {
+            int index = anchor_index[i];
+            if(labels[index]==1) {
+                box abox = an[index];
                 cv::rectangle(img, abox.rect(), cv::Scalar(0,255,0));
             }
         }
 
         // Draw bounding boxes
-        for( box b : mdata->boxes()) {
-            b = b * mdata->image_scale;
+        for( box b : extracted_metadata->boxes()) {
+            b = b * extracted_metadata->image_scale;
             cv::rectangle(img, b.rect(), cv::Scalar(255,0,0));
         }
         cv::imwrite(prefix+"fg.png",img);
     }
 
     {
-        cv::Mat img(mdata->image_size, CV_8UC3);
+        cv::Mat img(extracted_metadata->image_size, CV_8UC3);
         img = cv::Scalar(255,255,255);
         // Draw background boxes
-        for(int i=0; i<labels.size(); i++) {
-            box abox = an[anchor_index[i]];
-            if(labels[i]==0) {
+        for(int i=0; i<anchor_index.size(); i++) {
+            int index = anchor_index[i];
+            if(labels[index]==0) {
+                box abox = an[index];
                 cv::rectangle(img, abox.rect(), cv::Scalar(0,0,255));
             }
         }
 
         // Draw bounding boxes
-        for( box b : mdata->boxes()) {
-            b = b * mdata->image_scale;
+        for( box b : extracted_metadata->boxes()) {
+            b = b * extracted_metadata->image_scale;
             cv::rectangle(img, b.rect(), cv::Scalar(255,0,0));
         }
         cv::imwrite(prefix+"bg.png",img);
@@ -229,6 +238,39 @@ TEST(localization,calculate_scale_shape) {
     EXPECT_EQ(600,size.height);
 }
 
+TEST(localization, sample_anchors) {
+    string data = read_file(CURDIR"/test_data/006637.json");
+    shared_ptr<localization::config> cfg = make_localization_config();
+    localization::extractor extractor{cfg};
+    localization::transformer transformer{cfg};
+    auto extracted_metadata = extractor.extract(&data[0],data.size());
+    ASSERT_NE(nullptr,extracted_metadata);
+    shared_ptr<image::params> params = make_shared<image::params>();
+    auto transformed_metadata = transformer.transform(params, extracted_metadata);
+    ASSERT_NE(nullptr,transformed_metadata);
+
+    vector<int>    labels       = transformed_metadata->labels;
+    vector<target> bbox_targets = transformed_metadata->bbox_targets;
+    vector<int>    anchor_index = transformed_metadata->anchor_index;
+    vector<box>    anchors = transformed_metadata->anchors;
+
+    EXPECT_EQ(34596,labels.size());
+    EXPECT_EQ(34596,bbox_targets.size());
+    EXPECT_EQ(256,anchor_index.size());
+    EXPECT_EQ(34596,anchors.size());
+
+    for(int index : anchor_index) {
+        EXPECT_GE(index,0);
+        EXPECT_LT(index,34596);
+    }
+    for(int index : anchor_index) {
+        box b = anchors[index];
+        EXPECT_GE(b.xmin,0);
+        EXPECT_GE(b.ymin,0);
+        EXPECT_LT(b.xmax,cfg->max_size);
+        EXPECT_LT(b.ymax,cfg->max_size);
+    }
+}
 
 TEST(localization, transform) {
 //    {

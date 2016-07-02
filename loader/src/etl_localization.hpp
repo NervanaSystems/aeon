@@ -159,7 +159,7 @@ namespace nervana {
     private:
         cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<box>& query_boxes);
         std::vector<target> compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
-        std::tuple<std::vector<int>,std::vector<target>,std::vector<int>> sample_anchors(const std::vector<int>& labels, const std::vector<target>& bbox_targets);
+        std::vector<int> sample_anchors(const std::vector<int>& labels);
 
         std::shared_ptr<const localization::config> cfg;
         std::minstd_rand0 random;
@@ -168,16 +168,15 @@ namespace nervana {
 
     class localization::loader : public interface::loader<localization::decoded> {
     public:
-        loader(std::shared_ptr<const localization::config> cfg) {}
+        loader(std::shared_ptr<const localization::config> cfg);
 
         virtual ~loader() {}
 
-        void load(char* buf, std::shared_ptr<localization::decoded> mp) override {
-
-        }
-
-        void fill_info(nervana::count_size_type*) override {
-
-        }
-    };
+        void load(char* buf, std::shared_ptr<localization::decoded> mp) override;
+        void fill_info(nervana::count_size_type*) override;
+    private:
+        size_t _load_count;
+        size_t _load_size;
+        bool _channel_major;
+        int total_anchors;    };
 }
