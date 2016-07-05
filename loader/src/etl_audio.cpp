@@ -31,7 +31,6 @@ size_t audio::decoded::getSize() {
 }
 
 audio::extractor::extractor(std::shared_ptr<const audio::config> config) {
-    // TODO: this MediaParams is never freed
     _codec = new Codec(config);
     avcodec_register_all();
 }
@@ -46,7 +45,6 @@ std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int 
 
 audio::transformer::transformer(std::shared_ptr<const audio::config> config)
     : _noiseClips(0) {
-    // TODO: this MediaParams is never freed
     _codec = new Codec(config);
     _specgram = new Specgram(config, config->_randomSeed);
 
