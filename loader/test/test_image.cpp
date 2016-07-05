@@ -216,7 +216,7 @@ TEST(etl, image_extract2) {
 }
 
 TEST(etl, image_extract3) {
-    cv::Mat img = cv::Mat( 256, 256, CV_8UC1 );
+    cv::Mat img = cv::Mat( 256, 256, CV_8UC1, 0.0 );
     vector<unsigned char> png;
     cv::imencode( ".png", img, png );
 
@@ -224,7 +224,7 @@ TEST(etl, image_extract3) {
 }
 
 TEST(etl, image_extract4) {
-    cv::Mat img = cv::Mat( 256, 256, CV_8UC1 );
+    cv::Mat img = cv::Mat( 256, 256, CV_8UC1, 0.0 );
     vector<unsigned char> png;
     cv::imencode( ".png", img, png );
 
