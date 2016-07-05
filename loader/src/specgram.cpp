@@ -67,9 +67,9 @@ int Specgram::generate(shared_ptr<RawMedia> raw, char* buf, int bufSize) {
     cout << raw->bytesPerSample() << endl;
     assert(raw->bytesPerSample() == 2);
     assert(_width * _height == bufSize);
-    int rows = stridedSignal(raw);
-    assert(rows <= _width);
-    Mat signal(rows, _windowSize, CV_16SC1, (short*) _buf);
+    int numWindows = stridedSignal(raw);
+    assert(numWindows <= _width);
+    Mat signal(numWindows, _windowSize, CV_16SC1, (short*) _buf);
     Mat input;
     signal.convertTo(input, CV_32FC1);
 
