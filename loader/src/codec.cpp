@@ -91,7 +91,6 @@ std::shared_ptr<RawMedia> Codec::decode(const char* item, int itemSize) {
 
     _raw->setBytesPerSample(av_get_bytes_per_sample(_codec->sample_fmt));
     assert(_raw->bytesPerSample() >= 0);
-    std::cout << "decode " << _raw->bytesPerSample() << std::endl;
     AVPacket packet;
     while (av_read_frame(_format, &packet) >= 0) {
         decodeFrame(&packet, stream, itemSize);

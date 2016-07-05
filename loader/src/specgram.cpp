@@ -60,7 +60,6 @@ Specgram::~Specgram() {
 
 int Specgram::generate(shared_ptr<RawMedia> raw, char* buf, int bufSize) {
     // TODO: get rid of this assumption
-    cout << raw->bytesPerSample() << endl;
     assert(raw->bytesPerSample() == 2);
     assert(_width * _height == bufSize);
     int numWindows = stridedSignal(raw);
