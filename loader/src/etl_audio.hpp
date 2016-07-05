@@ -104,6 +104,7 @@ namespace nervana {
     // protected:
         std::shared_ptr<RawMedia> _raw;
         vector<char> _buf;
+        int _len;
     };
 
     class audio::extractor : public interface::extractor<audio::decoded> {

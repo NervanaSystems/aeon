@@ -71,17 +71,9 @@ std::shared_ptr<audio::decoded> audio::transformer::transform(
     decoded->_buf.resize(params->_width * params->_height);
 
     // convert from time domain to frequency domain
-    int len = _specgram->generate(
+    decoded->_len = _specgram->generate(
         decoded->_raw, decoded->_buf.data(), params->_width * params->_height
     );
-
-    // TODO: in private-neon the length of the uterance is used
-    // later on down the road somewhere.  Still need to figure out
-    // how to pass this through ...
-
-    // if (meta != 0) {
-    //     *meta = len;
-    // }
 
     return decoded;
 }
