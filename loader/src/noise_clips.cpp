@@ -1,5 +1,9 @@
 #include "noise_clips.hpp"
-#include "audio.hpp"
+
+#include <sstream>
+#include <fstream>
+
+#include <sys/stat.h>
 
 using namespace std;
 

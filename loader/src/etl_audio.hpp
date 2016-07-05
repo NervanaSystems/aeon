@@ -21,10 +21,9 @@
 #include "params.hpp"
 #include "media.hpp"
 #include "codec.hpp"
-#include "audio.hpp"
 #include "specgram.hpp"
+#include "noise_clips.hpp"
 
-class Audio;
 class Specgram;
 class NoiseClips;
 class NoiseClipsState;
@@ -126,7 +125,6 @@ namespace nervana {
             std::shared_ptr<audio::decoded>) override;
     private:
         Codec* _codec;
-        std::shared_ptr<Audio> _audio;
         Specgram* _specgram;
         NoiseClips* _noiseClips;
         NoiseClipsState* _state;

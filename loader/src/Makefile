@@ -22,7 +22,6 @@ SRCS            := \
     api_pversion.cpp \
     etl_audio.cpp \
     noise_clips.cpp \
-    audio.cpp \
     specgram.cpp \
     codec.cpp \
     etl_image.cpp \
