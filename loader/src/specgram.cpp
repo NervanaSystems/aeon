@@ -61,8 +61,8 @@ Specgram::~Specgram() {
 
 int Specgram::generate(shared_ptr<RawMedia> raw, char* buf, int bufSize) {
     // TODO: get rid of this assumption
-    cout << raw->sampleSize() << endl;
-    assert(raw->sampleSize() == 2);
+    cout << raw->bytesPerSample() << endl;
+    assert(raw->bytesPerSample() == 2);
     assert(_width * _height == bufSize);
     int rows = stridedSignal(raw);
     assert(rows <= _width);
@@ -184,7 +184,7 @@ void Specgram::applyWindow(Mat& signal) {
 }
 
 int Specgram::stridedSignal(shared_ptr<RawMedia> raw) {
-    int signalSize = raw->dataSize() / raw->sampleSize();
+    int signalSize = raw->dataSize() / raw->bytesPerSample();
     if (signalSize > _maxSignalSize) {
         signalSize = _maxSignalSize;
     }
@@ -193,8 +193,8 @@ int Specgram::stridedSignal(shared_ptr<RawMedia> raw) {
     assert(count <= _width);
     char* src = raw->getBuf(0);
     char* dst = _buf;
-    int windowSizeInBytes = _windowSize * raw->sampleSize();
-    int strideInBytes = _stride * raw->sampleSize();
+    int windowSizeInBytes = _windowSize * raw->bytesPerSample();
+    int strideInBytes = _stride * raw->bytesPerSample();
     for (int i = 0; i < count; i++) {
         memcpy(dst , src, windowSizeInBytes);
         dst += windowSizeInBytes;

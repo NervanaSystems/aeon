@@ -90,13 +90,13 @@ public:
 
 class RawMedia {
 public:
-    RawMedia() : _bufSize(0), _dataSize(0), _sampleSize(0) {
+    RawMedia() : _bufSize(0), _dataSize(0), _bytesPerSample(0) {
     }
 
     RawMedia(const RawMedia& media)
     : _bufSize(media._bufSize),
       _dataSize(media._dataSize),
-      _sampleSize(media._sampleSize) {
+      _bytesPerSample(media._bytesPerSample) {
         for (uint i = 0; i < media._bufs.size(); i++) {
             _bufs.push_back(new char[_bufSize]);
             memcpy(_bufs[i], media._bufs[i], _bufSize);
@@ -116,7 +116,7 @@ public:
     void addBufs(int count, int size) {
         for (int i = 0; i < count; i++) {
             _bufs.push_back(new char[size]);
-        }
+       }
         _bufSize = size;
     }
 
@@ -138,8 +138,8 @@ public:
         _bufSize += grow;
     }
 
-    void setSampleSize(int sampleSize) {
-        _sampleSize = sampleSize;
+    void setBytesPerSample(int bytesPerSample) {
+        _bytesPerSample = bytesPerSample;
     }
 
     int size() {
@@ -158,12 +158,12 @@ public:
         return _dataSize;
     }
 
-    int sampleSize() {
-        return _sampleSize;
+    int bytesPerSample() {
+        return _bytesPerSample;
     }
 
     int numSamples() {
-        return dataSize() / sampleSize();
+        return dataSize() / bytesPerSample();
     }
 
     void copyData(char* buf, int bufSize) {
@@ -184,5 +184,5 @@ private:
     vector<char*>               _bufs;
     int                         _bufSize;
     int                         _dataSize;
-    int                         _sampleSize;
+    int                         _bytesPerSample;
 };

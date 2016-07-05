@@ -98,8 +98,8 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media, cv::RNG& rng) {
     }
     // Assume a single channel with 16 bit samples for now.
     assert(media->size() == 1);
-    assert(media->sampleSize() == 2);
-    int sampleSize = media->sampleSize();
+    assert(media->bytesPerSample() == 2);
+    int bytesPerSample = media->bytesPerSample();
     int numSamples = media->numSamples();
     cv::Mat data(1, numSamples, CV_16S, media->getBuf(0));
     cv::Mat noise(1, numSamples, CV_16S);
@@ -108,10 +108,10 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media, cv::RNG& rng) {
     // Collect enough noise data to cover the entire input clip.
     while (left > 0) {
         std::shared_ptr<RawMedia> clipData = _data[_clipIndex];
-        assert(clipData->sampleSize() == sampleSize);
+        assert(clipData->bytesPerSample() == bytesPerSample);
         int clipSize = clipData->numSamples() - _clipOffset;
         cv::Mat clip(1, clipSize , CV_16S,
-                 clipData->getBuf(0) + sampleSize * _clipOffset);
+                 clipData->getBuf(0) + bytesPerSample * _clipOffset);
         if (clipSize > left) {
             const cv::Mat& src = clip(cv::Range::all(), cv::Range(0, left));
             const cv::Mat& dst = noise(cv::Range::all(), cv::Range(offset, offset + left));
