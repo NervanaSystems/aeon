@@ -72,7 +72,7 @@ private:
     // Window size and stride are in terms of samples.
     int                         _windowSize;
     int                         _stride;
-    int                         _timeSteps;
+    int                         _width;
     int                         _numFreqs;
     int                         _height;
     int                         _samplingFreq;

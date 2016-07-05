@@ -27,7 +27,7 @@ Specgram::Specgram(shared_ptr<const nervana::audio::config> params, int id)
   _clipDuration(params->_clipDuration),
   _windowSize(  params->_windowSize),
   _stride(      params->_stride),
-  _timeSteps(   params->_width),
+  _width(   params->_width),
   _numFreqs(    params->_windowSize / 2 + 1),
   _height(      params->_height),
   _samplingFreq(params->_samplingFreq),
@@ -63,9 +63,9 @@ int Specgram::generate(shared_ptr<RawMedia> raw, char* buf, int bufSize) {
     // TODO: get rid of this assumption
     cout << raw->sampleSize() << endl;
     assert(raw->sampleSize() == 2);
-    assert(_timeSteps * _height == bufSize);
+    assert(_width * _height == bufSize);
     int rows = stridedSignal(raw);
-    assert(rows <= _timeSteps);
+    assert(rows <= _width);
     Mat signal(rows, _windowSize, CV_16SC1, (short*) _buf);
     Mat input;
     signal.convertTo(input, CV_32FC1);
@@ -93,7 +93,7 @@ int Specgram::generate(shared_ptr<RawMedia> raw, char* buf, int bufSize) {
     cv::flip(feats, feats, 0);
 
     cv::normalize(feats, feats, 0, 255, CV_MINMAX, CV_8UC1);
-    Mat result(feats.rows, _timeSteps, CV_8UC1, buf);
+    Mat result(feats.rows, _width, CV_8UC1, buf);
     feats.copyTo(result(Range::all(), Range(0, feats.cols)));
 
     // Pad the rest with zeros.
@@ -190,7 +190,7 @@ int Specgram::stridedSignal(shared_ptr<RawMedia> raw) {
     }
     assert(signalSize >= _windowSize);
     int count = ((signalSize - _windowSize) / _stride) + 1;
-    assert(count <= _timeSteps);
+    assert(count <= _width);
     char* src = raw->getBuf(0);
     char* dst = _buf;
     int windowSizeInBytes = _windowSize * raw->sampleSize();
