@@ -48,12 +48,12 @@ TEST(etl, audio_transform) {
 
     auto config = make_shared<audio::config>();
     config->_mtype = MediaType::AUDIO;
-    config->_stride = 1;
-    config->_windowSize = 2;
+    config->_windowSize = 1024;
+    config->_stride = config->_windowSize / 4;
     config->_clipDuration = 2000;
-    config->_width = 100;
-    config->_height = 100;
     config->_samplingFreq = 44100;
+    config->_width = (((config->_clipDuration * config->_samplingFreq / 1000) - config->_windowSize) / config->_stride) + 1;
+    config->_height = 100;
     config->_numFilts = 64;
     config->_numCepstra = 40;
 

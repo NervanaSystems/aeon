@@ -44,7 +44,8 @@ std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int 
     return make_shared<audio::decoded>(_codec->decode(item, itemSize));
 }
 
-audio::transformer::transformer(std::shared_ptr<const audio::config> config) {
+audio::transformer::transformer(std::shared_ptr<const audio::config> config)
+    : _noiseClips(0) {
     // TODO: this MediaParams is never freed
     _codec = new Codec(config);
     _specgram = new Specgram(config, config->_randomSeed);

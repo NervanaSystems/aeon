@@ -27,7 +27,7 @@ Specgram::Specgram(shared_ptr<const nervana::audio::config> params, int id)
   _clipDuration(params->_clipDuration),
   _windowSize(  params->_windowSize),
   _stride(      params->_stride),
-  _width(   params->_width),
+  _width(       params->_width),
   _numFreqs(    params->_windowSize / 2 + 1),
   _height(      params->_height),
   _samplingFreq(params->_samplingFreq),
@@ -41,7 +41,8 @@ Specgram::Specgram(shared_ptr<const nervana::audio::config> params, int id)
     }
 
     _maxSignalSize = params->_clipDuration * params->_samplingFreq / 1000;
-    _buf = new char[4 *  _maxSignalSize];
+    _bufSize = _width * _windowSize * MAX_SAMPLE_SIZE;
+    _buf = new char[_bufSize];
     if (params->_window != 0) {
         _window = new Mat(1, _windowSize, CV_32FC1);
         createWindow(params->_window);
@@ -52,6 +53,8 @@ Specgram::Specgram(shared_ptr<const nervana::audio::config> params, int id)
     _scaleMin = 1.0 - _scaleBy;
     _scaleMax = 1.0 + _scaleBy;
     transpose(getFilterbank(_numFilts, _windowSize, _samplingFreq), _fbank);
+
+    assert(params->_width == (((params->_clipDuration * params->_samplingFreq / 1000) - params->_windowSize) / params->_stride) + 1);
 }
 
 Specgram::~Specgram() {
@@ -94,7 +97,8 @@ int Specgram::generate(shared_ptr<RawMedia> raw, char* buf, int bufSize) {
 
     cv::normalize(feats, feats, 0, 255, CV_MINMAX, CV_8UC1);
     Mat result(feats.rows, _width, CV_8UC1, buf);
-    feats.copyTo(result(Range::all(), Range(0, feats.cols)));
+
+    feats.copyTo(result(Range(0, feats.rows), Range(0, feats.cols)));
 
     // Pad the rest with zeros.
     result(Range::all(), Range(feats.cols, result.cols)) = cv::Scalar::all(0);
@@ -184,19 +188,36 @@ void Specgram::applyWindow(Mat& signal) {
 }
 
 int Specgram::stridedSignal(shared_ptr<RawMedia> raw) {
-    int signalSize = raw->dataSize() / raw->bytesPerSample();
-    if (signalSize > _maxSignalSize) {
-        signalSize = _maxSignalSize;
+    // read from raw in strided windows of length `_windowSize`
+    // with at every `_stride` samples.
+
+    // truncate data in raw if larger than _maxSignalSize
+    int numSamples = raw->numSamples();
+    if (numSamples > _maxSignalSize) {
+        numSamples = _maxSignalSize;
     }
-    assert(signalSize >= _windowSize);
-    int count = ((signalSize - _windowSize) / _stride) + 1;
+
+    // assert that there is more than 1 window of data in raw
+    assert(numSamples >= _windowSize);
+
+    // count is the number of windows to capture
+    int count = ((numSamples - _windowSize) / _stride) + 1;
+
+    // ensure the numver of windows will fit in output buffer of
+    // width `_width`
     assert(count <= _width);
+
     char* src = raw->getBuf(0);
     char* dst = _buf;
+
     int windowSizeInBytes = _windowSize * raw->bytesPerSample();
     int strideInBytes = _stride * raw->bytesPerSample();
+
+    assert(count * strideInBytes <= numSamples * raw->bytesPerSample());
+    assert(count * windowSizeInBytes <= _bufSize);
+
     for (int i = 0; i < count; i++) {
-        memcpy(dst , src, windowSizeInBytes);
+        memcpy(dst, src, windowSizeInBytes);
         dst += windowSizeInBytes;
         src += strideInBytes;
     }
