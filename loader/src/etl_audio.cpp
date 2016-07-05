@@ -42,11 +42,11 @@ std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int 
 }
 
 audio::transformer::transformer(std::shared_ptr<const audio::config> config)
-    : _noiseClips(0), _state(0), _rng(config->_randomSeed) {
-    _codec = new Codec(config);
+    : _noiseClips(0), _state(0), _rng(config->_randomSeed), _codec(0) {
     _specgram = new Specgram(config, config->_randomSeed);
 
     if (config->_noiseIndexFile != 0) {
+        _codec = new Codec(config);
         _noiseClips = new NoiseClips(
             config->_noiseIndexFile, config->_noiseDir, _codec
         );
@@ -55,7 +55,9 @@ audio::transformer::transformer(std::shared_ptr<const audio::config> config)
 
 audio::transformer::~transformer() {
     delete _specgram;
-    delete _codec;
+    if(_codec != 0) {
+        delete _codec;
+    }
 }
 
 std::shared_ptr<audio::decoded> audio::transformer::transform(
