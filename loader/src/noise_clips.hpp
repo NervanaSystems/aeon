@@ -17,7 +17,6 @@
 
 #include <opencv2/core/core.hpp>
 
-#include "audio_params.hpp"
 #include "codec.hpp"
 #include "noise_clips.hpp"
 

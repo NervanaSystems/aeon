@@ -25,11 +25,9 @@
 
 #include <opencv2/core/core.hpp>
 
-#include "media.hpp"
 #include "codec.hpp"
 #include "specgram.hpp"
 #include "noise_clips.hpp"
-#include "audio_params.hpp"
 #include "etl_audio.hpp"
 
 class Specgram;
@@ -41,7 +39,7 @@ namespace nervana {
     }
 }
 
-class Audio : public Media {
+class Audio {
 public:
     Audio(std::shared_ptr<nervana::audio::config> params, int randomSeed);
     virtual ~Audio();

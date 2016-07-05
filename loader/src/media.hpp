@@ -29,65 +29,6 @@ using std::vector;
 // for MediaType
 #include "params.hpp"
 
-class MediaParams {
-public:
-    MediaParams(MediaType mtype) : _mtype(mtype) {
-    }
-
-    // Do not make this virtual. The object passed down from Python will not
-    // have the virtual function table filled in.
-    void dump() {
-        printf("mtype %d\n", _mtype);
-    }
-
-public:
-    MediaType                   _mtype;
-};
-
-class SignalParams : public MediaParams {
-public:
-    SignalParams(MediaType mtype) : MediaParams(mtype) {}
-
-    int                         _samplingFreq;
-    int                         _clipDuration;
-    int                         _frameDuration;
-    int                         _overlapPercent;
-    char                        _windowType[16];
-    char                        _featureType[16];
-    float                       _randomScalePercent;
-    bool                        _ctcCost;
-    int                         _numFilts;
-    int                         _numCepstra;
-    char*                       _noiseIndexFile;
-    char*                       _noiseDir;
-    int                         _windowSize;
-    int                         _overlap;
-    int                         _stride;
-    int                         _width;
-    int                         _height;
-    int                         _window;
-    int                         _feature;
-    void*                       _noiseClips;
-};
-
-class Media {
-public:
-    virtual ~Media() {
-    }
-
-public:
-    virtual void transform(char* item, int itemSize, char* buf, int bufSize, int* meta) = 0;
-    virtual void ingest(char** dataBuf, int* dataBufLen, int* dataLen) = 0;
-    virtual void transform(char* encDatum, int encDatumLen,
-                           char* encTarget, int encTargetLen,
-                           char* datumBuf, int datumLen,
-                           char* targetBuf, int targetLen) {
-        throw std::logic_error("Not implemented");
-    }
-
-    static Media* create(MediaParams* params, MediaParams* ingestParams, int id);
-};
-
 class RawMedia {
 public:
     RawMedia() : _bufSize(0), _dataSize(0), _bytesPerSample(0) {
