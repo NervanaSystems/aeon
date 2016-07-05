@@ -158,7 +158,7 @@ namespace nervana {
         static std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size, int min_size, int max_size);
     private:
         cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<box>& query_boxes);
-        std::vector<target> compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
+        static std::vector<target> compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
         std::vector<int> sample_anchors(const std::vector<int>& labels);
 
         std::shared_ptr<const localization::config> cfg;

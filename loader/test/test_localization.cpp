@@ -159,13 +159,15 @@ void plot(const string& path) {
         last_width = b.width();
         last_height = b.height();
     }
+    if(list.size() > 0) {
+        plot(list, prefix);
+    }
 
     vector<int>    labels       = transformed_metadata->labels;
     vector<target> bbox_targets = transformed_metadata->bbox_targets;
     vector<int>    anchor_index = transformed_metadata->anchor_index;
     vector<box>    all_anchors  = transformed_metadata->anchors;
 
-    cout << "all anchors size " << all_anchors.size() << endl;
     an = transformed_metadata->anchors;
 
 //    for(int i=0; i<transformed_metadata->anchor_index.size(); i++) {
@@ -214,7 +216,7 @@ void plot(const string& path) {
     }
 }
 
-TEST(localization,plot) {
+TEST(DISABLED_localization,plot) {
     plot(CURDIR"/test_data/009952.json");
 }
 
@@ -318,6 +320,59 @@ TEST(localization, loader) {
     auto params = make_shared<image::params>();
     shared_ptr<localization::decoded> transformed = transformer.transform(params, decoded);
     loader.load(nullptr, transformed);
+}
+
+TEST(localization, compute_targets) {
+    // expected values generated via python localization example
+
+    vector<box> gt_bb;
+    vector<box> rp_bb;
+
+    // ('gt_bb {0}', array([ 561.6,  329.6,  713.6,  593.6]))
+    // ('rp_bb {1}', array([ 624.,  248.,  799.,  599.]))
+    // xgt 638.1, rp 712.0, dx -0.419886363636
+    // ygt 462.1, rp 424.0, dy  0.108238636364
+    // wgt 153.0, rp 176.0, dw -0.140046073646
+    // hgt 265.0, rp 352.0, dh -0.283901349612
+
+    gt_bb.emplace_back(561.6,  329.6,  713.6,  593.6);
+    rp_bb.emplace_back(624.,  248.,  799.,  599.);
+
+    float dx_0_expected = -0.419886363636;
+    float dy_0_expected =  0.108238636364;
+    float dw_0_expected = -0.140046073646;
+    float dh_0_expected = -0.283901349612;
+
+    // ('gt_bb {0}', array([ 561.6,  329.6,  713.6,  593.6]))
+    // ('rp_bb {1}', array([ 496.,  248.,  671.,  599.]))
+    // xgt 638.1, rp 584.0, dx  0.307386363636
+    // ygt 462.1, rp 424.0, dy  0.108238636364
+    // wgt 153.0, rp 176.0, dw -0.140046073646
+    // hgt 265.0, rp 352.0, dh -0.283901349612
+
+    gt_bb.emplace_back(561.6,  329.6,  713.6,  593.6);
+    rp_bb.emplace_back(496.,  248.,  671.,  599.);
+
+    float dx_1_expected =  0.307386363636;
+    float dy_1_expected =  0.108238636364;
+    float dw_1_expected = -0.140046073646;
+    float dh_1_expected = -0.283901349612;
+
+    ASSERT_EQ(gt_bb.size(), rp_bb.size());
+
+    vector<target> result = localization::transformer::compute_targets(gt_bb, rp_bb);
+    ASSERT_EQ(result.size(), gt_bb.size());
+
+    float acceptable_error = 0.00001;
+
+    EXPECT_NEAR(dx_0_expected, result[0].dx, acceptable_error);
+    EXPECT_NEAR(dy_0_expected, result[0].dy, acceptable_error);
+    EXPECT_NEAR(dw_0_expected, result[0].dw, acceptable_error);
+    EXPECT_NEAR(dh_0_expected, result[0].dh, acceptable_error);
+    EXPECT_NEAR(dx_1_expected, result[1].dx, acceptable_error);
+    EXPECT_NEAR(dy_1_expected, result[1].dy, acceptable_error);
+    EXPECT_NEAR(dw_1_expected, result[1].dw, acceptable_error);
+    EXPECT_NEAR(dh_1_expected, result[1].dh, acceptable_error);
 }
 
 

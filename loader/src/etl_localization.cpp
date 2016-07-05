@@ -153,12 +153,6 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     mp->labels = labels;
     mp->bbox_targets = bbox_targets;
 
-
-//    cout << "labels size " << labels.size() << " all_anchors size " << all_anchors.size() << endl;
-//    for(int i=0; i<mp->anchor_index.size(); i++) {
-//        cout << i << " " << mp->anchor_index[i] << " " << labels[mp->anchor_index[i]] << " " << all_anchors[mp->anchor_index[i]] << endl;
-//    }
-
     return mp;
 }
 
@@ -188,14 +182,6 @@ vector<int> localization::transformer::sample_anchors(const vector<int>& labels)
     result_idx.insert(result_idx.end(), fg_idx.begin(), fg_idx.end());
     result_idx.insert(result_idx.end(), bg_idx.begin(), bg_idx.end());
 
-//    vector<int>    result_labels;
-//    vector<target> result_targets;
-//    for(int i : result_idx) {
-//        result_labels.push_back(labels[i]);
-//        result_targets.push_back(bbox_targets[i]);
-//    }
-
-//    return make_tuple(result_labels, result_targets, result_idx);
     return result_idx;
 }
 
@@ -289,33 +275,27 @@ localization::loader::loader(std::shared_ptr<const localization::config> cfg)
 }
 
 void localization::loader::load(char* buf, std::shared_ptr<localization::decoded> mp) {
-    mp->labels;
-    mp->bbox_targets;
-    mp->anchor_index;
-    mp->anchors;
+//    mp->labels;
+//    mp->bbox_targets;
+//    mp->anchor_index;
+//    mp->anchors;
 
-    cout << "labels size " << mp->labels.size() << endl;
-    cout << "bbox_targets size " << mp->bbox_targets.size() << endl;
-    cout << "anchor_index size " << mp->anchor_index.size() << endl;
-    cout << "anchors size " << mp->anchors.size() << endl;
-
-//    for(auto index : mp->anchor_index) {
-//        cout << "anchor index " << index << endl;
-//    }
-
-
-
-//    # map our labels and bbox_targets back to
-//    # the full canvas (e.g. 9 * (62 * 62))
-//    label.fill(0)
-//    label[anchors_blob, :] = labels_blob[:, np.newaxis]
-    //    for(int i=0; i<mp->anchor_index.size(); i++) labels[mp->anchor_index[i]] = mp->labels[i];
-
-    //    for(int i=0; i<label.size(); i++) { cout << "label " << i << " [" << label[i] << "]" << endl; }
+//    cout << "labels size " << mp->labels.size() << endl;
+//    cout << "bbox_targets size " << mp->bbox_targets.size() << endl;
+//    cout << "anchor_index size " << mp->anchor_index.size() << endl;
+//    cout << "anchors size " << mp->anchors.size() << endl;
 
 //    self.dev_y_labels_flat[:] = label.reshape((1, -1))
 //    self.dev_y_labels_onehot[:] = self.be.onehot(self.dev_y_labels_flat, axis=0)
 //    self.dev_y_labels = self.dev_y_labels_onehot.reshape((-1, 1))
+    vector<int> dev_y_labels(mp->labels.size()*2);
+    int i;
+    for(i = 0; i<mp->labels.size(); i++) dev_y_labels[i] = 1;
+    for(; i<dev_y_labels.size(); i++) dev_y_labels[i] = 0;
+    for(int index : mp->anchor_index) if(mp->labels[index] == 1) dev_y_labels[index] = 0;
+//    for(int i=0; i<dev_y_labels.size(); i++) {
+//        cout << i << " [" << dev_y_labels[i] << "]" << endl;
+//    }
 
 //    label_mask.fill(0)
 //    label_mask[anchors_blob, :] = 1
