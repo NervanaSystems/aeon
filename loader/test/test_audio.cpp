@@ -53,7 +53,8 @@ TEST(etl, audio_transform) {
     config->_clipDuration = 2000;
     config->_samplingFreq = 44100;
     config->_width = (((config->_clipDuration * config->_samplingFreq / 1000) - config->_windowSize) / config->_stride) + 1;
-    config->_height = 100;
+    // TODO: how to compute height ahead of time?
+    config->_height = 513;
     config->_numFilts = 64;
     config->_numCepstra = 40;
 

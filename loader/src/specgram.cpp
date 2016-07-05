@@ -98,6 +98,8 @@ int Specgram::generate(shared_ptr<RawMedia> raw, char* buf, int bufSize) {
     cv::normalize(feats, feats, 0, 255, CV_MINMAX, CV_8UC1);
     Mat result(feats.rows, _width, CV_8UC1, buf);
 
+    assert(feats.rows <= _height);
+
     feats.copyTo(result(Range(0, feats.rows), Range(0, feats.cols)));
 
     // Pad the rest with zeros.
