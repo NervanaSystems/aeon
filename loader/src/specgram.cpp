@@ -37,7 +37,7 @@ Specgram::Specgram(shared_ptr<const nervana::audio::config> params, int id)
   _rng(         id) {
     assert(_stride != 0);
     _maxSignalSize = params->_clipDuration * params->_samplingFreq / 1000;
-    _bufSize = _width * _windowSize * MAX_SAMPLE_SIZE;
+    _bufSize = _width * _windowSize * MAX_BYTES_PER_SAMPLE;
     _buf = new char[_bufSize];
     if (params->_window != 0) {
         _window = new Mat(1, _windowSize, CV_32FC1);

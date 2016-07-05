@@ -87,5 +87,5 @@ private:
     cv::Mat*                    _window;
     cv::Mat                     _fbank;
     cv::RNG                     _rng;
-    constexpr static int        MAX_SAMPLE_SIZE = 4;
+    constexpr static int        MAX_BYTES_PER_SAMPLE = 4;
 };
