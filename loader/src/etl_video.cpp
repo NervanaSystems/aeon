@@ -78,7 +78,7 @@ std::shared_ptr<video::decoded> video::extractor::extract(const char* item, int 
     decode_video_frame(codecCtx, packet);
 
     // cleanup
-    free(buffer);
+    av_free(buffer);
     avcodec_close(codecCtx);
     av_free(formatCtx->pb->buffer);
     av_free(formatCtx->pb);
