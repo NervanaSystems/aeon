@@ -27,6 +27,7 @@
 class Audio;
 class Specgram;
 class NoiseClips;
+class NoiseClipsState;
 class Codec;
 
 namespace nervana {
@@ -128,6 +129,7 @@ namespace nervana {
         std::shared_ptr<Audio> _audio;
         Specgram* _specgram;
         NoiseClips* _noiseClips;
+        NoiseClipsState* _state;
         cv::RNG _rng;
     };
 }

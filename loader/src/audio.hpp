@@ -32,6 +32,7 @@
 
 class Specgram;
 class NoiseClips;
+class NoiseClipsState;
 class Codec;
 namespace nervana {
     namespace audio {
@@ -55,6 +56,7 @@ private:
     Codec*                      _codec;
     Specgram*                   _specgram;
     NoiseClips*                 _noiseClips;
+    NoiseClipsState*            _state;
     bool                        _loadedNoise;
     cv::RNG                     _rng;
 };

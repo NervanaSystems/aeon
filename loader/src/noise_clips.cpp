@@ -81,8 +81,7 @@ void Index::shuffle() {
 
 NoiseClips::NoiseClips(char* _noiseIndexFile, char* _noiseDir, Codec* codec)
 : _indexFile(_noiseIndexFile), _indexDir(_noiseDir),
-  _buf(0), _bufLen(0),
-  _clipIndex(0), _clipOffset(0) {
+  _buf(0), _bufLen(0) {
     loadIndex(_indexFile);
     loadData(codec);
 }
@@ -91,8 +90,8 @@ NoiseClips::~NoiseClips() {
     delete[] _buf;
 }
 
-void NoiseClips::addNoise(shared_ptr<RawMedia> media, cv::RNG& rng) {
-    if (rng(2) == 0) {
+void NoiseClips::addNoise(shared_ptr<RawMedia> media, NoiseClipsState* state) {
+    if (state->_rng(2) == 0) {
         // Augment half of the data examples.
         return;
     }
@@ -107,24 +106,24 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media, cv::RNG& rng) {
     int offset = 0;
     // Collect enough noise data to cover the entire input clip.
     while (left > 0) {
-        std::shared_ptr<RawMedia> clipData = _data[_clipIndex];
+        std::shared_ptr<RawMedia> clipData = _data[state->_index];
         assert(clipData->bytesPerSample() == bytesPerSample);
-        int clipSize = clipData->numSamples() - _clipOffset;
+        int clipSize = clipData->numSamples() - state->_offset;
         cv::Mat clip(1, clipSize , CV_16S,
-                 clipData->getBuf(0) + bytesPerSample * _clipOffset);
+                 clipData->getBuf(0) + bytesPerSample * state->_offset);
         if (clipSize > left) {
             const cv::Mat& src = clip(cv::Range::all(), cv::Range(0, left));
             const cv::Mat& dst = noise(cv::Range::all(), cv::Range(offset, offset + left));
             src.copyTo(dst);
             left = 0;
-            _clipOffset += left;
+            state->_offset += left;
         } else {
             const cv::Mat& dst = noise(cv::Range::all(),
                                        cv::Range(offset, offset + clipSize));
             clip.copyTo(dst);
             left -= clipSize;
             offset += clipSize;
-            next(rng);
+            next(state);
         }
     }
     // Superimpose noise without overflowing.
@@ -132,7 +131,7 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media, cv::RNG& rng) {
     data.convertTo(convData, CV_32F);
     cv::Mat convNoise;
     noise.convertTo(convNoise, CV_32F);
-    float noiseLevel = rng.uniform(0.f, 1.0f);
+    float noiseLevel = state->_rng.uniform(0.f, 2.0f);
     convNoise *= noiseLevel;
     convData += convNoise;
     double min, max;
@@ -147,15 +146,15 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media, cv::RNG& rng) {
     convData.convertTo(data, CV_16S);
 }
 
-void NoiseClips::next(cv::RNG rng) {
-    _clipIndex++;
-    if (_clipIndex != _data.size()) {
-        _clipOffset = 0;
-    } else {
+void NoiseClips::next(NoiseClipsState* state) {
+    state->_index++;
+    if (state->_index == _data.size()) {
         // Wrap around.
-        _clipIndex = 0;
+        state->_index = 0;
         // Start at a random offset.
-        _clipOffset = rng(_data[0]->numSamples());
+        state->_offset = state->_rng(_data[0]->numSamples());
+    } else {
+        state->_offset = 0;
     }
 }
 

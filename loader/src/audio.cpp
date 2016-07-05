@@ -3,8 +3,8 @@
 using namespace std;
 
 Audio::Audio(shared_ptr<nervana::audio::config> params, int randomSeed)
-: _params(params), _noiseClips(0), _loadedNoise(false) {
-    _rng.state = 0;
+: _params(params), _noiseClips(0), _state(0),
+  _loadedNoise(false), _rng(randomSeed) {
     _codec = new Codec(params);
     _specgram = new Specgram(params, randomSeed);
     if (params->_noiseIndexFile != 0) {
@@ -13,6 +13,7 @@ Audio::Audio(shared_ptr<nervana::audio::config> params, int randomSeed)
             _loadedNoise = true;
         }
         assert(_noiseClips != 0);
+        _state = new NoiseClipsState(_rng);
     }
 }
 
@@ -20,6 +21,7 @@ Audio::~Audio() {
     if (_loadedNoise == true) {
         delete _noiseClips;
     }
+    delete _state;
     delete _specgram;
     delete _codec;
 }
@@ -45,7 +47,7 @@ shared_ptr<RawMedia> Audio::decode(char* item, int itemSize) {
 
 void Audio::newTransform(shared_ptr<RawMedia> raw, char* buf, int bufSize, int* meta) {
     if (_noiseClips != 0) {
-        _noiseClips->addNoise(raw, _rng);
+        _noiseClips->addNoise(raw, _state);
     }
     int len = _specgram->generate(raw, buf, bufSize);
     if (meta != 0) {

@@ -49,15 +49,27 @@ public:
     uint                        _maxTargetSize;
 };
 
+class NoiseClipsState {
+public:
+    NoiseClipsState(cv::RNG& rng) : _index(0), _offset(0), _rng(rng) {}
+
+public:
+    // Index of the current noise clip.
+    uint                        _index;
+    // Offset within the current noise clip.
+    int                         _offset;
+    cv::RNG&                    _rng;
+};
+
 class NoiseClips {
 public:
     NoiseClips(char* _noiseIndexFile, char* _noiseDir, Codec* codec);
     virtual ~NoiseClips();
 
-    void addNoise(std::shared_ptr<RawMedia> media, cv::RNG& rng);
+    void addNoise(std::shared_ptr<RawMedia> media, NoiseClipsState* state);
 
 private:
-    void next(cv::RNG rng);
+    void next(NoiseClipsState* state);
     void loadIndex(std::string& indexFile);
     void loadData(Codec* codec);
     void readFile(std::string& fileName, int* dataLen);
@@ -70,6 +82,4 @@ private:
     Index                       _index;
     char*                       _buf;
     int                         _bufLen;
-    uint                        _clipIndex;
-    int                         _clipOffset;
 };

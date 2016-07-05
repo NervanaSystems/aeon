@@ -44,7 +44,7 @@ std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int 
 }
 
 audio::transformer::transformer(std::shared_ptr<const audio::config> config)
-    : _noiseClips(0) {
+    : _noiseClips(0), _state(0), _rng(config->_randomSeed) {
     _codec = new Codec(config);
     _specgram = new Specgram(config, config->_randomSeed);
 
@@ -64,7 +64,7 @@ std::shared_ptr<audio::decoded> audio::transformer::transform(
       std::shared_ptr<audio::params> params,
       std::shared_ptr<audio::decoded> decoded) {
     if (_noiseClips != 0) {
-        _noiseClips->addNoise(decoded->_raw, _rng);
+        _noiseClips->addNoise(decoded->_raw, _state);
     }
 
     // set up _buf in decoded to accept data from generate
