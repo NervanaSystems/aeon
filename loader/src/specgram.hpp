@@ -88,6 +88,5 @@ private:
     cv::Mat*                        _window;
     cv::Mat                         _fbank;
     cv::RNG                     _rng;
-    constexpr static double     PI = 3.14159265358979323846;
     constexpr static int        MAX_SAMPLE_SIZE = 4;
 };

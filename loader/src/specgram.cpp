@@ -131,21 +131,21 @@ void Specgram::none(int) {
 
 void Specgram::hann(int steps) {
     for (int i = 0; i <= steps; i++) {
-        _window->at<float>(0, i) = 0.5 - 0.5 * cos((2.0 * PI * i) / steps);
+        _window->at<float>(0, i) = 0.5 - 0.5 * cos((2.0 * CV_PI * i) / steps);
     }
 }
 
 void Specgram::blackman(int steps) {
     for (int i = 0; i <= steps; i++) {
         _window->at<float>(0, i) = 0.42 -
-                                   0.5 * cos((2.0 * PI * i) / steps) +
-                                   0.08 * cos(4.0 * PI * i / steps);
+                                   0.5 * cos((2.0 * CV_PI * i) / steps) +
+                                   0.08 * cos(4.0 * CV_PI * i / steps);
     }
 }
 
 void Specgram::hamming(int steps) {
     for (int i = 0; i <= steps; i++) {
-        _window->at<float>(0, i) = 0.54 - 0.46 * cos((2.0 * PI * i) / steps);
+        _window->at<float>(0, i) = 0.54 - 0.46 * cos((2.0 * CV_PI * i) / steps);
     }
 }
 
