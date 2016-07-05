@@ -36,10 +36,6 @@ Specgram::Specgram(shared_ptr<const nervana::audio::config> params, int id)
   _window(      0),
   _rng(         id) {
     assert(_stride != 0);
-    if (powerOfTwo(_windowSize) == false) {
-        throw std::runtime_error("Window size must be a power of 2");
-    }
-
     _maxSignalSize = params->_clipDuration * params->_samplingFreq / 1000;
     _bufSize = _width * _windowSize * MAX_SAMPLE_SIZE;
     _buf = new char[_bufSize];
@@ -128,13 +124,6 @@ void Specgram::resize(Mat& img, float fx) {
     } else {
         dst(Range::all(), Range(0, img.cols)).copyTo(img);
     }
-}
-
-bool Specgram::powerOfTwo(int num) {
-    while (((num % 2) == 0) && (num > 1)) {
-        num /= 2;
-    }
-    return (num == 1);
 }
 
 void Specgram::none(int) {
