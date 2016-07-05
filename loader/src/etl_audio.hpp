@@ -70,7 +70,6 @@ namespace nervana {
     public:
         bool set_config(nlohmann::json js) override;
 
-        // TODO: ensure these are still used and give better names
         int                         _randomSeed;
         int                         _samplingFreq;
         int                         _clipDuration;
