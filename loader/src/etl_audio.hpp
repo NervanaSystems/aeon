@@ -58,13 +58,12 @@ namespace nervana {
     class audio::param_factory : public interface::param_factory<audio::decoded, audio::params> {
     public:
         param_factory(std::shared_ptr<audio::config> cfg,
-                      std::default_random_engine& dre) : _cfg{cfg}, _dre{dre} {}
+                      std::default_random_engine& dre) : _cfg{cfg} {}
         ~param_factory() {}
 
         std::shared_ptr<audio::params> make_params(std::shared_ptr<const decoded>);
     private:
         std::shared_ptr<audio::config> _cfg;
-        std::default_random_engine& _dre;
     };
 
     class audio::config : public json_config_parser {
