@@ -10,9 +10,15 @@ bool audio::config::set_config(nlohmann::json js) {
 }
 
 shared_ptr<audio::params> audio::param_factory::make_params(std::shared_ptr<const decoded>) {
+    auto params = shared_ptr<audio::params>(new audio::params());
+
+    params->_width = _cfg->_width;
+    params->_height = _cfg->_height;
+
+    return params;
 }
 
-audio::decoded::decoded(RawMedia* raw)
+audio::decoded::decoded(shared_ptr<RawMedia> raw)
     : _raw(raw) {
 }
 
@@ -24,33 +30,35 @@ size_t audio::decoded::getSize() {
     return _raw->numSamples();
 }
 
-audio::extractor::extractor(std::shared_ptr<const audio::config>)
+audio::extractor::extractor(std::shared_ptr<const audio::config> config) {
     // TODO: this MediaParams is never freed
-    : _codec(new MediaParams(MediaType::AUDIO))
-{
+    _codec = new Codec(config);
     avcodec_register_all();
 }
 
-std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int itemSize) {
-    return make_shared<audio::decoded>(_codec.decode(item, itemSize));
+audio::extractor::~extractor() {
+    delete _codec;
 }
 
-audio::transformer::transformer(std::shared_ptr<const audio::config> config)
+std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int itemSize) {
+    return make_shared<audio::decoded>(_codec->decode(item, itemSize));
+}
+
+audio::transformer::transformer(std::shared_ptr<const audio::config> config) {
     // TODO: this MediaParams is never freed
-    : _codec(new MediaParams(MediaType::AUDIO))
-{
-    // TODO: this SignalParams is empty and never freed
-    _specgram = new Specgram(new SignalParams(MediaType::AUDIO), config->_randomSeed);
+    _codec = new Codec(config);
+    _specgram = new Specgram(config, config->_randomSeed);
 
     if (config->_noiseIndexFile != 0) {
         _noiseClips = new NoiseClips(
-            config->_noiseIndexFile, config->_noiseDir, &_codec
+            config->_noiseIndexFile, config->_noiseDir, _codec
         );
     }
 }
 
 audio::transformer::~transformer() {
     delete _specgram;
+    delete _codec;
 }
 
 std::shared_ptr<audio::decoded> audio::transformer::transform(

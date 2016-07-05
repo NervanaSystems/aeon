@@ -28,7 +28,9 @@ shared_ptr<audio::decoded> generate_decoded_audio(float frequencyHz, int duratio
     //       gen_audio::encode
     gen_audio gen;
     vector<unsigned char> encoded_audio = gen.encode(frequencyHz, duration);
-    audio::extractor extractor(make_shared<audio::config>());
+    auto config = make_shared<audio::config>();
+    config->_mtype = MediaType::AUDIO;
+    audio::extractor extractor(config);
     return extractor.extract((char*)encoded_audio.data(), encoded_audio.size());
 }
 
@@ -45,6 +47,15 @@ TEST(etl, audio_transform) {
     auto decoded_audio = generate_decoded_audio(1000, 2000);
 
     auto config = make_shared<audio::config>();
+    config->_mtype = MediaType::AUDIO;
+    config->_stride = 1;
+    config->_windowSize = 2;
+    config->_clipDuration = 2000;
+    config->_width = 100;
+    config->_height = 100;
+    config->_samplingFreq = 44100;
+    config->_numFilts = 64;
+    config->_numCepstra = 40;
 
     audio::transformer _imageTransformer(config);
 

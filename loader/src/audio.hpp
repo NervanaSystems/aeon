@@ -21,6 +21,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <memory>
 
 #include <opencv2/core/core.hpp>
 
@@ -29,24 +30,30 @@
 #include "specgram.hpp"
 #include "noise_clips.hpp"
 #include "audio_params.hpp"
+#include "etl_audio.hpp"
 
-using std::vector;
-using std::ifstream;
-using cv::Mat;
+class Specgram;
+class NoiseClips;
+class Codec;
+namespace nervana {
+    namespace audio {
+        class config;
+    }
+}
 
 class Audio : public Media {
 public:
-    Audio(AudioParams *params, int randomSeed);
+    Audio(std::shared_ptr<nervana::audio::config> params, int randomSeed);
     virtual ~Audio();
 
     void dumpToBin(char* filename, RawMedia* audio, int idx);
     void transform(char* item, int itemSize, char* buf, int bufSize, int* meta);
-    RawMedia* decode(char* item, int itemSize);
-    void newTransform(RawMedia* raw, char* buf, int bufSize, int* meta);
+    std::shared_ptr<RawMedia> decode(char* item, int itemSize);
+    void newTransform(std::shared_ptr<RawMedia> raw, char* buf, int bufSize, int* meta);
     void ingest(char** dataBuf, int* dataBufLen, int* dataLen);
 
 private:
-    AudioParams*                _params;
+    std::shared_ptr<nervana::audio::config> _params;
     Codec*                      _codec;
     Specgram*                   _specgram;
     NoiseClips*                 _noiseClips;

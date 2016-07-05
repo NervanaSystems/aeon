@@ -1,16 +1,17 @@
 #include "audio.hpp"
 
-Audio::Audio(AudioParams *params, int randomSeed)
+using namespace std;
+
+Audio::Audio(shared_ptr<nervana::audio::config> params, int randomSeed)
 : _params(params), _noiseClips(0), _loadedNoise(false) {
     _rng.state = 0;
     _codec = new Codec(params);
     _specgram = new Specgram(params, randomSeed);
     if (params->_noiseIndexFile != 0) {
-        if ((randomSeed == 0) && (params->_noiseClips == 0)) {
-            params->_noiseClips = new NoiseClips(params->_noiseIndexFile, params->_noiseDir, _codec);
+        if ((randomSeed == 0) && (_noiseClips == 0)) {
+            _noiseClips = new NoiseClips(params->_noiseIndexFile, params->_noiseDir, _codec);
             _loadedNoise = true;
         }
-        _noiseClips = reinterpret_cast<NoiseClips*>(params->_noiseClips);
         assert(_noiseClips != 0);
     }
 }
@@ -38,11 +39,11 @@ void Audio::transform(char* item, int itemSize, char* buf, int bufSize, int* met
     newTransform(raw, buf, bufSize, meta);
 }
 
-RawMedia* Audio::decode(char* item, int itemSize) {
+shared_ptr<RawMedia> Audio::decode(char* item, int itemSize) {
     return _codec->decode(item, itemSize);
 }
 
-void Audio::newTransform(RawMedia* raw, char* buf, int bufSize, int* meta) {
+void Audio::newTransform(shared_ptr<RawMedia> raw, char* buf, int bufSize, int* meta) {
     if (_noiseClips != 0) {
         _noiseClips->addNoise(raw, _rng);
     }

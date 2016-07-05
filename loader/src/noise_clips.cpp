@@ -89,12 +89,9 @@ NoiseClips::NoiseClips(char* _noiseIndexFile, char* _noiseDir, Codec* codec)
 
 NoiseClips::~NoiseClips() {
     delete[] _buf;
-    for (auto elem : _data) {
-        delete elem;
-    }
 }
 
-void NoiseClips::addNoise(RawMedia* media, cv::RNG& rng) {
+void NoiseClips::addNoise(shared_ptr<RawMedia> media, cv::RNG& rng) {
     if (rng(2) == 0) {
         // Augment half of the data examples.
         return;
@@ -104,26 +101,26 @@ void NoiseClips::addNoise(RawMedia* media, cv::RNG& rng) {
     assert(media->sampleSize() == 2);
     int sampleSize = media->sampleSize();
     int numSamples = media->numSamples();
-    Mat data(1, numSamples, CV_16S, media->getBuf(0));
-    Mat noise(1, numSamples, CV_16S);
+    cv::Mat data(1, numSamples, CV_16S, media->getBuf(0));
+    cv::Mat noise(1, numSamples, CV_16S);
     int left = numSamples;
     int offset = 0;
     // Collect enough noise data to cover the entire input clip.
     while (left > 0) {
-        RawMedia* clipData = _data[_clipIndex];
+        std::shared_ptr<RawMedia> clipData = _data[_clipIndex];
         assert(clipData->sampleSize() == sampleSize);
         int clipSize = clipData->numSamples() - _clipOffset;
-        Mat clip(1, clipSize , CV_16S,
+        cv::Mat clip(1, clipSize , CV_16S,
                  clipData->getBuf(0) + sampleSize * _clipOffset);
         if (clipSize > left) {
-            const Mat& src = clip(Range::all(), Range(0, left));
-            const Mat& dst = noise(Range::all(), Range(offset, offset + left));
+            const cv::Mat& src = clip(cv::Range::all(), cv::Range(0, left));
+            const cv::Mat& dst = noise(cv::Range::all(), cv::Range(offset, offset + left));
             src.copyTo(dst);
             left = 0;
             _clipOffset += left;
         } else {
-            const Mat& dst = noise(Range::all(),
-                                   Range(offset, offset + clipSize));
+            const cv::Mat& dst = noise(cv::Range::all(),
+                                       cv::Range(offset, offset + clipSize));
             clip.copyTo(dst);
             left -= clipSize;
             offset += clipSize;
@@ -131,9 +128,9 @@ void NoiseClips::addNoise(RawMedia* media, cv::RNG& rng) {
         }
     }
     // Superimpose noise without overflowing.
-    Mat convData;
+    cv::Mat convData;
     data.convertTo(convData, CV_32F);
-    Mat convNoise;
+    cv::Mat convNoise;
     noise.convertTo(convNoise, CV_32F);
     float noiseLevel = rng.uniform(0.f, 1.0f);
     convNoise *= noiseLevel;
@@ -176,8 +173,7 @@ void NoiseClips::loadData(Codec* codec) {
             ss << "Could not read " << fileName;
             throw std::runtime_error(ss.str());
         }
-        RawMedia* raw = codec->decode(_buf, len);
-        _data.push_back(new RawMedia(*raw));
+        _data.push_back(codec->decode(_buf, len));
     }
 }
 

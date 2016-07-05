@@ -19,6 +19,9 @@
 
 #include "audio_params.hpp"
 #include "codec.hpp"
+#include "noise_clips.hpp"
+
+class Codec;
 
 class IndexElement {
 public:
@@ -52,7 +55,7 @@ public:
     NoiseClips(char* _noiseIndexFile, char* _noiseDir, Codec* codec);
     virtual ~NoiseClips();
 
-    void addNoise(RawMedia* media, cv::RNG& rng);
+    void addNoise(std::shared_ptr<RawMedia> media, cv::RNG& rng);
 
 private:
     void next(cv::RNG rng);
@@ -64,7 +67,7 @@ private:
 private:
     std::string                 _indexFile;
     std::string                 _indexDir;
-    vector<RawMedia*>           _data;
+    vector<std::shared_ptr<RawMedia>> _data;
     Index                       _index;
     char*                       _buf;
     int                         _bufLen;

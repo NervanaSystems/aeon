@@ -22,6 +22,12 @@
 #include "media.hpp"
 #include "codec.hpp"
 #include "audio.hpp"
+#include "specgram.hpp"
+
+class Audio;
+class Specgram;
+class NoiseClips;
+class Codec;
 
 namespace nervana {
     namespace audio {
@@ -86,26 +92,27 @@ namespace nervana {
         int                         _height;
         int                         _window;
         int                         _feature;
+        MediaType                   _mtype;
     };
 
     class audio::decoded : public decoded_media {
     public:
-        decoded(RawMedia* raw);
+        decoded(std::shared_ptr<RawMedia> raw);
         MediaType get_type() override;
 
         size_t getSize();
     // protected:
-        RawMedia* _raw;
+        std::shared_ptr<RawMedia> _raw;
         vector<char> _buf;
     };
 
     class audio::extractor : public interface::extractor<audio::decoded> {
     public:
         extractor(std::shared_ptr<const audio::config>);
-        ~extractor() {}
+        ~extractor();
         std::shared_ptr<audio::decoded> extract(const char*, int) override;
     private:
-        Codec _codec;
+        Codec* _codec;
     };
 
     class audio::transformer : public interface::transformer<audio::decoded, audio::params> {
@@ -116,7 +123,7 @@ namespace nervana {
             std::shared_ptr<audio::params>,
             std::shared_ptr<audio::decoded>) override;
     private:
-        Codec _codec;
+        Codec* _codec;
         std::shared_ptr<Audio> _audio;
         Specgram* _specgram;
         NoiseClips* _noiseClips;
