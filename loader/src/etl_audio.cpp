@@ -58,6 +58,9 @@ audio::transformer::~transformer() {
     if(_codec != 0) {
         delete _codec;
     }
+    if(_noiseClips != 0) {
+        delete _noiseClips;
+    }
 }
 
 std::shared_ptr<audio::decoded> audio::transformer::transform(
