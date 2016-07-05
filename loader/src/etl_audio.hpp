@@ -74,18 +74,12 @@ namespace nervana {
         int                         _randomSeed;
         int                         _samplingFreq;
         int                         _clipDuration;
-        int                         _frameDuration;
-        int                         _overlapPercent;
-        char                        _windowType[16];
-        char                        _featureType[16];
         float                       _randomScalePercent;
-        bool                        _ctcCost;
         int                         _numFilts;
         int                         _numCepstra;
         char*                       _noiseIndexFile;
         char*                       _noiseDir;
         int                         _windowSize;
-        int                         _overlap;
         int                         _stride;
         int                         _width;
         int                         _height;
