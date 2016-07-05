@@ -84,9 +84,9 @@ private:
     float                       _scaleMax;
     char*                       _buf;
     int                         _bufSize;
-    cv::Mat*                        _image;
-    cv::Mat*                        _window;
-    cv::Mat                         _fbank;
+    cv::Mat*                    _image;
+    cv::Mat*                    _window;
+    cv::Mat                     _fbank;
     cv::RNG                     _rng;
     constexpr static int        MAX_SAMPLE_SIZE = 4;
 };
