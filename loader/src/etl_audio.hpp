@@ -19,7 +19,7 @@
 
 #include "etl_interface.hpp"
 #include "params.hpp"
-#include "media.hpp"
+#include "raw_media.hpp"
 #include "codec.hpp"
 #include "specgram.hpp"
 #include "noise_clips.hpp"

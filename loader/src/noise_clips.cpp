@@ -100,7 +100,7 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media, NoiseClipsState* state) {
         return;
     }
     // Assume a single channel with 16 bit samples for now.
-    assert(media->size() == 1);
+    assert(media->channels() == 1);
     assert(media->bytesPerSample() == 2);
     int bytesPerSample = media->bytesPerSample();
     int numSamples = media->numSamples();

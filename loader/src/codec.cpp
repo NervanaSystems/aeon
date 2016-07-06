@@ -83,14 +83,11 @@ std::shared_ptr<RawMedia> Codec::decode(const char* item, int itemSize) {
         raise_averror("Could not open decoder", errnum);
     }
 
-    if (_raw->size() == 0) {
-        _raw->addBufs(_codec->channels, itemSize);
-    } else {
-        _raw->reset();
-    }
-
+    _raw->setChannels(_codec->channels);
+    _raw->reset();
     _raw->setBytesPerSample(av_get_bytes_per_sample(_codec->sample_fmt));
     assert(_raw->bytesPerSample() >= 0);
+
     AVPacket packet;
     while (av_read_frame(_format, &packet) >= 0) {
         decodeFrame(&packet, stream, itemSize);
@@ -121,10 +118,7 @@ void Codec::decodeFrame(AVPacket* packet, int stream, int itemSize) {
 
         if (frameFinished == true) {
             int frameSize = frame->nb_samples * _raw->bytesPerSample();
-            if (_raw->bufSize() < _raw->dataSize() + frameSize) {
-                _raw->growBufs(itemSize);
-            }
-            _raw->fillBufs((char**) frame->data, frameSize);
+            _raw->appendFrames((char**) frame->data, frameSize);
         }
         av_frame_free(&frame);
     }

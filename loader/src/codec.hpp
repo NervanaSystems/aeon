@@ -18,7 +18,7 @@
 #include <sstream>
 #include <mutex>
 
-#include "media.hpp"
+#include "raw_media.hpp"
 #include "etl_audio.hpp"
 
 #ifdef __cplusplus
