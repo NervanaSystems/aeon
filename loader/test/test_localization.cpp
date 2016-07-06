@@ -140,7 +140,7 @@ void plot(const string& path) {
     localization::transformer transformer{cfg};
     auto extracted_metadata = extractor.extract(&data[0],data.size());
     ASSERT_NE(nullptr,extracted_metadata);
-    auto params = make_shared<image::params>();
+    auto params = make_shared<image_var::params>();
     shared_ptr<localization::decoded> transformed_metadata = transformer.transform(params, extracted_metadata);
 
     vector<box>& an = extracted_metadata->anchors;
@@ -247,7 +247,7 @@ TEST(localization, sample_anchors) {
     localization::transformer transformer{cfg};
     auto extracted_metadata = extractor.extract(&data[0],data.size());
     ASSERT_NE(nullptr,extracted_metadata);
-    shared_ptr<image::params> params = make_shared<image::params>();
+    shared_ptr<image_var::params> params = make_shared<image_var::params>();
     auto transformed_metadata = transformer.transform(params, extracted_metadata);
     ASSERT_NE(nullptr,transformed_metadata);
 
@@ -291,12 +291,39 @@ TEST(localization, transform) {
         auto cfg = make_localization_config();
         localization::extractor extractor{cfg};
         localization::transformer transformer{cfg};
-        auto mdata = extractor.extract(&data[0],data.size());
-        auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);
-        ASSERT_NE(nullptr,decoded);
-        auto params = make_shared<image::params>();
-        transformer.transform(params, decoded);
-        auto boxes = decoded->boxes();
+        auto decoded_data = extractor.extract(&data[0],data.size());
+        ASSERT_NE(nullptr,decoded_data);
+        auto params = make_shared<image_var::params>();
+        shared_ptr<localization::decoded> transformed_data = transformer.transform(params, decoded_data);
+
+        vector<int> fg_idx = {
+             1200,     1262,     1324,     1386,    23954,    24016,    24078,    24090,
+            24140,    24152,    24202,    24214,    24264,    24276,    24338,    24400,
+            24462,    24503,    24524,    24565,    24586,    24648,    27977,    27978,
+            28039,    28040,    28101,    28102,    28163,    28164,    28225,    28226,
+            28287,    28559,    28560
+        };
+
+        vector<int> bg_idx = {
+            192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
+            208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
+            224, 225, 226, 227, 228, 229, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263,
+            264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279,
+            280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 316, 317, 318, 319,
+            320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335,
+            336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351,
+            352, 353, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391,
+            392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404, 405, 406, 407,
+            408, 409, 410, 411, 412, 413, 414, 415, 440, 441, 442, 443, 444, 445, 446, 447,
+            448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463,
+            464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474, 475, 476, 477, 502, 503,
+            504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515, 516, 517, 518, 519,
+            520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530, 531, 532
+        };
+
+        ASSERT_EQ(transformed_data->anchor_index.size(), fg_idx.size() + bg_idx.size());
+
+
     }
 //    {
 //        string data = read_file(CURDIR"/test_data/009952.json");
@@ -317,7 +344,7 @@ TEST(localization, loader) {
     auto mdata = extractor.extract(&data[0],data.size());
     auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);
     ASSERT_NE(nullptr,decoded);
-    auto params = make_shared<image::params>();
+    auto params = make_shared<image_var::params>();
     shared_ptr<localization::decoded> transformed = transformer.transform(params, decoded);
     loader.load(nullptr, transformed);
 }
@@ -374,5 +401,4 @@ TEST(localization, compute_targets) {
     EXPECT_NEAR(dw_1_expected, result[1].dw, acceptable_error);
     EXPECT_NEAR(dh_1_expected, result[1].dh, acceptable_error);
 }
-
 

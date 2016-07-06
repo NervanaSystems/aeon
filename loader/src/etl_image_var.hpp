@@ -27,6 +27,7 @@ namespace nervana {
         void dump(std::ostream & = std::cout);
 
         bool flip = false;
+        bool debug_deterministic = false;
     private:
         params() {}
     };

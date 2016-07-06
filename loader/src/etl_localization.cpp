@@ -54,7 +54,7 @@ localization::transformer::transformer(std::shared_ptr<const localization::confi
 }
 
 shared_ptr<localization::decoded> localization::transformer::transform(
-                    shared_ptr<image::params> txs,
+                    shared_ptr<image_var::params> txs,
                     shared_ptr<localization::decoded> mp) {
     cv::Size im_size{mp->width(), mp->height()};
     float im_scale;
@@ -148,7 +148,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
         bbox_targets = move(t_bbox_targets);
     }
 
-    mp->anchor_index = sample_anchors(labels);
+    mp->anchor_index = sample_anchors(labels,txs->debug_deterministic);
     mp->anchors = all_anchors;
     mp->labels = labels;
     mp->bbox_targets = bbox_targets;
@@ -156,7 +156,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     return mp;
 }
 
-vector<int> localization::transformer::sample_anchors(const vector<int>& labels) {
+vector<int> localization::transformer::sample_anchors(const vector<int>& labels, bool debug) {
     // subsample labels if needed
     int num_fg = int(cfg->foreground_fraction * cfg->rois_per_image);
     vector<int> fg_idx;
@@ -168,12 +168,14 @@ vector<int> localization::transformer::sample_anchors(const vector<int>& labels)
             bg_idx.push_back(i);
         }
     }
-    shuffle(fg_idx.begin(), fg_idx.end(),random);
+    if(debug == false) {
+        shuffle(fg_idx.begin(), fg_idx.end(),random);
+        shuffle(bg_idx.begin(), bg_idx.end(),random);
+    }
     if(fg_idx.size() > num_fg) {
         fg_idx.resize(num_fg);
     }
-    int remainder = cfg->rois_per_image-fg_idx.size();
-    shuffle(bg_idx.begin(), bg_idx.end(),random);
+    int remainder = cfg->rois_per_image - fg_idx.size();
     if(bg_idx.size() > remainder) {
         bg_idx.resize(remainder);
     }
@@ -288,11 +290,26 @@ void localization::loader::load(char* buf, std::shared_ptr<localization::decoded
 //    self.dev_y_labels_flat[:] = label.reshape((1, -1))
 //    self.dev_y_labels_onehot[:] = self.be.onehot(self.dev_y_labels_flat, axis=0)
 //    self.dev_y_labels = self.dev_y_labels_onehot.reshape((-1, 1))
-    vector<int> dev_y_labels(mp->labels.size()*2);
+    vector<float> dev_y_labels(total_anchors*2);
+    vector<float> dev_y_labels_mask(total_anchors*2);
+    vector<float> dev_y_bbtargets(total_anchors*4);
     int i;
-    for(i = 0; i<mp->labels.size(); i++) dev_y_labels[i] = 1;
+    for(i = 0; i<total_anchors; i++) dev_y_labels[i] = 1;
     for(; i<dev_y_labels.size(); i++) dev_y_labels[i] = 0;
-    for(int index : mp->anchor_index) if(mp->labels[index] == 1) dev_y_labels[index] = 0;
+    fill_n(dev_y_labels_mask.begin(), dev_y_labels_mask.size(), 0);
+    for(int index : mp->anchor_index) {
+        if(mp->labels[index] == 1) {
+            dev_y_labels[index] = 0;
+            dev_y_labels[index+total_anchors] = 1;
+        }
+        dev_y_labels_mask[index] = 1;
+        dev_y_labels_mask[index+total_anchors] = 1;
+
+        dev_y_bbtargets[index]                 = mp->bbox_targets[index].dx;
+        dev_y_bbtargets[index+total_anchors]   = mp->bbox_targets[index].dy;
+        dev_y_bbtargets[index+total_anchors*2] = mp->bbox_targets[index].dw;
+        dev_y_bbtargets[index+total_anchors*3] = mp->bbox_targets[index].dh;
+    }
 //    for(int i=0; i<dev_y_labels.size(); i++) {
 //        cout << i << " [" << dev_y_labels[i] << "]" << endl;
 //    }
@@ -407,13 +424,7 @@ vector<box> localization::anchor::mkanchors(const vector<float>& ws, const vecto
 }
 
 vector<box> localization::anchor::ratio_enum(const box& anchor, const vector<float>& ratios) {
-    float w;
-    float h;
-    float x_ctr;
-    float y_ctr;
-    tie(w,h,x_ctr,y_ctr) = whctrs(anchor);
-
-    int size = w * h;
+    int size = anchor.width() * anchor.height();
     vector<float> size_ratios;
     vector<float> ws;
     vector<float> hs;
@@ -421,29 +432,15 @@ vector<box> localization::anchor::ratio_enum(const box& anchor, const vector<flo
     for(float sr : size_ratios)    { ws.push_back(round(sqrt(sr))); }
     for(int i=0; i<ws.size(); i++) { hs.push_back(round(ws[i]*ratios[i])); }
 
-    return mkanchors(ws, hs, x_ctr, y_ctr);
+    return mkanchors(ws, hs, anchor.xcenter(), anchor.ycenter());
 }
 
 vector<box> localization::anchor::scale_enum(const box& anchor, const vector<float>& scales) {
-    float w;
-    float h;
-    float x_ctr;
-    float y_ctr;
-    tie(w,h,x_ctr,y_ctr) = whctrs(anchor);
-
     vector<float> ws;
     vector<float> hs;
     for(float scale : scales) {
-        ws.push_back(w*scale);
-        hs.push_back(h*scale);
+        ws.push_back(anchor.width()*scale);
+        hs.push_back(anchor.height()*scale);
     }
-    return mkanchors(ws, hs, x_ctr, y_ctr);
-}
-
-tuple<float,float,float,float> localization::anchor::whctrs(const box& anchor) {
-    float w = anchor.xmax - anchor.xmin + 1;
-    float h = anchor.ymax - anchor.ymin + 1;
-    float x_ctr = (float)anchor.xmin + 0.5 * (float)(w - 1);
-    float y_ctr = (float)anchor.ymin + 0.5 * (float)(h - 1);
-    return make_tuple(w, h, x_ctr, y_ctr);
+    return mkanchors(ws, hs, anchor.xcenter(), anchor.ycenter());
 }

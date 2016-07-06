@@ -9,6 +9,9 @@ namespace nervana {
     namespace image {
         class randomizing_provider;
     }
+    namespace image_var {
+        class randomizing_provider;
+    }
     namespace label {
         class int_provider;
     }
@@ -28,6 +31,34 @@ namespace nervana {
         ~randomizing_provider() {}
     };
 
+    class image_var::randomizing_provider : public provider<image_var::decoded, image_var::params> {
+    public:
+        randomizing_provider(nlohmann::json js)
+        {
+            int seed;
+            auto val = js.find("random_seed");
+            if (val != js.end()) {
+                seed = val->get<int>();
+            } else {
+                std::chrono::high_resolution_clock clock;
+                seed = int(clock.now().time_since_epoch().count());
+            }
+
+            _cfg         = std::make_shared<image_var::config>();
+            _cfg->set_config(js);   // TODO: check return value
+            _r_eng       = std::default_random_engine(seed);
+            _extractor   = std::make_shared<image_var::extractor>(_cfg);
+            _transformer = std::make_shared<image_var::transformer>(_cfg);
+            _loader      = std::make_shared<image_var::loader>(_cfg);
+            _factory     = std::make_shared<image_var::param_factory>(_cfg, _r_eng);
+        }
+        ~randomizing_provider() {}
+
+    private:
+        std::default_random_engine         _r_eng;
+        std::shared_ptr<image_var::config> _cfg;
+    };
+
     class label::int_provider : public provider<label::decoded, nervana::params> {
     public:
         int_provider(std::shared_ptr<label::config> cfg)
@@ -40,7 +71,7 @@ namespace nervana {
         ~int_provider() {}
     };
 
-    class localization::default_provider : public provider<localization::decoded, image::params> {
+    class localization::default_provider : public provider<localization::decoded, image_var::params> {
     public:
         default_provider(nlohmann::json js)
         {
@@ -67,11 +98,11 @@ namespace nervana {
         }
     };
 
-    class localization_decoder : public train_provider<image::randomizing_provider, localization::default_provider> {
+    class localization_decoder : public train_provider<image_var::randomizing_provider, localization::default_provider> {
     public:
         localization_decoder(nlohmann::json js)
         {
-            _dprov = std::make_shared<image::randomizing_provider>(js["data_config"]);
+            _dprov = std::make_shared<image_var::randomizing_provider>(js["data_config"]);
             _tprov = std::make_shared<localization::default_provider>(js["target_config"]);
         }
     };

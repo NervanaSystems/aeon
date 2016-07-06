@@ -6,6 +6,7 @@
 
 #include "etl_interface.hpp"
 #include "etl_bbox.hpp"
+#include "etl_image_var.hpp"
 #include "params.hpp"
 #include "util.hpp"
 #include "box.hpp"
@@ -57,9 +58,6 @@ namespace nervana {
 
         //    Enumerate a set of anchors for each scale wrt an anchor.
         std::vector<box> scale_enum(const box& anchor, const std::vector<float>& scales);
-
-        //    Return width, height, x center, and y center for an anchor (window).
-        std::tuple<float,float,float,float> whctrs(const box&);
 
         std::vector<box> add_anchors();
 
@@ -145,21 +143,21 @@ namespace nervana {
         bbox::extractor bbox_extractor;
     };
 
-    class localization::transformer : public interface::transformer<localization::decoded, image::params> {
+    class localization::transformer : public interface::transformer<localization::decoded, image_var::params> {
     public:
         transformer(std::shared_ptr<const localization::config> cfg);
 
         virtual ~transformer() {}
 
         std::shared_ptr<localization::decoded> transform(
-                            std::shared_ptr<image::params> txs,
+                            std::shared_ptr<image_var::params> txs,
                             std::shared_ptr<localization::decoded> mp) override;
 
         static std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size, int min_size, int max_size);
     private:
         cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<box>& query_boxes);
         static std::vector<target> compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
-        std::vector<int> sample_anchors(const std::vector<int>& labels);
+        std::vector<int> sample_anchors(const std::vector<int>& labels, bool debug=false);
 
         std::shared_ptr<const localization::config> cfg;
         std::minstd_rand0 random;
@@ -178,5 +176,6 @@ namespace nervana {
         size_t _load_count;
         size_t _load_size;
         bool _channel_major;
-        int total_anchors;    };
+        int total_anchors;
+    };
 }

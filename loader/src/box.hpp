@@ -37,10 +37,12 @@ public:
         return cv::Rect(xmin,ymin,xmax-xmin,ymax-ymin);
     }
 
-    float xcenter() const { return xmin + width() / 2; }
-    float ycenter() const { return ymin + height() / 2; }
-    float width() const { return xmax - xmin + 1; }
-    float height() const { return ymax - ymin + 1; }
+    float xcenter() const { return xmin + (width()-1.) / 2.; }
+    float ycenter() const { return ymin + (height()-1.) / 2.; }
+    float x() const { return xmin; }
+    float y() const { return ymin; }
+    float width() const { return xmax - xmin + 1.; }
+    float height() const { return ymax - ymin + 1.; }
 };
 
 std::ostream& operator<<(std::ostream& out, const nervana::box& b);
