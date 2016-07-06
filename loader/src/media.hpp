@@ -28,16 +28,6 @@ public:
     RawMedia() : _bufSize(0), _dataSize(0), _bytesPerSample(0) {
     }
 
-    RawMedia(const RawMedia& media)
-    : _bufSize(media._bufSize),
-      _dataSize(media._dataSize),
-      _bytesPerSample(media._bytesPerSample) {
-        for (uint i = 0; i < media._bufs.size(); i++) {
-            _bufs.push_back(new char[_bufSize]);
-            memcpy(_bufs[i], media._bufs[i], _bufSize);
-        }
-    }
-
     virtual ~RawMedia() {
         for (uint i = 0; i < _bufs.size(); i++) {
             delete[] _bufs[i];
