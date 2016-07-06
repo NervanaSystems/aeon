@@ -19,7 +19,7 @@ class CpuBackend(object):
 
 class GpuBackend(object):
     '''
-    Defines the stubs that are necessary for a backend object
+    Note that GpuBackend can actually just be instantiated as a special case of MultiGpuBackend
     '''
     def __init__(self, device_id=0):
         self.use_pinned_mem = True

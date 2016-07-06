@@ -4,14 +4,6 @@
 #include <cassert>
 
 namespace nervana {
-    class count_size_type
-    {
-    public:
-        int count = 0;
-        int size  = 0;
-        char type[4] = {};
-    };
-
 
     // Unpack char array in little endian order
     template<typename T> T unpack_le(const char* data, int offset=0, int count=sizeof(T)) {
