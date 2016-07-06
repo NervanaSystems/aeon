@@ -63,7 +63,7 @@ public:
 
 class NoiseClips {
 public:
-    NoiseClips(char* _noiseIndexFile, char* _noiseDir, Codec* codec);
+    NoiseClips(const std::string _noiseIndexFile, const std::string _noiseDir, Codec* codec);
     virtual ~NoiseClips();
 
     void addNoise(std::shared_ptr<RawMedia> media, NoiseClipsState* state);

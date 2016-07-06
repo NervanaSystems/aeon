@@ -83,7 +83,7 @@ void Index::shuffle() {
     std::random_shuffle(_elements.begin(), _elements.end());
 }
 
-NoiseClips::NoiseClips(char* _noiseIndexFile, char* _noiseDir, Codec* codec)
+NoiseClips::NoiseClips(const std::string _noiseIndexFile, const std::string _noiseDir, Codec* codec)
 : _indexFile(_noiseIndexFile), _indexDir(_noiseDir),
   _buf(0), _bufLen(0) {
     loadIndex(_indexFile);

@@ -70,8 +70,7 @@ namespace nervana {
         bool channel_major = true;
         uint32_t channels = 3;
 
-        bool set_config(nlohmann::json js) override
-        {
+        bool set_config(nlohmann::json js) override {
             parse_req(height, "height", js);
             parse_req(width, "width", js);
 

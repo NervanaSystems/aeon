@@ -70,21 +70,21 @@ namespace nervana {
     public:
         bool set_config(nlohmann::json js) override;
 
-        int                         _randomSeed;
+        int                         _randomSeed = 0;
         int                         _samplingFreq;
         int                         _clipDuration;
         float                       _randomScalePercent;
         int                         _numFilts;
         int                         _numCepstra;
-        char*                       _noiseIndexFile;
-        char*                       _noiseDir;
+        std::string                 _noiseIndexFile = "";
+        std::string                 _noiseDir = "";
         int                         _windowSize;
         int                         _stride;
         int                         _width;
         int                         _height;
         int                         _window;
         int                         _feature;
-        MediaType                   _mtype;
+        MediaType                   _mtype = MediaType::AUDIO;
     };
 
     class audio::decoded : public decoded_media {

@@ -4,7 +4,20 @@ using namespace std;
 using namespace nervana;
 
 bool audio::config::set_config(nlohmann::json js) {
-    // TODO
+    // for now, all config params are required
+    parse_req(_samplingFreq, "samplingFreq", js);
+    parse_req(_clipDuration, "clipDuration", js);
+    parse_req(_randomScalePercent, "randomScalePercent", js);
+    parse_req(_numFilts, "numFilts", js);
+    parse_req(_numCepstra, "numCepstra", js);
+    parse_req(_noiseIndexFile, "noiseIndexFile", js);
+    parse_req(_noiseDir, "noiseDir", js);
+    parse_req(_windowSize, "windowSize", js);
+    parse_req(_stride, "stride", js);
+    parse_req(_width, "width", js);
+    parse_req(_height, "height", js);
+    parse_req(_window, "window", js);
+    parse_req(_feature, "feature", js);
 }
 
 shared_ptr<audio::params> audio::param_factory::make_params(std::shared_ptr<const decoded>) {
@@ -45,7 +58,7 @@ audio::transformer::transformer(std::shared_ptr<const audio::config> config)
     : _noiseClips(0), _state(0), _rng(config->_randomSeed), _codec(0) {
     _specgram = new Specgram(config, config->_randomSeed);
 
-    if (config->_noiseIndexFile != 0) {
+    if (config->_noiseIndexFile.size() != 0) {
         _codec = new Codec(config);
         _noiseClips = new NoiseClips(
             config->_noiseIndexFile, config->_noiseDir, _codec
@@ -75,7 +88,7 @@ std::shared_ptr<audio::decoded> audio::transformer::transform(
 
     // convert from time domain to frequency domain
     decoded->_len = _specgram->generate(
-        decoded->_raw, decoded->_buf.data(), params->_width * params->_height
+        decoded->_raw, decoded->_buf.data(), decoded->_buf.size()
     );
 
     return decoded;
