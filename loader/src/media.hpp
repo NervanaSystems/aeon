@@ -13,9 +13,6 @@
  limitations under the License.
 */
 
-
-// This must be kept in sync with media.py.
-
 #pragma once
 
 #include <vector>
@@ -25,9 +22,6 @@
 #include <sstream>
 
 using std::vector;
-
-// for MediaType
-#include "params.hpp"
 
 class RawMedia {
 public:
