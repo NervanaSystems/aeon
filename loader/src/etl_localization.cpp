@@ -276,11 +276,7 @@ localization::loader::loader(std::shared_ptr<const localization::config> cfg)
 //    _load_count    = cfg->width * cfg->height * cfg->channels * cfg->num_crops();
 }
 
-void localization::loader::load(char* buf, std::shared_ptr<localization::decoded> mp) {
-//    mp->labels;
-//    mp->bbox_targets;
-//    mp->anchor_index;
-//    mp->anchors;
+void localization::loader::build_output(std::shared_ptr<localization::decoded> mp, vector<float>& dev_y_labels, vector<float>& dev_y_labels_mask, vector<float>& dev_y_bbtargets, vector<float>& dev_y_bbtargets_mask) {
 
 //    cout << "labels size " << mp->labels.size() << endl;
 //    cout << "bbox_targets size " << mp->bbox_targets.size() << endl;
@@ -290,13 +286,15 @@ void localization::loader::load(char* buf, std::shared_ptr<localization::decoded
 //    self.dev_y_labels_flat[:] = label.reshape((1, -1))
 //    self.dev_y_labels_onehot[:] = self.be.onehot(self.dev_y_labels_flat, axis=0)
 //    self.dev_y_labels = self.dev_y_labels_onehot.reshape((-1, 1))
-    vector<float> dev_y_labels(total_anchors*2);
-    vector<float> dev_y_labels_mask(total_anchors*2);
-    vector<float> dev_y_bbtargets(total_anchors*4);
+    dev_y_labels.resize(total_anchors*2);
+    dev_y_labels_mask.resize(total_anchors*2);
+    dev_y_bbtargets.resize(total_anchors*4);
+    dev_y_bbtargets_mask.resize(total_anchors*4);
     int i;
     for(i = 0; i<total_anchors; i++) dev_y_labels[i] = 1;
     for(; i<dev_y_labels.size(); i++) dev_y_labels[i] = 0;
     fill_n(dev_y_labels_mask.begin(), dev_y_labels_mask.size(), 0);
+    fill_n(dev_y_bbtargets_mask.begin(), dev_y_bbtargets_mask.size(), 0.);
     for(int index : mp->anchor_index) {
         if(mp->labels[index] == 1) {
             dev_y_labels[index] = 0;
@@ -309,6 +307,11 @@ void localization::loader::load(char* buf, std::shared_ptr<localization::decoded
         dev_y_bbtargets[index+total_anchors]   = mp->bbox_targets[index].dy;
         dev_y_bbtargets[index+total_anchors*2] = mp->bbox_targets[index].dw;
         dev_y_bbtargets[index+total_anchors*3] = mp->bbox_targets[index].dh;
+
+        dev_y_bbtargets_mask[index]                 = 1.;
+        dev_y_bbtargets_mask[index+total_anchors]   = 1.;
+        dev_y_bbtargets_mask[index+total_anchors*2] = 1.;
+        dev_y_bbtargets_mask[index+total_anchors*3] = 1.;
     }
 //    for(int i=0; i<dev_y_labels.size(); i++) {
 //        cout << i << " [" << dev_y_labels[i] << "]" << endl;
@@ -338,16 +341,19 @@ void localization::loader::load(char* buf, std::shared_ptr<localization::decoded
 
 }
 
-//void localization::loader::fill_info(nervana::count_size_type* cst) {
-//    cst->count   = _load_count;
-//    cst->size    = _load_size;
-//    cst->type[0] = 'u';
-//}
+void localization::loader::load(char* buf, std::shared_ptr<localization::decoded> mp) {
+//    mp->labels;
+//    mp->bbox_targets;
+//    mp->anchor_index;
+//    mp->anchors;
 
+    vector<float> dev_y_labels(total_anchors*2);
+    vector<float> dev_y_labels_mask(total_anchors*2);
+    vector<float> dev_y_bbtargets(total_anchors*4);
+    vector<float> dev_y_bbtargets_mask(total_anchors*4);
 
-
-
-
+    build_output(mp, dev_y_labels, dev_y_labels_mask, dev_y_bbtargets, dev_y_bbtargets_mask);
+}
 
 
 localization::anchor::anchor(std::shared_ptr<const localization::config> _cfg) :
