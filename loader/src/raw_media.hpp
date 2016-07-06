@@ -45,11 +45,6 @@ public:
     virtual ~RawMedia() {
     }
 
-    void setChannels(int channels) {
-        // set the number of channels
-        _bufs.resize(channels);
-    }
-
     void reset() {
         // keep memory allocated, but start future data at index 0.
         _dataSize = 0;
@@ -73,6 +68,11 @@ public:
 
     int bytesPerSample() {
         return _bytesPerSample;
+    }
+
+    void setChannels(int channels) {
+        // set the number of channels
+        _bufs.resize(channels);
     }
 
     int channels() {
