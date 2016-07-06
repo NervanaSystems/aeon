@@ -29,9 +29,6 @@ public:
     }
 
     virtual ~RawMedia() {
-        for (uint i = 0; i < _bufs.size(); i++) {
-            delete[] _bufs[i];
-        }
     }
 
     void reset() {
@@ -39,8 +36,9 @@ public:
     }
 
     void addBufs(int count, int size) {
+        _bufs.resize(count);
         for (int i = 0; i < count; i++) {
-            _bufs.push_back(new char[size]);
+            _bufs[i].resize(size);
        }
         _bufSize = size;
     }
@@ -48,17 +46,14 @@ public:
     void fillBufs(char** frames, int frameSize) {
         // `frames` should contain one frame per channel of audio
         for (uint i = 0; i < _bufs.size(); i++) {
-            memcpy(_bufs[i] + _dataSize, frames[i], frameSize);
+            memcpy(_bufs[i].data() + _dataSize, frames[i], frameSize);
         }
         _dataSize += frameSize;
     }
 
     void growBufs(int grow) {
         for (uint i = 0; i < _bufs.size(); i++) {
-            char* buf = new char[_bufSize + grow];
-            memcpy(buf, _bufs[i], _dataSize);
-            delete[] _bufs[i];
-            _bufs[i] = buf;
+            _bufs[i].reserve(_bufSize + grow);
         }
         _bufSize += grow;
     }
@@ -72,7 +67,7 @@ public:
     }
 
     char* getBuf(int idx) {
-        return _bufs[idx];
+        return _bufs[idx].data();
     }
 
     int bufSize() {
@@ -92,7 +87,7 @@ public:
     }
 
 private:
-    vector<char*>               _bufs;
+    vector<vector<char>>        _bufs;
     int                         _bufSize;
     int                         _dataSize;
     int                         _bytesPerSample;
