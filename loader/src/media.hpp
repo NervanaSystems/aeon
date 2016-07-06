@@ -101,20 +101,6 @@ public:
         return dataSize() / bytesPerSample();
     }
 
-    void copyData(char* buf, int bufSize) {
-        if (_dataSize * (int) _bufs.size() > bufSize) {
-            std::stringstream ss;
-            ss << "Buffer too small to copy decoded data. Buffer size " <<
-                   bufSize << " Data size " << _dataSize * _bufs.size();
-            throw std::runtime_error(ss.str());
-        }
-
-        for (uint i = 0; i < _bufs.size(); i++) {
-            memcpy(buf, _bufs[i], _dataSize);
-            buf += _dataSize;
-        }
-    }
-
 private:
     vector<char*>               _bufs;
     int                         _bufSize;
