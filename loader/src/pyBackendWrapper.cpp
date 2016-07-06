@@ -1,38 +1,15 @@
 #include "pyBackendWrapper.hpp"
-using namespace nervana;
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
-static std::map<char, int> npy_type_map = {{NPY_BOOLLTR, NPY_BOOL},
-                                           {NPY_BYTELTR, NPY_BYTE},
-                                           {NPY_UBYTELTR, NPY_UBYTE},
-                                           {NPY_SHORTLTR, NPY_SHORT},
-                                           {NPY_USHORTLTR, NPY_USHORT},
-                                           {NPY_INTLTR, NPY_INT},
-                                           {NPY_UINTLTR, NPY_UINT},
-                                           {NPY_LONGLTR, NPY_LONG},
-                                           {NPY_ULONGLTR, NPY_ULONG},
-                                           {NPY_LONGLONGLTR, NPY_LONGLONG},
-                                           {NPY_ULONGLONGLTR, NPY_ULONGLONG},
-                                           {NPY_HALFLTR, NPY_HALF},
-                                           {NPY_FLOATLTR, NPY_FLOAT},
-                                           {NPY_DOUBLELTR, NPY_DOUBLE},
-                                           {NPY_LONGDOUBLELTR, NPY_LONGDOUBLE},
-                                           {NPY_CFLOATLTR, NPY_CFLOAT},
-                                           {NPY_CDOUBLELTR, NPY_CDOUBLE},
-                                           {NPY_CLONGDOUBLELTR, NPY_CLONGDOUBLE},
-                                           {NPY_OBJECTLTR, NPY_OBJECT},
-                                           {NPY_STRINGLTR, NPY_STRING},
-                                           {NPY_STRINGLTR2, NPY_STRING},
-                                           {NPY_UNICODELTR, NPY_UNICODE},
-                                           {NPY_VOIDLTR, NPY_VOID},
-                                           {NPY_DATETIMELTR, NPY_DATETIME},
-                                           {NPY_TIMEDELTALTR, NPY_TIMEDELTA},
-                                           {NPY_CHARLTR, NPY_CHAR}};
+using namespace nervana;
+using namespace std;
 
 pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
-                                   count_size_type* dtmInfo,
-                                   count_size_type* tgtInfo,
+                                   std::shared_ptr<nervana::interface::config> dtm_config,
+                                   std::shared_ptr<nervana::interface::config> tgt_config,
                                    int batchSize)
-: _dtmInfo(dtmInfo), _tgtInfo(tgtInfo), _batchSize(batchSize), _pBackend(pBackend)
+: _dtm_config(dtm_config), _tgt_config(tgt_config), _batchSize(batchSize), _pBackend(pBackend)
 {
     if (_pBackend == NULL) {
         throw std::runtime_error("Python Backend object does not exist");
@@ -106,8 +83,8 @@ void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    wrap_buffer_pool(_host_dlist, outBuf.first, bufIdx, _dtmInfo);
-    wrap_buffer_pool(_host_tlist, outBuf.second, bufIdx, _tgtInfo);
+    wrap_buffer_pool(_host_dlist, outBuf.first, bufIdx, _dtm_config);
+    wrap_buffer_pool(_host_tlist, outBuf.second, bufIdx, _tgt_config);
 
     PyObject* dArgs  = Py_BuildValue("iOO", bufIdx, _host_dlist, _dev_dlist);
 
@@ -146,7 +123,7 @@ PyObject* pyBackendWrapper::get_dtm_tgt_pair(int bufIdx)
 }
 
 void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
-                                        count_size_type *typeInfo)
+                                        const shared_ptr<nervana::interface::config> &cfg)
 {
     PyObject *hdItem = PyList_GetItem(list, bufIdx);
 
@@ -157,11 +134,14 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
         return;
     }
 
+    // For now, we will collapse everything into two dimensions
+    int all_dims = std::accumulate(cfg->get_shape().begin(),
+                                   cfg->get_shape().end(),
+                                   1, std::multiplies<uint32_t>());
     int nd = 2;
-    npy_intp dims[2] = {_batchSize, typeInfo->count};
-    int nptype  = npy_type_map[typeInfo->type[0]];
+    npy_intp dims[2] = {_batchSize, all_dims};
 
-    PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, nptype,
+    PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, cfg->get_type().np_type,
                                                   static_cast<void *>(buf->_data));
     if (p_array == NULL) {
         throw std::runtime_error("Unable to wrap buffer pool in as python object");

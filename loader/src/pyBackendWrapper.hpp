@@ -1,8 +1,7 @@
 #pragma once
 #include <map>
+#include "etl_interface.hpp"
 #include <Python.h>
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
 
 #include <assert.h>
 #include "buffer.hpp"
@@ -10,22 +9,26 @@
 
 class pyBackendWrapper {
 public:
-    pyBackendWrapper(PyObject*, nervana::count_size_type*, nervana::count_size_type*, int);
+    pyBackendWrapper(PyObject*,
+                     std::shared_ptr<nervana::interface::config>,
+                     std::shared_ptr<nervana::interface::config>,
+                     int);
+
     bool use_pinned_memory();
     void call_backend_transfer(BufferPair &outBuf, int bufIdx);
     PyObject* get_dtm_tgt_pair(int bufIdx);
 
     ~pyBackendWrapper();
 
-    nervana::count_size_type*   _dtmInfo;
-    nervana::count_size_type*   _tgtInfo;
+    std::shared_ptr<nervana::interface::config>   _dtm_config;
+    std::shared_ptr<nervana::interface::config>   _tgt_config;
     int                         _batchSize;
 
 private:
     pyBackendWrapper() {};
     PyObject* initPyList(int length=2);
     void wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
-                          nervana::count_size_type *typeInfo);
+                          const std::shared_ptr<nervana::interface::config>& config);
 
     PyObject*                   _pBackend;
 

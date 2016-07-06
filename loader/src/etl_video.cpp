@@ -143,11 +143,6 @@ std::shared_ptr<video::decoded> video::transformer::transform(
     ));
 }
 
-video::loader::loader(shared_ptr<const video::config> cfg)
-{
-    _load_count = cfg->width * cfg->height * cfg->channels * cfg->num_frames;
-}
-
 void video::loader::load(char* outbuf, shared_ptr<video::decoded> input)
 {
     // loads in channel x depth(frame) x height x width

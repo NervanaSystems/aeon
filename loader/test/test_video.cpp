@@ -42,8 +42,7 @@ TEST(etl, video_extract_transform) {
     // transform
     video::transformer transformer = video::transformer(config);
 
-    std::default_random_engine dre;
-    image::param_factory factory(config, dre);
+    image::param_factory factory(config);
     auto imageParams = factory.make_params(decoded_vid);
 
     imageParams->output_size = cv::Size2i(width/2, height/2);
@@ -73,8 +72,7 @@ TEST(etl, video_image_transform) {
 
     image::transformer _imageTransformer(config);
 
-    std::default_random_engine dre;
-    image::param_factory factory(config, dre);
+    image::param_factory factory(config);
     auto imageParams = factory.make_params(decoded_image);
     imageParams->output_size = cv::Size2i(width/2, height/2);
 

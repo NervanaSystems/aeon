@@ -28,7 +28,8 @@ SRCS := \
     test_lmap.cpp \
     test_provider.cpp \
     test_util.cpp \
-	test_video.cpp \
+    test_video.cpp \
+    test_types.cpp \
     manifest_test.cpp \
     manifest_maker.cpp \
     batch_file_loader_test.cpp \
@@ -42,8 +43,8 @@ SRCS := \
 
 TOBJS            = $(subst .cpp,.o,$(SRCS))
 OBJS             = $(subst .c,.o,$(TOBJS))
-CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=gnu11 -DCURDIR=\"$(CURDIR)\"
-CXXFLAGS        := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -DCURDIR=\"$(CURDIR)\"
+CFLAGS          := -Wall -Wno-deprecated-declarations -O0 -g -std=gnu11 -DCURDIR=\"$(CURDIR)\"
+CXXFLAGS        := -Wall -Wno-deprecated-declarations -O0 -g -std=c++11 -DCURDIR=\"$(CURDIR)\"
 CFLAGSDBG       := -g -Wall -O0 -std=c++11
 CC              := clang++
 UNAME_S         := $(shell uname -s)
@@ -83,6 +84,10 @@ MEDIAFLAGS      := $(IMGFLAG) $(VIDFLAG) $(AUDFLAG)
 LDIR            := $(IMGLDIR) $(VIDLDIR)
 LIBS            := $(IMGLIBS) $(VIDLIBS) -lgtest -lpthread
 INC             := $(INC) -I../src
+
+
+INC             := $(INC) -I$(VIRTUAL_ENV)/include/python2.7/
+LIBS            := $(LIBS) -lpython2.7
 
 ifeq ($(HAS_GPU), true)
 ifeq ($(CUDA_ROOT),)

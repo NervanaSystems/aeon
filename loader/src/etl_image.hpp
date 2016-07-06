@@ -2,7 +2,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-
+#include <chrono>
 #include "etl_interface.hpp"
 #include "params.hpp"
 
@@ -49,25 +49,13 @@ namespace nervana {
         params() {}
     };
 
-    class image::param_factory : public interface::param_factory<image::decoded, image::params> {
-    public:
-        param_factory(std::shared_ptr<image::config> cfg,
-                      std::default_random_engine& dre) : _cfg{cfg}, _dre{dre} {}
-        ~param_factory() {}
-
-        std::shared_ptr<image::params> make_params(std::shared_ptr<const image::decoded> input);
-    private:
-        void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
-
-        std::shared_ptr<image::config> _cfg;
-        std::default_random_engine& _dre;
-    };
-
-    class image::config : public json_config_parser {
+    class image::config : public interface::config {
         friend class video::config;
     public:
-        int height;
-        int width;
+        uint32_t height;
+        uint32_t width;
+
+        int32_t seed = 0; // Default is to seed deterministically
 
         std::uniform_real_distribution<float> scale{1.0f, 1.0f};
         std::uniform_int_distribution<int>    angle{0, 0};
@@ -77,14 +65,19 @@ namespace nervana {
         std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
         std::bernoulli_distribution           flip{0};
 
+        std::string type_string{"uint8_t"};
         bool do_area_scale = false;
         bool channel_major = true;
-        int channels = 3;
+        uint32_t channels = 3;
 
         bool set_config(nlohmann::json js) override
         {
             parse_req(height, "height", js);
             parse_req(width, "width", js);
+
+            parse_opt(seed, "seed", js);
+
+            parse_opt(type_string, "type_string", js);
 
             parse_opt(do_area_scale, "do_area_scale", js);
             parse_opt(channels, "channels", js);
@@ -98,15 +91,56 @@ namespace nervana {
             parse_dist(photometric, "photometric", dist_params);
             parse_dist(crop_offset, "crop_offset", dist_params);
             parse_dist(flip, "flip", dist_params);
+
+            // Now fill in derived
+            otype = nervana::output_type(type_string);
+            if (type_string != "uint8_t") {
+                throw std::runtime_error("Invalid load type for images " + type_string);
+            }
+
+            if (channel_major) {
+                shape = std::vector<uint32_t> {channels, height, width};
+            } else{
+                shape = std::vector<uint32_t> {height, width, channels};
+            }
+
+
             return validate();
         }
 
-        virtual int num_crops() const { return 1; }
-
     private:
         bool validate() {
-            return crop_offset.param().a() <= crop_offset.param().b();
+            bool result = true;
+
+            result &= crop_offset.param().a() <= crop_offset.param().b();
+            result &= width > 0;
+            result &= height > 0;
+
+            return result;
         }
+    };
+
+
+    class image::param_factory : public interface::param_factory<image::decoded, image::params> {
+    public:
+        param_factory(std::shared_ptr<image::config> cfg) : _cfg{cfg}, _dre{0}
+        {
+            // A positive provided seed means to run deterministic with that seed
+            if (_cfg->seed >= 0) {
+                _dre.seed((uint32_t) _cfg->seed);
+            } else {
+                _dre.seed(std::chrono::system_clock::now().time_since_epoch().count());
+
+            }
+        }
+        ~param_factory() {}
+
+        std::shared_ptr<image::params> make_params(std::shared_ptr<const image::decoded> input);
+    private:
+        void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
+
+        std::shared_ptr<image::config> _cfg;
+        std::default_random_engine _dre;
     };
 
 // ===============================================================================================
@@ -223,10 +257,13 @@ namespace nervana {
                 offsets.push_back(cv::Point2f(1.0, 1.0)); // SE
             }
             output_size = cv::Size2i(height, width);
+
+            // shape is going to be different because of multiple images
+            uint32_t num_views = crops_per_scale * multicrop_scales.size() * (include_flips ? 2 : 1);
+            shape.insert(shape.begin(), num_views);
+
             return validate();
         }
-
-        int num_crops() const override { return static_cast<int>(multicrop_scales.size()); }
 
     private:
         bool validate()
@@ -258,21 +295,12 @@ namespace nervana {
 
     class image::loader : public interface::loader<image::decoded> {
     public:
-        loader(std::shared_ptr<const image::config>);
+        loader(std::shared_ptr<image::config> cfg) : _cfg{cfg} {}
         ~loader() {}
         virtual void load(char*, std::shared_ptr<image::decoded>) override;
 
-        void fill_info(count_size_type* cst) override
-        {
-            cst->count   = _load_count;
-            cst->size    = _load_size;
-            cst->type[0] = 'B';
-        }
-
     private:
-        size_t _load_count;
-        size_t _load_size;
+        std::shared_ptr<image::config> _cfg;
         void split(cv::Mat&, char*);
-        bool _channel_major;
     };
 }

@@ -30,8 +30,6 @@ public:
         return optr;
     }
 
-    const std::shared_ptr<interface::loader<T>> get_loader() { return _loader; }
-
     std::shared_ptr<interface::extractor<T>>        _extractor;
     std::shared_ptr<interface::transformer<T, S>>   _transformer;
     std::shared_ptr<interface::loader<T>>           _loader;
@@ -41,21 +39,11 @@ public:
 class nervana::train_base {
 public:
     virtual void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) = 0;
-    virtual void fill_dtm_load_info(nervana::count_size_type* d) = 0;
-    virtual void fill_tgt_load_info(nervana::count_size_type* t) = 0;
 };
 
 template<typename D, typename T> class nervana::train_provider : public train_base {
 public:
     train_provider() {}
-    train_provider(const std::string& datum_cfg, const std::string& tgt_cfg) {
-        _dprov = std::make_shared<D>(datum_cfg);
-        _tprov = std::make_shared<T>(tgt_cfg);
-    }
-
-    void fill_dtm_load_info(count_size_type* d) override { _dprov->get_loader()->fill_info(d); }
-    void fill_tgt_load_info(count_size_type* t) override { _tprov->get_loader()->fill_info(t); }
-
     void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) override
     {
         int dsz_in, tsz_in;

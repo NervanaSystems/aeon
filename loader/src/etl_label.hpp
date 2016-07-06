@@ -14,13 +14,18 @@ namespace nervana {
         class loader;
     }
 
-    class label::config : public json_config_parser {
+    class label::config : public interface::config {
     public:
         bool binary = true;
+        std::string type_string{"uint32_t"};
 
         bool set_config(nlohmann::json js) override
         {
             parse_opt(binary, "binary", js);
+            parse_opt(type_string, "type_string", js);
+
+            otype = nervana::output_type(type_string);
+            shape = std::vector<uint32_t> {1};
             return true;
         }
     };
@@ -83,21 +88,15 @@ namespace nervana {
 
     class label::loader : public interface::loader<label::decoded> {
     public:
-        loader(std::shared_ptr<const label::config> = nullptr) {}
+        loader(std::shared_ptr<label::config> cfg) : _cfg{cfg} {}
         ~loader() {}
-
-        void fill_info(count_size_type* cst) override
-        {
-            cst->count   = 1;
-            cst->size    = 4;
-            cst->type[0] = 'i';
-        }
 
         void load(char* buf, std::shared_ptr<label::decoded> mp) override
         {
             int index = mp->get_index();
-            memcpy(buf, &index, sizeof(int32_t));
+            memcpy(buf, &index, _cfg->get_type().size);
         }
-
+    private:
+        std::shared_ptr<label::config> _cfg;
     };
 }

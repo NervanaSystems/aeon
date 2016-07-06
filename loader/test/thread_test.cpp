@@ -37,7 +37,10 @@ void single(simple_loader* loader, int epochCount, int minibatchCount,
     // BatchIterator* reader = loader;
 //    string configString = R"({"media":"image","config":{}})";
 //    auto js = nlohmann::json::parse(configString);
-    nlohmann::json js = {{"media","image"},{"data_config",{{"height",128},{"width",128}}},{"target_config",{}}};
+    nlohmann::json js = {{"media","image_label"},
+                         {"data_config", {{"type", "image"}, {"config", {{"height",128},{"width",128}}}}},
+                         {"target_config", {{"type", "label"}, {"config", {}}}}};
+
     cout << js.dump(4) << endl;
     shared_ptr<nervana::train_base> media = nervana::train_provider_factory::create(js);
     cout << __FILE__ << " " << __LINE__ << endl;

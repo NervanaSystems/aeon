@@ -85,7 +85,7 @@ endif
 	LIBS        := -lcuda -lcudart $(LIBS)
 endif
 
-INC             := -I/home/users/alex/Code/neon/.venv2/include/python2.7/ $(INC)
+INC             := -I$(VIRTUAL_ENV)/include/python2.7/ $(INC)
 LIBS            := -lpython2.7 $(LIBS)
 
 .PHONY: clean

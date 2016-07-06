@@ -40,6 +40,7 @@ public:
 
 class nervana::json_config_parser {
 public:
+
     // pass json by value so set_config gets a non-const copy
     virtual bool set_config(nlohmann::json js) = 0;
 
