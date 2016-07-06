@@ -39,8 +39,8 @@ pyDecodeThreadPool::pyDecodeThreadPool(int count,
 {
     _batchSize = _pbe->_batchSize;
     _itemsPerThread = (_batchSize - 1) / _count + 1;
-    _datumLen = _pbe->_dtmInfo->size * _pbe->_dtmInfo->count;
-    _targetLen = _pbe->_tgtInfo->size * _pbe->_tgtInfo->count;
+    _datumLen = _pbe->_dtm_config->get_size_bytes();
+    _targetLen = _pbe->_tgt_config->get_size_bytes();
 
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
@@ -242,8 +242,9 @@ void ReadThread::work(int id)
 PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
 : _pbe(pbe)
 {
-    _lcfg = make_shared<pyLoaderConfig>();
     _lcfg_json = nlohmann::json::parse(pyloaderConfigString);
+
+    _lcfg = make_shared<pyLoaderConfig>();
     _lcfg->set_config(_lcfg_json);
 
     _batchSize = _lcfg->minibatch_size;
@@ -264,16 +265,15 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
                                                               _manifest->version(),
                                                               batchFileLoader);
     if (_lcfg->shuffle_every_epoch) {
-        _batch_iterator = make_shared<ShuffledBatchIterator>(batchFileLoader,
+        _batch_iterator = make_shared<ShuffledBatchIterator>(batchCacheLoader,
                                                              _lcfg->macrobatch_size,
                                                              _lcfg->random_seed);
     } else {
-        _batch_iterator = make_shared<SequentialBatchIterator>(batchFileLoader,
+        _batch_iterator = make_shared<SequentialBatchIterator>(batchCacheLoader,
                                                                _lcfg->macrobatch_size);
     }
 
-    _batch_iterator = make_shared<MinibatchIterator>(_batch_iterator,
-                                                     _lcfg->minibatch_size);
+    _batch_iterator = make_shared<MinibatchIterator>(_batch_iterator, _lcfg->minibatch_size);
 }
 
 int PyLoader::start()
@@ -285,31 +285,26 @@ int PyLoader::start()
         int nthreads       = (_batchSize - 1) / itemsPerThread + 1;
         nthreads           = std::min(nthreads, _batchSize);
 
-        auto prov = nervana::train_provider_factory::create(_lcfg_json);
-        prov->fill_dtm_load_info(&_dtmInfo);
-        prov->fill_tgt_load_info(&_tgtInfo);
-
-        int dtmLen = _dtmInfo.size * _dtmInfo.count;
-        int tgtLen = _tgtInfo.size * _tgtInfo.count;
-
-        int dataLen   = dtmLen * _batchSize;
-        int targetLen = tgtLen * _batchSize;
+        _dtm_config = nervana::config_factory::create(_lcfg_json["data_config"]);
+        _tgt_config = nervana::config_factory::create(_lcfg_json["target_config"]);
 
         // Bind the python backend here
-        _pyBackend = make_shared<pyBackendWrapper>(_pbe, &_dtmInfo, &_tgtInfo, _batchSize);
+        _pyBackend = make_shared<pyBackendWrapper>(_pbe, _dtm_config, _tgt_config, _batchSize);
 
         // Start the read buffers off with a reasonable size. They will get resized as needed.
-        _readBufs = make_shared<BufferPool>(dataLen / 8, targetLen);
+        _readBufs = make_shared<BufferPool>(_dtm_config->get_size_bytes() * _batchSize / 8,
+                                            _tgt_config->get_size_bytes() * _batchSize);
         _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
 
-        _decodeBufs = make_shared<BufferPool>(dataLen, targetLen, _pyBackend->use_pinned_memory());
+        _decodeBufs = make_shared<BufferPool>(_dtm_config->get_size_bytes() * _batchSize,
+                                              _tgt_config->get_size_bytes() * _batchSize,
+                                              _pyBackend->use_pinned_memory());
+
         _decodeThreads = unique_ptr<pyDecodeThreadPool>(
                             new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs, _pyBackend));
-        printf("**Marker %s at %s:%d \n", __PRETTY_FUNCTION__, __FILE__, __LINE__);
 
-        // Now add on the already created provider and add on the additional ones
-        _decodeThreads->add_provider(prov);
-        for (int i=1; i<nthreads; i++) {
+        // Now add providers
+        for (int i=0; i<nthreads; i++) {
             _decodeThreads->add_provider(nervana::train_provider_factory::create(_lcfg_json));
         }
 

@@ -27,7 +27,7 @@ public:
 
 std::ostream& operator<<(std::ostream&,const nervana::bbox::box&);
 
-class nervana::bbox::config : public json_config_parser {
+class nervana::bbox::config : public nervana::interface::config {
 public:
     std::unordered_map<std::string,int> label_map;
 
@@ -86,15 +86,4 @@ public:
     loader();
     virtual ~loader(){}
     virtual void load(char*, std::shared_ptr<bbox::decoded>) override;
-
-    void fill_info(count_size_type* cst) override
-    {
-        cst->count   = _load_count;
-        cst->size    = _load_size;
-        cst->type[0] = 'f';
-    }
-
-private:
-    size_t _load_count;
-    size_t _load_size;
 };

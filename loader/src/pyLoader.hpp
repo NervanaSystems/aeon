@@ -179,8 +179,9 @@ private:
     std::shared_ptr<BatchIterator>      _batch_iterator = nullptr;
     std::shared_ptr<Manifest>           _manifest = nullptr;
 
-    nervana::count_size_type            _dtmInfo;
-    nervana::count_size_type            _tgtInfo;
+    std::shared_ptr<nervana::interface::config> _dtm_config;
+    std::shared_ptr<nervana::interface::config> _tgt_config;
+
     int                                 _batchSize;
     std::shared_ptr<pyLoaderConfig>     _lcfg;
     nlohmann::json                      _lcfg_json;

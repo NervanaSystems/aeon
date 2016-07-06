@@ -284,13 +284,6 @@ void multicrop::transformer::add_resized_crops(
     }
 }
 
-image::loader::loader(shared_ptr<const image::config> cfg)
-{
-    _channel_major = cfg->channel_major;
-    _load_size     = 1;
-    _load_count    = cfg->width * cfg->height * cfg->channels * cfg->num_crops();
-}
-
 void image::loader::load(char* outbuf, shared_ptr<image::decoded> input)
 {
     // TODO: Generalize this to also handle multi_crop case
@@ -300,7 +293,7 @@ void image::loader::load(char* outbuf, shared_ptr<image::decoded> input)
     for (int i=0; i < input->get_image_count(); i++) {
         auto outbuf_i = outbuf + (i * image_size);
 
-        if (_channel_major) {
+        if (_cfg->channel_major) {
             this->split(img, outbuf_i);
         } else {
             memcpy(outbuf_i, img.data, image_size);

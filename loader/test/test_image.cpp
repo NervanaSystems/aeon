@@ -248,8 +248,7 @@ TEST(etl, image_transform_crop) {
     image::extractor ext{config_ptr};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
-    std::default_random_engine dre;
-    image::param_factory factory(config_ptr, dre);
+    image::param_factory factory(config_ptr);
 
     image_params_builder builder(factory.make_params(decoded));
     shared_ptr<image::params> params_ptr = builder.cropbox( 100, 150, 20, 30 ).output_size(20, 30);
@@ -277,8 +276,7 @@ TEST(etl, image_transform_flip) {
     image::extractor ext{config_ptr};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
-    std::default_random_engine dre;
-    image::param_factory factory(config_ptr, dre);
+    image::param_factory factory(config_ptr);
 
     image_params_builder builder(factory.make_params(decoded));
     shared_ptr<image::params> params_ptr = builder.cropbox( 100, 150, 20, 20 ).output_size(20, 20).flip(true);

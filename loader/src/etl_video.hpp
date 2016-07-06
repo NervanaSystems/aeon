@@ -48,12 +48,14 @@ namespace nervana {
 
     class video::config : public nervana::image::config {
     public:
-        int num_frames;
+        uint32_t num_frames;
 
         bool set_config(nlohmann::json js) override
         {
             image::config::set_config(js);
             parse_req(num_frames, "num_frames", js);
+            shape.insert(shape.begin() + 1, num_frames); // This is for the depth after channels
+
             return validate();
         }
     };
@@ -105,19 +107,11 @@ namespace nervana {
 
     class video::loader : public interface::loader<video::decoded> {
     public:
-        loader(std::shared_ptr<const video::config>);
+        loader(std::shared_ptr<const video::config>) {}
         ~loader() {}
         virtual void load(char*, std::shared_ptr<video::decoded>) override;
 
-        void fill_info(count_size_type* cst) override
-        {
-            cst->count   = _load_count;
-            cst->size    = 1;
-            cst->type[0] = 'u';
-        }
-
     private:
-        size_t _load_count;
         void split(cv::Mat&, char*);
     };
 }

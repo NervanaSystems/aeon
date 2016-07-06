@@ -19,6 +19,8 @@ bool nervana::bbox::config::set_config(nlohmann::json js)
     for( int i=0; i<label_list.size(); i++ ) {
         label_map.insert({label_list[i],i});
     }
+    // TODO -- need to fill in the shape and type information here
+
     return validate();
 }
 

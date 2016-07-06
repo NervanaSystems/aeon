@@ -28,7 +28,8 @@ SRCS := \
     test_lmap.cpp \
     test_provider.cpp \
     test_util.cpp \
-	test_video.cpp \
+    test_video.cpp \
+    test_types.cpp \
     manifest_test.cpp \
     manifest_maker.cpp \
     batch_file_loader_test.cpp \
@@ -85,6 +86,10 @@ MEDIAFLAGS      := $(IMGFLAG) $(VIDFLAG) $(AUDFLAG)
 LDIR            := $(IMGLDIR) $(VIDLDIR)
 LIBS            := $(IMGLIBS) $(VIDLIBS) -lgtest -lpthread
 INC             := $(INC) -I../src
+
+
+INC             := $(INC) -I$(VIRTUAL_ENV)/include/python2.7/
+LIBS            := $(LIBS) -lpython2.7
 
 ifeq ($(HAS_GPU), true)
 ifeq ($(CUDA_ROOT),)
