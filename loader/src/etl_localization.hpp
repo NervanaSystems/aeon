@@ -171,7 +171,7 @@ namespace nervana {
         virtual ~loader() {}
 
         void load(char* buf, std::shared_ptr<localization::decoded> mp) override;
-        void fill_info(nervana::count_size_type*) override;
+//        void fill_info(nervana::count_size_type*) override;
     private:
         size_t _load_count;
         size_t _load_size;

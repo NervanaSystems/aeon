@@ -88,7 +88,8 @@ LIBS            := $(IMGLIBS) $(VIDLIBS) -lgtest -lpthread
 INC             := $(INC) -I../src
 
 
-INC             := $(INC) -I$(VIRTUAL_ENV)/include/python2.7/
+INC             := -I$(shell python -c "from distutils.sysconfig import get_python_inc; print get_python_inc()") $(INC)
+INC             := -I$(shell python -c "import numpy; print numpy.get_include()") $(INC)
 LIBS            := $(LIBS) -lpython2.7
 
 ifeq ($(HAS_GPU), true)

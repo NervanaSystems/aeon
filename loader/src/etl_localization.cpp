@@ -338,11 +338,11 @@ void localization::loader::load(char* buf, std::shared_ptr<localization::decoded
 
 }
 
-void localization::loader::fill_info(nervana::count_size_type* cst) {
-    cst->count   = _load_count;
-    cst->size    = _load_size;
-    cst->type[0] = 'u';
-}
+//void localization::loader::fill_info(nervana::count_size_type* cst) {
+//    cst->count   = _load_count;
+//    cst->size    = _load_size;
+//    cst->type[0] = 'u';
+//}
 
 
 

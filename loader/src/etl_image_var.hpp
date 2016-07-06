@@ -128,12 +128,12 @@ namespace nervana {
         ~loader() {}
         virtual void load(char*, std::shared_ptr<image_var::decoded>) override;
 
-        void fill_info(count_size_type* cst) override
-        {
-            cst->count   = _load_count;
-            cst->size    = _load_size;
-            cst->type[0] = 'u';
-        }
+//        void fill_info(count_size_type* cst) override
+//        {
+//            cst->count   = _load_count;
+//            cst->size    = _load_size;
+//            cst->type[0] = 'u';
+//        }
 
     private:
         size_t _load_count;
