@@ -43,8 +43,8 @@ SRCS := \
 
 TOBJS            = $(subst .cpp,.o,$(SRCS))
 OBJS             = $(subst .c,.o,$(TOBJS))
-CFLAGS          := -Wall -Wno-deprecated-declarations -O0 -g -std=gnu11 -DCURDIR=\"$(CURDIR)\"
-CXXFLAGS        := -Wall -Wno-deprecated-declarations -O0 -g -std=c++11 -DCURDIR=\"$(CURDIR)\"
+CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=gnu11 -DCURDIR=\"$(CURDIR)\"
+CXXFLAGS        := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -DCURDIR=\"$(CURDIR)\"
 CFLAGSDBG       := -g -Wall -O0 -std=c++11
 CC              := clang++
 UNAME_S         := $(shell uname -s)
