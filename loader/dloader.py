@@ -13,11 +13,12 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------
 import ctypes as ct
-import numpy as np
 import os
 import atexit
 
+
 class DataLoader(object):
+
     """
     Encapsulates the data loader library and exposes an API to iterate over
     generic data (images, video or audio given in compressed form). An index
@@ -46,10 +47,10 @@ class DataLoader(object):
 
         # Launch background threads
         self.loader = self.loaderlib.start(
-                ct.byref(self.item_count),
-                ct.c_char_p(loader_cfg_string),
-                ct.py_object(backend)
-                )
+            ct.byref(self.item_count),
+            ct.c_char_p(loader_cfg_string),
+            ct.py_object(backend)
+        )
 
         self.ndata = self.item_count.value
         if self.loader is None:
@@ -87,7 +88,9 @@ class DataLoader(object):
         if end == self.ndata:
             self.start_idx = self.batch_size - (self.ndata - start)
 
-        (data, targets) = self.loaderlib.next(self.loader, ct.c_int(self.buffer_id))
+        (data, targets) = self.loaderlib.next(
+            self.loader, ct.c_int(self.buffer_id)
+        )
 
         # Toggle buffer_id between 0 and 1
         self.buffer_id = 1 - self.buffer_id
