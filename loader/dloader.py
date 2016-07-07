@@ -43,14 +43,14 @@ class DataLoader(object):
         self.item_count = ct.c_int(0)
         self.buffer_id, self.start_idx = 0, 0
 
-        self.load_library()
+        self._load_library()
 
         # Launch background threads
         self.loader = self._start(loader_cfg_string, backend)
 
         atexit.register(self._stop, self)
 
-    def load_library(self):
+    def _load_library(self):
         path = os.path.dirname(os.path.realpath(__file__))
         libpath = os.path.join(path, 'bin', 'loader.so')
         self.loaderlib = ct.cdll.LoadLibrary(libpath)
