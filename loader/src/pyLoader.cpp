@@ -133,8 +133,8 @@ void pyDecodeThreadPool::work(int id)
 
     // No locking required because threads write into non-overlapping regions.
     BufferPair& outBuf = _out->getForWrite();
-    char* dataBuf      = outBuf.first->_data + _dataOffsets[id];
-    char* targetBuf    = outBuf.second->_data + _targetOffsets[id];
+    char* dataBuf      = outBuf[0]->_data + _dataOffsets[id];
+    char* targetBuf    = outBuf[1]->_data + _targetOffsets[id];
 
     for (int i = _startInds[id]; i < _endInds[id]; i++) {
         _providers[id]->provide_pair(i, _inputBuf, dataBuf, targetBuf);

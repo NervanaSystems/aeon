@@ -61,8 +61,8 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(BufferPair& dest, uint block_num, 
     }
     // load cpio file into dest one item at a time
     for(int i=0; i < reader.itemCount(); ++i) {
-        reader.read(*dest.first);
-        reader.read(*dest.second);
+        reader.read(*dest[0]);
+        reader.read(*dest[1]);
     }
 
     reader.close();
@@ -77,16 +77,16 @@ void BatchLoaderCPIOCache::writeBlockToCache(BufferPair& buff, uint block_num, u
     writer.open(blockFilename(block_num, block_size));
 
     // would be nice if this was taken care of the BufferPair
-    assert(buff.first->getItemCount() == buff.second->getItemCount());
+    assert(buff[0]->getItemCount() == buff[1]->getItemCount());
 
-    for(int i=0; i < buff.first->getItemCount(); ++i) {
+    for(int i=0; i < buff[0]->getItemCount(); ++i) {
         // TODO: standardize on name object/datum
         // TODO: standardize on size type int returned from getItem but
         // uint desired from writeItem
         int datum_len;
-        char* datum = buff.first->getItem(i, datum_len);
+        char* datum = buff[0]->getItem(i, datum_len);
         int target_len;
-        char* target = buff.second->getItem(i, target_len);
+        char* target = buff[1]->getItem(i, target_len);
 
         writer.writeItem(datum, target, datum_len, target_len);
     }

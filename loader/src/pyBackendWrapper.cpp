@@ -83,8 +83,8 @@ void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    wrap_buffer_pool(_host_dlist, outBuf.first, bufIdx, _dtm_config);
-    wrap_buffer_pool(_host_tlist, outBuf.second, bufIdx, _tgt_config);
+    wrap_buffer_pool(_host_dlist, outBuf[0], bufIdx, _dtm_config);
+    wrap_buffer_pool(_host_tlist, outBuf[1], bufIdx, _tgt_config);
 
     PyObject* dArgs  = Py_BuildValue("iOO", bufIdx, _host_dlist, _dev_dlist);
 

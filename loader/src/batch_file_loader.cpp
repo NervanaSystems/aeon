@@ -71,8 +71,8 @@ void BatchFileLoader::loadBlock(BufferPair& dest, uint block_num, uint block_siz
         // files from a network like s3 it may make sense to use multiple
         // threads to make loads faster.  multiple threads would only
         // slow down reads from a magnetic disk.
-        loadFile(dest.first, it->first);
-        loadFile(dest.second, it->second);
+        loadFile(dest[0], it->first);
+        loadFile(dest[1], it->second);
     }
 }
 

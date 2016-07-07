@@ -31,8 +31,8 @@ void ShuffledBatchIterator::read(BufferPair &dest) {
     // to ensure that the buffer shuffles are deterministic wrt the input seed.
     // HACK: pass the same seed to both shuffles to ensure that both buffers
     // are shuffled in the same order.
-    dest.first->shuffle(_seed + _epoch);
-    dest.second->shuffle(_seed + _epoch);
+    dest[0]->shuffle(_seed + _epoch);
+    dest[1]->shuffle(_seed + _epoch);
 
     ++_it;
 

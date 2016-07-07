@@ -37,14 +37,14 @@ TEST(minibatch_iterator, simple) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp = make_pair(dataBuffer, targetBuffer);
+    BufferPair bp(dataBuffer, targetBuffer);
 
     // read 6 minibatches
     for(int i = 0; i < 6; ++i) {
         mi.read(bp);
     }
 
-    vector<string> words = buffer_to_vector_of_strings(*bp.first);
+    vector<string> words = buffer_to_vector_of_strings(*bp[0]);
 
     ASSERT_EQ(sorted(words), true);
 

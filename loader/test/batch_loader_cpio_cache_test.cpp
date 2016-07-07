@@ -36,10 +36,10 @@ public:
         std::random_device engine;
 
         string object = randomString();
-        dest.first->read(object.c_str(), object.length());
+        dest[0]->read(object.c_str(), object.length());
 
         string target = randomString();
-        dest.second->read(target.c_str(), target.length());
+        dest[1]->read(target.c_str(), target.length());
     };
 
     uint objectCount() {
@@ -52,12 +52,12 @@ string load_string(BatchLoaderCPIOCache cache) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp = make_pair(dataBuffer, targetBuffer);
+    BufferPair bp(dataBuffer, targetBuffer);
 
     cache.loadBlock(bp, 1, 1);
 
     int len;
-    char* x = bp.first->getItem(0, len);
+    char* x = bp[0]->getItem(0, len);
     string str(x, len);
     return str;
 }

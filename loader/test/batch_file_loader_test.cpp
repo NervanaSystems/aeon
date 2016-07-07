@@ -34,12 +34,12 @@ TEST(blocked_file_loader, loadBlock) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp = make_pair(dataBuffer, targetBuffer);
+    BufferPair bp(dataBuffer, targetBuffer);
 
     bfl.loadBlock(bp, 0, block_size);
 
-    uint* object_data = (uint*)bp.first->_data;
-    uint* target_data = (uint*)bp.second->_data;
+    uint* object_data = (uint*)bp[0]->_data;
+    uint* target_data = (uint*)bp[1]->_data;
 
     // the object_data and target_data should be full of repeating
     // uints.  the uints in target_data will be 1 bigger than the uints
@@ -48,8 +48,8 @@ TEST(blocked_file_loader, loadBlock) {
         ASSERT_EQ(object_data[i] + 1, target_data[i]);
     }
 
-    delete bp.first;
-    delete bp.second;
+    delete bp[0];
+    delete bp[1];
 }
 
 TEST(blocked_file_loader, subsetPercent) {
@@ -64,20 +64,20 @@ TEST(blocked_file_loader, subsetPercent) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp = make_pair(dataBuffer, targetBuffer);
+    BufferPair bp(dataBuffer, targetBuffer);
 
     bfl.loadBlock(bp, 0, block_size);
-    ASSERT_EQ(bp.first->getItemCount(), block_size / 2);
-    bp.first->reset();
+    ASSERT_EQ(bp[0]->getItemCount(), block_size / 2);
+    bp[0]->reset();
 
     bfl.loadBlock(bp, 1, block_size);
-    ASSERT_EQ(bp.first->getItemCount(), block_size / 2);
-    bp.first->reset();
+    ASSERT_EQ(bp[0]->getItemCount(), block_size / 2);
+    bp[0]->reset();
 
     bfl.loadBlock(bp, 2, block_size);
-    ASSERT_EQ(bp.first->getItemCount(), 1);
-    bp.first->reset();
+    ASSERT_EQ(bp[0]->getItemCount(), 1);
+    bp[0]->reset();
 
-    delete bp.first;
-    delete bp.second;
+    delete bp[0];
+    delete bp[1];
 }

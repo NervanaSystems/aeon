@@ -26,7 +26,7 @@ TEST(shuffled_batch_iterator, sequential_batch_loader) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp = make_pair(dataBuffer, targetBuffer);
+    BufferPair bp(dataBuffer, targetBuffer);
 
     // ensure that loading successive blocks from SequentialBatchLoader
     // result in sorted strings
@@ -34,7 +34,7 @@ TEST(shuffled_batch_iterator, sequential_batch_loader) {
     bl.loadBlock(bp, 1, 3);
     bl.loadBlock(bp, 2, 3);
 
-    vector<string> words = buffer_to_vector_of_strings(*bp.first);
+    vector<string> words = buffer_to_vector_of_strings(*bp[0]);
 
     ASSERT_EQ(sorted(words), true);
 }
@@ -46,7 +46,7 @@ TEST(shuffled_batch_iterator, shuffled_block) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp = make_pair(dataBuffer, targetBuffer);
+    BufferPair bp(dataBuffer, targetBuffer);
 
     // ensure that loading successive blocks from SequentialBatchLoader
     // result in sorted strings
@@ -54,7 +54,7 @@ TEST(shuffled_batch_iterator, shuffled_block) {
         sbi.read(bp);
     }
 
-    vector<string> words = buffer_to_vector_of_strings(*bp.first);
+    vector<string> words = buffer_to_vector_of_strings(*bp[0]);
 
     ASSERT_EQ(sorted(words), false);
 

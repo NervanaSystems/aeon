@@ -48,8 +48,8 @@ public:
     {
         int dsz_in, tsz_in;
 
-        char* datum_in  = in_buf->first->getItem(idx, dsz_in);
-        char* target_in = in_buf->second->getItem(idx, tsz_in);
+        char* datum_in  = (*in_buf)[0]->getItem(idx, dsz_in);
+        char* target_in = (*in_buf)[1]->getItem(idx, tsz_in);
 
         if (datum_in == 0) {
             std::cout << "no data " << idx << std::endl;

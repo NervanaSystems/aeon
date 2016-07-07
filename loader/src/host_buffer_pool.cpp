@@ -36,21 +36,21 @@ host_buffer_pool::host_buffer_pool(int dataSize, int targetSize, bool pinned, in
     for (int i = 0; i < count; i++) {
         Buffer* dataBuffer = new Buffer(dataSize, pinned);
         Buffer* targetBuffer = new Buffer(targetSize, pinned);
-        _bufs.push_back(make_pair(dataBuffer, targetBuffer));
+        _bufs.push_back(BufferPair{dataBuffer, targetBuffer});
     }
 }
 
 host_buffer_pool::~host_buffer_pool() {
     for (auto buf : _bufs) {
-        delete buf.first;
-        delete buf.second;
+        delete buf[0];
+        delete buf[1];
     }
 }
 
 BufferPair& host_buffer_pool::getForWrite()
 {
-    _bufs[_writePos].first->reset();
-    _bufs[_writePos].second->reset();
+    _bufs[_writePos][0]->reset();
+    _bufs[_writePos][1]->reset();
     return _bufs[_writePos];
 }
 

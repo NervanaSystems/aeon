@@ -75,4 +75,8 @@ protected:
     bool                        _pinned;
 };
 
-typedef std::pair<Buffer*, Buffer*>             BufferPair;
+class BufferPair : public std::vector<Buffer*> {
+public:
+    BufferPair() : vector(2) {}
+    BufferPair(Buffer* b1, Buffer* b2) : vector{b1,b2}{}
+};
