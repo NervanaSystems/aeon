@@ -47,12 +47,10 @@ class DataLoader(object):
 
         # Launch background threads
         self.loader = self.loaderlib.start(
-            ct.byref(self.item_count),
             ct.c_char_p(loader_cfg_string),
             ct.py_object(backend)
         )
 
-        self.ndata = self.item_count.value
         if self.loader is None:
             a = self.loaderlib.get_error_message()
             raise RuntimeError('Failed to start data loader: ' + a)
@@ -71,10 +69,16 @@ class DataLoader(object):
 
         self.loaderlib.stop.argtypes = [ct.c_void_p]
         self.loaderlib.reset.argtypes = [ct.c_void_p]
+        self.loaderlib.itemCount.argtypes = [ct.c_void_p]
+        self.loaderlib.itemCount.restype = ct.c_int
 
     @property
     def nbatches(self):
-        return -((self.start_idx - self.ndata) // self.batch_size)
+        return -((self.start_idx - self.itemCount) // self.batch_size)
+
+    @property
+    def itemCount(self):
+        return self.loaderlib.itemCount(self.loader)
 
     def reset(self):
         """
@@ -84,9 +88,9 @@ class DataLoader(object):
         self.loaderlib.reset(self.loader)
 
     def next(self, start):
-        end = min(start + self.batch_size, self.ndata)
-        if end == self.ndata:
-            self.start_idx = self.batch_size - (self.ndata - start)
+        end = min(start + self.batch_size, self.itemCount)
+        if end == self.itemCount:
+            self.start_idx = self.batch_size - (self.itemCount - start)
 
         (data, targets) = self.loaderlib.next(
             self.loader, ct.c_int(self.buffer_id)
@@ -98,5 +102,5 @@ class DataLoader(object):
         return (data, targets)
 
     def __iter__(self):
-        for start in range(self.start_idx, self.ndata, self.batch_size):
+        for start in range(self.start_idx, self.itemCount, self.batch_size):
             yield self.next(start)

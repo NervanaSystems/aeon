@@ -20,8 +20,7 @@ extern const char* get_error_message() {
     return last_error_message.c_str();
 }
 
-extern void* start(int* itemCount,
-                   const char* loaderConfigString,
+extern void* start(const char* loaderConfigString,
                    PyObject* pbackend
                    ) {
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
@@ -37,7 +36,6 @@ extern void* start(int* itemCount,
             delete loader;
             return 0;
         }
-        *itemCount = loader->itemCount();
         return reinterpret_cast<void*>(loader);
     } catch(std::exception& ex) {
         last_error_message = ex.what();
@@ -60,6 +58,15 @@ extern PyObject* next(PyLoader* loader, int bufIdx) {
     } catch(std::exception& ex) {
         last_error_message = ex.what();
         return NULL;
+    }
+}
+
+extern int itemCount(PyLoader* loader) {
+    try {
+        return loader->itemCount();
+    } catch(std::exception& ex) {
+        last_error_message = ex.what();
+        return -1;
     }
 }
 
