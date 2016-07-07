@@ -25,7 +25,7 @@ class DataLoader(object):
     in CSV format.
 
     Arguments:
-        loader_cfg_string (str):
+        loader_cfg_string (json encoded str):
             All configuration information needed for defining the type of extraction,
             transforming, and loading of targets, as well as where source files come from,
             where the files should be cached locally, etc.
