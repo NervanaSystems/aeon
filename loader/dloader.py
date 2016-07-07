@@ -46,16 +46,9 @@ class DataLoader(object):
         self.load_library()
 
         # Launch background threads
-        self.loader = self.loaderlib.start(
-            ct.c_char_p(loader_cfg_string),
-            ct.py_object(backend)
-        )
+        self.loader = self._start(loader_cfg_string, backend)
 
-        if self.loader is None:
-            a = self.loaderlib.get_error_message()
-            raise RuntimeError('Failed to start data loader: ' + a)
-
-        atexit.register(self.loaderlib.stop, self.loader)
+        atexit.register(self._stop, self)
 
     def load_library(self):
         path = os.path.dirname(os.path.realpath(__file__))
@@ -72,29 +65,70 @@ class DataLoader(object):
         self.loaderlib.itemCount.argtypes = [ct.c_void_p]
         self.loaderlib.itemCount.restype = ct.c_int
 
+    def _raise_loader_error(self):
+        raise RuntimeError(
+            'error in loader: {}'.format(
+                self.loaderlib.get_error_message()
+            )
+        )
+
+    def _start(self, loader_cfg_string, backend):
+        loader = self.loaderlib.start(
+            ct.c_char_p(loader_cfg_string),
+            ct.py_object(backend)
+        )
+
+        if loader is None:
+            self._raise_loader_error()
+
+        return loader
+
+    def _stop(self):
+        if self.loaderlib.stop(self.loader) == 1:
+            self._raise_loader_error()
+
+    def _itemCount(self):
+        itemCount = self.loaderlib.itemCount(self.loader)
+        if itemCount == -1:
+            self._raise_loader_error()
+
+        return itemCount
+
+    def _next(self, buffer_id):
+        tup = self.loaderlib.next(
+            self.loader, ct.c_int(buffer_id)
+        )
+
+        if tup is None:
+            self._raise_loader_error()
+
+        return tup
+
+    def _reset(self):
+        if self.loaderlib.reset(self.loader) == -1:
+            self._raise_loader_error()
+
     @property
     def nbatches(self):
         return -((self.start_idx - self.itemCount) // self.batch_size)
 
     @property
     def itemCount(self):
-        return self.loaderlib.itemCount(self.loader)
+        return self._itemCount()
 
     def reset(self):
         """
         Restart data from index 0
         """
         self.buffer_id, self.start_idx = 0, 0
-        self.loaderlib.reset(self.loader)
+        self._reset()
 
     def next(self, start):
         end = min(start + self.batch_size, self.itemCount)
         if end == self.itemCount:
             self.start_idx = self.batch_size - (self.itemCount - start)
 
-        (data, targets) = self.loaderlib.next(
-            self.loader, ct.c_int(self.buffer_id)
-        )
+        (data, targets) = self._next(self.buffer_id)
 
         # Toggle buffer_id between 0 and 1
         self.buffer_id = 1 - self.buffer_id

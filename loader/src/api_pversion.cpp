@@ -34,12 +34,16 @@ extern void* start(const char* loaderConfigString,
             ss << "Could not start data loader. Error " << result;
             last_error_message = ss.str();
             delete loader;
-            return 0;
+
+            Py_INCREF(Py_None);
+            return Py_None;
         }
         return reinterpret_cast<void*>(loader);
     } catch(std::exception& ex) {
         last_error_message = ex.what();
-        return 0;
+
+        Py_INCREF(Py_None);
+        return Py_None;
     }
 }
 
@@ -57,7 +61,9 @@ extern PyObject* next(PyLoader* loader, int bufIdx) {
         return loader->next(bufIdx);
     } catch(std::exception& ex) {
         last_error_message = ex.what();
-        return NULL;
+
+        Py_INCREF(Py_None);
+        return Py_None;
     }
 }
 
