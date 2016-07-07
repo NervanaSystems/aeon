@@ -21,7 +21,7 @@
 
 /* BatchFileLoader
  *
- * Loads blocks of files from a manifest into a Buffer.
+ * Loads blocks of files from a Manifest into a BufferPair.
  *
  */
 class BatchFileLoader : public BatchLoader {
