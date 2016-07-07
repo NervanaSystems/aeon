@@ -38,13 +38,13 @@ public:
 
 class nervana::train_base {
 public:
-    virtual void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) = 0;
+    virtual void provide_pair(int idx, BufferArray* in_buf, char *datum_out, char *tgt_out) = 0;
 };
 
 template<typename D, typename T> class nervana::train_provider : public train_base {
 public:
     train_provider() {}
-    void provide_pair(int idx, BufferPair* in_buf, char *datum_out, char *tgt_out) override
+    void provide_pair(int idx, BufferArray* in_buf, char *datum_out, char *tgt_out) override
     {
         int dsz_in, tsz_in;
 

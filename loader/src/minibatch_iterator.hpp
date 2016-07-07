@@ -25,16 +25,16 @@ class MinibatchIterator : public BatchIterator {
 public:
     MinibatchIterator(std::shared_ptr<BatchIterator> macroBatchIterator, int minibatch_size);
 
-    void read(BufferPair& dest);
+    void read(BufferArray& dest);
     void reset();
 protected:
-    void popItemFromMacrobatch(BufferPair& dest);
+    void popItemFromMacrobatch(BufferArray& dest);
     void transferBufferItem(Buffer* dest, Buffer* src);
 
     std::shared_ptr<BatchIterator> _macroBatchIterator;
     int _minibatchSize;
 
-    BufferPair _macrobatch;
+    BufferArray _macrobatch;
     // the index into the _macrobatch to read next
     int _i;
 };

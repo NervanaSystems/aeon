@@ -27,9 +27,9 @@ class host_buffer_pool {
 public:
     host_buffer_pool(int dataSize, int targetSize, bool pinned = false, int count = 2);
     virtual ~host_buffer_pool();
-    BufferPair& getForWrite();
-    BufferPair& getForRead();
-    BufferPair& getPair(int bufIdx);
+    BufferArray& getForWrite();
+    BufferArray& getForRead();
+    BufferArray& getPair(int bufIdx);
     int getCount() { return _count;}
 
     void advanceReadPos();
@@ -48,7 +48,7 @@ protected:
 protected:
     int                         _count;
     int                         _used;
-    std::vector<BufferPair>     _bufs;
+    std::vector<BufferArray>     _bufs;
     int                         _readPos;
     int                         _writePos;
     std::mutex                  _mutex;

@@ -15,7 +15,7 @@ public:
                      int);
 
     bool use_pinned_memory();
-    void call_backend_transfer(BufferPair &outBuf, int bufIdx);
+    void call_backend_transfer(BufferArray &outBuf, int bufIdx);
     PyObject* get_dtm_tgt_pair(int bufIdx);
 
     ~pyBackendWrapper();

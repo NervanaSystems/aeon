@@ -26,7 +26,7 @@ TEST(shuffled_batch_iterator, sequential_batch_loader) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp(dataBuffer, targetBuffer);
+    BufferArray bp{dataBuffer, targetBuffer};
 
     // ensure that loading successive blocks from SequentialBatchLoader
     // result in sorted strings
@@ -46,7 +46,7 @@ TEST(shuffled_batch_iterator, shuffled_block) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp(dataBuffer, targetBuffer);
+    BufferArray bp{dataBuffer, targetBuffer};
 
     // ensure that loading successive blocks from SequentialBatchLoader
     // result in sorted strings

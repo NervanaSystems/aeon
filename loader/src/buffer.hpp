@@ -75,8 +75,13 @@ protected:
     bool                        _pinned;
 };
 
-class BufferPair : public std::vector<Buffer*> {
+class BufferArray {
 public:
-    BufferPair() : vector(2) {}
-    BufferPair(Buffer* b1, Buffer* b2) : vector{b1,b2}{}
+    BufferArray(std::initializer_list<Buffer*> list) : data(list) {}
+
+    Buffer* operator[](int i) { return data[i]; }
+    size_t size() const { return data.size(); }
+
+private:
+    std::vector<Buffer*>    data;
 };

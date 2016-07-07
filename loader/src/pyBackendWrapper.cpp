@@ -79,7 +79,7 @@ bool pyBackendWrapper::use_pinned_memory()
 }
 
 // Copy to device.
-void pyBackendWrapper::call_backend_transfer(BufferPair &outBuf, int bufIdx)
+void pyBackendWrapper::call_backend_transfer(BufferArray &outBuf, int bufIdx)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();

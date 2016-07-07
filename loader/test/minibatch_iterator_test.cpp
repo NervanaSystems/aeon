@@ -37,7 +37,7 @@ TEST(minibatch_iterator, simple) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp(dataBuffer, targetBuffer);
+    BufferArray bp{dataBuffer, targetBuffer};
 
     // read 6 minibatches
     for(int i = 0; i < 6; ++i) {

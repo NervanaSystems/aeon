@@ -20,6 +20,6 @@
 class BatchIterator
 {
 public:
-    virtual void read(BufferPair& dest) = 0;
+    virtual void read(BufferArray& dest) = 0;
     virtual void reset() = 0;
 };

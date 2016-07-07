@@ -8,7 +8,7 @@ MinibatchIterator::MinibatchIterator(std::shared_ptr<BatchIterator> macroBatchIt
     reset();
 }
 
-void MinibatchIterator::read(BufferPair& dest) {
+void MinibatchIterator::read(BufferArray& dest) {
     // read `_minibatchSize` items from _macrobatch into `dest`
     for(auto i = 0; i < _minibatchSize; ++i) {
         popItemFromMacrobatch(dest);
@@ -31,7 +31,7 @@ void MinibatchIterator::transferBufferItem(Buffer* dest, Buffer* src) {
     dest->read(item, len);
 }
 
-void MinibatchIterator::popItemFromMacrobatch(BufferPair& dest) {
+void MinibatchIterator::popItemFromMacrobatch(BufferArray& dest) {
     // load a new macrobatch if we've already iterated through the previous one
     if(_i >= _macrobatch[0]->getItemCount()) {
         _macrobatch[0]->reset();

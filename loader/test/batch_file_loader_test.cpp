@@ -34,7 +34,7 @@ TEST(blocked_file_loader, loadBlock) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp(dataBuffer, targetBuffer);
+    BufferArray bp{dataBuffer, targetBuffer};
 
     bfl.loadBlock(bp, 0, block_size);
 
@@ -64,7 +64,7 @@ TEST(blocked_file_loader, subsetPercent) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp(dataBuffer, targetBuffer);
+    BufferArray bp{dataBuffer, targetBuffer};
 
     bfl.loadBlock(bp, 0, block_size);
     ASSERT_EQ(bp[0]->getItemCount(), block_size / 2);

@@ -31,7 +31,7 @@ string randomString() {
 
 class RandomBatchLoader : public BatchLoader {
 public:
-    void loadBlock(BufferPair &dest, uint block_num, uint block_size) {
+    void loadBlock(BufferArray &dest, uint block_num, uint block_size) {
         // load BufferPair with random bytes
         std::random_device engine;
 
@@ -52,7 +52,7 @@ string load_string(BatchLoaderCPIOCache cache) {
 
     Buffer* dataBuffer = new Buffer(0);
     Buffer* targetBuffer = new Buffer(0);
-    BufferPair bp(dataBuffer, targetBuffer);
+    BufferArray bp{dataBuffer, targetBuffer};
 
     cache.loadBlock(bp, 1, 1);
 

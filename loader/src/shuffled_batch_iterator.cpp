@@ -23,7 +23,7 @@ void ShuffledBatchIterator::shuffle() {
     std::shuffle(_indices.begin(), _indices.end(), _rand);
 }
 
-void ShuffledBatchIterator::read(BufferPair &dest) {
+void ShuffledBatchIterator::read(BufferArray &dest) {
     _loader->loadBlock(dest, *_it, _block_size);
 
     // shuffle the objects in BufferPair dest

@@ -44,7 +44,7 @@ TEST(provider,image) {
         Buffer target_p(0);
         reader.read(target_p);
 
-        BufferPair bp{&data_p, &target_p};
+        BufferArray bp{&data_p, &target_p};
         media->provide_pair(0, &bp, &dbuffer[0], &tbuffer[0]);
 
         int target_value = unpack_le<int>(&tbuffer[0]);

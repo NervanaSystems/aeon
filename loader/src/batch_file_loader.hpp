@@ -28,7 +28,7 @@ class BatchFileLoader : public BatchLoader {
 public:
     BatchFileLoader(std::shared_ptr<Manifest> manifest, uint subsetPercent);
 
-    void loadBlock(BufferPair& dest, uint block_num, uint block_size);
+    void loadBlock(BufferArray& dest, uint block_num, uint block_size);
     void loadFile(Buffer* buff, const std::string& filename);
     uint objectCount();
 

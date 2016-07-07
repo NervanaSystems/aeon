@@ -24,7 +24,7 @@
 
 class BatchLoader {
 public:
-    virtual void loadBlock(BufferPair& dest, uint block_num, uint block_size) = 0;
+    virtual void loadBlock(BufferArray& dest, uint block_num, uint block_size) = 0;
     virtual uint objectCount() = 0;
 
     uint blockCount(uint block_size);

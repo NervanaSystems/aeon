@@ -22,7 +22,7 @@ class SequentialBatchIterator : public BatchIterator {
 public:
     SequentialBatchIterator(std::shared_ptr<BatchLoader> loader, uint block_size);
 
-    void read(BufferPair& dest);
+    void read(BufferArray& dest);
     void reset();
 
 private:

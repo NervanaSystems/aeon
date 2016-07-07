@@ -4,7 +4,7 @@
 
 using namespace std;
 
-void MockBatchLoader::loadBlock(BufferPair &dest, uint block_num, uint block_size) {
+void MockBatchLoader::loadBlock(BufferArray &dest, uint block_num, uint block_size) {
     // load BufferPair with strings.
     // block_num 0: 'aa', 'ab', 'ac'
     // block_num 1: 'ba', 'bb', 'bc'

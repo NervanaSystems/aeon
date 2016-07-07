@@ -132,7 +132,7 @@ void pyDecodeThreadPool::work(int id)
     }
 
     // No locking required because threads write into non-overlapping regions.
-    BufferPair& outBuf = _out->getForWrite();
+    BufferArray& outBuf = _out->getForWrite();
     char* dataBuf      = outBuf[0]->_data + _dataOffsets[id];
     char* targetBuf    = outBuf[1]->_data + _targetOffsets[id];
 
@@ -173,7 +173,7 @@ void pyDecodeThreadPool::produce()
             _endSignaled = 0;
         }
         // At this point, we have decoded data for the whole minibatch.
-        BufferPair& outBuf = _out->getForWrite();
+        BufferArray& outBuf = _out->getForWrite();
 
         // Copy to device.
         _pbe->call_backend_transfer(outBuf, _bufferIndex);

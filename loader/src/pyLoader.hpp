@@ -73,7 +73,7 @@ private:
     std::thread*                _manager        = 0;
     bool                        _stopManager    = false;
     bool                        _managerStopped = false;
-    BufferPair*                 _inputBuf       = 0;
+    BufferArray*                 _inputBuf       = 0;
     int                         _bufferIndex    = 0;
     int                         _batchSize;
 

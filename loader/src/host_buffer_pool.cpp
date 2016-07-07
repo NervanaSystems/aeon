@@ -36,7 +36,7 @@ host_buffer_pool::host_buffer_pool(int dataSize, int targetSize, bool pinned, in
     for (int i = 0; i < count; i++) {
         Buffer* dataBuffer = new Buffer(dataSize, pinned);
         Buffer* targetBuffer = new Buffer(targetSize, pinned);
-        _bufs.push_back(BufferPair{dataBuffer, targetBuffer});
+        _bufs.push_back(BufferArray{dataBuffer, targetBuffer});
     }
 }
 
@@ -47,18 +47,18 @@ host_buffer_pool::~host_buffer_pool() {
     }
 }
 
-BufferPair& host_buffer_pool::getForWrite()
+BufferArray& host_buffer_pool::getForWrite()
 {
     _bufs[_writePos][0]->reset();
     _bufs[_writePos][1]->reset();
     return _bufs[_writePos];
 }
 
-BufferPair& host_buffer_pool::getForRead() {
+BufferArray& host_buffer_pool::getForRead() {
     return _bufs[_readPos];
 }
 
-BufferPair& host_buffer_pool::getPair(int bufIdx) {
+BufferArray& host_buffer_pool::getPair(int bufIdx) {
     assert(bufIdx >= 0 && bufIdx < _count);
     return _bufs[bufIdx];
 }
