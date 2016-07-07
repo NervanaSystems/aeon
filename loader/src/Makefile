@@ -39,7 +39,8 @@ SRCS            := \
     shuffled_batch_iterator.cpp \
     minibatch_iterator.cpp \
     batch_loader.cpp \
-    box.cpp
+    box.cpp \
+    host_buffer_pool.cpp
 
 
 OBJS             = $(subst .cpp,.o,$(SRCS))

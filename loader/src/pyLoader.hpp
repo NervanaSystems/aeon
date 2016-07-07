@@ -29,7 +29,7 @@
 #include "batch_iterator.hpp"
 #include "manifest.hpp"
 #include "provider_factory.hpp"
-
+#include "host_buffer_pool.hpp"
 
 /* DecodeThreadPool
  *

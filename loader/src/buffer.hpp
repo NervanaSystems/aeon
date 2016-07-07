@@ -76,36 +76,3 @@ protected:
 };
 
 typedef std::pair<Buffer*, Buffer*>             BufferPair;
-
-class BufferPool {
-public:
-    BufferPool(int dataSize, int targetSize, bool pinned = false, int count = 2);
-    virtual ~BufferPool();
-    BufferPair& getForWrite();
-    BufferPair& getForRead();
-    BufferPair& getPair(int bufIdx);
-    int getCount() { return _count;}
-
-    void advanceReadPos();
-    void advanceWritePos();
-    bool empty();
-    bool full();
-    std::mutex& getMutex();
-    void waitForNonEmpty(std::unique_lock<std::mutex>& lock);
-    void waitForNonFull(std::unique_lock<std::mutex>& lock);
-    void signalNonEmpty();
-    void signalNonFull();
-
-protected:
-    void advance(int& index);
-
-protected:
-    int                         _count;
-    int                         _used;
-    std::vector<BufferPair>     _bufs;
-    int                         _readPos;
-    int                         _writePos;
-    std::mutex                  _mutex;
-    std::condition_variable     _nonFull;
-    std::condition_variable     _nonEmpty;
-};
