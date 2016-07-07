@@ -112,7 +112,7 @@ vector<unsigned char> gen_audio::encode(float frequencyHz, int duration) {
     /* put sample parameters */
     c->bit_rate = 64000;
     c->sample_rate = 44100;
-    c->channels = 2;
+    c->channels = 1;
 
     /* open it */
     if (avcodec_open2(c, codec, nullptr) < 0) {
@@ -133,8 +133,7 @@ vector<unsigned char> gen_audio::encode(float frequencyHz, int duration) {
     tincr = 2 * M_PI * frequencyHz / c->sample_rate;
     for(i=0;i<frames;i++) {
         for(j=0;j<frame_size;j++) {
-            samples[2*j] = (int)(sin(t) * 10000);
-            samples[2*j+1] = samples[2*j];
+            samples[j] = (int)(sin(t) * 10000);
             t += tincr;
         }
         /* encode the samples */

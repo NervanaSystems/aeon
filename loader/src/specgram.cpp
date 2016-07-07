@@ -60,7 +60,8 @@ Specgram::~Specgram() {
 
 int Specgram::generate(shared_ptr<RawMedia> raw, char* buf, int bufSize) {
     // TODO: get rid of these assumptions:
-    assert(media->channels() == 1);
+    cout << "channels: " << raw->channels() << endl;
+    assert(raw->channels() == 1);
     assert(raw->bytesPerSample() == 2);
 
     assert(_width * _height == bufSize);
