@@ -15,6 +15,7 @@
 import ctypes as ct
 import os
 import atexit
+import json
 
 
 class DataLoader(object):
@@ -22,31 +23,32 @@ class DataLoader(object):
     """
     Encapsulates the data loader library and exposes an API to iterate over
     generic data (images, video or audio given in compressed form). An index
-    file that maps the data examples to their targets is expected to be provided
-    in CSV format.
+    file that maps the data examples to their targets is expected to be
+    provided in CSV format.
 
     Arguments:
-        loader_cfg_string (json encoded str):
-            All configuration information needed for defining the type of extraction,
-            transforming, and loading of targets, as well as where source files come from,
-            where the files should be cached locally, etc.
-        batch_size (int):
-            The number of records to return per batch (minibatch)
+        config (dict):
+            All configuration information needed for defining the type of
+            extraction, transforming, and loading of targets, as well as where
+            source files come from, where the files should be cached locally,
+            etc.
         backend (object):
-            This is an instance of an object which knows how to create tensors it needs
-            for processing, and how to transfer host information to those tensors
+            This is an instance of an object which knows how to create tensors
+            it needs for processing, and how to transfer host information to
+            those tensors
+
+    Note that if the epoch is not evenly divisible by the minibatch size, there
+    will be one minibatch per epoch (or so) which contains data from two
+    epochs.
     """
 
-    def __init__(self, loader_cfg_string, batch_size, backend):
-        self.batch_size = batch_size
-
-        self.item_count = ct.c_int(0)
-        self.buffer_id, self.start_idx = 0, 0
+    def __init__(self, config, backend):
+        self.buffer_id = 0
 
         self._load_library()
 
         # Launch background threads
-        self.loader = self._start(loader_cfg_string, backend)
+        self.loader = self._start(json.dumps(config), backend)
 
         atexit.register(self._stop, self)
 
@@ -66,15 +68,23 @@ class DataLoader(object):
         self.loaderlib.itemCount.restype = ct.c_int
 
     def _raise_loader_error(self):
+        """
+        C api can't easily raise python exceptions, so it returns an error code
+        and then makes the error message accessable via get_error_message().
+        This gets that message and wraps it in a RuntimeError.
+        """
         raise RuntimeError(
             'error in loader: {}'.format(
                 self.loaderlib.get_error_message()
             )
         )
 
-    def _start(self, loader_cfg_string, backend):
+    def _start(self, config, backend):
+        """
+        C api wrapper with exception handling
+        """
         loader = self.loaderlib.start(
-            ct.c_char_p(loader_cfg_string),
+            ct.c_char_p(config),
             ct.py_object(backend)
         )
 
@@ -84,10 +94,16 @@ class DataLoader(object):
         return loader
 
     def _stop(self):
+        """
+        C api wrapper with exception handling
+        """
         if self.loaderlib.stop(self.loader) == 1:
             self._raise_loader_error()
 
     def _itemCount(self):
+        """
+        C api wrapper with exception handling
+        """
         itemCount = self.loaderlib.itemCount(self.loader)
         if itemCount == -1:
             self._raise_loader_error()
@@ -95,6 +111,9 @@ class DataLoader(object):
         return itemCount
 
     def _next(self, buffer_id):
+        """
+        C api wrapper with exception handling
+        """
         tup = self.loaderlib.next(
             self.loader, ct.c_int(buffer_id)
         )
@@ -105,29 +124,30 @@ class DataLoader(object):
         return tup
 
     def _reset(self):
+        """
+        C api wrapper with exception handling
+        """
         if self.loaderlib.reset(self.loader) == -1:
             self._raise_loader_error()
 
     @property
-    def nbatches(self):
-        return -((self.start_idx - self.itemCount) // self.batch_size)
-
-    @property
     def itemCount(self):
+        """
+        Number of items in the dataset.
+        """
         return self._itemCount()
 
     def reset(self):
         """
-        Restart data from index 0
+        Restart data from index 0.
         """
-        self.buffer_id, self.start_idx = 0, 0
+        self.buffer_id = 0
         self._reset()
 
-    def next(self, start):
-        end = min(start + self.batch_size, self.itemCount)
-        if end == self.itemCount:
-            self.start_idx = self.batch_size - (self.itemCount - start)
-
+    def next(self):
+        """
+        return one minibatch in a (data, targets) tuple
+        """
         (data, targets) = self._next(self.buffer_id)
 
         # Toggle buffer_id between 0 and 1
@@ -136,5 +156,8 @@ class DataLoader(object):
         return (data, targets)
 
     def __iter__(self):
-        for start in range(self.start_idx, self.itemCount, self.batch_size):
-            yield self.next(start)
+        """
+        never ending iterator over dataset.
+        """
+        while True:
+            yield self.next()
