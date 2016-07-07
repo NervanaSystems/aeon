@@ -23,10 +23,10 @@
 #include "host_buffer_pool.hpp"
 #include "buffer.hpp"
 
-class BufferPool {
+class host_buffer_pool {
 public:
-    BufferPool(int dataSize, int targetSize, bool pinned = false, int count = 2);
-    virtual ~BufferPool();
+    host_buffer_pool(int dataSize, int targetSize, bool pinned = false, int count = 2);
+    virtual ~host_buffer_pool();
     BufferPair& getForWrite();
     BufferPair& getForRead();
     BufferPair& getPair(int bufIdx);

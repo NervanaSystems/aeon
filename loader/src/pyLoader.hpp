@@ -42,8 +42,8 @@
 class pyDecodeThreadPool : public ThreadPool {
 public:
     pyDecodeThreadPool(int count,
-                       const std::shared_ptr<BufferPool>& in,
-                       const std::shared_ptr<BufferPool>& out,
+                       const std::shared_ptr<host_buffer_pool>& in,
+                       const std::shared_ptr<host_buffer_pool>& out,
                        const std::shared_ptr<pyBackendWrapper>& pbe);
 
     virtual ~pyDecodeThreadPool();
@@ -63,8 +63,8 @@ private:
     pyDecodeThreadPool(const pyDecodeThreadPool&);
 
     int                         _itemsPerThread;
-    std::shared_ptr<BufferPool> _in;
-    std::shared_ptr<BufferPool> _out;
+    std::shared_ptr<host_buffer_pool> _in;
+    std::shared_ptr<host_buffer_pool> _out;
     std::shared_ptr<pyBackendWrapper> _pbe;
     std::mutex                  _mutex;
     std::condition_variable     _started;
@@ -128,7 +128,7 @@ private:
 
 class ReadThread: public ThreadPool {
 public:
-    ReadThread(const std::shared_ptr<BufferPool>& out,
+    ReadThread(const std::shared_ptr<host_buffer_pool>& out,
                const std::shared_ptr<BatchIterator>& batch_iterator);
 
 protected:
@@ -137,7 +137,7 @@ protected:
 private:
     ReadThread();
     ReadThread(const ReadThread&);
-    std::shared_ptr<BufferPool> _out;
+    std::shared_ptr<host_buffer_pool> _out;
     std::shared_ptr<BatchIterator> _batch_iterator;
 };
 
@@ -172,8 +172,8 @@ private:
 
     bool                                _first = true;
 
-    std::shared_ptr<BufferPool>         _readBufs = nullptr;
-    std::shared_ptr<BufferPool>         _decodeBufs = nullptr;
+    std::shared_ptr<host_buffer_pool>         _readBufs = nullptr;
+    std::shared_ptr<host_buffer_pool>         _decodeBufs = nullptr;
     std::unique_ptr<ReadThread>         _readThread = nullptr;
     std::unique_ptr<pyDecodeThreadPool> _decodeThreads = nullptr;
     std::shared_ptr<BatchIterator>      _batch_iterator = nullptr;

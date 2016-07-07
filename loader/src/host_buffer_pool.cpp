@@ -31,7 +31,7 @@
 
 using namespace std;
 
-BufferPool::BufferPool(int dataSize, int targetSize, bool pinned, int count)
+host_buffer_pool::host_buffer_pool(int dataSize, int targetSize, bool pinned, int count)
 : _count(count), _used(0), _readPos(0), _writePos(0) {
     for (int i = 0; i < count; i++) {
         Buffer* dataBuffer = new Buffer(dataSize, pinned);
@@ -40,70 +40,70 @@ BufferPool::BufferPool(int dataSize, int targetSize, bool pinned, int count)
     }
 }
 
-BufferPool::~BufferPool() {
+host_buffer_pool::~host_buffer_pool() {
     for (auto buf : _bufs) {
         delete buf.first;
         delete buf.second;
     }
 }
 
-BufferPair& BufferPool::getForWrite()
+BufferPair& host_buffer_pool::getForWrite()
 {
     _bufs[_writePos].first->reset();
     _bufs[_writePos].second->reset();
     return _bufs[_writePos];
 }
 
-BufferPair& BufferPool::getForRead() {
+BufferPair& host_buffer_pool::getForRead() {
     return _bufs[_readPos];
 }
 
-BufferPair& BufferPool::getPair(int bufIdx) {
+BufferPair& host_buffer_pool::getPair(int bufIdx) {
     assert(bufIdx >= 0 && bufIdx < _count);
     return _bufs[bufIdx];
 }
 
-void BufferPool::advanceReadPos() {
+void host_buffer_pool::advanceReadPos() {
     _used--;
     advance(_readPos);
 }
 
-void BufferPool::advanceWritePos() {
+void host_buffer_pool::advanceWritePos() {
     _used++;
     advance(_writePos);
 }
 
-bool BufferPool::empty() {
+bool host_buffer_pool::empty() {
     assert(_used >= 0);
     return (_used == 0);
 }
 
-bool BufferPool::full() {
+bool host_buffer_pool::full() {
     assert(_used <= _count);
     return (_used == _count);
 }
 
-std::mutex& BufferPool::getMutex() {
+std::mutex& host_buffer_pool::getMutex() {
     return _mutex;
 }
 
-void BufferPool::waitForNonEmpty(std::unique_lock<std::mutex>& lock) {
+void host_buffer_pool::waitForNonEmpty(std::unique_lock<std::mutex>& lock) {
     _nonEmpty.wait(lock);
 }
 
-void BufferPool::waitForNonFull(std::unique_lock<std::mutex>& lock) {
+void host_buffer_pool::waitForNonFull(std::unique_lock<std::mutex>& lock) {
     _nonFull.wait(lock);
 }
 
-void BufferPool::signalNonEmpty() {
+void host_buffer_pool::signalNonEmpty() {
     _nonEmpty.notify_all();
 }
 
-void BufferPool::signalNonFull() {
+void host_buffer_pool::signalNonFull() {
     _nonFull.notify_all();
 }
 
-void BufferPool::advance(int& index) {
+void host_buffer_pool::advance(int& index) {
     // increment index and reset to 0 when index hits `_count`
     if (++index == _count) {
         index = 0;
