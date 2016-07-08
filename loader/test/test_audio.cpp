@@ -60,8 +60,7 @@ TEST(etl, audio_transform) {
 
     audio::transformer _imageTransformer(config);
 
-    std::default_random_engine dre;
-    audio::param_factory factory(config, dre);
+    audio::param_factory factory(config);
     auto audioParams = factory.make_params(decoded_audio);
 
     _imageTransformer.transform(audioParams, decoded_audio);

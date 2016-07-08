@@ -22,53 +22,42 @@ using namespace std;
 using std::stringstream;
 using std::vector;
 
-Specgram::Specgram(shared_ptr<const nervana::audio::config> params, int id)
-: _feature(     params->_feature),
-  _clipDuration(params->_clipDuration),
-  _windowSize(  params->_windowSize),
-  _stride(      params->_stride),
-  _width(       params->_width),
-  _numFreqs(    params->_windowSize / 2 + 1),
-  _height(      params->_height),
-  _samplingFreq(params->_samplingFreq),
-  _numFilts(    params->_numFilts),
-  _numCepstra(  params->_numCepstra),
-  _window(      0),
-  _rng(         id) {
+Specgram::Specgram(shared_ptr<const nervana::audio::config> cfg)
+: _feature (cfg->_feature),
+  _max_duration_tn(cfg->max_duration_tn),
+  _frame_length_tn(cfg->frame_length_tn),
+  _stride(      cfg->_stride),
+  _width(       cfg->_width),
+  _numFreqs(    cfg->_frame_length_tn / 2 + 1),
+  _height(      cfg->_height),
+  _num_cepstra(  cfg->num_cepstra),
+{
     assert(_stride != 0);
-    _maxSignalSize = params->_clipDuration * params->_samplingFreq / 1000;
-    _bufSize = _width * _windowSize * MAX_BYTES_PER_SAMPLE;
-    _buf = new char[_bufSize];
-    if (params->_window != 0) {
-        _window = new Mat(1, _windowSize, CV_32FC1);
-        createWindow(params->_window);
-    }
-    assert(params->_randomScalePercent >= 0);
-    assert(params->_randomScalePercent < 100);
-    _scaleBy = params->_randomScalePercent / 100.0;
-    _scaleMin = 1.0 - _scaleBy;
-    _scaleMax = 1.0 + _scaleBy;
-    transpose(getFilterbank(_numFilts, _windowSize, _samplingFreq), _fbank);
+    create_window(cfg->window_type, _frame_length_tn, _window);
 
-    assert(params->_width == (((params->_clipDuration * params->_samplingFreq / 1000) - params->_windowSize) / params->_stride) + 1);
+    fill_filterbanks(cfg->num_filters, _frame_length_tn, cfg->sample_freq_hz, _fbank);
+
+    cv::transpose(_fbank);
 }
 
 Specgram::~Specgram() {
-    delete _window;
     delete[] _buf;
 }
 
-int Specgram::generate(shared_ptr<RawMedia> raw, char* buf, int bufSize) {
+int Specgram::generate(shared_ptr<RawMedia> time_data, cv::Mat &freq_data) {
     // TODO: get rid of this assumption
-    assert(raw->bytesPerSample() == 2);
-    assert(_width * _height == bufSize);
-    int numWindows = stridedSignal(raw);
-    assert(numWindows <= _width);
-    Mat signal(numWindows, _windowSize, CV_16SC1, (short*) _buf);
+    assert(time_data->bytesPerSample() == 2);
+
+    int numWindows = stridedSignal(time_data);
+
+    Mat signal(numWindows, _frame_length_tn, CV_16SC1, (short*) _buf);
     Mat input;
     signal.convertTo(input, CV_32FC1);
 
-    applyWindow(input);
+    if (_window.cols == _frame_length_tn) {
+        signal = signal.mul(cv::repeat(_window, signal.rows, 1));
+    }
+
     Mat planes[] = {input, Mat::zeros(input.size(), CV_32FC1)};
     Mat compx;
     cv::merge(planes, 2, compx);
@@ -86,6 +75,7 @@ int Specgram::generate(shared_ptr<RawMedia> raw, char* buf, int bufSize) {
     }
 
     Mat feats;
+
     // Rotate by 90 degrees.
     cv::transpose(mag, feats);
     cv::flip(feats, feats, 0);
@@ -93,160 +83,106 @@ int Specgram::generate(shared_ptr<RawMedia> raw, char* buf, int bufSize) {
     cv::normalize(feats, feats, 0, 255, CV_MINMAX, CV_8UC1);
     Mat result(feats.rows, _width, CV_8UC1, buf);
 
-    assert(feats.rows <= _height);
+    // assert(feats.rows <= _height);
 
     feats.copyTo(result(Range(0, feats.rows), Range(0, feats.cols)));
 
     // Pad the rest with zeros.
     result(Range::all(), Range(feats.cols, result.cols)) = cv::Scalar::all(0);
 
-    randomize(result);
     // Return the percentage of valid columns.
     return feats.cols * 100 / result.cols;
 }
 
-void Specgram::randomize(Mat& img) {
-    if (_scaleBy > 0) {
-        float fx = _rng.uniform(_scaleMin, _scaleMax);
-        resize(img, fx);
-    }
-}
 
-void Specgram::resize(Mat& img, float fx) {
-    Mat dst;
-    int inter = (fx > 1.0) ? CV_INTER_CUBIC : CV_INTER_AREA;
-    cv::resize(img, dst, Size(), fx, 1.0, inter);
-    assert(img.rows == dst.rows);
-    if (img.cols > dst.cols) {
-        dst.copyTo(img(Range::all(), Range(0, dst.cols)));
-        img(Range::all(), Range(dst.cols, img.cols)) = cv::Scalar::all(0);
-    } else {
-        dst(Range::all(), Range(0, img.cols)).copyTo(img);
-    }
-}
+void Specgram::create_window(const std::string& window_type, uint32_t window_length, cv::Mat& win)
+{
 
-void Specgram::none(int) {
-}
-
-void Specgram::hann(int steps) {
-    for (int i = 0; i <= steps; i++) {
-        _window->at<float>(0, i) = 0.5 - 0.5 * cos((2.0 * CV_PI * i) / steps);
-    }
-}
-
-void Specgram::blackman(int steps) {
-    for (int i = 0; i <= steps; i++) {
-        _window->at<float>(0, i) = 0.42 -
-                                   0.5 * cos((2.0 * CV_PI * i) / steps) +
-                                   0.08 * cos(4.0 * CV_PI * i / steps);
-    }
-}
-
-void Specgram::hamming(int steps) {
-    for (int i = 0; i <= steps; i++) {
-        _window->at<float>(0, i) = 0.54 - 0.46 * cos((2.0 * CV_PI * i) / steps);
-    }
-}
-
-void Specgram::bartlett(int steps) {
-    for (int i = 0; i <= steps; i++) {
-        _window->at<float>(0, i) = 1.0 - 2.0 * fabs(i - steps / 2.0) / steps;
-    }
-}
-
-void Specgram::createWindow(int windowType) {
-    typedef void(Specgram::*winFunc)(int);
-    winFunc funcs[] = {&Specgram::none, &Specgram::hann,
-                       &Specgram::blackman, &Specgram::hamming,
-                       &Specgram::bartlett};
-    assert(windowType >= 0);
-    if (windowType >= (int) (sizeof(funcs) / sizeof(funcs[0]))) {
-        throw std::runtime_error("Unsupported window function");
-    }
-    int steps = _windowSize - 1;
-    assert(steps > 0);
-    (this->*(funcs[windowType]))(steps);
-}
-
-void Specgram::applyWindow(Mat& signal) {
-    if (_window == 0) {
+    if (window_type == "none") {
         return;
     }
-    for (int i = 0; i < signal.rows; i++) {
-        signal.row(i) = signal.row(i).mul((*_window));
+
+    int n = static_cast<int>(window_length);
+    win.create(1, n, CV_32FC1)
+
+    float twopi_by_n = 2.0 * CV_PI / (float) n;
+    for (int i = 0; i <= n; i++) {
+        if (window_type == "hann") {
+            win.at<float>(0, i) = 0.5 - 0.5 * cos(twopi_by_n * i);
+        } else if (window_type == "blackman") {
+            win.at<float>(0, i) = 0.42 - 0.5 * cos(twopi_by_n * i) + 0.08 * cos(2 * twopi_by_n * i);
+        } else if (window_type == "hamming") {
+            win.at<float>(0, i) = 0.54 - 0.46 * cos(twopi_by_n * i);
+        } else if (window_type == "bartlett") {
+            win.at<float>(0, i) = 1.0 - 2.0 * fabs(i - n / 2.0) / n;
+        } else {
+            throw std::runtime_error("Unsupported window function");
+        }
     }
 }
 
-int Specgram::stridedSignal(shared_ptr<RawMedia> raw) {
-    // read from raw in strided windows of length `_windowSize`
-    // with at every `_stride` samples.
 
-    // truncate data in raw if larger than _maxSignalSize
-    int numSamples = raw->numSamples();
-    if (numSamples > _maxSignalSize) {
-        numSamples = _maxSignalSize;
-    }
+int Specgram::stridedSignal(shared_ptr<RawMedia> raw) {
+    // read frames of length `_frame_length_tn` shifted every `_frame_stride_tn` samples
+
+    // truncate data in raw if larger than _max_duration_tn
+    int length_tn = std::min(raw->numSamples(), static_cast<int>(_max_duration_tn));
 
     // assert that there is more than 1 window of data in raw
-    assert(numSamples >= _windowSize);
+    assert(length_tn >= _frame_length_tn);
 
     // count is the number of windows to capture
-    int count = ((numSamples - _windowSize) / _stride) + 1;
-
-    // ensure the numver of windows will fit in output buffer of
-    // width `_width`
-    assert(count <= _width);
+    int num_frames = ((length_tn - _frame_length_tn) / _frame_stride_tn) + 1;
 
     char* src = raw->getBuf(0);
-    char* dst = _buf;
 
-    int windowSizeInBytes = _windowSize * raw->bytesPerSample();
-    int strideInBytes = _stride * raw->bytesPerSample();
-
-    assert(count * strideInBytes <= numSamples * raw->bytesPerSample());
-    assert(count * windowSizeInBytes <= _bufSize);
-
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < num_frames; i++) {
         memcpy(dst, src, windowSizeInBytes);
         dst += windowSizeInBytes;
         src += strideInBytes;
     }
 
-    return count;
+    return num_frames;
 }
 
-double Specgram::hzToMel(double freqInHz) {
-    return 2595 * std::log10(1 + freqInHz/700.0);
+double Specgram::hzToMel(double freq_hz)
+{
+    return 2595 * std::log10(1 + freq_hz / 700.0);
 }
 
-double Specgram::melToHz(double freqInMels) {
-    return 700 * (std::pow(10, freqInMels/2595.0)-1);
+double Specgram::melToHz(double freq_mel)
+{
+    return 700 * (std::pow(10, freq_mel / 2595.0) - 1);
 }
 
-vector<double> Specgram::linspace(double a, double b, int n) {
-    vector<double> interval;
-    double delta = (b-a)/(n-1);
-    while (a <= b) {
-        interval.push_back(a);
+void Specgram::linspace(double a, double b, vector<double>& interval)
+{
+    double delta = (b - a) / (interval.size() - 1);
+    for (auto &x : interval) {
+        x = a;
         a += delta;
     }
-    interval.push_back(a);
-    return interval;
+    return;
 }
 
-Mat Specgram::getFilterbank(int filts, int ffts, double samplingRate) {
-    double minFreq = 0.0;
-    double maxFreq = samplingRate / 2.0;
-    double minMelFreq = hzToMel(minFreq);
-    double maxMelFreq = hzToMel(maxFreq);
-    vector<double> melInterval = linspace(minMelFreq, maxMelFreq, filts + 2);
-    vector<int> bins;
-    for (int k=0; k<filts+2; ++k) {
-        bins.push_back(std::floor((1+ffts)*melToHz(melInterval[k])/samplingRate));
+void Specgram::fill_filterbanks(int num_filters, int ffts, uint32_t samplingRate, cv::Mat &fbank) {
+    double min_mel_freq = hzToMel(0.0);
+    double max_mel_freq = hzToMel(samplingRate / 2.0);
+
+    // Get mel-scale bin centers
+    int num_mel = num_filters + 2;
+    vector<double> mel_intervals (num_mel);
+    vector<int> bins (num_mel);
+
+    linspace(min_mel_freq, max_mel_freq, mel_intervals);
+
+    for (int k=0; k < num_mel; ++k) {
+        bins[k] = std::floor((1 + ffts) * melToHz(mel_intervals[k]) / samplingRate);
     }
 
-    Mat fbank = Mat::zeros(filts, 1 + ffts / 2, CV_32F);
-    for (int j=0; j<filts; ++j) {
+    fbank::create(num_filters, 1 + ffts / 2, CV_32F);
+
+    for (int j=0; j<num_filters; ++j) {
         for (int i=bins[j]; i<bins[j+1]; ++i) {
             fbank.at<float>(j, i) = (i - bins[j]) / (1.0*(bins[j + 1] - bins[j]));
         }
@@ -254,13 +190,13 @@ Mat Specgram::getFilterbank(int filts, int ffts, double samplingRate) {
             fbank.at<float>(j, i) = (bins[j+2]-i) / (1.0*(bins[j + 2] - bins[j+1]));
         }
     }
-    return fbank;
+    return;
 }
 
 void Specgram::extractFeatures(Mat& spectrogram, Mat& features) {
     Mat powspec = spectrogram.mul(spectrogram);
-    powspec *= 1.0 / _windowSize;
-    Mat cepsgram = powspec*_fbank;
+    powspec *= 1.0 / _frame_length_tn;
+    Mat cepsgram = powspec * _fbank;
     log(cepsgram, cepsgram);
     if (_feature == MFSC) {
         features = cepsgram;
@@ -278,5 +214,5 @@ void Specgram::extractFeatures(Mat& spectrogram, Mat& features) {
     cepsgram.copyTo(padcepsgram(Range(0, cepsgram.rows), Range(0, cepsgram.cols)));
     dct(padcepsgram, padcepsgram, cv::DFT_ROWS);
     cepsgram = padcepsgram(Range(0, cepsgram.rows), Range(0, cepsgram.cols));
-    features = cepsgram(Range::all(), Range(0, _numCepstra));
+    features = cepsgram(Range::all(), Range(0, _num_cepstra));
 }

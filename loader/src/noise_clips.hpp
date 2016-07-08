@@ -18,68 +18,25 @@
 #include <opencv2/core/core.hpp>
 
 #include "codec.hpp"
-#include "noise_clips.hpp"
+#include "params.hpp"
 
 class Codec;
 
-class IndexElement {
-public:
-    IndexElement();
-
-public:
-    std::string                      _fileName;
-    std::vector<std::string>         _targets;
-};
-
-class Index {
-public:
-    Index();
-    virtual ~Index();
-
-    void load(std::string& fileName, bool shuf = false);
-    IndexElement* operator[] (int idx);
-    uint size();
-
-private:
-    void addElement(std::string& line);
-    void shuffle();
-
-public:
-    vector<IndexElement*>       _elements;
-    uint                        _maxTargetSize;
-};
-
-class NoiseClipsState {
-public:
-    NoiseClipsState(cv::RNG& rng) : _index(0), _offset(0), _rng(rng) {}
-
-public:
-    // Index of the current noise clip.
-    uint                        _index;
-    // Offset within the current noise clip.
-    int                         _offset;
-    cv::RNG&                    _rng;
-};
-
 class NoiseClips {
 public:
-    NoiseClips(const std::string _noiseIndexFile, const std::string _noiseDir, Codec* codec);
+    NoiseClips(const std::string noiseIndexFile);
     virtual ~NoiseClips();
-
-    void addNoise(std::shared_ptr<RawMedia> media, NoiseClipsState* state);
-
-private:
-    void next(NoiseClipsState* state);
-    void loadIndex(std::string& indexFile);
-    void loadData(Codec* codec);
-    void readFile(std::string& fileName, int* dataLen);
-    void resize(int newLen);
+    void addNoise(std::shared_ptr<RawMedia> media, std::shared_ptr<nervana::audio::params> prm);
 
 private:
-    std::string                 _indexFile;
-    std::string                 _indexDir;
-    vector<std::shared_ptr<RawMedia>> _data;
-    Index                       _index;
-    char*                       _buf;
-    int                         _bufLen;
+    void load_index(std::string& index_file);
+    void load_data(std::shared_ptr<Codec> codec);
+    void read_noise(std::string& noise_file, int* dataLen);
+
+private:
+    std::string                            _noise_dir {""};
+    std::vector<std::string>               _noise_files;
+    std::vector<std::shared_ptr<RawMedia>> _noise_data;
+    char*                                  _buf = 0;
+    int                                    _bufLen = 0;
 };

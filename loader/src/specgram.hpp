@@ -33,36 +33,23 @@ namespace nervana {
     }
 }
 
-enum FeatureType {
-    SPECGRAM    = 0,
-    MFSC        = 1,
-    MFCC        = 2,
-};
-
 static_assert(sizeof(short) == 2, "Unsupported platform");
 
 class Specgram {
 public:
     Specgram(std::shared_ptr<const nervana::audio::config> params, int id);
     virtual ~Specgram();
-    int generate(std::shared_ptr<RawMedia> raw, char* buf, int bufSize);
+    int generate(std::shared_ptr<RawMedia> in_time, cv::Mat& out_freq);
 
 private:
-    void randomize(cv::Mat& img);
-    void resize(cv::Mat& img, float fx);
     bool powerOfTwo(int num);
-    void none(int);
-    void hann(int steps);
-    void blackman(int steps);
-    void hamming(int steps);
-    void bartlett(int steps);
-    void createWindow(int windowType);
+    void create_window(const std::string& window_type, uint32_t frame_length_tn);
     void applyWindow(cv::Mat& signal);
     int stridedSignal(std::shared_ptr<RawMedia> raw);
     double hzToMel(double freqInHz);
     double melToHz(double freqInMels);
-    std::vector<double> linspace(double a, double b, int n);
-    cv::Mat getFilterbank(int filts, int ffts, double samplingRate);
+    void linspace(double a, double b, int n, std::vector<double>& intervals);
+    void fill_filterbanks(int filts, int ffts, double samplingRate, cv::Mat& filterbanks);
     void extractFeatures(cv::Mat& spectrogram, cv::Mat& features);
 
 private:
@@ -75,17 +62,13 @@ private:
     int                         _width;
     int                         _numFreqs;
     int                         _height;
-    int                         _samplingFreq;
     int                         _maxSignalSize;
     int                         _numFilts;
     int                         _numCepstra;
-    float                       _scaleBy;
-    float                       _scaleMin;
-    float                       _scaleMax;
+
     char*                       _buf;
     int                         _bufSize;
-    cv::Mat*                    _window;
+    cv::Mat                     _window {0, 0, CV_32FC1};
     cv::Mat                     _fbank;
-    cv::RNG                     _rng;
     constexpr static int        MAX_BYTES_PER_SAMPLE = 4;
 };

@@ -7,98 +7,54 @@
 
 using namespace std;
 
-IndexElement::IndexElement() {
+NoiseClips::NoiseClips(const std::string noiseIndexFile)
+{
+    auto codec = make_shared<Codec>(MediaType::AUDIO);
+    load_index(noiseIndexFile);
+    load_data(codec);
 }
 
-Index::Index() : _maxTargetSize(0) {
-}
-
-Index::~Index() {
-    for (auto elem : _elements) {
-        delete elem;
-    }
-}
-
-void Index::load(std::string& fileName, bool shuf) {
-    ifstream ifs(fileName);
-    if (!ifs) {
-        stringstream ss;
-        ss << "Could not open " << fileName;
-        throw std::ios_base::failure(ss.str());
-    }
-
-    std::string line;
-    // Ignore the header line.
-    std::getline(ifs, line);
-    while (std::getline(ifs, line)) {
-        if (line[0] == '#') {
-            // Ignore comments.
-            continue;
-        }
-        addElement(line);
-    }
-
-    if (shuf == true) {
-        shuffle();
-    }
-
-    if (_elements.size() == 0) {
-        stringstream ss;
-        ss << "Could not load index from " << fileName;
-        throw std::runtime_error(ss.str());
-    }
-}
-
-IndexElement* Index::operator[] (int idx) {
-    return _elements[idx];
-}
-
-uint Index::size() {
-    return _elements.size();
-}
-
-void Index::addElement(std::string& line) {
-    IndexElement* elem = new IndexElement();
-    std::istringstream ss(line);
-    std::string token;
-    std::getline(ss, token, ',');
-    elem->_fileName = token;
-    while (std::getline(ss, token, ',')) {
-        elem->_targets.push_back(token);
-    }
-
-    // For now, restrict to a single target.
-    assert(elem->_targets.size() <= 1);
-    _elements.push_back(elem);
-    if (elem->_targets.size() == 0) {
-        return;
-    }
-    if (elem->_targets[0].size() > _maxTargetSize) {
-        _maxTargetSize = elem->_targets[0].size();
-    }
-}
-
-void Index::shuffle() {
-    std::srand(0);
-    std::random_shuffle(_elements.begin(), _elements.end());
-}
-
-NoiseClips::NoiseClips(const std::string _noiseIndexFile, const std::string _noiseDir, Codec* codec)
-: _indexFile(_noiseIndexFile), _indexDir(_noiseDir),
-  _buf(0), _bufLen(0) {
-    loadIndex(_indexFile);
-    loadData(codec);
-}
-
-NoiseClips::~NoiseClips() {
+NoiseClips::~NoiseClips()
+{
     delete[] _buf;
 }
 
-void NoiseClips::addNoise(shared_ptr<RawMedia> media, NoiseClipsState* state) {
-    if (state->_rng(2) == 0) {
-        // Augment half of the data examples.
+void NoiseClips::load_index(std::string& index_file)
+{
+    ifstream ifs(index_file);
+
+    if (!ifs) {
+        throw std::ios_base::failure("Could not open " + index_file);
+    }
+
+    std::stringstream file_contents_buffer;
+    file_contents_buffer << ifs.rdbuf();
+
+    auto js = nlohmann::json::parse(file_contents_buffer.str());
+    nervana::json_config_parser cfg_parser;
+    cfg_parser.parse_value<std::string>(js, "noise_dir", _noise_dir);
+    cfg_parser.parse_value<std::vector<std::string>>(js, "noise_files", _noise_files);
+
+    if (_noise_files.size() == 0) {
+        throw std::runtime_error("No noise files provided in " + index_file);
+    }
+}
+
+// From Factory, get do_or_donot, offset (pct), noise index, noise level
+void NoiseClips::addNoise(shared_ptr<RawMedia> media, shared_ptr<nervana::audio::params> prm) {
+
+    bool     noise_add   = prm->add_noise;
+    uint32_t noise_index = prm->noise_index % _noise_data.size();
+    float    noise_level = prm->noise_level;
+    float    offset_frac = prm->noise_offset_fraction;
+
+    assert(offset_frac  1.0);
+    assert(offset_frac = 0.0);
+
+    if (!noise_add) {
         return;
     }
+
     // Assume a single channel with 16 bit samples for now.
     assert(media->size() == 1);
     assert(media->bytesPerSample() == 2);
@@ -106,105 +62,87 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media, NoiseClipsState* state) {
     int numSamples = media->numSamples();
     cv::Mat data(1, numSamples, CV_16S, media->getBuf(0));
     cv::Mat noise(1, numSamples, CV_16S);
-    int left = numSamples;
-    int offset = 0;
+
     // Collect enough noise data to cover the entire input clip.
-    while (left > 0) {
-        std::shared_ptr<RawMedia> clipData = _data[state->_index];
-        assert(clipData->bytesPerSample() == bytesPerSample);
-        int clipSize = clipData->numSamples() - state->_offset;
-        cv::Mat clip(1, clipSize , CV_16S,
-                 clipData->getBuf(0) + bytesPerSample * state->_offset);
-        if (clipSize > left) {
-            const cv::Mat& src = clip(cv::Range::all(), cv::Range(0, left));
-            const cv::Mat& dst = noise(cv::Range::all(), cv::Range(offset, offset + left));
-            src.copyTo(dst);
-            left = 0;
-            state->_offset += left;
+    std::shared_ptr<RawMedia> clipData = _noise_data[noise_index];
+    assert(clipData->bytesPerSample() == bytesPerSample);
+    cv::Mat noise_src(1, clipData->numSamples() , CV_16S, clipData->getBuf(0));
+
+    uint32_t src_offset = clipData->numSamples() * offset_frac;
+    uint32_t src_left = clipData->numSamples() - src_offset;
+    uint32_t dst_offset = 0;
+    uint32_t dst_left = numSamples;
+    while (dst_left > 0) {
+        uint32_t copy_size = std::min(dst_left, src_left);
+
+        const cv::Mat& src = noise_src(cv::Range::all(),
+                                       cv::Range(src_offset, src_offset + copy_size));
+        const cv::Mat& dst = noise(cv::Range::all(),
+                                       cv::Range(dst_offset, dst_offset + copy_size));
+        src.copyTo(dst);
+
+        if (src_left > dst_left) {
+            dst_left = 0;
         } else {
-            const cv::Mat& dst = noise(cv::Range::all(),
-                                       cv::Range(offset, offset + clipSize));
-            clip.copyTo(dst);
-            left -= clipSize;
-            offset += clipSize;
-            next(state);
+            dst_left -= copy_size;
+            dst_offset += copy_size;
+            src_left = clipData->numSamples();
+            src_offset = 0; // loop around
         }
     }
-    // Superimpose noise without overflowing.
-    cv::Mat convData;
-    data.convertTo(convData, CV_32F);
-    cv::Mat convNoise;
-    noise.convertTo(convNoise, CV_32F);
-    float noiseLevel = state->_rng.uniform(0.f, 2.0f);
-    convNoise *= noiseLevel;
-    convData += convNoise;
-    double min, max;
-    cv::minMaxLoc(convData, &min, &max);
-    if (-min > 0x8000) {
-        convData *= 0x8000 / -min;
-        cv::minMaxLoc(convData, &min, &max);
-    }
-    if (max > 0x7FFF) {
-        convData *= 0x7FFF / max;
-    }
-    convData.convertTo(data, CV_16S);
+    // Superimpose noise without overflowing (opencv handles saturation cast for non CV_32S)
+    cv::addWeighted(data, 1.0f, noise, noise_level, 0.0f, data);
+    // cv::Mat convData;
+    // data.convertTo(convData, CV_32F);
+    // cv::Mat convNoise;
+    // noise.convertTo(convNoise, CV_32F);
+
+    // convNoise *= noise_level;
+    // convData += convNoise;
+    // double min, max;
+    // cv::minMaxLoc(convData, &min, &max);
+    // if (-min > 0x8000) {
+    //     convData *= 0x8000 / -min;
+    //     cv::minMaxLoc(convData, &min, &max);
+    // }
+    // if (max > 0x7FFF) {
+    //     convData *= 0x7FFF / max;
+    // }
+    // convData.convertTo(data, CV_16S);
 }
 
-void NoiseClips::next(NoiseClipsState* state) {
-    state->_index++;
-    if (state->_index == _data.size()) {
-        // Wrap around.
-        state->_index = 0;
-        // Start at a random offset.
-        state->_offset = state->_rng(_data[0]->numSamples());
-    } else {
-        state->_offset = 0;
-    }
-}
-
-void NoiseClips::loadIndex(std::string& indexFile) {
-    _index.load(indexFile, true);
-}
-
-void NoiseClips::loadData(Codec* codec) {
-    for (uint i = 0; i < _index.size(); i++) {
-        std::string& fileName = _index[i]->_fileName;
+void NoiseClips::load_data(std::shared_ptr<Codec> codec) {
+    for(auto nfile: _noise_files) {
         int len = 0;
-        readFile(fileName, &len);
-        if (len == 0) {
-            stringstream ss;
-            ss << "Could not read " << fileName;
-            throw std::runtime_error(ss.str());
-        }
-        _data.push_back(codec->decode(_buf, len));
+        read_noise(nfile, &len);
+        _noise_data.push_back(codec->decode(_buf, len));
     }
 }
 
-void NoiseClips::readFile(std::string& fileName, int* dataLen) {
-    std::string path;
-    if (fileName[0] == '/') {
-        path = fileName;
-    } else {
-        path = _indexDir + '/' + fileName;
+void NoiseClips::read_noise(std::string& noise_file, int* dataLen) {
+    std::string path = noise_file;
+    if (path[0] != '/') {
+        path = _noise_dir + '/' + path;
     }
+
     struct stat stats;
     int result = stat(path.c_str(), &stats);
     if (result == -1) {
-        stringstream ss;
-        ss << "Could not find " << path;
-        throw std::runtime_error(ss.str());
+        throw std::runtime_error("Could not find " + path);
     }
+
     off_t size = stats.st_size;
     if (_bufLen < size) {
-        resize(size + size / 8);
+        delete[] _buf;
+        _buf = new char[size + size / 8];
+        _bufLen = size + size / 8;
     }
+
     std::ifstream ifs(path, std::ios::binary);
     ifs.read(_buf, size);
-    *dataLen = size;
-}
 
-void NoiseClips::resize(int newLen) {
-    delete[] _buf;
-    _buf = new char[newLen];
-    _bufLen = newLen;
+    if (size == 0) {
+        throw std::runtime_error("Could not read " + path);
+    }
+    *dataLen = size;
 }

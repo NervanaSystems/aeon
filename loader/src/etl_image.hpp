@@ -70,7 +70,8 @@ namespace nervana {
         bool channel_major = true;
         uint32_t channels = 3;
 
-        bool set_config(nlohmann::json js) override {
+        bool set_config(nlohmann::json js) override
+        {
             parse_req(height, "height", js);
             parse_req(width, "width", js);
 
@@ -103,7 +104,6 @@ namespace nervana {
                 shape = std::vector<uint32_t> {height, width, channels};
             }
 
-
             return validate();
         }
 
@@ -119,7 +119,6 @@ namespace nervana {
         }
     };
 
-
     class image::param_factory : public interface::param_factory<image::decoded, image::params> {
     public:
         param_factory(std::shared_ptr<image::config> cfg) : _cfg{cfg}, _dre{0}
@@ -129,7 +128,6 @@ namespace nervana {
                 _dre.seed((uint32_t) _cfg->seed);
             } else {
                 _dre.seed(std::chrono::system_clock::now().time_since_epoch().count());
-
             }
         }
         ~param_factory() {}

@@ -31,10 +31,11 @@ int lockmgr(void **p, enum AVLockOp op) {
 }
 
 
-Codec::Codec(std::shared_ptr<const nervana::audio::config> params) : _format(0), _codec(0) {
-    if (params->_mtype == MediaType::VIDEO) {
+Codec::Codec(MediaType mtype)
+{
+    if (mtype == MediaType::VIDEO) {
         _mediaType = AVMEDIA_TYPE_VIDEO;
-    } else if (params->_mtype == MediaType::AUDIO) {
+    } else if (mtype == MediaType::AUDIO) {
         _mediaType = AVMEDIA_TYPE_AUDIO;
     }
 

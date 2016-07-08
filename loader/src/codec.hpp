@@ -50,17 +50,16 @@ int lockmgr(void **p, enum AVLockOp op);
 
 class Codec {
 public:
-    Codec(std::shared_ptr<const nervana::audio::config> params);
+    Codec(MediaType mtype);
     std::shared_ptr<RawMedia> decode(const char* item, int itemSize);
 
 private:
     void decodeFrame(AVPacket* packet, int stream, int itemSize);
 
-private:
-    std::shared_ptr<RawMedia>   _raw;
-    AVMediaType                 _mediaType;
-    AVFormatContext*            _format;
-    AVCodecContext*             _codec;
+    std::shared_ptr<RawMedia>   _raw{nullptr};
+    AVMediaType                 _mediaType = AVMEDIA_TYPE_AUDIO;
+    AVFormatContext*            _format = 0;
+    AVCodecContext*             _codec = 0;
     mutex                       _mutex;
     static int                  _init;
 };
