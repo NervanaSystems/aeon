@@ -92,10 +92,10 @@ private:
 class pyLoaderConfig : public nervana::json_config_parser {
 public:
     std::string manifest_filename;
-    std::string cache_directory;
-    int macrobatch_size;
     int minibatch_size;
 
+    std::string cache_directory = "";
+    int macrobatch_size      = 0;
     bool shuffle_every_epoch = false;
     bool shuffle_manifest    = false;
     int subset_percent        = 100;
@@ -104,14 +104,18 @@ public:
     bool set_config(nlohmann::json js) override
     {
         parse_req(manifest_filename, "manifest_filename", js);
-        parse_req(cache_directory,   "cache_directory", js);
-        parse_req(macrobatch_size,   "macrobatch_size", js);
         parse_req(minibatch_size,    "minibatch_size", js);
 
+        parse_opt(cache_directory,     "cache_directory", js);
+        parse_opt(macrobatch_size,     "macrobatch_size", js);
         parse_opt(shuffle_every_epoch, "shuffle_every_epoch", js);
         parse_opt(shuffle_manifest,    "shuffle_manifest", js);
         parse_opt(subset_percent,      "subset_percent", js);
         parse_opt(random_seed,         "random_seed", js);
+
+        if(macrobatch_size == 0) {
+            macrobatch_size = minibatch_size;
+        }
 
         return validate();
     }
