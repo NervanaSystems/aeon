@@ -33,9 +33,9 @@ using namespace std;
 buffer_pool_in::buffer_pool_in(int dataSize, int targetSize, bool pinned, int count)
 : _count(count), _used(0), _readPos(0), _writePos(0) {
     for (int i = 0; i < count; i++) {
-        Buffer* dataBuffer = new Buffer(dataSize, pinned);
-        Buffer* targetBuffer = new Buffer(targetSize, pinned);
-        _bufs.push_back(BufferArray{dataBuffer, targetBuffer});
+        buffer_in* dataBuffer = new buffer_in(dataSize, pinned);
+        buffer_in* targetBuffer = new buffer_in(targetSize, pinned);
+        _bufs.push_back(buffer_in_array{dataBuffer, targetBuffer});
     }
 }
 
@@ -46,18 +46,18 @@ buffer_pool_in::~buffer_pool_in() {
     }
 }
 
-BufferArray& buffer_pool_in::getForWrite()
+buffer_in_array& buffer_pool_in::getForWrite()
 {
     _bufs[_writePos][0]->reset();
     _bufs[_writePos][1]->reset();
     return _bufs[_writePos];
 }
 
-BufferArray& buffer_pool_in::getForRead() {
+buffer_in_array& buffer_pool_in::getForRead() {
     return _bufs[_readPos];
 }
 
-BufferArray& buffer_pool_in::getPair(int bufIdx) {
+buffer_in_array& buffer_pool_in::getPair(int bufIdx) {
     assert(bufIdx >= 0 && bufIdx < _count);
     return _bufs[bufIdx];
 }

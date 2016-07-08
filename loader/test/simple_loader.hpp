@@ -14,7 +14,7 @@ public:
     int start() { return 0; }
     void stop() {}
 
-    void read(BufferArray& dest) override;
+    void read(buffer_in_array& dest) override;
     void reset() override;
 
 private:

@@ -33,11 +33,11 @@
  * position of each item in the memory is recorded in _items and the
  * length of each item is stored in _lens.
  */
-class Buffer {
+class buffer_in {
 public:
-    explicit Buffer(int size, bool pinned = false);
-    Buffer(char* data, int size);
-    virtual ~Buffer();
+    explicit buffer_in(int size, bool pinned = false);
+    buffer_in(char* data, int size);
+    virtual ~buffer_in();
 
     void read(std::istream& is, int size);
     void read(const char* src, int size);
@@ -51,7 +51,7 @@ public:
     uint getSize();
 
 private:
-    Buffer() = delete;
+    buffer_in() = delete;
     char* alloc();
     void dealloc(char* data);
     void resize(int inc);
@@ -75,13 +75,13 @@ protected:
     bool                        _pinned;
 };
 
-class BufferArray {
+class buffer_in_array {
 public:
-    BufferArray(std::initializer_list<Buffer*> list) : data(list) {}
+    buffer_in_array(std::initializer_list<buffer_in*> list) : data(list) {}
 
-    Buffer* operator[](int i) { return data[i]; }
+    buffer_in* operator[](int i) { return data[i]; }
     size_t size() const { return data.size(); }
 
 private:
-    std::vector<Buffer*>    data;
+    std::vector<buffer_in*>    data;
 };

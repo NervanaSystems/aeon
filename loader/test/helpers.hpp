@@ -22,7 +22,7 @@
 
 using namespace std;
 
-vector<string> buffer_to_vector_of_strings(Buffer& b);
+vector<string> buffer_to_vector_of_strings(buffer_in& b);
 bool sorted(vector<string> words);
 void dump_vector_of_strings(vector<string>& words);
 

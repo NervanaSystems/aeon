@@ -24,7 +24,7 @@ class ShuffledBatchIterator : public BatchIterator {
 public:
     ShuffledBatchIterator(std::shared_ptr<BatchLoader> loader, uint block_size, uint seed);
 
-    void read(BufferArray& dest);
+    void read(buffer_in_array& dest);
     void reset();
 
 protected:

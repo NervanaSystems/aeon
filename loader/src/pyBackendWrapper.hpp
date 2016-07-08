@@ -15,7 +15,7 @@ public:
                      int);
 
     bool use_pinned_memory();
-    void call_backend_transfer(BufferArray &outBuf, int bufIdx);
+    void call_backend_transfer(buffer_in_array &outBuf, int bufIdx);
     PyObject* get_dtm_tgt_pair(int bufIdx);
 
     ~pyBackendWrapper();
@@ -27,7 +27,7 @@ public:
 private:
     pyBackendWrapper() {};
     PyObject* initPyList(int length=2);
-    void wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
+    void wrap_buffer_pool(PyObject *list, buffer_in *buf, int bufIdx,
                           const std::shared_ptr<nervana::interface::config>& config);
 
     PyObject*                   _pBackend;

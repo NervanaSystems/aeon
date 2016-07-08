@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-vector<string> buffer_to_vector_of_strings(Buffer& b) {
+vector<string> buffer_to_vector_of_strings(buffer_in& b) {
     vector<string> words;
     int len;
     for(auto i = 0; i != b.getItemCount(); ++i) {

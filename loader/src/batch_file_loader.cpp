@@ -28,7 +28,7 @@ BatchFileLoader::BatchFileLoader(shared_ptr<Manifest> manifest, uint subsetPerce
     assert(_subsetPercent >= 0 && _subsetPercent <= 100);
 }
 
-void BatchFileLoader::loadBlock(BufferArray& dest, uint block_num, uint block_size) {
+void BatchFileLoader::loadBlock(buffer_in_array& dest, uint block_num, uint block_size) {
     // NOTE: thread safe so long as you aren't modifying the manifest
     // NOTE: dest memory must already be allocated at the correct size
     // NOTE: end_i - begin_i may not be a full block for the last
@@ -76,7 +76,7 @@ void BatchFileLoader::loadBlock(BufferArray& dest, uint block_num, uint block_si
     }
 }
 
-void BatchFileLoader::loadFile(Buffer* buff, const string& filename) {
+void BatchFileLoader::loadFile(buffer_in* buff, const string& filename) {
     off_t size = getFileSize(filename);
     ifstream fin(filename, ios::binary);
     buff->read(fin, size);

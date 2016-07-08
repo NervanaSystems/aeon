@@ -38,13 +38,13 @@ TEST(provider,image) {
     CPIOFileReader reader;
     EXPECT_EQ(reader.open(files[0]), true);
     for (int i=0; i<reader.itemCount()/2; i++ ) {
-        Buffer data_p(0);
+        buffer_in data_p(0);
         reader.read(data_p);
 
-        Buffer target_p(0);
+        buffer_in target_p(0);
         reader.read(target_p);
 
-        BufferArray bp{&data_p, &target_p};
+        buffer_in_array bp{&data_p, &target_p};
         media->provide_pair(0, &bp, &dbuffer[0], &tbuffer[0]);
 
         int target_value = unpack_le<int>(&tbuffer[0]);

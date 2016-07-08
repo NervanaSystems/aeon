@@ -25,7 +25,7 @@ TEST(buffer, shuffle) {
     // that they are sorted, then shuffle, then assert that they are
     // not sorted
 
-    Buffer b(0);
+    buffer_in b(0);
 
     b.read("abc", 3);
     b.read("asd", 3);

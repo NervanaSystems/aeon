@@ -24,9 +24,9 @@ using namespace std;
 TEST(shuffled_batch_iterator, sequential_batch_loader) {
     MockBatchLoader bl;
 
-    Buffer* dataBuffer = new Buffer(0);
-    Buffer* targetBuffer = new Buffer(0);
-    BufferArray bp{dataBuffer, targetBuffer};
+    buffer_in* dataBuffer = new buffer_in(0);
+    buffer_in* targetBuffer = new buffer_in(0);
+    buffer_in_array bp{dataBuffer, targetBuffer};
 
     // ensure that loading successive blocks from SequentialBatchLoader
     // result in sorted strings
@@ -44,9 +44,9 @@ TEST(shuffled_batch_iterator, shuffled_block) {
         make_shared<MockBatchLoader>(), 3, 0
     );
 
-    Buffer* dataBuffer = new Buffer(0);
-    Buffer* targetBuffer = new Buffer(0);
-    BufferArray bp{dataBuffer, targetBuffer};
+    buffer_in* dataBuffer = new buffer_in(0);
+    buffer_in* targetBuffer = new buffer_in(0);
+    buffer_in_array bp{dataBuffer, targetBuffer};
 
     // ensure that loading successive blocks from SequentialBatchLoader
     // result in sorted strings

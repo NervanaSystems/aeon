@@ -181,7 +181,7 @@ void CPIOReader::readHeader() {
     _header.read(*_is);
 }
 
-void CPIOReader::read(Buffer& dest) {
+void CPIOReader::read(buffer_in& dest) {
     uint datumSize;
     _recordHeader.read(*_is, &datumSize);
     dest.read(*_is, datumSize);

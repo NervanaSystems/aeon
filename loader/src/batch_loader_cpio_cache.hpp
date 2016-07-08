@@ -32,12 +32,12 @@ public:
                          const std::string& hash, const std::string& version,
                          std::shared_ptr<BatchLoader> loader);
 
-    void loadBlock(BufferArray& dest, uint block_num, uint block_size);
+    void loadBlock(buffer_in_array& dest, uint block_num, uint block_size);
     uint objectCount();
 
 private:
-    bool loadBlockFromCache(BufferArray& dest, uint block_num, uint block_size);
-    void writeBlockToCache(BufferArray& dest, uint block_num, uint block_size);
+    bool loadBlockFromCache(buffer_in_array& dest, uint block_num, uint block_size);
+    void writeBlockToCache(buffer_in_array& dest, uint block_num, uint block_size);
     std::string blockFilename(uint block_num, uint block_size);
 
     void invalidateOldCache(const std::string& rootCacheDir, const std::string& hash, const std::string& version);

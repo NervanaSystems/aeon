@@ -32,9 +32,9 @@ TEST(blocked_file_loader, loadBlock) {
 
     BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(4, object_size, target_size), true), 100);
 
-    Buffer* dataBuffer = new Buffer(0);
-    Buffer* targetBuffer = new Buffer(0);
-    BufferArray bp{dataBuffer, targetBuffer};
+    buffer_in* dataBuffer = new buffer_in(0);
+    buffer_in* targetBuffer = new buffer_in(0);
+    buffer_in_array bp{dataBuffer, targetBuffer};
 
     bfl.loadBlock(bp, 0, block_size);
 
@@ -62,9 +62,9 @@ TEST(blocked_file_loader, subsetPercent) {
 
     BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(10, object_size, target_size), true), 50);
 
-    Buffer* dataBuffer = new Buffer(0);
-    Buffer* targetBuffer = new Buffer(0);
-    BufferArray bp{dataBuffer, targetBuffer};
+    buffer_in* dataBuffer = new buffer_in(0);
+    buffer_in* targetBuffer = new buffer_in(0);
+    buffer_in_array bp{dataBuffer, targetBuffer};
 
     bfl.loadBlock(bp, 0, block_size);
     ASSERT_EQ(bp[0]->getItemCount(), block_size / 2);

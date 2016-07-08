@@ -79,7 +79,7 @@ bool pyBackendWrapper::use_pinned_memory()
 }
 
 // Copy to device.
-void pyBackendWrapper::call_backend_transfer(BufferArray &outBuf, int bufIdx)
+void pyBackendWrapper::call_backend_transfer(buffer_in_array &outBuf, int bufIdx)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -122,7 +122,7 @@ PyObject* pyBackendWrapper::get_dtm_tgt_pair(int bufIdx)
     return dtm_tgt_pair;
 }
 
-void pyBackendWrapper::wrap_buffer_pool(PyObject *list, Buffer *buf, int bufIdx,
+void pyBackendWrapper::wrap_buffer_pool(PyObject *list, buffer_in *buf, int bufIdx,
                                         const shared_ptr<nervana::interface::config> &cfg)
 {
     PyObject *hdItem = PyList_GetItem(list, bufIdx);

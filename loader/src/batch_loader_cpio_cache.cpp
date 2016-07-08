@@ -40,7 +40,7 @@ BatchLoaderCPIOCache::BatchLoaderCPIOCache(const string& rootCacheDir,
     makeDirectory(_cacheDir);
 }
 
-void BatchLoaderCPIOCache::loadBlock(BufferArray& dest, uint block_num, uint block_size) {
+void BatchLoaderCPIOCache::loadBlock(buffer_in_array& dest, uint block_num, uint block_size) {
     if(loadBlockFromCache(dest, block_num, block_size)) {
         return;
     } else {
@@ -49,7 +49,7 @@ void BatchLoaderCPIOCache::loadBlock(BufferArray& dest, uint block_num, uint blo
     }
 }
 
-bool BatchLoaderCPIOCache::loadBlockFromCache(BufferArray& dest, uint block_num, uint block_size) {
+bool BatchLoaderCPIOCache::loadBlockFromCache(buffer_in_array& dest, uint block_num, uint block_size) {
     // load a block from cpio cache into dest.  If file doesn't exist,
     // return false.  If loading from cpio cache was successful return
     // true.
@@ -72,7 +72,7 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(BufferArray& dest, uint block_num,
     return true;
 }
 
-void BatchLoaderCPIOCache::writeBlockToCache(BufferArray& buff, uint block_num, uint block_size) {
+void BatchLoaderCPIOCache::writeBlockToCache(buffer_in_array& buff, uint block_num, uint block_size) {
     CPIOFileWriter writer;
     writer.open(blockFilename(block_num, block_size));
 

@@ -7,7 +7,7 @@ simple_loader::simple_loader(const string& repoDir) :
 {
 }
 
-void simple_loader::read(BufferArray& dest) {
+void simple_loader::read(buffer_in_array& dest) {
 
 }
 

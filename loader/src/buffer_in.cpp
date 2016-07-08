@@ -30,31 +30,31 @@
 
 using namespace std;
 
-Buffer::Buffer(int size, bool pinned)
+buffer_in::buffer_in(int size, bool pinned)
 : _size(size), _idx(0), _alloc(true), _pinned(pinned) {
     _data = alloc();
     _cur = _data;
 }
 
-Buffer::Buffer(char* data, int size)
+buffer_in::buffer_in(char* data, int size)
 : _data(data), _size(size), _cur(_data), _idx(0), _alloc(false), _pinned(false) {
     pushItem(size);
 }
 
-Buffer::~Buffer() {
+buffer_in::~buffer_in() {
     if (_alloc == true) {
         dealloc(_data);
     }
 }
 
-void Buffer::reset() {
+void buffer_in::reset() {
     _cur = _data;
     _idx = 0;
     _items.clear();
     _lens.clear();
 }
 
-void Buffer::shuffle(uint seed) {
+void buffer_in::shuffle(uint seed) {
     // TODO: instead of reseeding the shuffle, store these in a pair
     std::minstd_rand0 rand_items(seed);
     std::shuffle(_items.begin(), _items.end(), rand_items);
@@ -63,7 +63,7 @@ void Buffer::shuffle(uint seed) {
     std::shuffle(_lens.begin(), _lens.end(), rand_lens);
 }
 
-void Buffer::dump() {
+void buffer_in::dump() {
     uint8_t* data = reinterpret_cast<uint8_t*>(_data);
     int len = _size;
     assert(len % 16 == 0);
@@ -87,14 +87,14 @@ void Buffer::dump() {
     }
 }
 
-void Buffer::pushItem(int len) {
+void buffer_in::pushItem(int len) {
     _items.push_back(_idx);
     _lens.push_back(len);
     _cur += len;
     _idx += len;
 }
 
-char* Buffer::getItem(int index, int& len) {
+char* buffer_in::getItem(int index, int& len) {
     if (index >= (int) _items.size()) {
         // TODO: why not raise exception here?  Is anyone actually
         // checking the return value of getItem to make sure it is
@@ -105,43 +105,43 @@ char* Buffer::getItem(int index, int& len) {
     return _data + _items[index];
 }
 
-int Buffer::getItemCount() {
+int buffer_in::getItemCount() {
     return _items.size();
 }
 
-char* Buffer::getCurrent() {
+char* buffer_in::getCurrent() {
     return _cur;
 }
 
-uint Buffer::getSize() {
+uint buffer_in::getSize() {
     return _size;
 }
 
-uint Buffer::getLevel() {
+uint buffer_in::getLevel() {
     return _idx;
 }
 
-void Buffer::read(istream& is, int size) {
+void buffer_in::read(istream& is, int size) {
     // read `size` bytes out of `ifs` and push into buffer
     resizeIfNeeded(size);
     is.read(_cur, size);
     pushItem(size);
 }
 
-void Buffer::read(const char* src, int size) {
+void buffer_in::read(const char* src, int size) {
     // read `size` bytes out of `src` and push into buffer
     resizeIfNeeded(size);
     memcpy((void *) _cur, (void *) src, size);
     pushItem(size);
 }
 
-void Buffer::resizeIfNeeded(int inc) {
+void buffer_in::resizeIfNeeded(int inc) {
     if (getLevel() + inc > getSize()) {
         resize(inc);
     }
 }
 
-void Buffer::resize(int inc) {
+void buffer_in::resize(int inc) {
     assert(_alloc == true);
     _size = getLevel() + inc;
     // Allocate a bit more to minimize reallocations.
@@ -153,7 +153,7 @@ void Buffer::resize(int inc) {
     _cur = _data + _idx;
 }
 
-char* Buffer::alloc() {
+char* buffer_in::alloc() {
     char*      data;
     assert(_alloc == true);
     if (_pinned == true) {
@@ -171,7 +171,7 @@ char* Buffer::alloc() {
     return data;
 }
 
-void Buffer::dealloc(char* data) {
+void buffer_in::dealloc(char* data) {
     if (_pinned == true) {
 #if HAS_GPU
         cuMemFreeHost(data);

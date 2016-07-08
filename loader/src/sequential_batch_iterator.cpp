@@ -26,7 +26,7 @@ SequentialBatchIterator::SequentialBatchIterator(shared_ptr<BatchLoader> loader,
     reset();
 };
 
-void SequentialBatchIterator::read(BufferArray& dest) {
+void SequentialBatchIterator::read(buffer_in_array& dest) {
     _loader->loadBlock(dest, _i, _block_size);
 
     ++_i;

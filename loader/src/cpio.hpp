@@ -126,7 +126,7 @@ public:
     CPIOReader();
     CPIOReader(std::istream* is);
 
-    void read(Buffer& dest);
+    void read(buffer_in& dest);
 
     int itemCount() ;
 
