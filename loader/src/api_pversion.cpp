@@ -35,15 +35,13 @@ extern void* start(const char* loaderConfigString,
             last_error_message = ss.str();
             delete loader;
 
-            Py_INCREF(Py_None);
-            return Py_None;
+            return 0;
         }
         return reinterpret_cast<void*>(loader);
     } catch(std::exception& ex) {
         last_error_message = ex.what();
 
-        Py_INCREF(Py_None);
-        return Py_None;
+        return 0;
     }
 }
 
