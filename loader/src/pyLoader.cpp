@@ -32,8 +32,8 @@
 using namespace std;
 
 pyDecodeThreadPool::pyDecodeThreadPool(int count,
-                                       const shared_ptr<host_buffer_pool>& in,
-                                       const shared_ptr<host_buffer_pool>& out,
+                                       const shared_ptr<buffer_pool_in>& in,
+                                       const shared_ptr<buffer_pool_in>& out,
                                        const shared_ptr<pyBackendWrapper>& pbe)
 : ThreadPool(count), _in(in), _out(out), _pbe(pbe)
 {
@@ -217,7 +217,7 @@ void pyDecodeThreadPool::manage()
 }
 
 
-ReadThread::ReadThread(const shared_ptr<host_buffer_pool>& out,
+ReadThread::ReadThread(const shared_ptr<buffer_pool_in>& out,
                        const shared_ptr<BatchIterator>& batch_iterator)
 : ThreadPool(1), _out(out), _batch_iterator(batch_iterator)
 {
@@ -305,11 +305,11 @@ int PyLoader::start()
         _pyBackend = make_shared<pyBackendWrapper>(_pbe, _dtm_config, _tgt_config, _batchSize);
 
         // Start the read buffers off with a reasonable size. They will get resized as needed.
-        _readBufs = make_shared<host_buffer_pool>(_dtm_config->get_size_bytes() * _batchSize / 8,
+        _readBufs = make_shared<buffer_pool_in>(_dtm_config->get_size_bytes() * _batchSize / 8,
                                             _tgt_config->get_size_bytes() * _batchSize);
         _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
 
-        _decodeBufs = make_shared<host_buffer_pool>(_dtm_config->get_size_bytes() * _batchSize,
+        _decodeBufs = make_shared<buffer_pool_in>(_dtm_config->get_size_bytes() * _batchSize,
                                               _tgt_config->get_size_bytes() * _batchSize,
                                               _pyBackend->use_pinned_memory());
 

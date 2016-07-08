@@ -15,7 +15,7 @@
 
 #include "gtest/gtest.h"
 
-#include "buffer.hpp"
+#include "buffer_in.hpp"
 #include "helpers.hpp"
 
 using namespace std;

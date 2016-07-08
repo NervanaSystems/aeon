@@ -15,8 +15,6 @@
 
 #include <math.h>
 
-#include "buffer.hpp"
-
 #include "sequential_batch_iterator.hpp"
 
 using namespace std;

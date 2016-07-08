@@ -20,16 +20,16 @@
 #include <condition_variable>
 #include <cstring>
 
-#include "host_buffer_pool.hpp"
-#include "buffer.hpp"
+#include "buffer_pool_out.hpp"
+#include "buffer_out.hpp"
 
-class host_buffer_pool {
+class buffer_pool_out {
 public:
-    host_buffer_pool(int dataSize, int targetSize, bool pinned = false, int count = 2);
-    virtual ~host_buffer_pool();
-    BufferArray& getForWrite();
-    BufferArray& getForRead();
-    BufferArray& getPair(int bufIdx);
+    buffer_pool_out(int dataSize, int targetSize, bool pinned = false, int count = 2);
+    virtual ~buffer_pool_out();
+    buffer_out_array& getForWrite();
+    buffer_out_array& getForRead();
+    buffer_out_array& getPair(int bufIdx);
     int getCount() { return _count;}
 
     void advanceReadPos();
@@ -48,7 +48,7 @@ protected:
 protected:
     int                         _count;
     int                         _used;
-    std::vector<BufferArray>     _bufs;
+    std::vector<buffer_out_array> _bufs;
     int                         _readPos;
     int                         _writePos;
     std::mutex                  _mutex;

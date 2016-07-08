@@ -4,7 +4,7 @@
 #include <Python.h>
 
 #include <assert.h>
-#include "buffer.hpp"
+#include "buffer_in.hpp"
 #include "util.hpp"
 
 class pyBackendWrapper {

@@ -2,7 +2,7 @@
 #include <memory>
 #include "util.hpp"
 #include "etl_interface.hpp"
-#include "buffer.hpp"
+#include "buffer_in.hpp"
 
 namespace nervana {
     template<typename T, typename S> class provider;

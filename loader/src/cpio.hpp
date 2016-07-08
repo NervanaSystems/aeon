@@ -27,7 +27,7 @@
 #include <cstring>
 #include <sstream>
 
-#include "buffer.hpp"
+#include "buffer_in.hpp"
 
 #define FORMAT_VERSION  1
 #define WRITER_VERSION  1

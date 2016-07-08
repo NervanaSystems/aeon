@@ -16,7 +16,8 @@
 
 SRCS            := \
     cpio.cpp \
-    buffer.cpp \
+    buffer_in.cpp \
+    buffer_out.cpp \
     pyBackendWrapper.cpp \
     pyLoader.cpp \
     api_pversion.cpp \
@@ -40,7 +41,8 @@ SRCS            := \
     minibatch_iterator.cpp \
     batch_loader.cpp \
     box.cpp \
-    host_buffer_pool.cpp
+    buffer_pool_in.cpp \
+    buffer_pool_out.cpp \
 
 
 OBJS             = $(subst .cpp,.o,$(SRCS))

@@ -26,84 +26,83 @@
 #include <condition_variable>
 #include <fstream>
 
-#include "host_buffer_pool.hpp"
-#include "buffer.hpp"
+#include "buffer_pool_out.hpp"
 
 using namespace std;
 
-host_buffer_pool::host_buffer_pool(int dataSize, int targetSize, bool pinned, int count)
+buffer_pool_out::buffer_pool_out(int dataSize, int targetSize, bool pinned, int count)
 : _count(count), _used(0), _readPos(0), _writePos(0) {
     for (int i = 0; i < count; i++) {
-        Buffer* dataBuffer = new Buffer(dataSize, pinned);
-        Buffer* targetBuffer = new Buffer(targetSize, pinned);
-        _bufs.push_back(BufferArray{dataBuffer, targetBuffer});
+        buffer_out* dataBuffer = new buffer_out(1, dataSize, 1, pinned);
+        buffer_out* targetBuffer = new buffer_out(1, targetSize, 1, pinned);
+        _bufs.push_back(buffer_out_array{dataBuffer, targetBuffer});
     }
 }
 
-host_buffer_pool::~host_buffer_pool() {
+buffer_pool_out::~buffer_pool_out() {
     for (auto buf : _bufs) {
         delete buf[0];
         delete buf[1];
     }
 }
 
-BufferArray& host_buffer_pool::getForWrite()
+buffer_out_array& buffer_pool_out::getForWrite()
 {
-    _bufs[_writePos][0]->reset();
-    _bufs[_writePos][1]->reset();
+//    _bufs[_writePos][0]->reset();
+//    _bufs[_writePos][1]->reset();
     return _bufs[_writePos];
 }
 
-BufferArray& host_buffer_pool::getForRead() {
+buffer_out_array& buffer_pool_out::getForRead() {
     return _bufs[_readPos];
 }
 
-BufferArray& host_buffer_pool::getPair(int bufIdx) {
+buffer_out_array& buffer_pool_out::getPair(int bufIdx) {
     assert(bufIdx >= 0 && bufIdx < _count);
     return _bufs[bufIdx];
 }
 
-void host_buffer_pool::advanceReadPos() {
+void buffer_pool_out::advanceReadPos() {
     _used--;
     advance(_readPos);
 }
 
-void host_buffer_pool::advanceWritePos() {
+void buffer_pool_out::advanceWritePos() {
     _used++;
     advance(_writePos);
 }
 
-bool host_buffer_pool::empty() {
+bool buffer_pool_out::empty() {
     assert(_used >= 0);
     return (_used == 0);
 }
 
-bool host_buffer_pool::full() {
+bool buffer_pool_out::full() {
     assert(_used <= _count);
     return (_used == _count);
 }
 
-std::mutex& host_buffer_pool::getMutex() {
+std::mutex& buffer_pool_out::getMutex() {
     return _mutex;
 }
 
-void host_buffer_pool::waitForNonEmpty(std::unique_lock<std::mutex>& lock) {
+void buffer_pool_out::waitForNonEmpty(std::unique_lock<std::mutex>& lock) {
     _nonEmpty.wait(lock);
 }
 
-void host_buffer_pool::waitForNonFull(std::unique_lock<std::mutex>& lock) {
+void buffer_pool_out::waitForNonFull(std::unique_lock<std::mutex>& lock) {
     _nonFull.wait(lock);
 }
 
-void host_buffer_pool::signalNonEmpty() {
+void buffer_pool_out::signalNonEmpty() {
     _nonEmpty.notify_all();
 }
 
-void host_buffer_pool::signalNonFull() {
+void buffer_pool_out::signalNonFull() {
     _nonFull.notify_all();
 }
 
-void host_buffer_pool::advance(int& index) {
+void buffer_pool_out::advance(int& index) {
     // increment index and reset to 0 when index hits `_count`
     if (++index == _count) {
         index = 0;

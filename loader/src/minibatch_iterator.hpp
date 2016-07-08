@@ -17,7 +17,7 @@
 
 #include <memory>
 
-#include "buffer.hpp"
+#include "buffer_in.hpp"
 #include "batch_iterator.hpp"
 
 // This can inherit from BatchIterator, but should it?

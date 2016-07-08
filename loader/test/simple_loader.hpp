@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "buffer.hpp"
+#include "buffer_in.hpp"
 #include "batch_iterator.hpp"
 
 class simple_loader : public BatchIterator

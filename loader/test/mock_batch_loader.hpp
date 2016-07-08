@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "buffer.hpp"
+#include "buffer_in.hpp"
 #include "batch_loader.hpp"
 
 class MockBatchLoader : public BatchLoader {

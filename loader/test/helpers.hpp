@@ -18,7 +18,7 @@
 #include <vector>
 #include <string>
 
-#include "buffer.hpp"
+#include "buffer_in.hpp"
 
 using namespace std;
 
