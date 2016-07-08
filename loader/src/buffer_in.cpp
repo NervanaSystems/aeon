@@ -31,7 +31,7 @@
 using namespace std;
 
 buffer_in::buffer_in(int size)
-: _size(size), _idx(0), _pinned(false) {
+: _size(size), _idx(0) {
     _data = alloc();
     _cur = _data;
 }
@@ -122,30 +122,9 @@ void buffer_in::resize(int inc) {
 }
 
 char* buffer_in::alloc() {
-    char*      data;
-    if (_pinned == true) {
-#if HAS_GPU
-        CUresult status = cuMemAllocHost((void**)&data, _size);
-        if (status != CUDA_SUCCESS) {
-            throw std::bad_alloc();
-        }
-#else
-        data = new char[_size];
-#endif
-    } else {
-        data = new char[_size];
-    }
-    return data;
+    return new char[_size];
 }
 
 void buffer_in::dealloc(char* data) {
-    if (_pinned == true) {
-#if HAS_GPU
-        cuMemFreeHost(data);
-#else
-        delete[] data;
-#endif
-    } else {
-        delete[] data;
-    }
+    delete[] data;
 }

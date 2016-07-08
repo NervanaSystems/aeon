@@ -69,7 +69,6 @@ protected:
     int                         _idx;
     std::vector<int>            _items;
     std::vector<int>            _lens;
-    bool                        _pinned;
 };
 
 class buffer_in_array {
