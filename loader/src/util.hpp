@@ -36,4 +36,6 @@ namespace nervana {
             data[offset+i] = (char)(value >> (8*(count-i-1)));
         }
     }
+
+    void dump( const void*, size_t );
 }

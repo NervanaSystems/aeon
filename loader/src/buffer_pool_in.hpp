@@ -24,12 +24,12 @@
 
 class buffer_pool_in {
 public:
-    buffer_pool_in(int dataSize, int targetSize, bool pinned = false, int count = 2);
+    buffer_pool_in(int dataSize, int targetSize);
     virtual ~buffer_pool_in();
     buffer_in_array& getForWrite();
     buffer_in_array& getForRead();
     buffer_in_array& getPair(int bufIdx);
-    int getCount() { return _count;}
+    int getCount() { return _bufs.size();}
 
     void advanceReadPos();
     void advanceWritePos();
@@ -45,9 +45,9 @@ protected:
     void advance(int& index);
 
 protected:
-    int                         _count;
+    static constexpr int        _count = 2;
     int                         _used;
-    std::vector<buffer_in_array>     _bufs;
+    std::vector<buffer_in_array>_bufs;
     int                         _readPos;
     int                         _writePos;
     std::mutex                  _mutex;

@@ -35,8 +35,7 @@
  */
 class buffer_in {
 public:
-    explicit buffer_in(int size, bool pinned = false);
-    buffer_in(char* data, int size);
+    explicit buffer_in(int size);
     virtual ~buffer_in();
 
     void read(std::istream& is, int size);
@@ -44,7 +43,6 @@ public:
     void reset();
     char* getItem(int index, int& len);
 
-    void dump();
     void shuffle(uint seed);
 
     int getItemCount();
@@ -71,7 +69,6 @@ protected:
     int                         _idx;
     std::vector<int>            _items;
     std::vector<int>            _lens;
-    bool                        _alloc;
     bool                        _pinned;
 };
 

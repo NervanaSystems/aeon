@@ -33,7 +33,7 @@ using namespace std;
 
 pyDecodeThreadPool::pyDecodeThreadPool(int count,
                                        const shared_ptr<buffer_pool_in>& in,
-                                       const shared_ptr<buffer_pool_in>& out,
+                                       const shared_ptr<buffer_pool_out>& out,
                                        const shared_ptr<pyBackendWrapper>& pbe)
 : ThreadPool(count), _in(in), _out(out), _pbe(pbe)
 {
@@ -132,9 +132,9 @@ void pyDecodeThreadPool::work(int id)
     }
 
     // No locking required because threads write into non-overlapping regions.
-    buffer_in_array& outBuf = _out->getForWrite();
-    char* dataBuf      = outBuf[0]->_data + _dataOffsets[id];
-    char* targetBuf    = outBuf[1]->_data + _targetOffsets[id];
+    buffer_out_array& outBuf = _out->getForWrite();
+    char* dataBuf      = outBuf[0]->data() + _dataOffsets[id];
+    char* targetBuf    = outBuf[1]->data() + _targetOffsets[id];
 
     for (int i = _startInds[id]; i < _endInds[id]; i++) {
         _providers[id]->provide_pair(i, _inputBuf, dataBuf, targetBuf);
@@ -173,7 +173,7 @@ void pyDecodeThreadPool::produce()
             _endSignaled = 0;
         }
         // At this point, we have decoded data for the whole minibatch.
-        buffer_in_array& outBuf = _out->getForWrite();
+        buffer_out_array& outBuf = _out->getForWrite();
 
         // Copy to device.
         _pbe->call_backend_transfer(outBuf, _bufferIndex);
@@ -309,8 +309,9 @@ int PyLoader::start()
                                             _tgt_config->get_size_bytes() * _batchSize);
         _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
 
-        _decodeBufs = make_shared<buffer_pool_in>(_dtm_config->get_size_bytes() * _batchSize,
-                                              _tgt_config->get_size_bytes() * _batchSize,
+        _decodeBufs = make_shared<buffer_pool_out>((size_t)_dtm_config->get_size_bytes(),
+                                              (size_t)_tgt_config->get_size_bytes(),
+                                              (size_t)_batchSize,
                                               _pyBackend->use_pinned_memory());
 
         _decodeThreads = unique_ptr<pyDecodeThreadPool>(

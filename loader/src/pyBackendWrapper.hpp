@@ -6,6 +6,7 @@
 #include <assert.h>
 #include "buffer_in.hpp"
 #include "util.hpp"
+#include "buffer_out.hpp"
 
 class pyBackendWrapper {
 public:
@@ -15,7 +16,7 @@ public:
                      int);
 
     bool use_pinned_memory();
-    void call_backend_transfer(buffer_in_array &outBuf, int bufIdx);
+    void call_backend_transfer(buffer_out_array &outBuf, int bufIdx);
     PyObject* get_dtm_tgt_pair(int bufIdx);
 
     ~pyBackendWrapper();
@@ -27,7 +28,7 @@ public:
 private:
     pyBackendWrapper() {};
     PyObject* initPyList(int length=2);
-    void wrap_buffer_pool(PyObject *list, buffer_in *buf, int bufIdx,
+    void wrap_buffer_pool(PyObject *list, buffer_out *buf, int bufIdx,
                           const std::shared_ptr<nervana::interface::config>& config);
 
     PyObject*                   _pBackend;

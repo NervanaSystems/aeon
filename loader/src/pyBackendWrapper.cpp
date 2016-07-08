@@ -79,7 +79,7 @@ bool pyBackendWrapper::use_pinned_memory()
 }
 
 // Copy to device.
-void pyBackendWrapper::call_backend_transfer(buffer_in_array &outBuf, int bufIdx)
+void pyBackendWrapper::call_backend_transfer(buffer_out_array &outBuf, int bufIdx)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -122,7 +122,7 @@ PyObject* pyBackendWrapper::get_dtm_tgt_pair(int bufIdx)
     return dtm_tgt_pair;
 }
 
-void pyBackendWrapper::wrap_buffer_pool(PyObject *list, buffer_in *buf, int bufIdx,
+void pyBackendWrapper::wrap_buffer_pool(PyObject *list, buffer_out *buf, int bufIdx,
                                         const shared_ptr<nervana::interface::config> &cfg)
 {
     PyObject *hdItem = PyList_GetItem(list, bufIdx);
@@ -141,8 +141,7 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, buffer_in *buf, int bufI
     int nd = 2;
     npy_intp dims[2] = {_batchSize, all_dims};
 
-    PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, cfg->get_type().np_type,
-                                                  static_cast<void *>(buf->_data));
+    PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, cfg->get_type().np_type,buf->data());
     if (p_array == NULL) {
         throw std::runtime_error("Unable to wrap buffer pool in as python object");
     }

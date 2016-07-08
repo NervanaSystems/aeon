@@ -25,7 +25,7 @@
 
 class buffer_pool_out {
 public:
-    buffer_pool_out(int dataSize, int targetSize, bool pinned = false, int count = 2);
+    buffer_pool_out(size_t dataSize, size_t targetSize, size_t batchSize, bool pinned = false);
     virtual ~buffer_pool_out();
     buffer_out_array& getForWrite();
     buffer_out_array& getForRead();

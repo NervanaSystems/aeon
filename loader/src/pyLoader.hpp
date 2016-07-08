@@ -30,6 +30,7 @@
 #include "manifest.hpp"
 #include "provider_factory.hpp"
 #include "buffer_pool_in.hpp"
+#include "buffer_pool_out.hpp"
 
 /* DecodeThreadPool
  *
@@ -43,7 +44,7 @@ class pyDecodeThreadPool : public ThreadPool {
 public:
     pyDecodeThreadPool(int count,
                        const std::shared_ptr<buffer_pool_in>& in,
-                       const std::shared_ptr<buffer_pool_in>& out,
+                       const std::shared_ptr<buffer_pool_out>& out,
                        const std::shared_ptr<pyBackendWrapper>& pbe);
 
     virtual ~pyDecodeThreadPool();
@@ -64,7 +65,7 @@ private:
 
     int                         _itemsPerThread;
     std::shared_ptr<buffer_pool_in> _in;
-    std::shared_ptr<buffer_pool_in> _out;
+    std::shared_ptr<buffer_pool_out> _out;
     std::shared_ptr<pyBackendWrapper> _pbe;
     std::mutex                  _mutex;
     std::condition_variable     _started;
@@ -73,7 +74,7 @@ private:
     std::thread*                _manager        = 0;
     bool                        _stopManager    = false;
     bool                        _managerStopped = false;
-    buffer_in_array*                 _inputBuf       = 0;
+    buffer_in_array*            _inputBuf       = 0;
     int                         _bufferIndex    = 0;
     int                         _batchSize;
 
@@ -176,8 +177,8 @@ private:
 
     bool                                _first = true;
 
-    std::shared_ptr<buffer_pool_in>         _readBufs = nullptr;
-    std::shared_ptr<buffer_pool_in>         _decodeBufs = nullptr;
+    std::shared_ptr<buffer_pool_in>     _readBufs = nullptr;
+    std::shared_ptr<buffer_pool_out>    _decodeBufs = nullptr;
     std::unique_ptr<ReadThread>         _readThread = nullptr;
     std::unique_ptr<pyDecodeThreadPool> _decodeThreads = nullptr;
     std::shared_ptr<BatchIterator>      _batch_iterator = nullptr;

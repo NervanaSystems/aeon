@@ -30,11 +30,11 @@
 
 using namespace std;
 
-buffer_pool_in::buffer_pool_in(int dataSize, int targetSize, bool pinned, int count)
-: _count(count), _used(0), _readPos(0), _writePos(0) {
-    for (int i = 0; i < count; i++) {
-        buffer_in* dataBuffer = new buffer_in(dataSize, pinned);
-        buffer_in* targetBuffer = new buffer_in(targetSize, pinned);
+buffer_pool_in::buffer_pool_in(int dataSize, int targetSize)
+: _used(0), _readPos(0), _writePos(0) {
+    for (int i = 0; i < _count; i++) {
+        buffer_in* dataBuffer = new buffer_in(dataSize);
+        buffer_in* targetBuffer = new buffer_in(targetSize);
         _bufs.push_back(buffer_in_array{dataBuffer, targetBuffer});
     }
 }

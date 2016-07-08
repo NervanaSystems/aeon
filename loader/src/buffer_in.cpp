@@ -30,21 +30,14 @@
 
 using namespace std;
 
-buffer_in::buffer_in(int size, bool pinned)
-: _size(size), _idx(0), _alloc(true), _pinned(pinned) {
+buffer_in::buffer_in(int size)
+: _size(size), _idx(0), _pinned(false) {
     _data = alloc();
     _cur = _data;
 }
 
-buffer_in::buffer_in(char* data, int size)
-: _data(data), _size(size), _cur(_data), _idx(0), _alloc(false), _pinned(false) {
-    pushItem(size);
-}
-
 buffer_in::~buffer_in() {
-    if (_alloc == true) {
-        dealloc(_data);
-    }
+    dealloc(_data);
 }
 
 void buffer_in::reset() {
@@ -61,30 +54,6 @@ void buffer_in::shuffle(uint seed) {
 
     std::minstd_rand0 rand_lens(seed);
     std::shuffle(_lens.begin(), _lens.end(), rand_lens);
-}
-
-void buffer_in::dump() {
-    uint8_t* data = reinterpret_cast<uint8_t*>(_data);
-    int len = _size;
-    assert(len % 16 == 0);
-    int index = 0;
-    while (index < len) {
-        printf("%08x", index);
-        for (int i = 0; i < 8; i++) {
-            printf(" %02x", data[i]);
-        }
-        printf("  ");
-        for (int i = 8; i < 16; i++) {
-            printf(" %02x", data[i]);
-        }
-        printf(" ");
-        for (int i = 0; i < 16; i++) {
-            printf("%c", (data[i] < 32)? '.' : data[i]);
-        }
-        printf("\n");
-        data += 16;
-        index += 16;
-    }
 }
 
 void buffer_in::pushItem(int len) {
@@ -142,7 +111,6 @@ void buffer_in::resizeIfNeeded(int inc) {
 }
 
 void buffer_in::resize(int inc) {
-    assert(_alloc == true);
     _size = getLevel() + inc;
     // Allocate a bit more to minimize reallocations.
     _size += _size / 8;
@@ -155,7 +123,6 @@ void buffer_in::resize(int inc) {
 
 char* buffer_in::alloc() {
     char*      data;
-    assert(_alloc == true);
     if (_pinned == true) {
 #if HAS_GPU
         CUresult status = cuMemAllocHost((void**)&data, _size);

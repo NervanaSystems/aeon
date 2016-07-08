@@ -30,11 +30,11 @@
 
 using namespace std;
 
-buffer_pool_out::buffer_pool_out(int dataSize, int targetSize, bool pinned, int count)
-: _count(count), _used(0), _readPos(0), _writePos(0) {
-    for (int i = 0; i < count; i++) {
-        buffer_out* dataBuffer = new buffer_out(1, dataSize, 1, pinned);
-        buffer_out* targetBuffer = new buffer_out(1, targetSize, 1, pinned);
+buffer_pool_out::buffer_pool_out(size_t dataSize, size_t targetSize, size_t batchSize, bool pinned)
+: _count(2), _used(0), _readPos(0), _writePos(0) {
+    for (int i = 0; i < _count; i++) {
+        buffer_out* dataBuffer   = new buffer_out(1, dataSize, batchSize, pinned);
+        buffer_out* targetBuffer = new buffer_out(1, targetSize, batchSize, pinned);
         _bufs.push_back(buffer_out_array{dataBuffer, targetBuffer});
     }
 }

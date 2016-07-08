@@ -26,7 +26,7 @@
 
 class buffer_out {
 public:
-    explicit buffer_out(int sizeof_type, int item_count, int minibatch_size, bool pinned = false);
+    explicit buffer_out(int sizeof_type, int item_count, int batch_size, bool pinned = false);
     virtual ~buffer_out();
 
     char* getItem(int index, int& len);
