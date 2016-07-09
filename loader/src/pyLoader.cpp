@@ -290,6 +290,14 @@ int PyLoader::start()
         int nthreads       = (_batchSize - 1) / itemsPerThread + 1;
         nthreads           = std::min(nthreads, _batchSize);
 
+        if(_lcfg_json["data_config"] == nullptr) {
+            throw std::runtime_error("missing PyLoader config parameter data_config");
+        }
+
+        if(_lcfg_json["target_config"] == nullptr) {
+            throw std::runtime_error("missing PyLoader config parameter target_config");
+        }
+
         _dtm_config = nervana::config_factory::create(_lcfg_json["data_config"]);
         _tgt_config = nervana::config_factory::create(_lcfg_json["target_config"]);
 
