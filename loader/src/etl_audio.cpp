@@ -18,6 +18,7 @@ bool audio::config::set_config(nlohmann::json js) {
     parse_req(_height, "height", js);
     parse_req(_window, "window", js);
     parse_req(_feature, "feature", js);
+    return true;
 }
 
 shared_ptr<audio::params> audio::param_factory::make_params(std::shared_ptr<const decoded>) {
@@ -55,7 +56,7 @@ std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int 
 }
 
 audio::transformer::transformer(std::shared_ptr<const audio::config> config)
-    : _noiseClips(0), _state(0), _rng(config->_randomSeed), _codec(0) {
+    : _codec(0), _noiseClips(0), _state(0), _rng(config->_randomSeed) {
     _specgram = new Specgram(config, config->_randomSeed);
 
     if (config->_noiseIndexFile.size() != 0) {
