@@ -17,14 +17,13 @@
 
 #include <vector>
 
-#include "etl_interface.hpp"
 #include "params.hpp"
+#include "etl_interface.hpp"
 #include "media.hpp"
 #include "codec.hpp"
 #include "specgram.hpp"
 #include "noise_clips.hpp"
 
-class Specgram;
 class NoiseClips;
 class Codec;
 
@@ -62,8 +61,10 @@ namespace nervana {
         // _tn for samples, _ms for milliseconds, _ss for seconds, _hz for freq in hz
 
         //          Independent      variables     and required
-        uint32_t    freq_steps;
-        uint32_t    max_duration_ms;
+        std::string  max_duration;
+        std::string  frame_stride;
+        std::string  frame_length;
+
 
         //          Independent      variables     and optional
         int32_t     seed             {0};          //  Default  is to seed deterministically
@@ -72,32 +73,36 @@ namespace nervana {
         std::string type_string      {"uint8_t"};
         std::string feature_type     {"specgram"};
         std::string window_type      {"hann"};
+
         std::string noise_index_file {};
 
         uint32_t    sample_freq_hz   {16000};
-        uint32_t    frame_stride_ms  {10};
-        uint32_t    frame_length_ms  {25};
+
 
         //          Dependent        variables
         uint32_t    time_steps;
+        uint32_t    freq_steps;
+
         uint32_t    frame_stride_tn;
         uint32_t    frame_length_tn;
         uint32_t    max_duration_tn;
 
+        float       frame_stride_ms;
+        float       frame_length_ms;
+        float       max_duration_ms;
+
         std::uniform_real_distribution<float>    time_scale_fraction   {1.0f, 1.0f};
         std::bernoulli_distribution              add_noise             {0.0f};
-        std::uniform_real_distribution<uint32_t> noise_index           {0,    UINT32_MAX};
+        std::uniform_int_distribution<uint32_t>  noise_index           {0,    UINT32_MAX};
         std::uniform_real_distribution<float>    noise_level           {0.0f, 0.5f};
         std::uniform_real_distribution<float>    noise_offset_fraction {0.0f, 1.0f};
 
-        bool audio::config::set_config(nlohmann::json js) override {
-            parse_req(time_steps,      "time_steps",      js);
-            parse_req(freq_steps,      "freq_steps",      js);
-            parse_req(max_duration_ms, "max_duration_ms", js);
+        bool set_config(nlohmann::json js) override {
+            parse_req(max_duration, "max_duration", js);
+            parse_req(frame_stride, "frame_stride", js);
+            parse_req(frame_length, "frame_length", js);
 
             parse_opt(sample_freq_hz,  "sample_freq_hz",  js);
-            parse_opt(frame_stride_ms, "frame_stride_ms", js);
-            parse_opt(frame_length_ms, "frame_length_ms", js);
             parse_opt(num_cepstra,     "num_cepstra",     js);
             parse_opt(num_filters,     "num_filters",     js);
             parse_opt(window_type,     "window_type",     js);
@@ -113,28 +118,65 @@ namespace nervana {
             parse_dist(noise_level,           "noise_level",           dist_params);
             parse_dist(noise_offset_fraction, "noise_offset_fraction", dist_params);
 
-
             // Now fill in derived variables
-            frame_stride_tn = frame_stride_ms * sample_freq_hz / 1000;
-            frame_length_tn = frame_length_ms * sample_freq_hz / 1000;
-            max_duration_tn = max_duration_ms * sample_freq_hz / 1000;
+            parse_samples_or_seconds(max_duration, max_duration_ms, max_duration_tn);
+            parse_samples_or_seconds(frame_length, frame_length_ms, frame_length_tn);
+            parse_samples_or_seconds(frame_stride, frame_stride_ms, frame_stride_tn);
 
-            time_steps      = (((max_duration_tn) - frame_length_tn) / frame_stride_tn);
+            time_steps      = ((max_duration_tn - frame_length_tn) / frame_stride_tn) + 1;
+
+            if (feature_type == "specgram") {
+                freq_steps = frame_length_tn / 2  + 1;
+            } else if (feature_type == "mfsc") {
+                freq_steps = num_filters;
+            } else if (feature_type == "mfcc") {
+                freq_steps = num_cepstra;
+            } else {
+                throw std::runtime_error("Unknown feature type " + feature_type);
+            }
 
             otype = nervana::output_type(type_string);
             if (type_string != "uint8_t") {
                 throw std::runtime_error("Invalid load type for audio " + type_string);
             }
             shape = std::vector<uint32_t> {1, freq_steps, time_steps};
+            return validate();
         }
 
         bool validate() {
             bool result = true;
 
             result &= frame_stride_ms != 0;
-            result &= time_steps == (((max_duration_tn) - frame_length_tn) / frame_stride_tn) + 1
+            result &= time_steps == ((max_duration_tn - frame_length_tn) / frame_stride_tn) + 1;
+
+            result &= noise_offset_fraction.param().a() >= 0.0f;
+            result &= noise_offset_fraction.param().b() <= 1.0f;
 
             return result;
+        }
+    private:
+        void parse_samples_or_seconds(const std::string &unit, float &ms, uint32_t &tn)
+        {
+            // There's got to be a better way to do this (json parsing doesn't allow getting
+            // as heterogenous sequences)
+
+            std::string::size_type sz;
+            const float unit_val = std::stof(unit, &sz);
+            std::string unit_type = unit.substr(sz);
+
+            if (unit_type.find("samples") != std::string::npos) {
+                tn = unit_val;
+                ms = tn * 1000.0f / sample_freq_hz;
+            } else if (unit_type.find("milliseconds") != std::string::npos) {
+                ms = unit_val;
+                tn = ms * sample_freq_hz / 1000.0f;
+            } else if (unit_type.find("seconds") != std::string::npos) {
+                ms = unit_val * 1000.0f;
+                tn = unit_val * sample_freq_hz;
+            } else {
+                throw std::runtime_error("Unknown time unit " + unit_type);
+            }
+
         }
     };
 
@@ -169,7 +211,7 @@ namespace nervana {
         size_t getSize() { return time_rep->numSamples(); }
 
         std::shared_ptr<RawMedia> get_time_data() { return time_rep; }
-        cv::Mat &get_freq_data() { return freq_rep; }
+        cv::Mat& get_freq_data() { return freq_rep; }
 
     protected:
         std::shared_ptr<RawMedia> time_rep {nullptr};
@@ -200,13 +242,17 @@ namespace nervana {
 
     class audio::transformer : public interface::transformer<audio::decoded, audio::params> {
     public:
-        transformer(std::shared_ptr<const audio::config>);
+        transformer(std::shared_ptr<audio::config> config);
         ~transformer();
         std::shared_ptr<audio::decoded> transform(
                                         std::shared_ptr<audio::params>,
                                         std::shared_ptr<audio::decoded>) override;
     private:
-        std::shared_ptr<Specgram>   _specmaker  {nullptr};
-        std::shared_ptr<NoiseClips> _noisemaker {nullptr};
+        void resize(cv::Mat& img, float fx);
+
+        std::shared_ptr<NoiseClips>    _noisemaker {nullptr};
+        std::shared_ptr<audio::config> _cfg;
+        cv::Mat                        _window     {};
+        cv::Mat                        _filterbank {};
     };
 }

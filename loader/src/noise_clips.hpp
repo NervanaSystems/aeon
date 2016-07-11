@@ -22,20 +22,40 @@
 
 class Codec;
 
+class NoiseConfig : public nervana::json_config_parser {
+public:
+    std::string              noise_dir   {""};
+    std::vector<std::string> noise_files {};
+
+    bool set_config(nlohmann::json js) override
+    {
+        parse_opt(noise_dir,   "noise_dir",   js);
+        parse_opt(noise_files, "noise_files", js);
+        return validate();
+    }
+
+private:
+    bool validate() { return true; }
+};
+
 class NoiseClips {
 public:
     NoiseClips(const std::string noiseIndexFile);
     virtual ~NoiseClips();
-    void addNoise(std::shared_ptr<RawMedia> media, std::shared_ptr<nervana::audio::params> prm);
+    void addNoise(std::shared_ptr<RawMedia> media,
+                  bool add_noise,
+                  uint32_t noise_index,
+                  float noise_offset_fraction,
+                  float noise_level);
+
 
 private:
-    void load_index(std::string& index_file);
+    void load_index(const std::string& index_file);
     void load_data(std::shared_ptr<Codec> codec);
     void read_noise(std::string& noise_file, int* dataLen);
 
 private:
-    std::string                            _noise_dir {""};
-    std::vector<std::string>               _noise_files;
+    NoiseConfig _cfg;
     std::vector<std::shared_ptr<RawMedia>> _noise_data;
     char*                                  _buf = 0;
     int                                    _bufLen = 0;

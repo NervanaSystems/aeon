@@ -9,17 +9,21 @@ using namespace std;
 
 NoiseClips::NoiseClips(const std::string noiseIndexFile)
 {
-    auto codec = make_shared<Codec>(MediaType::AUDIO);
-    load_index(noiseIndexFile);
-    load_data(codec);
+    if (!noiseIndexFile.empty()) {
+        load_index(noiseIndexFile);
+        auto codec = make_shared<Codec>(MediaType::AUDIO);
+        load_data(codec);
+    }
 }
 
 NoiseClips::~NoiseClips()
 {
-    delete[] _buf;
+    if (_bufLen != 0) {
+        delete[] _buf;
+    }
 }
 
-void NoiseClips::load_index(std::string& index_file)
+void NoiseClips::load_index(const std::string& index_file)
 {
     ifstream ifs(index_file);
 
@@ -30,28 +34,22 @@ void NoiseClips::load_index(std::string& index_file)
     std::stringstream file_contents_buffer;
     file_contents_buffer << ifs.rdbuf();
 
-    auto js = nlohmann::json::parse(file_contents_buffer.str());
-    nervana::json_config_parser cfg_parser;
-    cfg_parser.parse_value<std::string>(js, "noise_dir", _noise_dir);
-    cfg_parser.parse_value<std::vector<std::string>>(js, "noise_files", _noise_files);
+    _cfg.set_config(nlohmann::json::parse(file_contents_buffer.str()));
 
-    if (_noise_files.size() == 0) {
+    if (_cfg.noise_files.empty()) {
         throw std::runtime_error("No noise files provided in " + index_file);
     }
 }
 
-// From Factory, get do_or_donot, offset (pct), noise index, noise level
-void NoiseClips::addNoise(shared_ptr<RawMedia> media, shared_ptr<nervana::audio::params> prm) {
-
-    bool     noise_add   = prm->add_noise;
-    uint32_t noise_index = prm->noise_index % _noise_data.size();
-    float    noise_level = prm->noise_level;
-    float    offset_frac = prm->noise_offset_fraction;
-
-    assert(offset_frac  1.0);
-    assert(offset_frac = 0.0);
-
-    if (!noise_add) {
+// From Factory, get add_noise, offset (frac), noise index, noise level
+void NoiseClips::addNoise(shared_ptr<RawMedia> media,
+                          bool add_noise,
+                          uint32_t noise_index,
+                          float noise_offset_fraction,
+                          float noise_level)
+{
+    // No-op if we have no noise files or randomly not adding noise on this datum
+    if (!add_noise || _noise_data.empty()) {
         return;
     }
 
@@ -64,11 +62,11 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media, shared_ptr<nervana::audio:
     cv::Mat noise(1, numSamples, CV_16S);
 
     // Collect enough noise data to cover the entire input clip.
-    std::shared_ptr<RawMedia> clipData = _noise_data[noise_index];
+    std::shared_ptr<RawMedia> clipData = _noise_data[ noise_index % _noise_data.size() ];
     assert(clipData->bytesPerSample() == bytesPerSample);
     cv::Mat noise_src(1, clipData->numSamples() , CV_16S, clipData->getBuf(0));
 
-    uint32_t src_offset = clipData->numSamples() * offset_frac;
+    uint32_t src_offset = clipData->numSamples() * noise_offset_fraction;
     uint32_t src_left = clipData->numSamples() - src_offset;
     uint32_t dst_offset = 0;
     uint32_t dst_left = numSamples;
@@ -112,7 +110,7 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media, shared_ptr<nervana::audio:
 }
 
 void NoiseClips::load_data(std::shared_ptr<Codec> codec) {
-    for(auto nfile: _noise_files) {
+    for(auto nfile: _cfg.noise_files) {
         int len = 0;
         read_noise(nfile, &len);
         _noise_data.push_back(codec->decode(_buf, len));
@@ -122,7 +120,7 @@ void NoiseClips::load_data(std::shared_ptr<Codec> codec) {
 void NoiseClips::read_noise(std::string& noise_file, int* dataLen) {
     std::string path = noise_file;
     if (path[0] != '/') {
-        path = _noise_dir + '/' + path;
+        path = _cfg.noise_dir + '/' + path;
     }
 
     struct stat stats;

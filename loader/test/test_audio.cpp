@@ -29,7 +29,6 @@ shared_ptr<audio::decoded> generate_decoded_audio(float frequencyHz, int duratio
     gen_audio gen;
     vector<unsigned char> encoded_audio = gen.encode(frequencyHz, duration);
     auto config = make_shared<audio::config>();
-    config->_mtype = MediaType::AUDIO;
     audio::extractor extractor(config);
     return extractor.extract((char*)encoded_audio.data(), encoded_audio.size());
 }
@@ -47,16 +46,18 @@ TEST(etl, audio_transform) {
     auto decoded_audio = generate_decoded_audio(1000, 2000);
 
     auto config = make_shared<audio::config>();
-    config->_mtype = MediaType::AUDIO;
-    config->_windowSize = 1024;
-    config->_stride = config->_windowSize / 4;
-    config->_clipDuration = 2000;
-    config->_samplingFreq = 44100;
-    config->_width = (((config->_clipDuration * config->_samplingFreq / 1000) - config->_windowSize) / config->_stride) + 1;
-    // TODO: how to compute height ahead of time?
-    config->_height = 513;
-    config->_numFilts = 64;
-    config->_numCepstra = 40;
+    auto js = R"(
+        {
+            "max_duration": "2000 milliseconds",
+            "frame_length": "1024 samples",
+            "frame_stride": "256 samples",
+            "sample_freq_hz": 44100,
+            "feature_type": "mfcc",
+            "num_filts": 64
+        }
+    )"_json;
+
+    config->set_config(js);
 
     audio::transformer _imageTransformer(config);
 

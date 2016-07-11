@@ -18,8 +18,8 @@
 #include <sstream>
 #include <mutex>
 
+#include "params.hpp"
 #include "media.hpp"
-#include "etl_audio.hpp"
 
 #ifdef __cplusplus
 extern "C"
