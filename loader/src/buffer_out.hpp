@@ -42,6 +42,7 @@ private:
 
     char*   _data;
     size_t  _size;
+    size_t  _batch_size;
 
     bool    _pinned;
     size_t  _stride;

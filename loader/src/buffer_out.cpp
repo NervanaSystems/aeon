@@ -32,6 +32,7 @@ using namespace std;
 
 buffer_out::buffer_out(int sizeof_type, int item_count, int minibatch_size, bool pinned) :
     _size(sizeof_type * item_count * minibatch_size),
+    _batch_size(minibatch_size),
     _pinned(pinned),
     _stride(sizeof_type * item_count),
     _item_size(sizeof_type * item_count)
@@ -45,12 +46,12 @@ buffer_out::~buffer_out() {
 
 char* buffer_out::getItem(int index, int& len) {
     size_t offset = index * _stride;
-//    if (index >= (int) _items.size()) {
-//        // TODO: why not raise exception here?  Is anyone actually
-//        // checking the return value of getItem to make sure it is
-//        // non-0?
-//        return 0;
-//    }
+    if (index >= (int)_batch_size) {
+        // TODO: why not raise exception here?  Is anyone actually
+        // checking the return value of getItem to make sure it is
+        // non-0?
+        return 0;
+    }
     len = _item_size;
     return &_data[offset];
 }
