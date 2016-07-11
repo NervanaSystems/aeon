@@ -49,6 +49,60 @@ extern "C" {
 #define AUDIO_REFILL_THRESH 4096
 
 using namespace std;
+using nervana::pack_le;
+
+void wav_data::write_to_file(string filename)
+{
+    _ofs.open(filename, ostream::binary);
+
+    if(!_ofs) {
+        throw std::runtime_error("couldn't write to file " + filename);
+    }
+    write_header();
+    write_data();
+
+    _ofs.close();
+}
+
+void wav_data::write_header()
+{
+    int32_t file_size = nbytes() + 16 + 20;
+    char header_1[16] {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'A', 'V', 'E', 'f', 'm', 't', ' '};
+    pack_le(header_1, file_size, 4);
+    _ofs.write(header_1, 16);
+
+    int32_t fmtlen = 16;
+    int16_t format_tag = 1;
+
+    char header_2[20];
+    pack_le(header_2, fmtlen);
+    pack_le(header_2 + 4, format_tag);
+    pack_le(header_2 + 6, channels());
+    pack_le(header_2 + 8, sample_rate());
+    pack_le(header_2 + 12, bytes_per_second());
+    pack_le(header_2 + 16, block_align());
+    pack_le(header_2 + 18, bit_depth());
+    _ofs.write(header_2, 20);
+}
+
+void wav_data::write_data()
+{
+    char data_header[8] {'d', 'a', 't', 'a', 0, 0, 0, 0};
+    pack_le(data_header + 4, nbytes());
+    _ofs.write(data_header, 8);
+
+    char *data_payload = new char[nbytes()];
+    for (int n = 0; n < data.rows; n++) {
+        int16_t *ptr = data.ptr<int16_t>(n);
+        for (int c = 0; c < data.cols; c++) {
+            pack_le(data_payload, ptr[c], (n * data.cols + c) * sizeof(int16_t));
+        }
+    }
+    _ofs.write(data_payload, nbytes());
+    delete[] data_payload;
+}
+
+
 
 gen_audio::gen_audio() :
     r{42}

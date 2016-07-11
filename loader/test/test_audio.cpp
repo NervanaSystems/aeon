@@ -60,9 +60,14 @@ TEST(etl, audio_transform) {
     config->set_config(js);
 
     audio::transformer _imageTransformer(config);
-
     audio::param_factory factory(config);
+
     auto audioParams = factory.make_params(decoded_audio);
 
     _imageTransformer.transform(audioParams, decoded_audio);
+
+    ASSERT_EQ(config->get_shape()[0], 1);
+    ASSERT_EQ(config->get_shape()[1], 40);
+    ASSERT_EQ(config->get_shape()[1], 40);
+
 }
