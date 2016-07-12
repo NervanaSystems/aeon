@@ -129,10 +129,9 @@ namespace nervana {
                 _dre.seed((uint32_t) _cfg.seed);
             } else {
                 _dre.seed(std::chrono::system_clock::now().time_since_epoch().count());
-
             }
         }
-        ~param_factory() {}
+        virtual ~param_factory() {}
 
         std::shared_ptr<image::params> make_params(std::shared_ptr<const image::decoded> input);
     private:

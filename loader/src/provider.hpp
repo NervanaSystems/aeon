@@ -9,7 +9,13 @@ namespace nervana {
     template<typename D, typename T> class train_provider;
     class image_decoder;
     class train_base;
+    class provider_interface;
 }
+
+class nervana::provider_interface {
+public:
+    virtual void provide_pair(int idx, buffer_in_array* in_buf, char* datum_out, char* tgt_out) = 0;
+};
 
 // Do we want to have a vector of transformers so that we can cascade?
 template<typename T, typename S> class nervana::provider {

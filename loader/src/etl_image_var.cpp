@@ -11,16 +11,16 @@ void image_var::params::dump(ostream & ostr)
 
 
 /* Extract */
-image_var::extractor::extractor(shared_ptr<const image_var::config> cfg)
+image_var::extractor::extractor(const image_var::config& cfg)
 {
-    if (!(cfg->channels == 1 || cfg->channels == 3))
+    if (!(cfg.channels == 1 || cfg.channels == 3))
     {
         std::stringstream ss;
-        ss << "Unsupported number of channels in image: " << cfg->channels;
+        ss << "Unsupported number of channels in image: " << cfg.channels;
         throw std::runtime_error(ss.str());
     } else {
-        _pixel_type = cfg->channels == 1 ? CV_8UC1 : CV_8UC3;
-        _color_mode = cfg->channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR;
+        _pixel_type = cfg.channels == 1 ? CV_8UC1 : CV_8UC3;
+        _color_mode = cfg.channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR;
     }
 }
 
@@ -47,10 +47,10 @@ shared_ptr<image_var::decoded> image_var::extractor::extract(const char* inbuf, 
 
 */
 
-image_var::transformer::transformer(shared_ptr<const image_var::config> cfg)
+image_var::transformer::transformer(const image_var::config& cfg)
 {
-    min_size = cfg->min_size;
-    max_size = cfg->max_size;
+    min_size = cfg.min_size;
+    max_size = cfg.max_size;
 }
 
 shared_ptr<image_var::decoded> image_var::transformer::transform(
@@ -80,14 +80,14 @@ image_var::param_factory::make_params(shared_ptr<const decoded> input)
 {
     auto imgstgs = shared_ptr<image_var::params>();
 
-    imgstgs->flip  = _cfg->flip(_dre);
+    imgstgs->flip  = _cfg.flip(_dre);
 
     return imgstgs;
 }
 
-image_var::loader::loader(shared_ptr<const image_var::config> cfg)
+image_var::loader::loader(const image_var::config& cfg)
 {
-    _channel_major = cfg->channel_major;
+    _channel_major = cfg.channel_major;
     _load_size     = 1;
 }
 

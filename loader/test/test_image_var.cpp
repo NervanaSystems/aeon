@@ -85,13 +85,12 @@ TEST(image_var, resize) {
         {"flip",{false}}
     }}};
 
-    shared_ptr<image_var::config> config_ptr = make_shared<image_var::config>(jsConfig);
+    image_var::config config_ptr{jsConfig};
 
     image_var::extractor ext{config_ptr};
     shared_ptr<image_var::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
-    std::default_random_engine dre;
-    image_var::param_factory factory(config_ptr, dre);
+    image_var::param_factory factory(config_ptr);
 
     shared_ptr<image_var::params> params_ptr = make_shared<image_var::params>();
 
@@ -113,13 +112,13 @@ TEST(image_var, transform_flip) {
         {"flip",{true}}
     }}};
 
-    shared_ptr<image_var::config> config_ptr = make_shared<image_var::config>(jsConfig);
+    image_var::config config_ptr{jsConfig};
 
     image_var::extractor ext{config_ptr};
     shared_ptr<image_var::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
     std::default_random_engine dre;
-    image_var::param_factory factory(config_ptr, dre);
+    image_var::param_factory factory(config_ptr);
 
     shared_ptr<image_var::params> params_ptr = make_shared<image_var::params>();
     params_ptr->flip = true;

@@ -2,6 +2,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <chrono>
 
 #include "etl_interface.hpp"
 #include "params.hpp"
@@ -32,20 +33,6 @@ namespace nervana {
         params() {}
     };
 
-    class image_var::param_factory : public interface::param_factory<image_var::decoded, image_var::params> {
-    public:
-        param_factory(std::shared_ptr<image_var::config> cfg,
-                      std::default_random_engine& dre) : _cfg{cfg}, _dre{dre} {}
-        ~param_factory() {}
-
-        std::shared_ptr<image_var::params> make_params(std::shared_ptr<const decoded>);
-    private:
-        void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
-
-        std::shared_ptr<image_var::config> _cfg;
-        std::default_random_engine& _dre;
-    };
-
     class image_var::config : public json_config_parser {
     public:
         int min_size;
@@ -56,6 +43,8 @@ namespace nervana {
         bool channel_major = true;
         int channels = 3;
 
+        int32_t seed = 0; // Default is to seed deterministically
+
         config(nlohmann::json js)
         {
             parse_value(min_size, "min_size", js, mode::REQUIRED);
@@ -63,6 +52,7 @@ namespace nervana {
 
             parse_value(channels, "channels", js);
             parse_value(channel_major, "channel_major", js);
+            parse_value(seed, "seed", js);
 
             auto dist_params = js["distribution"];
             parse_dist(flip, "flip", dist_params);
@@ -76,6 +66,28 @@ namespace nervana {
         bool validate() {
             return max_size >= min_size;
         }
+    };
+
+    class image_var::param_factory : public interface::param_factory<image_var::decoded, image_var::params> {
+    public:
+        param_factory(image_var::config& cfg) : _cfg{cfg}, _dre{0}
+        {
+            // A positive provided seed means to run deterministic with that seed
+            if (_cfg.seed >= 0) {
+                _dre.seed((uint32_t) _cfg.seed);
+            } else {
+                _dre.seed(std::chrono::system_clock::now().time_since_epoch().count());
+            }
+        }
+
+        virtual ~param_factory() {}
+
+        std::shared_ptr<image_var::params> make_params(std::shared_ptr<const decoded>);
+    private:
+        void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
+
+        image_var::config&         _cfg;
+        std::default_random_engine _dre;
     };
 
 // ===============================================================================================
@@ -99,8 +111,8 @@ namespace nervana {
 
     class image_var::extractor : public interface::extractor<image_var::decoded> {
     public:
-        extractor(std::shared_ptr<const image_var::config>);
-        ~extractor() {}
+        extractor(const image_var::config&);
+        virtual ~extractor() {}
         virtual std::shared_ptr<image_var::decoded> extract(const char*, int) override;
 
         const int get_channel_count() {return _color_mode == CV_LOAD_IMAGE_COLOR ? 3 : 1;}
@@ -112,7 +124,7 @@ namespace nervana {
 
     class image_var::transformer : public interface::transformer<image_var::decoded, image_var::params> {
     public:
-        transformer(std::shared_ptr<const image_var::config>);
+        transformer(const image_var::config&);
         ~transformer() {}
         virtual std::shared_ptr<image_var::decoded> transform(
                                                 std::shared_ptr<image_var::params>,
@@ -125,8 +137,8 @@ namespace nervana {
 
     class image_var::loader : public interface::loader<image_var::decoded> {
     public:
-        loader(std::shared_ptr<const image_var::config>);
-        ~loader() {}
+        loader(const image_var::config&);
+        virtual ~loader() {}
         virtual void load(char*, std::shared_ptr<image_var::decoded>) override;
 
 //        void fill_info(count_size_type* cst) override
@@ -137,7 +149,6 @@ namespace nervana {
 //        }
 
     private:
-        size_t _load_count;
         size_t _load_size;
         void split(cv::Mat&, char*);
         bool _channel_major;
