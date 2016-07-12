@@ -69,6 +69,9 @@ class DataLoader(object):
         self.loaderlib.next.argtypes = [ct.c_void_p, ct.c_int]
         self.loaderlib.next.restype = ct.py_object
 
+        self.loaderlib.shapes.argtypes = [ct.c_void_p]
+        self.loaderlib.shapes.restype = ct.py_object
+
         self.loaderlib.stop.argtypes = [ct.c_void_p]
         self.loaderlib.reset.argtypes = [ct.c_void_p]
         self.loaderlib.itemCount.argtypes = [ct.c_void_p]
@@ -130,6 +133,17 @@ class DataLoader(object):
 
         return tup
 
+    def _shapes(self):
+        """
+        C api wrapper with exception handling
+        """
+        ret = self.loaderlib.shapes(self.loader)
+
+        if ret is None:
+            self._raise_loader_error()
+
+        return ret
+
     def _reset(self):
         """
         C api wrapper with exception handling
@@ -179,6 +193,14 @@ class DataLoader(object):
         self._nbatches = math.ceil(
             (self.item_count - self._item_index) / float(self.minibatch_size)
         )
+
+    @property
+    def ndata(self):
+        return self.item_count
+
+    @property
+    def shape(self):
+        return self._shapes()[0]
 
     @property
     def nbatches(self):

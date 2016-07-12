@@ -65,6 +65,17 @@ extern PyObject* next(PyLoader* loader, int bufIdx) {
     }
 }
 
+extern PyObject* shapes(PyLoader* loader) {
+    try {
+        return loader->shapes();
+    } catch(std::exception& ex) {
+        last_error_message = ex.what();
+
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+}
+
 extern int itemCount(PyLoader* loader) {
     try {
         return loader->itemCount();

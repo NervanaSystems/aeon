@@ -399,6 +399,23 @@ PyObject* PyLoader::next(int bufIdx)
     return _pyBackend->get_dtm_tgt_pair(bufIdx);
 }
 
+PyObject* PyLoader::pyConfigShape(std::shared_ptr<nervana::interface::config> config) {
+    // get the shape of a config and convert it into a python list
+    auto shape = config->get_shape();
+    PyObject* ret = PyTuple_New(shape.size());
+    for(uint i = 0; i < shape.size(); ++i) {
+        PyTuple_SetItem(ret, i, Py_BuildValue("i", shape[i]));
+    }
+    return ret;
+}
+
+PyObject* PyLoader::shapes() {
+    PyObject* ret = PyTuple_New(2);
+    PyTuple_SetItem(ret, 0, pyConfigShape(_dtm_config));
+    PyTuple_SetItem(ret, 1, pyConfigShape(_tgt_config));
+    return ret;
+}
+
 void PyLoader::drain()
 {
     {

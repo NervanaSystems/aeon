@@ -28,5 +28,6 @@ extern PyObject* next(PyLoader* loader, int bufIdx);
 extern int reset(PyLoader* loader);
 extern int stop(PyLoader* loader);
 extern int itemCount(PyLoader* loader);
+extern PyObject* shapes(PyLoader* loader);
 
 }

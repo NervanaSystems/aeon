@@ -163,6 +163,7 @@ public:
     void stop();
     int reset();
     // void next();
+    PyObject* shapes();
     PyObject* next(int bufIdx);
 
     std::shared_ptr<BatchIterator> getBatchIterator() { return _batch_iterator; }
@@ -174,6 +175,8 @@ private:
 private:
     PyLoader();
     PyLoader(const PyLoader&);
+
+    PyObject* pyConfigShape(std::shared_ptr<nervana::interface::config> config);
 
     bool                                _first = true;
 
