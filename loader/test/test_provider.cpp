@@ -44,7 +44,7 @@ TEST(provider,image) {
         reader.read(target_p);
 
         buffer_in_array bp{&data_p, &target_p};
-        media->provide_pair(0, &bp, &dbuffer[0], &tbuffer[0]);
+        media->provide(0, &bp, &dbuffer[0], &tbuffer[0]);
 
         int target_value = unpack_le<int>(&tbuffer[0]);
         EXPECT_EQ(42+i,target_value);

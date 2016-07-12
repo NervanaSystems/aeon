@@ -137,7 +137,7 @@ void pyDecodeThreadPool::work(int id)
     char* targetBuf    = outBuf[1]->data() + _targetOffsets[id];
 
     for (int i = _startInds[id]; i < _endInds[id]; i++) {
-        _providers[id]->provide_pair(i, _inputBuf, dataBuf, targetBuf);
+        _providers[id]->provide(i, _inputBuf, dataBuf, targetBuf);
         dataBuf   += _datumLen;
         targetBuf += _targetLen;
     }

@@ -34,7 +34,7 @@ namespace nervana {
         {
         }
 
-        void provide_pair(int idx, buffer_in_array* in_buf, char* datum_out, char* tgt_out) override {
+        void provide(int idx, buffer_in_array* in_buf, char* datum_out, char* tgt_out) override {
             int dsz_in, tsz_in;
 
             char* datum_in  = (*in_buf)[0]->getItem(idx, dsz_in);
@@ -85,7 +85,7 @@ namespace nervana {
         {
         }
 
-        void provide_pair(int idx, buffer_in_array* in_buf, char* datum_out, char* tgt_out) override {
+        void provide(int idx, buffer_in_array* in_buf, char* datum_out, char* tgt_out) override {
             int dsz_in, tsz_in;
 
             char* datum_in  = (*in_buf)[0]->getItem(idx, dsz_in);

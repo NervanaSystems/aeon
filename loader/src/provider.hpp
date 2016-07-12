@@ -14,7 +14,7 @@ namespace nervana {
 
 class nervana::provider_interface {
 public:
-    virtual void provide_pair(int idx, buffer_in_array* in_buf, char* datum_out, char* tgt_out) = 0;
+    virtual void provide(int idx, buffer_in_array* in_buf, char* datum_out, char* tgt_out) = 0;
 };
 
 //// Do we want to have a vector of transformers so that we can cascade?
