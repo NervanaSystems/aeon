@@ -68,23 +68,6 @@ namespace nervana {
         std::vector<box> all_anchors;
     };
 
-
-//    class localization::params : public nervana::params {
-//    public:
-
-//        params() {}
-//        void dump(std::ostream & = std::cout);
-
-//        cv::Rect cropbox;
-//        cv::Size2i output_size;
-//        int angle = 0;
-//        bool flip = false;
-//        std::vector<float> lighting;  //pixelwise random values
-//        float color_noise_std = 0;
-//        std::vector<float> photometric;  // contrast, brightness, saturation
-//        std::vector<std::string> label_list;
-//    };
-
     class localization::config : public bbox::config {
     public:
         int images_per_batch = 1;
@@ -127,7 +110,6 @@ namespace nervana {
 
     private:
     };
-
 
     class localization::extractor : public nervana::interface::extractor<localization::decoded> {
     public:
