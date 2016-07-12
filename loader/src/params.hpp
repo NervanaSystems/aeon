@@ -97,14 +97,4 @@ public:
             throw std::invalid_argument("Required Argument: " + key + " not set");
         }
     }
-
-    template<typename T> static void parse_req(T& value, const std::string key, const nlohmann::json &js)
-    {
-        parse_value(value, key, js, mode::REQUIRED);
-    }
-
-    template<typename T> static void parse_opt(T& value, const std::string key, const nlohmann::json &js)
-    {
-        parse_value(value, key, js, mode::OPTIONAL);
-    }
 };

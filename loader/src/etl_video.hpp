@@ -53,7 +53,7 @@ namespace nervana {
         bool set_config(nlohmann::json js) override
         {
             image::config::set_config(js);
-            parse_req(num_frames, "num_frames", js);
+            parse_value(num_frames, "num_frames", js, mode::REQUIRED);
             shape.insert(shape.begin() + 1, num_frames); // This is for the depth after channels
 
             return validate();

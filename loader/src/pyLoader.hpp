@@ -104,15 +104,15 @@ public:
 
     bool set_config(nlohmann::json js) override
     {
-        parse_req(manifest_filename, "manifest_filename", js);
-        parse_req(minibatch_size,    "minibatch_size", js);
+        parse_value(manifest_filename, "manifest_filename", js, mode::REQUIRED);
+        parse_value(minibatch_size,    "minibatch_size", js, mode::REQUIRED);
 
-        parse_opt(cache_directory,     "cache_directory", js);
-        parse_opt(macrobatch_size,     "macrobatch_size", js);
-        parse_opt(shuffle_every_epoch, "shuffle_every_epoch", js);
-        parse_opt(shuffle_manifest,    "shuffle_manifest", js);
-        parse_opt(subset_percent,      "subset_percent", js);
-        parse_opt(random_seed,         "random_seed", js);
+        parse_value(cache_directory,     "cache_directory", js);
+        parse_value(macrobatch_size,     "macrobatch_size", js);
+        parse_value(shuffle_every_epoch, "shuffle_every_epoch", js);
+        parse_value(shuffle_manifest,    "shuffle_manifest", js);
+        parse_value(subset_percent,      "subset_percent", js);
+        parse_value(random_seed,         "random_seed", js);
 
         if(macrobatch_size == 0) {
             macrobatch_size = minibatch_size;

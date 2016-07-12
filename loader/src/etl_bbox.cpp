@@ -15,7 +15,7 @@ bool nervana::bbox::config::set_config(nlohmann::json js)
 {
     label_map.clear();
     vector<string> label_list;
-    parse_req(label_list, "labels", js);
+    parse_value(label_list, "labels", js, mode::REQUIRED);
     for( int i=0; i<label_list.size(); i++ ) {
         label_map.insert({label_list[i],i});
     }

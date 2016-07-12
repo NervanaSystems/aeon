@@ -17,17 +17,17 @@ bool nervana::localization::config::set_config(nlohmann::json js)
 {
     bbox::config::set_config(js);
 
-    parse_opt(images_per_batch, "images_per_batch", js);
-    parse_opt(rois_per_image, "rois_per_image", js);
-    parse_opt(min_size, "min_size", js);
-    parse_opt(max_size, "max_size", js);
-    parse_opt(base_size, "base_size", js);
-    parse_opt(scaling_factor, "scaling_factor", js);
-    parse_opt(ratios, "ratios", js);
-    parse_opt(scales, "scales", js);
-    parse_opt(negative_overlap, "negative_overlap", js);
-    parse_opt(positive_overlap, "positive_overlap", js);
-    parse_opt(foreground_fraction, "foreground_fraction", js);
+    parse_value(images_per_batch, "images_per_batch", js);
+    parse_value(rois_per_image, "rois_per_image", js);
+    parse_value(min_size, "min_size", js);
+    parse_value(max_size, "max_size", js);
+    parse_value(base_size, "base_size", js);
+    parse_value(scaling_factor, "scaling_factor", js);
+    parse_value(ratios, "ratios", js);
+    parse_value(scales, "scales", js);
+    parse_value(negative_overlap, "negative_overlap", js);
+    parse_value(positive_overlap, "positive_overlap", js);
+    parse_value(foreground_fraction, "foreground_fraction", js);
 
     return validate();
 }

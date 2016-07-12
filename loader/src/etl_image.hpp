@@ -71,16 +71,16 @@ namespace nervana {
         uint32_t channels = 3;
 
         bool set_config(nlohmann::json js) override {
-            parse_req(height, "height", js);
-            parse_req(width, "width", js);
+            parse_value(height, "height", js, mode::REQUIRED);
+            parse_value(width, "width", js, mode::REQUIRED);
 
-            parse_opt(seed, "seed", js);
+            parse_value(seed, "seed", js);
 
-            parse_opt(type_string, "type_string", js);
+            parse_value(type_string, "type_string", js);
 
-            parse_opt(do_area_scale, "do_area_scale", js);
-            parse_opt(channels, "channels", js);
-            parse_opt(channel_major, "channel_major", js);
+            parse_value(do_area_scale, "do_area_scale", js);
+            parse_value(channels, "channels", js);
+            parse_value(channel_major, "channel_major", js);
 
             auto dist_params = js["distribution"];
             parse_dist(angle, "angle", dist_params);
@@ -239,9 +239,9 @@ namespace nervana {
         {
             image::config::set_config(js);
             // Parse required and optional variables
-            parse_req(multicrop_scales, "multicrop_scales", js);
-            parse_opt(crops_per_scale, "crops_per_scale", js);
-            parse_opt(include_flips, "include_flips", js);
+            parse_value(multicrop_scales, "multicrop_scales", js, mode::REQUIRED);
+            parse_value(crops_per_scale, "crops_per_scale", js);
+            parse_value(include_flips, "include_flips", js);
 
             if (!validate()) {
                 throw std::runtime_error("invalid configuration values");

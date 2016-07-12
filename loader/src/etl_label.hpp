@@ -21,8 +21,8 @@ namespace nervana {
 
         bool set_config(nlohmann::json js) override
         {
-            parse_opt(binary, "binary", js);
-            parse_opt(type_string, "type_string", js);
+            parse_value(binary, "binary", js);
+            parse_value(type_string, "type_string", js);
 
             otype = nervana::output_type(type_string);
             shape = std::vector<uint32_t> {1};

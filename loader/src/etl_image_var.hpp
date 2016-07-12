@@ -58,11 +58,11 @@ namespace nervana {
 
         bool set_config(nlohmann::json js) override
         {
-            parse_req(min_size, "min_size", js);
-            parse_req(max_size, "max_size", js);
+            parse_value(min_size, "min_size", js, mode::REQUIRED);
+            parse_value(max_size, "max_size", js, mode::REQUIRED);
 
-            parse_opt(channels, "channels", js);
-            parse_opt(channel_major, "channel_major", js);
+            parse_value(channels, "channels", js);
+            parse_value(channel_major, "channel_major", js);
 
             auto dist_params = js["distribution"];
             parse_dist(flip, "flip", dist_params);

@@ -5,19 +5,19 @@ using namespace nervana;
 
 bool audio::config::set_config(nlohmann::json js) {
     // for now, all config params are required
-    parse_req(_samplingFreq, "samplingFreq", js);
-    parse_req(_clipDuration, "clipDuration", js);
-    parse_req(_randomScalePercent, "randomScalePercent", js);
-    parse_req(_numFilts, "numFilts", js);
-    parse_req(_numCepstra, "numCepstra", js);
-    parse_req(_noiseIndexFile, "noiseIndexFile", js);
-    parse_req(_noiseDir, "noiseDir", js);
-    parse_req(_windowSize, "windowSize", js);
-    parse_req(_stride, "stride", js);
-    parse_req(_width, "width", js);
-    parse_req(_height, "height", js);
-    parse_req(_window, "window", js);
-    parse_req(_feature, "feature", js);
+    parse_value(_samplingFreq, "samplingFreq", js, mode::REQUIRED);
+    parse_value(_clipDuration, "clipDuration", js, mode::REQUIRED);
+    parse_value(_randomScalePercent, "randomScalePercent", js, mode::REQUIRED);
+    parse_value(_numFilts, "numFilts", js, mode::REQUIRED);
+    parse_value(_numCepstra, "numCepstra", js, mode::REQUIRED);
+    parse_value(_noiseIndexFile, "noiseIndexFile", js, mode::REQUIRED);
+    parse_value(_noiseDir, "noiseDir", js, mode::REQUIRED);
+    parse_value(_windowSize, "windowSize", js, mode::REQUIRED);
+    parse_value(_stride, "stride", js, mode::REQUIRED);
+    parse_value(_width, "width", js, mode::REQUIRED);
+    parse_value(_height, "height", js, mode::REQUIRED);
+    parse_value(_window, "window", js, mode::REQUIRED);
+    parse_value(_feature, "feature", js, mode::REQUIRED);
     return true;
 }
 
