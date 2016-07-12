@@ -47,7 +47,7 @@ pyDecodeThreadPool::pyDecodeThreadPool(int count,
 }
 
 
-void pyDecodeThreadPool::add_provider(std::shared_ptr<nervana::train_base> prov)
+void pyDecodeThreadPool::add_provider(std::shared_ptr<nervana::provider_interface> prov)
 {
     _providers.push_back(prov);
     _startSignaled.push_back(0);
@@ -244,8 +244,7 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
 {
     _lcfg_json = nlohmann::json::parse(pyloaderConfigString);
 
-    _lcfg = make_shared<pyLoaderConfig>();
-    _lcfg->set_config(_lcfg_json);
+    _lcfg = make_shared<pyLoaderConfig>(_lcfg_json);
 
     _batchSize = _lcfg->minibatch_size;
 

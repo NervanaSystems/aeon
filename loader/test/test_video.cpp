@@ -29,11 +29,10 @@ TEST(etl, video_extract_transform) {
     vector<unsigned char> vid = gen_video().encode(1000);
 
     // extract
-    auto config = make_shared<video::config>();
-    config->width = width;
-    config->height = height;
+    nlohmann::json js = {{"width", width},{"height",height},{"num_frames",5}};
+    video::config config(js);
 
-    video::extractor extractor = video::extractor(config);
+    video::extractor extractor{config};
     auto decoded_vid = extractor.extract((char*)vid.data(), vid.size());
 
     ASSERT_EQ(decoded_vid->get_image_count(), 25);
@@ -62,13 +61,10 @@ TEST(etl, video_image_transform) {
 
     auto decoded_image = make_shared<image::decoded>();
     cv::Mat mat_image(width, height, CV_8UC3, 0.0);
-    cout << "mat_image " << mat_image.size() << endl;
     decoded_image->add(mat_image);
-    cout << "d " << decoded_image->get_image_size() << endl;
 
-    auto config = make_shared<image::config>();
-    config->width = width;
-    config->height = height;
+    nlohmann::json js = {{"width", width},{"height",height}};
+    image::config config(js);
 
     image::transformer _imageTransformer(config);
 
@@ -96,14 +92,14 @@ TEST(etl, video_loader) {
     // each dimension is unique to help debug and detect incorrect
     // dimension ordering
     // extract
-    auto vconfig = make_shared<video::config>();
-    vconfig->set_config({{"height",4},{"width",2},{"channels",3},{"num_frames",5}});
+    nlohmann::json js = {{"height",4},{"width",2},{"channels",3},{"num_frames",5}};
+    video::config vconfig{js};
 
     int channels, height, width, depth;
-    tie(channels, height, width, depth) = make_tuple(vconfig->channels,
-                                                     vconfig->height,
-                                                     vconfig->width,
-                                                     vconfig->num_frames);
+    tie(channels, height, width, depth) = make_tuple(vconfig.channels,
+                                                     vconfig.height,
+                                                     vconfig.width,
+                                                     vconfig.num_frames);
 
     shared_ptr<video::decoded> decoded = make_shared<video::decoded>();
 

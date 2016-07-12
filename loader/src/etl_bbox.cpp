@@ -11,7 +11,7 @@ ostream& operator<<(ostream& out, const nervana::bbox::box& b) {
     return out;
 }
 
-bool nervana::bbox::config::set_config(nlohmann::json js)
+nervana::bbox::config::config(nlohmann::json js)
 {
     label_map.clear();
     vector<string> label_list;
@@ -21,7 +21,7 @@ bool nervana::bbox::config::set_config(nlohmann::json js)
     }
     // TODO -- need to fill in the shape and type information here
 
-    return validate();
+    validate();
 }
 
 bool nervana::bbox::config::validate() {
@@ -32,8 +32,8 @@ bool nervana::bbox::config::validate() {
 nervana::bbox::decoded::decoded() {
 }
 
-nervana::bbox::extractor::extractor(shared_ptr<const config> cfg) :
-    label_map{cfg->label_map}
+nervana::bbox::extractor::extractor(const config& cfg) :
+    label_map{cfg.label_map}
 {
 }
 

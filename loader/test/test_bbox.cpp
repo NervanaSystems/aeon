@@ -59,12 +59,10 @@ static nlohmann::json create_metadata( const vector<nlohmann::json>& boxes, int 
     return j;
 }
 
-static shared_ptr<bbox::config> make_bbox_config() {
-    auto cfg = make_shared<bbox::config>();
+static bbox::config make_bbox_config() {
     auto obj = nlohmann::json::object();
     obj["labels"] = label_list;
-    cfg->set_config(obj);
-    return cfg;
+    return bbox::config(obj);
 }
 
 cv::Mat draw( int width, int height, const vector<bbox::box>& blist, cv::Rect crop=cv::Rect() ) {

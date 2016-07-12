@@ -19,14 +19,13 @@ namespace nervana {
         bool binary = true;
         std::string type_string{"uint32_t"};
 
-        bool set_config(nlohmann::json js) override
+        config(nlohmann::json js)
         {
             parse_value(binary, "binary", js);
             parse_value(type_string, "type_string", js);
 
             otype = nervana::output_type(type_string);
             shape = std::vector<uint32_t> {1};
-            return true;
         }
     };
 
@@ -47,11 +46,11 @@ namespace nervana {
 
     class label::extractor : public interface::extractor<label::decoded> {
     public:
-        extractor(std::shared_ptr<const label::config> cfg = nullptr)
+        extractor(const label::config& cfg)
         {
-            if (cfg != nullptr) {
-                _binary = cfg->binary;
-            }
+//            if (cfg != nullptr) {
+//                _binary = cfg->binary;
+//            }
         }
 
         ~extractor() {}
@@ -77,7 +76,7 @@ namespace nervana {
 
     class label::transformer : public interface::transformer<label::decoded, nervana::params> {
     public:
-        transformer(std::shared_ptr<const label::config> = nullptr) {}
+        transformer(const label::config&) {}
 
         ~transformer() {}
 
@@ -88,15 +87,15 @@ namespace nervana {
 
     class label::loader : public interface::loader<label::decoded> {
     public:
-        loader(std::shared_ptr<label::config> cfg) : _cfg{cfg} {}
+        loader(const label::config& cfg) : _cfg{cfg} {}
         ~loader() {}
 
         void load(char* buf, std::shared_ptr<label::decoded> mp) override
         {
             int index = mp->get_index();
-            memcpy(buf, &index, _cfg->get_type().size);
+            memcpy(buf, &index, _cfg.get_type().size);
         }
     private:
-        std::shared_ptr<label::config> _cfg;
+        const label::config& _cfg;
     };
 }

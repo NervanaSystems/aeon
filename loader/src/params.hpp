@@ -46,8 +46,8 @@ public:
         REQUIRED
     };
 
-    // pass json by value so set_config gets a non-const copy
-    virtual bool set_config(nlohmann::json js) = 0;
+//    // pass json by value so set_config gets a non-const copy
+//    virtual bool set_config(nlohmann::json js) = 0;
 
     template<typename T> void parse_dist(T& value, const std::string key, const nlohmann::json &js)
     {

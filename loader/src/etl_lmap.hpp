@@ -16,12 +16,23 @@ namespace nervana {
         class loader;
         class box;
         class params;
+        class config;
     }
 }
 
 class nervana::lmap::params : public nervana::params {
 public:
     params() {}
+};
+
+class nervana::lmap::config : public interface::config {
+public:
+    config(nlohmann::json js);
+    const std::vector<std::string> labels() const { return _labels; }
+
+private:
+    config() = delete;
+    std::vector<std::string> _labels;
 };
 
 class nervana::lmap::decoded : public decoded_media {
@@ -41,8 +52,7 @@ private:
 
 class nervana::lmap::extractor : public nervana::interface::extractor<nervana::lmap::decoded> {
 public:
-    extractor( const std::vector<std::string>& labels );
-    extractor( std::istream& in );
+    extractor( const nervana::lmap::config& );
     virtual ~extractor(){}
     virtual std::shared_ptr<nervana::lmap::decoded> extract(const char*, int) override;
 

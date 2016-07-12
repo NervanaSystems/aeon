@@ -20,7 +20,6 @@ TEST(provider,image) {
     nlohmann::json js = {{"media","image_label"},
                          {"data_config", {{"type", "image"}, {"config", {{"height",128},{"width",128},{"channel_major",false},{"flip",true}}}}},
                          {"target_config", {{"type", "label"}, {"config", {}}}}};
-    cout << js.dump(4) << endl;
 
     auto data_config = nervana::config_factory::create(js["data_config"]);
     size_t dsize = data_config->get_size_bytes();
@@ -62,8 +61,7 @@ TEST(provider, argtype) {
         /* Create extractor with default num channels param */
         string cfgString = "{\"height\":10, \"width\":10}";
         auto js = nlohmann::json::parse(cfgString);
-        auto cfg = make_shared<image::config>();
-        cfg->set_config(js);
+        image::config cfg{js};
         auto ic = make_shared<image::extractor>(cfg);
         EXPECT_EQ(ic->get_channel_count(), 3);
     }
@@ -85,8 +83,7 @@ TEST(provider, argtype) {
         )";
 
 
-        auto itpj = make_shared<image::config>();
-        itpj->set_config(nlohmann::json::parse(cfgString));
+        auto itpj = make_shared<image::config>(nlohmann::json::parse(cfgString));
 
         // output the fixed parameters
         EXPECT_EQ(30,itpj->height);
@@ -94,13 +91,11 @@ TEST(provider, argtype) {
 
         // output the random parameters
         default_random_engine r_eng(0);
-        image::param_factory img_prm_maker(itpj);
-        auto imgt = make_shared<image::transformer>(itpj);
+        image::param_factory img_prm_maker(*itpj);
+        auto imgt = make_shared<image::transformer>(*itpj);
 
         auto input_img_ptr = make_shared<image::decoded>(cv::Mat(256, 320, CV_8UC3));
 
         auto its = img_prm_maker.make_params(input_img_ptr);
-        its->dump();
     }
-
 }

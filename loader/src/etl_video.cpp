@@ -18,7 +18,7 @@ void video::params::dump(ostream & ostr) {
     ostr << "Frames Per Clip: " << _framesPerClip << " ";
 }
 
-video::extractor::extractor(std::shared_ptr<const video::config>)
+video::extractor::extractor(const video::config&)
     : _pFormat(AV_PIX_FMT_BGR24) {
     // AV_PIX_FMT_BGR24 in ffmpeg corresponds to CV_8UC3 in opencv
     _pFrameRGB = av_frame_alloc();
@@ -129,7 +129,7 @@ void video::extractor::convertFrameFormat(AVCodecContext* codecCtx, AVPixelForma
     sws_freeContext(imgConvertCtx);
 }
 
-video::transformer::transformer(std::shared_ptr<const video::config> config)
+video::transformer::transformer(const video::config& config)
     : _imageTransformer(config) {
 }
 

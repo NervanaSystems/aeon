@@ -5,20 +5,16 @@
 using namespace std;
 using namespace nervana;
 
+lmap::config::config(nlohmann::json js) {
+    parse_value(_labels, "labels", js, mode::REQUIRED);
+}
+
 nervana::lmap::decoded::decoded() {
 }
 
-nervana::lmap::extractor::extractor( const vector<string>& labels ) {
+nervana::lmap::extractor::extractor( const lmap::config& cfg) {
     int index = 0;
-    for( const string& label : labels ) {
-        _dictionary.insert({label,index++});
-    }
-}
-
-nervana::lmap::extractor::extractor( std::istream& in ) {
-    int index = 0;
-    string label;
-    while( in >> label ) {
+    for( const string& label : cfg.labels() ) {
         _dictionary.insert({label,index++});
     }
 }

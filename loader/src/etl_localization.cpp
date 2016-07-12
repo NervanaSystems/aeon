@@ -13,10 +13,9 @@ template<typename T> string join(const T& v, const string& sep) {
     return ss.str();
 }
 
-bool nervana::localization::config::set_config(nlohmann::json js)
+nervana::localization::config::config(nlohmann::json js) :
+    bbox::config::config(js)
 {
-    bbox::config::set_config(js);
-
     parse_value(images_per_batch, "images_per_batch", js);
     parse_value(rois_per_image, "rois_per_image", js);
     parse_value(min_size, "min_size", js);
@@ -29,7 +28,7 @@ bool nervana::localization::config::set_config(nlohmann::json js)
     parse_value(positive_overlap, "positive_overlap", js);
     parse_value(foreground_fraction, "foreground_fraction", js);
 
-    return validate();
+    validate();
 }
 
 bool nervana::localization::config::validate() {
@@ -40,14 +39,14 @@ bool nervana::localization::config::validate() {
            positive_overlap <= 1.0 &&
            foreground_fraction <= 1.0;}
 
-localization::extractor::extractor(std::shared_ptr<const localization::config> cfg) :
+localization::extractor::extractor(const localization::config& cfg) :
     bbox_extractor{cfg}
 {
 
 }
 
 
-localization::transformer::transformer(std::shared_ptr<const localization::config> _cfg) :
+localization::transformer::transformer(const localization::config& _cfg) :
     cfg{_cfg},
     _anchor{cfg}
 {
@@ -58,7 +57,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
                     shared_ptr<localization::decoded> mp) {
     cv::Size im_size{mp->width(), mp->height()};
     float im_scale;
-    tie(im_scale, im_size) = calculate_scale_shape(im_size, cfg->min_size, cfg->max_size);
+    tie(im_scale, im_size) = calculate_scale_shape(im_size, cfg.min_size, cfg.max_size);
     mp->image_scale = im_scale;
     mp->image_size = im_size;
 
@@ -92,7 +91,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     }
 
     for(int row=0; row<overlaps.rows; row++) {
-        if(row_max[row] < cfg->negative_overlap) {
+        if(row_max[row] < cfg.negative_overlap) {
             labels[row] = 0;
         }
     }
@@ -110,7 +109,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 
     // 2. any anchor above the overlap threshold with any gt box
     for(int row=0; row<overlaps.rows; row++) {
-        if(row_max[row] >= cfg->positive_overlap) {
+        if(row_max[row] >= cfg.positive_overlap) {
             labels[row] = 1;
         }
     }
@@ -158,7 +157,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 
 vector<int> localization::transformer::sample_anchors(const vector<int>& labels, bool debug) {
     // subsample labels if needed
-    int num_fg = int(cfg->foreground_fraction * cfg->rois_per_image);
+    int num_fg = int(cfg.foreground_fraction * cfg.rois_per_image);
     vector<int> fg_idx;
     vector<int> bg_idx;
     for(int i=0; i<labels.size(); i++) {
@@ -175,7 +174,7 @@ vector<int> localization::transformer::sample_anchors(const vector<int>& labels,
     if(fg_idx.size() > num_fg) {
         fg_idx.resize(num_fg);
     }
-    int remainder = cfg->rois_per_image - fg_idx.size();
+    int remainder = cfg.rois_per_image - fg_idx.size();
     if(bg_idx.size() > remainder) {
         bg_idx.resize(remainder);
     }
@@ -268,12 +267,12 @@ tuple<float,cv::Size> localization::transformer::calculate_scale_shape(cv::Size 
 
 
 
-localization::loader::loader(std::shared_ptr<const localization::config> cfg)
+localization::loader::loader(const localization::config& cfg)
 {
-    _channel_major = cfg->channel_major;
+    _channel_major = cfg.channel_major;
     _load_size     = 1;
-    total_anchors = cfg->total_anchors();
-//    _load_count    = cfg->width * cfg->height * cfg->channels * cfg->num_crops();
+    total_anchors = cfg.total_anchors();
+//    _load_count    = cfg.width * cfg.height * cfg.channels * cfg.num_crops();
 }
 
 void localization::loader::build_output(std::shared_ptr<localization::decoded> mp, vector<float>& dev_y_labels, vector<float>& dev_y_labels_mask, vector<float>& dev_y_bbtargets, vector<float>& dev_y_bbtargets_mask) {
@@ -356,9 +355,9 @@ void localization::loader::load(char* buf, std::shared_ptr<localization::decoded
 }
 
 
-localization::anchor::anchor(std::shared_ptr<const localization::config> _cfg) :
+localization::anchor::anchor(const localization::config& _cfg) :
     cfg{_cfg},
-    conv_size{int(std::floor(cfg->max_size * cfg->scaling_factor))}
+    conv_size{int(std::floor(cfg.max_size * cfg.scaling_factor))}
 {
     all_anchors = add_anchors();
 }
@@ -382,8 +381,8 @@ vector<box> localization::anchor::add_anchors() {
     vector<float> shift_x;
     vector<float> shift_y;
     for(float i=0; i<conv_size; i++) {
-        shift_x.push_back(i * 1. / cfg->scaling_factor);
-        shift_y.push_back(i * 1. / cfg->scaling_factor);
+        shift_x.push_back(i * 1. / cfg.scaling_factor);
+        shift_y.push_back(i * 1. / cfg.scaling_factor);
     }
 
     vector<box> shifts;
@@ -405,12 +404,12 @@ vector<box> localization::anchor::add_anchors() {
 }
 
 vector<box> localization::anchor::generate_anchors() {
-    box anchor{0.,0.,(float)(cfg->base_size-1),(float)(cfg->base_size-1)};
-    vector<box> ratio_anchors = ratio_enum(anchor, cfg->ratios);
+    box anchor{0.,0.,(float)(cfg.base_size-1),(float)(cfg.base_size-1)};
+    vector<box> ratio_anchors = ratio_enum(anchor, cfg.ratios);
 
     vector<box> result;
     for(const box& ratio_anchor : ratio_anchors) {
-        for(const box& b : scale_enum(ratio_anchor, cfg->scales)) {
+        for(const box& b : scale_enum(ratio_anchor, cfg.scales)) {
             result.push_back(b);
         }
     }

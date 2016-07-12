@@ -16,16 +16,16 @@ void image::params::dump(ostream & ostr)
 
 
 /* Extract */
-image::extractor::extractor(shared_ptr<const image::config> cfg)
+image::extractor::extractor(const image::config& cfg)
 {
-    if (!(cfg->channels == 1 || cfg->channels == 3))
+    if (!(cfg.channels == 1 || cfg.channels == 3))
     {
         std::stringstream ss;
-        ss << "Unsupported number of channels in image: " << cfg->channels;
+        ss << "Unsupported number of channels in image: " << cfg.channels;
         throw std::runtime_error(ss.str());
     } else {
-        _pixel_type = cfg->channels == 1 ? CV_8UC1 : CV_8UC3;
-        _color_mode = cfg->channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR;
+        _pixel_type = cfg.channels == 1 ? CV_8UC1 : CV_8UC3;
+        _color_mode = cfg.channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR;
     }
 }
 
@@ -59,7 +59,7 @@ shared_ptr<image::decoded> image::extractor::extract(const char* inbuf, int insi
 
 */
 
-image::transformer::transformer(shared_ptr<const image::config>) :
+image::transformer::transformer(const image::config&) :
     _CPCA{{0.39731118,  0.70119634, -0.59200296},
                             {-0.81698062, -0.02354167, -0.5761844},
                             {0.41795513, -0.71257945, -0.56351045}},
@@ -174,30 +174,30 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
 {
     auto imgstgs = shared_ptr<image::params>(new image::params());
 
-    imgstgs->output_size = cv::Size2i(_cfg->width, _cfg->height);
+    imgstgs->output_size = cv::Size2i(_cfg.width, _cfg.height);
 
-    imgstgs->angle = _cfg->angle(_dre);
-    imgstgs->flip  = _cfg->flip(_dre);
+    imgstgs->angle = _cfg.angle(_dre);
+    imgstgs->flip  = _cfg.flip(_dre);
 
     cv::Size2f in_size = input->get_image_size();
 
-    float scale = _cfg->scale(_dre);
-    float aspect_ratio = _cfg->aspect_ratio(_dre);
+    float scale = _cfg.scale(_dre);
+    float aspect_ratio = _cfg.aspect_ratio(_dre);
     scale_cropbox(in_size, imgstgs->cropbox, aspect_ratio, scale);
 
-    float c_off_x = _cfg->crop_offset(_dre);
-    float c_off_y = _cfg->crop_offset(_dre);
+    float c_off_x = _cfg.crop_offset(_dre);
+    float c_off_y = _cfg.crop_offset(_dre);
     shift_cropbox(in_size, imgstgs->cropbox, c_off_x, c_off_y);
 
-    if (_cfg->lighting.stddev() != 0) {
+    if (_cfg.lighting.stddev() != 0) {
         for( int i=0; i<3; i++ ) {
-            imgstgs->lighting.push_back(_cfg->lighting(_dre));
+            imgstgs->lighting.push_back(_cfg.lighting(_dre));
         }
-        imgstgs->color_noise_std = _cfg->lighting.stddev();
+        imgstgs->color_noise_std = _cfg.lighting.stddev();
     }
-    if (_cfg->photometric.a()!=_cfg->photometric.b()) {
+    if (_cfg.photometric.a()!=_cfg.photometric.b()) {
         for( int i=0; i<3; i++ ) {
-            imgstgs->photometric.push_back(_cfg->photometric(_dre));
+            imgstgs->photometric.push_back(_cfg.photometric(_dre));
         }
     }
     return imgstgs;
@@ -216,12 +216,12 @@ void image::param_factory::scale_cropbox(
                             float tgt_scale )
 {
 
-    float out_a_r = static_cast<float>(_cfg->width) / _cfg->height;
+    float out_a_r = static_cast<float>(_cfg.width) / _cfg.height;
     float in_a_r  = in_size.width / in_size.height;
 
     float crop_a_r = out_a_r * tgt_aspect_ratio;
 
-    if (_cfg->do_area_scale) {
+    if (_cfg.do_area_scale) {
         // Area scaling -- use pctge of original area subject to aspect ratio constraints
         float max_scale = in_a_r > crop_a_r ? crop_a_r /  in_a_r : in_a_r / crop_a_r;
         float tgt_area  = std::min(tgt_scale, max_scale) * in_size.area();
@@ -293,7 +293,7 @@ void image::loader::load(char* outbuf, shared_ptr<image::decoded> input)
     for (int i=0; i < input->get_image_count(); i++) {
         auto outbuf_i = outbuf + (i * image_size);
 
-        if (_cfg->channel_major) {
+        if (_cfg.channel_major) {
             this->split(img, outbuf_i);
         } else {
             memcpy(outbuf_i, img.data, image_size);

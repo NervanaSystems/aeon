@@ -38,9 +38,10 @@ using namespace nervana;
 
 TEST(etl, lmap) {
     {
-        vector<string> vocab = {"a","and","the","quick","fox","cow","dog","blue",
-            "black","brown","happy","lazy","skip","jumped","run","under","over","around"};
-        lmap::extractor extractor(vocab);
+        nlohmann::json js = {{"labels",{"a","and","the","quick","fox","cow","dog","blue",
+            "black","brown","happy","lazy","skip","jumped","run","under","over","around"}}};
+        lmap::config cfg{js};
+        lmap::extractor extractor(cfg);
         auto data = extractor.get_data();
         EXPECT_EQ(2,data["the"]);
 
@@ -63,8 +64,10 @@ TEST(etl, lmap) {
         }
     }
     {
-        stringstream vocab("a and the quick fox cow dog blue black brown happy lazy skip jumped run under over around");
-        lmap::extractor extractor(vocab);
+        nlohmann::json js = {{"labels",{"a","and","the","quick","fox","cow","dog","blue",
+            "black","brown","happy","lazy","skip","jumped","run","under","over","around"}}};
+        lmap::config cfg{js};
+        lmap::extractor extractor(cfg);
         auto data = extractor.get_data();
         EXPECT_EQ(2,data["the"]);
 

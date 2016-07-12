@@ -13,7 +13,7 @@ public:
     virtual ~train_provider_factory() {}
 
 public:
-    static std::shared_ptr<nervana::train_base> create(nlohmann::json configJs);
+    static std::shared_ptr<nervana::provider_interface> create(nlohmann::json configJs);
 };
 
 

@@ -43,12 +43,10 @@ static string read_file( const string& path ) {
     return ss.str();
 }
 
-static shared_ptr<localization::config> make_localization_config() {
-    auto cfg = make_shared<localization::config>();
+static localization::config make_localization_config() {
     nlohmann::json js;
     js["labels"] = label_list;
-    cfg->set_config(js);
-    return cfg;
+    return localization::config(js);
 }
 
 TEST(localization,generate_anchors) {
@@ -92,7 +90,7 @@ TEST(localization,generate_anchors) {
         EXPECT_EQ(expected[i], actual[i]);
     }
 
-    EXPECT_EQ(34596,cfg->total_anchors());
+    EXPECT_EQ(34596,cfg.total_anchors());
 
     EXPECT_EQ((9 * (62 * 62)),_anchor.all_anchors.size());
 }
@@ -224,8 +222,7 @@ TEST(localization,config) {
     nlohmann::json js;
     js["labels"] = label_list;
 
-    localization::config cfg;
-    EXPECT_TRUE(cfg.set_config(js));
+    EXPECT_NO_THROW(localization::config cfg(js));
 }
 
 TEST(localization,calculate_scale_shape) {
@@ -234,7 +231,7 @@ TEST(localization,calculate_scale_shape) {
     localization::transformer transformer(cfg);
     cv::Size size{500,375};
     float scale;
-    tie(scale,size) = transformer.calculate_scale_shape(size, cfg->min_size, cfg->max_size);
+    tie(scale,size) = transformer.calculate_scale_shape(size, cfg.min_size, cfg.max_size);
     EXPECT_FLOAT_EQ(1.6,scale);
     EXPECT_EQ(800,size.width);
     EXPECT_EQ(600,size.height);
@@ -242,7 +239,7 @@ TEST(localization,calculate_scale_shape) {
 
 TEST(localization, sample_anchors) {
     string data = read_file(CURDIR"/test_data/006637.json");
-    shared_ptr<localization::config> cfg = make_localization_config();
+    localization::config cfg = make_localization_config();
     localization::extractor extractor{cfg};
     localization::transformer transformer{cfg};
     auto extracted_metadata = extractor.extract(&data[0],data.size());
@@ -269,8 +266,8 @@ TEST(localization, sample_anchors) {
         box b = anchors[index];
         EXPECT_GE(b.xmin,0);
         EXPECT_GE(b.ymin,0);
-        EXPECT_LT(b.xmax,cfg->max_size);
-        EXPECT_LT(b.ymax,cfg->max_size);
+        EXPECT_LT(b.xmax,cfg.max_size);
+        EXPECT_LT(b.ymax,cfg.max_size);
     }
 }
 

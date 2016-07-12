@@ -59,7 +59,7 @@ namespace nervana {
     public:
         param_factory(std::shared_ptr<audio::config> cfg,
                       std::default_random_engine& dre) : _cfg{cfg} {}
-        ~param_factory() {}
+        virtual ~param_factory() {}
 
         std::shared_ptr<audio::params> make_params(std::shared_ptr<const decoded>);
     private:
@@ -68,7 +68,7 @@ namespace nervana {
 
     class audio::config : public json_config_parser {
     public:
-        bool set_config(nlohmann::json js) override;
+        config(nlohmann::json js);
 
         int                         _randomSeed = 0;
         int                         _samplingFreq;
@@ -85,11 +85,15 @@ namespace nervana {
         int                         _window;
         int                         _feature;
         MediaType                   _mtype = MediaType::AUDIO;
+
+    private:
+        config() = delete;
     };
 
     class audio::decoded : public decoded_media {
     public:
         decoded(std::shared_ptr<RawMedia> raw);
+        virtual ~decoded(){}
         MediaType get_type() override;
 
         size_t getSize();
@@ -102,20 +106,22 @@ namespace nervana {
     class audio::extractor : public interface::extractor<audio::decoded> {
     public:
         extractor(std::shared_ptr<const audio::config>);
-        ~extractor();
+        virtual ~extractor();
         std::shared_ptr<audio::decoded> extract(const char*, int) override;
     private:
+        extractor() = delete;
         Codec* _codec;
     };
 
     class audio::transformer : public interface::transformer<audio::decoded, audio::params> {
     public:
         transformer(std::shared_ptr<const audio::config>);
-        ~transformer();
+        virtual ~transformer();
         std::shared_ptr<audio::decoded> transform(
             std::shared_ptr<audio::params>,
             std::shared_ptr<audio::decoded>) override;
     private:
+        transformer() = delete;
         Codec* _codec;
         Specgram* _specgram;
         NoiseClips* _noiseClips;

@@ -31,42 +31,54 @@
 using namespace std;
 using namespace nervana;
 
-class image_config_builder {
-public:
-    image_config_builder() { height(30); width(30); }
+//class image_config_builder {
+//public:
+//    image_config_builder() { height(30); width(30); }
 
-    image_config_builder& height(int val) { obj.height = val; return *this; }
-    image_config_builder& width(int val) { obj.width = val; return *this; }
-    image_config_builder& do_area_scale(bool val) { obj.do_area_scale = val; return *this; }
-    image_config_builder& channel_major(bool val) { obj.channel_major = val; return *this; }
-    image_config_builder& channels(int val) { obj.channels = val; return *this; }
-    image_config_builder& scale(float a, float b) { obj.scale = uniform_real_distribution<float>(a,b); return *this; }
-    image_config_builder& angle(float a, float b) { obj.angle = uniform_int_distribution<int>(a,b); return *this; }
-    image_config_builder& lighting(float mean, float stddev) { obj.lighting = normal_distribution<float>(mean,stddev); return *this; }
-    image_config_builder& aspect_ratio(float a, float b) { obj.aspect_ratio = uniform_real_distribution<float>(a,b); return *this; }
-    image_config_builder& photometric(float a, float b) { obj.photometric = uniform_real_distribution<float>(a,b); return *this; }
-    image_config_builder& crop_offset(float a, float b) { obj.crop_offset = uniform_real_distribution<float>(a,b); return *this; }
-    image_config_builder& flip(float p) { obj.flip = bernoulli_distribution(p); return *this; }
+//    image_config_builder& height(int val) { obj.height = val; return *this; }
+//    image_config_builder& width(int val) { obj.width = val; return *this; }
+//    image_config_builder& do_area_scale(bool val) { obj.do_area_scale = val; return *this; }
+//    image_config_builder& channel_major(bool val) { obj.channel_major = val; return *this; }
+//    image_config_builder& channels(int val) { obj.channels = val; return *this; }
+//    image_config_builder& scale(float a, float b) { obj.scale = uniform_real_distribution<float>(a,b); return *this; }
+//    image_config_builder& angle(float a, float b) { obj.angle = uniform_int_distribution<int>(a,b); return *this; }
+//    image_config_builder& lighting(float mean, float stddev) { obj.lighting = normal_distribution<float>(mean,stddev); return *this; }
+//    image_config_builder& aspect_ratio(float a, float b) { obj.aspect_ratio = uniform_real_distribution<float>(a,b); return *this; }
+//    image_config_builder& photometric(float a, float b) { obj.photometric = uniform_real_distribution<float>(a,b); return *this; }
+//    image_config_builder& crop_offset(float a, float b) { obj.crop_offset = uniform_real_distribution<float>(a,b); return *this; }
+//    image_config_builder& flip(float p) { obj.flip = bernoulli_distribution(p); return *this; }
 
-    shared_ptr<image::config> dump(int tab=4) {
-        nlohmann::json js = {{"height",obj.height},{"width",obj.width},{"channels",obj.channels},
-        {"do_area_scale",obj.do_area_scale},{"channel_major",obj.channel_major},{
-        "distribution",{
-            {"angle",{obj.angle.a(),obj.angle.b()}},
-            {"scale",{obj.scale.a(),obj.scale.b()}},
-            {"lighting",{obj.lighting.mean(),obj.lighting.stddev()}},
-            {"aspect_ratio",{obj.aspect_ratio.a(),obj.aspect_ratio.b()}},
-            {"photometric",{obj.photometric.a(),obj.photometric.b()}},
-            {"crop_offset",{obj.crop_offset.a(),obj.crop_offset.b()}},
-            {"flip",{obj.flip.p()!=0}}
-        }}};
-        auto rc = make_shared<image::config>();
-        rc->set_config(js);
-        return rc;
-    }
-private:
-    image::config obj;
-};
+//    shared_ptr<image::config> dump(int tab=4) {
+//        nlohmann::json js = {{"height",obj.height},{"width",obj.width},{"channels",obj.channels},
+//        {"do_area_scale",obj.do_area_scale},{"channel_major",obj.channel_major},{
+//        "distribution",{
+//            {"angle",{obj.angle.a(),obj.angle.b()}},
+//            {"scale",{obj.scale.a(),obj.scale.b()}},
+//            {"lighting",{obj.lighting.mean(),obj.lighting.stddev()}},
+//            {"aspect_ratio",{obj.aspect_ratio.a(),obj.aspect_ratio.b()}},
+//            {"photometric",{obj.photometric.a(),obj.photometric.b()}},
+//            {"crop_offset",{obj.crop_offset.a(),obj.crop_offset.b()}},
+//            {"flip",{obj.flip.p()!=0}}
+//        }}};
+//        auto rc = make_shared<image::config>(js);
+//        return rc;
+//    }
+//private:
+//    image::config obj = nlohmann::json();
+
+//    height;
+//    width;
+//    do_area_scale;
+//    channel_major;
+//    channels;
+//    scale;
+//    angle;
+//    lighting;
+//    aspect_ratio;
+//    photometric;
+//    crop_offset;
+//    flip;
+//};
 
 class image_params_builder {
 public:
@@ -112,10 +124,9 @@ void test_image(vector<unsigned char>& img, int channels) {
         {"flip",{false}}
     }}};
 
-    auto itpj = make_shared<image::config>();
-    itpj->set_config(js);
+    auto itpj = make_shared<image::config>(js);
 
-    image::extractor ext{itpj};
+    image::extractor ext{*itpj};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
     ASSERT_NE(nullptr,decoded);
@@ -170,8 +181,7 @@ TEST(etl, image_config) {
         {"flip",{false}}
     }}};
 
-    auto config = make_shared<image::config>();
-    config->set_config(js);
+    auto config = make_shared<image::config>(js);
     EXPECT_EQ(30,config->height);
     EXPECT_EQ(30,config->width);
     EXPECT_FALSE(config->do_area_scale);
@@ -242,18 +252,18 @@ TEST(etl, image_transform_crop) {
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
 
-    image_config_builder config;
-    shared_ptr<image::config> config_ptr = config.width(256).height(256).dump();
+    nlohmann::json js = {{"width", 256},{"height",256}};
+    image::config cfg(js);
 
-    image::extractor ext{config_ptr};
+    image::extractor ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
-    image::param_factory factory(config_ptr);
+    image::param_factory factory(cfg);
 
     image_params_builder builder(factory.make_params(decoded));
     shared_ptr<image::params> params_ptr = builder.cropbox( 100, 150, 20, 30 ).output_size(20, 30);
 
-    image::transformer trans{config_ptr};
+    image::transformer trans{cfg};
     shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
 
     cv::Mat image = transformed->get_image(0);
@@ -270,18 +280,18 @@ TEST(etl, image_transform_flip) {
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
 
-    image_config_builder config;
-    shared_ptr<image::config> config_ptr = config.width(256).height(256).dump();
+    nlohmann::json js = {{"width", 256},{"height",256}};
+    image::config cfg(js);
 
-    image::extractor ext{config_ptr};
+    image::extractor ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
-    image::param_factory factory(config_ptr);
+    image::param_factory factory(cfg);
 
     image_params_builder builder(factory.make_params(decoded));
     shared_ptr<image::params> params_ptr = builder.cropbox( 100, 150, 20, 20 ).output_size(20, 20).flip(true);
 
-    image::transformer trans{config_ptr};
+    image::transformer trans{cfg};
     shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
 
     cv::Mat image = transformed->get_image(0);
@@ -298,10 +308,10 @@ TEST(etl, multi_crop) {
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
 
-    image_config_builder config;
-    shared_ptr<image::config> config_ptr = config.dump();  // Only used for extract and load
+    nlohmann::json js = {{"width", 256},{"height",256}};
+    image::config cfg(js);
 
-    image::extractor ext{config_ptr};
+    image::extractor ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
     // Just center crop
@@ -315,8 +325,7 @@ TEST(etl, multi_crop) {
             }
         )";
         auto js = nlohmann::json::parse(jsstring);
-        auto mc_config_ptr = make_shared<multicrop::config>();
-        mc_config_ptr->set_config(js);
+        auto mc_config_ptr = make_shared<multicrop::config>(js);
 
         multicrop::transformer trans{mc_config_ptr};
         shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
@@ -347,8 +356,7 @@ TEST(etl, multi_crop) {
         )";
 
         auto js = nlohmann::json::parse(jsstring);
-        auto mc_config_ptr = make_shared<multicrop::config>();
-        mc_config_ptr->set_config(js);
+        auto mc_config_ptr = make_shared<multicrop::config>(js);
 
         multicrop::transformer trans{mc_config_ptr};
         shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
@@ -382,8 +390,7 @@ TEST(etl, multi_crop) {
         using idxPt = std::pair<int, Point2i>;
 
         auto js = nlohmann::json::parse(jsstring);
-        auto mc_config_ptr = make_shared<multicrop::config>();
-        mc_config_ptr->set_config(js);
+        auto mc_config_ptr = make_shared<multicrop::config>(js);
 
         multicrop::transformer trans{mc_config_ptr};
         shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);

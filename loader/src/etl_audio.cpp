@@ -3,7 +3,7 @@
 using namespace std;
 using namespace nervana;
 
-bool audio::config::set_config(nlohmann::json js) {
+audio::config::config(nlohmann::json js) {
     // for now, all config params are required
     parse_value(_samplingFreq, "samplingFreq", js, mode::REQUIRED);
     parse_value(_clipDuration, "clipDuration", js, mode::REQUIRED);
@@ -18,7 +18,6 @@ bool audio::config::set_config(nlohmann::json js) {
     parse_value(_height, "height", js, mode::REQUIRED);
     parse_value(_window, "window", js, mode::REQUIRED);
     parse_value(_feature, "feature", js, mode::REQUIRED);
-    return true;
 }
 
 shared_ptr<audio::params> audio::param_factory::make_params(std::shared_ptr<const decoded>) {

@@ -50,14 +50,17 @@ namespace nervana {
     public:
         uint32_t num_frames;
 
-        bool set_config(nlohmann::json js) override
+        config(nlohmann::json js) :
+            image::config::config(js)
         {
-            image::config::set_config(js);
             parse_value(num_frames, "num_frames", js, mode::REQUIRED);
             shape.insert(shape.begin() + 1, num_frames); // This is for the depth after channels
 
-            return validate();
+            validate();
         }
+
+    private:
+        config() = delete;
     };
 
     class video::params : public nervana::params {
@@ -67,17 +70,21 @@ namespace nervana {
 
         std::shared_ptr<image::params> _imageParams;
         int _framesPerClip;
+
+    private:
+        params() = delete;
     };
 
     class video::decoded : public image::decoded {
     public:
+        virtual ~decoded(){}
         virtual MediaType get_type() override { return MediaType::VIDEO; }
     };
 
     class video::extractor : public interface::extractor<video::decoded> {
     public:
-        extractor(std::shared_ptr<const video::config>);
-        ~extractor();
+        extractor(const video::config&);
+        virtual ~extractor();
 
         virtual std::shared_ptr<video::decoded> extract(const char* item, int itemSize) override;
 
@@ -91,27 +98,32 @@ namespace nervana {
         AVPixelFormat _pFormat;
         AVFrame* _pFrameRGB;
         AVFrame* _pFrame;
+
+    private:
+        extractor() = delete;
     };
 
     // simple wrapper around image::transformer for now
     class video::transformer : public interface::transformer<video::decoded, video::params> {
     public:
-        transformer(std::shared_ptr<const video::config>);
-        ~transformer() {}
+        transformer(const video::config&);
+        virtual ~transformer() {}
         virtual std::shared_ptr<video::decoded> transform(
                                                 std::shared_ptr<video::params>,
                                                 std::shared_ptr<video::decoded>) override;
     protected:
+        transformer() = delete;
         image::transformer _imageTransformer;
     };
 
     class video::loader : public interface::loader<video::decoded> {
     public:
-        loader(std::shared_ptr<const video::config>) {}
-        ~loader() {}
+        loader(const video::config&) {}
+        virtual ~loader() {}
         virtual void load(char*, std::shared_ptr<video::decoded>) override;
 
     private:
+        loader() = delete;
         void split(cv::Mat&, char*);
     };
 }

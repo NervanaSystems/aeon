@@ -33,9 +33,10 @@ class nervana::bbox::config : public nervana::interface::config {
 public:
     std::unordered_map<std::string,int> label_map;
 
-    bool set_config(nlohmann::json js) override;
+    config(nlohmann::json js);
 
 private:
+    config() = delete;
     bool validate();
 };
 
@@ -64,12 +65,13 @@ private:
 
 class nervana::bbox::extractor : public nervana::interface::extractor<nervana::bbox::decoded> {
 public:
-    extractor(std::shared_ptr<const bbox::config>);
+    extractor(const bbox::config&);
     virtual ~extractor(){}
     virtual std::shared_ptr<bbox::decoded> extract(const char*, int) override;
     void extract(const char*, int, std::shared_ptr<bbox::decoded>&);
 private:
-     std::unordered_map<std::string,int> label_map;
+    extractor() = delete;
+    std::unordered_map<std::string,int> label_map;
 };
 
 class nervana::bbox::transformer : public nervana::interface::transformer<nervana::bbox::decoded, nervana::image::params> {

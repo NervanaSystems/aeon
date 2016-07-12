@@ -22,7 +22,7 @@ public:
     config() {}
 
     const std::vector<uint32_t>& get_shape() { return shape; }
-    const output_type& get_type() { return otype; }
+    const output_type& get_type() const { return otype; }
     uint32_t get_size_bytes()
     {
         return static_cast<uint32_t>(otype.size)

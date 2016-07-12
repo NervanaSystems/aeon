@@ -50,7 +50,7 @@ public:
     virtual ~pyDecodeThreadPool();
     virtual void start();
     virtual void stop();
-    void add_provider(std::shared_ptr<nervana::train_base> prov);
+    void add_provider(std::shared_ptr<nervana::provider_interface> prov);
 
 protected:
     virtual void run(int id);
@@ -78,7 +78,7 @@ private:
     int                         _bufferIndex    = 0;
     int                         _batchSize;
 
-    std::vector<std::shared_ptr<nervana::train_base>> _providers;
+    std::vector<std::shared_ptr<nervana::provider_interface>> _providers;
 
     std::vector<int>            _startSignaled;
     std::vector<int>            _startInds;
@@ -102,7 +102,7 @@ public:
     int subset_percent        = 100;
     int random_seed           = 0;
 
-    bool set_config(nlohmann::json js) override
+    pyLoaderConfig(nlohmann::json js)
     {
         parse_value(manifest_filename, "manifest_filename", js, mode::REQUIRED);
         parse_value(minibatch_size,    "minibatch_size", js, mode::REQUIRED);
@@ -118,10 +118,11 @@ public:
             macrobatch_size = minibatch_size;
         }
 
-        return validate();
+        validate();
     }
 
 private:
+    pyLoaderConfig() = delete;
     bool validate() { return true; }
 };
 

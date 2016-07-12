@@ -70,7 +70,7 @@ namespace nervana {
         bool channel_major = true;
         uint32_t channels = 3;
 
-        bool set_config(nlohmann::json js) override {
+        config(nlohmann::json js) {
             parse_value(height, "height", js, mode::REQUIRED);
             parse_value(width, "width", js, mode::REQUIRED);
 
@@ -78,7 +78,7 @@ namespace nervana {
 
             parse_value(type_string, "type_string", js);
 
-            parse_value(do_area_scale, "do_area_scale", js);
+            parse_value(do_area_scale, "do_area_scale", js, mode::OPTIONAL);
             parse_value(channels, "channels", js);
             parse_value(channel_major, "channel_major", js);
 
@@ -103,11 +103,11 @@ namespace nervana {
                 shape = std::vector<uint32_t> {height, width, channels};
             }
 
-
-            return validate();
+            validate();
         }
 
     private:
+        config() = delete;
         bool validate() {
             bool result = true;
 
@@ -122,11 +122,11 @@ namespace nervana {
 
     class image::param_factory : public interface::param_factory<image::decoded, image::params> {
     public:
-        param_factory(std::shared_ptr<image::config> cfg) : _cfg{cfg}, _dre{0}
+        param_factory(image::config& cfg) : _cfg{cfg}, _dre{0}
         {
             // A positive provided seed means to run deterministic with that seed
-            if (_cfg->seed >= 0) {
-                _dre.seed((uint32_t) _cfg->seed);
+            if (_cfg.seed >= 0) {
+                _dre.seed((uint32_t) _cfg.seed);
             } else {
                 _dre.seed(std::chrono::system_clock::now().time_since_epoch().count());
 
@@ -138,7 +138,7 @@ namespace nervana {
     private:
         void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
 
-        std::shared_ptr<image::config> _cfg;
+        image::config& _cfg;
         std::default_random_engine _dre;
     };
 
@@ -185,7 +185,7 @@ namespace nervana {
 
     class image::extractor : public interface::extractor<image::decoded> {
     public:
-        extractor(std::shared_ptr<const image::config>);
+        extractor(const image::config&);
         ~extractor() {}
         virtual std::shared_ptr<image::decoded> extract(const char*, int) override;
 
@@ -198,7 +198,7 @@ namespace nervana {
 
     class image::transformer : public interface::transformer<image::decoded, image::params> {
     public:
-        transformer(std::shared_ptr<const image::config>);
+        transformer(const image::config&);
         ~transformer() {}
         virtual std::shared_ptr<image::decoded> transform(
                                                 std::shared_ptr<image::params>,
@@ -235,9 +235,9 @@ namespace nervana {
         std::vector<cv::Point2f> offsets;
         cv::Size2i output_size;
 
-        bool set_config(nlohmann::json js) override
+        config(nlohmann::json js) :
+            image::config::config(js)
         {
-            image::config::set_config(js);
             // Parse required and optional variables
             parse_value(multicrop_scales, "multicrop_scales", js, mode::REQUIRED);
             parse_value(crops_per_scale, "crops_per_scale", js);
@@ -261,7 +261,7 @@ namespace nervana {
             uint32_t num_views = crops_per_scale * multicrop_scales.size() * (include_flips ? 2 : 1);
             shape.insert(shape.begin(), num_views);
 
-            return validate();
+            validate();
         }
 
     private:
@@ -294,12 +294,12 @@ namespace nervana {
 
     class image::loader : public interface::loader<image::decoded> {
     public:
-        loader(std::shared_ptr<image::config> cfg) : _cfg{cfg} {}
+        loader(const image::config& cfg) : _cfg{cfg} {}
         ~loader() {}
         virtual void load(char*, std::shared_ptr<image::decoded>) override;
 
     private:
-        std::shared_ptr<image::config> _cfg;
+        const image::config& _cfg;
         void split(cv::Mat&, char*);
     };
 }

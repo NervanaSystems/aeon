@@ -56,7 +56,7 @@ namespace nervana {
         bool channel_major = true;
         int channels = 3;
 
-        bool set_config(nlohmann::json js) override
+        config(nlohmann::json js)
         {
             parse_value(min_size, "min_size", js, mode::REQUIRED);
             parse_value(max_size, "max_size", js, mode::REQUIRED);
@@ -66,12 +66,13 @@ namespace nervana {
 
             auto dist_params = js["distribution"];
             parse_dist(flip, "flip", dist_params);
-            return validate();
+            validate();
         }
 
         virtual int num_crops() const { return 1; }
 
     private:
+        config() = delete;
         bool validate() {
             return max_size >= min_size;
         }

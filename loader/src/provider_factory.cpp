@@ -1,8 +1,8 @@
 #include "provider_factory.hpp"
 
-std::shared_ptr<nervana::train_base> nervana::train_provider_factory::create(nlohmann::json configJs)
+std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::create(nlohmann::json configJs)
 {
-    std::shared_ptr<nervana::train_base> rc;
+    std::shared_ptr<nervana::provider_interface> rc;
     if(!configJs["media"].is_string()) {
         throw std::invalid_argument("must have a property 'media' with type string.  Options are: 'image_label'' and 'localization'.");
     }
@@ -26,9 +26,10 @@ std::shared_ptr<nervana::interface::config> nervana::config_factory::create(nloh
     }
     std::string mediaType = configJs["type"];
     if( mediaType == "image" ) {
-        rc = std::make_shared<nervana::image::config>();
+        rc = std::make_shared<nervana::image::config>(configJs["config"]);
+        printf("Made it here\n");
     } else if ( mediaType == "label" ) {
-        rc = std::make_shared<nervana::label::config>();
+        rc = std::make_shared<nervana::label::config>(configJs["config"]);
     } else {
         rc = nullptr;
     }

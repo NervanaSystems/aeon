@@ -59,8 +59,7 @@ TEST(image_var, image_config) {
         {"flip",{false}}
     }}};
 
-    auto config = make_shared<image_var::config>();
-    config->set_config(js);
+    auto config = make_shared<image_var::config>(js);
     EXPECT_EQ(300,config->min_size);
     EXPECT_EQ(400,config->max_size);
     EXPECT_TRUE(config->channel_major);
@@ -86,8 +85,7 @@ TEST(image_var, resize) {
         {"flip",{false}}
     }}};
 
-    shared_ptr<image_var::config> config_ptr = make_shared<image_var::config>();
-    config_ptr->set_config(jsConfig);
+    shared_ptr<image_var::config> config_ptr = make_shared<image_var::config>(jsConfig);
 
     image_var::extractor ext{config_ptr};
     shared_ptr<image_var::decoded> decoded = ext.extract((char*)&img[0], img.size());
@@ -115,8 +113,7 @@ TEST(image_var, transform_flip) {
         {"flip",{true}}
     }}};
 
-    shared_ptr<image_var::config> config_ptr = make_shared<image_var::config>();
-    config_ptr->set_config(jsConfig);
+    shared_ptr<image_var::config> config_ptr = make_shared<image_var::config>(jsConfig);
 
     image_var::extractor ext{config_ptr};
     shared_ptr<image_var::decoded> decoded = ext.extract((char*)&img[0], img.size());

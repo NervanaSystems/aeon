@@ -38,13 +38,14 @@ namespace nervana {
 
     class localization::anchor {
     public:
-        anchor(std::shared_ptr<const localization::config>);
+        anchor(const localization::config&);
 
         std::vector<int> inside_image_bounds(int width, int height);
 //        std::vector<int> inside_image_bounds(int width, int height);
         int total_anchors() const { return all_anchors.size(); }
         const std::vector<box>& get_all_anchors() const { return all_anchors; }
     private:
+        anchor() = delete;
         //    Generate anchor (reference) windows by enumerating aspect ratios X
         //    scales wrt a reference (0, 0, 15, 15) window.
         std::vector<box> generate_anchors();
@@ -61,7 +62,7 @@ namespace nervana {
 
         std::vector<box> add_anchors();
 
-        std::shared_ptr<const localization::config> cfg;
+        const localization::config& cfg;
         int conv_size;
 
         std::vector<box> all_anchors;
@@ -98,7 +99,7 @@ namespace nervana {
         float positive_overlap = 0.7;  // positive anchors have > 0.7 overlap with at least one gt box
         float foreground_fraction = 0.5;  // at most, positive anchors are 0.5 of the total rois
 
-        bool set_config(nlohmann::json js) override;
+        config(nlohmann::json js);
 
         bool channel_major = true;
 
@@ -106,6 +107,7 @@ namespace nervana {
             return ratios.size() * scales.size() * (int)pow(int(std::floor(max_size * scaling_factor)),2);
         }
     private:
+        config() = delete;
         bool validate();
     };
 
@@ -129,7 +131,7 @@ namespace nervana {
 
     class localization::extractor : public nervana::interface::extractor<localization::decoded> {
     public:
-        extractor(std::shared_ptr<const localization::config>);
+        extractor(const localization::config&);
 
         virtual std::shared_ptr<localization::decoded> extract(const char* data, int size) override {
             auto rc = std::make_shared<localization::decoded>();
@@ -140,12 +142,13 @@ namespace nervana {
 
         virtual ~extractor() {}
     private:
+        extractor() = delete;
         bbox::extractor bbox_extractor;
     };
 
     class localization::transformer : public interface::transformer<localization::decoded, image_var::params> {
     public:
-        transformer(std::shared_ptr<const localization::config> cfg);
+        transformer(const localization::config&);
 
         virtual ~transformer() {}
 
@@ -155,23 +158,25 @@ namespace nervana {
 
         static std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size, int min_size, int max_size);
     private:
+        transformer() = delete;
         cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<box>& query_boxes);
         static std::vector<target> compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
         std::vector<int> sample_anchors(const std::vector<int>& labels, bool debug=false);
 
-        std::shared_ptr<const localization::config> cfg;
+        const localization::config& cfg;
         std::minstd_rand0 random;
         anchor  _anchor;
     };
 
     class localization::loader : public interface::loader<localization::decoded> {
     public:
-        loader(std::shared_ptr<const localization::config> cfg);
+        loader(const localization::config&);
 
         virtual ~loader() {}
 
         void load(char* buf, std::shared_ptr<localization::decoded> mp) override;
     private:
+        loader() = delete;
         void build_output(std::shared_ptr<localization::decoded> mp, std::vector<float>& dev_y_labels, std::vector<float>& dev_y_labels_mask, std::vector<float>& dev_y_bbtargets, std::vector<float>& dev_y_bbtargets_mask);
         size_t _load_count;
         size_t _load_size;
