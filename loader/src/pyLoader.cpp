@@ -298,8 +298,23 @@ int PyLoader::start()
             throw std::runtime_error("missing PyLoader config parameter target_config");
         }
 
-        _dtm_config = nervana::config_factory::create(_lcfg_json["data_config"]);
-        _tgt_config = nervana::config_factory::create(_lcfg_json["target_config"]);
+        try {
+            _dtm_config = nervana::config_factory::create(_lcfg_json["data_config"]);
+        } catch (const std::invalid_argument e) {
+            stringstream ss;
+            ss << "exception while parsing data_config: ";
+            ss << e.what();
+            throw std::runtime_error(ss.str());
+        }
+
+        try {
+            _tgt_config = nervana::config_factory::create(_lcfg_json["target_config"]);
+        } catch (const std::invalid_argument e) {
+            stringstream ss;
+            ss << "exception while parsing target_config: ";
+            ss << e.what();
+            throw std::runtime_error(ss.str());
+        }
 
         // Bind the python backend here
         _pyBackend = make_shared<pyBackendWrapper>(_pbe, _dtm_config, _tgt_config, _batchSize);
@@ -319,7 +334,17 @@ int PyLoader::start()
 
         // Now add providers
         for (int i=0; i<nthreads; i++) {
-            _decodeThreads->add_provider(nervana::train_provider_factory::create(_lcfg_json));
+            std::shared_ptr<nervana::train_base> factory;
+            try {
+                factory = nervana::train_provider_factory::create(_lcfg_json);
+            } catch (const std::invalid_argument e) {
+                stringstream ss;
+                ss << "exception while parsing provider_factory: ";
+                ss << e.what();
+                throw std::runtime_error(ss.str());
+            }
+
+            _decodeThreads->add_provider(factory);
         }
 
     } catch(std::bad_alloc&) {

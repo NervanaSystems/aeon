@@ -73,7 +73,7 @@ public:
                                     T& value,
                                     const std::string key,
                                     const nlohmann::json &js,
-                                    mode required=mode::OPTIONAL )
+                                    mode required=mode::OPTIONAL)
     {
         auto val = js.find(key);
         if (val != js.end()) {
