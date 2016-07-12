@@ -41,6 +41,10 @@ public:
 
 class nervana::json_config_parser {
 public:
+    enum class mode {
+        OPTIONAL,
+        REQUIRED
+    };
 
     // pass json by value so set_config gets a non-const copy
     virtual bool set_config(nlohmann::json js) = 0;
@@ -65,27 +69,42 @@ public:
         dist = std::bernoulli_distribution{params[0] ? 0.5 : 0.0};
     }
 
-    template<typename T> void parse_value(
+    template<typename T> static void parse_value(
                                     T& value,
                                     const std::string key,
                                     const nlohmann::json &js,
-                                    bool required=false )
+                                    mode required=mode::OPTIONAL )
     {
         auto val = js.find(key);
         if (val != js.end()) {
             value = val->get<T>();
-        } else if (required) {
+        } else if (required == mode::REQUIRED) {
             throw std::invalid_argument("Required Argument: " + key + " not set");
         }
     }
 
-    template<typename T> void parse_req(T& value, const std::string key, const nlohmann::json &js)
+    template<typename T> static void parse_enum(
+                                    T& value,
+                                    const std::string key,
+                                    const nlohmann::json &js,
+                                    mode required=mode::OPTIONAL )
     {
-        parse_value(value, key, js, true);
+        auto val = js.find(key);
+        if (val != js.end()) {
+            std::string tmp = val->get<std::string>();
+            from_string(value,tmp);
+        } else if (required == mode::REQUIRED) {
+            throw std::invalid_argument("Required Argument: " + key + " not set");
+        }
     }
 
-    template<typename T> void parse_opt(T& value, const std::string key, const nlohmann::json &js)
+    template<typename T> static void parse_req(T& value, const std::string key, const nlohmann::json &js)
     {
-        parse_value(value, key, js, false);
+        parse_value(value, key, js, mode::REQUIRED);
+    }
+
+    template<typename T> static void parse_opt(T& value, const std::string key, const nlohmann::json &js)
+    {
+        parse_value(value, key, js, mode::OPTIONAL);
     }
 };

@@ -38,4 +38,6 @@ namespace nervana {
     }
 
     void dump( const void*, size_t );
+
+    std::string tolower(const std::string& s);
 }

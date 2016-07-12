@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <string>
+
 #include "util.hpp"
 
 void nervana::dump( const void* _data, size_t _size ) {
@@ -22,4 +25,10 @@ void nervana::dump( const void* _data, size_t _size ) {
         data += 16;
         index += 16;
     }
+}
+
+std::string nervana::tolower(const std::string& s) {
+    std::string rc = s;
+    std::transform(rc.begin(), rc.end(), rc.begin(), ::tolower);
+    return rc;
 }
