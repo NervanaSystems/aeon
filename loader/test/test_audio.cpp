@@ -42,6 +42,12 @@ TEST(etl, audio_extract) {
     ASSERT_EQ(decoded_audio->getSize(), 88704);
 }
 
+TEST(etl, write_wav) {
+    auto sg = make_shared<sinewave_generator>(400, 500);
+    wav_data wav(sg, 2, 16000, false);
+    wav.write_to_file("blah.wav");
+}
+
 TEST(etl, audio_transform) {
     auto decoded_audio = generate_decoded_audio(1000, 2000);
 

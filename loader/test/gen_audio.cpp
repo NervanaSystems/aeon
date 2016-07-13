@@ -50,56 +50,165 @@ extern "C" {
 
 using namespace std;
 using nervana::pack_le;
+using nervana::unpack_le;
+
+wav_data::wav_data(char *buf, uint32_t bufsize)
+{
+    char *bptr = buf;
+    if (bufsize < 36) {
+        throw wavefile_exception("Header size is too small");
+    }
+    if (strncmp(bptr, "RIFF", 4) || strncmp(bptr+8, "WAVEfmt ", 8)) {
+        throw wavefile_exception("Unsupported format");
+    }
+
+    uint32_t riff_chunk_size = unpack_le<uint32_t>(bptr + 4);
+
+    if (riff_chunk_size > bufsize) {
+        throw wavefile_exception("");
+    }
+
+    bptr += 16;
+
+    uint32_t subchunk1_size  = unpack_le<uint32_t>(bptr);   bptr += sizeof(subchunk1_size);
+    uint16_t audio_format    = unpack_le<uint16_t>(bptr);   bptr += sizeof(audio_format);
+    uint16_t num_channels    = unpack_le<uint16_t>(bptr);   bptr += sizeof(num_channels);
+    _sample_rate             = unpack_le<uint32_t>(bptr);   bptr += sizeof(_sample_rate);
+    uint32_t byte_rate       = unpack_le<uint32_t>(bptr);   bptr += sizeof(byte_rate);
+    uint32_t block_align     = unpack_le<uint16_t>(bptr);   bptr += sizeof(block_align);
+    uint32_t bits_per_sample = unpack_le<uint16_t>(bptr);   bptr += sizeof(bits_per_sample);
+
+    if (bits_per_sample != 16) {
+        throw wavefile_exception("Ingested waveforms must be 16-bit PCM");
+    }
+    uint32_t fmt_chunk_read  = 16;
+
+    if (audio_format != WAVE_FORMAT_PCM) {
+        throw wavefile_exception("can read only PCM data");
+    } else if (subchunk1_size < 16) {
+        throw wavefile_exception("PCM format data not at least 16");
+    }
+
+    // Skip any subchunks between "fmt" and "data".
+    while (strncmp(bptr, "data", 4) != 0) {
+        uint32_t chunk_sz = unpack_le<uint32_t>(bptr + 4);
+        if (chunk_sz != 4 && !strncmp(bptr, "fact", 4)) {
+            throw wavefile_exception("Malformed fact chunk");
+        }
+
+        bptr += 4 + sizeof(chunk_sz) + chunk_sz; // chunk tag, chunk size, chunk
+    }
+
+    if (strncmp(bptr, "data", 4) != 0) {
+        throw wavefile_exception("Got unexpected tag");
+    }
+
+    uint32_t data_chunk_size = unpack_le<uint32_t>(bptr + 4);
+
+    bptr += 4 + sizeof(data_chunk_size);
+
+    uint32_t num_samples = data_chunk_size / block_align;
+    data.create(num_samples, num_channels, CV_16SC1);
+
+    for (uint32_t n = 0; n < num_samples; ++n) {
+        for (uint32_t c = 0; c < num_channels; ++c) {
+            data.at<int16_t>(n, c) = unpack_le<int16_t>(bptr);
+            bptr += sizeof(int16_t);
+        }
+    }
+}
+
 
 void wav_data::write_to_file(string filename)
 {
-    _ofs.open(filename, ostream::binary);
+    vector<char> stored_data(_file_size);
+    write_header_alternate(stored_data);
+    write_data(stored_data);
 
+    _ofs.open(filename, ostream::binary);
     if(!_ofs) {
         throw std::runtime_error("couldn't write to file " + filename);
     }
-    write_header();
-    write_data();
-
+    _ofs.write(&(stored_data[0]), _file_size);
     _ofs.close();
 }
 
-void wav_data::write_header()
+void wav_data::write_to_buffer(char *buf, uint32_t bufsize)
 {
-    int32_t file_size = nbytes() + 16 + 20;
-    char header_1[16] {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'A', 'V', 'E', 'f', 'm', 't', ' '};
-    pack_le(header_1, file_size, 4);
-    _ofs.write(header_1, 16);
+    if (bufsize < _file_size) {
+        throw std::runtime_error("output buffer is too small " +
+                                  std::to_string(bufsize) + " provided " +
+                                  std::to_string(_file_size) + " needed.");
+    }
 
+    vector<char> stored_data(_file_size);
+    write_header(stored_data);
+    write_data(stored_data);
+    memcpy(&(stored_data[0]), buf, _file_size);
+}
+
+void wav_data::write_header_alternate(vector<char> & buf)
+{
+    RiffMainHeader rh;
+    rh.dwRiffCC      = nervana::FOURCC('R', 'I', 'F', 'F');
+    rh.dwRiffLen     = sizeof(RiffMainHeader) + sizeof(FmtHeader) + sizeof(DataHeader) + nbytes();
+    rh.dwWaveID      = nervana::FOURCC('W', 'A', 'V', 'E');
+
+    FmtHeader fh;
+    fh.dwFmtCC       = nervana::FOURCC('f', 'm', 't', ' ');
+    fh.dwFmtLen      = sizeof(FmtHeader) - 2 * sizeof(uint32_t);
+    fh.hwFmtTag      = WAVE_FORMAT_PCM;
+    fh.hwChannels    = channels();
+    fh.dwSampleRate  = sample_rate();
+    fh.dwBytesPerSec = bps();
+    fh.hwBlockAlign  = block_align();
+    fh.hwBitDepth    = bit_depth();
+
+    DataHeader dh;
+    dh.dwDataCC      = nervana::FOURCC('d', 'a', 't', 'a');
+    dh.dwDataLen     = nbytes();
+
+    buf.resize(sizeof(rh) + sizeof(fh) + sizeof(dh));
+
+    char *head_ptr = &(buf[0]);
+    memcpy(head_ptr, &rh, sizeof(rh)); head_ptr += sizeof(rh);
+    memcpy(head_ptr, &fh, sizeof(fh)); head_ptr += sizeof(fh);
+    memcpy(head_ptr, &dh, sizeof(dh));
+
+}
+
+void wav_data::write_header(vector<char>& buf)
+{
     int32_t fmtlen = 16;
     int16_t format_tag = 1;
 
-    char header_2[20];
-    pack_le(header_2, fmtlen);
-    pack_le(header_2 + 4, format_tag);
-    pack_le(header_2 + 6, channels());
-    pack_le(header_2 + 8, sample_rate());
-    pack_le(header_2 + 12, bytes_per_second());
-    pack_le(header_2 + 16, block_align());
-    pack_le(header_2 + 18, bit_depth());
-    _ofs.write(header_2, 20);
+    buf.resize(HEADER_SIZE);
+
+    char *head_ptr = &(buf[0]);
+    strncpy(head_ptr, "RIFF", 4);       head_ptr += 4;
+    pack_le(head_ptr, _file_size);      head_ptr += sizeof(_file_size);
+    strncpy(head_ptr, "WAVEfmt ", 8);   head_ptr += 8;
+    pack_le(head_ptr, fmtlen);          head_ptr += sizeof(fmtlen);
+    pack_le(head_ptr, format_tag);      head_ptr += sizeof(format_tag);
+    pack_le(head_ptr, channels());      head_ptr += sizeof(int16_t);
+    pack_le(head_ptr, sample_rate());   head_ptr += sizeof(int32_t);
+    pack_le(head_ptr, bps());           head_ptr += sizeof(int32_t);
+    pack_le(head_ptr, block_align());   head_ptr += sizeof(int16_t);
+    pack_le(head_ptr, bit_depth());     head_ptr += sizeof(int16_t);
+
+    strncpy(head_ptr, "data", 4);       head_ptr += 4;
+    pack_le(head_ptr, nbytes());
 }
 
-void wav_data::write_data()
+void wav_data::write_data(vector<char>& buf)
 {
-    char data_header[8] {'d', 'a', 't', 'a', 0, 0, 0, 0};
-    pack_le(data_header + 4, nbytes());
-    _ofs.write(data_header, 8);
-
-    char *data_payload = new char[nbytes()];
+    char *data_payload = &(buf[HEADER_SIZE]);
     for (int n = 0; n < data.rows; n++) {
         int16_t *ptr = data.ptr<int16_t>(n);
         for (int c = 0; c < data.cols; c++) {
             pack_le(data_payload, ptr[c], (n * data.cols + c) * sizeof(int16_t));
         }
     }
-    _ofs.write(data_payload, nbytes());
-    delete[] data_payload;
 }
 
 
@@ -324,28 +433,3 @@ vector<string> gen_audio::get_codec_list() {
     return rc;
 }
 
-//int main(int argc, char **argv)
-//{
-//    const char *filename;
-
-//    /* must be called before using avcodec lib */
-////    avcodec_init();
-
-//    /* register all the codecs */
-//    avcodec_register_all();
-
-//    if (argc <= 1) {
-//        audio_encode_example("/tmp/test.mp2");
-//        audio_decode_example("/tmp/test.sw", "/tmp/test.mp2");
-
-//        video_encode_example("/tmp/test.mpg");
-//        filename = "/tmp/test.mpg";
-//    } else {
-//        filename = argv[1];
-//    }
-
-//    //    audio_decode_example("/tmp/test.sw", filename);
-//    video_decode_example("/tmp/test%d.pgm", filename);
-
-//    return 0;
-//}

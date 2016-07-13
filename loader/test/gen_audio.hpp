@@ -27,9 +27,51 @@
 
 #include "dataset.hpp"
 #include "util.hpp"
+
+namespace nervana {
+#define MKFOURCC(a, b, c, d) ((uint32_t)(a) | (b) << 8 | (c) << 16 | (d) << 24)
+
+    constexpr uint32_t FOURCC ( char a, char b, char c, char d )
+    {
+        return (a |  (b << 8) | (c << 16) | (d << 24));
+    }
+}
+#pragma pack(1)
+struct RiffMainHeader
+{
+    uint32_t dwRiffCC;
+    uint32_t dwRiffLen;
+    uint32_t dwWaveID;
+};
+struct FmtHeader
+{
+    uint32_t dwFmtCC;
+    uint32_t dwFmtLen;
+    uint16_t hwFmtTag;
+    uint16_t hwChannels;
+    uint32_t dwSampleRate;
+    uint32_t dwBytesPerSec;
+    uint16_t hwBlockAlign;
+    uint16_t hwBitDepth;
+};
+struct DataHeader
+{
+    uint32_t dwDataCC;
+    uint32_t dwDataLen;
+};
+#pragma pack()
+
+class wavefile_exception: public std::runtime_error {
+public:
+    wavefile_exception (const std::string& msg) :
+    runtime_error(msg.c_str())
+    {}
+};
+
 class signal_generator {
 public:
-    virtual int16_t operator() (float) = 0;
+    virtual ~signal_generator() {}
+    virtual int16_t operator() (float t) = 0;
 };
 
 class sinewave_generator : public signal_generator {
@@ -38,7 +80,7 @@ public:
     frequency(frequency), amplitude(amplitude)
     {}
 
-    int16_t operator () (float t) override
+    int16_t operator() (float t) override
     {
         return static_cast<int16_t>(sin(frequency * t) * amplitude);
     }
@@ -50,34 +92,58 @@ private:
 
 class wav_data {
 public:
-    wav_data(signal_generator signal, int duration_ss, int sample_rate, bool is_stereo) :
-    _sample_rate(sample_rate)
+    wav_data(std::shared_ptr<signal_generator> sigptr,
+             int duration_ss, int rate, bool is_stereo) :
+    _sample_rate(rate)
     {
-        data.create(duration_ss * sample_rate, is_stereo ? 2 : 1, CV_16SC1);
+        data.create(duration_ss * rate, is_stereo ? 2 : 1, CV_16SC1);
         for (int n = 0; n < data.rows; ++n) {
+            float t = 2.0 * CV_PI * n / static_cast<float>(rate);
             for (int c = 0; c < data.cols; ++c) {
-                float t = n / static_cast<float>(sample_rate);
-                data.at<int16_t>(n, c) = signal(t);
+                data.at<int16_t>(n, c) = (*sigptr)(t);
             }
         }
+        _file_size = nbytes() + HEADER_SIZE - 4;  // everything but 'RIFF'
+    }
+
+    wav_data(char *buf, uint32_t bufsize);
+
+    void dump(std::ostream & ostr = std::cout)
+    {
+        ostr << "sample_rate " << sample_rate() << "\n";
+        ostr << "channels " << channels() << "\n";
+        ostr << "bit_depth " << bit_depth() << "\n";
+        ostr << "nbytes " << nbytes() << "\n";
+        ostr << "block_align " << block_align() << "\n";
+        ostr << "bytes_per_second " << bps() << "\n";
     }
 
     void write_to_file(std::string filename);
+    void write_to_buffer(char *buf, uint32_t bufsize);
 
     inline int32_t sample_rate() { return _sample_rate; }
     inline int32_t channels() { return data.cols; }
-    inline int16_t bit_depth() { return data.elemSize(); }
-    inline int32_t nbytes() { return data.total() * bit_depth(); }
-    inline int16_t block_align() {return bit_depth() * data.cols ;}
-    inline int32_t bytes_per_second() {return sample_rate() * block_align() ;}
+    inline int16_t bit_depth() { return data.elemSize() * 8; }
+    inline int32_t nbytes() { return data.total() * data.elemSize(); }
+    inline int16_t block_align() {return data.elemSize() * data.cols ;}
+    inline int32_t bps() {return sample_rate() * data.elemSize();}
 
+    static constexpr size_t HEADER_P0_SIZE = 12 + 4 * sizeof(int32_t) + 4 * sizeof(int16_t);
+    static constexpr size_t HEADER_D0_SIZE = 4 + sizeof(int32_t);
+    static constexpr size_t HEADER_SIZE = 4 + HEADER_P0_SIZE + HEADER_D0_SIZE;
+
+    static constexpr int WAVE_FORMAT_PCM = 0x0001;
+    static constexpr int WAVE_FORMAT_IEEE_FLOAT = 0x0003;
+    static constexpr int WAVE_FORMAT_EXTENSIBLE = 0xfffe;
 private:
-    void write_header();
-    void write_data();
+    void write_header_alternate(std::vector<char>&);
+    void write_header(std::vector<char>&);
+    void write_data(std::vector<char>&);
 
     std::ofstream _ofs;
     cv::Mat       data;
     int32_t       _sample_rate;
+    int32_t       _file_size;
 };
 
 class gen_audio : public dataset<gen_audio> {
