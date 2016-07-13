@@ -28,11 +28,8 @@ TEST(provider,image) {
 
     auto media = nervana::train_provider_factory::create(js);
 
-//    vector<char> dbuffer(dsize);
-//    vector<char> tbuffer(tsize);
-
-    buffer_out dbuffer(1,dsize,1);
-    buffer_out tbuffer(1,tsize,1);
+    buffer_out dbuffer(dsize,1);
+    buffer_out tbuffer(tsize,1);
     buffer_out_array outBuf({&dbuffer,&tbuffer});
 
     auto files = image_dataset.GetFiles();
