@@ -176,11 +176,11 @@ namespace nervana {
 
     class audio::param_factory : public interface::param_factory<audio::decoded, audio::params> {
     public:
-        param_factory(std::shared_ptr<audio::config> cfg) : _cfg{cfg}
+        param_factory(audio::config& cfg) : _cfg{cfg}
         {
             // A positive provided seed means to run deterministic with that seed
-            if (_cfg->seed >= 0) {
-                _dre.seed((uint32_t) _cfg->seed);
+            if (_cfg.seed >= 0) {
+                _dre.seed((uint32_t) _cfg.seed);
             } else {
                 _dre.seed(std::chrono::system_clock::now().time_since_epoch().count());
             }
@@ -189,7 +189,7 @@ namespace nervana {
 
         std::shared_ptr<audio::params> make_params(std::shared_ptr<const audio::decoded> input);
     private:
-        std::shared_ptr<audio::config> _cfg;
+        audio::config& _cfg;
         std::default_random_engine     _dre {0};
     };
 
@@ -234,7 +234,7 @@ namespace nervana {
     class audio::transformer : public interface::transformer<audio::decoded, audio::params> {
     public:
 
-        transformer(std::shared_ptr<audio::config> config);
+        transformer(const audio::config& config);
         ~transformer();
         std::shared_ptr<audio::decoded> transform(
                                         std::shared_ptr<audio::params>,
@@ -244,7 +244,7 @@ namespace nervana {
         void resize(cv::Mat& img, float fx);
 
         std::shared_ptr<NoiseClips>    _noisemaker {nullptr};
-        std::shared_ptr<audio::config> _cfg;
+        const audio::config&           _cfg;
         cv::Mat                        _window     {};
         cv::Mat                        _filterbank {};
     };

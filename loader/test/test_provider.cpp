@@ -87,16 +87,16 @@ TEST(provider, argtype) {
         )";
 
 
-        auto itpj = make_shared<image::config>(nlohmann::json::parse(cfgString));
+        image::config itpj(nlohmann::json::parse(cfgString));
 
         // output the fixed parameters
-        EXPECT_EQ(30,itpj->height);
-        EXPECT_EQ(30,itpj->width);
+        EXPECT_EQ(30,itpj.height);
+        EXPECT_EQ(30,itpj.width);
 
         // output the random parameters
         default_random_engine r_eng(0);
-        image::param_factory img_prm_maker(*itpj);
-        auto imgt = make_shared<image::transformer>(*itpj);
+        image::param_factory img_prm_maker(itpj);
+        auto imgt = make_shared<image::transformer>(itpj);
 
         auto input_img_ptr = make_shared<image::decoded>(cv::Mat(256, 320, CV_8UC3));
 

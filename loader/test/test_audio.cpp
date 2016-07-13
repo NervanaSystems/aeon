@@ -73,7 +73,7 @@ TEST(etl, audio_transform) {
 
     wav.write_to_buffer(databuf, bufsize);
 
-    auto config = make_shared<audio::config>(js);
+    audio::config config(js);
 
     audio::extractor extractor;
     audio::transformer _imageTransformer(config);
@@ -84,8 +84,8 @@ TEST(etl, audio_transform) {
 
     _imageTransformer.transform(audioParams, decoded_audio);
 
-    ASSERT_EQ(config->get_shape()[0], 1);
-    ASSERT_EQ(config->get_shape()[1], 40);
+    ASSERT_EQ(config.get_shape()[0], 1);
+    ASSERT_EQ(config.get_shape()[1], 40);
     ASSERT_NE(decoded_audio->get_freq_data().rows, 0);
     delete[] databuf;
 }

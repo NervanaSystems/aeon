@@ -59,13 +59,13 @@ TEST(image_var, image_config) {
         {"flip",{false}}
     }}};
 
-    auto config = make_shared<image_var::config>(js);
-    EXPECT_EQ(300,config->min_size);
-    EXPECT_EQ(400,config->max_size);
-    EXPECT_TRUE(config->channel_major);
-    EXPECT_EQ(3,config->channels);
+    image_var::config config(js);
+    EXPECT_EQ(300,config.min_size);
+    EXPECT_EQ(400,config.max_size);
+    EXPECT_TRUE(config.channel_major);
+    EXPECT_EQ(3,config.channels);
 
-    EXPECT_FLOAT_EQ(0.0,config->flip.p());
+    EXPECT_FLOAT_EQ(0.0,config.flip.p());
 }
 
 static bool check_value(shared_ptr<image_var::decoded> transformed, int x0, int y0, int x1, int y1) {

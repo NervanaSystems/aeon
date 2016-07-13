@@ -278,13 +278,13 @@ namespace nervana {
 
     class multicrop::transformer : public interface::transformer<image::decoded, image::params> {
     public:
-        transformer(std::shared_ptr<multicrop::config> cfg) : _cfg(cfg) {}
+        transformer(const multicrop::config& cfg) : _cfg(cfg) {}
         ~transformer() {}
         virtual std::shared_ptr<image::decoded> transform(
                                                 std::shared_ptr<image::params>,
                                                 std::shared_ptr<image::decoded>) override;
     private:
-        std::shared_ptr<multicrop::config> _cfg;
+        const multicrop::config& _cfg;
 
         void add_resized_crops(const cv::Mat&, std::shared_ptr<image::decoded>&, std::vector<cv::Rect>&);
     };

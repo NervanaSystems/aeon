@@ -31,55 +31,6 @@
 using namespace std;
 using namespace nervana;
 
-//class image_config_builder {
-//public:
-//    image_config_builder() { height(30); width(30); }
-
-//    image_config_builder& height(int val) { obj.height = val; return *this; }
-//    image_config_builder& width(int val) { obj.width = val; return *this; }
-//    image_config_builder& do_area_scale(bool val) { obj.do_area_scale = val; return *this; }
-//    image_config_builder& channel_major(bool val) { obj.channel_major = val; return *this; }
-//    image_config_builder& channels(int val) { obj.channels = val; return *this; }
-//    image_config_builder& scale(float a, float b) { obj.scale = uniform_real_distribution<float>(a,b); return *this; }
-//    image_config_builder& angle(float a, float b) { obj.angle = uniform_int_distribution<int>(a,b); return *this; }
-//    image_config_builder& lighting(float mean, float stddev) { obj.lighting = normal_distribution<float>(mean,stddev); return *this; }
-//    image_config_builder& aspect_ratio(float a, float b) { obj.aspect_ratio = uniform_real_distribution<float>(a,b); return *this; }
-//    image_config_builder& photometric(float a, float b) { obj.photometric = uniform_real_distribution<float>(a,b); return *this; }
-//    image_config_builder& crop_offset(float a, float b) { obj.crop_offset = uniform_real_distribution<float>(a,b); return *this; }
-//    image_config_builder& flip(float p) { obj.flip = bernoulli_distribution(p); return *this; }
-
-//    shared_ptr<image::config> dump(int tab=4) {
-//        nlohmann::json js = {{"height",obj.height},{"width",obj.width},{"channels",obj.channels},
-//        {"do_area_scale",obj.do_area_scale},{"channel_major",obj.channel_major},{
-//        "distribution",{
-//            {"angle",{obj.angle.a(),obj.angle.b()}},
-//            {"scale",{obj.scale.a(),obj.scale.b()}},
-//            {"lighting",{obj.lighting.mean(),obj.lighting.stddev()}},
-//            {"aspect_ratio",{obj.aspect_ratio.a(),obj.aspect_ratio.b()}},
-//            {"photometric",{obj.photometric.a(),obj.photometric.b()}},
-//            {"crop_offset",{obj.crop_offset.a(),obj.crop_offset.b()}},
-//            {"flip",{obj.flip.p()!=0}}
-//        }}};
-//        auto rc = make_shared<image::config>(js);
-//        return rc;
-//    }
-//private:
-//    image::config obj = nlohmann::json();
-
-//    height;
-//    width;
-//    do_area_scale;
-//    channel_major;
-//    channels;
-//    scale;
-//    angle;
-//    lighting;
-//    aspect_ratio;
-//    photometric;
-//    crop_offset;
-//    flip;
-//};
-
 class image_params_builder {
 public:
     image_params_builder(shared_ptr<image::params> _obj) { obj = _obj; }
@@ -124,9 +75,9 @@ void test_image(vector<unsigned char>& img, int channels) {
         {"flip",{false}}
     }}};
 
-    auto itpj = make_shared<image::config>(js);
+    image::config itpj(js);
 
-    image::extractor ext{*itpj};
+    image::extractor ext{itpj};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
     ASSERT_NE(nullptr,decoded);
@@ -181,32 +132,32 @@ TEST(etl, image_config) {
         {"flip",{false}}
     }}};
 
-    auto config = make_shared<image::config>(js);
-    EXPECT_EQ(30,config->height);
-    EXPECT_EQ(30,config->width);
-    EXPECT_FALSE(config->do_area_scale);
-    EXPECT_TRUE(config->channel_major);
-    EXPECT_EQ(3,config->channels);
+    image::config config(js);
+    EXPECT_EQ(30,config.height);
+    EXPECT_EQ(30,config.width);
+    EXPECT_FALSE(config.do_area_scale);
+    EXPECT_TRUE(config.channel_major);
+    EXPECT_EQ(3,config.channels);
 
-    EXPECT_FLOAT_EQ(0.2,config->scale.a());
-    EXPECT_FLOAT_EQ(0.8,config->scale.b());
+    EXPECT_FLOAT_EQ(0.2,config.scale.a());
+    EXPECT_FLOAT_EQ(0.8,config.scale.b());
 
-    EXPECT_EQ(-20,config->angle.a());
-    EXPECT_EQ(20,config->angle.b());
+    EXPECT_EQ(-20,config.angle.a());
+    EXPECT_EQ(20,config.angle.b());
 
-    EXPECT_FLOAT_EQ(0.0,config->lighting.mean());
-    EXPECT_FLOAT_EQ(0.1,config->lighting.stddev());
+    EXPECT_FLOAT_EQ(0.0,config.lighting.mean());
+    EXPECT_FLOAT_EQ(0.1,config.lighting.stddev());
 
-    EXPECT_FLOAT_EQ(0.75,config->aspect_ratio.a());
-    EXPECT_FLOAT_EQ(1.33,config->aspect_ratio.b());
+    EXPECT_FLOAT_EQ(0.75,config.aspect_ratio.a());
+    EXPECT_FLOAT_EQ(1.33,config.aspect_ratio.b());
 
-    EXPECT_FLOAT_EQ(0.0,config->photometric.a());
-    EXPECT_FLOAT_EQ(0.0,config->photometric.b());
+    EXPECT_FLOAT_EQ(0.0,config.photometric.a());
+    EXPECT_FLOAT_EQ(0.0,config.photometric.b());
 
-    EXPECT_FLOAT_EQ(0.5,config->crop_offset.a());
-    EXPECT_FLOAT_EQ(0.5,config->crop_offset.b());
+    EXPECT_FLOAT_EQ(0.5,config.crop_offset.a());
+    EXPECT_FLOAT_EQ(0.5,config.crop_offset.b());
 
-    EXPECT_FLOAT_EQ(0.0,config->flip.p());
+    EXPECT_FLOAT_EQ(0.0,config.flip.p());
 }
 
 TEST(etl, image_extract1) {
@@ -325,7 +276,7 @@ TEST(etl, multi_crop) {
             }
         )";
         auto js = nlohmann::json::parse(jsstring);
-        auto mc_config_ptr = make_shared<multicrop::config>(js);
+        multicrop::config mc_config_ptr(js);
 
         multicrop::transformer trans{mc_config_ptr};
         shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
@@ -356,7 +307,7 @@ TEST(etl, multi_crop) {
         )";
 
         auto js = nlohmann::json::parse(jsstring);
-        auto mc_config_ptr = make_shared<multicrop::config>(js);
+        multicrop::config mc_config_ptr(js);
 
         multicrop::transformer trans{mc_config_ptr};
         shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
@@ -390,7 +341,7 @@ TEST(etl, multi_crop) {
         using idxPt = std::pair<int, Point2i>;
 
         auto js = nlohmann::json::parse(jsstring);
-        auto mc_config_ptr = make_shared<multicrop::config>(js);
+        multicrop::config mc_config_ptr(js);
 
         multicrop::transformer trans{mc_config_ptr};
         shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);

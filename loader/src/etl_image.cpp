@@ -251,10 +251,10 @@ shared_ptr<image::decoded> multicrop::transformer::transform(
     vector<cv::Rect> cropboxes;
 
     // Get the positional crop boxes
-    for (const float &s: _cfg->multicrop_scales) {
+    for (const float &s: _cfg.multicrop_scales) {
         cv::Size2i boxdim(short_side_in * s, short_side_in * s);
         cv::Size2i border = in_size - boxdim;
-        for (cv::Point2f &offset: _cfg->offsets) {
+        for (const cv::Point2f &offset: _cfg.offsets) {
             cv::Point2i corner(border);
             corner.x *= offset.x;
             corner.y *= offset.y;
@@ -264,7 +264,7 @@ shared_ptr<image::decoded> multicrop::transformer::transform(
 
     auto out_imgs = make_shared<image::decoded>();
     add_resized_crops(input->get_image(0), out_imgs, cropboxes);
-    if (_cfg->include_flips) {
+    if (_cfg.include_flips) {
         cv::Mat input_img;
         cv::flip(input->get_image(0), input_img, 1);
         add_resized_crops(input_img, out_imgs, cropboxes);
@@ -279,7 +279,7 @@ void multicrop::transformer::add_resized_crops(
 {
     for (auto cropbox: cropboxes) {
         cv::Mat img_out;
-        image::resize(input(cropbox), img_out, _cfg->output_size);
+        image::resize(input(cropbox), img_out, _cfg.output_size);
         out_img->add(img_out);
     }
 }
