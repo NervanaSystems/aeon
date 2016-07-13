@@ -93,6 +93,9 @@ class DataLoader(object):
         """
         C api wrapper with exception handling
         """
+        if not hasattr(backend, 'consume'):
+            raise TypeError('backend must have a callable consume attr')
+
         loader = self.loaderlib.start(
             ct.c_char_p(config),
             ct.py_object(backend)
@@ -133,7 +136,7 @@ class DataLoader(object):
 
         return tup
 
-    def _shapes(self):
+    def shapes(self):
         """
         C api wrapper with exception handling
         """
@@ -200,7 +203,7 @@ class DataLoader(object):
 
     @property
     def shape(self):
-        return self._shapes()[0]
+        return self.shapes()[0]
 
     @property
     def nbatches(self):
@@ -253,4 +256,3 @@ class DataLoader(object):
     def minibatch_index(self, epoch_index):
         """ returns the minibatch_index that `epoch_index` starts with """
         return (self.item_count * epoch_index) // self.minibatch_size
-
