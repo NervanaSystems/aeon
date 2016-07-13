@@ -23,13 +23,12 @@ namespace nervana {
 
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override {
             int dsz_in, tsz_in;
-            int dsz_out, tsz_out;
 
             char* datum_in  = in_buf[0]->getItem(idx, dsz_in);
             char* target_in = in_buf[1]->getItem(idx, tsz_in);
 
-            char* datum_out  = out_buf[0]->getItem(idx, dsz_out);
-            char* target_out = out_buf[1]->getItem(idx, tsz_out);
+            char* datum_out  = out_buf[0]->getItem(idx);
+            char* target_out = out_buf[1]->getItem(idx);
 
             if (datum_in == 0) {
                 std::cout << "no data " << idx << std::endl;
@@ -78,13 +77,12 @@ namespace nervana {
 
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override {
             int dsz_in, tsz_in;
-            int dsz_out, tsz_out;
 
             char* datum_in  = in_buf[0]->getItem(idx, dsz_in);
             char* target_in = in_buf[1]->getItem(idx, tsz_in);
 
-            char* datum_out  = out_buf[0]->getItem(idx, dsz_out);
-            char* target_out = out_buf[1]->getItem(idx, tsz_out);
+            char* datum_out  = out_buf[0]->getItem(idx);
+            char* target_out = out_buf[1]->getItem(idx);
 
             if (datum_in == 0) {
                 std::cout << "no data " << idx << std::endl;
@@ -136,13 +134,12 @@ namespace nervana {
 
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override {
             int dsz_in, tsz_in;
-            int dsz_out, tsz_out;
 
             char* datum_in  = in_buf[0]->getItem(idx, dsz_in);
             char* target_in = in_buf[1]->getItem(idx, tsz_in);
 
-            char* datum_out  = out_buf[0]->getItem(idx, dsz_out);
-            char* target_out = out_buf[1]->getItem(idx, tsz_out);
+            char* datum_out  = out_buf[0]->getItem(idx);
+            char* target_out = out_buf[1]->getItem(idx);
 
             if (datum_in == 0) {
                 std::cout << "no data " << idx << std::endl;

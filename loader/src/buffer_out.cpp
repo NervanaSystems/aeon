@@ -30,12 +30,12 @@
 
 using namespace std;
 
-buffer_out::buffer_out(int sizeof_type, int item_count, int minibatch_size, bool pinned) :
-    _size(sizeof_type * item_count * minibatch_size),
+buffer_out::buffer_out(size_t element_size, size_t minibatch_size, bool pinned) :
+    _size(element_size * minibatch_size),
     _batch_size(minibatch_size),
     _pinned(pinned),
-    _stride(sizeof_type * item_count),
-    _item_size(sizeof_type * item_count)
+    _stride(element_size),
+    _item_size(element_size)
 {
     _data = alloc();
 }
@@ -44,7 +44,7 @@ buffer_out::~buffer_out() {
     dealloc(_data);
 }
 
-char* buffer_out::getItem(int index, int& len) {
+char* buffer_out::getItem(size_t index) {
     size_t offset = index * _stride;
     if (index >= (int)_batch_size) {
         // TODO: why not raise exception here?  Is anyone actually
@@ -52,15 +52,14 @@ char* buffer_out::getItem(int index, int& len) {
         // non-0?
         return 0;
     }
-    len = _item_size;
     return &_data[offset];
 }
 
-int buffer_out::getItemCount() {
+size_t buffer_out::getItemCount() {
     return _size / _item_size;
 }
 
-uint buffer_out::getSize() {
+size_t buffer_out::getSize() {
     return _size;
 }
 

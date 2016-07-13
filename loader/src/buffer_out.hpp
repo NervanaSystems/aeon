@@ -26,14 +26,14 @@
 
 class buffer_out {
 public:
-    explicit buffer_out(int sizeof_type, int item_count, int batch_size, bool pinned = false);
+    explicit buffer_out(size_t element_size, size_t batch_size, bool pinned = false);
     virtual ~buffer_out();
 
-    char* getItem(int index, int& len);
+    char* getItem(size_t index);
     char* data() { return _data; }
 
-    int getItemCount();
-    uint getSize();
+    size_t getItemCount();
+    size_t getSize();
 
 private:
     buffer_out() = delete;
@@ -53,7 +53,7 @@ class buffer_out_array {
 public:
     buffer_out_array(std::initializer_list<buffer_out*> list) : data(list) {}
 
-    buffer_out* operator[](int i) { return data[i]; }
+    buffer_out* operator[](size_t i) { return data[i]; }
     size_t size() const { return data.size(); }
 
 private:
