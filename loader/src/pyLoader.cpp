@@ -333,7 +333,7 @@ int PyLoader::start()
 
         // Now add providers
         for (int i=0; i<nthreads; i++) {
-            std::shared_ptr<nervana::train_base> factory;
+            std::shared_ptr<nervana::provider_interface> factory;
             try {
                 factory = nervana::train_provider_factory::create(_lcfg_json);
             } catch (const std::invalid_argument e) {

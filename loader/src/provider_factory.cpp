@@ -37,7 +37,6 @@ std::shared_ptr<nervana::interface::config> nervana::config_factory::create(nloh
         if(!configJs["config"].is_object()) {
             throw std::invalid_argument("must have a property 'config' of type object.");
         }
-        rc->set_config(configJs["config"]);
     }
     return rc;
 }
