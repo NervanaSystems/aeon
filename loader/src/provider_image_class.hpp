@@ -21,11 +21,15 @@ namespace nervana {
         {
         }
 
-        void provide(int idx, buffer_in_array* in_buf, char* datum_out, char* tgt_out) override {
+        void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override {
             int dsz_in, tsz_in;
+            int dsz_out, tsz_out;
 
-            char* datum_in  = (*in_buf)[0]->getItem(idx, dsz_in);
-            char* target_in = (*in_buf)[1]->getItem(idx, tsz_in);
+            char* datum_in  = in_buf[0]->getItem(idx, dsz_in);
+            char* target_in = in_buf[1]->getItem(idx, tsz_in);
+
+            char* datum_out  = out_buf[0]->getItem(idx, dsz_out);
+            char* target_out = out_buf[1]->getItem(idx, tsz_out);
 
             if (datum_in == 0) {
                 std::cout << "no data " << idx << std::endl;
@@ -39,7 +43,7 @@ namespace nervana {
 
             // Process target data
             auto label_dec = label_extractor.extract(target_in, tsz_in);
-            label_loader.load(tgt_out, label_transformer.transform(image_params, label_dec));
+            label_loader.load(target_out, label_transformer.transform(image_params, label_dec));
         }
 
     private:
@@ -72,11 +76,15 @@ namespace nervana {
         {
         }
 
-        void provide(int idx, buffer_in_array* in_buf, char* datum_out, char* tgt_out) override {
+        void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override {
             int dsz_in, tsz_in;
+            int dsz_out, tsz_out;
 
-            char* datum_in  = (*in_buf)[0]->getItem(idx, dsz_in);
-            char* target_in = (*in_buf)[1]->getItem(idx, tsz_in);
+            char* datum_in  = in_buf[0]->getItem(idx, dsz_in);
+            char* target_in = in_buf[1]->getItem(idx, tsz_in);
+
+            char* datum_out  = out_buf[0]->getItem(idx, dsz_out);
+            char* target_out = out_buf[1]->getItem(idx, tsz_out);
 
             if (datum_in == 0) {
                 std::cout << "no data " << idx << std::endl;
@@ -90,7 +98,7 @@ namespace nervana {
 
             // Process target data
             auto target_dec = localization_extractor.extract(target_in, tsz_in);
-            localization_loader.load(tgt_out, localization_transformer.transform(image_params, target_dec));
+            localization_loader.load(target_out, localization_transformer.transform(image_params, target_dec));
         }
 
     private:
@@ -126,11 +134,15 @@ namespace nervana {
 
         virtual ~bbox_provider() {}
 
-        void provide(int idx, buffer_in_array* in_buf, char* datum_out, char* tgt_out) override {
+        void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override {
             int dsz_in, tsz_in;
+            int dsz_out, tsz_out;
 
-            char* datum_in  = (*in_buf)[0]->getItem(idx, dsz_in);
-            char* target_in = (*in_buf)[1]->getItem(idx, tsz_in);
+            char* datum_in  = in_buf[0]->getItem(idx, dsz_in);
+            char* target_in = in_buf[1]->getItem(idx, tsz_in);
+
+            char* datum_out  = out_buf[0]->getItem(idx, dsz_out);
+            char* target_out = out_buf[1]->getItem(idx, tsz_out);
 
             if (datum_in == 0) {
                 std::cout << "no data " << idx << std::endl;
@@ -144,7 +156,7 @@ namespace nervana {
 
             // Process target data
             auto target_dec = bbox_extractor.extract(target_in, tsz_in);
-            bbox_loader.load(tgt_out, bbox_transformer.transform(image_params, target_dec));
+            bbox_loader.load(target_out, bbox_transformer.transform(image_params, target_dec));
         }
     private:
         bbox_provider() = delete;

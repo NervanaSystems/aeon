@@ -76,6 +76,7 @@ public:
     buffer_in_array(std::initializer_list<buffer_in*> list) : data(list) {}
 
     buffer_in* operator[](int i) { return data[i]; }
+    const buffer_in* operator[](int i) const { return data[i]; }
     size_t size() const { return data.size(); }
 
 private:

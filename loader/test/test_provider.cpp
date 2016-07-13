@@ -28,8 +28,12 @@ TEST(provider,image) {
 
     auto media = nervana::train_provider_factory::create(js);
 
-    vector<char> dbuffer(dsize);
-    vector<char> tbuffer(tsize);
+//    vector<char> dbuffer(dsize);
+//    vector<char> tbuffer(tsize);
+
+    buffer_out dbuffer(1,dsize,1);
+    buffer_out tbuffer(1,tsize,1);
+    buffer_out_array outBuf({&dbuffer,&tbuffer});
 
     auto files = image_dataset.GetFiles();
     ASSERT_NE(0,files.size());
@@ -44,9 +48,9 @@ TEST(provider,image) {
         reader.read(target_p);
 
         buffer_in_array bp{&data_p, &target_p};
-        media->provide(0, &bp, &dbuffer[0], &tbuffer[0]);
+        media->provide(0, bp, outBuf);
 
-        int target_value = unpack_le<int>(&tbuffer[0]);
+        int target_value = unpack_le<int>(tbuffer.data());
         EXPECT_EQ(42+i,target_value);
 //        cv::Mat mat(width,height,CV_8UC3,&dbuffer[0]);
 //        string filename = "data" + to_string(i) + ".png";
