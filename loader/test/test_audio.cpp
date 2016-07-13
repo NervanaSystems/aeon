@@ -28,11 +28,7 @@ shared_ptr<audio::decoded> generate_decoded_audio(float frequencyHz, int duratio
     //       gen_audio::encode
     gen_audio gen;
     vector<unsigned char> encoded_audio = gen.encode(frequencyHz, duration);
-    nlohmann::json js;
-
-    auto config = make_shared<audio::config>(js);
-
-    audio::extractor extractor(config);
+    audio::extractor extractor;
     return extractor.extract((char*)encoded_audio.data(), encoded_audio.size());
 }
 
@@ -54,7 +50,6 @@ TEST(etl, write_wav) {
 }
 
 TEST(etl, audio_transform) {
-    auto decoded_audio = generate_decoded_audio(1000, 2000);
 
     auto js = R"(
         {
@@ -66,17 +61,31 @@ TEST(etl, audio_transform) {
             "num_filts": 64
         }
     )"_json;
+
+    float sine_freq = 400, sine_ampl = 500;
+    auto sg = make_shared<sinewave_generator>(sine_freq, sine_ampl);
+    int wav_len_sec = 4, sample_freq = 44100;
+    bool stereo = false;
+
+    wav_data wav(sg, wav_len_sec, sample_freq, stereo);
+    uint32_t bufsize = wav_data::HEADER_SIZE + wav.nbytes();
+    char *databuf = new char[bufsize];
+
+    wav.write_to_buffer(databuf, bufsize);
+
     auto config = make_shared<audio::config>(js);
 
+    audio::extractor extractor;
     audio::transformer _imageTransformer(config);
     audio::param_factory factory(config);
 
+    auto decoded_audio = extractor.extract(databuf, bufsize);
     auto audioParams = factory.make_params(decoded_audio);
 
     _imageTransformer.transform(audioParams, decoded_audio);
 
     ASSERT_EQ(config->get_shape()[0], 1);
     ASSERT_EQ(config->get_shape()[1], 40);
-    ASSERT_EQ(config->get_shape()[1], 40);
-
+    ASSERT_NE(decoded_audio->get_freq_data().rows, 0);
+    delete[] databuf;
 }

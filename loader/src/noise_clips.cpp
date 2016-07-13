@@ -34,7 +34,7 @@ void NoiseClips::load_index(const std::string& index_file)
     std::stringstream file_contents_buffer;
     file_contents_buffer << ifs.rdbuf();
 
-    _cfg.set_config(nlohmann::json::parse(file_contents_buffer.str()));
+    _cfg = NoiseConfig(nlohmann::json::parse(file_contents_buffer.str()));
 
     if (_cfg.noise_files.empty()) {
         throw std::runtime_error("No noise files provided in " + index_file);

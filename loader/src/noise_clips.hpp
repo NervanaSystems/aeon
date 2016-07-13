@@ -26,16 +26,13 @@ class NoiseConfig : public nervana::json_config_parser {
 public:
     std::string              noise_dir   {""};
     std::vector<std::string> noise_files {};
+    NoiseConfig() {}
 
-    bool set_config(nlohmann::json js) override
+    NoiseConfig(nlohmann::json js)
     {
-        parse_opt(noise_dir,   "noise_dir",   js);
-        parse_opt(noise_files, "noise_files", js);
-        return validate();
+        parse_value(noise_dir,   "noise_dir",   js, mode::OPTIONAL);
+        parse_value(noise_files, "noise_files", js, mode::OPTIONAL);
     }
-
-private:
-    bool validate() { return true; }
 };
 
 class NoiseClips {

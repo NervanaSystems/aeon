@@ -71,7 +71,7 @@ public:
 class signal_generator {
 public:
     virtual ~signal_generator() {}
-    virtual int16_t operator() (float t) = 0;
+    virtual int16_t operator() (float t) const = 0;
 };
 
 class sinewave_generator : public signal_generator {
@@ -80,7 +80,7 @@ public:
     frequency(frequency), amplitude(amplitude)
     {}
 
-    int16_t operator() (float t) override
+    int16_t operator() (float t) const override
     {
         return static_cast<int16_t>(sin(frequency * t) * amplitude);
     }

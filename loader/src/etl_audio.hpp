@@ -90,18 +90,18 @@ namespace nervana {
         float       max_duration_ms, frame_length_ms, frame_stride_ms;
 
         config(nlohmann::json js) {
-            parse_req(max_duration, "max_duration", js);
-            parse_req(frame_stride, "frame_stride", js);
-            parse_req(frame_length, "frame_length", js);
+            parse_value(max_duration, "max_duration", js, mode::REQUIRED);
+            parse_value(frame_stride, "frame_stride", js, mode::REQUIRED);
+            parse_value(frame_length, "frame_length", js, mode::REQUIRED);
 
-            parse_opt(sample_freq_hz,  "sample_freq_hz",  js);
-            parse_opt(num_cepstra,     "num_cepstra",     js);
-            parse_opt(num_filters,     "num_filters",     js);
-            parse_opt(window_type,     "window_type",     js);
-            parse_opt(feature_type,    "feature_type",    js);
+            parse_value(sample_freq_hz,  "sample_freq_hz", js, mode::OPTIONAL);
+            parse_value(num_cepstra,     "num_cepstra",    js, mode::OPTIONAL);
+            parse_value(num_filters,     "num_filters",    js, mode::OPTIONAL);
+            parse_value(window_type,     "window_type",    js, mode::OPTIONAL);
+            parse_value(feature_type,    "feature_type",   js, mode::OPTIONAL);
 
-            parse_opt(seed,            "seed",            js);
-            parse_opt(type_string,     "type_string",     js);
+            parse_value(seed,            "seed",           js, mode::OPTIONAL);
+            parse_value(type_string,     "type_string",    js, mode::OPTIONAL);
 
             auto dist_params = js["distribution"];
             parse_dist(time_scale_fraction,   "time_scale_fraction",   dist_params);
@@ -214,7 +214,7 @@ namespace nervana {
 
     class audio::extractor : public interface::extractor<audio::decoded> {
     public:
-        extractor(std::shared_ptr<const audio::config>)
+        extractor()
         {
             _codec = std::make_shared<Codec>(MediaType::AUDIO);
             avcodec_register_all();
