@@ -103,47 +103,36 @@ public:
                 data.at<int16_t>(n, c) = (*sigptr)(t);
             }
         }
-        _file_size = nbytes() + HEADER_SIZE - 4;  // everything but 'RIFF'
     }
 
     wav_data(char *buf, uint32_t bufsize);
 
-    void dump(std::ostream & ostr = std::cout)
-    {
-        ostr << "sample_rate " << sample_rate() << "\n";
-        ostr << "channels " << channels() << "\n";
-        ostr << "bit_depth " << bit_depth() << "\n";
-        ostr << "nbytes " << nbytes() << "\n";
-        ostr << "block_align " << block_align() << "\n";
-        ostr << "bytes_per_second " << bps() << "\n";
-    }
-
+    void dump(std::ostream & ostr = std::cout);
     void write_to_file(std::string filename);
     void write_to_buffer(char *buf, uint32_t bufsize);
 
-    inline int32_t sample_rate() { return _sample_rate; }
-    inline int32_t channels() { return data.cols; }
-    inline int16_t bit_depth() { return data.elemSize() * 8; }
-    inline int32_t nbytes() { return data.total() * data.elemSize(); }
-    inline int16_t block_align() {return data.elemSize() * data.cols ;}
-    inline int32_t bps() {return sample_rate() * data.elemSize();}
+    inline uint32_t nbytes() { return data.total() * data.elemSize(); }
 
-    static constexpr size_t HEADER_P0_SIZE = 12 + 4 * sizeof(int32_t) + 4 * sizeof(int16_t);
-    static constexpr size_t HEADER_D0_SIZE = 4 + sizeof(int32_t);
-    static constexpr size_t HEADER_SIZE = 4 + HEADER_P0_SIZE + HEADER_D0_SIZE;
+    static constexpr size_t HEADER_SIZE = sizeof(RiffMainHeader) + sizeof(FmtHeader) + sizeof(DataHeader);
 
     static constexpr int WAVE_FORMAT_PCM = 0x0001;
     static constexpr int WAVE_FORMAT_IEEE_FLOAT = 0x0003;
     static constexpr int WAVE_FORMAT_EXTENSIBLE = 0xfffe;
-private:
-    void write_header_alternate(std::vector<char>&);
-    void write_header(std::vector<char>&);
-    void write_data(std::vector<char>&);
 
-    std::ofstream _ofs;
+private:
+    void wav_assert(bool cond, const std::string &msg)
+    {
+        if (!cond)
+        {
+            throw wavefile_exception(msg);
+        }
+    }
+
+    void write_header(char* buf, uint32_t bufsize);
+    void write_data(char* buf, uint32_t bufsize);
+
     cv::Mat       data;
     int32_t       _sample_rate;
-    int32_t       _file_size;
 };
 
 class gen_audio : public dataset<gen_audio> {
