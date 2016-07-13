@@ -46,6 +46,7 @@ output/
 *.mp2
 *.mpg
 *.cpio
+*.wav
 
 # vim
 *.swp
