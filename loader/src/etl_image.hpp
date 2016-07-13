@@ -119,7 +119,6 @@ namespace nervana {
         }
     };
 
-
     class image::param_factory : public interface::param_factory<image::decoded, image::params> {
     public:
         param_factory(image::config& cfg) : _cfg{cfg}, _dre{0}

@@ -31,7 +31,7 @@ shared_ptr<audio::decoded> generate_decoded_audio(float frequencyHz, int duratio
     nlohmann::json js;
 
     auto config = make_shared<audio::config>(js);
-    config->_mtype = MediaType::AUDIO;
+
     audio::extractor extractor(config);
     return extractor.extract((char*)encoded_audio.data(), encoded_audio.size());
 }
@@ -47,29 +47,36 @@ TEST(DISABLED_etl, audio_extract) {
     ASSERT_EQ(decoded_audio->getSize(), 88704);
 }
 
-// This test was disabled because it does not properly configure the audio::config
-// structure. This used to often pass but now always fails.
-TEST(DISABLED_etl, audio_transform) {
+TEST(etl, write_wav) {
+    auto sg = make_shared<sinewave_generator>(400, 500);
+    wav_data wav(sg, 2, 16000, false);
+    wav.write_to_file("blah.wav");
+}
+
+TEST(etl, audio_transform) {
     auto decoded_audio = generate_decoded_audio(1000, 2000);
 
-    nlohmann::json js;
+    auto js = R"(
+        {
+            "max_duration": "2000 milliseconds",
+            "frame_length": "1024 samples",
+            "frame_stride": "256 samples",
+            "sample_freq_hz": 44100,
+            "feature_type": "mfcc",
+            "num_filts": 64
+        }
+    )"_json;
     auto config = make_shared<audio::config>(js);
-    config->_mtype = MediaType::AUDIO;
-    config->_windowSize = 1024;
-    config->_stride = config->_windowSize / 4;
-    config->_clipDuration = 2000;
-    config->_samplingFreq = 44100;
-    config->_width = (((config->_clipDuration * config->_samplingFreq / 1000) - config->_windowSize) / config->_stride) + 1;
-    // TODO: how to compute height ahead of time?
-    config->_height = 513;
-    config->_numFilts = 64;
-    config->_numCepstra = 40;
 
     audio::transformer _imageTransformer(config);
+    audio::param_factory factory(config);
 
-    std::default_random_engine dre;
-    audio::param_factory factory(config, dre);
     auto audioParams = factory.make_params(decoded_audio);
 
     _imageTransformer.transform(audioParams, decoded_audio);
+
+    ASSERT_EQ(config->get_shape()[0], 1);
+    ASSERT_EQ(config->get_shape()[1], 40);
+    ASSERT_EQ(config->get_shape()[1], 40);
+
 }

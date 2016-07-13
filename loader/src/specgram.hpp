@@ -15,77 +15,56 @@
 #pragma once
 
 #include "raw_media.hpp"
-#include "etl_audio.hpp"
 
 #include <sstream>
 #include <math.h>
-
+#include <memory>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 #include <cmath>
-#include <vector>
 
-namespace nervana {
-    namespace audio {
-        class config;
-    }
-}
-
-enum FeatureType {
-    SPECGRAM    = 0,
-    MFSC        = 1,
-    MFCC        = 2,
-};
 
 static_assert(sizeof(short) == 2, "Unsupported platform");
 
-class Specgram {
+class specgram {
 public:
-    Specgram(std::shared_ptr<const nervana::audio::config> params, int id);
-    virtual ~Specgram();
-    int generate(std::shared_ptr<RawMedia> raw, char* buf, int bufSize);
+    specgram() {}
+    virtual ~specgram() {}
 
-private:
-    void randomize(cv::Mat& img);
-    void resize(cv::Mat& img, float fx);
-    bool powerOfTwo(int num);
-    void none(int);
-    void hann(int steps);
-    void blackman(int steps);
-    void hamming(int steps);
-    void bartlett(int steps);
-    void createWindow(int windowType);
-    void applyWindow(cv::Mat& signal);
-    int stridedSignal(std::shared_ptr<RawMedia> raw);
-    double hzToMel(double freqInHz);
-    double melToHz(double freqInMels);
-    std::vector<double> linspace(double a, double b, int n);
-    cv::Mat getFilterbank(int filts, int ffts, double samplingRate);
-    void extractFeatures(cv::Mat& spectrogram, cv::Mat& features);
+    static void wav_to_specgram(std::shared_ptr<RawMedia> wav,
+                                const int frame_length_tn,
+                                const int frame_stride_tn,
+                                const int max_time_steps,
+                                const cv::Mat& window,
+                                cv::Mat& specgram);
 
+    static void specgram_to_cepsgram(const cv::Mat& specgram,
+                                     const cv::Mat& filter_bank,
+                                     cv::Mat& cepsgram);
+
+    static void cepsgram_to_mfcc(const cv::Mat& cepsgram,
+                                 const int num_cepstra,
+                                 cv::Mat& mfcc);
+
+    static void create_window(const std::string& window_type,
+                              const int n,
+                              cv::Mat& win);
+
+    static void create_filterbanks(const int num_filters,
+                                   const int fftsz,
+                                   const int sample_freq_hz,
+                                   cv::Mat &fbank);
 private:
-    int                         _feature;
-    // Maximum duration in milliseconds.
-    int                         _clipDuration;
-    // Window size and stride are in terms of samples.
-    int                         _windowSize;
-    int                         _stride;
-    int                         _width;
-    int                         _numFreqs;
-    int                         _height;
-    int                         _samplingFreq;
-    int                         _maxSignalSize;
-    int                         _numFilts;
-    int                         _numCepstra;
-    float                       _scaleBy;
-    float                       _scaleMin;
-    float                       _scaleMax;
-    char*                       _buf;
-    int                         _bufSize;
-    cv::Mat*                    _window;
-    cv::Mat                     _fbank;
-    cv::RNG                     _rng;
-    constexpr static int        MAX_BYTES_PER_SAMPLE = 4;
+    static inline double hz_to_mel(double freq_hz)
+    {
+        return 2595 * std::log10(1 + freq_hz / 700.0);
+    }
+
+    static inline double mel_to_hz(double freq_mel)
+    {
+        return 700 * (std::pow(10, freq_mel / 2595.0) - 1);
+    }
+
 };

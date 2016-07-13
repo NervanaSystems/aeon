@@ -18,68 +18,45 @@
 #include <opencv2/core/core.hpp>
 
 #include "codec.hpp"
-#include "noise_clips.hpp"
+#include "params.hpp"
 
 class Codec;
 
-class IndexElement {
+class NoiseConfig : public nervana::json_config_parser {
 public:
-    IndexElement();
+    std::string              noise_dir   {""};
+    std::vector<std::string> noise_files {};
 
-public:
-    std::string                      _fileName;
-    std::vector<std::string>         _targets;
-};
-
-class Index {
-public:
-    Index();
-    virtual ~Index();
-
-    void load(std::string& fileName, bool shuf = false);
-    IndexElement* operator[] (int idx);
-    uint size();
+    bool set_config(nlohmann::json js) override
+    {
+        parse_opt(noise_dir,   "noise_dir",   js);
+        parse_opt(noise_files, "noise_files", js);
+        return validate();
+    }
 
 private:
-    void addElement(std::string& line);
-    void shuffle();
-
-public:
-    vector<IndexElement*>       _elements;
-    uint                        _maxTargetSize;
-};
-
-class NoiseClipsState {
-public:
-    NoiseClipsState(cv::RNG& rng) : _index(0), _offset(0), _rng(rng) {}
-
-public:
-    // Index of the current noise clip.
-    uint                        _index;
-    // Offset within the current noise clip.
-    int                         _offset;
-    cv::RNG&                    _rng;
+    bool validate() { return true; }
 };
 
 class NoiseClips {
 public:
-    NoiseClips(const std::string _noiseIndexFile, const std::string _noiseDir, Codec* codec);
+    NoiseClips(const std::string noiseIndexFile);
     virtual ~NoiseClips();
+    void addNoise(std::shared_ptr<RawMedia> media,
+                  bool add_noise,
+                  uint32_t noise_index,
+                  float noise_offset_fraction,
+                  float noise_level);
 
-    void addNoise(std::shared_ptr<RawMedia> media, NoiseClipsState* state);
-
-private:
-    void next(NoiseClipsState* state);
-    void loadIndex(std::string& indexFile);
-    void loadData(Codec* codec);
-    void readFile(std::string& fileName, int* dataLen);
-    void resize(int newLen);
 
 private:
-    std::string                 _indexFile;
-    std::string                 _indexDir;
-    vector<std::shared_ptr<RawMedia>> _data;
-    Index                       _index;
-    char*                       _buf;
-    int                         _bufLen;
+    void load_index(const std::string& index_file);
+    void load_data(std::shared_ptr<Codec> codec);
+    void read_noise(std::string& noise_file, int* dataLen);
+
+private:
+    NoiseConfig _cfg;
+    std::vector<std::shared_ptr<RawMedia>> _noise_data;
+    char*                                  _buf = 0;
+    int                                    _bufLen = 0;
 };

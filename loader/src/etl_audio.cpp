@@ -3,93 +3,82 @@
 using namespace std;
 using namespace nervana;
 
-audio::config::config(nlohmann::json js) {
-    // for now, all config params are required
-    parse_value(_samplingFreq, "samplingFreq", js, mode::REQUIRED);
-    parse_value(_clipDuration, "clipDuration", js, mode::REQUIRED);
-    parse_value(_randomScalePercent, "randomScalePercent", js, mode::REQUIRED);
-    parse_value(_numFilts, "numFilts", js, mode::REQUIRED);
-    parse_value(_numCepstra, "numCepstra", js, mode::REQUIRED);
-    parse_value(_noiseIndexFile, "noiseIndexFile", js, mode::REQUIRED);
-    parse_value(_noiseDir, "noiseDir", js, mode::REQUIRED);
-    parse_value(_windowSize, "windowSize", js, mode::REQUIRED);
-    parse_value(_stride, "stride", js, mode::REQUIRED);
-    parse_value(_width, "width", js, mode::REQUIRED);
-    parse_value(_height, "height", js, mode::REQUIRED);
-    parse_value(_window, "window", js, mode::REQUIRED);
-    parse_value(_feature, "feature", js, mode::REQUIRED);
+shared_ptr<audio::params> audio::param_factory::make_params(std::shared_ptr<const decoded>)
+{
+    auto audio_stgs = shared_ptr<audio::params>(new audio::params());
+
+    audio_stgs->add_noise             = _cfg->add_noise(_dre);
+    audio_stgs->noise_index           = _cfg->noise_index(_dre);
+    audio_stgs->noise_level           = _cfg->noise_level(_dre);
+    audio_stgs->noise_offset_fraction = _cfg->noise_offset_fraction(_dre);
+    audio_stgs->time_scale_fraction   = _cfg->time_scale_fraction(_dre);
+
+    return audio_stgs;
 }
 
-shared_ptr<audio::params> audio::param_factory::make_params(std::shared_ptr<const decoded>) {
-    auto params = shared_ptr<audio::params>(new audio::params());
-
-    params->_width = _cfg->_width;
-    params->_height = _cfg->_height;
-
-    return params;
-}
-
-audio::decoded::decoded(shared_ptr<RawMedia> raw)
-    : _raw(raw) {
-}
-
-MediaType audio::decoded::get_type() {
-    return MediaType::AUDIO;
-}
-
-size_t audio::decoded::getSize() {
-    return _raw->numSamples();
-}
-
-audio::extractor::extractor(std::shared_ptr<const audio::config> config) {
-    _codec = new Codec(config);
-    avcodec_register_all();
-}
-
-audio::extractor::~extractor() {
-    delete _codec;
-}
-
-std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int itemSize) {
+std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int itemSize)
+{
     return make_shared<audio::decoded>(_codec->decode(item, itemSize));
 }
 
-audio::transformer::transformer(std::shared_ptr<const audio::config> config)
-    : _codec(0), _noiseClips(0), _state(0), _rng(config->_randomSeed) {
-    _specgram = new Specgram(config, config->_randomSeed);
-
-    if (config->_noiseIndexFile.size() != 0) {
-        _codec = new Codec(config);
-        _noiseClips = new NoiseClips(
-            config->_noiseIndexFile, config->_noiseDir, _codec
-        );
-    }
+audio::transformer::transformer(std::shared_ptr<audio::config> config) :
+_cfg(config)
+{
+    specgram::create_window(_cfg->window_type, _cfg->frame_length_tn, _window);
+    specgram::create_filterbanks(_cfg->num_filters, _cfg->frame_length_tn, _cfg->sample_freq_hz,
+                                 _filterbank);
+    _noisemaker = make_shared<NoiseClips>(_cfg->noise_index_file);
 }
 
-audio::transformer::~transformer() {
-    delete _specgram;
-    if(_codec != 0) {
-        delete _codec;
-    }
-    if(_noiseClips != 0) {
-        delete _noiseClips;
-    }
+audio::transformer::~transformer()
+{
+    _noisemaker = nullptr;
+    _cfg        = nullptr;
 }
 
 std::shared_ptr<audio::decoded> audio::transformer::transform(
-      std::shared_ptr<audio::params> params,
-      std::shared_ptr<audio::decoded> decoded) {
-    if (_noiseClips != 0) {
-        _noiseClips->addNoise(decoded->_raw, _state);
+                                      std::shared_ptr<audio::params> params,
+                                      std::shared_ptr<audio::decoded> decoded)
+{
+    _noisemaker->addNoise(decoded->get_time_data(),
+                          params->add_noise,
+                          params->noise_index,
+                          params->noise_offset_fraction,
+                          params->noise_level); // no-op if no noise files
+
+    // convert from time domain to frequency domain into the freq mat
+    specgram::wav_to_specgram(decoded->get_time_data(),
+                              _cfg->frame_length_tn,
+                              _cfg->frame_stride_tn,
+                              _cfg->time_steps,
+                              _window,
+                              decoded->get_freq_data());
+    if (_cfg->feature_type != "specgram") {
+        cv::Mat tmpmat;
+        specgram::specgram_to_cepsgram(decoded->get_freq_data(), _filterbank, tmpmat);
+        if (_cfg->feature_type == "mfcc") {
+            specgram::cepsgram_to_mfcc(tmpmat, _cfg->num_cepstra, decoded->get_freq_data());
+        } else {
+            decoded->get_freq_data() = tmpmat;
+        }
     }
-
-    // set up _buf in decoded to accept data from generate
-    decoded->_buf.resize(params->_width * params->_height);
-
-    // convert from time domain to frequency domain
-    decoded->_len = _specgram->generate(
-        decoded->_raw, decoded->_buf.data(), decoded->_buf.size()
-    );
+    resize(decoded->get_freq_data(), params->time_scale_fraction);
 
     return decoded;
+}
+
+
+void audio::transformer::resize(cv::Mat& img, float fx) {
+    if (fx == 1.0f) {
+        return;
+    }
+    cv::Mat dst;
+    cv::resize(img, dst, cv::Size(), fx, 1.0, (fx > 1.0) ? CV_INTER_CUBIC : CV_INTER_AREA);
+    assert(img.rows == dst.rows);
+    if (img.cols > dst.cols) {
+        dst.copyTo(img(cv::Range::all(), cv::Range(0, dst.cols)));
+        img(cv::Range::all(), cv::Range(dst.cols, img.cols)) = cv::Scalar::all(0);
+    } else {
+        dst(cv::Range::all(), cv::Range(0, img.cols)).copyTo(img);
+    }
 }
