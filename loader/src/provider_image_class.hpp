@@ -2,23 +2,10 @@
 
 #include "etl_label.hpp"
 #include "etl_image.hpp"
-#include "provider.hpp"
+#include "provider_interface.hpp"
 #include "etl_localization.hpp"
 
 namespace nervana {
-    namespace image {
-        class randomizing_provider;
-    }
-    namespace image_var {
-        class randomizing_provider;
-    }
-    namespace label {
-        class int_provider;
-    }
-    namespace localization {
-        class default_provider;
-    }
-
     class image_decoder : public provider_interface {
     public:
         image_decoder(nlohmann::json js) :

@@ -30,7 +30,6 @@
 #include "etl_label.hpp"
 #include "etl_bbox.hpp"
 #include "etl_lmap.hpp"
-#include "provider.hpp"
 #include "json.hpp"
 
 extern gen_image image_dataset;
