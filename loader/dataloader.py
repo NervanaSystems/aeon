@@ -93,6 +93,9 @@ class DataLoader(object):
         """
         C api wrapper with exception handling
         """
+        if not hasattr(backend, 'consume'):
+            raise TypeError('backend must have a callable consume attr')
+
         loader = self.loaderlib.start(
             ct.c_char_p(config),
             ct.py_object(backend)
