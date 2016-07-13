@@ -3,6 +3,7 @@
 #include <vector>
 #include <numeric>
 #include <functional>
+#include <exception>
 #include "typemap.hpp"
 #include "params.hpp"
 #include "util.hpp"
@@ -27,6 +28,11 @@ public:
     {
         return static_cast<uint32_t>(otype.size)
                  * std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint32_t>());
+    }
+
+    void base_validate() {
+        if(shape.size() == 0)      throw std::invalid_argument("config missing output shape");
+        if(otype.valid() == false) throw std::invalid_argument("config missing output type");
     }
 
 protected:

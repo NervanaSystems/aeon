@@ -89,9 +89,10 @@ namespace nervana {
         int total_anchors() const {
             return ratios.size() * scales.size() * (int)pow(int(std::floor(max_size * scaling_factor)),2);
         }
+
     private:
         config() = delete;
-        bool validate();
+        void validate();
     };
 
     class localization::decoded : public bbox::decoded {

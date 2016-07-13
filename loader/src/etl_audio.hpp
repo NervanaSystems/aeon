@@ -135,16 +135,21 @@ namespace nervana {
             validate();
         }
 
-        bool validate() {
-            bool result = true;
+        void validate() {
+            if(frame_stride_ms <= 0) {
+                throw std::invalid_argument("frame_stride_ms <= 0");
+            }
+            if(time_steps != ((max_duration_tn - frame_length_tn) / frame_stride_tn) + 1) {
+                throw std::invalid_argument("time_steps != ((max_duration_tn - frame_length_tn) / frame_stride_tn) + 1");
+            }
+            if(noise_offset_fraction.param().a() < 0.0f) {
+                throw std::invalid_argument("noise_offset_fraction.param().a() < 0.0f");
+            }
+            if(noise_offset_fraction.param().b() > 1.0f) {
+                throw std::invalid_argument("noise_offset_fraction.param().b() > 1.0f");
+            }
 
-            result &= frame_stride_ms != 0;
-            result &= time_steps == ((max_duration_tn - frame_length_tn) / frame_stride_tn) + 1;
-
-            result &= noise_offset_fraction.param().a() >= 0.0f;
-            result &= noise_offset_fraction.param().b() <= 1.0f;
-
-            return result;
+            base_validate();
         }
     private:
         void parse_samples_or_seconds(const std::string &unit, float &ms, uint32_t &tn)

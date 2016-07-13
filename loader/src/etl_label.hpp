@@ -26,6 +26,8 @@ namespace nervana {
 
             otype = nervana::output_type(type_string);
             shape = std::vector<uint32_t> {1};
+
+            base_validate();
         }
     };
 

@@ -22,7 +22,7 @@ namespace nervana {
     class output_type {
     public:
         output_type() {}
-        output_type(std::string r)
+        output_type(const std::string& r)
         {
             auto tpl_iter = all_outputs.find(r);
             if (tpl_iter != all_outputs.end()) {
@@ -32,14 +32,14 @@ namespace nervana {
                 throw std::runtime_error("Unable to map type " + r);
             }
         }
+        bool valid() const {
+            return tp_name.size() > 0;
+        }
         std::string tp_name;
         int np_type;
         int cv_type;
         size_t size;
     };
-
-
-
-};
+}
 
 

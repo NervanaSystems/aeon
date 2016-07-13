@@ -27,7 +27,6 @@ std::shared_ptr<nervana::interface::config> nervana::config_factory::create(nloh
     std::string mediaType = configJs["type"];
     if( mediaType == "image" ) {
         rc = std::make_shared<nervana::image::config>(configJs["config"]);
-        printf("Made it here\n");
     } else if ( mediaType == "label" ) {
         rc = std::make_shared<nervana::label::config>(configJs["config"]);
     } else {

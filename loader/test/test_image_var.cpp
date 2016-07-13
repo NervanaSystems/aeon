@@ -78,7 +78,6 @@ TEST(image_var, resize) {
     auto mat = cv::Mat(200,300,CV_8UC3);
     vector<unsigned char> img;
     cv::imencode( ".png", mat, img );
-    cout << __PRETTY_FUNCTION__ << " mat size " << mat.size() << endl;
 
     nlohmann::json jsConfig = {{"min_size",300},{"max_size",400},{"channels",3},{
     "distribution",{

@@ -31,15 +31,17 @@ std::ostream& operator<<(std::ostream&,const nervana::bbox::box&);
 
 class nervana::bbox::config : public nervana::interface::config {
 public:
-    uint32_t height;
-    uint32_t width;
+    size_t height;
+    size_t width;
+    size_t max_bbox;
+
     std::unordered_map<std::string,int> label_map;
 
-    config(nlohmann::json js);
+    config(nlohmann::json js, bool ignore_errors=false);
 
 private:
     config() = delete;
-    bool validate();
+    void validate();
 };
 
 class nervana::bbox::decoded : public decoded_media {

@@ -7,6 +7,13 @@ using namespace nervana;
 
 lmap::config::config(nlohmann::json js) {
     parse_value(_labels, "labels", js, mode::REQUIRED);
+    string type_string = "int32_t";
+    parse_value(type_string, "type_string", js);
+
+    otype = nervana::output_type(type_string);
+    shape.push_back(otype.size);
+
+    base_validate();
 }
 
 nervana::lmap::decoded::decoded() {

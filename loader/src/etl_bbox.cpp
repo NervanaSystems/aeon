@@ -11,7 +11,7 @@ ostream& operator<<(ostream& out, const nervana::bbox::box& b) {
     return out;
 }
 
-nervana::bbox::config::config(nlohmann::json js)
+nervana::bbox::config::config(nlohmann::json js, bool ignore_errors)
 {
     label_map.clear();
     vector<string> label_list;
@@ -20,14 +20,20 @@ nervana::bbox::config::config(nlohmann::json js)
         label_map.insert({label_list[i],i});
     }
     // TODO -- need to fill in the shape and type information here
-    parse_value(height, "height", js, mode::REQUIRED);
-    parse_value(width, "width", js, mode::REQUIRED);
+    string type_string = "float";
+    parse_value(type_string,    "type_string", js);
+    parse_value(height,         "height", js, mode::REQUIRED);
+    parse_value(width,          "width", js, mode::REQUIRED);
+    parse_value(max_bbox,       "max_bbox_count", js, mode::REQUIRED);
 
-    validate();
+    shape = {uint32_t(max_bbox), uint32_t(4*sizeof(float))};
+    otype = nervana::output_type(type_string);
+
+    if(!ignore_errors) validate();
 }
 
-bool nervana::bbox::config::validate() {
-    return true;
+void nervana::bbox::config::validate() {
+    base_validate();
 }
 
 

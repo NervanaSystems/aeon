@@ -108,14 +108,17 @@ namespace nervana {
 
     private:
         config() = delete;
-        bool validate() {
-            bool result = true;
-
-            result &= crop_offset.param().a() <= crop_offset.param().b();
-            result &= width > 0;
-            result &= height > 0;
-
-            return result;
+        void validate() {
+            if(crop_offset.param().a() > crop_offset.param().b()) {
+                throw std::invalid_argument("invalid crop_offset");
+            }
+            if(width <= 0) {
+                throw std::invalid_argument("invalid width");
+            }
+            if(height <= 0) {
+                throw std::invalid_argument("invalid height");
+            }
+            base_validate();
         }
     };
 

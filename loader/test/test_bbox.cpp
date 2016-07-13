@@ -59,7 +59,7 @@ static nlohmann::json create_metadata( const vector<nlohmann::json>& boxes, int 
 }
 
 static bbox::config make_bbox_config() {
-    nlohmann::json obj = {{"height",100},{"width",150}};
+    nlohmann::json obj = {{"height",100},{"width",150},{"max_bbox_count",100}};
     obj["labels"] = label_list;
     return bbox::config(obj);
 }

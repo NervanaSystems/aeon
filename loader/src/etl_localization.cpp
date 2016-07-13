@@ -14,35 +14,46 @@ template<typename T> string join(const T& v, const string& sep) {
 }
 
 nervana::localization::config::config(nlohmann::json js) :
-    bbox::config::config(js)
+    bbox::config::config(js, true)
 {
-    parse_value(images_per_batch, "images_per_batch", js);
-    parse_value(rois_per_image, "rois_per_image", js);
-    parse_value(min_size, "min_size", js);
-    parse_value(max_size, "max_size", js);
-    parse_value(base_size, "base_size", js);
-    parse_value(scaling_factor, "scaling_factor", js);
-    parse_value(ratios, "ratios", js);
-    parse_value(scales, "scales", js);
-    parse_value(negative_overlap, "negative_overlap", js);
-    parse_value(positive_overlap, "positive_overlap", js);
-    parse_value(foreground_fraction, "foreground_fraction", js);
+    string type_string = "float";
+    parse_value(images_per_batch,       "images_per_batch", js);
+    parse_value(rois_per_image,         "rois_per_image", js);
+    parse_value(min_size,               "min_size", js);
+    parse_value(max_size,               "max_size", js);
+    parse_value(base_size,              "base_size", js);
+    parse_value(scaling_factor,         "scaling_factor", js);
+    parse_value(ratios,                 "ratios", js);
+    parse_value(scales,                 "scales", js);
+    parse_value(negative_overlap,       "negative_overlap", js);
+    parse_value(positive_overlap,       "positive_overlap", js);
+    parse_value(foreground_fraction,    "foreground_fraction", js);
+    parse_value(type_string,            "type_string", js);
+
+    size_t dev_y_labels_size = total_anchors() * 2 * sizeof(float);             // 69192
+    size_t dev_y_labels_mask_size = total_anchors() * 2 * sizeof(float);        // 69192
+    size_t dev_y_bbtargets_size = total_anchors() * 4 * sizeof(float);          // 138384
+    size_t dev_y_bbtargets_mask_size = total_anchors() * 4 * sizeof(float);     // 138384
+    size_t size = dev_y_labels_size + dev_y_labels_mask_size + dev_y_bbtargets_size + dev_y_bbtargets_mask_size;
+    shape.push_back(size);
+    otype = nervana::output_type(type_string);
 
     validate();
 }
 
-bool nervana::localization::config::validate() {
-    return max_size > min_size &&
-           negative_overlap >= 0.0 &&
-           negative_overlap <= 1.0 &&
-           positive_overlap >= 0.0 &&
-           positive_overlap <= 1.0 &&
-           foreground_fraction <= 1.0;}
+void nervana::localization::config::validate() {
+    if(max_size < min_size) throw invalid_argument("max_size < min_size");
+    if(negative_overlap    < 0.0) throw invalid_argument("negative_overlap");
+    if(negative_overlap    > 1.0) throw invalid_argument("negative_overlap");
+    if(positive_overlap    < 0.0) throw invalid_argument("positive_overlap");
+    if(positive_overlap    > 1.0) throw invalid_argument("positive_overlap");
+    if(foreground_fraction > 1.0) throw invalid_argument("foreground_fraction");
+    base_validate();
+}
 
 localization::extractor::extractor(const localization::config& cfg) :
     bbox_extractor{cfg}
 {
-
 }
 
 

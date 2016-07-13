@@ -56,7 +56,6 @@ TEST(provider,image) {
 //        string filename = "data" + to_string(i) + ".png";
 //        cv::imwrite(filename,mat);
     }
-    cout << "cpio contains " << reader.itemCount() << endl;
 }
 
 TEST(provider, argtype) {
