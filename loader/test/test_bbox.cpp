@@ -30,7 +30,6 @@
 #include "etl_label.hpp"
 #include "etl_bbox.hpp"
 #include "etl_lmap.hpp"
-#include "provider.hpp"
 #include "json.hpp"
 
 extern gen_image image_dataset;
@@ -60,7 +59,7 @@ static nlohmann::json create_metadata( const vector<nlohmann::json>& boxes, int 
 }
 
 static bbox::config make_bbox_config() {
-    auto obj = nlohmann::json::object();
+    nlohmann::json obj = {{"height",100},{"width",150}};
     obj["labels"] = label_list;
     return bbox::config(obj);
 }
@@ -162,7 +161,7 @@ TEST(etl, bbox) {
     EXPECT_EQ(8,boxes[1].label);
     EXPECT_EQ(7,boxes[2].label);
 
-    bbox::transformer transform;
+    bbox::transformer transform(cfg);
     shared_ptr<image::params> iparam = make_shared<image::params>();
     auto tx = transform.transform( iparam, decoded );
 }
@@ -199,7 +198,7 @@ TEST(etl, bbox_crop) {
 
     ASSERT_EQ(8,boxes.size());
 
-    bbox::transformer transform;
+    bbox::transformer transform(cfg);
     shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
 
@@ -251,7 +250,7 @@ TEST(etl, bbox_rescale) {
 
     ASSERT_EQ(8,boxes.size());
 
-    bbox::transformer transform;
+    bbox::transformer transform(cfg);
     shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
     iparam->output_size = cv::Size(512, 1024);
@@ -283,7 +282,7 @@ TEST(etl, bbox_angle) {
 
     ASSERT_EQ(1,boxes.size());
 
-    bbox::transformer transform;
+    bbox::transformer transform(cfg);
     shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->angle = 5;
     auto tx = transform.transform( iparam, decoded );

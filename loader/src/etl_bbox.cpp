@@ -20,6 +20,8 @@ nervana::bbox::config::config(nlohmann::json js)
         label_map.insert({label_list[i],i});
     }
     // TODO -- need to fill in the shape and type information here
+    parse_value(height, "height", js, mode::REQUIRED);
+    parse_value(width, "width", js, mode::REQUIRED);
 
     validate();
 }
@@ -84,7 +86,7 @@ shared_ptr<nervana::bbox::decoded> nervana::bbox::extractor::extract(const char*
     return rc;
 }
 
-nervana::bbox::transformer::transformer() {}
+nervana::bbox::transformer::transformer(const bbox::config&) {}
 
 shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(shared_ptr<image::params> pptr, shared_ptr<bbox::decoded> boxes) {
     if( pptr->angle != 0 ) {
@@ -125,6 +127,10 @@ shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(shared_ptr<image
         // cout << b.rect << ", " << b.label << endl;
     }
     return rc;
+}
+
+nervana::bbox::loader::loader(const bbox::config&) {
+
 }
 
 void nervana::bbox::loader::load(char* data, shared_ptr<bbox::decoded> boxes) {

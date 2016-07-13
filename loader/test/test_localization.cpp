@@ -44,8 +44,7 @@ static string read_file( const string& path ) {
 }
 
 static localization::config make_localization_config() {
-    nlohmann::json js;
-    js["labels"] = label_list;
+    nlohmann::json js = {{"height",100},{"width",150},{"labels",label_list}};
     return localization::config(js);
 }
 
@@ -219,8 +218,7 @@ TEST(DISABLED_localization,plot) {
 }
 
 TEST(localization,config) {
-    nlohmann::json js;
-    js["labels"] = label_list;
+    nlohmann::json js = {{"height",100},{"width",150},{"labels",label_list}};
 
     EXPECT_NO_THROW(localization::config cfg(js));
 }

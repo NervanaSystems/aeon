@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include "provider.hpp"
+#include "provider_interface.hpp"
 #include "provider_image_class.hpp"
 
 namespace nervana {
