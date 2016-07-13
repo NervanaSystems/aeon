@@ -31,6 +31,8 @@ std::ostream& operator<<(std::ostream&,const nervana::bbox::box&);
 
 class nervana::bbox::config : public nervana::interface::config {
 public:
+    uint32_t height;
+    uint32_t width;
     std::unordered_map<std::string,int> label_map;
 
     config(nlohmann::json js);
@@ -76,7 +78,7 @@ private:
 
 class nervana::bbox::transformer : public nervana::interface::transformer<nervana::bbox::decoded, nervana::image::params> {
 public:
-    transformer();
+    transformer(const bbox::config&);
     virtual ~transformer(){}
     virtual std::shared_ptr<bbox::decoded> transform(
                                             std::shared_ptr<image::params>,
@@ -87,7 +89,7 @@ private:
 
 class nervana::bbox::loader : public nervana::interface::loader<nervana::bbox::decoded> {
 public:
-    loader();
+    loader(const bbox::config&);
     virtual ~loader(){}
     virtual void load(char*, std::shared_ptr<bbox::decoded>) override;
 };

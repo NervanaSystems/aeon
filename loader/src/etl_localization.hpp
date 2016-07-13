@@ -160,7 +160,6 @@ namespace nervana {
     private:
         loader() = delete;
         void build_output(std::shared_ptr<localization::decoded> mp, std::vector<float>& dev_y_labels, std::vector<float>& dev_y_labels_mask, std::vector<float>& dev_y_bbtargets, std::vector<float>& dev_y_bbtargets_mask);
-        size_t _load_count;
         size_t _load_size;
         bool _channel_major;
         int total_anchors;

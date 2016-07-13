@@ -108,4 +108,58 @@ namespace nervana {
 
         std::default_random_engine  _r_eng;
     };
+
+    class bbox_provider : public provider_interface {
+    public:
+        bbox_provider(nlohmann::json js) :
+            image_config(js["data_config"]["config"]),
+            bbox_config(js["target_config"]["config"]),
+            image_extractor(image_config),
+            image_transformer(image_config),
+            image_loader(image_config),
+            image_factory(image_config),
+            bbox_extractor(bbox_config),
+            bbox_transformer(bbox_config),
+            bbox_loader(bbox_config)
+        {
+        }
+
+        virtual ~bbox_provider() {}
+
+        void provide(int idx, buffer_in_array* in_buf, char* datum_out, char* tgt_out) override {
+            int dsz_in, tsz_in;
+
+            char* datum_in  = (*in_buf)[0]->getItem(idx, dsz_in);
+            char* target_in = (*in_buf)[1]->getItem(idx, tsz_in);
+
+            if (datum_in == 0) {
+                std::cout << "no data " << idx << std::endl;
+                return;
+            }
+
+            // Process image data
+            auto image_dec = image_extractor.extract(datum_in, dsz_in);
+            auto image_params = image_factory.make_params(image_dec);
+            image_loader.load(datum_out, image_transformer.transform(image_params, image_dec));
+
+            // Process target data
+            auto target_dec = bbox_extractor.extract(target_in, tsz_in);
+            bbox_loader.load(tgt_out, bbox_transformer.transform(image_params, target_dec));
+        }
+    private:
+        bbox_provider() = delete;
+        image::config               image_config;
+        bbox::config                bbox_config;
+
+        image::extractor            image_extractor;
+        image::transformer          image_transformer;
+        image::loader               image_loader;
+        image::param_factory        image_factory;
+
+        bbox::extractor             bbox_extractor;
+        bbox::transformer           bbox_transformer;
+        bbox::loader                bbox_loader;
+
+        std::default_random_engine  _r_eng;
+    };
 }
