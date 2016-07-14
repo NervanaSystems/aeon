@@ -24,8 +24,10 @@ SRCS            := \
     etl_audio.cpp \
     noise_clips.cpp \
     specgram.cpp \
-    codec.cpp \
-    etl_image.cpp \
+	codec.cpp \
+	image.cpp \
+	etl_pixel_mask.cpp \
+	etl_image.cpp \
     etl_image_var.cpp \
     etl_bbox.cpp \
     etl_label_map.cpp \

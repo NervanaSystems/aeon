@@ -28,11 +28,13 @@ public:
 class nervana::label_map::config : public interface::config {
 public:
     config(nlohmann::json js);
-    const std::vector<std::string> labels() const { return _labels; }
+    const std::vector<std::string> labels() const { return _label_list; }
+    int max_label_count() const { return _max_label_count; }
 
 private:
     config() = delete;
-    std::vector<std::string> _labels;
+    std::vector<std::string>    _label_list;
+    int                         _max_label_count = 100;
 };
 
 class nervana::label_map::decoded : public decoded_media {
@@ -52,7 +54,7 @@ private:
 
 class nervana::label_map::extractor : public nervana::interface::extractor<nervana::label_map::decoded> {
 public:
-    extractor( const nervana::label_map::config& );
+    extractor(const nervana::label_map::config&);
     virtual ~extractor(){}
     virtual std::shared_ptr<nervana::label_map::decoded> extract(const char*, int) override;
 
@@ -74,9 +76,10 @@ private:
 
 class nervana::label_map::loader : public nervana::interface::loader<nervana::label_map::decoded> {
 public:
-    loader();
+    loader(const nervana::label_map::config&);
     virtual ~loader(){}
 
     virtual void load(char*, std::shared_ptr<nervana::label_map::decoded>) override;
 private:
+    int max_label_count;
 };

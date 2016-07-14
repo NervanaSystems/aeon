@@ -21,8 +21,8 @@ namespace nervana {
 
         config(nlohmann::json js)
         {
-            parse_value(binary, "binary", js);
-            parse_value(type_string, "type_string", js);
+            parse_value(binary,      "binary",      js, mode::OPTIONAL);
+            parse_value(type_string, "type_string", js, mode::OPTIONAL);
 
             otype = nervana::output_type(type_string);
             shape = std::vector<uint32_t> {1};
@@ -50,9 +50,7 @@ namespace nervana {
     public:
         extractor(const label::config& cfg)
         {
-//            if (cfg != nullptr) {
-//                _binary = cfg->binary;
-//            }
+            _binary = cfg.binary;
         }
 
         ~extractor() {}

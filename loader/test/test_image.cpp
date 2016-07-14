@@ -18,38 +18,19 @@
 #include <sstream>
 #include <random>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include "gtest/gtest.h"
 
 #include "params.hpp"
 #include "etl_image.hpp"
 #include "json.hpp"
-
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include "helpers.hpp"
 
 using namespace std;
 using namespace nervana;
-
-class image_params_builder {
-public:
-    image_params_builder(shared_ptr<image::params> _obj) { obj = _obj; }
-
-    image_params_builder& cropbox( int x, int y, int w, int h ) { obj->cropbox = cv::Rect(x,y,w,h); return *this; }
-    image_params_builder& output_size( int w, int h ) { obj->output_size = cv::Size2i(w,h); return *this; }
-    image_params_builder& angle( int val ) { obj->angle = val; return *this; }
-    image_params_builder& flip( bool val ) { obj->flip = val; return *this; }
-    image_params_builder& lighting( float f1, float f2, float f3 ) { obj->lighting = {f1,f2,f3}; return *this; }
-    image_params_builder& color_noise_std(float f) { obj->color_noise_std = f; return *this; }
-    image_params_builder& photometric( float f1, float f2, float f3 ) { obj->photometric = {f1,f2,f3}; return *this; }
-
-    operator shared_ptr<image::params>() const {
-        return obj;
-    }
-
-private:
-    shared_ptr<image::params> obj;
-};
 
 cv::Mat generate_indexed_image() {
     cv::Mat color = cv::Mat( 256, 256, CV_8UC3 );

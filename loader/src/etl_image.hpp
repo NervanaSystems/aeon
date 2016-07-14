@@ -5,7 +5,7 @@
 #include <chrono>
 #include "etl_interface.hpp"
 #include "params.hpp"
-
+#include "image.hpp"
 
 namespace nervana {
     namespace image {
@@ -18,10 +18,6 @@ namespace nervana {
         class extractor;
         class transformer;
         class loader;
-
-        // These functions may be common across different transformers
-        void resize(const cv::Mat&, cv::Mat&, const cv::Size2i& );
-        void shift_cropbox(const cv::Size2f &, cv::Rect &, float, float);
     }
     namespace video {
         class config;     // Forward decl for friending
@@ -206,7 +202,6 @@ namespace nervana {
                                                 std::shared_ptr<image::decoded>) override;
 
     private:
-        void rotate(const cv::Mat& input, cv::Mat& output, int angle);
         void lighting(cv::Mat& inout, std::vector<float>, float color_noise_std);
         void cbsjitter(cv::Mat& inout, const std::vector<float>&);
 

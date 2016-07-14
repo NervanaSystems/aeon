@@ -20,6 +20,8 @@
 #include "mock_batch_loader.hpp"
 #include "sequential_batch_iterator.hpp"
 
+using namespace std;
+
 TEST(minibatch_iterator, simple) {
     // give a MinibatchIterator a MacroBatchIterator and make sure
     // that reading through the MinibatchIterator results in reading

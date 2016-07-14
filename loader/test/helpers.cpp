@@ -1,8 +1,9 @@
-#include "helpers.hpp"
+#include <algorithm>
 
+#include "helpers.hpp"
 #include "gtest/gtest.h"
 
-#include <algorithm>
+using namespace std;
 
 vector<string> buffer_to_vector_of_strings(buffer_in& b) {
     vector<string> words;

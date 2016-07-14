@@ -4,6 +4,7 @@
 #include "etl_image.hpp"
 #include "provider_interface.hpp"
 #include "etl_localization.hpp"
+#include "etl_pixel_mask.hpp"
 
 namespace nervana {
     class image_decoder : public provider_interface {
@@ -161,6 +162,55 @@ namespace nervana {
         bbox::extractor             bbox_extractor;
         bbox::transformer           bbox_transformer;
         bbox::loader                bbox_loader;
+
+        std::default_random_engine  _r_eng;
+    };
+
+    class pixel_mask_decoder : public provider_interface {
+    public:
+        pixel_mask_decoder(nlohmann::json js) :
+            image_config(js["data_config"]["config"]),
+            image_extractor(image_config),
+            image_transformer(image_config),
+            image_loader(image_config),
+            image_factory(image_config),
+            target_extractor(image_config),
+            target_transformer(image_config),
+            target_loader(image_config)
+        {
+        }
+
+        void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override {
+            std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
+            std::vector<char>& target_in = in_buf[1]->getItem(idx);
+            char* datum_out  = out_buf[0]->getItem(idx);
+            char* target_out = out_buf[1]->getItem(idx);
+
+            if (datum_in.size() == 0) {
+                std::cout << "no data " << idx << std::endl;
+                return;
+            }
+
+            // Process image data
+            auto image_dec = image_extractor.extract(datum_in.data(), datum_in.size());
+            auto image_params = image_factory.make_params(image_dec);
+            image_loader.load(datum_out, image_transformer.transform(image_params, image_dec));
+
+            // Process target data
+            auto target_dec = target_extractor.extract(target_in.data(), target_in.size());
+            target_loader.load(target_out, target_transformer.transform(image_params, target_dec));
+        }
+
+    private:
+        image::config               image_config;
+        image::extractor            image_extractor;
+        image::transformer          image_transformer;
+        image::loader               image_loader;
+        image::param_factory        image_factory;
+
+        pixel_mask::extractor       target_extractor;
+        pixel_mask::transformer     target_transformer;
+        pixel_mask::loader          target_loader;
 
         std::default_random_engine  _r_eng;
     };

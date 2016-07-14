@@ -102,27 +102,6 @@ shared_ptr<image::decoded> image::transformer::transform(
     return rc;
 }
 
-void image::transformer::rotate(const cv::Mat& input, cv::Mat& output, int angle)
-{
-    if (angle == 0) {
-        output = input;
-    } else {
-        cv::Point2i pt(input.cols / 2, input.rows / 2);
-        cv::Mat rot = cv::getRotationMatrix2D(pt, angle, 1.0);
-        cv::warpAffine(input, output, rot, input.size());
-    }
-}
-
-void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size)
-{
-    if (size == input.size()) {
-        output = input;
-    } else {
-        int inter = input.size().area() < size.area() ? CV_INTER_CUBIC : CV_INTER_AREA;
-        cv::resize(input, output, size, 0, 0, inter);
-    }
-}
-
 /*
 Implements colorspace noise perturbation as described in:
 Krizhevsky et. al., "ImageNet Classification with Deep Convolutional Neural Networks"
@@ -201,12 +180,6 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
         }
     }
     return imgstgs;
-}
-
-void image::shift_cropbox(const cv::Size2f &in_size, cv::Rect &crop_box, float xoff, float yoff)
-{
-    crop_box.x = (in_size.width - crop_box.width) * xoff;
-    crop_box.y = (in_size.height - crop_box.height) * yoff;
 }
 
 void image::param_factory::scale_cropbox(

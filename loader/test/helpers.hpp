@@ -19,11 +19,30 @@
 #include <string>
 
 #include "buffer_in.hpp"
+#include "etl_image.hpp"
 
-using namespace std;
+std::vector<std::string> buffer_to_vector_of_strings(buffer_in& b);
+bool sorted(std::vector<std::string> words);
+void dump_vector_of_strings(std::vector<std::string>& words);
 
-vector<string> buffer_to_vector_of_strings(buffer_in& b);
-bool sorted(vector<string> words);
-void dump_vector_of_strings(vector<string>& words);
+void assert_vector_unique(std::vector<std::string>& words);
 
-void assert_vector_unique(vector<string>& words);
+class image_params_builder {
+public:
+    image_params_builder(std::shared_ptr<nervana::image::params> _obj) { obj = _obj; }
+
+    image_params_builder& cropbox( int x, int y, int w, int h ) { obj->cropbox = cv::Rect(x,y,w,h); return *this; }
+    image_params_builder& output_size( int w, int h ) { obj->output_size = cv::Size2i(w,h); return *this; }
+    image_params_builder& angle( int val ) { obj->angle = val; return *this; }
+    image_params_builder& flip( bool val ) { obj->flip = val; return *this; }
+    image_params_builder& lighting( float f1, float f2, float f3 ) { obj->lighting = {f1,f2,f3}; return *this; }
+    image_params_builder& color_noise_std(float f) { obj->color_noise_std = f; return *this; }
+    image_params_builder& photometric( float f1, float f2, float f3 ) { obj->photometric = {f1,f2,f3}; return *this; }
+
+    operator std::shared_ptr<nervana::image::params>() const {
+        return obj;
+    }
+
+private:
+    std::shared_ptr<nervana::image::params> obj;
+};
