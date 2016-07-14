@@ -26,101 +26,50 @@
 
 using namespace std;
 
-buffer_in::buffer_in(int size)
-: _size(size), _idx(0) {
-    _data = alloc();
-    _cur = _data;
+buffer_in::buffer_in(int size) {
 }
 
 buffer_in::~buffer_in() {
-    dealloc(_data);
 }
 
 void buffer_in::reset() {
-    _cur = _data;
-    _idx = 0;
-    _items.clear();
-    _lens.clear();
+    buffers.clear();
 }
 
 void buffer_in::shuffle(uint seed) {
     // TODO: instead of reseeding the shuffle, store these in a pair
     std::minstd_rand0 rand_items(seed);
-    std::shuffle(_items.begin(), _items.end(), rand_items);
-
-    std::minstd_rand0 rand_lens(seed);
-    std::shuffle(_lens.begin(), _lens.end(), rand_lens);
+    std::shuffle(buffers.begin(), buffers.end(), rand_items);
 }
 
-void buffer_in::pushItem(int len) {
-    _items.push_back(_idx);
-    _lens.push_back(len);
-    _cur += len;
-    _idx += len;
-}
-
-char* buffer_in::getItem(int index, int& len) {
-    if (index >= (int) _items.size()) {
+vector<char>& buffer_in::getItem(int index) {
+    if (index >= (int) buffers.size()) {
         // TODO: why not raise exception here?  Is anyone actually
         // checking the return value of getItem to make sure it is
         // non-0?
-        return 0;
+        throw invalid_argument("index out-of-range");
     }
-    len = _lens[index];
-    return _data + _items[index];
+    return buffers[index];
+}
+
+void buffer_in::addItem(const std::vector<char>& buf) {
+    buffers.push_back(buf);
 }
 
 int buffer_in::getItemCount() {
-    return _items.size();
-}
-
-char* buffer_in::getCurrent() {
-    return _cur;
-}
-
-uint buffer_in::getSize() {
-    return _size;
-}
-
-uint buffer_in::getLevel() {
-    return _idx;
+    return buffers.size();
 }
 
 void buffer_in::read(istream& is, int size) {
     // read `size` bytes out of `ifs` and push into buffer
-    resizeIfNeeded(size);
-    is.read(_cur, size);
-    pushItem(size);
+    vector<char> b(size);
+    is.read(b.data(), size);
+    buffers.push_back(b);
 }
 
-void buffer_in::read(const char* src, int size) {
-    // read `size` bytes out of `src` and push into buffer
-    resizeIfNeeded(size);
-    memcpy((void *) _cur, (void *) src, size);
-    pushItem(size);
-}
-
-void buffer_in::resizeIfNeeded(int inc) {
-    if (getLevel() + inc > getSize()) {
-        resize(inc);
-    }
-}
-
-void buffer_in::resize(int inc) {
-    _size = getLevel() + inc;
-    // Allocate a bit more to minimize reallocations.
-    _size += _size / 8;
-    char* data = alloc();
-    memcpy(data, _data, getLevel());
-    dealloc(_data);
-    _data = data;
-    _cur = _data + _idx;
-}
-
-char* buffer_in::alloc() {
-    return new char[_size];
-}
-
-void buffer_in::dealloc(char* data) {
-    delete[] data;
-}
+//void buffer_in::read(const char* src, int size) {
+//    // read `size` bytes out of `src` and push into buffer
+////    resizeIfNeeded(size);
+////    memcpy((void *) _cur, (void *) src, size);
+////    pushItem(size);
+//}

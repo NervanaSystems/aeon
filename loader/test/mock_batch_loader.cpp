@@ -18,8 +18,8 @@ void MockBatchLoader::loadBlock(buffer_in_array &dest, uint block_num, uint bloc
         ss << (char)('a' + i);
         string s = ss.str();
 
-        dest[0]->read(s.c_str(), s.length());
-        dest[1]->read(s.c_str(), s.length());
+        dest[0]->addItem(vector<char>(s.begin(), s.end()));
+        dest[1]->addItem(vector<char>(s.begin(), s.end()));
     }
 };
 

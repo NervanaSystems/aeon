@@ -83,12 +83,10 @@ void BatchLoaderCPIOCache::writeBlockToCache(buffer_in_array& buff, uint block_n
         // TODO: standardize on name object/datum
         // TODO: standardize on size type int returned from getItem but
         // uint desired from writeItem
-        int datum_len;
-        char* datum = buff[0]->getItem(i, datum_len);
-        int target_len;
-        char* target = buff[1]->getItem(i, target_len);
+        vector<char>& datum = buff[0]->getItem(i);
+        vector<char>& target = buff[1]->getItem(i);
 
-        writer.writeItem(datum, target, datum_len, target_len);
+        writer.writeItem(datum.data(), target.data(), datum.size(), target.size());
     }
 
     writer.close();

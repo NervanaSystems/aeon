@@ -35,9 +35,10 @@ public:
     virtual ~buffer_in();
 
     void read(std::istream& is, int size);
-    void read(const char* src, int size);
+//    void read(const char* src, int size);
     void reset();
-    char* getItem(int index, int& len);
+    std::vector<char>& getItem(int index);
+    void addItem(const std::vector<char>&);
 
     void shuffle(uint seed);
 
@@ -46,25 +47,8 @@ public:
 
 private:
     buffer_in() = delete;
-    char* alloc();
-    void dealloc(char* data);
-    void resize(int inc);
 
-    uint getLevel();
-    void resizeIfNeeded(int inc);
-
-    void pushItem(int len);
-    char* getCurrent();
-
-public:
-    char*                       _data;
-    uint                        _size;
-
-protected:
-    char*                       _cur;
-    int                         _idx;
-    std::vector<int>            _items;
-    std::vector<int>            _lens;
+    std::vector<std::vector<char>>  buffers;
 };
 
 class buffer_in_array {

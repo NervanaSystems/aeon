@@ -35,11 +35,13 @@ public:
         // load BufferPair with random bytes
         std::random_device engine;
 
-        string object = randomString();
-        dest[0]->read(object.c_str(), object.length());
+        string object_string = randomString();
+        vector<char> obj(object_string.begin(), object_string.end());
+        dest[0]->addItem(obj);
 
         string target = randomString();
-        dest[1]->read(target.c_str(), target.length());
+        vector<char> tgt(target.begin(), target.end());
+        dest[1]->addItem(tgt);
     };
 
     uint objectCount() {
@@ -57,8 +59,8 @@ string load_string(BatchLoaderCPIOCache cache) {
     cache.loadBlock(bp, 1, 1);
 
     int len;
-    char* x = bp[0]->getItem(0, len);
-    string str(x, len);
+    vector<char>& x = bp[0]->getItem(0);
+    string str(x.data(), x.size());
     return str;
 }
 

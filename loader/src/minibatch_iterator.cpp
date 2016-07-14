@@ -25,10 +25,7 @@ void MinibatchIterator::reset() {
 }
 
 void MinibatchIterator::transferBufferItem(buffer_in* dest, buffer_in* src) {
-    // getItem from src and read it into dest
-    int len;
-    char* item = src->getItem(_i, len);
-    dest->read(item, len);
+    dest->addItem(src->getItem(_i));
 }
 
 void MinibatchIterator::popItemFromMacrobatch(buffer_in_array& dest) {

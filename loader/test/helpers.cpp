@@ -6,10 +6,9 @@
 
 vector<string> buffer_to_vector_of_strings(buffer_in& b) {
     vector<string> words;
-    int len;
     for(auto i = 0; i != b.getItemCount(); ++i) {
-        const char* s = b.getItem(i, len);
-        words.push_back(string(s, s + len));
+        vector<char>& s = b.getItem(i);
+        words.push_back(string(s.data(), s.size()));
     }
 
     return words;
