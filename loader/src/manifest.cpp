@@ -78,46 +78,49 @@ void Manifest::parse() {
 }
 
 size_t Manifest::getSize() const {
-    return _filename_pairs.size();
+    return _filename_lists.size();
 }
 
 void Manifest::parseStream(istream& is) {
-    // parse istream is and load the entire thing into _filename_pairs
+    // parse istream is and load the entire thing into _filename_lists
     string line;
-    pair<string, string> filename_pair;
 
-    // read in each line, then from that istringstream, read in up to
-    // the comma, then everything after.
+    // read in each line, then from that istringstream, break into
+    // comma-separated fields.
     while(std::getline(is, line)) {
         istringstream lineis(line);
-        std::getline(lineis, filename_pair.first, ',');
-        std::getline(lineis, filename_pair.second);
+        string field;
+        vector<string> filename_list;
+        while (std::getline(lineis, field, ',')) {
+            filename_list.push_back(field);
+        }
 
-        _filename_pairs.push_back(filename_pair);
+
+        _filename_lists.push_back(filename_list);
     }
 
     // If we don't need to shuffle, there may be small performance
-    // benefits in some situations to stream the filename_pairs instead
+    // benefits in some situations to stream the filename_lists instead
     // of loading them all at once.  That said, in the event that there
     // is no cache and we are resuming training at a specific epoch, we
     // may need to be able to jump around and read random blocks of the
     // file, so a purely stream based interface is not sufficient.
     if(_shuffle) {
-        shuffleFilenamePairs();
+        shuffleFilenameLists();
     }
 }
 
-void Manifest::shuffleFilenamePairs() {
-    // shuffles _filename_pairs.  It is possible that the order of the
+void Manifest::shuffleFilenameLists() {
+    // shuffles _filename_lists.  It is possible that the order of the
     // filenames in the manifest file were in some sorted order and we
     // don't want our blocks to be biased by that order.
-    std::shuffle(_filename_pairs.begin(), _filename_pairs.end(), std::mt19937(_randomSeed));
+    std::shuffle(_filename_lists.begin(), _filename_lists.end(), std::mt19937(_randomSeed));
 }
 
 Manifest::iter Manifest::begin() const {
-    return _filename_pairs.begin();
+    return _filename_lists.begin();
 }
 
 Manifest::iter Manifest::end() const {
-    return _filename_pairs.end();
+    return _filename_lists.end();
 }

@@ -19,8 +19,6 @@
 #include <string>
 #include <random>
 
-typedef std::pair<std::string, std::string> FilenamePair;
-
 /* Manifest
  *
  * load a manifest file and parse the filenames
@@ -41,26 +39,27 @@ public:
     Manifest(std::string filename, bool shuffle, const int randomSeed);
     Manifest(std::string filename, bool shuffle);
 
-    typedef std::vector<FilenamePair>::const_iterator iter;
+    typedef std::vector<std::string> FilenameList;
+    typedef std::vector<FilenameList>::const_iterator iter;
 
     std::string hash();
     std::string version();
     size_t getSize() const;
 
-    // begin and end provide iterators over the FilenamePairs
+    // begin and end provide iterators over the FilenameLists
     iter begin() const;
     iter end() const;
 
 protected:
     void parse();
     void parseStream(std::istream& is);
-    void shuffleFilenamePairs();
+    void shuffleFilenameLists();
 
 private:
     const std::string _filename;
     const bool _shuffle;
     const int _randomSeed;
 
-    std::vector<FilenamePair> _filename_pairs;
+    std::vector<FilenameList> _filename_lists;
 };
 

@@ -32,9 +32,7 @@ TEST(blocked_file_loader, loadBlock) {
 
     BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(4, object_size, target_size), true), 100);
 
-    buffer_in* dataBuffer = new buffer_in(0);
-    buffer_in* targetBuffer = new buffer_in(0);
-    buffer_in_array bp{dataBuffer, targetBuffer};
+    buffer_in_array bp(vector<uint32_t>{0, 0});
 
     bfl.loadBlock(bp, 0, block_size);
 
@@ -47,9 +45,6 @@ TEST(blocked_file_loader, loadBlock) {
     for(uint i = 0; i < object_size / sizeof(uint) * block_size; ++i) {
         ASSERT_EQ(object_data[i] + 1, target_data[i]);
     }
-
-    delete bp[0];
-    delete bp[1];
 }
 
 TEST(blocked_file_loader, subsetPercent) {
@@ -62,9 +57,8 @@ TEST(blocked_file_loader, subsetPercent) {
 
     BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(10, object_size, target_size), true), 50);
 
-    buffer_in* dataBuffer = new buffer_in(0);
-    buffer_in* targetBuffer = new buffer_in(0);
-    buffer_in_array bp{dataBuffer, targetBuffer};
+    buffer_in_array bp(vector<uint32_t>{0, 0});
+
 
     bfl.loadBlock(bp, 0, block_size);
     ASSERT_EQ(bp[0]->getItemCount(), block_size / 2);
@@ -77,7 +71,4 @@ TEST(blocked_file_loader, subsetPercent) {
     bfl.loadBlock(bp, 2, block_size);
     ASSERT_EQ(bp[0]->getItemCount(), 1);
     bp[0]->reset();
-
-    delete bp[0];
-    delete bp[1];
 }

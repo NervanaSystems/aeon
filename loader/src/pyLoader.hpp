@@ -192,7 +192,7 @@ private:
     std::shared_ptr<nervana::interface::config> _tgt_config;
 
     int                                 _batchSize;
-    std::shared_ptr<pyLoaderConfig>     _lcfg;
+    std::shared_ptr<pyLoaderConfig>     _lcfg = nullptr;
     nlohmann::json                      _lcfg_json;
     PyObject*                           _pbe;
     std::shared_ptr<pyBackendWrapper>   _pyBackend;

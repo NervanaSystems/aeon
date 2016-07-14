@@ -105,8 +105,8 @@ TEST(manifest, no_shuffle) {
     Manifest manifest2(filename, false);
 
     for(auto it1 = manifest1.begin(), it2 = manifest2.begin(); it1 != manifest1.end(); ++it1, ++it2) {
-        ASSERT_EQ(it1->first, it2->first);
-        ASSERT_EQ(it1->second, it2->second);
+        ASSERT_EQ((*it1)[0], (*it2)[0]);
+        ASSERT_EQ((*it1)[1], (*it2)[1]);
     }
 }
 
@@ -118,7 +118,7 @@ TEST(manifest, shuffle) {
     bool different = false;
 
     for(auto it1 = manifest1.begin(), it2 = manifest2.begin(); it1 != manifest1.end(); ++it1, ++it2) {
-        if(it1->first != it2->first) {
+        if((*it1)[0] != (*it2)[0]) {
             different = true;
         }
     }

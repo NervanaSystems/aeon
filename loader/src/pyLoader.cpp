@@ -239,9 +239,7 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
 : _pbe(pbe)
 {
     _lcfg_json = nlohmann::json::parse(pyloaderConfigString);
-
     _lcfg = make_shared<pyLoaderConfig>(_lcfg_json);
-
     _batchSize = _lcfg->minibatch_size;
 
     // the manifest defines which data should be included in the dataset
@@ -288,11 +286,9 @@ int PyLoader::start()
         if(_lcfg_json["data_config"] == nullptr) {
             throw std::runtime_error("missing PyLoader config parameter data_config");
         }
-
         if(_lcfg_json["target_config"] == nullptr) {
             throw std::runtime_error("missing PyLoader config parameter target_config");
         }
-
         try {
             _dtm_config = nervana::config_factory::create(_lcfg_json["data_config"]);
         } catch (const std::invalid_argument e) {
@@ -301,7 +297,6 @@ int PyLoader::start()
             ss << e.what();
             throw std::runtime_error(ss.str());
         }
-
         try {
             _tgt_config = nervana::config_factory::create(_lcfg_json["target_config"]);
         } catch (const std::invalid_argument e) {
@@ -315,9 +310,16 @@ int PyLoader::start()
         _pyBackend = make_shared<pyBackendWrapper>(_pbe, _dtm_config, _tgt_config, _batchSize);
 
         // Start the read buffers off with a reasonable size. They will get resized as needed.
-        _readBufs = make_shared<buffer_pool_in>(_dtm_config->get_size_bytes() * _batchSize / 8,
-                                            _tgt_config->get_size_bytes() * _batchSize);
+        vector<uint32_t> read_sizes_initial {_dtm_config->get_size_bytes() * _batchSize / 8,
+                                            _tgt_config->get_size_bytes() * _batchSize};
+        printf("Made it here %s %d\n", __FILE__, __LINE__);
+        for (auto a : read_sizes_initial)
+            cout << a <<  " " << endl;
+        _readBufs = make_shared<buffer_pool_in>(read_sizes_initial);
+        printf("Made it here %s %d\n", __FILE__, __LINE__);
+
         _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
+        printf("Made it here %s %d\n", __FILE__, __LINE__);
 
         _decodeBufs = make_shared<buffer_pool_out>((size_t)_dtm_config->get_size_bytes(),
                                               (size_t)_tgt_config->get_size_bytes(),
@@ -326,6 +328,7 @@ int PyLoader::start()
 
         _decodeThreads = unique_ptr<pyDecodeThreadPool>(
                             new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs, _pyBackend));
+        printf("Made it here %s %d\n", __FILE__, __LINE__);
 
         // Now add providers
         for (int i=0; i<nthreads; i++) {
@@ -341,6 +344,7 @@ int PyLoader::start()
 
             _decodeThreads->add_provider(factory);
         }
+        printf("Made it here %s %d\n", __FILE__, __LINE__);
 
     } catch(std::bad_alloc&) {
         return -1;

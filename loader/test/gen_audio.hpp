@@ -157,5 +157,3 @@ private:
 
     std::minstd_rand0 r;
 };
-
-

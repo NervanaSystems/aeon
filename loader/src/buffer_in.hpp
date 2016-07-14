@@ -16,10 +16,6 @@
 #pragma once
 
 #include <assert.h>
-#if HAS_GPU
-#include <cuda.h>
-#endif
-
 #include <vector>
 #include <thread>
 #include <mutex>
@@ -73,11 +69,27 @@ protected:
 
 class buffer_in_array {
 public:
-    buffer_in_array(std::initializer_list<buffer_in*> list) : data(list) {}
+    buffer_in_array(const std::vector<uint32_t>& initial_sizes)
+    {
+        for (auto sz : initial_sizes) {
+            data.push_back(new buffer_in(sz));
+        }
+    }
+
+    ~buffer_in_array()
+    {
+        for (auto buf : data) {
+            delete buf;
+        }
+    }
+    // buffer_in_array(std::initializer_list<buffer_in*> list) : data(list) {}
 
     buffer_in* operator[](int i) { return data[i]; }
     const buffer_in* operator[](int i) const { return data[i]; }
     size_t size() const { return data.size(); }
+
+    std::vector<buffer_in*>::iterator begin() { return data.begin(); }
+    std::vector<buffer_in*>::iterator end() { return data.end(); }
 
 private:
     std::vector<buffer_in*>    data;

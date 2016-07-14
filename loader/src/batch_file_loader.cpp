@@ -63,16 +63,17 @@ void BatchFileLoader::loadBlock(buffer_in_array& dest, uint block_num, uint bloc
     auto begin_it = _manifest->begin() + begin_i;
     auto end_it = _manifest->begin() + end_i;
 
-    uint i = 0;
-    for(auto it = begin_it; it != end_it; ++it, ++i) {
+    for(auto it = begin_it; it != end_it; ++it) {
         // load both object and target files into respective buffers
         //
         // NOTE: if at some point in the future, loadFile is loading
         // files from a network like s3 it may make sense to use multiple
         // threads to make loads faster.  multiple threads would only
         // slow down reads from a magnetic disk.
-        loadFile(dest[0], it->first);
-        loadFile(dest[1], it->second);
+        auto file_list = *it;
+        for (uint i = 0; i < file_list.size(); i++) {
+            loadFile(dest[i], file_list[i]);
+        }
     }
 }
 

@@ -30,36 +30,37 @@
 
 using namespace std;
 
-buffer_pool_in::buffer_pool_in(int dataSize, int targetSize)
-: _used(0), _readPos(0), _writePos(0) {
+buffer_pool_in::buffer_pool_in(const std::vector<uint32_t>& initial_sizes)
+{
     for (int i = 0; i < _count; i++) {
-        buffer_in* dataBuffer = new buffer_in(dataSize);
-        buffer_in* targetBuffer = new buffer_in(targetSize);
-        _bufs.push_back(buffer_in_array{dataBuffer, targetBuffer});
+        _bufs.push_back(make_shared<buffer_in_array>(initial_sizes));
     }
+
 }
 
 buffer_pool_in::~buffer_pool_in() {
-    for (auto buf : _bufs) {
-        delete buf[0];
-        delete buf[1];
-    }
+
 }
 
 buffer_in_array& buffer_pool_in::getForWrite()
 {
-    _bufs[_writePos][0]->reset();
-    _bufs[_writePos][1]->reset();
-    return _bufs[_writePos];
+    buffer_in_array& buf_ary = *_bufs[_writePos];
+    for (auto &b : buf_ary) {
+        b->reset();
+    }
+    return buf_ary;
+    // _bufs[_writePos][0]->reset();
+    // _bufs[_writePos][1]->reset();
+    // return _bufs[_writePos];
 }
 
 buffer_in_array& buffer_pool_in::getForRead() {
-    return _bufs[_readPos];
+    return *_bufs[_readPos];
 }
 
 buffer_in_array& buffer_pool_in::getPair(int bufIdx) {
     assert(bufIdx >= 0 && bufIdx < _count);
-    return _bufs[bufIdx];
+    return *_bufs[bufIdx];
 }
 
 void buffer_pool_in::advanceReadPos() {

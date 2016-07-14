@@ -14,10 +14,6 @@
 */
 
 #include <assert.h>
-#if HAS_GPU
-#include <cuda.h>
-#endif
-
 #include <random>
 #include <algorithm>
 #include <vector>

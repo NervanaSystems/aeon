@@ -35,9 +35,11 @@ TEST(minibatch_iterator, simple) {
     // 6 minibatches fo 13 out.  They should all be unique and still in
     // sorted order.
 
-    buffer_in* dataBuffer = new buffer_in(0);
-    buffer_in* targetBuffer = new buffer_in(0);
-    buffer_in_array bp{dataBuffer, targetBuffer};
+    // buffer_in* dataBuffer = new buffer_in(0);
+    // buffer_in* targetBuffer = new buffer_in(0);
+    // buffer_in_array bp{dataBuffer, targetBuffer};
+    buffer_in_array bp(vector<uint32_t>{0, 0});
+
 
     // read 6 minibatches
     for(int i = 0; i < 6; ++i) {

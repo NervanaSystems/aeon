@@ -3,7 +3,7 @@
 MinibatchIterator::MinibatchIterator(std::shared_ptr<BatchIterator> macroBatchIterator, int minibatchSize)
     : _macroBatchIterator(macroBatchIterator),
       _minibatchSize(minibatchSize),
-      _macrobatch{new buffer_in(0), new buffer_in(0)}
+      _macrobatch{std::vector<uint32_t>{0,0}}
 {
     reset();
 }

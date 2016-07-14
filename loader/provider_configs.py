@@ -15,9 +15,8 @@ def make_cifar_config(minibatch_size):
                     cache_directory="/scratch/alex/dloader_test",
                     macrobatch_size=minibatch_size,
                     minibatch_size=minibatch_size)
+    return cfg_dict
 
-    cifar_cfg_string = json.dumps(cfg_dict)
-    return cifar_cfg_string
 
 def make_miniplaces_config(manifest_dir="/scratch/alex/places2mini", minibatch_size=128):
     dcfg = dict(type="image", config=dict(height=112, width=112, channel_major=True, flip=True))
