@@ -25,11 +25,12 @@ TEST(provider,image) {
     size_t dsize = data_config->get_size_bytes();
     size_t tsize = 4;
 
-
     auto media = nervana::train_provider_factory::create(js);
 
-    buffer_out dbuffer(dsize,1);
-    buffer_out tbuffer(tsize,1);
+    size_t batch_size = 128;
+
+    buffer_out dbuffer(dsize,batch_size);
+    buffer_out tbuffer(tsize,batch_size);
     buffer_out_array outBuf({&dbuffer,&tbuffer});
 
     auto files = image_dataset.GetFiles();
@@ -37,22 +38,24 @@ TEST(provider,image) {
 
     CPIOFileReader reader;
     EXPECT_EQ(reader.open(files[0]), true);
-    for (int i=0; i<reader.itemCount()/2; i++ ) {
+    buffer_in data_p(0);
+    buffer_in target_p(0);
+    for(int i=0; i<reader.itemCount()/2; i++) {
+        reader.read(data_p);
+        reader.read(target_p);
+    }
+    buffer_in_array bp{&data_p, &target_p};
+    EXPECT_GT(data_p.getItemCount(),batch_size);
+    for (int i=0; i<batch_size; i++ ) {
+        media->provide(i, bp, outBuf);
 
-        buffer_in_array bp(vector<uint32_t>{0, 0});
-        buffer_in& dtm = *bp[0];
-        reader.read(dtm); // data
-
-        buffer_in& tgt = *bp[1];
-        reader.read(tgt); // target
-
-        media->provide(0, bp, outBuf);
-
-        int target_value = unpack_le<int>(tbuffer.data());
-        EXPECT_EQ(42+i,target_value);
 //        cv::Mat mat(width,height,CV_8UC3,&dbuffer[0]);
 //        string filename = "data" + to_string(i) + ".png";
 //        cv::imwrite(filename,mat);
+    }
+    for (int i=0; i<batch_size; i++ ) {
+        int target_value = unpack_le<int>(tbuffer.getItem(i));
+        EXPECT_EQ(42+i,target_value);
     }
 }
 
