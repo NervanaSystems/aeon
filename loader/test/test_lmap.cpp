@@ -27,7 +27,7 @@
 #include "etl_image.hpp"
 #include "etl_label.hpp"
 #include "etl_bbox.hpp"
-#include "etl_lmap.hpp"
+#include "etl_label_map.hpp"
 #include "json.hpp"
 
 extern gen_image image_dataset;
@@ -35,12 +35,12 @@ extern gen_image image_dataset;
 using namespace std;
 using namespace nervana;
 
-TEST(etl, lmap) {
+TEST(etl, label_map) {
     {
         nlohmann::json js = {{"labels",{"a","and","the","quick","fox","cow","dog","blue",
             "black","brown","happy","lazy","skip","jumped","run","under","over","around"}}};
-        lmap::config cfg{js};
-        lmap::extractor extractor(cfg);
+        label_map::config cfg{js};
+        label_map::extractor extractor(cfg);
         auto data = extractor.get_data();
         EXPECT_EQ(2,data["the"]);
 
@@ -55,7 +55,7 @@ TEST(etl, lmap) {
             vector<int> expected = {2, 3, 9, 4, 13, 16, 2, 11, 6};
             auto extracted = extractor.extract(&t1[0], t1.size());
             ASSERT_NE(nullptr, extracted);
-            shared_ptr<lmap::decoded> decoded = static_pointer_cast<lmap::decoded>(extracted);
+            shared_ptr<label_map::decoded> decoded = static_pointer_cast<label_map::decoded>(extracted);
             ASSERT_EQ(expected.size(),decoded->get_data().size());
             for( int i=0; i<expected.size(); i++ ) {
                 EXPECT_EQ(expected[i], decoded->get_data()[i]) << "at index " << i;
@@ -65,8 +65,8 @@ TEST(etl, lmap) {
     {
         nlohmann::json js = {{"labels",{"a","and","the","quick","fox","cow","dog","blue",
             "black","brown","happy","lazy","skip","jumped","run","under","over","around"}}};
-        lmap::config cfg{js};
-        lmap::extractor extractor(cfg);
+        label_map::config cfg{js};
+        label_map::extractor extractor(cfg);
         auto data = extractor.get_data();
         EXPECT_EQ(2,data["the"]);
 
@@ -81,7 +81,7 @@ TEST(etl, lmap) {
             vector<int> expected = {2, 3, 9, 4, 13, 16, 2, 11, 6};
             auto extracted = extractor.extract(&t1[0], t1.size());
             ASSERT_NE(nullptr, extracted);
-            shared_ptr<lmap::decoded> decoded = static_pointer_cast<lmap::decoded>(extracted);
+            shared_ptr<label_map::decoded> decoded = static_pointer_cast<label_map::decoded>(extracted);
             ASSERT_EQ(expected.size(),decoded->get_data().size());
             for( int i=0; i<expected.size(); i++ ) {
                 EXPECT_EQ(expected[i], decoded->get_data()[i]) << "at index " << i;

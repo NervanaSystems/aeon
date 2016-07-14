@@ -82,9 +82,10 @@ namespace nervana {
         float positive_overlap = 0.7;  // positive anchors have > 0.7 overlap with at least one gt box
         float foreground_fraction = 0.5;  // at most, positive anchors are 0.5 of the total rois
 
-        config(nlohmann::json js);
+        // Derived values
+        uint32_t output_buffer_size;
 
-        bool channel_major = true;
+        config(nlohmann::json js);
 
         int total_anchors() const {
             return ratios.size() * scales.size() * (int)pow(int(std::floor(max_size * scaling_factor)),2);
@@ -161,8 +162,6 @@ namespace nervana {
     private:
         loader() = delete;
         void build_output(std::shared_ptr<localization::decoded> mp, std::vector<float>& dev_y_labels, std::vector<float>& dev_y_labels_mask, std::vector<float>& dev_y_bbtargets, std::vector<float>& dev_y_bbtargets_mask);
-        size_t _load_size;
-        bool _channel_major;
         int total_anchors;
     };
 }

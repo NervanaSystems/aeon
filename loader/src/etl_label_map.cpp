@@ -1,11 +1,11 @@
 #include <sstream>
 #include <iostream>
-#include "etl_lmap.hpp"
+#include "etl_label_map.hpp"
 
 using namespace std;
 using namespace nervana;
 
-lmap::config::config(nlohmann::json js) {
+label_map::config::config(nlohmann::json js) {
     parse_value(_labels, "labels", js, mode::REQUIRED);
     string type_string = "int32_t";
     parse_value(type_string, "type_string", js);
@@ -16,17 +16,17 @@ lmap::config::config(nlohmann::json js) {
     base_validate();
 }
 
-nervana::lmap::decoded::decoded() {
+nervana::label_map::decoded::decoded() {
 }
 
-nervana::lmap::extractor::extractor( const lmap::config& cfg) {
+nervana::label_map::extractor::extractor( const label_map::config& cfg) {
     int index = 0;
     for( const string& label : cfg.labels() ) {
         _dictionary.insert({label,index++});
     }
 }
 
-shared_ptr<nervana::lmap::decoded> nervana::lmap::extractor::extract(const char* data, int size) {
+shared_ptr<nervana::label_map::decoded> nervana::label_map::extractor::extract(const char* data, int size) {
     auto rc = make_shared<decoded>();
     stringstream ss( string(data, size) );
     string label;
@@ -44,18 +44,18 @@ shared_ptr<nervana::lmap::decoded> nervana::lmap::extractor::extract(const char*
     return rc;
 }
 
-nervana::lmap::transformer::transformer() {
+nervana::label_map::transformer::transformer() {
 
 }
 
-shared_ptr<nervana::lmap::decoded> nervana::lmap::transformer::transform(
-                                shared_ptr<nervana::lmap::params> pptr,
-                                shared_ptr<nervana::lmap::decoded> media) {
-    shared_ptr<lmap::decoded> rc = make_shared<lmap::decoded>();
+shared_ptr<nervana::label_map::decoded> nervana::label_map::transformer::transform(
+                                shared_ptr<nervana::label_map::params> pptr,
+                                shared_ptr<nervana::label_map::decoded> media) {
+    shared_ptr<label_map::decoded> rc = make_shared<label_map::decoded>();
     return rc;
 }
 
-void nervana::lmap::loader::load(char* data, shared_ptr<nervana::lmap::decoded> media) {
+void nervana::label_map::loader::load(char* data, shared_ptr<nervana::label_map::decoded> media) {
 
 }
 

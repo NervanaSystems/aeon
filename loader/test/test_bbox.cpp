@@ -29,7 +29,7 @@
 #include "etl_image.hpp"
 #include "etl_label.hpp"
 #include "etl_bbox.hpp"
-#include "etl_lmap.hpp"
+#include "etl_label_map.hpp"
 #include "json.hpp"
 
 extern gen_image image_dataset;

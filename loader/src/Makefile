@@ -28,7 +28,7 @@ SRCS            := \
     etl_image.cpp \
     etl_image_var.cpp \
     etl_bbox.cpp \
-    etl_lmap.cpp \
+    etl_label_map.cpp \
     etl_localization.cpp \
     etl_video.cpp \
     util.cpp \

@@ -34,8 +34,8 @@ nervana::localization::config::config(nlohmann::json js) :
     size_t dev_y_labels_mask_size = total_anchors() * 2 * sizeof(float);        // 69192
     size_t dev_y_bbtargets_size = total_anchors() * 4 * sizeof(float);          // 138384
     size_t dev_y_bbtargets_mask_size = total_anchors() * 4 * sizeof(float);     // 138384
-    size_t size = dev_y_labels_size + dev_y_labels_mask_size + dev_y_bbtargets_size + dev_y_bbtargets_mask_size;
-    shape.push_back(size);
+    output_buffer_size = dev_y_labels_size + dev_y_labels_mask_size + dev_y_bbtargets_size + dev_y_bbtargets_mask_size;
+    shape.push_back(output_buffer_size);
     otype = nervana::output_type(type_string);
 
     validate();
@@ -280,8 +280,6 @@ tuple<float,cv::Size> localization::transformer::calculate_scale_shape(cv::Size 
 
 localization::loader::loader(const localization::config& cfg)
 {
-    _channel_major = cfg.channel_major;
-    _load_size     = 1;
     total_anchors = cfg.total_anchors();
 //    _load_count    = cfg.width * cfg.height * cfg.channels * cfg.num_crops();
 }
