@@ -35,15 +35,16 @@ TEST(blocked_file_loader, loadBlock) {
     buffer_in_array bp(vector<uint32_t>{0, 0});
 
     bfl.loadBlock(bp, 0, block_size);
-    cout << "******* " << bp[0]->getItemCount() << endl;
 
     // the object_data and target_data should be full of repeating
     // uints.  the uints in target_data will be 1 bigger than the uints
     // in object_data.  Make sure that this is the case here.
-    for(uint i = 0; i < object_size / sizeof(uint) * block_size; ++i) {
-        uint object_data = *(uint*)bp[0]->getItem(i).data();
-        uint target_data = *(uint*)bp[1]->getItem(i).data();
-        ASSERT_EQ(object_data + 1, target_data);
+    for(int block=0; block<block_size; block++) {
+        uint* object_data = (uint*)bp[0]->getItem(block).data();
+        uint* target_data = (uint*)bp[1]->getItem(block).data();
+        for(int offset=0; offset<object_size / sizeof(uint); offset++) {
+            ASSERT_EQ(object_data[offset] + 1, target_data[offset]);
+        }
     }
 }
 

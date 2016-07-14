@@ -58,7 +58,6 @@ string load_string(BatchLoaderCPIOCache cache) {
 
     cache.loadBlock(bp, 1, 1);
 
-    int len;
     vector<char>& x = bp[0]->getItem(0);
     string str(x.data(), x.size());
     return str;

@@ -35,7 +35,6 @@ public:
     virtual ~buffer_in();
 
     void read(std::istream& is, int size);
-//    void read(const char* src, int size);
     void reset();
     std::vector<char>& getItem(int index);
     void addItem(const std::vector<char>&);

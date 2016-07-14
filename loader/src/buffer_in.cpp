@@ -66,10 +66,3 @@ void buffer_in::read(istream& is, int size) {
     is.read(b.data(), size);
     buffers.push_back(b);
 }
-
-//void buffer_in::read(const char* src, int size) {
-//    // read `size` bytes out of `src` and push into buffer
-////    resizeIfNeeded(size);
-////    memcpy((void *) _cur, (void *) src, size);
-////    pushItem(size);
-//}
