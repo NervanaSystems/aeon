@@ -39,8 +39,6 @@ pyDecodeThreadPool::pyDecodeThreadPool(int count,
 {
     _batchSize = _pbe->_batchSize;
     _itemsPerThread = (_batchSize - 1) / _count + 1;
-    _datumLen = _pbe->_configs[0]->get_size_bytes();
-    _targetLen = _pbe->_configs[1]->get_size_bytes();
 
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
@@ -54,8 +52,6 @@ void pyDecodeThreadPool::add_provider(std::shared_ptr<nervana::provider_interfac
 
     _startInds.push_back(0);
     _endInds.push_back(0);
-    _dataOffsets.push_back(0);
-    _targetOffsets.push_back(0);
 }
 
 pyDecodeThreadPool::~pyDecodeThreadPool()
@@ -107,8 +103,7 @@ void pyDecodeThreadPool::run(int id)
     }
 
     _endInds[id] = _startInds[id] + itemCount;
-    _dataOffsets[id] = _startInds[id] * _datumLen;
-    _targetOffsets[id] = _startInds[id] * _targetLen;
+
     while (_done == false) {
         work(id);
     }

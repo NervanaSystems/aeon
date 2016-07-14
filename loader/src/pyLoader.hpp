@@ -83,11 +83,6 @@ private:
     std::vector<int>            _startSignaled;
     std::vector<int>            _startInds;
     std::vector<int>            _endInds;
-    std::vector<int>            _dataOffsets;
-    std::vector<int>            _targetOffsets;
-
-    int                         _datumLen;
-    int                         _targetLen;
 };
 
 class pyLoaderConfig : public nervana::json_config_parser {
