@@ -38,13 +38,13 @@ TEST(provider,image) {
 
     CPIOFileReader reader;
     EXPECT_EQ(reader.open(files[0]), true);
-    buffer_in data_p(0);
-    buffer_in target_p(0);
+    buffer_in_array bp({0,0});
+    buffer_in& data_p = *bp[0];
+    buffer_in& target_p = *bp[1];
     for(int i=0; i<reader.itemCount()/2; i++) {
         reader.read(data_p);
         reader.read(target_p);
     }
-    buffer_in_array bp{&data_p, &target_p};
     EXPECT_GT(data_p.getItemCount(),batch_size);
     for (int i=0; i<batch_size; i++ ) {
         media->provide(i, bp, outBuf);
