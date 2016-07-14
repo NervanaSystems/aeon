@@ -6,10 +6,9 @@ using namespace nervana;
 using namespace std;
 
 pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
-                                   std::shared_ptr<nervana::interface::config> dtm_config,
-                                   std::shared_ptr<nervana::interface::config> tgt_config,
+                                   vector<shared_ptr<nervana::interface::config>> configs,
                                    int batchSize)
-: _dtm_config(dtm_config), _tgt_config(tgt_config), _batchSize(batchSize), _pBackend(pBackend)
+: _configs(configs), _batchSize(batchSize), _pBackend(pBackend)
 {
     if (_pBackend == NULL) {
         throw std::runtime_error("Python Backend object does not exist");
@@ -29,10 +28,11 @@ pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
     PyOS_setsig(SIGINT, sighandler);
     PyGILState_Release(gstate);
 
-    _host_dlist = initPyList();
-    _host_tlist = initPyList();
-    _dev_dlist  = initPyList();
-    _dev_tlist  = initPyList();
+    for (uint i = 0; i < _configs.size(); ++i)
+    {
+        _host_lists.push_back(initPyList());
+        _dev_lists.push_back(initPyList());
+    }
 }
 
 PyObject* pyBackendWrapper::initPyList(int length)
@@ -51,10 +51,13 @@ pyBackendWrapper::~pyBackendWrapper()
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    Py_XDECREF(_host_dlist);
-    Py_XDECREF(_host_tlist);
-    Py_XDECREF(_dev_dlist);
-    Py_XDECREF(_dev_tlist);
+    for (auto h: _host_lists) {
+        Py_XDECREF(h);
+    }
+    for (auto d: _dev_lists) {
+        Py_XDECREF(d);
+    }
+
     Py_XDECREF(_f_consume);
     Py_XDECREF(_pBackend);
     PyGILState_Release(gstate);
@@ -83,27 +86,22 @@ void pyBackendWrapper::call_backend_transfer(buffer_out_array &outBuf, int bufId
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    wrap_buffer_pool(_host_dlist, outBuf[0], bufIdx, _dtm_config);
-    wrap_buffer_pool(_host_tlist, outBuf[1], bufIdx, _tgt_config);
 
-    PyObject* dArgs  = Py_BuildValue("iOO", bufIdx, _host_dlist, _dev_dlist);
+    assert(_host_lists.size() == _configs.size());
+    assert(_dev_lists.size() == _host_lists.size());
 
-    if (dArgs == NULL) {
-        throw std::runtime_error("Unable to build args");
+    for (uint i=0; i<_host_lists.size(); i++) {
+        wrap_buffer_pool(_host_lists[i], outBuf[i], bufIdx, _configs[i]);
+        PyObject* pArgs  = Py_BuildValue("iOO", bufIdx, _host_lists[i], _dev_lists[i]);
+
+        if (pArgs == NULL) {
+            throw std::runtime_error("Unable to build args");
+        }
+        PyObject* pRes = PyObject_CallObject(_f_consume, pArgs);
+        Py_XDECREF(pArgs);
+        Py_XDECREF(pRes);
     }
-    PyObject* dRes = PyObject_CallObject(_f_consume, dArgs);
-    Py_XDECREF(dArgs);
-    Py_XDECREF(dRes);
-
-    PyObject* tArgs  = Py_BuildValue("iOO", bufIdx, _host_tlist, _dev_tlist);
-    PyObject* tRes = PyObject_CallObject(_f_consume, tArgs);
-    if (!tRes) {
-        PyErr_Print();
-    }
-    Py_XDECREF(tArgs);
-    Py_XDECREF(tRes);
     PyGILState_Release(gstate);
-
 }
 
 PyObject* pyBackendWrapper::get_dtm_tgt_pair(int bufIdx)
@@ -111,15 +109,26 @@ PyObject* pyBackendWrapper::get_dtm_tgt_pair(int bufIdx)
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    PyObject *dItem = PyList_GetItem(_dev_dlist, bufIdx);
-    PyObject *hItem = PyList_GetItem(_dev_tlist, bufIdx);
-    if (dItem == NULL || hItem == NULL) {
-        throw std::runtime_error("Bad Index");
+
+    int provider_count = _dev_lists.size();
+    PyObject *result = PyTuple_New(provider_count);
+    if (result == NULL)
+    {
+        throw std::runtime_error("couldn't make tuple");
     }
 
-    PyObject* dtm_tgt_pair = Py_BuildValue("OO", dItem, hItem);
+    for (int pidx = 0; pidx < provider_count; pidx++) {
+        PyObject* value = PyList_GetItem(_dev_lists[pidx], bufIdx);
+
+        if (value == NULL) {
+            throw std::runtime_error("Bad Index");
+        }
+        Py_INCREF(value);
+        PyTuple_SetItem(result, pidx, value);
+    }
+
     PyGILState_Release(gstate);
-    return dtm_tgt_pair;
+    return result;
 }
 
 void pyBackendWrapper::wrap_buffer_pool(PyObject *list, buffer_out *buf, int bufIdx,

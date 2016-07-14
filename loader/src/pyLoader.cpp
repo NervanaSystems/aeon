@@ -39,8 +39,8 @@ pyDecodeThreadPool::pyDecodeThreadPool(int count,
 {
     _batchSize = _pbe->_batchSize;
     _itemsPerThread = (_batchSize - 1) / _count + 1;
-    _datumLen = _pbe->_dtm_config->get_size_bytes();
-    _targetLen = _pbe->_tgt_config->get_size_bytes();
+    _datumLen = _pbe->_configs[0]->get_size_bytes();
+    _targetLen = _pbe->_configs[1]->get_size_bytes();
 
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
@@ -282,53 +282,39 @@ int PyLoader::start()
         int itemsPerThread = (_batchSize - 1) /  ncores + 1;
         int nthreads       = (_batchSize - 1) / itemsPerThread + 1;
         nthreads           = std::min(nthreads, _batchSize);
+        std::vector<std::string> config_tags{"data_config", "target_config"};
 
-        if(_lcfg_json["data_config"] == nullptr) {
-            throw std::runtime_error("missing PyLoader config parameter data_config");
-        }
-        if(_lcfg_json["target_config"] == nullptr) {
-            throw std::runtime_error("missing PyLoader config parameter target_config");
-        }
-        try {
-            _dtm_config = nervana::config_factory::create(_lcfg_json["data_config"]);
-        } catch (const std::invalid_argument e) {
-            stringstream ss;
-            ss << "exception while parsing data_config: ";
-            ss << e.what();
-            throw std::runtime_error(ss.str());
-        }
-        try {
-            _tgt_config = nervana::config_factory::create(_lcfg_json["target_config"]);
-        } catch (const std::invalid_argument e) {
-            stringstream ss;
-            ss << "exception while parsing target_config: ";
-            ss << e.what();
-            throw std::runtime_error(ss.str());
+        for (auto& pcfg_tag : config_tags) {
+            if (_lcfg_json[pcfg_tag] == nullptr) {
+                throw std::runtime_error("missing PyLoader config parameter " + pcfg_tag);
+            }
+            try {
+                _provider_configs.push_back(
+                                    nervana::config_factory::create(_lcfg_json[pcfg_tag]));
+            } catch (const std::invalid_argument e) {
+                throw std::runtime_error( "exception while parsing " + pcfg_tag + " " + string(e.what()));
+            }
         }
 
         // Bind the python backend here
-        _pyBackend = make_shared<pyBackendWrapper>(_pbe, _dtm_config, _tgt_config, _batchSize);
+        _pyBackend = make_shared<pyBackendWrapper>(_pbe, _provider_configs, _batchSize);
 
         // Start the read buffers off with a reasonable size. They will get resized as needed.
-        vector<uint32_t> read_sizes_initial {_dtm_config->get_size_bytes() * _batchSize / 8,
-                                            _tgt_config->get_size_bytes() * _batchSize};
-        printf("Made it here %s %d\n", __FILE__, __LINE__);
-        for (auto a : read_sizes_initial)
-            cout << a <<  " " << endl;
+        vector<uint32_t> read_sizes_initial {_provider_configs[0]->get_size_bytes() * _batchSize / 8,
+                                             _provider_configs[1]->get_size_bytes() * _batchSize};
+
         _readBufs = make_shared<buffer_pool_in>(read_sizes_initial);
-        printf("Made it here %s %d\n", __FILE__, __LINE__);
 
         _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
-        printf("Made it here %s %d\n", __FILE__, __LINE__);
 
-        _decodeBufs = make_shared<buffer_pool_out>((size_t)_dtm_config->get_size_bytes(),
-                                              (size_t)_tgt_config->get_size_bytes(),
-                                              (size_t)_batchSize,
-                                              _pyBackend->use_pinned_memory());
+        _decodeBufs = make_shared<buffer_pool_out>(
+                                            (size_t)_provider_configs[0]->get_size_bytes(),
+                                            (size_t)_provider_configs[1]->get_size_bytes(),
+                                            (size_t)_batchSize,
+                                            _pyBackend->use_pinned_memory());
 
         _decodeThreads = unique_ptr<pyDecodeThreadPool>(
                             new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs, _pyBackend));
-        printf("Made it here %s %d\n", __FILE__, __LINE__);
 
         // Now add providers
         for (int i=0; i<nthreads; i++) {
@@ -344,7 +330,6 @@ int PyLoader::start()
 
             _decodeThreads->add_provider(factory);
         }
-        printf("Made it here %s %d\n", __FILE__, __LINE__);
 
     } catch(std::bad_alloc&) {
         return -1;
@@ -409,9 +394,10 @@ PyObject* PyLoader::pyConfigShape(std::shared_ptr<nervana::interface::config> co
 }
 
 PyObject* PyLoader::shapes() {
-    PyObject* ret = PyTuple_New(2);
-    PyTuple_SetItem(ret, 0, pyConfigShape(_dtm_config));
-    PyTuple_SetItem(ret, 1, pyConfigShape(_tgt_config));
+    PyObject* ret = PyTuple_New(_provider_configs.size());
+    for (uint i=0; i < _provider_configs.size(); ++i) {
+        PyTuple_SetItem(ret, i, pyConfigShape(_provider_configs[i]));
+    }
     return ret;
 }
 

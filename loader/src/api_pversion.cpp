@@ -25,10 +25,8 @@ extern void* start(const char* loaderConfigString,
                    ) {
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
-        printf("Made it here %s %d\n", __FILE__, __LINE__);
 
         PyLoader* loader = new PyLoader(loaderConfigString, pbackend);
-        printf("Made it here %s %d\n", __FILE__, __LINE__);
 
         int result = loader->start();
         if (result != 0) {

@@ -163,7 +163,6 @@ public:
     int start();
     void stop();
     int reset();
-    // void next();
     PyObject* shapes();
     PyObject* next(int bufIdx);
 
@@ -187,12 +186,11 @@ private:
     std::unique_ptr<pyDecodeThreadPool> _decodeThreads = nullptr;
     std::shared_ptr<BatchIterator>      _batch_iterator = nullptr;
     std::shared_ptr<Manifest>           _manifest = nullptr;
+    std::shared_ptr<pyLoaderConfig>     _lcfg = nullptr;
 
-    std::shared_ptr<nervana::interface::config> _dtm_config;
-    std::shared_ptr<nervana::interface::config> _tgt_config;
+    std::vector<std::shared_ptr<nervana::interface::config>> _provider_configs;
 
     int                                 _batchSize;
-    std::shared_ptr<pyLoaderConfig>     _lcfg = nullptr;
     nlohmann::json                      _lcfg_json;
     PyObject*                           _pbe;
     std::shared_ptr<pyBackendWrapper>   _pyBackend;
