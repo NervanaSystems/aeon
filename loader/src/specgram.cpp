@@ -70,7 +70,11 @@ void specgram::wav_to_specgram(shared_ptr<RawMedia> wav,
     cv::split(compx, planes);
     cv::magnitude(planes[0], planes[1], planes[0]);
 
+    // NOTE: at this point we are returning the specgram representation in
+    // (time_steps, freq_steps) shape order.
+
     specgram = planes[0];
+
     return;
 }
 

@@ -32,6 +32,7 @@ SRCS            := \
     etl_localization.cpp \
     etl_video.cpp \
     util.cpp \
+    wav_data.cpp \
     manifest.cpp \
     provider_factory.cpp \
     batch_file_loader.cpp \
