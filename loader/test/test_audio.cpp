@@ -45,7 +45,7 @@ TEST(DISABLED_etl, audio_extract) {
 }
 
 TEST(etl, wav_compare) {
-    auto sg = make_shared<sinewave_generator>(400, 500);
+    sinewave_generator sg{400, 500};
     wav_data wav(sg, 2, 16000, false);
 
     uint32_t wav_bufsize = wav_data::HEADER_SIZE + wav.nbytes();
@@ -78,7 +78,7 @@ TEST(etl, specgram) {
     // This test generates a 1kHz signal and ensures that the spectrogram creates the correct
     // line image
     float signal_freq = 1000;
-    auto sg = make_shared<sinewave_generator>(signal_freq);
+    sinewave_generator sg{signal_freq};
     int wav_len_sec = 4, sample_freq = 16000;
     bool stereo = false;
     wav_data wav(sg, wav_len_sec, sample_freq, stereo);
@@ -134,8 +134,9 @@ TEST(etl, audio_transform) {
         }
     )"_json;
 
-    float sine_freq = 400, sine_ampl = 500;
-    auto sg = make_shared<sinewave_generator>(sine_freq, sine_ampl);
+    float sine_freq = 400;
+    int16_t sine_ampl = 500;
+    sinewave_generator sg{sine_freq, sine_ampl};
     int wav_len_sec = 4, sample_freq = 44100;
     bool stereo = false;
 

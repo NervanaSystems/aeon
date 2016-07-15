@@ -74,7 +74,7 @@ namespace nervana {
 
     class wav_data {
     public:
-        wav_data(std::shared_ptr<signal_generator> sigptr,
+        wav_data(const signal_generator& sigptr,
                  int duration_ss, int rate, bool is_stereo) :
         _sample_rate(rate)
         {
@@ -82,7 +82,7 @@ namespace nervana {
             for (int n = 0; n < data.rows; ++n) {
                 float t = 2.0 * CV_PI * n / static_cast<float>(rate);
                 for (int c = 0; c < data.cols; ++c) {
-                    data.at<int16_t>(n, c) = (*sigptr)(t);
+                    data.at<int16_t>(n, c) = sigptr(t);
                 }
             }
         }
