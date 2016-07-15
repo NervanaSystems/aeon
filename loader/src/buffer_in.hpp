@@ -26,7 +26,7 @@
 
 class buffer_in {
 public:
-    explicit buffer_in(int size);
+    explicit buffer_in(size_t size);
     virtual ~buffer_in();
 
     void read(std::istream& is, int size);
@@ -51,7 +51,7 @@ private:
 // the datums or the targets.  Each buffer_in* should have the same length.
 class buffer_in_array {
 public:
-    buffer_in_array(const std::vector<uint32_t>& initial_sizes)
+    buffer_in_array(const std::vector<size_t>& initial_sizes)
     {
         for (auto sz : initial_sizes) {
             data.push_back(new buffer_in(sz));

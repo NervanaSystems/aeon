@@ -22,13 +22,7 @@ class nervana::interface::config : public nervana::json_config_parser {
 public:
     config() {}
 
-    const std::vector<uint32_t>& get_shape() { return shape; }
-    const output_type& get_type() const { return otype; }
-    uint32_t get_size_bytes()
-    {
-        return static_cast<uint32_t>(otype.size)
-                 * std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint32_t>());
-    }
+    nervana::shape_type get_shape_type() const { return shape_type(shape, otype); }
 
     void base_validate() {
         if(shape.size() == 0)      throw std::invalid_argument("config missing output shape");

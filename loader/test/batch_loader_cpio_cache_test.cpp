@@ -54,7 +54,7 @@ string load_string(BatchLoaderCPIOCache cache) {
 
     // buffer_in* dataBuffer = new buffer_in(0);
     // buffer_in* targetBuffer = new buffer_in(0);
-    buffer_in_array bp(vector<uint32_t>{0, 0});
+    buffer_in_array bp(vector<size_t>{0, 0});
 
     cache.loadBlock(bp, 1, 1);
 

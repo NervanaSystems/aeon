@@ -52,7 +52,20 @@ private:
 // in cases with (object, target) pairs, buffer_out is length 2
 class buffer_out_array {
 public:
-    buffer_out_array(std::initializer_list<buffer_out*> list) : data(list) {}
+    buffer_out_array(const std::vector<size_t>& write_sizes,
+                     size_t batch_size, bool pinned = false)
+    {
+        for (auto sz : write_sizes) {
+            data.push_back(new buffer_out(sz, batch_size, pinned));
+        }
+    }
+
+    ~buffer_out_array()
+    {
+        for (auto buf : data) {
+            delete buf;
+        }
+    }
 
     buffer_out* operator[](size_t i) { return data[i]; }
     size_t size() const { return data.size(); }

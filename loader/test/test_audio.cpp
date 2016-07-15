@@ -44,6 +44,8 @@ TEST(DISABLED_etl, audio_extract) {
     ASSERT_EQ(decoded_audio->getSize(), 88704);
 }
 
+// This test is for comparing that a generated wav_data structure can write its data out to
+// 16-bit PCM that can be read via extractor (just via buffer rather than actually touching disk)
 TEST(etl, wav_compare) {
     sinewave_generator sg{400, 500};
     wav_data wav(sg, 2, 16000, false);
@@ -156,9 +158,9 @@ TEST(etl, audio_transform) {
     auto audioParams = factory.make_params(decoded_audio);
 
     _imageTransformer.transform(audioParams, decoded_audio);
-
-    ASSERT_EQ(config.get_shape()[0], 1);
-    ASSERT_EQ(config.get_shape()[1], 40);
+    auto shape = config.get_shape_type();
+    ASSERT_EQ(shape.get_shape()[0], 1);
+    ASSERT_EQ(shape.get_shape()[1], 40);
     ASSERT_NE(decoded_audio->get_freq_data().rows, 0);
     delete[] databuf;
 }

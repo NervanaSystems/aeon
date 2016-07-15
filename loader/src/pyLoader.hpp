@@ -171,8 +171,6 @@ private:
     PyLoader();
     PyLoader(const PyLoader&);
 
-    PyObject* pyConfigShape(std::shared_ptr<nervana::interface::config> config);
-
     bool                                _first = true;
 
     std::shared_ptr<buffer_pool_in>     _readBufs = nullptr;

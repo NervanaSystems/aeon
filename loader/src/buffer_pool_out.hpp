@@ -26,7 +26,7 @@
 // buffer_pool_out acts as our double buffer to hold data before copying to device
 class buffer_pool_out : public buffer_pool {
 public:
-    buffer_pool_out(size_t dataSize, size_t targetSize, size_t batchSize, bool pinned = false);
+    buffer_pool_out(const std::vector<size_t>& writeSizes, size_t batchSize, bool pinned = false);
     virtual ~buffer_pool_out();
     buffer_out_array& getForWrite();
     buffer_out_array& getForRead();
@@ -47,9 +47,9 @@ protected:
     void advance(int& index);
 
 protected:
-    int                         _count;
-    int                         _used;
-    std::vector<buffer_out_array> _bufs;
+    static constexpr int        _count = 2;
+    int                         _used = 0;
+    std::vector<std::shared_ptr<buffer_out_array>> _bufs;
     std::mutex                  _mutex;
     std::condition_variable     _nonFull;
     std::condition_variable     _nonEmpty;

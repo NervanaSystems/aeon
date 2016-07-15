@@ -30,80 +30,87 @@
 
 using namespace std;
 
-buffer_pool_out::buffer_pool_out(size_t dataSize, size_t targetSize, size_t batchSize, bool pinned)
-: buffer_pool(), _count(2), _used(0) {
+buffer_pool_out::buffer_pool_out(const std::vector<size_t>& writeSizes,
+                                 size_t batchSize, bool pinned)
+: buffer_pool()
+{
     for (int i = 0; i < _count; i++) {
-        buffer_out* dataBuffer   = new buffer_out(dataSize, batchSize, pinned);
-        buffer_out* targetBuffer = new buffer_out(targetSize, batchSize, pinned);
-        _bufs.push_back(buffer_out_array{dataBuffer, targetBuffer});
+        _bufs.push_back(make_shared<buffer_out_array>(writeSizes, batchSize, pinned));
     }
+
 }
 
-buffer_pool_out::~buffer_pool_out() {
-    for(auto i = _bufs.begin(); i != _bufs.end(); ++i) {
-        delete (*i)[0];
-        delete (*i)[1];
-    }
+buffer_pool_out::~buffer_pool_out()
+{}
+
+buffer_out_array& buffer_pool_out::getForWrite()
+{
+    return *_bufs[_writePos];
 }
 
-buffer_out_array& buffer_pool_out::getForWrite() {
-//    _bufs[_writePos][0]->reset();
-//    _bufs[_writePos][1]->reset();
-    return _bufs[_writePos];
+buffer_out_array& buffer_pool_out::getForRead()
+{
+    return *_bufs[_readPos];
 }
 
-buffer_out_array& buffer_pool_out::getForRead() {
-    reraiseException();
-    return _bufs[_readPos];
-}
-
-buffer_out_array& buffer_pool_out::getPair(int bufIdx) {
+buffer_out_array& buffer_pool_out::getPair(int bufIdx)
+{
     assert(bufIdx >= 0 && bufIdx < _count);
-    return _bufs[bufIdx];
+    return *_bufs[bufIdx];
 }
 
-void buffer_pool_out::advanceReadPos() {
+void buffer_pool_out::advanceReadPos()
+{
     _used--;
     advance(_readPos);
 }
 
-void buffer_pool_out::advanceWritePos() {
+void buffer_pool_out::advanceWritePos()
+{
     _used++;
     advance(_writePos);
     clearException();
 }
 
-bool buffer_pool_out::empty() {
+bool buffer_pool_out::empty()
+{
     assert(_used >= 0);
     return (_used == 0);
 }
 
-bool buffer_pool_out::full() {
+bool buffer_pool_out::full()
+{
     assert(_used <= _count);
     return (_used == _count);
 }
 
-std::mutex& buffer_pool_out::getMutex() {
+std::mutex& buffer_pool_out::getMutex()
+{
     return _mutex;
 }
 
-void buffer_pool_out::waitForNonEmpty(std::unique_lock<std::mutex>& lock) {
+void buffer_pool_out::waitForNonEmpty(std::unique_lock<std::mutex>& lock)
+{
     _nonEmpty.wait(lock);
 }
 
-void buffer_pool_out::waitForNonFull(std::unique_lock<std::mutex>& lock) {
+void buffer_pool_out::waitForNonFull(std::unique_lock<std::mutex>& lock)
+{
     _nonFull.wait(lock);
 }
 
-void buffer_pool_out::signalNonEmpty() {
+void buffer_pool_out::signalNonEmpty()
+{
     _nonEmpty.notify_all();
 }
 
-void buffer_pool_out::signalNonFull() {
+void buffer_pool_out::signalNonFull()
+{
     _nonFull.notify_all();
 }
 
-void buffer_pool_out::advance(int& index) {
+void buffer_pool_out::advance(int& index)
+{
     // increment index and reset to 0 when index hits `_count`
     if (++index == _count) {
         index = 0;

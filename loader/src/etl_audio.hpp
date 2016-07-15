@@ -207,7 +207,7 @@ namespace nervana {
 
         std::shared_ptr<RawMedia> get_time_data() { return time_rep; }
         cv::Mat& get_freq_data() { return freq_rep; }
-
+        uint32_t valid_frames {0};
     protected:
         std::shared_ptr<RawMedia> time_rep {nullptr};
         cv::Mat                   freq_rep {};
@@ -233,8 +233,6 @@ namespace nervana {
 
 
 
-
-
     class audio::transformer : public interface::transformer<audio::decoded, audio::params> {
     public:
 
@@ -245,11 +243,24 @@ namespace nervana {
                                         std::shared_ptr<audio::decoded>) override;
     private:
         transformer() = delete;
-        void resize(cv::Mat& img, float fx);
+        void scale_time(cv::Mat& img, float scale_fraction);
 
         std::shared_ptr<NoiseClips>    _noisemaker {nullptr};
         const audio::config&           _cfg;
         cv::Mat                        _window     {};
         cv::Mat                        _filterbank {};
     };
+
+
+
+    class audio::loader : public interface::loader<audio::decoded> {
+    public:
+        loader(const audio::config& cfg) : _cfg{cfg} {}
+        ~loader() {}
+        virtual void load(char*, std::shared_ptr<audio::decoded>) override;
+
+    private:
+        const audio::config& _cfg;
+    };
+
 }

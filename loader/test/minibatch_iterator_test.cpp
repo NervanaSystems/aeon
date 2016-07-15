@@ -40,7 +40,7 @@ TEST(minibatch_iterator, simple) {
     // buffer_in* dataBuffer = new buffer_in(0);
     // buffer_in* targetBuffer = new buffer_in(0);
     // buffer_in_array bp{dataBuffer, targetBuffer};
-    buffer_in_array bp(vector<uint32_t>{0, 0});
+    buffer_in_array bp(vector<size_t>{0, 0});
 
 
     // read 6 minibatches

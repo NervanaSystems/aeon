@@ -21,3 +21,14 @@ export ROOT_DIR=/scratch/alex/places2mini
 mkdir -p $ROOT_DIR/labels
 for i in $(seq 0 99); do echo $i > $ROOT_DIR/labels/$i.txt; done
 cat $ROOT_DIR/development_kit/data/train.txt | awk -vRR=$ROOT_DIR '{print RR"/images/"$1","RR"/labels/"$2".txt"}' > $ROOT_DIR/train.csv
+
+
+###################################
+# Notes for ingesting audio
+export INDIR=/scratch/alex/audio/VCTK-Corpus/wav48
+export OUTDIR=/scratch/alex/audio/VCTK-Corpus/ingested
+
+# Create the output directories for the downsampled files
+find $INDIR -mindepth 1 -type d | sed "s|wav48|ingested|" | xargs mkdir -p
+
+find $INDIR -name "*.wav" | awk -vI=$INDIR -vO=$OUTDIR'{printf("sox -r 16k -b 16 -c 1 -e signed %s %s\n",  $1, out)}'

@@ -20,6 +20,9 @@ namespace nervana {
             label_transformer(label_config),
             label_loader(label_config)
         {
+            num_inputs = 2;
+            oshapes.push_back(image_config.get_shape_type());
+            oshapes.push_back(label_config.get_shape_type());
         }
 
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override {
@@ -55,8 +58,6 @@ namespace nervana {
         label::extractor            label_extractor;
         label::transformer          label_transformer;
         label::loader               label_loader;
-
-        std::default_random_engine  _r_eng;
     };
 
     class localization_decoder : public provider_interface {
@@ -72,6 +73,9 @@ namespace nervana {
             localization_transformer(localization_config),
             localization_loader(localization_config)
         {
+            num_inputs = 2;
+            oshapes.push_back(image_config.get_shape_type());
+            oshapes.push_back(localization_config.get_shape_type());
         }
 
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override {
@@ -125,6 +129,9 @@ namespace nervana {
             bbox_transformer(bbox_config),
             bbox_loader(bbox_config)
         {
+            num_inputs = 2;
+            oshapes.push_back(image_config.get_shape_type());
+            oshapes.push_back(bbox_config.get_shape_type());
         }
 
         virtual ~bbox_provider() {}

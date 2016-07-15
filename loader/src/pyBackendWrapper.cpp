@@ -6,9 +6,9 @@ using namespace nervana;
 using namespace std;
 
 pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
-                                   vector<shared_ptr<nervana::interface::config>> configs,
+                                   const vector<nervana::shape_type>& oshape_types,
                                    int batchSize)
-: _configs(configs), _batchSize(batchSize), _pBackend(pBackend)
+: _oshape_types(oshape_types), _batchSize(batchSize), _pBackend(pBackend)
 {
     if (_pBackend == NULL) {
         throw std::runtime_error("Python Backend object does not exist");
@@ -28,11 +28,28 @@ pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
     PyOS_setsig(SIGINT, sighandler);
     PyGILState_Release(gstate);
 
-    for (uint i = 0; i < _configs.size(); ++i)
+    for (uint i = 0; i < _oshape_types.size(); ++i)
     {
         _host_lists.push_back(initPyList());
         _dev_lists.push_back(initPyList());
     }
+}
+
+PyObject* pyBackendWrapper::get_shapes()
+{
+    uint num_shapes = _oshape_types.size();
+    PyObject* all_shapes = PyTuple_New(num_shapes);
+    for (uint idx = 0; idx < num_shapes; ++idx)
+    {
+        auto shapevec = _oshape_types[idx].get_shape();
+        PyObject* this_shape = PyTuple_New(shapevec.size());
+        for (uint dim = 0; dim < shapevec.size(); dim++)
+        {
+            PyTuple_SetItem(this_shape, dim, Py_BuildValue("i", shapevec[dim]));
+        }
+        PyTuple_SetItem(all_shapes, idx, this_shape);
+    }
+    return all_shapes;
 }
 
 PyObject* pyBackendWrapper::initPyList(int length)
@@ -87,11 +104,11 @@ void pyBackendWrapper::call_backend_transfer(buffer_out_array &outBuf, int bufId
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    assert(_host_lists.size() == _configs.size());
+    assert(_host_lists.size() == _oshape_types.size());
     assert(_dev_lists.size() == _host_lists.size());
 
     for (uint i=0; i<_host_lists.size(); i++) {
-        wrap_buffer_pool(_host_lists[i], outBuf[i], bufIdx, _configs[i]);
+        wrap_buffer_pool(_host_lists[i], outBuf[i], bufIdx, _oshape_types[i]);
         PyObject* pArgs  = Py_BuildValue("iOO", bufIdx, _host_lists[i], _dev_lists[i]);
 
         if (pArgs == NULL) {
@@ -107,7 +124,7 @@ void pyBackendWrapper::call_backend_transfer(buffer_out_array &outBuf, int bufId
     PyGILState_Release(gstate);
 }
 
-PyObject* pyBackendWrapper::get_dtm_tgt_pair(int bufIdx)
+PyObject* pyBackendWrapper::get_host_tuple(int bufIdx)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -135,7 +152,7 @@ PyObject* pyBackendWrapper::get_dtm_tgt_pair(int bufIdx)
 }
 
 void pyBackendWrapper::wrap_buffer_pool(PyObject *list, buffer_out *buf, int bufIdx,
-                                        const shared_ptr<nervana::interface::config> &cfg)
+                                        const nervana::shape_type& st)
 {
     PyObject *hdItem = PyList_GetItem(list, bufIdx);
 
@@ -147,13 +164,13 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, buffer_out *buf, int buf
     }
 
     // For now, we will collapse everything into two dimensions
-    int all_dims = std::accumulate(cfg->get_shape().begin(),
-                                   cfg->get_shape().end(),
+    int all_dims = std::accumulate(st.get_shape().begin(),
+                                   st.get_shape().end(),
                                    1, std::multiplies<uint32_t>());
     int nd = 2;
     npy_intp dims[2] = {_batchSize, all_dims};
 
-    PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, cfg->get_type().np_type, buf->data());
+    PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, st.get_otype().np_type, buf->data());
 
     if (p_array == NULL) {
         throw std::runtime_error("Unable to wrap buffer pool in as python object");

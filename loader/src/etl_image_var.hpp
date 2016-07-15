@@ -33,7 +33,7 @@ namespace nervana {
         params() {}
     };
 
-    class image_var::config : public json_config_parser {
+    class image_var::config : public interface::config {
     public:
         int min_size;
         int max_size;
@@ -56,6 +56,7 @@ namespace nervana {
 
             auto dist_params = js["distribution"];
             parse_dist(flip, "flip", dist_params);
+
             validate();
         }
 

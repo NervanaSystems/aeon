@@ -27,7 +27,7 @@ TEST(shuffled_batch_iterator, sequential_batch_loader) {
     // buffer_in* dataBuffer = new buffer_in(0);
     // buffer_in* targetBuffer = new buffer_in(0);
     // buffer_in_array bp{dataBuffer, targetBuffer};
-    buffer_in_array bp(vector<uint32_t>{0, 0});
+    buffer_in_array bp(vector<size_t>{0, 0});
 
     // ensure that loading successive blocks from SequentialBatchLoader
     // result in sorted strings
@@ -47,7 +47,7 @@ TEST(shuffled_batch_iterator, shuffled_block) {
     // buffer_in* dataBuffer = new buffer_in(0);
     // buffer_in* targetBuffer = new buffer_in(0);
     // buffer_in_array bp{dataBuffer, targetBuffer};
-    buffer_in_array bp(vector<uint32_t>{0, 0});
+    buffer_in_array bp(vector<size_t>{0, 0});
 
 
     // ensure that loading successive blocks from SequentialBatchLoader

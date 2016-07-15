@@ -10,36 +10,25 @@
 
 class pyBackendWrapper {
 public:
-    pyBackendWrapper(PyObject*,
-                     std::vector<std::shared_ptr<nervana::interface::config>>,
-                     int);
+    pyBackendWrapper(PyObject*, const std::vector<nervana::shape_type>&, int);
+    ~pyBackendWrapper();
 
     bool use_pinned_memory();
     void call_backend_transfer(buffer_out_array &outBuf, int bufIdx);
-    PyObject* get_dtm_tgt_pair(int bufIdx);
-
-    ~pyBackendWrapper();
-    std::vector<std::shared_ptr<nervana::interface::config>> _configs;
-    // std::shared_ptr<nervana::interface::config>   _dtm_config;
-    // std::shared_ptr<nervana::interface::config>   _tgt_config;
+    PyObject* get_host_tuple(int bufIdx);
+    PyObject* get_shapes();
+    const std::vector<nervana::shape_type>& _oshape_types;
     int                         _batchSize;
-
 private:
     pyBackendWrapper() = delete;
     PyObject* initPyList(int length=2);
     void wrap_buffer_pool(PyObject *list, buffer_out *buf, int bufIdx,
-                          const std::shared_ptr<nervana::interface::config>& config);
+                          const nervana::shape_type& shape_type);
 
     PyObject*                   _pBackend;
 
     std::vector<PyObject*>      _host_lists;
     std::vector<PyObject*>      _dev_lists;
-
-    // PyObject*                   _host_dlist;
-    // PyObject*                   _host_tlist;
-
-    // PyObject*                   _dev_dlist;
-    // PyObject*                   _dev_tlist;
 
     PyObject*                   _f_consume = NULL;
 };

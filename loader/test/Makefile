@@ -27,6 +27,7 @@ SRCS := \
     test_image_var.cpp \
     test_label_map.cpp \
     test_pixel_mask.cpp \
+    test_char_map.cpp \
     test_provider.cpp \
     test_util.cpp \
     test_video.cpp \

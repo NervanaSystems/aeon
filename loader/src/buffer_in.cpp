@@ -26,7 +26,7 @@
 
 using namespace std;
 
-buffer_in::buffer_in(int size) {
+buffer_in::buffer_in(size_t size) {
 }
 
 buffer_in::~buffer_in() {

@@ -32,6 +32,7 @@ SRCS            := \
     etl_image_var.cpp \
     etl_bbox.cpp \
     etl_label_map.cpp \
+    etl_char_map.cpp \
     etl_localization.cpp \
     etl_video.cpp \
     util.cpp \

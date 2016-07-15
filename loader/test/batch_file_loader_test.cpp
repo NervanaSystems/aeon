@@ -32,7 +32,7 @@ TEST(blocked_file_loader, loadBlock) {
 
     BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(4, {object_size, target_size}), true), 100);
 
-    buffer_in_array bp(vector<uint32_t>{0, 0});
+    buffer_in_array bp(vector<size_t>{0, 0});
 
     bfl.loadBlock(bp, 0, block_size);
 
@@ -58,7 +58,7 @@ TEST(blocked_file_loader, subsetPercent) {
 
     BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(10, {object_size, target_size}), true), 50);
 
-    buffer_in_array bp(vector<uint32_t>{0, 0});
+    buffer_in_array bp(vector<size_t>{0, 0});
 
 
     bfl.loadBlock(bp, 0, block_size);
@@ -81,7 +81,7 @@ TEST(blocked_file_loader, exception) {
         ), 100
     );
 
-    buffer_in_array bp(vector<uint32_t>{0, 0});
+    buffer_in_array bp(vector<size_t>{0, 0});
 
     // loadBlock doesn't actually raise the exception
     bfl.loadBlock(bp, 0, 1);
