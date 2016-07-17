@@ -174,7 +174,6 @@ namespace nervana {
             image_transformer(image_config),
             image_loader(image_config),
             image_factory(image_config),
-            target_extractor(image_config),
             target_transformer(image_config)
         {
         }
@@ -193,11 +192,13 @@ namespace nervana {
             // Process image data
             auto image_dec = image_extractor.extract(datum_in.data(), datum_in.size());
             auto image_params = image_factory.make_params(image_dec);
-            image_loader.load(datum_out, image_transformer.transform(image_params, image_dec));
+            auto image_transformed = image_transformer.transform(image_params, image_dec);
+            image_loader.load(datum_out, image_transformed);
 
             // Process target data
-            auto target_dec = target_extractor.extract(target_in.data(), target_in.size());
-            image_loader.load(target_out, target_transformer.transform(image_params, target_dec));
+            auto target_dec = image_extractor.extract(target_in.data(), target_in.size());
+            auto target_transformed = target_transformer.transform(image_params, target_dec);
+            image_loader.load(target_out, target_transformed);
         }
 
     private:
@@ -207,9 +208,6 @@ namespace nervana {
         image::loader               image_loader;
         image::param_factory        image_factory;
 
-        pixel_mask::extractor       target_extractor;
         pixel_mask::transformer     target_transformer;
-
-        std::default_random_engine  _r_eng;
     };
 }
