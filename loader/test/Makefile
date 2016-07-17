@@ -44,6 +44,7 @@ SRCS := \
     minibatch_iterator_test.cpp \
     test_localization.cpp \
     test_audio.cpp \
+    test_logging.cpp \
 
 TOBJS            = $(subst .cpp,.o,$(SRCS))
 OBJS             = $(subst .c,.o,$(TOBJS))
