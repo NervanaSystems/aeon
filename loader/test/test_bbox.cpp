@@ -58,8 +58,8 @@ static nlohmann::json create_metadata( const vector<nlohmann::json>& boxes, int 
     return j;
 }
 
-static bbox::config make_bbox_config() {
-    nlohmann::json obj = {{"height",100},{"width",150},{"max_bbox_count",100}};
+static bbox::config make_bbox_config(int max_boxes) {
+    nlohmann::json obj = {{"height",100},{"width",150},{"max_bbox_count",max_boxes}};
     obj["labels"] = label_list;
     return bbox::config(obj);
 }
@@ -76,13 +76,12 @@ cv::Mat draw( int width, int height, const vector<bbox::box>& blist, cv::Rect cr
     return image;
 }
 
-TEST(etl, bbox_extractor) {
+TEST(bbox, extractor) {
     {
         string data = read_file(CURDIR"/test_data/000001.json");
-        auto cfg = make_bbox_config();
+        auto cfg = make_bbox_config(100);
         bbox::extractor extractor{cfg};
-        auto mdata = extractor.extract(&data[0],data.size());
-        auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
+        auto decoded = extractor.extract(&data[0],data.size());
         ASSERT_NE(nullptr,decoded);
         auto boxes = decoded->boxes();
         ASSERT_EQ(2,boxes.size());
@@ -105,10 +104,9 @@ TEST(etl, bbox_extractor) {
     }
     {
         string data = read_file(CURDIR"/test_data/006637.json");
-        auto cfg = make_bbox_config();
+        auto cfg = make_bbox_config(100);
         bbox::extractor extractor{cfg};
-        auto mdata = extractor.extract(&data[0],data.size());
-        auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
+        auto decoded = extractor.extract(&data[0],data.size());
         ASSERT_NE(nullptr,decoded);
         auto boxes = decoded->boxes();
         ASSERT_EQ(6,boxes.size());
@@ -124,17 +122,16 @@ TEST(etl, bbox_extractor) {
     }
     {
         string data = read_file(CURDIR"/test_data/009952.json");
-        auto cfg = make_bbox_config();
+        auto cfg = make_bbox_config(100);
         bbox::extractor extractor{cfg};
-        auto mdata = extractor.extract(&data[0],data.size());
-        auto decoded = static_pointer_cast<nervana::bbox::decoded>(mdata);
+        auto decoded = extractor.extract(&data[0],data.size());
         ASSERT_NE(nullptr,decoded);
         auto boxes = decoded->boxes();
         ASSERT_EQ(1,boxes.size());
     }
 }
 
-TEST(etl, bbox) {
+TEST(bbox, bbox) {
     // Create test metadata
     cv::Rect r0 = cv::Rect( 0, 0, 10, 15 );
     cv::Rect r1 = cv::Rect( 10, 10, 12, 13 );
@@ -143,15 +140,12 @@ TEST(etl, bbox) {
                   create_box( r1, "flea" ),
                   create_box( r2, "tick")};
     auto j = create_metadata(list,256,256);
-    // cout << std::setw(4) << j << endl;
 
     string buffer = j.dump();
-    // cout << "boxes\n" << buffer << endl;
 
-    auto cfg = make_bbox_config();
+    auto cfg = make_bbox_config(100);
     bbox::extractor extractor{cfg};
-    auto data = extractor.extract( &buffer[0], buffer.size() );
-    shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
+    auto decoded = extractor.extract( &buffer[0], buffer.size() );
     vector<bbox::box> boxes = decoded->boxes();
     ASSERT_EQ(3,boxes.size());
     EXPECT_EQ(r0,boxes[0].rect());
@@ -166,7 +160,7 @@ TEST(etl, bbox) {
     auto tx = transform.transform( iparam, decoded );
 }
 
-TEST(etl, bbox_crop) {
+TEST(bbox, crop) {
     // Create test metadata
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
     cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
@@ -190,10 +184,9 @@ TEST(etl, bbox_crop) {
 
     string buffer = j.dump();
 
-    auto cfg = make_bbox_config();
+    auto cfg = make_bbox_config(100);
     bbox::extractor extractor{cfg};
-    auto data = extractor.extract( &buffer[0], buffer.size() );
-    shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
+    auto decoded = extractor.extract( &buffer[0], buffer.size() );
     vector<bbox::box> boxes = decoded->boxes();
 
     ASSERT_EQ(8,boxes.size());
@@ -207,8 +200,7 @@ TEST(etl, bbox_crop) {
 
 
     iparam->output_size = cv::Size(256, 256);
-    auto tx = transform.transform( iparam, decoded );
-    shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
+    auto tx_decoded = transform.transform( iparam, decoded );
     vector<bbox::box> tx_boxes = tx_decoded->boxes();
     ASSERT_EQ(6,tx_boxes.size());
     EXPECT_EQ(cv::Rect(35,35,5,5),tx_boxes[0].rect());
@@ -219,7 +211,7 @@ TEST(etl, bbox_crop) {
     EXPECT_EQ(cv::Rect(35,35,40,40),tx_boxes[5].rect());
 }
 
-TEST(etl, bbox_rescale) {
+TEST(bbox, rescale) {
     // Create test metadata
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
     cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
@@ -242,10 +234,9 @@ TEST(etl, bbox_rescale) {
 
     string buffer = j.dump();
 
-    auto cfg = make_bbox_config();
+    auto cfg = make_bbox_config(100);
     bbox::extractor extractor{cfg};
-    auto data = extractor.extract( &buffer[0], buffer.size() );
-    shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
+    auto decoded = extractor.extract( &buffer[0], buffer.size() );
     vector<bbox::box> boxes = decoded->boxes();
 
     ASSERT_EQ(8,boxes.size());
@@ -254,8 +245,7 @@ TEST(etl, bbox_rescale) {
     shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
     iparam->output_size = cv::Size(512, 1024);
-    auto tx = transform.transform( iparam, decoded );
-    shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
+    auto tx_decoded = transform.transform( iparam, decoded );
     vector<bbox::box> tx_boxes = tx_decoded->boxes();
     ASSERT_EQ(6,tx_boxes.size());
     EXPECT_EQ(cv::Rect(35*2,35*4,5*2,5*4),tx_boxes[0].rect());
@@ -266,7 +256,7 @@ TEST(etl, bbox_rescale) {
     EXPECT_EQ(cv::Rect(35*2,35*4,40*2,40*4),tx_boxes[5].rect());
 }
 
-TEST(etl, bbox_angle) {
+TEST(bbox, angle) {
     // Create test metadata
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );
     auto list = {create_box( r0, "puma" )};
@@ -274,10 +264,9 @@ TEST(etl, bbox_angle) {
 
     string buffer = j.dump();
 
-    auto cfg = make_bbox_config();
+    auto cfg = make_bbox_config(100);
     bbox::extractor extractor{cfg};
-    auto data = extractor.extract( &buffer[0], buffer.size() );
-    shared_ptr<bbox::decoded> decoded = static_pointer_cast<bbox::decoded>(data);
+    auto decoded = extractor.extract( &buffer[0], buffer.size() );
     vector<bbox::box> boxes = decoded->boxes();
 
     ASSERT_EQ(1,boxes.size());
@@ -285,7 +274,101 @@ TEST(etl, bbox_angle) {
     bbox::transformer transform(cfg);
     shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->angle = 5;
-    auto tx = transform.transform( iparam, decoded );
-    shared_ptr<bbox::decoded> tx_decoded = static_pointer_cast<bbox::decoded>(tx);
+    auto tx_decoded = transform.transform( iparam, decoded );
     EXPECT_EQ(nullptr,tx_decoded.get());
+}
+
+void test_values(const cv::Rect& r, float* outbuf) {
+    EXPECT_EQ(r.x,         (int)outbuf[0]);
+    EXPECT_EQ(r.y,         (int)outbuf[1]);
+    EXPECT_EQ(r.x+r.width ,(int)outbuf[2]);
+    EXPECT_EQ(r.y+r.height,(int)outbuf[3]);
+}
+
+TEST(bbox, load_pad) {
+    cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
+    cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
+    cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]
+    cv::Rect r3 = cv::Rect( 70, 30, 10, 10 );   // result[2]
+    cv::Rect r4 = cv::Rect( 90, 35, 10, 10 );   // outside
+    cv::Rect r5 = cv::Rect( 30, 70, 10, 10 );   // result[3]
+    cv::Rect r6 = cv::Rect( 70, 70, 10, 10 );   // result[4]
+    cv::Rect r7 = cv::Rect( 30, 30, 80, 80 );   // result[5]
+    auto list = {create_box( r0, "lion" ),
+                  create_box( r1, "tiger" ),
+                  create_box( r2, "eel" ),
+                  create_box( r3, "eel" ),
+                  create_box( r4, "eel" ),
+                  create_box( r5, "eel" ),
+                  create_box( r6, "eel" ),
+                  create_box( r7, "eel" )};
+    auto j = create_metadata(list,256,256);
+    string buffer = j.dump();
+
+    size_t bbox_max = 10;
+    auto cfg = make_bbox_config(bbox_max);
+
+    bbox::extractor extractor{cfg};
+    bbox::loader loader{cfg};
+
+    vector<float> outbuf(bbox_max*4+1);     // xmin, ymin, xmax, ymax
+    outbuf[outbuf.size()-1] = -1;           // one past the end of the buffer
+    auto extracted = extractor.extract(buffer.data(), buffer.size());
+    loader.load((char*)outbuf.data(), extracted);
+
+    test_values(r0, &outbuf[0]);
+    test_values(r1, &outbuf[4]);
+    test_values(r2, &outbuf[8]);
+    test_values(r3, &outbuf[12]);
+    test_values(r4, &outbuf[16]);
+    test_values(r5, &outbuf[20]);
+    test_values(r6, &outbuf[24]);
+    test_values(r7, &outbuf[28]);
+
+    for(int i=32; i<40; i++) {
+        EXPECT_EQ(0,(int)outbuf[i]);
+    }
+
+    EXPECT_EQ(-1,(int)outbuf[outbuf.size()-1]);
+}
+
+TEST(bbox, load_full) {
+    cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
+    cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
+    cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]
+    cv::Rect r3 = cv::Rect( 70, 30, 10, 10 );   // result[2]
+    cv::Rect r4 = cv::Rect( 90, 35, 10, 10 );   // outside
+    cv::Rect r5 = cv::Rect( 30, 70, 10, 10 );   // result[3]
+    cv::Rect r6 = cv::Rect( 70, 70, 10, 10 );   // result[4]
+    cv::Rect r7 = cv::Rect( 30, 30, 80, 80 );   // result[5]
+    auto list = {create_box( r0, "lion" ),
+                  create_box( r1, "tiger" ),
+                  create_box( r2, "eel" ),
+                  create_box( r3, "eel" ),
+                  create_box( r4, "eel" ),
+                  create_box( r5, "eel" ),
+                  create_box( r6, "eel" ),
+                  create_box( r7, "eel" )};
+    auto j = create_metadata(list,256,256);
+    string buffer = j.dump();
+
+    size_t bbox_max = 6;
+    auto cfg = make_bbox_config(bbox_max);
+
+    bbox::extractor extractor{cfg};
+    bbox::loader loader{cfg};
+
+    vector<float> outbuf(bbox_max*4+1);     // xmin, ymin, xmax, ymax
+    outbuf[outbuf.size()-1] = -1;           // one past the end of the buffer
+    auto extracted = extractor.extract(buffer.data(), buffer.size());
+    loader.load((char*)outbuf.data(), extracted);
+
+    test_values(r0, &outbuf[0]);
+    test_values(r1, &outbuf[4]);
+    test_values(r2, &outbuf[8]);
+    test_values(r3, &outbuf[12]);
+    test_values(r4, &outbuf[16]);
+    test_values(r5, &outbuf[20]);
+
+    EXPECT_EQ(-1,(int)outbuf[outbuf.size()-1]);
 }
