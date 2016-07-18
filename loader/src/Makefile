@@ -47,7 +47,6 @@ SRCS            := \
     box.cpp \
     buffer_pool_in.cpp \
     buffer_pool_out.cpp \
-    event.cpp \
 
 
 OBJS             = $(subst .cpp,.o,$(SRCS))
