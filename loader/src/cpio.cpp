@@ -192,22 +192,6 @@ int CPIOReader::itemCount() {
     return _header._itemCount;
 }
 
-int CPIOReader::totalDataSize() {
-    return _header._totalDataSize;
-}
-
-int CPIOReader::totalTargetsSize() {
-    return _header._totalTargetsSize;
-}
-
-int CPIOReader::maxDatumSize() {
-    return _header._maxDatumSize;
-}
-
-int CPIOReader::maxTargetSize() {
-    return _header._maxTargetSize;
-}
-
 CPIOFileReader::CPIOFileReader() {
 }
 
@@ -293,7 +277,7 @@ void CPIOFileWriter::close() {
     }
 }
 
-void CPIOFileWriter::writeItem(char* datum, char* target,
+void CPIOFileWriter::writeItem(const char* datum, const char* target,
                uint datumSize, uint targetSize) {
     char fileName[16];
     // Write the datum.
@@ -316,50 +300,8 @@ void CPIOFileWriter::writeItem(char* datum, char* target,
     _header._itemCount++;
 }
 
-void CPIOFileWriter::writeItem(ByteVect &datum, ByteVect &target) {
+void CPIOFileWriter::writeItem(const vector<char> &datum, const vector<char> &target) {
     uint    datumSize = datum.size();
     uint    targetSize = target.size();
     writeItem(&datum[0], &target[0], datumSize, targetSize);
-}
-
-
-
-
-
-
-
-
-
-// Some utilities that would be used by batch writers
-int readFileLines(const string &filn, LineList &ll) {
-    std::ifstream ifs(filn);
-    if (ifs) {
-        for (string line; std::getline( ifs, line ); /**/ )
-           ll.push_back( line );
-        ifs.close();
-        return 0;
-    } else {
-        std::cerr << "Unable to open " << filn << std::endl;
-        return -1;
-    }
-}
-
-int readFileBytes(const string &filn, ByteVect &b) {
-/* Reads in the binary file as a sequence of bytes, resizing
- * the provided byte vector to fit
-*/
-    std::ifstream ifs(filn, std::istream::binary);
-    if (ifs) {
-        ifs.seekg (0, ifs.end);
-        int length = ifs.tellg();
-        ifs.seekg (0, ifs.beg);
-
-        b.resize(length);
-        ifs.read(&b[0], length);
-        ifs.close();
-        return 0;
-    } else {
-        std::cerr << "Unable to open " << filn << std::endl;
-        return -1;
-    }
 }

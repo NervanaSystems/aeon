@@ -44,9 +44,7 @@ public:
     decoded();
     virtual ~decoded() {}
 
-    MediaType get_type() override { return MediaType::TARGET; }
-
-    std::vector<int> get_data() const { return _labels; }
+    const std::vector<int>& get_data() const { return _labels; }
 
 private:
     std::vector<int>    _labels;

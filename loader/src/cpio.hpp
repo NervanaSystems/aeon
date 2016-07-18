@@ -34,15 +34,6 @@
 #define MAGIC_STRING    "MACR"
 #define CPIO_FOOTER     "TRAILER!!!"
 
-
-typedef std::vector<std::string> LineList;
-typedef std::vector<char> ByteVect;
-typedef std::pair<std::shared_ptr<ByteVect>,std::shared_ptr<ByteVect>> DataPair;
-
-static_assert(sizeof(int) == 4, "int is not 4 bytes");
-static_assert(sizeof(uint) == 4, "uint is not 4 bytes");
-static_assert(sizeof(short) == 2, "short is not 2 bytes");
-
 /*
 
 The data is stored as a cpio archive and may be unpacked using the
@@ -66,26 +57,26 @@ Each of these items comprises of a cpio header record followed by data.
 class RecordHeader {
 public:
     RecordHeader();
-    void loadDoubleShort(uint* dst, ushort src[2]);
+    void loadDoubleShort(uint32_t* dst, uint16_t src[2]);
 
-    void saveDoubleShort(ushort* dst, uint src);
+    void saveDoubleShort(uint16_t* dst, uint32_t src);
 
-    void read(std::istream& ifs, uint* fileSize);
+    void read(std::istream& ifs, uint32_t* fileSize);
 
-    void write(std::ostream& ofs, uint fileSize, const char* fileName);
+    void write(std::ostream& ofs, uint32_t fileSize, const char* fileName);
 
 public:
-    ushort                      _magic;
-    ushort                      _dev;
-    ushort                      _ino;
-    ushort                      _mode;
-    ushort                      _uid;
-    ushort                      _gid;
-    ushort                      _nlink;
-    ushort                      _rdev;
-    ushort                      _mtime[2];
-    ushort                      _namesize;
-    ushort                      _filesize[2];
+    uint16_t                    _magic;
+    uint16_t                    _dev;
+    uint16_t                    _ino;
+    uint16_t                    _mode;
+    uint16_t                    _uid;
+    uint16_t                    _gid;
+    uint16_t                    _nlink;
+    uint16_t                    _rdev;
+    uint16_t                    _mtime[2];
+    uint16_t                    _namesize;
+    uint16_t                    _filesize[2];
 };
 
 class CPIOHeader {
@@ -99,15 +90,15 @@ public:
 private:
 #pragma pack(1)
     char                        _magic[4];
-    uint                        _formatVersion;
-    uint                        _writerVersion;
+    uint32_t                    _formatVersion;
+    uint32_t                    _writerVersion;
     char                        _dataType[8];
-    uint                        _itemCount;
-    uint                        _maxDatumSize;
-    uint                        _maxTargetSize;
-    uint                        _totalDataSize;
-    uint                        _totalTargetsSize;
-    char                        _unused[24];
+    uint32_t                    _itemCount;
+    uint32_t                    _maxDatumSize;
+    uint32_t                    _maxTargetSize;
+    uint32_t                    _totalDataSize;
+    uint32_t                    _totalTargetsSize;
+    uint8_t                     _unused[24];
 #pragma pack()
 };
 
@@ -118,7 +109,7 @@ public:
     void read(std::istream& ifs);
 
 private:
-    uint                        _unused[4];
+    uint32_t                    _unused[4];
 };
 
 class CPIOReader {
@@ -129,14 +120,6 @@ public:
     void read(buffer_in& dest);
 
     int itemCount() ;
-
-    int totalDataSize() ;
-
-    int totalTargetsSize();
-
-    int maxDatumSize() ;
-
-    int maxTargetSize();
 
 protected:
     void readHeader();
@@ -172,10 +155,10 @@ public:
     void open(const std::string& fileName, const std::string& dataType = "");
     void close();
 
-    void writeItem(char* datum, char* target,
+    void writeItem(const char* datum, const char* target,
                    uint datumSize, uint targetSize);
 
-    void writeItem(ByteVect &datum, ByteVect &target);
+    void writeItem(const std::vector<char> &datum, const std::vector<char> &target);
 
 private:
     std::ofstream               _ofs;
@@ -186,8 +169,3 @@ private:
     std::string                 _fileName;
     std::string                 _tempName;
 };
-extern int readFileLines(const std::string &filn, LineList &ll);
-extern int readFileBytes(const std::string &filn, ByteVect &b);
-
-
-

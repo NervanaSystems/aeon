@@ -203,7 +203,6 @@ namespace nervana {
     class audio::decoded : public decoded_media {
     public:
         decoded(std::shared_ptr<RawMedia> raw) : time_rep(raw) {}
-        MediaType get_type() override { return MediaType::AUDIO; }
         size_t getSize() { return time_rep->numSamples(); }
 
         std::shared_ptr<RawMedia> get_time_data() { return time_rep; }

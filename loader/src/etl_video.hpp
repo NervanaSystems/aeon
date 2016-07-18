@@ -78,7 +78,6 @@ namespace nervana {
     class video::decoded : public image::decoded {
     public:
         virtual ~decoded(){}
-        virtual MediaType get_type() override { return MediaType::VIDEO; }
     };
 
     class video::extractor : public interface::extractor<video::decoded> {

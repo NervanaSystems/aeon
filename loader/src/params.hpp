@@ -12,10 +12,6 @@ namespace nervana {
     class json_config_parser;
 }
 
-typedef std::shared_ptr<nervana::decoded_media>        media_ptr;
-typedef std::shared_ptr<nervana::json_config_parser>   config_ptr;
-typedef std::shared_ptr<nervana::params>               param_ptr;
-
 enum class MediaType {
     UNKNOWN = -1,
     IMAGE = 0,
@@ -30,7 +26,6 @@ enum class MediaType {
 class nervana::decoded_media {
 public:
     virtual ~decoded_media() {}
-    virtual MediaType get_type() = 0;
 };
 
 /*  ABSTRACT INTERFACES */

@@ -44,6 +44,7 @@ private:
     bool filenameHoldsInvalidCache(const std::string& filename, const std::string& hash, const std::string& version);
     void removeDirectory(const std::string& dir);
     void makeDirectory(const std::string& dir);
+    static int rm(const char *path, const struct stat *s, int flag, struct FTW *f);
 
     std::string _cacheDir;
     std::shared_ptr<BatchLoader> _loader;

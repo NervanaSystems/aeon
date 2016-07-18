@@ -52,8 +52,6 @@ public:
     bool extract(const char* data, int size, const std::unordered_map<std::string,int>& label_map);
     virtual ~decoded() {}
 
-    MediaType get_type() override { return MediaType::TARGET; }
-
     const std::vector<box>& boxes() const { return _boxes; }
     int width() const { return _width; }
     int height() const { return _height; }

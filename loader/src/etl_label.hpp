@@ -37,8 +37,7 @@ namespace nervana {
             _index{index} {}
         virtual ~decoded() override {}
 
-        inline MediaType get_type() override { return MediaType::TARGET; }
-        inline int get_index() { return _index; }
+        int get_index() { return _index; }
 
     private:
         decoded() = delete;

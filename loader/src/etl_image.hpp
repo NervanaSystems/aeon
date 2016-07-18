@@ -159,7 +159,6 @@ namespace nervana {
         }
         virtual ~decoded() override {}
 
-        virtual MediaType get_type() override { return MediaType::IMAGE; }
         cv::Mat& get_image(int index) { return _images[index]; }
         cv::Size2i get_image_size() const {return _images[0].size(); }
         int get_image_channels() const { return _images[0].channels(); }

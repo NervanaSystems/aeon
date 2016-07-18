@@ -132,7 +132,7 @@ bool BatchLoaderCPIOCache::filenameHoldsInvalidCache(const string& filename,
     return false;
 }
 
-int rm(const char *path, const struct stat *s, int flag, struct FTW *f) {
+int BatchLoaderCPIOCache::rm(const char *path, const struct stat *s, int flag, struct FTW *f) {
     // see http://stackoverflow.com/a/1149837/2093984
     // Call unlink or rmdir on the path, as appropriate.
     int (*rm_func)(const char *);
