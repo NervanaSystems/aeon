@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <deque>
 
 namespace nervana {
 
@@ -64,9 +65,14 @@ class logger {
     friend class log_helper;
 public:
     static void set_log_path(const std::string& path);
+    static void start();
+    static void stop();
 private:
     static void log_item(const std::string& s);
+    static void process_event(const std::string& s);
+    static void thread_entry(void* param);
     static std::string log_path;
+    static std::deque<std::string>  queue;
 };
 
 #define ERR  nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_ERROR,   get_file_name(__FILE__), __LINE__, __PRETTY_FUNCTION__).stream()
