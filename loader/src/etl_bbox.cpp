@@ -135,11 +135,29 @@ shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(shared_ptr<image
     return rc;
 }
 
-nervana::bbox::loader::loader(const bbox::config&) {
+nervana::bbox::loader::loader(const bbox::config& cfg) :
+    max_bbox{cfg.max_bbox}
+{
 
 }
 
-void nervana::bbox::loader::load(char* data, shared_ptr<bbox::decoded> boxes) {
-
+void nervana::bbox::loader::load(char* buffer, shared_ptr<bbox::decoded> boxes) {
+    float* data = (float*)buffer;
+    size_t output_count = min(max_bbox, boxes->boxes().size());
+    int i=0;
+    for(; i<output_count; i++) {
+        data[0] = boxes->boxes()[i].xmin;
+        data[1] = boxes->boxes()[i].ymin;
+        data[2] = boxes->boxes()[i].xmax;
+        data[3] = boxes->boxes()[i].ymax;
+        data += 4;
+    }
+    for(; i<max_bbox; i++) {
+        data[0] = 0;
+        data[1] = 0;
+        data[2] = 0;
+        data[3] = 0;
+        data += 4;
+    }
 }
 
