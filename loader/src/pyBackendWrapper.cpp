@@ -152,12 +152,6 @@ void pyBackendWrapper::wrap_buffer_pool(PyObject *list, buffer_out *buf, int buf
 
     PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, cfg->get_type().np_type, buf->data());
 
-    // Note: Reverting this back to default strides, it appears correct (AP)
-    // update strides.  not sure why this isn't happening correctly
-    // inside PyArray_SimpleNewFromData
-    // npy_intp* strides = PyArray_STRIDES((PyArrayObject*)p_array);
-    // strides[1] *= dims[0];
-
     if (p_array == NULL) {
         throw std::runtime_error("Unable to wrap buffer pool in as python object");
     }
