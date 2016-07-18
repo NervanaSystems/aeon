@@ -98,6 +98,9 @@ void pyBackendWrapper::call_backend_transfer(buffer_out_array &outBuf, int bufId
             throw std::runtime_error("Unable to build args");
         }
         PyObject* pRes = PyObject_CallObject(_f_consume, pArgs);
+        if (!pRes) {
+            PyErr_Print();
+        }
         Py_XDECREF(pArgs);
         Py_XDECREF(pRes);
     }
