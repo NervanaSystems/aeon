@@ -287,6 +287,7 @@ void CPIOFileWriter::close() {
         if (result != 0) {
             stringstream ss;
             ss << "Could not create " << _fileName;
+            ss << ": " << strerror(result);
             throw std::runtime_error(ss.str());
         }
     }
