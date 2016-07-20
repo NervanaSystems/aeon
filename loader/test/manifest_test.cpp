@@ -27,7 +27,7 @@
 using namespace std;
 
 TEST(manifest, constructor) {
-    string tmpname = tmp_manifest_file(0, 0, 0);
+    string tmpname = tmp_manifest_file(0, {0, 0});
     Manifest manifest(tmpname, false);
 }
 
@@ -38,20 +38,20 @@ TEST(manifest, no_file) {
 }
 
 TEST(manifest, hash_eq) {
-    string tmpname = tmp_manifest_file(0, 0, 0);
+    string tmpname = tmp_manifest_file(0, {0, 0});
     Manifest manifest1(tmpname, false);
     Manifest manifest2(tmpname, false);
     ASSERT_EQ(manifest1.hash(), manifest2.hash());
 }
 
 TEST(manifest, hash_ne) {
-    Manifest manifest1(tmp_manifest_file(0, 0, 0), false);
-    Manifest manifest2(tmp_manifest_file(0, 0, 0), false);
+    Manifest manifest1(tmp_manifest_file(0, {0, 0}), false);
+    Manifest manifest2(tmp_manifest_file(0, {0, 0}), false);
     ASSERT_NE(manifest1.hash(), manifest2.hash());
 }
 
 TEST(manifest, version_eq) {
-    string tmpname = tmp_manifest_file(0, 0, 0);
+    string tmpname = tmp_manifest_file(0, {0, 0});
     Manifest manifest1(tmpname, false);
     Manifest manifest2(tmpname, false);
     ASSERT_EQ(manifest1.version(), manifest2.version());
@@ -73,7 +73,7 @@ void touch(const std::string& filename)
 }
 
 TEST(manifest, version_ne) {
-    string tmpname = tmp_manifest_file(0, 0, 0);
+    string tmpname = tmp_manifest_file(0, {0, 0});
     Manifest manifest(tmpname, false);
     string v1 = manifest.version();
 
@@ -86,21 +86,21 @@ TEST(manifest, version_ne) {
 }
 
 TEST(manifest, parse_file_doesnt_exist) {
-    string tmpname = tmp_manifest_file(0, 0, 0);
+    string tmpname = tmp_manifest_file(0, {0, 0});
     Manifest manifest(tmpname, false);
 
     ASSERT_EQ(manifest.getSize(), 0);
 }
 
 TEST(manifest, parse_file) {
-    string tmpname = tmp_manifest_file(2, 0, 0);
+    string tmpname = tmp_manifest_file(2, {0, 0});
 
     Manifest manifest(tmpname, false);
     ASSERT_EQ(manifest.getSize(), 2);
 }
 
 TEST(manifest, no_shuffle) {
-    string filename = tmp_manifest_file(20, 4, 4);
+    string filename = tmp_manifest_file(20, {4, 4});
     Manifest manifest1(filename, false);
     Manifest manifest2(filename, false);
 
@@ -111,7 +111,7 @@ TEST(manifest, no_shuffle) {
 }
 
 TEST(manifest, shuffle) {
-    string filename = tmp_manifest_file(20, 4, 4);
+    string filename = tmp_manifest_file(20, {4, 4});
     Manifest manifest1(filename, false);
     Manifest manifest2(filename, true);
 

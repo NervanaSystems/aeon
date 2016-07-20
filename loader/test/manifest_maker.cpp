@@ -65,14 +65,20 @@ string tmp_file_repeating(uint size, uint x) {
     return tmpname;
 }
 
-string tmp_manifest_file(uint num_records, uint object_size, uint target_size) {
+string tmp_manifest_file(uint num_records, vector<uint> sizes) {
     string tmpname = tmp_filename();
     ofstream f(tmpname);
 
     for(uint i = 0; i < num_records; ++i) {
         // stick a unique uint into each file
-        f << tmp_file_repeating(object_size, i*2) << ",";
-        f << tmp_file_repeating(target_size, i*2+1) << endl;
+        for(uint j = 0; j < sizes.size(); ++j) {
+            if(j != 0) {
+                f << ",";
+            }
+
+            f << tmp_file_repeating(sizes[j], (i * sizes.size()) + j);
+        }
+        f << endl;
     }
 
     f.close();

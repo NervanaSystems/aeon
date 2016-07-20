@@ -20,7 +20,7 @@
 using namespace std;
 
 TEST(blocked_file_loader, constructor) {
-    string tmpname = tmp_manifest_file(0, 0, 0);
+    string tmpname = tmp_manifest_file(0, {0, 0});
     BatchFileLoader bfl(make_shared<Manifest>(tmpname, true), 100);
 }
 
@@ -30,7 +30,7 @@ TEST(blocked_file_loader, loadBlock) {
     uint object_size = 16;
     uint target_size = 16;
 
-    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(4, object_size, target_size), true), 100);
+    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(4, {object_size, target_size}), true), 100);
 
     buffer_in_array bp(vector<uint32_t>{0, 0});
 
@@ -56,7 +56,7 @@ TEST(blocked_file_loader, subsetPercent) {
     uint object_size = 16;
     uint target_size = 16;
 
-    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(10, object_size, target_size), true), 50);
+    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(10, {object_size, target_size}), true), 50);
 
     buffer_in_array bp(vector<uint32_t>{0, 0});
 
