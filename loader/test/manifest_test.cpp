@@ -124,3 +124,16 @@ TEST(manifest, shuffle) {
     }
     ASSERT_EQ(different, true);
 }
+
+TEST(manifest, too_many_files) {
+    string filename = tmp_manifest_file(20, {4, 4, 4});
+    try {
+        Manifest manifest1(filename, false);
+        FAIL();
+    } catch (std::exception& e) {
+        ASSERT_EQ(
+            string("manifest file has a line with more than 2 files "),
+            string(e.what()).substr(0, 48)
+        );
+    }
+}

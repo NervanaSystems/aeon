@@ -95,6 +95,16 @@ void Manifest::parseStream(istream& is) {
             filename_list.push_back(field);
         }
 
+        if(filename_list.size() != 2) {
+            stringstream ss;
+            ss << "manifest file has a line with more than 2 files (";
+            ss << filename_list.size() << "): ";
+            for (uint i = 0; i < filename_list.size() - 1; i++) {
+                ss << filename_list[i] << ", ";
+            }
+            ss << filename_list[filename_list.size() - 1];
+            throw std::runtime_error(ss.str());
+        }
 
         _filename_lists.push_back(filename_list);
     }
