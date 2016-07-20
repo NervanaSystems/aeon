@@ -228,13 +228,17 @@ class DataLoader(object):
         self._compute_nbatches()
 
         for _ in range(self._nbatches):
-            yield self.next()
-
-            # keep track of where we are in the dataset so we know which epoch
-            # we are on
-            self._item_index += self.minibatch_size
-            if self._item_index > self.item_count:
-                self._item_index -= self.item_count
+            try:
+                yield self.next()
+            except Exception as e:
+                # TODO: log this somewhere instead of printing
+                print e
+            finally:
+                # keep track of where we are in the dataset so we know which epoch
+                # we are on
+                self._item_index += self.minibatch_size
+                if self._item_index > self.item_count:
+                    self._item_index -= self.item_count
 
     # UNUSED
     # these are reference for how we could switch to explicit epoch handling
