@@ -376,8 +376,7 @@ int PyLoader::reset()
 {
     stop();
     _batch_iterator->reset();
-    start();
-    return 0;
+    return start();
 }
 
 PyObject* PyLoader::next(int bufIdx)
