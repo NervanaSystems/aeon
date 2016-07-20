@@ -25,7 +25,11 @@ void MinibatchIterator::reset() {
 }
 
 void MinibatchIterator::transferBufferItem(buffer_in* dest, buffer_in* src) {
-    dest->addItem(src->getItem(_i));
+    try {
+        dest->addItem(src->getItem(_i));
+    } catch (std::exception& e) {
+        dest->addException(std::current_exception());
+    }
 }
 
 void MinibatchIterator::popItemFromMacrobatch(buffer_in_array& dest) {
