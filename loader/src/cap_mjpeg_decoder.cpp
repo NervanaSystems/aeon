@@ -39,12 +39,31 @@
 //
 //M*/
 
-#include "precomp.hpp"
+//#include "precomp.hpp"
 #include <deque>
 #include <stdint.h>
+#include <cinttypes>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include "opencv2/imgproc/imgproc_c.h"
+#include <opencv2/highgui/highgui_c.h>
 
-namespace cv
+using namespace std;
+using namespace cv;
+
+namespace nervana
 {
+
+#define CV_FOURCC_MACRO(c1, c2, c3, c4) (((c1) & 255) + (((c2) & 255) << 8) + (((c3) & 255) << 16) + (((c4) & 255) << 24))
+
+int CV_FOURCC(char c1, char c2, char c3, char c4)
+{
+    return CV_FOURCC_MACRO(c1, c2, c3, c4);
+}
 
 const uint32_t RIFF_CC = CV_FOURCC('R','I','F','F');
 const uint32_t LIST_CC = CV_FOURCC('L','I','S','T');
@@ -61,11 +80,11 @@ const uint32_t AVIX_CC = CV_FOURCC('A','V','I','X');
 const uint32_t JUNK_CC = CV_FOURCC('J','U','N','K');
 const uint32_t INFO_CC = CV_FOURCC('I','N','F','O');
 
-String fourccToString(uint32_t fourcc);
-
-String fourccToString(uint32_t fourcc)
+string fourccToString(uint32_t fourcc)
 {
-    return format("%c%c%c%c", fourcc & 255, (fourcc >> 8) & 255, (fourcc >> 16) & 255, (fourcc >> 24) & 255);
+    stringstream ss;
+    ss <<  (fourcc & 255) << ((fourcc >> 8) & 255) << ((fourcc >> 16) & 255) << ((fourcc >> 24) & 255);
+    return ss.str();
 }
 
 #ifndef DWORD
@@ -159,13 +178,13 @@ class MjpegInputStream
 {
 public:
     MjpegInputStream();
-    MjpegInputStream(const String& filename);
+    MjpegInputStream(const string& filename);
     ~MjpegInputStream();
     MjpegInputStream& read(char*, uint64_t);
     MjpegInputStream& seekg(uint64_t);
     uint64_t tellg();
     bool isOpened() const;
-    bool open(const String& filename);
+    bool open(const string& filename);
     void close();
     operator bool();
 
@@ -178,7 +197,7 @@ MjpegInputStream::MjpegInputStream(): m_is_valid(false), m_f(0)
 {
 }
 
-MjpegInputStream::MjpegInputStream(const String& filename): m_is_valid(false), m_f(0)
+MjpegInputStream::MjpegInputStream(const string& filename): m_is_valid(false), m_f(0)
 {
     open(filename);
 }
@@ -188,7 +207,7 @@ bool MjpegInputStream::isOpened() const
     return m_f != 0;
 }
 
-bool MjpegInputStream::open(const String& filename)
+bool MjpegInputStream::open(const string& filename)
 {
     close();
 
@@ -685,7 +704,7 @@ bool AviMjpegStream::parseAvi(MjpegInputStream& in_str)
 }
 
 
-class MotionJpegCapture: public IVideoCapture
+class MotionJpegCapture//: public IVideoCapture
 {
 public:
     virtual ~MotionJpegCapture();
@@ -694,10 +713,10 @@ public:
     virtual bool grabFrame();
     virtual bool retrieveFrame(int, OutputArray);
     virtual bool isOpened() const;
-    virtual int getCaptureDomain() { return CAP_ANY; } // Return the type of the capture object: CAP_VFW, etc...
-    MotionJpegCapture(const String&);
+    virtual int getCaptureDomain() { return CV_CAP_ANY; } // Return the type of the capture object: CAP_VFW, etc...
+    MotionJpegCapture(const string&);
 
-    bool open(const String&);
+    bool open(const string&);
     void close();
 protected:
 
@@ -734,7 +753,7 @@ uint64_t MotionJpegCapture::getFramePos() const
 
 bool MotionJpegCapture::setProperty(int property, double value)
 {
-    if(property == CAP_PROP_POS_FRAMES)
+    if(property == CV_CAP_PROP_POS_FRAMES)
     {
         if(int(value) == 0)
         {
@@ -757,21 +776,21 @@ double MotionJpegCapture::getProperty(int property) const
 {
     switch(property)
     {
-        case CAP_PROP_POS_FRAMES:
+        case CV_CAP_PROP_POS_FRAMES:
             return (double)getFramePos();
-        case CAP_PROP_POS_AVI_RATIO:
+        case CV_CAP_PROP_POS_AVI_RATIO:
             return double(getFramePos())/m_mjpeg_frames.size();
-        case CAP_PROP_FRAME_WIDTH:
+        case CV_CAP_PROP_FRAME_WIDTH:
             return (double)m_frame_width;
-        case CAP_PROP_FRAME_HEIGHT:
+        case CV_CAP_PROP_FRAME_HEIGHT:
             return (double)m_frame_height;
-        case CAP_PROP_FPS:
+        case CV_CAP_PROP_FPS:
             return m_fps;
-        case CAP_PROP_FOURCC:
+        case CV_CAP_PROP_FOURCC:
             return (double)CV_FOURCC('M','J','P','G');
-        case CAP_PROP_FRAME_COUNT:
+        case CV_CAP_PROP_FRAME_COUNT:
             return (double)m_mjpeg_frames.size();
-        case CAP_PROP_FORMAT:
+        case CV_CAP_PROP_FORMAT:
             return 0;
         default:
             return 0;
@@ -837,7 +856,7 @@ MotionJpegCapture::~MotionJpegCapture()
     close();
 }
 
-MotionJpegCapture::MotionJpegCapture(const String& filename)
+MotionJpegCapture::MotionJpegCapture(const string& filename)
 {
     open(filename);
 }
@@ -853,7 +872,7 @@ void MotionJpegCapture::close()
     m_frame_iterator = m_mjpeg_frames.end();
 }
 
-bool MotionJpegCapture::open(const String& filename)
+bool MotionJpegCapture::open(const string& filename)
 {
     close();
 
@@ -909,7 +928,7 @@ bool MotionJpegCapture::parseRiff(MjpegInputStream& in_str)
     return result;
 }
 
-Ptr<IVideoCapture> createMotionJpegCapture(const String& filename)
+Ptr<MotionJpegCapture> createMotionJpegCapture(const string& filename)
 {
     Ptr<MotionJpegCapture> mjdecoder(new MotionJpegCapture(filename));
     if( mjdecoder->isOpened() )
