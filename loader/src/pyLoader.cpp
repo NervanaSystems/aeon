@@ -143,7 +143,7 @@ void pyDecodeThreadPool::work(int id)
 
 void pyDecodeThreadPool::produce()
 {
-    // Produce a minibatch.
+    // lock on output buffers and copy to device
     {
         unique_lock<mutex> lock(_out->getMutex());
         while (_out->full() == true) {
@@ -177,7 +177,7 @@ void pyDecodeThreadPool::produce()
 
 void pyDecodeThreadPool::consume()
 {
-    // Consume an input buffer.
+    // lock on input buffers and call produce
     {
         unique_lock<mutex> lock(_in->getMutex());
         while (_in->empty() == true) {
