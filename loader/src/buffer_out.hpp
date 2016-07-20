@@ -49,6 +49,7 @@ private:
     size_t  _item_size;
 };
 
+// in cases with (object, target) pairs, buffer_out is length 2
 class buffer_out_array {
 public:
     buffer_out_array(std::initializer_list<buffer_out*> list) : data(list) {}
