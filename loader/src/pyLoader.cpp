@@ -132,10 +132,12 @@ void pyDecodeThreadPool::work(int id)
     }
 
     // No locking required because threads write into non-overlapping regions.
-    buffer_out_array& outBuf = _out->getForWrite();
-
-    for (int i = _startInds[id]; i < _endInds[id]; i++) {
-        _providers[id]->provide(i, *_inputBuf, outBuf);
+    try {
+        for (int i = _startInds[id]; i < _endInds[id]; i++) {
+            _providers[id]->provide(i, *_inputBuf, _out->getForWrite());
+        }
+    } catch (std::exception& e) {
+        _out->writeException(std::current_exception());
     }
 
     {
