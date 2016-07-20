@@ -29,8 +29,9 @@ namespace nervana {
             char* target_out = out_buf[1]->getItem(idx);
 
             if (datum_in.size() == 0) {
-                std::cout << "no data " << idx << std::endl;
-                return;
+                std::stringstream ss;
+                ss << "received encoded image with size 0, at idx " << idx;
+                throw std::runtime_error(ss.str());
             }
 
             // Process image data
@@ -81,11 +82,11 @@ namespace nervana {
             char* target_out = out_buf[1]->getItem(idx);
 
             if (datum_in.size() == 0) {
-                std::cout << "no data " << idx << std::endl;
-                return;
+                std::stringstream ss;
+                ss << "received encoded image with size 0, at idx " << idx;
+                throw std::runtime_error(ss.str());
             }
 
-            // Process image data
             auto image_dec = image_extractor.extract(datum_in.data(), datum_in.size());
             auto image_params = image_factory.make_params(image_dec);
             image_loader.load(datum_out, image_transformer.transform(image_params, image_dec));
@@ -136,11 +137,11 @@ namespace nervana {
             char* target_out = out_buf[1]->getItem(idx);
 
             if (datum_in.size() == 0) {
-                std::cout << "no data " << idx << std::endl;
-                return;
+                std::stringstream ss;
+                ss << "received encoded image with size 0, at idx " << idx;
+                throw std::runtime_error(ss.str());
             }
 
-            // Process image data
             auto image_dec = image_extractor.extract(datum_in.data(), datum_in.size());
             auto image_params = image_factory.make_params(image_dec);
             image_loader.load(datum_out, image_transformer.transform(image_params, image_dec));
@@ -185,11 +186,11 @@ namespace nervana {
             char* target_out = out_buf[1]->getItem(idx);
 
             if (datum_in.size() == 0) {
-                std::cout << "no data " << idx << std::endl;
-                return;
+                std::stringstream ss;
+                ss << "received encoded image with size 0, at idx " << idx;
+                throw std::runtime_error(ss.str());
             }
 
-            // Process image data
             auto image_dec = image_extractor.extract(datum_in.data(), datum_in.size());
             auto image_params = image_factory.make_params(image_dec);
             auto image_transformed = image_transformer.transform(image_params, image_dec);
