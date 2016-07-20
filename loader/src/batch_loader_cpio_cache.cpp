@@ -45,7 +45,13 @@ void BatchLoaderCPIOCache::loadBlock(buffer_in_array& dest, uint block_num, uint
         return;
     } else {
         _loader->loadBlock(dest, block_num, block_size);
-        writeBlockToCache(dest, block_num, block_size);
+
+        try {
+            writeBlockToCache(dest, block_num, block_size);
+        } catch (std::exception& e) {
+            // failure to write block to cache doesn't stop execution, only print an error
+            cerr << "ERROR writing block to cache: " << e.what() << endl;
+        }
     }
 }
 
