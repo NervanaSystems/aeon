@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 #include "util.hpp"
 #include "wav_data.hpp"
+#include "cap_mjpeg_decoder.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -121,5 +122,15 @@ TEST(util, pack_le) {
 }
 
 TEST(avi,video) {
-
+    const string filename = "/home/users/alex/bb2.avi";
+    shared_ptr<MotionJpegCapture> mjdecoder = make_shared<MotionJpegCapture>(filename);
+    if( mjdecoder->isOpened() ) {
+        cout << "mjpeg opened" << endl;
+        if(mjdecoder->grabFrame()) {
+            cout << "grabbed frame" << endl;
+            cv::Mat image;
+            mjdecoder->retrieveFrame(0,image);
+            cv::imwrite("decoded_mjpeg.jpg",image);
+        }
+    }
 }
