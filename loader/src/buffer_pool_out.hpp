@@ -23,6 +23,7 @@
 #include "buffer_pool.hpp"
 #include "buffer_out.hpp"
 
+// buffer_pool_out acts as our double buffer to hold data before copying to device
 class buffer_pool_out : public buffer_pool {
 public:
     buffer_pool_out(size_t dataSize, size_t targetSize, size_t batchSize, bool pinned = false);
