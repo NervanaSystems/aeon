@@ -174,14 +174,14 @@ MjpegInputStream::MjpegInputStream(const string& filename): m_is_valid(false), m
 
 bool MjpegInputStream::isOpened() const
 {
-    return m_f != 0;
+    return m_f.is_open();
 }
 
 bool MjpegInputStream::open(const string& filename)
 {
     close();
 
-    m_f = fopen(filename.c_str(), "rb");
+    m_f.open(filename, istream::binary);
 
     m_is_valid = isOpened();
 
@@ -194,8 +194,7 @@ void MjpegInputStream::close()
     {
         m_is_valid = false;
 
-        fclose(m_f);
-        m_f = 0;
+        m_f.close();
     }
 }
 
@@ -203,7 +202,7 @@ MjpegInputStream& MjpegInputStream::read(char* buf, uint64_t count)
 {
     if(isOpened())
     {
-        m_is_valid = (count == fread((void*)buf, 1, (size_t)count, m_f));
+        m_f.read(buf, count);
     }
 
     return *this;
@@ -211,14 +210,15 @@ MjpegInputStream& MjpegInputStream::read(char* buf, uint64_t count)
 
 MjpegInputStream& MjpegInputStream::seekg(uint64_t pos)
 {
-    m_is_valid = (fseek(m_f, (long)pos, SEEK_SET) == 0);
+    m_f.seekg(pos, m_f.beg);
+    m_is_valid = m_f.good();
 
     return *this;
 }
 
 uint64_t MjpegInputStream::tellg()
 {
-    return ftell(m_f);
+    return m_f.tellg();
 }
 
 MjpegInputStream::operator bool()

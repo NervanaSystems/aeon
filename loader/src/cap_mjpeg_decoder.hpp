@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <deque>
+#include <fstream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -34,8 +35,8 @@ public:
     operator bool();
 
 private:
-    bool    m_is_valid;
-    FILE*   m_f;
+    bool            m_is_valid;
+    std::ifstream   m_f;
 };
 
 class nervana::MotionJpegCapture//: public IVideoCapture
