@@ -393,6 +393,8 @@ PyObject* PyLoader::next(int bufIdx)
     while (_decodeBufs->empty()) {
         _decodeBufs->waitForNonEmpty(lock);
     }
+    // TODO: should this actually be somewhere above the various locks/signals?
+    _decodeBufs->reraiseException();
     return _pyBackend->get_dtm_tgt_pair(bufIdx);
 }
 
