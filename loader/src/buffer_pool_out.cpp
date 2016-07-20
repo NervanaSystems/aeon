@@ -40,14 +40,13 @@ buffer_pool_out::buffer_pool_out(size_t dataSize, size_t targetSize, size_t batc
 }
 
 buffer_pool_out::~buffer_pool_out() {
-    for (auto buf : _bufs) {
-        delete buf[0];
-        delete buf[1];
+    for(auto i = _bufs.begin(); i != _bufs.end(); ++i) {
+        delete (*i)[0];
+        delete (*i)[1];
     }
 }
 
-buffer_out_array& buffer_pool_out::getForWrite()
-{
+buffer_out_array& buffer_pool_out::getForWrite() {
 //    _bufs[_writePos][0]->reset();
 //    _bufs[_writePos][1]->reset();
     return _bufs[_writePos];
