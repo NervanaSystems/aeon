@@ -31,7 +31,7 @@
 using namespace std;
 
 buffer_pool_out::buffer_pool_out(size_t dataSize, size_t targetSize, size_t batchSize, bool pinned)
-: _count(2), _used(0), _readPos(0), _writePos(0) {
+: buffer_pool(), _count(2), _used(0) {
     for (int i = 0; i < _count; i++) {
         buffer_out* dataBuffer   = new buffer_out(dataSize, batchSize, pinned);
         buffer_out* targetBuffer = new buffer_out(targetSize, batchSize, pinned);
@@ -54,6 +54,7 @@ buffer_out_array& buffer_pool_out::getForWrite()
 }
 
 buffer_out_array& buffer_pool_out::getForRead() {
+    reraiseException();
     return _bufs[_readPos];
 }
 
@@ -70,6 +71,7 @@ void buffer_pool_out::advanceReadPos() {
 void buffer_pool_out::advanceWritePos() {
     _used++;
     advance(_writePos);
+    clearException();
 }
 
 bool buffer_pool_out::empty() {

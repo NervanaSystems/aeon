@@ -45,6 +45,7 @@ SRCS            := \
     minibatch_iterator.cpp \
     batch_loader.cpp \
     box.cpp \
+	buffer_pool.cpp \
     buffer_pool_in.cpp \
     buffer_pool_out.cpp \
 

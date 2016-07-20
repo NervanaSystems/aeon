@@ -20,9 +20,10 @@
 #include <condition_variable>
 #include <cstring>
 
+#include "buffer_pool.hpp"
 #include "buffer_in.hpp"
 
-class buffer_pool_in {
+class buffer_pool_in : public buffer_pool {
 public:
     buffer_pool_in(const std::vector<uint32_t>& initial_sizes);
     virtual ~buffer_pool_in();
@@ -48,8 +49,6 @@ protected:
     static constexpr int        _count = 2;
     int                         _used = 0;
     std::vector<std::shared_ptr<buffer_in_array>> _bufs;
-    int                         _readPos = 0;
-    int                         _writePos = 0;
     std::mutex                  _mutex;
     std::condition_variable     _nonFull;
     std::condition_variable     _nonEmpty;

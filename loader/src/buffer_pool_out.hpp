@@ -20,10 +20,10 @@
 #include <condition_variable>
 #include <cstring>
 
-#include "buffer_pool_out.hpp"
+#include "buffer_pool.hpp"
 #include "buffer_out.hpp"
 
-class buffer_pool_out {
+class buffer_pool_out : public buffer_pool {
 public:
     buffer_pool_out(size_t dataSize, size_t targetSize, size_t batchSize, bool pinned = false);
     virtual ~buffer_pool_out();
@@ -49,8 +49,6 @@ protected:
     int                         _count;
     int                         _used;
     std::vector<buffer_out_array> _bufs;
-    int                         _readPos;
-    int                         _writePos;
     std::mutex                  _mutex;
     std::condition_variable     _nonFull;
     std::condition_variable     _nonEmpty;
