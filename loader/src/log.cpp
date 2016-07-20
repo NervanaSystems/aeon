@@ -84,7 +84,9 @@ nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const
     std::time_t tt = chrono::system_clock::to_time_t(chrono::system_clock::now());
     auto tm = std::gmtime(&tt);
     char buffer[256];
-    strftime(buffer,sizeof(buffer), "%Y-%m-%d %H:%M:%S UTC", tm);
+//    strftime(buffer,sizeof(buffer), "%d/%b/%Y:%H:%M:%S %z", tm);
+//    strftime(buffer,sizeof(buffer), "%Y-%m-%d %H:%M:%S UTC", tm);
+    strftime(buffer,sizeof(buffer), "%Y-%m-%dT%H:%M:%Sz", tm);
     _stream << buffer << " ";
 
     _stream << file;
