@@ -20,6 +20,7 @@
 
 #include "gtest/gtest.h"
 #include "util.hpp"
+#include "wav_data.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -117,4 +118,8 @@ TEST(util, pack_le) {
 //        pack_le<int>(actual,0x00010000,1,3);
 //        EXPECT_EQ(expected,actual);
 //    }
+}
+
+TEST(avi,video) {
+
 }
