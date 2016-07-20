@@ -44,16 +44,28 @@ void buffer_in::shuffle(uint seed) {
 
 vector<char>& buffer_in::getItem(int index) {
     if (index >= (int) buffers.size()) {
-        // TODO: why not raise exception here?  Is anyone actually
-        // checking the return value of getItem to make sure it is
-        // non-0?
         throw invalid_argument("index out-of-range");
     }
+
+    auto it = exceptions.find(index);
+    if (it != exceptions.end()) {
+        std::rethrow_exception(it->second);
+    }
+
     return buffers[index];
 }
 
 void buffer_in::addItem(const std::vector<char>& buf) {
     buffers.push_back(buf);
+}
+
+void buffer_in::addException(std::exception_ptr e) {
+    // add an axception to exceptions
+    exceptions[buffers.size()] = e;
+
+    // also add an empty vector to buffers to that indicies line up
+    std::vector<char> empty;
+    buffers.push_back(empty);
 }
 
 int buffer_in::getItemCount() {

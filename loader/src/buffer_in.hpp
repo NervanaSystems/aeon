@@ -22,13 +22,8 @@
 #include <condition_variable>
 #include <cstring>
 #include <iostream>
+#include <map>
 
-/* Buffer
- *
- * Buffer contains an ordered list of items in contiguous memory.  The
- * position of each item in the memory is recorded in _items and the
- * length of each item is stored in _lens.
- */
 class buffer_in {
 public:
     explicit buffer_in(int size);
@@ -38,6 +33,7 @@ public:
     void reset();
     std::vector<char>& getItem(int index);
     void addItem(const std::vector<char>&);
+    void addException(std::exception_ptr);
 
     void shuffle(uint seed);
 
@@ -47,9 +43,12 @@ public:
 private:
     buffer_in() = delete;
 
-    std::vector<std::vector<char>>  buffers;
+    std::vector<std::vector<char>> buffers;
+    std::map<int, std::exception_ptr> exceptions;
 };
 
+// buffer_in_array holds a vector of buffer_in*.  Each buffer_in* holds eather
+// the datums or the targets.  Each buffer_in* should have the same length.
 class buffer_in_array {
 public:
     buffer_in_array(const std::vector<uint32_t>& initial_sizes)
@@ -65,7 +64,6 @@ public:
             delete buf;
         }
     }
-    // buffer_in_array(std::initializer_list<buffer_in*> list) : data(list) {}
 
     buffer_in* operator[](int i) { return data[i]; }
     const buffer_in* operator[](int i) const { return data[i]; }

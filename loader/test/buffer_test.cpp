@@ -20,6 +20,11 @@
 
 using namespace std;
 
+void read(buffer_in& b, const char* str) {
+    istringstream is(str);
+    b.read(is, strlen(str));
+}
+
 TEST(buffer, shuffle) {
     // create a buffer with lots of words in sorted order.  assert
     // that they are sorted, then shuffle, then assert that they are
@@ -27,18 +32,57 @@ TEST(buffer, shuffle) {
 
     buffer_in b(0);
 
-//    b.read("abc", 3);
-//    b.read("asd", 3);
-//    b.read("hello", 5);
-//    b.read("qwe", 3);
-//    b.read("world", 5);
-//    b.read("xyz", 3);
-//    b.read("yuiop", 5);
-//    b.read("zxcvb", 5);
+    read(b, "abc");
+    read(b, "asd");
+    read(b, "hello");
+    read(b, "qwe");
+    read(b, "world");
+    read(b, "xyz");
+    read(b, "yuiop");
+    read(b, "zxcvb");
 
-//    ASSERT_EQ(sorted(buffer_to_vector_of_strings(b)), true);
+    ASSERT_EQ(sorted(buffer_to_vector_of_strings(b)), true);
 
-//    b.shuffle(0);
+    b.shuffle(0);
 
-//    ASSERT_EQ(sorted(buffer_to_vector_of_strings(b)), false);
+    ASSERT_EQ(sorted(buffer_to_vector_of_strings(b)), false);
+}
+
+void setup_buffer_exception(buffer_in& b) {
+    // setup b with length 4, one value is an exception
+    read(b, "a");
+
+    try {
+        throw std::runtime_error("expect me");
+    } catch (std::exception& e) {
+        b.addException(std::current_exception());
+    }
+
+    read(b, "c");
+    read(b, "d");
+}
+
+TEST(buffer, write_exception) {
+    buffer_in b(0);
+
+    setup_buffer_exception(b);
+}
+
+TEST(buffer, read_exception) {
+    buffer_in b(0);
+
+    setup_buffer_exception(b);
+
+    // no exceptions if we hit index 0, 2 and 3
+    ASSERT_EQ(b.getItem(0)[0], 'a');
+    ASSERT_EQ(b.getItem(2)[0], 'c');
+    ASSERT_EQ(b.getItem(3)[0], 'd');
+
+    // assert that exception is raised
+    try {
+        b.getItem(1);
+        FAIL();
+    } catch (std::exception& e) {
+        ASSERT_STREQ("expect me", e.what());
+    }
 }
