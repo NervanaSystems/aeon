@@ -95,20 +95,25 @@ void pyDecodeThreadPool::run(int id)
 {
     // Initialize worker threads by computing memory offsets for the
     // data this thread should work on
-    assert(id < _count);
-    _startInds[id] = id * _itemsPerThread;
-    int itemCount = _itemsPerThread;
-    if (id == _count - 1) {
-        itemCount = _batchSize - id * _itemsPerThread;
+    try {
+        assert(id < _count);
+        _startInds[id] = id * _itemsPerThread;
+        int itemCount = _itemsPerThread;
+        if (id == _count - 1) {
+            itemCount = _batchSize - id * _itemsPerThread;
+        }
+
+        _endInds[id] = _startInds[id] + itemCount;
+
+        while (_done == false) {
+            work(id);
+        }
+
+        _stopped[id] = true;
+    } catch (std::exception& e) {
+        cerr << "fatal exception in DecodeThreadPool::run: " << e.what() << endl;
+        // TODO: fail gracefully, not seg fault
     }
-
-    _endInds[id] = _startInds[id] + itemCount;
-
-    while (_done == false) {
-        work(id);
-    }
-
-    _stopped[id] = true;
 }
 
 void pyDecodeThreadPool::work(int id)
@@ -195,16 +200,21 @@ void pyDecodeThreadPool::consume()
 
 void pyDecodeThreadPool::manage()
 {
-    // Thread function.
-    // int result = _device->init();
-    int result = 0;
-    if (result != 0) {
-        _stopManager = true;
+    try {
+        // Thread function.
+        // int result = _device->init();
+        int result = 0;
+        if (result != 0) {
+            _stopManager = true;
+        }
+        while (_stopManager == false) {
+            consume();
+        }
+        _managerStopped = true;
+    } catch (std::exception& e) {
+        cerr << "exception in DecodeThreadPool::manage: " << e.what() << endl;
+        // TODO: fail gracefully, not seg fault
     }
-    while (_stopManager == false) {
-        consume();
-    }
-    _managerStopped = true;
 }
 
 
