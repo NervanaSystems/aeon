@@ -90,8 +90,10 @@ std::string tmp_manifest_file_with_invalid_filename() {
     string tmpname = tmp_filename();
     ofstream f(tmpname);
 
-    f << tmp_filename() + "jklsfjksdklfjsd" << ',';
-    f << tmp_filename() + "jklsfjksdklfjsd" << endl;
+    for(uint i = 0; i < 10; ++i) {
+        f << tmp_filename() + ".this_file_shouldnt_exist" << ',';
+        f << tmp_filename() + ".this_file_shouldnt_exist" << endl;
+    }
 
     f.close();
     return tmpname;
