@@ -1,4 +1,7 @@
 #pragma once
+
+#include <sstream>
+
 #include "etl_interface.hpp"
 #include "params.hpp"
 #include "util.hpp"
@@ -59,7 +62,10 @@ namespace nervana {
             int lbl;
             if (_binary) {
                 if (bufSize != 4) {
-                    throw std::runtime_error("Only 4 byte buffers can be loaded as int32");
+                    std::stringstream ss;
+                    ss << "Only 4 byte buffers can be loaded as int32.  ";
+                    ss << "label_extractor::extract received " << bufSize << " bytes";
+                    throw std::runtime_error(ss.str());
                 }
                 lbl = unpack_le<int>(buf);
             } else {
