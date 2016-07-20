@@ -235,7 +235,13 @@ void ReadThread::work(int id)
         while (_out->full() == true) {
             _out->waitForNonFull(lock);
         }
-        _batch_iterator->read(_out->getForWrite());
+
+        try {
+            _batch_iterator->read(_out->getForWrite());
+        } catch(std::exception& e) {
+            _out->writeException(std::current_exception());
+        }
+
         _out->advanceWritePos();
     }
     _out->signalNonEmpty();
