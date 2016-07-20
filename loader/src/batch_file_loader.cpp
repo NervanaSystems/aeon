@@ -72,7 +72,11 @@ void BatchFileLoader::loadBlock(buffer_in_array& dest, uint block_num, uint bloc
         // slow down reads from a magnetic disk.
         auto file_list = *it;
         for (uint i = 0; i < file_list.size(); i++) {
-            loadFile(dest[i], file_list[i]);
+            try {
+                loadFile(dest[i], file_list[i]);
+            } catch (std::exception& e) {
+                dest[i]->addException(std::current_exception());
+            }
         }
     }
 }

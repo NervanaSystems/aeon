@@ -73,3 +73,24 @@ TEST(blocked_file_loader, subsetPercent) {
     ASSERT_EQ(bp[0]->getItemCount(), 1);
     bp[0]->reset();
 }
+
+TEST(blocked_file_loader, exception) {
+    BatchFileLoader bfl(
+        make_shared<Manifest>(
+            tmp_manifest_file_with_invalid_filename(), false
+        ), 100
+    );
+
+    buffer_in_array bp(vector<uint32_t>{0, 0});
+
+    // loadBlock doesn't actually raise the exception
+    bfl.loadBlock(bp, 0, 1);
+
+    // Could not find file exception raised when we try to access the item
+    try {
+        bp[0]->getItem(0);
+        FAIL();
+    } catch (std::exception& e) {
+        ASSERT_EQ(string("Could not find "), string(e.what()).substr(0, 15));
+    }
+}

@@ -20,3 +20,4 @@
 std::string tmp_filename();
 std::string tmp_zero_file(uint size);
 std::string tmp_manifest_file(uint num_records, uint object_size, uint target_size);
+std::string tmp_manifest_file_with_invalid_filename();

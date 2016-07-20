@@ -79,3 +79,14 @@ string tmp_manifest_file(uint num_records, uint object_size, uint target_size) {
 
     return tmpname;
 }
+
+std::string tmp_manifest_file_with_invalid_filename() {
+    string tmpname = tmp_filename();
+    ofstream f(tmpname);
+
+    f << tmp_filename() + "jklsfjksdklfjsd" << ',';
+    f << tmp_filename() + "jklsfjksdklfjsd" << endl;
+
+    f.close();
+    return tmpname;
+}
