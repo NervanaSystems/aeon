@@ -67,8 +67,13 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(buffer_in_array& dest, uint block_
     }
     // load cpio file into dest one item at a time
     for(int i=0; i < reader.itemCount(); ++i) {
-        reader.read(*dest[0]);
-        reader.read(*dest[1]);
+        for(int j=0; j < 2; ++j) {
+            try {
+                reader.read(*dest[j]);
+            } catch (std::exception& e) {
+                dest[j]->addException(std::current_exception());
+            }
+        }
     }
 
     reader.close();
