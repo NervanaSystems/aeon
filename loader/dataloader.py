@@ -237,7 +237,7 @@ class DataLoader(object):
                 # keep track of where we are in the dataset so we know which epoch
                 # we are on
                 self._item_index += self.minibatch_size
-                if self._item_index > self.item_count:
+                if self._item_index >= self.item_count:
                     self._item_index -= self.item_count
 
     # UNUSED
