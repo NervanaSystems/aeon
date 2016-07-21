@@ -57,9 +57,9 @@ def random_manifest(num_lines, invalid_image_index=None):
     return manifest
 
 
-def generic_config(manifest):
+def generic_config(manifest_name):
     return {
-        'manifest_filename': manifest.name,
+        'manifest_filename': manifest_name,
         'minibatch_size': 2,
         'data_config': {
             'type': 'image',
@@ -79,10 +79,17 @@ def generic_config(manifest):
     }
 
 
+def test_loader_failed_manifest():
+    config = generic_config('/this_manifest_file_does_not_exist')
+
+    with pytest.raises(Exception):
+        dl = DataLoader(config, gen_backend(backend='cpu'))
+
+
 def test_loader():
     # NOTE: manifest needs to stay in scope until DataLoader has read it.
     manifest = random_manifest(10)
-    config = generic_config(manifest)
+    config = generic_config(manifest.name)
 
     dl = DataLoader(config, gen_backend(backend='cpu'))
 
@@ -92,7 +99,7 @@ def test_loader():
 def test_loader_repeat_iter():
     # NOTE: manifest needs to stay in scope until DataLoader has read it.
     manifest = random_manifest(10)
-    config = generic_config(manifest)
+    config = generic_config(manifest.name)
 
     dl = DataLoader(config, gen_backend(backend='cpu'))
 
@@ -103,7 +110,7 @@ def test_loader_repeat_iter():
 def test_loader_exception_next():
     # NOTE: manifest needs to stay in scope until DataLoader has read it.
     manifest = random_manifest(10, 2)
-    config = generic_config(manifest)
+    config = generic_config(manifest.name)
 
     dl = DataLoader(config, gen_backend(backend='cpu'))
     dl.next()
@@ -114,7 +121,7 @@ def test_loader_exception_next():
 def test_loader_exception_iter():
     # NOTE: manifest needs to stay in scope until DataLoader has read it.
     manifest = random_manifest(10, 2)
-    config = generic_config(manifest)
+    config = generic_config(manifest.name)
 
     dl = DataLoader(config, gen_backend(backend='cpu'))
 
@@ -124,7 +131,7 @@ def test_loader_exception_iter():
 def test_loader_reset():
     # NOTE: manifest needs to stay in scope until DataLoader has read it.
     manifest = random_manifest(10)
-    config = generic_config(manifest)
+    config = generic_config(manifest.name)
 
     dl = DataLoader(config, gen_backend(backend='cpu'))
 
