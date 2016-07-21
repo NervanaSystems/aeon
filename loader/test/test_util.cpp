@@ -121,9 +121,34 @@ TEST(util, pack_le) {
 //    }
 }
 
-TEST(avi,video) {
+TEST(avi,video_file) {
     const string filename = "/home/users/alex/bb2.avi";
     shared_ptr<MotionJpegCapture> mjdecoder = make_shared<MotionJpegCapture>(filename);
+    if( mjdecoder->isOpened() ) {
+        cv::Mat image;
+        int image_number = 0;
+        while(mjdecoder->grabFrame() && mjdecoder->retrieveFrame(0,image)) {
+            string output_name = "mjpeg_frame_"+to_string(image_number)+".jpg";
+            cv::imwrite(output_name,image);
+            image_number++;
+        }
+    }
+}
+
+TEST(DISABLED_avi,video_buffer) {
+    const string filename = "/home/users/alex/bb2.avi";
+    ifstream in(filename, ios_base::binary);
+    ASSERT_TRUE(in);
+    in.seekg(0,in.end);
+    size_t size = in.tellg();
+    in.seekg(0,in.beg);
+    cout << "data size " << size << endl;
+    vector<char> data(size);
+    cout << "vector size " << data.size() << endl;
+    data.assign(istreambuf_iterator<char>(in), istreambuf_iterator<char>());
+    cout << "post vector size " << data.size() << endl;
+
+    shared_ptr<MotionJpegCapture> mjdecoder = make_shared<MotionJpegCapture>(data.data(), data.size());
     if( mjdecoder->isOpened() ) {
         cv::Mat image;
         int image_number = 0;
@@ -134,4 +159,35 @@ TEST(avi,video) {
             image_number++;
         }
     }
+}
+
+TEST(util,memstream) {
+    string data = "abcdefghijklmnopqrstuvwxyz";
+    memstream<char> ms((char*)data.data(),data.size());
+    istream is(&ms);
+    char buf[10];
+
+    EXPECT_EQ(0,is.tellg());
+    is.seekg(0,is.end);
+    EXPECT_EQ(26,is.tellg());
+    is.seekg(10,is.end);
+    EXPECT_EQ(16,is.tellg());
+    is.seekg(3,is.cur);
+    EXPECT_EQ(19,is.tellg());
+    is.seekg(3,is.beg);
+    EXPECT_EQ(3,is.tellg());
+    is.read(buf,2);
+    EXPECT_EQ('d',buf[0]);
+    EXPECT_EQ('e',buf[1]);
+    is.read(buf,2);
+    EXPECT_EQ('f',buf[0]);
+    EXPECT_EQ('g',buf[1]);
+
+
+    EXPECT_EQ(true,is.good());
+    is.seekg(0,is.end);
+    is.read(buf,2);     // read past end
+    EXPECT_EQ(false,is.good());
+
+    // test stream reset
 }
