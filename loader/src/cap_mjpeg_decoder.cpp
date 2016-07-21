@@ -163,21 +163,21 @@ struct RiffList
 
 #pragma pack(pop)
 
-MjpegInputStream::MjpegInputStream(): m_is_valid(false), m_f(0)
+MjpegFileInputStream::MjpegFileInputStream(): m_is_valid(false), m_f(0)
 {
 }
 
-MjpegInputStream::MjpegInputStream(const string& filename): m_is_valid(false), m_f(0)
+MjpegFileInputStream::MjpegFileInputStream(const string& filename): m_is_valid(false), m_f(0)
 {
     open(filename);
 }
 
-bool MjpegInputStream::isOpened() const
+bool MjpegFileInputStream::isOpened() const
 {
     return m_f.is_open();
 }
 
-bool MjpegInputStream::open(const string& filename)
+bool MjpegFileInputStream::open(const string& filename)
 {
     close();
 
@@ -188,7 +188,7 @@ bool MjpegInputStream::open(const string& filename)
     return m_is_valid;
 }
 
-void MjpegInputStream::close()
+void MjpegFileInputStream::close()
 {
     if(isOpened())
     {
@@ -198,7 +198,7 @@ void MjpegInputStream::close()
     }
 }
 
-MjpegInputStream& MjpegInputStream::read(char* buf, uint64_t count)
+MjpegInputStream& MjpegFileInputStream::read(char* buf, uint64_t count)
 {
     if(isOpened())
     {
@@ -208,7 +208,7 @@ MjpegInputStream& MjpegInputStream::read(char* buf, uint64_t count)
     return *this;
 }
 
-MjpegInputStream& MjpegInputStream::seekg(uint64_t pos)
+MjpegInputStream& MjpegFileInputStream::seekg(uint64_t pos)
 {
     m_f.seekg(pos, m_f.beg);
     m_is_valid = m_f.good();
@@ -216,17 +216,17 @@ MjpegInputStream& MjpegInputStream::seekg(uint64_t pos)
     return *this;
 }
 
-uint64_t MjpegInputStream::tellg()
+uint64_t MjpegFileInputStream::tellg()
 {
     return m_f.tellg();
 }
 
-MjpegInputStream::operator bool()
+MjpegFileInputStream::operator bool()
 {
     return m_is_valid;
 }
 
-MjpegInputStream::~MjpegInputStream()
+MjpegFileInputStream::~MjpegFileInputStream()
 {
     close();
 }
