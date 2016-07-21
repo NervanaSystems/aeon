@@ -39,7 +39,6 @@ find $INDIR -name "*.wav" -printf "%p\n" |
         sub(I, O, $2);
         printf("sox -r 16k -b 16 -c 1 -e signed %s %s\n",  $1, $2)
     }' > convert.sh
-
 bash convert.sh
 
 find $OUTDIR -name "*.wav" -printf "%p\n" | awk -v O=$OUTDIR -v T=$TXTDIR '{$2=$1; sub(O, T, $2); sub("wav","txt",$2); printf("%s,%s\n", $1, $2)}' > $OUTDIR/train.csv
