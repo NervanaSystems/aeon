@@ -298,7 +298,10 @@ int PyLoader::start()
         int itemsPerThread = (_batchSize - 1) /  ncores + 1;
         int nthreads       = (_batchSize - 1) / itemsPerThread + 1;
         nthreads           = std::min(nthreads, _batchSize);
-
+        if (_lcfg->single_thread)
+        {
+            nthreads = 1;
+        }
         if (nthreads <= 0)
         {
             throw std::invalid_argument("Number of threads must be > 0");

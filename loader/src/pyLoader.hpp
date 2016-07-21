@@ -94,6 +94,7 @@ public:
     int macrobatch_size      = 0;
     bool shuffle_every_epoch = false;
     bool shuffle_manifest    = false;
+    bool single_thread       = false;
     int subset_percent        = 100;
     int random_seed           = 0;
 
@@ -102,6 +103,7 @@ public:
         parse_value(manifest_filename, "manifest_filename", js, mode::REQUIRED);
         parse_value(minibatch_size,    "minibatch_size", js, mode::REQUIRED);
 
+        parse_value(single_thread,       "single_thread", js);
         parse_value(cache_directory,     "cache_directory", js);
         parse_value(macrobatch_size,     "macrobatch_size", js);
         parse_value(shuffle_every_epoch, "shuffle_every_epoch", js);
