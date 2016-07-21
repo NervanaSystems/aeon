@@ -6,7 +6,7 @@ import random
 import struct
 import pytest
 
-from axon import DataLoader, LoaderRuntimeError
+from aeon import DataLoader, LoaderRuntimeError
 
 from neon.backends import gen_backend
 from neon.models import Model
