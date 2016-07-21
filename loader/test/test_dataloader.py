@@ -8,7 +8,7 @@ import pytest
 
 from neon.backends import gen_backend
 from neon.models import Model
-from loader.dataloader import DataLoader
+from loader.dataloader import DataLoader, LoaderRuntimeError
 
 
 def random_image(filename):
@@ -107,7 +107,7 @@ def test_loader_exception_next():
 
     dl = DataLoader(config, gen_backend(backend='cpu'))
     dl.next()
-    with pytest.raises(Exception):
+    with pytest.raises(LoaderRuntimeError):
         dl.next()
 
 

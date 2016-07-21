@@ -19,6 +19,10 @@ import json
 import math
 
 
+class LoaderRuntimeError(RuntimeError):
+    pass
+
+
 class DataLoader(object):
 
     """
@@ -83,7 +87,7 @@ class DataLoader(object):
         and then makes the error message accessable via get_error_message().
         This gets that message and wraps it in a RuntimeError.
         """
-        raise RuntimeError(
+        raise LoaderRuntimeError(
             'error in loader: {}'.format(
                 self.loaderlib.get_error_message()
             )
@@ -230,7 +234,7 @@ class DataLoader(object):
         for _ in range(self._nbatches):
             try:
                 yield self.next()
-            except Exception as e:
+            except LoaderRuntimeError as e:
                 # TODO: log this somewhere instead of printing
                 print e
             finally:
