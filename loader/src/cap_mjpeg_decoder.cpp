@@ -203,6 +203,10 @@ MjpegInputStream& MjpegFileInputStream::read(char* buf, uint64_t count)
     if(isOpened())
     {
         m_f.read(buf, count);
+        m_is_valid = m_f.good();
+        if(!m_f) {
+            m_f.clear();
+        }
     }
 
     return *this;
@@ -729,17 +733,17 @@ double MotionJpegCapture::getProperty(int property) const
 
 std::vector<char> MotionJpegCapture::readFrame(frame_iterator it)
 {
-    m_file_stream.seekg(it->first);
+    m_file_stream->seekg(it->first);
 
     RiffChunk chunk;
-    m_file_stream >> chunk;
+    *m_file_stream >> chunk;
 
     std::vector<char> result;
 
     result.reserve(chunk.m_size);
     result.resize(chunk.m_size);
 
-    m_file_stream.read(&(result[0]), chunk.m_size); // result.data() failed with MSVS2008
+    m_file_stream->read(&(result[0]), chunk.m_size); // result.data() failed with MSVS2008
 
     return result;
 }
@@ -788,8 +792,15 @@ MotionJpegCapture::~MotionJpegCapture()
 
 MotionJpegCapture::MotionJpegCapture(const string& filename)
 {
+    m_file_stream = make_shared<MjpegFileInputStream>(filename);
     open(filename);
 }
+
+MotionJpegCapture::MotionJpegCapture(char* buffer, size_t size)
+{
+    m_file_stream = make_shared<MjpegMemoryInputStream>(buffer, size);
+}
+
 
 bool MotionJpegCapture::isOpened() const
 {
@@ -798,7 +809,7 @@ bool MotionJpegCapture::isOpened() const
 
 void MotionJpegCapture::close()
 {
-    m_file_stream.close();
+    m_file_stream->close();
     m_frame_iterator = m_mjpeg_frames.end();
 }
 
@@ -806,12 +817,12 @@ bool MotionJpegCapture::open(const string& filename)
 {
     close();
 
-    m_file_stream.open(filename);
+    m_file_stream->open(filename);
 
     m_frame_iterator = m_mjpeg_frames.end();
     m_is_first_frame = true;
 
-    if(!parseRiff(m_file_stream))
+    if(!parseRiff(*m_file_stream))
     {
         close();
     }

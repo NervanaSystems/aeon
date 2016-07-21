@@ -124,14 +124,14 @@ TEST(util, pack_le) {
 TEST(avi,video_file) {
     const string filename = "/home/users/alex/bb2.avi";
     shared_ptr<MotionJpegCapture> mjdecoder = make_shared<MotionJpegCapture>(filename);
-    if( mjdecoder->isOpened() ) {
-        cv::Mat image;
-        int image_number = 0;
-        while(mjdecoder->grabFrame() && mjdecoder->retrieveFrame(0,image)) {
-            string output_name = "mjpeg_frame_"+to_string(image_number)+".jpg";
-            cv::imwrite(output_name,image);
-            image_number++;
-        }
+    ASSERT_TRUE(mjdecoder->isOpened());
+    cv::Mat image;
+    int image_number = 0;
+    while(mjdecoder->grabFrame() && mjdecoder->retrieveFrame(0,image)) {
+        ASSERT_NE(0, image.size().area());
+        string output_name = "mjpeg_frame_"+to_string(image_number)+".jpg";
+        cv::imwrite(output_name,image);
+        image_number++;
     }
 }
 
