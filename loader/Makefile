@@ -21,13 +21,8 @@ HAS_GPU := $(shell nvcc --version > /dev/null 2>&1 && echo true)
 bin/loader.so: Makefile
 	@cd src && make ../bin/loader.so HAS_GPU=$(HAS_GPU) -j8
 
-test: ctest pytest
-
-ctest: build_test
+test: build_test
 	@test/test $(ARGS)
-
-pytest: bin/loader.so
-	@py.test .
 
 build_test: Makefile
 	@cd src && make loader.a HAS_GPU=$(HAS_GPU) -j8
