@@ -14,7 +14,6 @@
 */
 
 #include "specgram.hpp"
-
 using cv::Mat;
 using cv::Range;
 using namespace std;
@@ -145,8 +144,8 @@ void specgram::create_window(const std::string& window_type, const int n, Mat& w
 
     win.create(1, n, CV_32FC1);
 
-    float twopi_by_n = 2.0 * CV_PI / (float) n;
-    for (int i = 0; i <= n; i++) {
+    float twopi_by_n = 2.0 * CV_PI / (float) (n-1);
+    for (int i = 0; i < n; i++) {
         if (window_type == "hann") {
             win.at<float>(0, i) = 0.5 - 0.5 * cos(twopi_by_n*i);
         } else if (window_type == "blackman") {

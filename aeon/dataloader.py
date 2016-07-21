@@ -197,9 +197,7 @@ class DataLoader(object):
         compute the number of batches for the next epoch
         """
 
-        self._nbatches = math.ceil(
-            (self.item_count - self._item_index) / float(self.minibatch_size)
-        )
+        self._nbatches = -((self._item_index - self.item_count) // self.minibatch_size)
 
     @property
     def ndata(self):

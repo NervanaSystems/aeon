@@ -164,3 +164,44 @@ TEST(etl, audio_transform) {
     ASSERT_NE(decoded_audio->get_freq_data().rows, 0);
     delete[] databuf;
 }
+
+
+TEST(etl, audio_transform2) {
+
+    auto js = R"(
+        {
+            "max_duration": "3 seconds",
+            "frame_length": "256 samples",
+            "frame_stride": "128 samples",
+            "sample_freq_hz": 16000
+        }
+    )"_json;
+
+    float sine_freq = 400;
+    int16_t sine_ampl = 500;
+    sinewave_generator sg{sine_freq, sine_ampl};
+    int wav_len_sec = 2, sample_freq = 16000;
+    bool stereo = false;
+
+    wav_data wav(sg, wav_len_sec, sample_freq, stereo);
+    uint32_t bufsize = wav_data::HEADER_SIZE + wav.nbytes();
+    char *databuf = new char[bufsize];
+
+    wav.write_to_buffer(databuf, bufsize);
+
+    audio::config config(js);
+
+    audio::extractor extractor;
+    audio::transformer _imageTransformer(config);
+    audio::param_factory factory(config);
+
+    auto decoded_audio = extractor.extract(databuf, bufsize);
+    auto audioParams = factory.make_params(decoded_audio);
+
+    _imageTransformer.transform(audioParams, decoded_audio);
+    auto shape = config.get_shape_type();
+    ASSERT_EQ(shape.get_shape()[0], 1);
+    ASSERT_EQ(shape.get_shape()[1], 256/2 + 1);
+    ASSERT_NE(decoded_audio->get_freq_data().rows, 0);
+    delete[] databuf;
+}

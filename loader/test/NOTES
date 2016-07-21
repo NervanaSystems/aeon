@@ -26,9 +26,14 @@ cat $ROOT_DIR/development_kit/data/train.txt | awk -vRR=$ROOT_DIR '{print RR"/im
 ###################################
 # Notes for ingesting audio
 export INDIR=/scratch/alex/audio/VCTK-Corpus/wav48
-export OUTDIR=/scratch/alex/audio/VCTK-Corpus/ingested
+export TXTDIR=${INDIR/wav48/txt}
+export OUTDIR=${INDIR/wav48/ingested}
+
 
 # Create the output directories for the downsampled files
-find $INDIR -mindepth 1 -type d | sed "s|wav48|ingested|" | xargs mkdir -p
+find $INDIR -mindepth 1 -type d -printf "$OUTDIR/%f\n" | xargs mkdir -p
+find $INDIR -name "*.wav" -printf "%p\n" | awk -v O=$OUTDIR -v I=$INDIR '{$2=$1; sub(I, O, $2); printf("sox -r 16k -b 16 -c 1 -e signed %s %s\n",  $1, $2)}' > convert.sh
+bash convert.sh
 
-find $INDIR -name "*.wav" | awk -vI=$INDIR -vO=$OUTDIR'{printf("sox -r 16k -b 16 -c 1 -e signed %s %s\n",  $1, out)}'
+find $OUTDIR -name "*.wav" -printf "%p\n" | awk -v O=$OUTDIR -v T=$TXTDIR '{$2=$1; sub(O, T, $2); sub("wav","txt",$2); printf("%s,%s\n", $1, $2)}' > $OUTDIR/train.csv
+
