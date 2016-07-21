@@ -79,8 +79,15 @@ def generic_config(manifest_name):
     }
 
 
-def test_loader_failed_manifest():
+def test_loader_non_existant_manifest():
     config = generic_config('/this_manifest_file_does_not_exist')
+
+    with pytest.raises(Exception):
+        dl = DataLoader(config, gen_backend(backend='cpu'))
+
+
+def test_loader_invalid_manifest():
+    config = generic_config(invalid_image('/tmp/this_manifest_file_is_empty'))
 
     with pytest.raises(Exception):
         dl = DataLoader(config, gen_backend(backend='cpu'))
