@@ -51,3 +51,9 @@ output/
 # vim
 *.swp
 *.swo
+
+# setup.py intermediate files
+build/
+
+# Apple
+*.AppleDouble

@@ -64,8 +64,8 @@ class DataLoader(object):
         self._compute_nbatches()
 
     def _load_library(self):
-        path = os.path.dirname(os.path.realpath(__file__))
-        libpath = os.path.join(path, 'bin', 'loader.so')
+        path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        libpath = os.path.join(path, 'axon_lib.so')
         self.loaderlib = ct.cdll.LoadLibrary(libpath)
         self.loaderlib.get_error_message.restype = ct.c_char_p
         self.loaderlib.start.restype = ct.c_void_p
