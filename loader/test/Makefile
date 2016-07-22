@@ -20,7 +20,7 @@ include ../Makefile.base
 
 # specific to TEST
 
-SRCS := \
+TEST_SRCS := \
     main.cpp \
     gen_image.cpp \
     gen_audio.cpp \
@@ -50,7 +50,7 @@ SRCS := \
     test_audio.cpp \
     test_logging.cpp \
 
-OBJS             = $(subst .cpp,.o,$(SRCS))
+OBJS             = $(subst .cpp,.o,$(TEST_SRCS))
 INC             := -I../src $(INC)
 # hackery to fix bug in opencv. It exports gtest symbols in the
 # opencv_ts library so remove it from LIBS
@@ -82,7 +82,7 @@ endif
 $(DEPDIR)/%.d: ;
 .PRECIOUS: $(DEPDIR)/%.d
 
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(TEST_SRCS)))
 
 clean:
 	@rm -vf *.o

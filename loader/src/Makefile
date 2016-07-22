@@ -20,44 +20,6 @@ include ../Makefile.base
 
 # specific to src
 
-SRCS := \
-    cpio.cpp \
-    buffer_in.cpp \
-    buffer_out.cpp \
-    pyBackendWrapper.cpp \
-    pyLoader.cpp \
-    api_pversion.cpp \
-    etl_audio.cpp \
-    noise_clips.cpp \
-    specgram.cpp \
-    log.cpp \
-    codec.cpp \
-    image.cpp \
-    etl_pixel_mask.cpp \
-    etl_image.cpp \
-    etl_image_var.cpp \
-    etl_bbox.cpp \
-    etl_label_map.cpp \
-    etl_char_map.cpp \
-    etl_localization.cpp \
-    etl_video.cpp \
-    util.cpp \
-    wav_data.cpp \
-    manifest.cpp \
-    provider_factory.cpp \
-    batch_file_loader.cpp \
-    batch_loader_cpio_cache.cpp \
-    sequential_batch_iterator.cpp \
-    shuffled_batch_iterator.cpp \
-    minibatch_iterator.cpp \
-    batch_loader.cpp \
-    box.cpp \
-    buffer_pool.cpp \
-    buffer_pool_in.cpp \
-    buffer_pool_out.cpp \
-    cap_mjpeg_decoder.cpp \
-	nds_batch_loader.cpp \
-
 OBJS             = $(subst .cpp,.o,$(SRCS))
 LOADER_SO       := ../bin/loader.so
 LOADER_STATIC   := loader.a

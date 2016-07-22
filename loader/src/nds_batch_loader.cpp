@@ -46,7 +46,7 @@ NDSBatchLoader::~NDSBatchLoader() {
     curl_easy_cleanup(_curl);
 }
 
-void NDSBatchLoader::loadBlock(BufferPair &dest, uint block_num, uint block_size) {
+void NDSBatchLoader::loadBlock(buffer_in_array& dest, uint block_num, uint block_size) {
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
 
@@ -57,8 +57,8 @@ void NDSBatchLoader::loadBlock(BufferPair &dest, uint block_num, uint block_size
     // parse cpio_stream into dest one object/target pair at a time
     CPIOReader reader(&cpio_stream);
     for(int i=0; i < reader.itemCount(); ++i) {
-        reader.read(*dest.first);
-        reader.read(*dest.second);
+        reader.read(*dest[0]);
+        reader.read(*dest[1]);
     }
 }
 
