@@ -76,7 +76,7 @@ test:
 endif
 
 %.o : %.cpp $(DEPDIR)/%.d
-	$(CC) -c -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
+	$(CC) -c -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $<
 	$(POSTCOMPILE)
 
 $(DEPDIR)/%.d: ;
