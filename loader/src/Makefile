@@ -26,12 +26,8 @@ LOADER_STATIC   := loader.a
 
 all: ../bin/loader.so $(LOADER_SO) $(LOADER_STATIC) Makefile
 
-%.o : %.c $(DEPDIR)/%.d
-	$(CC) -c -o $@ $(CFLAGS) $(INC) $<
-	$(POSTCOMPILE)
-
 %.o : %.cpp $(DEPDIR)/%.d
-	$(CC) -c -o $@ $(CFLAGS) $(INC) $<
+	$(CC) -c -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $<
 	$(POSTCOMPILE)
 
 $(DEPDIR)/%.d: ;
