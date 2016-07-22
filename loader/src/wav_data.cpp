@@ -23,7 +23,8 @@ namespace nervana {
         wav_assert(bufsize >= rh.dwRiffLen, "Buffer not large enough for indicated file size");
 
         wav_assert(fh.hwFmtTag == WAVE_FORMAT_PCM, "can read only PCM data");
-        wav_assert(fh.hwChannels == 16, "Ingested waveforms must be 16-bit PCM");
+        wav_assert(fh.hwBitDepth == 16, "Ingested waveforms must be 16-bit PCM");
+        wav_assert(fh.hwChannels == 1, "Can only handle mono data");
         wav_assert(fh.dwFmtLen >= 16, "PCM format data must be at least 16 bytes");
 
         // Skip any subchunks between "fmt" and "data".
@@ -86,7 +87,7 @@ namespace nervana {
     {
         RiffMainHeader rh;
         rh.dwRiffCC      = nervana::FOURCC('R', 'I', 'F', 'F');
-        rh.dwRiffLen     = HEADER_SIZE + nbytes();
+        rh.dwRiffLen     = HEADER_SIZE + nbytes() - 2 * sizeof(uint32_t);
         rh.dwWaveID      = nervana::FOURCC('W', 'A', 'V', 'E');
 
         FmtHeader fh;

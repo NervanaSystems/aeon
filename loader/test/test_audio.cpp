@@ -13,6 +13,7 @@
  limitations under the License.
 */
 
+#include <fstream>
 #include "gtest/gtest.h"
 
 #include "etl_audio.hpp"
@@ -165,6 +166,37 @@ TEST(etl, audio_transform) {
     delete[] databuf;
 }
 
+TEST(etl, wav_dump) {
+
+    float sine_freq = 400;
+    int16_t sine_ampl = INT16_MAX / 16;
+    sinewave_generator sg{sine_freq, sine_ampl};
+    int wav_len_sec = 3, sample_freq = 16000;
+    bool stereo = false;
+
+    wav_data wav(sg, wav_len_sec, sample_freq, stereo);
+    wav.write_to_file("/home/users/alex/Code/aeon/loader/this_out.wav");
+}
+
+TEST(etl, wav_read) {
+    // generate with sox  -r 16000 -b 16 -e s -n output.wav synth 3 sine 400 vol 0.5
+    auto a = system("sox -r 16000 -b 16 -e s -n output.wav synth 3 sine 400 vol 0.5");
+    if (a == 0)
+    {
+        basic_ifstream<char> ifs("output.wav", ios::binary);
+        // read the data:
+        vector<char> buf((istreambuf_iterator<char>(ifs)), istreambuf_iterator<char>());
+
+        wav_data wav(&(buf[0]), buf.size());
+        ASSERT_EQ(wav.sample_rate(), 16000);
+        ASSERT_EQ(wav.nsamples(), 16000 * 3);
+        remove("output.wav");
+    }
+    else
+    {
+        cout << "Missing sox for wav read test" << endl;
+    }
+}
 
 TEST(etl, audio_transform2) {
 

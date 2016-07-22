@@ -96,6 +96,7 @@ namespace nervana {
         char **get_raw_data() { return (char **) &(data.data);}
         inline uint32_t nbytes() { return data.total() * data.elemSize(); }
         inline uint32_t nsamples() { return data.rows; }
+        inline int32_t sample_rate() { return _sample_rate; }
 
         static constexpr size_t HEADER_SIZE = sizeof(RiffMainHeader) + sizeof(FmtHeader) + sizeof(DataHeader);
 
