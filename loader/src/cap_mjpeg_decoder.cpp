@@ -341,12 +341,12 @@ bool AviMjpegStream::parseHdrlList(MjpegInputStream& in_str)
         if(in_str)
         {
             m_is_indx_present = ((avi_hdr.dwFlags & 0x10) != 0);
-            DWORD number_of_streams = avi_hdr.dwStreams;
+            uint32_t number_of_streams = avi_hdr.dwStreams;
             m_width = avi_hdr.dwWidth;
             m_height = avi_hdr.dwHeight;
 
             //the number of strl lists must be equal to number of streams specified in main avi header
-            for(DWORD i = 0; i < number_of_streams; ++i)
+            for(uint32_t i = 0; i < number_of_streams; ++i)
             {
                 in_str.seekg(next_strl_list);
                 RiffList strl_list;
