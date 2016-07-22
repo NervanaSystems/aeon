@@ -2,7 +2,6 @@
 
 #include "etl_char_map.hpp"
 #include "etl_audio.hpp"
-
 #include "provider_interface.hpp"
 
 namespace nervana {
@@ -51,7 +50,7 @@ namespace nervana {
 
             // Save out the length
             uint32_t trans_length = trans_dec->get_length();
-            memcpy(&length_out, &trans_length, sizeof(uint32_t));
+            pack_le(length_out, trans_length);
         }
 
         void post_process(buffer_out_array& out_buf) override
