@@ -42,7 +42,7 @@ $(DEPDIR)/%.d: ;
 $(LOADER_SO): $(OBJS)
 	@echo "Building $@..."
 	@mkdir -p ../bin
-	$(CC) -shared -o $@ $(OBJS) $(LDIR) $(LIBS)
+	$(CC) -shared -o $@ $(OBJS) $(LDIR) ${DEPFLAGS} $(LIBS)
 
 $(LOADER_STATIC): $(OBJS)
 	@echo "Building $@..."
