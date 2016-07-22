@@ -10,7 +10,6 @@ for line in shell_stdout('bash -c "source env.sh; env"').split('\n'):
     key, _, value = line.partition("=")
     os.environ[key] = value
 
-define_macros = []
 include_dirs = os.environ['INC'].replace('-I', '').split()
 library_dirs = os.environ['LDIR'].replace('-L', '').split()
 libraries = os.environ['LIBS'].replace('-l', '').split()

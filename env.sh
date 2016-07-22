@@ -83,3 +83,5 @@ if [ "${HAS_GPU}" = true ] ; then
 	export LIBS="-lcuda -lcudart ${LIBS}"
 fi
 
+export CFLAGS="${CFLAGS} ${GPUFLAG} {MEDIAFLAGS}"
+
