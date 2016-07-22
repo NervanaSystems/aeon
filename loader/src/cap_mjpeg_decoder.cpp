@@ -163,11 +163,15 @@ struct RiffList
 
 #pragma pack(pop)
 
-MjpegFileInputStream::MjpegFileInputStream(): m_is_valid(false), m_f(0)
+MjpegFileInputStream::MjpegFileInputStream() :
+    m_is_valid(false),
+    m_f()
 {
 }
 
-MjpegFileInputStream::MjpegFileInputStream(const string& filename): m_is_valid(false), m_f(0)
+MjpegFileInputStream::MjpegFileInputStream(const string& filename) :
+    m_is_valid(false),
+    m_f()
 {
     open(filename);
 }
@@ -181,7 +185,7 @@ bool MjpegFileInputStream::open(const string& filename)
 {
     close();
 
-    m_f.open(filename, istream::binary);
+    m_f.open(filename, ios::in | ios::binary);
 
     m_is_valid = isOpened();
 
@@ -234,6 +238,55 @@ MjpegFileInputStream::~MjpegFileInputStream()
 {
     close();
 }
+
+
+MjpegMemoryInputStream::MjpegMemoryInputStream(char* data, size_t size) :
+    m_is_valid{true},
+    m_wrapper{data,size},
+    m_f{&m_wrapper}
+{
+}
+
+MjpegMemoryInputStream::~MjpegMemoryInputStream()
+{
+}
+
+MjpegInputStream& MjpegMemoryInputStream::read(char* buf, uint64_t count) {
+    m_f.read(buf, count);
+    m_is_valid = m_f.good();
+    if(!m_f) {
+        m_f.clear();
+    }
+
+    return *this;
+}
+
+MjpegInputStream& MjpegMemoryInputStream::seekg(uint64_t pos) {
+    m_f.seekg(pos, m_f.beg);
+    m_is_valid = m_f.good();
+
+    return *this;
+}
+
+uint64_t MjpegMemoryInputStream::tellg() {
+    return m_f.tellg();
+}
+
+bool MjpegMemoryInputStream::isOpened() const {
+    return true;
+}
+
+bool MjpegMemoryInputStream::open(const std::string& filename) {
+    return true;
+}
+
+void MjpegMemoryInputStream::close() {
+}
+
+MjpegMemoryInputStream::operator bool() {
+    return m_is_valid;
+}
+
 
 MjpegInputStream& operator >> (MjpegInputStream& is, AviMainHeader& avih);
 MjpegInputStream& operator >> (MjpegInputStream& is, AviStreamHeader& strh);
@@ -793,12 +846,13 @@ MotionJpegCapture::~MotionJpegCapture()
 MotionJpegCapture::MotionJpegCapture(const string& filename)
 {
     m_file_stream = make_shared<MjpegFileInputStream>(filename);
-    open(filename);
+    open();
 }
 
 MotionJpegCapture::MotionJpegCapture(char* buffer, size_t size)
 {
     m_file_stream = make_shared<MjpegMemoryInputStream>(buffer, size);
+    open();
 }
 
 
@@ -813,11 +867,11 @@ void MotionJpegCapture::close()
     m_frame_iterator = m_mjpeg_frames.end();
 }
 
-bool MotionJpegCapture::open(const string& filename)
+bool MotionJpegCapture::open()
 {
-    close();
+//    close();
 
-    m_file_stream->open(filename);
+//    m_file_stream->open(filename);
 
     m_frame_iterator = m_mjpeg_frames.end();
     m_is_first_frame = true;

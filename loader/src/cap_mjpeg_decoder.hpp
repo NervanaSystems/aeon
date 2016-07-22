@@ -13,6 +13,8 @@
 #include "opencv2/imgproc/imgproc_c.h"
 #include <opencv2/highgui/highgui_c.h>
 
+#include "util.hpp"
+
 namespace nervana {
     class MjpegInputStream;
     class MjpegFileInputStream;
@@ -71,8 +73,9 @@ public:
     operator bool() override;
 
 private:
-    bool            m_is_valid;
-    std::istream    m_f;
+    bool                        m_is_valid;
+    nervana::memstream<char>    m_wrapper;
+    std::istream                m_f;
 };
 
 class nervana::MotionJpegCapture//: public IVideoCapture
@@ -88,7 +91,7 @@ public:
     virtual bool isOpened() const;
     virtual int getCaptureDomain() { return CV_CAP_ANY; } // Return the type of the capture object: CAP_VFW, etc...
 
-    bool open(const std::string&);
+    bool open();
     void close();
 protected:
 

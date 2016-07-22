@@ -129,36 +129,34 @@ TEST(avi,video_file) {
     int image_number = 0;
     while(mjdecoder->grabFrame() && mjdecoder->retrieveFrame(0,image)) {
         ASSERT_NE(0, image.size().area());
-        string output_name = "mjpeg_frame_"+to_string(image_number)+".jpg";
-        cv::imwrite(output_name,image);
+//        string output_name = "mjpeg_frame_"+to_string(image_number)+".jpg";
+//        cv::imwrite(output_name,image);
         image_number++;
     }
+    EXPECT_EQ(600,image_number);
 }
 
-TEST(DISABLED_avi,video_buffer) {
+TEST(avi,video_buffer) {
     const string filename = "/home/users/alex/bb2.avi";
     ifstream in(filename, ios_base::binary);
     ASSERT_TRUE(in);
     in.seekg(0,in.end);
     size_t size = in.tellg();
     in.seekg(0,in.beg);
-    cout << "data size " << size << endl;
     vector<char> data(size);
-    cout << "vector size " << data.size() << endl;
     data.assign(istreambuf_iterator<char>(in), istreambuf_iterator<char>());
-    cout << "post vector size " << data.size() << endl;
 
     shared_ptr<MotionJpegCapture> mjdecoder = make_shared<MotionJpegCapture>(data.data(), data.size());
-    if( mjdecoder->isOpened() ) {
-        cv::Mat image;
-        int image_number = 0;
-        while(mjdecoder->grabFrame() && mjdecoder->retrieveFrame(0,image)) {
-            string output_name = "mjpeg_frame_"+to_string(image_number)+".jpg";
-            cv::imwrite(output_name,image);
-            cout << output_name << endl;
-            image_number++;
-        }
+    ASSERT_TRUE(mjdecoder->isOpened());
+    cv::Mat image;
+    int image_number = 0;
+    while(mjdecoder->grabFrame() && mjdecoder->retrieveFrame(0,image)) {
+        ASSERT_NE(0, image.size().area());
+//        string output_name = "mjpeg_frame_"+to_string(image_number)+".jpg";
+//        cv::imwrite(output_name,image);
+        image_number++;
     }
+    EXPECT_EQ(600,image_number);
 }
 
 TEST(util,memstream) {
