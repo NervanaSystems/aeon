@@ -2,56 +2,19 @@ import os
 from distutils.core import setup, Extension
 import subprocess
 
-os.environ['CC'] = 'clang++'
-os.environ['CFLAGS'] = '-Wno-deprecated-declarations -std=c++11'
-
 
 def shell_stdout(cmd):
     return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].strip()
 
+for line in shell_stdout('bash -c "source env.sh; env"').split('\n'):
+    key, _, value = line.partition("=")
+    os.environ[key] = value
+
 define_macros = []
-include_dirs = []
-library_dirs = []
-libraries = []
-
-if shell_stdout('pkg-config --exists opencv; echo $?') == '0':
-    define_macros.append(('HAS_IMGLIB', '1'))
-    include_dirs.extend(
-        shell_stdout('pkg-config --cflags opencv').replace('-I', '').split()
-    )
-    library_dirs.extend(
-        shell_stdout('pkg-config --libs-only-L opencv').replace('-L', '').split()
-    )
-    libraries.extend(
-        shell_stdout('pkg-config --libs-only-l opencv').replace('-l', '').split()
-    )
-
-if shell_stdout('pkg-config --exists libavutil libavformat libavcodec libswscale; echo $?') == '0':
-    define_macros.append(['HAS_VIDLIB', '1'])
-    define_macros.append(['HAS_AUDLIB', '1'])
-
-    library_dirs.extend(
-        shell_stdout('pkg-config --libs-only-L libavutil libavformat libavcodec libswscale').replace('-L', '').split()
-    )
-    libraries.extend(['avutil', 'avformat', 'avcodec', 'swscale'])
-
-if os.environ.get('HAS_GPU') == 'true':
-    CUDA_ROOT = shell_stdout('which nvcc').replace('/bin/nvcc', '')
-    if CUDA_ROOT:
-        include_dirs.append('{CUDA_ROOT}/include'.format(CUDA_ROOT=CUDA_ROOT))
-
-    define_macros.append(('HAS_GPU', '1'))
-    include_dirs.append('{CUDA_ROOT}/include'.format(CUDA_ROOT=CUDA_ROOT))
-    if shell_stdout('uname -s') == 'Darwin':
-        library_dirs.append('{CUDA_ROOT}/lib'.format(CUDA_ROOT=CUDA_ROOT))
-    else:
-        library_dirs.append('{CUDA_ROOT}/lib64'.format(CUDA_ROOT=CUDA_ROOT))
-
-    libraries.extend(['cuda', 'cudart'])
-
-print 'include_dirs:', include_dirs
-print 'library_dirs:', library_dirs
-print 'libraries:', libraries
+include_dirs = os.environ['INC'].replace('-I', '').split()
+library_dirs = os.environ['LDIR'].replace('-L', '').split()
+libraries = os.environ['LIBS'].replace('-l', '').split()
+extra_compile_args = os.environ['CFLAGS'].split()
 
 module = Extension(
     'axon_lib',
@@ -94,6 +57,7 @@ module = Extension(
     include_dirs=include_dirs,
     libraries=libraries,
     library_dirs=library_dirs,
+    extra_compile_args=extra_compile_args,
 )
 
 setup(

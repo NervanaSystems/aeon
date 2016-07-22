@@ -14,8 +14,11 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------
 
-mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
+include ../Makefile.base
+
+.PHONY: clean
+
+# specific to TEST
 
 SRCS := \
     main.cpp \
@@ -47,74 +50,21 @@ SRCS := \
     test_audio.cpp \
     test_logging.cpp \
 
-TOBJS            = $(subst .cpp,.o,$(SRCS))
-OBJS             = $(subst .c,.o,$(TOBJS))
-CFLAGS          := -Wall -Wno-deprecated-declarations -O3 -std=gnu11 -DCURDIR=\"$(CURDIR)\"
-CXXFLAGS        := -Wall -Wno-deprecated-declarations -O3 -std=c++11 -DCURDIR=\"$(CURDIR)\"
-CFLAGSDBG       := -g -Wall -O0 -std=c++11
-CC              := clang++
-UNAME_S         := $(shell uname -s)
-DEPDIR = .d
-$(shell mkdir -p $(DEPDIR) >/dev/null)
-DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
-POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
+OBJS             = $(subst .cpp,.o,$(SRCS))
+INC             := -I../src $(INC)
+# hackery to fix bug in opencv. It exports gtest symbols in the
+# opencv_ts library so remove it from LIBS
+LIBS            := $(subst -lopencv_ts,,$(LIBS))
+LIBS            := $(LIBS) -lgtest -lpthread
 GTEST_TEST      := /usr/local/lib/libgtest.a
 LOADER_LIB      := ../src/loader.a
-ifeq ($(UNAME_S), FreeBSD)
-	CC          := clang++
-endif
+CFLAGS          := $(CFLAGS) -DCURDIR=\"$(CURDIR)\"
 
 ifneq ("$(wildcard $(GTEST_TEST))","")
 	GTEST_INSTALLED = true
 else
 	GTEST_INSTALLED = false
 endif
-
-ifeq ($(shell pkg-config --exists opencv; echo $$?), 0)
-	IMGFLAG     := -DHAS_IMGLIB
-	INC         := $(shell pkg-config --cflags opencv)
-	IMGLDIR     := $(shell pkg-config --libs-only-L opencv)
-	IMGLIBS     := $(shell pkg-config --libs-only-l opencv)
-ifeq ($(shell pkg-config --exists libavutil libavformat libavcodec libswscale; echo $$?), 0)
-	VIDFLAG     := -DHAS_VIDLIB
-	AUDFLAG     := -DHAS_AUDLIB
-	VIDLDIR     := $(shell pkg-config --libs-only-L libavutil libavformat libavcodec libswscale)
-	VIDLIBS     := -lavutil -lavformat -lavcodec -lswscale
-endif
-endif
-
-# hackery to fix bug in opencv. It exports gtest symbols in the opencv_ts library
-IMGLIBS = $(subst -lopencv_ts,,$(shell pkg-config --libs-only-l opencv))
-
-MEDIAFLAGS      := $(IMGFLAG) $(VIDFLAG) $(AUDFLAG)
-LDIR            := $(IMGLDIR) $(VIDLDIR)
-LIBS            := $(IMGLIBS) $(VIDLIBS) -lgtest -lpthread
-INC             := $(INC) -I../src
-
-INC             := -I$(shell python -c "from distutils.sysconfig import get_python_inc; print get_python_inc()") $(INC)
-INC             := -I$(shell python -c "import numpy; print numpy.get_include()") $(INC)
-LIBS            := $(LIBS) -lpython2.7
-
-ifeq ($(HAS_GPU), true)
-ifeq ($(CUDA_ROOT),)
-	CUDA_ROOT   := $(patsubst %/bin/nvcc,%, $(shell which nvcc))
-endif
-
-	GPUFLAG     := -DHAS_GPU
-	INC         := -I$(CUDA_ROOT)/include $(INC)
-	ifeq ($(shell uname -s),Darwin)
-		LDIR    := -L$(CUDA_ROOT)/lib $(LDIR)
-	else
-		LDIR    := -L$(CUDA_ROOT)/lib64 $(LDIR)
-	endif
-	LIBS        := -lcuda -lcudart $(LIBS)
-endif
-
-$(shell mkdir -p bin)
-
-.PHONY: clean
-
-print-%  : ; @echo $* = $($*)
 
 ifeq ($(GTEST_INSTALLED),true)
 test: $(OBJS) $(LOADER_LIB)
@@ -125,12 +75,8 @@ test:
 	@echo "gtest must be installed to build test"
 endif
 
-%.o : %.c $(DEPDIR)/%.d
-	clang -c -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
-	$(POSTCOMPILE)
-
 %.o : %.cpp $(DEPDIR)/%.d
-	$(CC) -c -o $@ $(CXXFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
+	$(CC) -c -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
 	$(POSTCOMPILE)
 
 $(DEPDIR)/%.d: ;

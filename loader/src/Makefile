@@ -14,7 +14,13 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------
 
-SRCS            := \
+include ../Makefile.base
+
+.PHONY: clean
+
+# specific to src
+
+SRCS := \
     cpio.cpp \
     buffer_in.cpp \
     buffer_out.cpp \
@@ -24,11 +30,11 @@ SRCS            := \
     etl_audio.cpp \
     noise_clips.cpp \
     specgram.cpp \
-	log.cpp \
-	codec.cpp \
-	image.cpp \
-	etl_pixel_mask.cpp \
-	etl_image.cpp \
+    log.cpp \
+    codec.cpp \
+    image.cpp \
+    etl_pixel_mask.cpp \
+    etl_image.cpp \
     etl_image_var.cpp \
     etl_bbox.cpp \
     etl_label_map.cpp \
@@ -46,68 +52,16 @@ SRCS            := \
     minibatch_iterator.cpp \
     batch_loader.cpp \
     box.cpp \
-	buffer_pool.cpp \
+    buffer_pool.cpp \
     buffer_pool_in.cpp \
     buffer_pool_out.cpp \
     cap_mjpeg_decoder.cpp \
 
 OBJS             = $(subst .cpp,.o,$(SRCS))
-CFLAGS          := -Wall -Wno-deprecated-declarations -O0 -g -std=c++11 -fPIC
-CFLAGSDBG       := -g -Wall -O0 -std=c++11 -fPIC
-CC              := clang++
 LOADER_SO       := ../bin/loader.so
 LOADER_STATIC   := loader.a
-UNAME_S         := $(shell uname -s)
-DEPDIR             = .d
-$(shell mkdir -p $(DEPDIR) >/dev/null)
-DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
-POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
-ifeq ($(UNAME_S), FreeBSD)
-	CC          := clang++
-endif
-
-ifeq ($(shell pkg-config --exists opencv; echo $$?), 0)
-	IMGFLAG     := -DHAS_IMGLIB
-	INC         := $(shell pkg-config --cflags opencv)
-	IMGLDIR     := $(shell pkg-config --libs-only-L opencv)
-	IMGLIBS     := $(shell pkg-config --libs-only-l opencv)
-ifeq ($(shell pkg-config --exists libavutil libavformat libavcodec libswscale; echo $$?), 0)
-	VIDFLAG     := -DHAS_VIDLIB
-	AUDFLAG     := -DHAS_AUDLIB
-	VIDLDIR     := $(shell pkg-config --libs-only-L libavutil libavformat libavcodec libswscale)
-	VIDLIBS     := -lavutil -lavformat -lavcodec -lswscale
-endif
-endif
-
-MEDIAFLAGS      := $(IMGFLAG) $(VIDFLAG) $(AUDFLAG)
-LDIR            := $(IMGLDIR) $(VIDLDIR)
-LIBS            := $(IMGLIBS) $(VIDLIBS)
-
-ifeq ($(HAS_GPU), true)
-ifeq ($(CUDA_ROOT),)
-	CUDA_ROOT   := $(patsubst %/bin/nvcc,%, $(shell which nvcc))
-endif
-
-	GPUFLAG     := -DHAS_GPU
-	INC         := -I$(CUDA_ROOT)/include $(INC)
-	ifeq ($(shell uname -s),Darwin)
-		LDIR    := -L$(CUDA_ROOT)/lib $(LDIR)
-	else
-		LDIR    := -L$(CUDA_ROOT)/lib64 $(LDIR)
-	endif
-	LIBS        := -lcuda -lcudart $(LIBS)
-endif
-
-INC             := -I$(shell python -c "from distutils.sysconfig import get_python_inc; print get_python_inc()") $(INC)
-INC             := -I$(shell python -c "import numpy; print numpy.get_include()") $(INC)
-LIBS            := -lpython2.7 $(LIBS)
-
-.PHONY: clean
-
 
 all: ../bin/loader.so $(LOADER_SO) $(LOADER_STATIC) Makefile
-
-print-%  : ; @echo $* = $($*)
 
 %.o : %.c $(DEPDIR)/%.d
 	$(CC) -c -o $@ $(CFLAGS) $(INC) $(DEPFLAGS) $(GPUFLAG) $(MEDIAFLAGS) $<
