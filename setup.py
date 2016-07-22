@@ -19,9 +19,6 @@ sources = [
     'loader/src/'+src for src in os.environ['SRCS'].split()
 ]
 
-print sources
-print os.environ['SRCS']
-
 module = Extension(
     'axon_lib',
     sources=sources,
