@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo apt-get install python-dev clang
+sudo apt-get install python-dev clang libcurl4-openssl-dev
 
 # install gtest
 sudo apt-get install libgtest-dev
