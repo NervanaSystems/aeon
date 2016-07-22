@@ -1,8 +1,8 @@
 IGNORE          := $(shell bash -c "source ../../env.sh; env | sed 's/=/:=/' | sed 's/^/export /' > /tmp/makeenv")
-include /tmp/makeenv 
+include /tmp/makeenv
 
 CFLAGS          := $(CFLAGS) -Wall -O2 -fPIC
 DEPDIR           = .d
 $(shell mkdir -p ${DEPDIR}>/dev/null)
 DEPFLAGS         = -MT $@ -MMD -MP -MF ${DEPDIR}/$*.Td
-POSTCOMPILE      = mv -f ${DEPDIR}/$*.Td ${DEPDIR}/$*.d
+POSTCOMPILE      = @mv -f ${DEPDIR}/$*.Td ${DEPDIR}/$*.d
