@@ -9,12 +9,16 @@
 #include "util.hpp"
 
 namespace nervana {
-    class MjpegInputStream;
-    class MjpegFileInputStream;
-    class MjpegMemoryInputStream;
+    struct AviMainHeader;
+    struct AviStreamHeader;
+    struct AviIndex;
+    struct BitmapInfoHeader;
+    struct RiffChunk;
+    struct RiffList;
+}
 
 #pragma pack(push, 1)
-struct AviMainHeader
+struct nervana::AviMainHeader
 {
     uint32_t dwMicroSecPerFrame;    //  The period between video frames
     uint32_t dwMaxBytesPerSec;      //  Maximum data rate of the file
@@ -29,7 +33,7 @@ struct AviMainHeader
     uint32_t dwReserved[4];         // 0, 0, 0, 0
 };
 
-struct AviStreamHeader
+struct nervana::AviStreamHeader
 {
     uint32_t fccType;              // 'vids', 'auds', 'txts'...
     uint32_t fccHandler;           // "cvid", "DIB "
@@ -51,7 +55,7 @@ struct AviStreamHeader
     } rcFrame;                // If stream has a different size than dwWidth*dwHeight(unused)
 };
 
-struct AviIndex
+struct nervana::AviIndex
 {
     uint32_t ckid;
     uint32_t dwFlags;
@@ -59,7 +63,7 @@ struct AviIndex
     uint32_t dwChunkLength;
 };
 
-struct BitmapInfoHeader
+struct nervana::BitmapInfoHeader
 {
     uint32_t biSize;                // Write header size of BITMAPINFO header structure
     int32_t  biWidth;               // width in pixels
@@ -75,13 +79,13 @@ struct BitmapInfoHeader
     uint32_t biClrImportant;        // Specifies that the first x colors of the color table. Are important to the DIB.
 };
 
-struct RiffChunk
+struct nervana::RiffChunk
 {
     uint32_t m_four_cc;
     uint32_t m_size;
 };
 
-struct RiffList
+struct nervana::RiffList
 {
     uint32_t m_riff_or_list_cc;
     uint32_t m_size;
@@ -90,68 +94,36 @@ struct RiffList
 
 #pragma pack(pop)
 
-}
-
-
 typedef std::deque< std::pair<uint64_t, uint32_t> > frame_list;
 typedef frame_list::iterator frame_iterator;
 
-class nervana::MjpegInputStream
+std::istream& operator >> (std::istream& is, nervana::AviMainHeader& avih);
+std::istream& operator >> (std::istream& is, nervana::AviStreamHeader& strh);
+std::istream& operator >> (std::istream& is, nervana::BitmapInfoHeader& bmph);
+std::istream& operator >> (std::istream& is, nervana::RiffList& riff_list);
+std::istream& operator >> (std::istream& is, nervana::RiffChunk& riff_chunk);
+std::istream& operator >> (std::istream& is, nervana::AviIndex& idx1);
+
+namespace nervana
 {
-public:
-    MjpegInputStream(){}
-    virtual ~MjpegInputStream(){}
-    virtual MjpegInputStream& read(char*, uint64_t) = 0;
-    virtual MjpegInputStream& seekg(uint64_t) = 0;
-    virtual uint64_t tellg() = 0;
-    virtual bool isOpened() const = 0;
-    virtual bool open(const std::string& filename) = 0;
-    virtual void close() = 0;
-    virtual operator bool() = 0;
-};
+    #define CV_FOURCC_MACRO(c1, c2, c3, c4) (((c1) & 255) + (((c2) & 255) << 8) + (((c3) & 255) << 16) + (((c4) & 255) << 24))
 
-class nervana::MjpegFileInputStream : public nervana::MjpegInputStream
-{
-public:
-    MjpegFileInputStream();
-    MjpegFileInputStream(const std::string& filename);
-    ~MjpegFileInputStream();
-    MjpegInputStream& read(char*, uint64_t) override;
-    MjpegInputStream& seekg(uint64_t) override;
-    uint64_t tellg() override;
-    bool isOpened() const override;
-    bool open(const std::string& filename) override;
-    void close() override;
-    operator bool() override;
+    int CV_FOURCC(char c1, char c2, char c3, char c4);
 
-private:
-    bool            m_is_valid;
-    std::ifstream   m_f;
-};
+    const uint32_t RIFF_CC = CV_FOURCC('R','I','F','F');
+    const uint32_t LIST_CC = CV_FOURCC('L','I','S','T');
+    const uint32_t HDRL_CC = CV_FOURCC('h','d','r','l');
+    const uint32_t AVIH_CC = CV_FOURCC('a','v','i','h');
+    const uint32_t STRL_CC = CV_FOURCC('s','t','r','l');
+    const uint32_t STRH_CC = CV_FOURCC('s','t','r','h');
+    const uint32_t VIDS_CC = CV_FOURCC('v','i','d','s');
+    const uint32_t MJPG_CC = CV_FOURCC('M','J','P','G');
+    const uint32_t MOVI_CC = CV_FOURCC('m','o','v','i');
+    const uint32_t IDX1_CC = CV_FOURCC('i','d','x','1');
+    const uint32_t AVI_CC  = CV_FOURCC('A','V','I',' ');
+    const uint32_t AVIX_CC = CV_FOURCC('A','V','I','X');
+    const uint32_t JUNK_CC = CV_FOURCC('J','U','N','K');
+    const uint32_t INFO_CC = CV_FOURCC('I','N','F','O');
 
-class nervana::MjpegMemoryInputStream : public nervana::MjpegInputStream
-{
-public:
-    MjpegMemoryInputStream();
-    MjpegMemoryInputStream(char* data, size_t size);
-    ~MjpegMemoryInputStream();
-    MjpegInputStream& read(char*, uint64_t) override;
-    MjpegInputStream& seekg(uint64_t) override;
-    uint64_t tellg() override;
-    bool isOpened() const override;
-    bool open(const std::string& filename) override;
-    void close() override;
-    operator bool() override;
-
-private:
-    bool                        m_is_valid;
-    nervana::memstream<char>    m_wrapper;
-    std::istream                m_f;
-};
-
-nervana::MjpegInputStream& operator >> (nervana::MjpegInputStream& is, nervana::AviMainHeader& avih);
-nervana::MjpegInputStream& operator >> (nervana::MjpegInputStream& is, nervana::AviStreamHeader& strh);
-nervana::MjpegInputStream& operator >> (nervana::MjpegInputStream& is, nervana::BitmapInfoHeader& bmph);
-nervana::MjpegInputStream& operator >> (nervana::MjpegInputStream& is, nervana::RiffList& riff_list);
-nervana::MjpegInputStream& operator >> (nervana::MjpegInputStream& is, nervana::RiffChunk& riff_chunk);
-nervana::MjpegInputStream& operator >> (nervana::MjpegInputStream& is, nervana::AviIndex& idx1);
+    std::string fourccToString(uint32_t fourcc);
+}

@@ -37,12 +37,12 @@ public:
     void close();
 protected:
 
-    bool parseRiff(MjpegInputStream& in_str);
+    bool parseRiff(std::istream& in_str);
 
     inline uint64_t getFramePos() const;
     std::vector<char> readFrame(frame_iterator it);
 
-    std::shared_ptr<MjpegInputStream>   m_file_stream;
+    std::shared_ptr<std::istream>       m_file_stream;
     bool                                m_is_first_frame;
     frame_list                          m_mjpeg_frames;
 

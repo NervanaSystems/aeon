@@ -60,7 +60,6 @@ namespace nervana {
                 this->setg(this->eback(), this->egptr()-off, this->egptr());
                 break;
             default:
-                std::cout << "********************************** ugh" << off << std::endl;
                 break;
             }
             return this->gptr() - this->eback();
@@ -69,5 +68,16 @@ namespace nervana {
             this->setg(this->eback(), this->eback()+pos, this->egptr());
             return this->gptr() - this->eback();
         }
+    };
+
+    class memory_stream : public std::istream {
+    public:
+        memory_stream(char* data, size_t size) :
+            std::istream{&wrapper},
+            wrapper{data, size}
+        {
+        }
+    private:
+        memstream<char> wrapper;
     };
 }

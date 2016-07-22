@@ -48,35 +48,6 @@ using namespace cv;
 namespace nervana
 {
 
-#define CV_FOURCC_MACRO(c1, c2, c3, c4) (((c1) & 255) + (((c2) & 255) << 8) + (((c3) & 255) << 16) + (((c4) & 255) << 24))
-
-int CV_FOURCC(char c1, char c2, char c3, char c4)
-{
-    return CV_FOURCC_MACRO(c1, c2, c3, c4);
-}
-
-const uint32_t RIFF_CC = CV_FOURCC('R','I','F','F');
-const uint32_t LIST_CC = CV_FOURCC('L','I','S','T');
-const uint32_t HDRL_CC = CV_FOURCC('h','d','r','l');
-const uint32_t AVIH_CC = CV_FOURCC('a','v','i','h');
-const uint32_t STRL_CC = CV_FOURCC('s','t','r','l');
-const uint32_t STRH_CC = CV_FOURCC('s','t','r','h');
-const uint32_t VIDS_CC = CV_FOURCC('v','i','d','s');
-const uint32_t MJPG_CC = CV_FOURCC('M','J','P','G');
-const uint32_t MOVI_CC = CV_FOURCC('m','o','v','i');
-const uint32_t IDX1_CC = CV_FOURCC('i','d','x','1');
-const uint32_t AVI_CC  = CV_FOURCC('A','V','I',' ');
-const uint32_t AVIX_CC = CV_FOURCC('A','V','I','X');
-const uint32_t JUNK_CC = CV_FOURCC('J','U','N','K');
-const uint32_t INFO_CC = CV_FOURCC('I','N','F','O');
-
-string fourccToString(uint32_t fourcc)
-{
-    stringstream ss;
-    ss <<  (fourcc & 255) << ((fourcc >> 8) & 255) << ((fourcc >> 16) & 255) << ((fourcc >> 24) & 255);
-    return ss.str();
-}
-
 /*
 AVI struct:
 
@@ -134,9 +105,9 @@ class AviMjpegStream
 public:
     AviMjpegStream();
     //stores founded frames in m_frame_list which can be accessed via getFrames
-    bool parseAvi(MjpegInputStream& in_str);
+    bool parseAvi(istream& in_str);
     //stores founded frames in in_frame_list. getFrames() would return empty list
-    bool parseAvi(MjpegInputStream& in_str, frame_list& in_frame_list);
+    bool parseAvi(istream& in_str, frame_list& in_frame_list);
     size_t getFramesCount();
     frame_list& getFrames();
     uint32_t getWidth();
@@ -145,16 +116,16 @@ public:
 
 protected:
 
-    bool parseAviWithFrameList(MjpegInputStream& in_str, frame_list& in_frame_list);
-    void skipJunk(RiffChunk& chunk, MjpegInputStream& in_str);
-    void skipJunk(RiffList& list, MjpegInputStream& in_str);
-    bool parseHdrlList(MjpegInputStream& in_str);
-    bool parseIndex(MjpegInputStream& in_str, uint32_t index_size, frame_list& in_frame_list);
-    bool parseMovi(MjpegInputStream& in_str, frame_list& in_frame_list);
-    bool parseStrl(MjpegInputStream& in_str, uint8_t stream_id);
-    bool parseInfo(MjpegInputStream& in_str);
-    void printError(MjpegInputStream& in_str, RiffList& list, uint32_t expected_fourcc);
-    void printError(MjpegInputStream& in_str, RiffChunk& chunk, uint32_t expected_fourcc);
+    bool parseAviWithFrameList(istream& in_str, frame_list& in_frame_list);
+    void skipJunk(RiffChunk& chunk, istream& in_str);
+    void skipJunk(RiffList& list, istream& in_str);
+    bool parseHdrlList(istream& in_str);
+    bool parseIndex(istream& in_str, uint32_t index_size, frame_list& in_frame_list);
+    bool parseMovi(istream& in_str, frame_list& in_frame_list);
+    bool parseStrl(istream& in_str, uint8_t stream_id);
+    bool parseInfo(istream& in_str);
+    void printError(istream& in_str, RiffList& list, uint32_t expected_fourcc);
+    void printError(istream& in_str, RiffChunk& chunk, uint32_t expected_fourcc);
 
     uint32_t   m_stream_id;
     uint64_t   m_movi_start;
@@ -195,7 +166,7 @@ double AviMjpegStream::getFps()
     return m_fps;
 }
 
-void AviMjpegStream::printError(MjpegInputStream& in_str, RiffList& list, uint32_t expected_fourcc)
+void AviMjpegStream::printError(istream& in_str, RiffList& list, uint32_t expected_fourcc)
 {
     if(!in_str)
     {
@@ -211,7 +182,7 @@ void AviMjpegStream::printError(MjpegInputStream& in_str, RiffList& list, uint32
     }
 }
 
-void AviMjpegStream::printError(MjpegInputStream& in_str, RiffChunk& chunk, uint32_t expected_fourcc)
+void AviMjpegStream::printError(istream& in_str, RiffChunk& chunk, uint32_t expected_fourcc)
 {
     if(!in_str)
     {
@@ -224,19 +195,19 @@ void AviMjpegStream::printError(MjpegInputStream& in_str, RiffChunk& chunk, uint
 }
 
 
-bool AviMjpegStream::parseMovi(MjpegInputStream&, frame_list&)
+bool AviMjpegStream::parseMovi(istream&, frame_list&)
 {
     //not implemented
     return true;
 }
 
-bool AviMjpegStream::parseInfo(MjpegInputStream&)
+bool AviMjpegStream::parseInfo(istream&)
 {
     //not implemented
     return true;
 }
 
-bool AviMjpegStream::parseIndex(MjpegInputStream& in_str, uint32_t index_size, frame_list& in_frame_list)
+bool AviMjpegStream::parseIndex(istream& in_str, uint32_t index_size, frame_list& in_frame_list)
 {
     uint64_t index_end = in_str.tellg();
     index_end += index_size;
@@ -268,7 +239,7 @@ bool AviMjpegStream::parseIndex(MjpegInputStream& in_str, uint32_t index_size, f
     return result;
 }
 
-bool AviMjpegStream::parseStrl(MjpegInputStream& in_str, uint8_t stream_id)
+bool AviMjpegStream::parseStrl(istream& in_str, uint8_t stream_id)
 {
     RiffChunk strh;
     in_str >> strh;
@@ -304,26 +275,26 @@ bool AviMjpegStream::parseStrl(MjpegInputStream& in_str, uint8_t stream_id)
     return false;
 }
 
-void AviMjpegStream::skipJunk(RiffChunk& chunk, MjpegInputStream& in_str)
+void AviMjpegStream::skipJunk(RiffChunk& chunk, istream& in_str)
 {
     if(chunk.m_four_cc == JUNK_CC)
     {
-        in_str.seekg(in_str.tellg() + chunk.m_size);
+        in_str.seekg((uint32_t)in_str.tellg() + chunk.m_size);
         in_str >> chunk;
     }
 }
 
-void AviMjpegStream::skipJunk(RiffList& list, MjpegInputStream& in_str)
+void AviMjpegStream::skipJunk(RiffList& list, istream& in_str)
 {
     if(list.m_riff_or_list_cc == JUNK_CC)
     {
         //JUNK chunk is 4 bytes less than LIST
-        in_str.seekg(in_str.tellg() + list.m_size - 4);
+        in_str.seekg((uint32_t)in_str.tellg() + list.m_size - 4);
         in_str >> list;
     }
 }
 
-bool AviMjpegStream::parseHdrlList(MjpegInputStream& in_str)
+bool AviMjpegStream::parseHdrlList(istream& in_str)
 {
     bool result = false;
 
@@ -375,7 +346,7 @@ bool AviMjpegStream::parseHdrlList(MjpegInputStream& in_str)
     return result;
 }
 
-bool AviMjpegStream::parseAviWithFrameList(MjpegInputStream& in_str, frame_list& in_frame_list)
+bool AviMjpegStream::parseAviWithFrameList(istream& in_str, frame_list& in_frame_list)
 {
     RiffList hdrl_list;
     in_str >> hdrl_list;
@@ -463,12 +434,12 @@ bool AviMjpegStream::parseAviWithFrameList(MjpegInputStream& in_str, frame_list&
     return in_frame_list.size() > 0;
 }
 
-bool AviMjpegStream::parseAvi(MjpegInputStream& in_str, frame_list& in_frame_list)
+bool AviMjpegStream::parseAvi(istream& in_str, frame_list& in_frame_list)
 {
     return parseAviWithFrameList(in_str, in_frame_list);
 }
 
-bool AviMjpegStream::parseAvi(MjpegInputStream& in_str)
+bool AviMjpegStream::parseAvi(istream& in_str)
 {
     return parseAviWithFrameList(in_str, m_frame_list);
 }
@@ -591,13 +562,13 @@ MotionJpegCapture::~MotionJpegCapture()
 
 MotionJpegCapture::MotionJpegCapture(const string& filename)
 {
-    m_file_stream = make_shared<MjpegFileInputStream>(filename);
+    m_file_stream = make_shared<ifstream>(filename, ios::in | ios::binary);
     open();
 }
 
 MotionJpegCapture::MotionJpegCapture(char* buffer, size_t size)
 {
-    m_file_stream = make_shared<MjpegMemoryInputStream>(buffer, size);
+    m_file_stream = make_shared<memory_stream>(buffer, size);
     open();
 }
 
@@ -609,7 +580,7 @@ bool MotionJpegCapture::isOpened() const
 
 void MotionJpegCapture::close()
 {
-    m_file_stream->close();
+    //m_file_stream->close();
     m_frame_iterator = m_mjpeg_frames.end();
 }
 
@@ -631,7 +602,7 @@ bool MotionJpegCapture::open()
 }
 
 
-bool MotionJpegCapture::parseRiff(MjpegInputStream& in_str)
+bool MotionJpegCapture::parseRiff(istream& in_str)
 {
     bool result = false;
     while(in_str)
@@ -665,6 +636,7 @@ bool MotionJpegCapture::parseRiff(MjpegInputStream& in_str)
             break;
         }
     }
+    in_str.clear();
 
     return result;
 }
