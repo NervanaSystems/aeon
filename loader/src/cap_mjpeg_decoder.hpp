@@ -29,7 +29,7 @@ public:
     virtual double getProperty(int) const;
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
-    virtual bool retrieveFrame(int, cv::OutputArray);
+    virtual bool retrieveFrame(int, cv::Mat&);
     virtual bool isOpened() const;
     virtual int getCaptureDomain() { return CV_CAP_ANY; } // Return the type of the capture object: CAP_VFW, etc...
 
