@@ -52,12 +52,6 @@ TEST(provider,audio_transcript) {
     // Get the character map
     auto cmap = media->get_cmap();
 
-    // Get buffer output shapes for data and target. Here there are only 1 input and 1 output.
-    const vector<nervana::shape_type>& oshapes = media->get_oshapes();
-    size_t dsize = oshapes[0].get_byte_size();
-    size_t tsize = oshapes[1].get_byte_size();
-    // cout << "dsize is " << dsize << " and tsize is " << tsize << endl;
-
     size_t batch_size = 128;
 
     // Generate a simple sine wav
@@ -68,27 +62,14 @@ TEST(provider,audio_transcript) {
     bool stereo = false;
 
     wav_data wav(sg, wav_len_sec, sample_freq, stereo);
-    uint32_t wavbufsize = wav_data::HEADER_SIZE + wav.nbytes();
+    vector<char> buf(wav_data::HEADER_SIZE + wav.nbytes());
+    wav.write_to_buffer(&buf[0], buf.size());
 
-    vector<char> buf(wavbufsize);
-    wav.write_to_buffer(&buf[0], wavbufsize);
-
-    // Generate a fake transcript
-    string t1 = "The quick brown fox jumped over the lazy dog";
-    vector<char> t1_char(t1.begin(), t1.end());
-    // cout << "t1 is: " << t1 << endl;
-    // for (int i=0; i<t1.length(); i++) {
-    //   cout << (int) cmap[std::toupper(t1[i])] << " ";
-    // }
-    // cout << endl;
-
-    string t2 = "A much more interesting sentence.";
-    vector<char> t2_char(t2.begin(), t2.end());
-    // cout << "t2 is: " << t2 << endl;
-    // for (int i=0; i<t2.length(); i++) {
-    //   cout << (int) cmap[std::toupper(t2[i])] << " ";
-    // }
-    // cout << endl;
+    // Generate alternating fake transcripts
+    vector<string> tr {"The quick brown fox jumped over the lazy dog",
+                       "A much more interesting sentence."};
+    vector<char> tr0_char(tr[0].begin(), tr[0].end());
+    vector<char> tr1_char(tr[1].begin(), tr[1].end());
 
     // Create the input buffer
     buffer_in_array bp({0,0});
@@ -96,52 +77,42 @@ TEST(provider,audio_transcript) {
     buffer_in& target_p = *bp[1];
 
     // Fill the input buffer
-    for (int i=0; i<batch_size-1; i++) {
+    for (int i=0; i<batch_size; i++) {
         data_p.addItem(buf);
-        target_p.addItem(t1_char);
+        target_p.addItem( ( (i % 2) == 0 ? tr0_char : tr1_char) );
     }
-    data_p.addItem(buf);
-    target_p.addItem(t2_char);
+
     EXPECT_EQ(data_p.getItemCount(), batch_size);
     EXPECT_EQ(target_p.getItemCount(), batch_size);
 
-    // Generate an output buffer
-    buffer_out_array outBuf({dsize, tsize, 4}, batch_size);
+    // Generate output buffers using shapes from the provider
+    buffer_out_array outBuf({media->get_oshapes()[0].get_byte_size(),
+                             media->get_oshapes()[1].get_byte_size(),
+                             media->get_oshapes()[2].get_byte_size()},
+                            batch_size);
 
     // Call the provider
-    for (int i=0; i<batch_size; i++ ) {
-       media->provide(i, bp, outBuf);
+    for (int i=0; i<batch_size; i++)
+    {
+        media->provide(i, bp, outBuf);
     }
 
-    // Check the output data
-    // char* data_out = outBuf[1]->getItem(0);
-
-
-    // Check first target starts with "t"(19) and ends with "g"(6)
-    char* target_out = outBuf[1]->getItem(0);
-    // cout << "First output is: " << endl;
-    for (int i=0; i<t1.length(); i++) {
-        auto v = unpack_le<uint8_t>(target_out, i);
-        // cout << (int) v << " ";
-        ASSERT_EQ(v, cmap[std::toupper(t1[i])]);
+    // Check target sequences against their source string
+    for (int i=0; i<batch_size; i++)
+    {
+        char* target_out = outBuf[1]->getItem(i);
+        auto orig_string = tr[i % 2];
+        for (auto c : orig_string)
+        {
+            ASSERT_EQ(unpack_le<uint8_t>(target_out++),
+                      cmap[std::toupper(c)]);
+        }
     }
-    // cout << endl;
 
-    // Check last target starts with "t"(19) and ends with "g"(6)
-    target_out = outBuf[1]->getItem(batch_size - 1);
-    // cout << "Last output is: " << endl;
-    for (int i=0; i<t2.length(); i++) {
-        auto v = unpack_le<uint8_t>(target_out, i);
-        // cout << (int) v << " ";
-        ASSERT_EQ(v, cmap[std::toupper(t2[i])]);
+    // Check the transcript lengths match source string length
+    for (int i=0; i<batch_size; i++)
+    {
+        ASSERT_EQ(unpack_le<uint32_t>(outBuf[2]->getItem(i)), tr[i % 2].length());
     }
-    // cout << endl;
 
-    // Check the first transcript length (should be 44)
-    char* len_out = outBuf[2]->getItem(0);
-    ASSERT_EQ(unpack_le<uint32_t>(len_out, 0), t1.length());
-
-    // Check the last transcript length is also 44
-    len_out = outBuf[2]->getItem(batch_size-1);
-    ASSERT_EQ(unpack_le<uint32_t>(len_out, 0), t2.length());
 }
