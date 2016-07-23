@@ -21,6 +21,7 @@ namespace nervana {
     public:
         uint32_t max_length;
         std::string alphabet;
+        bool pack_for_ctc = false;
 
         std::string type_string{"uint8_t"};
 
@@ -28,6 +29,7 @@ namespace nervana {
             parse_value(max_length,  "max_length",  js,  mode::REQUIRED);
             parse_value(alphabet,    "alphabet",    js,  mode::REQUIRED);
 
+            parse_value(pack_for_ctc, "pack_for_ctc", js);
             parse_value(type_string, "type_string", js);
 
             // Now fill in derived

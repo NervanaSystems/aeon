@@ -55,7 +55,17 @@ namespace nervana {
 
         void post_process(buffer_out_array& out_buf) override
         {
-            // TODO write packing routine
+            if (trans_config.pack_for_ctc) {
+                auto num_items = out_buf[1]->getItemCount();
+                char* dptr = out_buf[1]->data();
+
+                for (int i=0; i<num_items; i++) {
+                    uint32_t len = unpack_le<uint32_t>(out_buf[2]->getItem(i));
+                    memmove(dptr, out_buf[1]->getItem(i), len);
+                    dptr += len;
+                }
+                // TODO: zero out the rest of the buffer?
+            }
         }
 
         const std::unordered_map<char, uint8_t>& get_cmap() const {return trans_config.get_cmap();}

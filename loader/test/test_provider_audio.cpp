@@ -43,6 +43,7 @@ TEST(provider,audio_transcript) {
                             {"type", "transcript"},
                             {"config", {
                               {"alphabet","ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()"},
+                              {"pack_for_ctc", true},
                               {"max_length",50}
                             }}}}};
 
@@ -113,6 +114,20 @@ TEST(provider,audio_transcript) {
     for (int i=0; i<batch_size; i++)
     {
         ASSERT_EQ(unpack_le<uint32_t>(outBuf[2]->getItem(i)), tr[i % 2].length());
+    }
+
+    // Do the packing
+    media->post_process(outBuf);
+    string combined_string = tr[0] + tr[1];
+    uint32_t packed_length = combined_string.size() * batch_size / 2;
+
+    // Check that target sequence contains abutted vals corresponding to original strings
+    char* target_ptr = outBuf[1]->data();
+    for (int i=0; i<packed_length; i++)
+    {
+        char c = combined_string[i % combined_string.size()];
+        ASSERT_EQ(unpack_le<uint8_t>(target_ptr++),
+                  cmap[std::toupper(c)]);
     }
 
 }
