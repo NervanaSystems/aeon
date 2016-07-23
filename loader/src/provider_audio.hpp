@@ -58,6 +58,8 @@ namespace nervana {
             // TODO write packing routine
         }
 
+        const std::unordered_map<char, uint8_t>& get_cmap() const {return trans_config.get_cmap();}
+
     private:
         audio::config               audio_config;
         char_map::config            trans_config;

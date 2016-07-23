@@ -47,8 +47,10 @@ TEST(provider,audio_transcript) {
                             }}}}};
 
     // Create the config
-    shared_ptr<transcribed_audio> media = static_pointer_cast<transcribed_audio>(nervana::train_provider_factory::create(js));
-    // auto cmap = media->trans_config.get_cmap();
+    auto media = dynamic_pointer_cast<transcribed_audio>(nervana::train_provider_factory::create(js));
+
+    // Get the character map
+    auto cmap = media->get_cmap();
 
     // Get buffer output shapes for data and target. Here there are only 1 input and 1 output.
     const vector<nervana::shape_type>& oshapes = media->get_oshapes();
@@ -74,9 +76,19 @@ TEST(provider,audio_transcript) {
     // Generate a fake transcript
     string t1 = "The quick brown fox jumped over the lazy dog";
     vector<char> t1_char(t1.begin(), t1.end());
+    // cout << "t1 is: " << t1 << endl;
+    // for (int i=0; i<t1.length(); i++) {
+    //   cout << (int) cmap[std::toupper(t1[i])] << " ";
+    // }
+    // cout << endl;
 
     string t2 = "A much more interesting sentence.";
     vector<char> t2_char(t2.begin(), t2.end());
+    // cout << "t2 is: " << t2 << endl;
+    // for (int i=0; i<t2.length(); i++) {
+    //   cout << (int) cmap[std::toupper(t2[i])] << " ";
+    // }
+    // cout << endl;
 
     // Create the input buffer
     buffer_in_array bp({0,0});
@@ -84,10 +96,12 @@ TEST(provider,audio_transcript) {
     buffer_in& target_p = *bp[1];
 
     // Fill the input buffer
-    for (int i=0; i<batch_size; i++) {
+    for (int i=0; i<batch_size-1; i++) {
         data_p.addItem(buf);
         target_p.addItem(t1_char);
     }
+    data_p.addItem(buf);
+    target_p.addItem(t2_char);
     EXPECT_EQ(data_p.getItemCount(), batch_size);
     EXPECT_EQ(target_p.getItemCount(), batch_size);
 
@@ -105,16 +119,23 @@ TEST(provider,audio_transcript) {
 
     // Check first target starts with "t"(19) and ends with "g"(6)
     char* target_out = outBuf[1]->getItem(0);
-    // for (int i=0; i<t1.length(), i++) {
-    //     ASSERT_EQ(unpack_le<uint8_t>(target_out, i), cmap[t1[i]]);
-    // }
-    ASSERT_EQ(unpack_le<uint8_t>(target_out, 0), 19);
-    ASSERT_EQ(unpack_le<uint8_t>(target_out, t1.length() - 1), 6);
+    // cout << "First output is: " << endl;
+    for (int i=0; i<t1.length(); i++) {
+        auto v = unpack_le<uint8_t>(target_out, i);
+        // cout << (int) v << " ";
+        ASSERT_EQ(v, cmap[std::toupper(t1[i])]);
+    }
+    // cout << endl;
 
     // Check last target starts with "t"(19) and ends with "g"(6)
     target_out = outBuf[1]->getItem(batch_size - 1);
-    ASSERT_EQ(unpack_le<uint8_t>(target_out, 0), 19);
-    ASSERT_EQ(unpack_le<uint8_t>(target_out, t1.length() - 1), 6);
+    // cout << "Last output is: " << endl;
+    for (int i=0; i<t2.length(); i++) {
+        auto v = unpack_le<uint8_t>(target_out, i);
+        // cout << (int) v << " ";
+        ASSERT_EQ(v, cmap[std::toupper(t2[i])]);
+    }
+    // cout << endl;
 
     // Check the first transcript length (should be 44)
     char* len_out = outBuf[2]->getItem(0);
@@ -122,13 +143,5 @@ TEST(provider,audio_transcript) {
 
     // Check the last transcript length is also 44
     len_out = outBuf[2]->getItem(batch_size-1);
-    ASSERT_EQ(unpack_le<uint32_t>(len_out, 0), t1.length());
-    // cout << "transcript_length is " << transcript_length << endl;
-    // uint32_t transcript_length2;
-    // memcpy(&transcript_length2, outBuf[2]->getItem(0), 1);
-    // cout << "transcript_length2 is " << transcript_length2 << endl;
-    // This is currently failing...
-    // ASSERT_EQ(max_length, t1.length())
-
-
+    ASSERT_EQ(unpack_le<uint32_t>(len_out, 0), t2.length());
 }
