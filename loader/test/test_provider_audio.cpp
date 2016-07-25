@@ -18,6 +18,7 @@
 #include <typeinfo>
 
 #include "provider_factory.hpp"
+#include "provider_audio.hpp"
 #include "etl_audio.hpp"
 #include "etl_char_map.hpp"
 #include "wav_data.hpp"

@@ -1,4 +1,6 @@
 #include "provider_factory.hpp"
+#include "provider_image_class.hpp"
+#include "provider_audio.hpp"
 
 #include <sstream>
 
@@ -14,8 +16,13 @@ std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::cr
     if( mediaType == "image,label" ) {
         rc = std::make_shared<nervana::image_decoder>(configJs);
     } else if( mediaType == "audio_transcript" ) {
-        rc = std::make_shared<nervana::transcribed_audio>(configJs);
-    } else if( mediaType == "localization" ) {
+        rc = make_shared<transcribed_audio>(configJs);
+    } else if( mediaType == "image_localization" ) {
+        rc = make_shared<localization_decoder>(configJs);
+    } else if( mediaType == "image_pixelmask" ) {
+        rc = make_shared<pixel_mask_decoder>(configJs);
+    } else if( mediaType == "image_boundingbox" ) {
+        rc = make_shared<bbox_provider>(configJs);
     } else {
         rc = nullptr;
         stringstream ss;

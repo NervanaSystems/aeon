@@ -12,15 +12,7 @@ namespace nervana {
         class loader;
     }
 
-    class pixel_mask::extractor : public interface::extractor<image::decoded> {
-    public:
-        extractor(const image::config& cfg);
-        ~extractor();
-        std::shared_ptr<image::decoded> extract(const char* buf, int bufSize);
-    private:
-        int _pixel_type;
-        int _color_mode;
-    };
+    // image extractor used
 
 
     class pixel_mask::transformer : public interface::transformer<image::decoded, image::params> {
@@ -32,12 +24,5 @@ namespace nervana {
                             std::shared_ptr<image::decoded> mp) override;
     };
 
-    class pixel_mask::loader : public interface::loader<image::decoded> {
-    public:
-        loader(const image::config& cfg);
-        ~loader();
-        void load(char* buf, std::shared_ptr<image::decoded> mp) override;
-    private:
-        const image::config& _cfg;
-    };
+    // image loader used
 }

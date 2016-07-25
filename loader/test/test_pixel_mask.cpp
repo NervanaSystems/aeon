@@ -28,6 +28,7 @@
 
 #include "params.hpp"
 #include "provider_image_class.hpp"
+#include "etl_image.hpp"
 #include "json.hpp"
 #include "helpers.hpp"
 
@@ -75,9 +76,9 @@ TEST(pixel_mask, scale_up) {
     nlohmann::json js = {{"width", 256},{"height",256}};
     image::config cfg(js);
 
-    pixel_mask::extractor   extractor{cfg};
+    image::extractor        extractor{cfg};
     pixel_mask::transformer transformer{cfg};
-    pixel_mask::loader      loader{cfg};
+    image::loader           loader{cfg};
     image::param_factory    factory{cfg};
 
     auto extracted = extractor.extract((const char*)test_data.data(), test_data.size());
@@ -98,9 +99,9 @@ TEST(pixel_mask, scale_down) {
     nlohmann::json js = {{"width", 256},{"height",256}};
     image::config cfg(js);
 
-    pixel_mask::extractor   extractor{cfg};
+    image::extractor        extractor{cfg};
     pixel_mask::transformer transformer{cfg};
-    pixel_mask::loader      loader{cfg};
+    image::loader           loader{cfg};
     image::param_factory    factory{cfg};
 
     auto extracted = extractor.extract((const char*)test_data.data(), test_data.size());
@@ -121,9 +122,9 @@ TEST(pixel_mask, rotate) {
     nlohmann::json js = {{"width", 256},{"height",256}};
     image::config cfg(js);
 
-    pixel_mask::extractor   extractor{cfg};
+    image::extractor        extractor{cfg};
     pixel_mask::transformer transformer{cfg};
-    pixel_mask::loader      loader{cfg};
+    image::loader           loader{cfg};
     image::param_factory    factory{cfg};
 
     auto extracted = extractor.extract((const char*)test_data.data(), test_data.size());
