@@ -66,7 +66,6 @@ def generic_config(manifest_name):
             'height': 2,
             'width': 2,
         },
-        'label': {},
         'type': 'image,label',
     }
 
@@ -83,14 +82,16 @@ def test_loader_invalid_config_type():
     assert 'invalid type name' in str(ex)
 
 
-@pytest.mark.xfail
 def test_loader_missing_config_field():
     manifest = random_manifest(10)
     config = generic_config(manifest.name)
 
     del config['image']
 
-    dl = DataLoader(config, gen_backend(backend='cpu'))
+    with pytest.raises(Exception) as ex:
+        dl = DataLoader(config, gen_backend(backend='cpu'))
+
+    assert 'image' in str(ex)
 
 
 def test_loader_non_existant_manifest():
@@ -162,4 +163,4 @@ def test_loader_reset():
 
 
 if __name__ == '__main__':
-    pytest.main('-s')
+    pytest.main()
