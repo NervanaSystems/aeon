@@ -29,7 +29,7 @@ using namespace std;
 using namespace nervana;
 
 TEST(provider,audio_transcript) {
-    nlohmann::json js = {{"media","audio_transcript"},
+    nlohmann::json js = {{"type","audio_transcript"},
                          {"data_config",{
                             {"type", "audio"},
                             {"config", {

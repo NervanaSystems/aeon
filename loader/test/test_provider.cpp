@@ -17,9 +17,9 @@ using namespace std;
 using namespace nervana;
 
 TEST(provider,image) {
-    nlohmann::json js = {{"media","image_label"},
-                         {"data_config", {{"type", "image"}, {"config", {{"height",128},{"width",128},{"channel_major",false},{"flip",true}}}}},
-                         {"target_config", {{"type", "label"}, {"config", {}}}}};
+    nlohmann::json js = {{"type","image,label"},
+                         {"image", {{"height",128},{"width",128},{"channel_major",false},{"flip",true}}},
+                         {"label", {}}};
 
     auto media = nervana::train_provider_factory::create(js);
     const vector<nervana::shape_type>& oshapes = media->get_oshapes();
