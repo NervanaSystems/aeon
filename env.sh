@@ -36,6 +36,7 @@ SRCS="
     buffer_pool_in.cpp
     buffer_pool_out.cpp
     cap_mjpeg_decoder.cpp
+    avi.cpp
 	nds_batch_loader.cpp
 "
 # remove newlines
