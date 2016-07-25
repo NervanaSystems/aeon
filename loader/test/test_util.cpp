@@ -122,7 +122,7 @@ TEST(util, pack_le) {
 }
 
 TEST(avi,video_file) {
-    const string filename = "/home/users/alex/bb8.avi";
+    const string filename = CURDIR"/test_data/bb8.avi";
     shared_ptr<MotionJpegCapture> mjdecoder = make_shared<MotionJpegCapture>(filename);
     ASSERT_TRUE(mjdecoder->isOpened());
     cv::Mat image;
