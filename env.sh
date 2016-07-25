@@ -11,7 +11,6 @@ SRCS="
     noise_clips.cpp
     specgram.cpp
     log.cpp
-    codec.cpp
     image.cpp
     etl_pixel_mask.cpp
     etl_image.cpp

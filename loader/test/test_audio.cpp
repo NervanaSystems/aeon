@@ -17,33 +17,10 @@
 #include "gtest/gtest.h"
 
 #include "etl_audio.hpp"
-#include "gen_audio.hpp"
 #include "wav_data.hpp"
 
 using namespace std;
 using namespace nervana;
-
-shared_ptr<audio::decoded> generate_decoded_audio(float frequencyHz, int duration) {
-    // generate a decoded audio by first using gen_audio::encode to generate
-    // the encoded audio and then decoding it with an extractor.
-    // TODO: refactor audio signal generation from encoding step in
-    //       gen_audio::encode
-    gen_audio gen;
-    vector<unsigned char> encoded_audio = gen.encode(frequencyHz, duration);
-    audio::extractor extractor;
-    return extractor.extract((char*)encoded_audio.data(), encoded_audio.size());
-}
-
-// This test was disabled because it does not properly configure the audio::config
-// structure. This used to often pass but now always fails.
-TEST(DISABLED_etl, audio_extract) {
-    auto decoded_audio = generate_decoded_audio(1000, 2000);
-
-    // because of the way encoded_audio is being generated, there
-    // are 88704 samples instead of 44100 * 2 = 88200 like we would
-    // expect ... a fix for another time
-    ASSERT_EQ(decoded_audio->getSize(), 88704);
-}
 
 // This test is for comparing that a generated wav_data structure can write its data out to
 // 16-bit PCM that can be read via extractor (just via buffer rather than actually touching disk)
@@ -59,7 +36,8 @@ TEST(etl, wav_compare) {
     audio::extractor extractor;
     auto d_audio = extractor.extract(wav_buf, wav_bufsize);
 
-    ASSERT_EQ(d_audio->get_time_data()->numSamples(), wav.nsamples());
+    auto extracted_wav = d_audio->get_time_data();
+    ASSERT_EQ(extracted_wav->get_data().rows, wav.nsamples());
 
     uint32_t num_samples = wav.nsamples();
     bool all_eq = true;
@@ -67,7 +45,7 @@ TEST(etl, wav_compare) {
     {
         size_t offset = i * sizeof(uint16_t);
         uint16_t*  waddr = (uint16_t *) (wav.get_raw_data()[0] + offset);
-        uint16_t*  daddr = (uint16_t *) (d_audio->get_time_data()->getBuf(0) + offset);
+        uint16_t*  daddr = (uint16_t *) (extracted_wav->get_raw_data()[0] + offset);
         if (*waddr != *daddr)
         {
             all_eq = false; break;
@@ -92,16 +70,9 @@ TEST(etl, specgram) {
     int frame_stride_tn = 16;  //  Shift over 1 period each time
     // int nsamples = (time_steps - 1) * frame_stride_tn + frame_length_tn;
 
-    // Make a raw media container just for calculating spectrogram
-    auto raw_wav = make_shared<RawMedia>();
-    raw_wav->setChannels(1);
-    raw_wav->reset();
-    raw_wav->setBytesPerSample(2); // Only 16-bit PCM
-    raw_wav->appendFrames(wav.get_raw_data(), wav.nbytes());
-
     // Now generate spectrogram
     cv::Mat spec, window;
-    specgram::wav_to_specgram(raw_wav, frame_length_tn, frame_stride_tn, time_steps, window, spec);
+    specgram::wav_to_specgram(wav.get_data(), frame_length_tn, frame_stride_tn, time_steps, window, spec);
 
     // Scale back because our original signal was set up to use full 16-bit dynamic range
     spec = spec / INT16_MAX;
@@ -166,20 +137,8 @@ TEST(etl, audio_transform) {
     delete[] databuf;
 }
 
-TEST(etl, wav_dump) {
-
-    float sine_freq = 400;
-    int16_t sine_ampl = INT16_MAX / 16;
-    sinewave_generator sg{sine_freq, sine_ampl};
-    int wav_len_sec = 3, sample_freq = 16000;
-    bool stereo = false;
-
-    wav_data wav(sg, wav_len_sec, sample_freq, stereo);
-    wav.write_to_file("/home/users/alex/Code/aeon/loader/this_out.wav");
-}
-
 TEST(etl, wav_read) {
-    // generate with sox  -r 16000 -b 16 -e s -n output.wav synth 3 sine 400 vol 0.5
+    // requires sox : `apt-get install sox` on ubuntu
     auto a = system("sox -r 16000 -b 16 -e s -n output.wav synth 3 sine 400 vol 0.5");
     if (a == 0)
     {

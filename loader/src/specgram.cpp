@@ -19,35 +19,36 @@ using cv::Range;
 using namespace std;
 
 // These can all be static
-void specgram::wav_to_specgram(shared_ptr<RawMedia> wav,
+void specgram::wav_to_specgram(const Mat& wav_col_mat,
                                const int frame_length_tn,
                                const int frame_stride_tn,
                                const int max_time_steps,
                                const Mat& window,
                                Mat& specgram)
 {
+    // const Mat& wav_mat = wav.get_data();
+    // Read as a row vector
+    Mat wav_mat = wav_col_mat.reshape(1, 1);
+
     // TODO: support more sample formats
-    int sample_dtype = CV_16SC1;
-    int sample_dsize  = wav->bytesPerSample();
-    if (sample_dsize != 2) {
+    if (wav_mat.elemSize1() != 2) {
         throw std::runtime_error(
-                "Unsupported number of bytes per sample: " + std::to_string(sample_dsize));
+                "Unsupported number of bytes per sample: " + std::to_string(wav_mat.elemSize1()));
     }
 
     // Go from time domain to strided signal
-    Mat wav_data(1, wav->numSamples(), sample_dtype, wav->getBuf(0));
     Mat wav_frames;
     {
-        int num_frames = ((wav_data.cols - frame_length_tn) / frame_stride_tn) + 1;
+        int num_frames = ((wav_mat.cols - frame_length_tn) / frame_stride_tn) + 1;
         num_frames = std::min(num_frames, max_time_steps);
         // ensure that there is enough data for at least one frame
         assert(num_frames >= 0);
 
-        wav_frames.create(num_frames, frame_length_tn, sample_dtype);
+        wav_frames.create(num_frames, frame_length_tn, wav_mat.type());
         for (int frame = 0; frame < num_frames; frame++) {
             int start = frame * frame_stride_tn;
             int end   = start + frame_length_tn;
-            wav_data.colRange(start, end).copyTo(wav_frames.row(frame));
+            wav_mat.colRange(start, end).copyTo(wav_frames.row(frame));
         }
     }
 

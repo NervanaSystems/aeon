@@ -14,14 +14,11 @@
 */
 #pragma once
 
-#include "raw_media.hpp"
-
 #include <sstream>
 #include <math.h>
 #include <memory>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
 
 #include <cmath>
 
@@ -33,7 +30,7 @@ public:
     specgram() {}
     virtual ~specgram() {}
 
-    static void wav_to_specgram(std::shared_ptr<RawMedia> wav,
+    static void wav_to_specgram(const cv::Mat& wav_mat,
                                 const int frame_length_tn,
                                 const int frame_stride_tn,
                                 const int max_time_steps,

@@ -23,7 +23,6 @@ include ../Makefile.base
 TEST_SRCS := \
     main.cpp \
     gen_image.cpp \
-    gen_audio.cpp \
     gen_video.cpp \
     test_bbox.cpp \
     test_image.cpp \
@@ -32,7 +31,7 @@ TEST_SRCS := \
     test_pixel_mask.cpp \
     test_char_map.cpp \
     test_provider.cpp \
-		test_provider_audio.cpp \
+    test_provider_audio.cpp \
     test_util.cpp \
     test_video.cpp \
     test_types.cpp \

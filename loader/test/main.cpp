@@ -28,13 +28,11 @@ extern "C" {
 #include "gtest/gtest.h"
 
 #include "gen_image.hpp"
-#include "gen_audio.hpp"
 #include "gen_video.hpp"
 
 using namespace std;
 
 gen_image image_dataset;
-gen_audio audio_dataset;
 gen_video video_dataset;
 
 static void CreateImageDataset() {
@@ -49,19 +47,6 @@ static void CreateImageDataset() {
             .Create();
 //    auto end = timer.now();
 //    cout << "image dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
-}
-
-static void CreateAudioDataset() {
-//    _audio_dataset.encode("test1.mp2",2000,1000);
-//    std::chrono::high_resolution_clock timer;
-//    auto start = timer.now();
-    audio_dataset.Directory("audio_data")
-            .Prefix("archive-")
-            .MacrobatchMaxItems(500)
-            .DatasetSize(100)
-            .Create();
-//    auto end = timer.now();
-//    cout << "audio dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
 static void CreateVideoDataset() {
@@ -79,13 +64,11 @@ static void CreateVideoDataset() {
 
 static void DeleteDataset() {
     image_dataset.Delete();
-    audio_dataset.Delete();
     video_dataset.Delete();
 }
 
 extern "C" int main( int argc, char** argv ) {
     CreateImageDataset();
-    CreateAudioDataset();
     CreateVideoDataset();
 
     ::testing::InitGoogleTest(&argc, argv);

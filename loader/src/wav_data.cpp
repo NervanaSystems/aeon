@@ -6,17 +6,17 @@ using nervana::unpack_le;
 
 namespace nervana {
 
-    wav_data::wav_data(char *buf, uint32_t bufsize)
+    wav_data::wav_data(const char *buf, uint32_t bufsize)
     {
-        char *bptr = buf;
+        size_t pos = 0;
 
         wav_assert(bufsize >= HEADER_SIZE, "Header size is too small");
 
         RiffMainHeader rh;
         FmtHeader fh;
 
-        memcpy(&rh, bptr, sizeof(rh)); bptr += sizeof(rh);
-        memcpy(&fh, bptr, sizeof(fh)); bptr += sizeof(fh);
+        memcpy(&rh, buf + pos, sizeof(rh)); pos += sizeof(rh);
+        memcpy(&fh, buf + pos, sizeof(fh)); pos += sizeof(fh);
 
         wav_assert(rh.dwRiffCC == nervana::FOURCC('R', 'I', 'F', 'F'), "Unsupported format");
         wav_assert(rh.dwWaveID == nervana::FOURCC('W', 'A', 'V', 'E'), "Unsupported format");
@@ -28,16 +28,16 @@ namespace nervana {
         wav_assert(fh.dwFmtLen >= 16, "PCM format data must be at least 16 bytes");
 
         // Skip any subchunks between "fmt" and "data".
-        while (strncmp(bptr, "data", 4) != 0) {
-            uint32_t chunk_sz = unpack_le<uint32_t>(bptr + 4);
-            wav_assert(chunk_sz == 4 || strncmp(bptr, "fact", 4), "Malformed fact chunk");
-            bptr += 4 + sizeof(chunk_sz) + chunk_sz; // chunk tag, chunk size, chunk
+        while (strncmp(buf + pos, "data", 4) != 0) {
+            uint32_t chunk_sz = unpack_le<uint32_t>(buf + pos + 4);
+            wav_assert(chunk_sz == 4 || strncmp(buf + pos, "fact", 4), "Malformed fact chunk");
+            pos += 4 + sizeof(chunk_sz) + chunk_sz; // chunk tag, chunk size, chunk
         }
 
-        wav_assert(strncmp(bptr, "data", 4) == 0, "Expected data tag not found");
+        wav_assert(strncmp(buf + pos, "data", 4) == 0, "Expected data tag not found");
 
         DataHeader dh;
-        memcpy(&dh, bptr, sizeof(dh)); bptr += sizeof(dh);
+        memcpy(&dh, buf + pos, sizeof(dh)); pos += sizeof(dh);
 
         uint32_t num_samples = dh.dwDataLen / fh.hwBlockAlign;
         data.create(num_samples, fh.hwChannels, CV_16SC1);
@@ -45,8 +45,8 @@ namespace nervana {
 
         for (uint32_t n = 0; n < data.rows; ++n) {
             for (uint32_t c = 0; c < data.cols; ++c) {
-                data.at<int16_t>(n, c) = unpack_le<int16_t>(bptr);
-                bptr += sizeof(int16_t);
+                data.at<int16_t>(n, c) = unpack_le<int16_t>(buf + pos);
+                pos += sizeof(int16_t);
             }
         }
     }

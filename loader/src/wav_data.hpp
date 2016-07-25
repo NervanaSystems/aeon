@@ -87,12 +87,13 @@ namespace nervana {
             }
         }
 
-        wav_data(char *buf, uint32_t bufsize);
+        wav_data(const char *buf, uint32_t bufsize);
 
         void dump(std::ostream & ostr = std::cout);
         void write_to_file(std::string filename);
         void write_to_buffer(char *buf, uint32_t bufsize);
 
+        cv::Mat& get_data() { return data; }
         char **get_raw_data() { return (char **) &(data.data);}
         inline uint32_t nbytes() { return data.total() * data.elemSize(); }
         inline uint32_t nsamples() { return data.rows; }

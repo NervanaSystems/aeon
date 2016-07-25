@@ -18,7 +18,7 @@ shared_ptr<audio::params> audio::param_factory::make_params(std::shared_ptr<cons
 
 std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int itemSize)
 {
-    return make_shared<audio::decoded>(_codec->decode(item, itemSize));
+    return make_shared<audio::decoded>(make_shared<wav_data>(item, (uint32_t) itemSize));
 }
 
 audio::transformer::transformer(const audio::config& config) :
@@ -38,14 +38,15 @@ std::shared_ptr<audio::decoded> audio::transformer::transform(
                                       std::shared_ptr<audio::params> params,
                                       std::shared_ptr<audio::decoded> decoded)
 {
-    _noisemaker->addNoise(decoded->get_time_data(),
+    cv::Mat& samples_mat = decoded->get_time_data()->get_data();
+    _noisemaker->addNoise(samples_mat,
                           params->add_noise,
                           params->noise_index,
                           params->noise_offset_fraction,
                           params->noise_level); // no-op if no noise files
 
     // convert from time domain to frequency domain into the freq mat
-    specgram::wav_to_specgram(decoded->get_time_data(),
+    specgram::wav_to_specgram(samples_mat,
                               _cfg.frame_length_tn,
                               _cfg.frame_stride_tn,
                               _cfg.time_steps,

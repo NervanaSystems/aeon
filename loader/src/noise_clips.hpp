@@ -17,10 +17,9 @@
 
 #include <opencv2/core/core.hpp>
 
-#include "codec.hpp"
+#include "wav_data.hpp"
 #include "params.hpp"
 
-class Codec;
 
 class NoiseConfig : public nervana::json_config_parser {
 public:
@@ -39,7 +38,7 @@ class NoiseClips {
 public:
     NoiseClips(const std::string noiseIndexFile);
     virtual ~NoiseClips();
-    void addNoise(std::shared_ptr<RawMedia> media,
+    void addNoise(cv::Mat& wav_mat,
                   bool add_noise,
                   uint32_t noise_index,
                   float noise_offset_fraction,
@@ -48,12 +47,12 @@ public:
 
 private:
     void load_index(const std::string& index_file);
-    void load_data(std::shared_ptr<Codec> codec);
+    void load_data();
     void read_noise(std::string& noise_file, int* dataLen);
 
 private:
     NoiseConfig _cfg;
-    std::vector<std::shared_ptr<RawMedia>> _noise_data;
+    std::vector<std::shared_ptr<nervana::wav_data>> _noise_data;
     char*                                  _buf = 0;
     int                                    _bufLen = 0;
 };

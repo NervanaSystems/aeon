@@ -102,9 +102,9 @@ const string NDSBatchLoader::loadBlockURL(uint block_num, uint block_size) {
 }
 
 uint NDSBatchLoader::objectCount() {
-    // TODO
+    throw std::runtime_error("Object count not implemented");
 }
 
 uint NDSBatchLoader::blockCount(uint block_size) {
-    // TODO
+    throw std::runtime_error("Block count not implemented");
 }

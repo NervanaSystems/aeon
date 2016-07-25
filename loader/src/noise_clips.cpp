@@ -11,8 +11,7 @@ NoiseClips::NoiseClips(const std::string noiseIndexFile)
 {
     if (!noiseIndexFile.empty()) {
         load_index(noiseIndexFile);
-        auto codec = make_shared<Codec>(MediaType::AUDIO);
-        load_data(codec);
+        load_data();
     }
 }
 
@@ -42,7 +41,7 @@ void NoiseClips::load_index(const std::string& index_file)
 }
 
 // From Factory, get add_noise, offset (frac), noise index, noise level
-void NoiseClips::addNoise(shared_ptr<RawMedia> media,
+void NoiseClips::addNoise(cv::Mat& wav_mat,
                           bool add_noise,
                           uint32_t noise_index,
                           float noise_offset_fraction,
@@ -54,22 +53,19 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media,
     }
 
     // Assume a single channel with 16 bit samples for now.
-    assert(media->channels() == 1);
-    assert(media->bytesPerSample() == 2);
-    int bytesPerSample = media->bytesPerSample();
-    int numSamples = media->numSamples();
-    cv::Mat data(1, numSamples, CV_16S, media->getBuf(0));
-    cv::Mat noise(1, numSamples, CV_16S);
+    assert(wav_mat.cols == 1);
+    assert(wav_mat.type() == CV_16SC1);
+    cv::Mat noise = cv::Mat::zeros(wav_mat.size(), wav_mat.type());
 
     // Collect enough noise data to cover the entire input clip.
-    std::shared_ptr<RawMedia> clipData = _noise_data[ noise_index % _noise_data.size() ];
-    assert(clipData->bytesPerSample() == bytesPerSample);
-    cv::Mat noise_src(1, clipData->numSamples() , CV_16S, clipData->getBuf(0));
+    const cv::Mat& noise_src = _noise_data[ noise_index % _noise_data.size() ]->get_data();
 
-    uint32_t src_offset = clipData->numSamples() * noise_offset_fraction;
-    uint32_t src_left = clipData->numSamples() - src_offset;
+    assert(noise_src.type() == wav_mat.type());
+
+    uint32_t src_offset = noise_src.rows * noise_offset_fraction;
+    uint32_t src_left = noise_src.rows - src_offset;
     uint32_t dst_offset = 0;
-    uint32_t dst_left = numSamples;
+    uint32_t dst_left = wav_mat.rows;
     while (dst_left > 0) {
         uint32_t copy_size = std::min(dst_left, src_left);
 
@@ -84,12 +80,12 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media,
         } else {
             dst_left -= copy_size;
             dst_offset += copy_size;
-            src_left = clipData->numSamples();
+            src_left = noise_src.rows;
             src_offset = 0; // loop around
         }
     }
     // Superimpose noise without overflowing (opencv handles saturation cast for non CV_32S)
-    cv::addWeighted(data, 1.0f, noise, noise_level, 0.0f, data);
+    cv::addWeighted(wav_mat, 1.0f, noise, noise_level, 0.0f, wav_mat);
     // cv::Mat convData;
     // data.convertTo(convData, CV_32F);
     // cv::Mat convNoise;
@@ -109,11 +105,11 @@ void NoiseClips::addNoise(shared_ptr<RawMedia> media,
     // convData.convertTo(data, CV_16S);
 }
 
-void NoiseClips::load_data(std::shared_ptr<Codec> codec) {
+void NoiseClips::load_data() {
     for(auto nfile: _cfg.noise_files) {
         int len = 0;
         read_noise(nfile, &len);
-        _noise_data.push_back(codec->decode(_buf, len));
+        _noise_data.push_back(make_shared<nervana::wav_data>(_buf, len));
     }
 }
 

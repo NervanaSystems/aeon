@@ -16,16 +16,15 @@
 #pragma once
 
 #include <vector>
+#include <chrono>
 
 #include "params.hpp"
 #include "etl_interface.hpp"
-#include "raw_media.hpp"
-#include "codec.hpp"
+#include "wav_data.hpp"
 #include "specgram.hpp"
 #include "noise_clips.hpp"
 
 class NoiseClips;
-class Codec;
 
 namespace nervana {
     namespace audio {
@@ -202,14 +201,14 @@ namespace nervana {
 
     class audio::decoded : public decoded_media {
     public:
-        decoded(std::shared_ptr<RawMedia> raw) : time_rep(raw) {}
-        size_t getSize() { return time_rep->numSamples(); }
+        decoded(std::shared_ptr<wav_data> raw) : time_rep(raw) {}
+        size_t getSize() { return time_rep->nsamples(); }
 
-        std::shared_ptr<RawMedia> get_time_data() { return time_rep; }
+        std::shared_ptr<wav_data> get_time_data() { return time_rep; }
         cv::Mat& get_freq_data() { return freq_rep; }
         uint32_t valid_frames {0};
     protected:
-        std::shared_ptr<RawMedia> time_rep {nullptr};
+        std::shared_ptr<wav_data> time_rep {nullptr};
         cv::Mat                   freq_rep {};
     };
 
@@ -218,17 +217,11 @@ namespace nervana {
 
     class audio::extractor : public interface::extractor<audio::decoded> {
     public:
-        extractor()
-        {
-            _codec = std::make_shared<Codec>(MediaType::AUDIO);
-            avcodec_register_all();
-        }
-
-        ~extractor() { _codec = nullptr; }
+        extractor() {}
+        ~extractor() {}
 
         std::shared_ptr<audio::decoded> extract(const char*, int) override;
     private:
-        std::shared_ptr<Codec> _codec {nullptr};
     };
 
 
