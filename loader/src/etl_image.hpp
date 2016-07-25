@@ -67,6 +67,10 @@ namespace nervana {
         uint32_t channels = 3;
 
         config(nlohmann::json js) {
+            if(js.is_null()) {
+                throw std::runtime_error("missing image config in json config");
+            }
+
             parse_value(height, "height", js, mode::REQUIRED);
             parse_value(width, "width", js, mode::REQUIRED);
 
