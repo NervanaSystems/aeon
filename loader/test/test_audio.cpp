@@ -140,16 +140,17 @@ TEST(etl, audio_transform) {
 TEST(etl, wav_read) {
     // requires sox : `apt-get install sox` on ubuntu
     auto a = system("sox -r 16000 -b 16 -e s -n output.wav synth 3 sine 400 vol 0.5");
+    string test_file = "output.wav";
     if (a == 0)
     {
-        basic_ifstream<char> ifs("output.wav", ios::binary);
+        basic_ifstream<char> ifs(test_file, ios::binary);
         // read the data:
         vector<char> buf((istreambuf_iterator<char>(ifs)), istreambuf_iterator<char>());
 
         wav_data wav(&(buf[0]), buf.size());
         ASSERT_EQ(wav.sample_rate(), 16000);
         ASSERT_EQ(wav.nsamples(), 16000 * 3);
-        remove("output.wav");
+        remove(test_file.c_str());
     }
     else
     {

@@ -122,7 +122,7 @@ TEST(util, pack_le) {
 }
 
 TEST(avi,video_file) {
-    const string filename = "/home/users/alex/bb2.avi";
+    const string filename = "/home/users/alex/bb8.avi";
     shared_ptr<MotionJpegCapture> mjdecoder = make_shared<MotionJpegCapture>(filename);
     ASSERT_TRUE(mjdecoder->isOpened());
     cv::Mat image;
@@ -133,11 +133,11 @@ TEST(avi,video_file) {
 //        cv::imwrite(output_name,image);
         image_number++;
     }
-    EXPECT_EQ(600,image_number);
+    EXPECT_EQ(6,image_number);
 }
 
 TEST(avi,video_buffer) {
-    const string filename = "/home/users/alex/bb2.avi";
+    const string filename = "/home/users/alex/bb8.avi";
     ifstream in(filename, ios_base::binary);
     ASSERT_TRUE(in);
     in.seekg(0,in.end);
@@ -156,7 +156,7 @@ TEST(avi,video_buffer) {
 //        cv::imwrite(output_name,image);
         image_number++;
     }
-    EXPECT_EQ(600,image_number);
+    EXPECT_EQ(6,image_number);
 }
 
 TEST(util,memstream) {
