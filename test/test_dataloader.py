@@ -62,22 +62,35 @@ def generic_config(manifest_name):
     return {
         'manifest_filename': manifest_name,
         'minibatch_size': 2,
-        'data_config': {
-            'type': 'image',
-            'config': {
-                'height': 2,
-                'width': 2,
-            },
+        'image': {
+            'height': 2,
+            'width': 2,
         },
-        'target_config': {
-            'type': 'image',
-            'config': {
-                'height': 2,
-                'width': 2,
-            },
-        },
-        'media': 'image_label',
+        'label': {},
+        'type': 'image,label',
     }
+
+
+def test_loader_invalid_config_type():
+    manifest = random_manifest(10)
+    config = generic_config(manifest.name)
+
+    config['type'] = 'invalid type name'
+
+    with pytest.raises(Exception) as ex:
+        dl = DataLoader(config, gen_backend(backend='cpu'))
+
+    assert 'invalid type name' in str(ex)
+
+
+@pytest.mark.xfail
+def test_loader_missing_config_field():
+    manifest = random_manifest(10)
+    config = generic_config(manifest.name)
+
+    del config['image']
+
+    dl = DataLoader(config, gen_backend(backend='cpu'))
 
 
 def test_loader_non_existant_manifest():

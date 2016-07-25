@@ -10,8 +10,8 @@ namespace nervana {
     class image_decoder : public provider_interface {
     public:
         image_decoder(nlohmann::json js) :
-            image_config(js["data_config"]["config"]),
-            label_config(js["target_config"]["config"]),
+            image_config(js["image"]),
+            label_config(js["label"]),
             image_extractor(image_config),
             image_transformer(image_config),
             image_loader(image_config),
