@@ -1,5 +1,9 @@
-IGNORE          := $(shell bash -c "source ../../env.sh; env | sed 's/=/:=/' | sed 's/^/export /' > /tmp/makeenv")
-include /tmp/makeenv
+PWD             := $(shell pwd)
+TMPDIR          := ${PWD}/../../tmp
+$(shell mkdir -p ${TMPDIR}>/dev/null)
+FILENAME        := ${TMPDIR}/makeenv
+IGNORE          := $(shell bash -c "source ../../env.sh; env | sed 's/=/:=/' | sed 's/^/export /' > ${FILENAME}")
+include ${FILENAME}
 
 CFLAGS          := $(CFLAGS) -Wall -O2 -fPIC
 DEPDIR           = .d
