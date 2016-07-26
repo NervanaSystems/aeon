@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <fstream>
 
 #include "helpers.hpp"
 #include "gtest/gtest.h"
@@ -30,4 +31,11 @@ void assert_vector_unique(vector<string>& words) {
     for(auto word = words.begin(); word != words.end() - 1; ++word) {
         ASSERT_NE(*word, *(word + 1));
     }
+}
+
+vector<char> read_file_contents(const string& path) {
+    ifstream file(path, ios::binary);
+    if(!file) cout << "error opening file " << path << endl;
+    vector<char> data((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    return data;
 }
