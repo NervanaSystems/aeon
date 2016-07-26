@@ -10,7 +10,7 @@ std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::cr
 {
     std::shared_ptr<nervana::provider_interface> rc;
     if(!configJs["type"].is_string()) {
-        throw std::invalid_argument("must have a property 'type' with type string.  Options are: 'image,label' and 'localization'.");
+        throw std::invalid_argument("must have a property 'type' with type string.");
     }
     std::string mediaType = configJs["type"];
     if( mediaType == "image,label" ) {
