@@ -24,7 +24,6 @@ image_classifier::image_classifier(const nlohmann::json js) :
     label_extractor(label_config),
     label_loader(label_config)
 {
-    std::cout << js << std::endl;
     num_inputs = 2;
     oshapes.push_back(image_config.get_shape_type());
     oshapes.push_back(label_config.get_shape_type());
