@@ -136,45 +136,45 @@ TEST(pixel_mask, rotate) {
     EXPECT_TRUE(verify_image(tximg));
 }
 
-TEST(pixel_mask, read_test) {
-    string path = "/home/users/robert/segnet/";
-    string train = path+"train/";
-    string trainannot = path+"trainannot/";
-    string base_name = "0001TP_006690.png";
-    string train_path = train+base_name;
-    string trainannot_path = trainannot+base_name;
+//TEST(pixel_mask, read_test) {
+//    string path = "/home/users/robert/segnet/";
+//    string train = path+"train/";
+//    string trainannot = path+"trainannot/";
+//    string base_name = "0001TP_006690.png";
+//    string train_path = train+base_name;
+//    string trainannot_path = trainannot+base_name;
 
-    nlohmann::json js = {{"width", 512},{"height",256}};
-    image::config cfg(js);
+//    nlohmann::json js = {{"width", 512},{"height",256}};
+//    image::config cfg(js);
 
-    auto train_data = read_file_contents(train_path);
-    auto trainannot_data = read_file_contents(trainannot_path);
-    ASSERT_TRUE(train_data.size()>0) << train_path;
-    ASSERT_TRUE(trainannot_data.size()>0) << trainannot_path;
+//    auto train_data = read_file_contents(train_path);
+//    auto trainannot_data = read_file_contents(trainannot_path);
+//    ASSERT_TRUE(train_data.size()>0) << train_path;
+//    ASSERT_TRUE(trainannot_data.size()>0) << trainannot_path;
 
-    cv::Mat mat;
-    cv::imdecode(trainannot_data,CV_LOAD_IMAGE_COLOR,&mat);
-    cout << "pixel size " << mat.elemSize() << endl;
+////    cv::Mat mat;
+////    cv::imdecode(trainannot_data,CV_LOAD_IMAGE_COLOR,&mat);
+////    cout << "pixel size " << mat.elemSize() << endl;
 
-    image::extractor        extractor{cfg};
-    pixel_mask::transformer transformer{cfg};
-    image::loader           loader{cfg};
-    image::param_factory    factory{cfg};
+//    image::extractor        extractor{cfg};
+//    pixel_mask::transformer transformer{cfg};
+//    image::loader           loader{cfg};
+//    image::param_factory    factory{cfg};
 
-    auto extracted = extractor.extract((const char*)trainannot_data.data(), trainannot_data.size());
-    image_params_builder builder(factory.make_params(extracted));
-    shared_ptr<image::params> params_ptr = builder;
-    shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
-    cv::Mat tximg = transformed->get_image(0);
+//    auto extracted = extractor.extract((const char*)trainannot_data.data(), trainannot_data.size());
+//    image_params_builder builder(factory.make_params(extracted));
+//    shared_ptr<image::params> params_ptr = builder;
+//    shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
+//    cv::Mat tximg = transformed->get_image(0);
 
-//    unsigned char *data = (unsigned char*)(tximg.data);
-//    int index = 0;
-//    for(int row = 0; row < tximg.rows; row++) {
-//        for(int col = 0; col < tximg.cols; col++) {
-//            int b = data[index++];
-//            int g = data[index++];
-//            int r = data[index++];
-//            cout << b << "," << g << "," << r << endl;
-//        }
-//    }
-}
+////    unsigned char *data = (unsigned char*)(tximg.data);
+////    int index = 0;
+////    for(int row = 0; row < tximg.rows; row++) {
+////        for(int col = 0; col < tximg.cols; col++) {
+////            int b = data[index++];
+////            int g = data[index++];
+////            int r = data[index++];
+////            cout << b << "," << g << "," << r << endl;
+////        }
+////    }
+//}
