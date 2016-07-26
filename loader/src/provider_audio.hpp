@@ -5,9 +5,9 @@
 #include "provider_interface.hpp"
 
 namespace nervana {
-    class transcribed_audio : public provider_interface {
+    class audio_transcriber : public provider_interface {
     public:
-        transcribed_audio(nlohmann::json js) :
+        audio_transcriber(nlohmann::json js) :
             audio_config(js["audio"]),
             trans_config(js["transcript"]),
             audio_extractor(),

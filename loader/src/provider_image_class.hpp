@@ -7,9 +7,9 @@
 #include "etl_pixel_mask.hpp"
 
 namespace nervana {
-    class image_decoder : public provider_interface {
+    class image_classifier : public provider_interface {
     public:
-        image_decoder(const nlohmann::json js);
+        image_classifier(const nlohmann::json js);
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
 
     private:

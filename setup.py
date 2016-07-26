@@ -19,7 +19,7 @@ sources = [
 ]
 
 module = Extension(
-    'axon_lib',
+    'aeon_lib',
     sources=sources,
     include_dirs=include_dirs,
     libraries=libraries,

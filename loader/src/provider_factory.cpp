@@ -14,9 +14,9 @@ std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::cr
     }
     std::string mediaType = configJs["type"];
     if( mediaType == "image,label" ) {
-        rc = std::make_shared<nervana::image_decoder>(configJs);
-    } else if( mediaType == "audio,transcript" ) {
-        rc = make_shared<transcribed_audio>(configJs);
+        rc = make_shared<image_classifier>(configJs);
+    } else if( mediaType == "audio,transcribe" ) {
+        rc = make_shared<audio_transcriber>(configJs);
     } else if( mediaType == "audio,label" ) {
         rc = make_shared<audio_classifier>(configJs);
     } else if( mediaType == "image_localization" ) {

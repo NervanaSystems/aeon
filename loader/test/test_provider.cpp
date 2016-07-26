@@ -24,7 +24,6 @@ TEST(provider,image) {
     auto media = nervana::train_provider_factory::create(js);
     const vector<nervana::shape_type>& oshapes = media->get_oshapes();
 
-    // auto data_config = nervana::config_factory::create(js["data_config"]);
     size_t dsize = oshapes[0].get_byte_size();
     size_t tsize = 4;
 

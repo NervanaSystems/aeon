@@ -79,7 +79,7 @@ TEST(provider,audio_classify) {
 
 
 TEST(provider,audio_transcript) {
-    nlohmann::json js = {{"type","audio,transcript"},
+    nlohmann::json js = {{"type","audio,transcribe"},
                          {"audio", {
                             {"max_duration","2000 milliseconds"},
                             {"frame_length","1024 samples"},
@@ -92,7 +92,7 @@ TEST(provider,audio_transcript) {
                             {"max_length",50}}}};
 
     // Create the config
-    auto media = dynamic_pointer_cast<transcribed_audio>(nervana::train_provider_factory::create(js));
+    auto media = dynamic_pointer_cast<audio_transcriber>(nervana::train_provider_factory::create(js));
 
     // Get the character map
     auto cmap = media->get_cmap();

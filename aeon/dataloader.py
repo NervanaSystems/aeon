@@ -65,7 +65,7 @@ class DataLoader(object):
 
     def _load_library(self):
         path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        libpath = os.path.join(path, 'axon_lib.so')
+        libpath = os.path.join(path, 'aeon_lib.so')
         self.loaderlib = ct.cdll.LoadLibrary(libpath)
         self.loaderlib.get_error_message.restype = ct.c_char_p
         self.loaderlib.start.restype = ct.c_void_p
@@ -178,12 +178,12 @@ class DataLoader(object):
         """
         return one minibatch in a (data, targets) tuple
         """
-        (data, targets) = self._next(self._buffer_id)
+        dtuple = self._next(self._buffer_id)
 
         # Toggle _buffer_id between 0 and 1
         self._buffer_id = 1 - self._buffer_id
 
-        return (data, targets)
+        return dtuple
 
     def unending_iter(self):
         """

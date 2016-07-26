@@ -10,9 +10,9 @@ myconfig = make_cstr_config()
 
 dd = DataLoader(backend=mybackend, config=myconfig)
 
-for i, (x, t) in enumerate(dd):
-    host_x = mybackend.get_ary(x)
-    host_t = mybackend.get_ary(t)
+for i, dtuple in enumerate(dd):
+    host_x = mybackend.get_ary(dtuple[0])
+    host_t = mybackend.get_ary(dtuple[1])
 
     print(i, host_x)
     print(i, host_t)

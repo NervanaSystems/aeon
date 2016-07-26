@@ -2,7 +2,7 @@
 
 using namespace nervana;
 
-image_decoder::image_decoder(const nlohmann::json js) :
+image_classifier::image_classifier(const nlohmann::json js) :
     image_config(js["image"]),
     label_config(js["label"]),
     image_extractor(image_config),
@@ -18,7 +18,7 @@ image_decoder::image_decoder(const nlohmann::json js) :
     oshapes.push_back(label_config.get_shape_type());
 }
 
-void image_decoder::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
+void image_classifier::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
     std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
     std::vector<char>& target_in = in_buf[1]->getItem(idx);
     char* datum_out  = out_buf[0]->getItem(idx);
