@@ -368,7 +368,6 @@ void PyLoader::stop()
     }
     _decodeThreads->stop();
 
-    _provider_configs.clear();
     _readThread    = nullptr;
     _decodeBufs    = nullptr;
     _decodeThreads = nullptr;

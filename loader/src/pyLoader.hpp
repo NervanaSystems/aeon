@@ -184,8 +184,6 @@ private:
     std::shared_ptr<Manifest>           _manifest = nullptr;
     std::shared_ptr<pyLoaderConfig>     _lcfg = nullptr;
 
-    std::vector<std::shared_ptr<nervana::interface::config>> _provider_configs;
-
     int                                 _batchSize;
     nlohmann::json                      _lcfg_json;
     PyObject*                           _pbe;
