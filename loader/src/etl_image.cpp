@@ -24,7 +24,7 @@ image::extractor::extractor(const image::config& cfg)
         ss << "Unsupported number of channels in image: " << cfg.channels;
         throw std::runtime_error(ss.str());
     } else {
-        _pixel_type = cfg.channels == 1 ? CV_8UC1 : CV_8UC3;
+        _pixel_type = CV_MAKETYPE(CV_8U, cfg.channels);
         _color_mode = cfg.channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR;
     }
 }

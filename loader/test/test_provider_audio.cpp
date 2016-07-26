@@ -20,6 +20,7 @@
 #include "provider_factory.hpp"
 #include "provider_audio.hpp"
 #include "etl_audio.hpp"
+#include "etl_label.hpp"
 #include "etl_char_map.hpp"
 #include "wav_data.hpp"
 #include "json.hpp"
@@ -29,24 +30,66 @@
 using namespace std;
 using namespace nervana;
 
+
+TEST(provider,audio_classify) {
+    nlohmann::json js = {{"type","audio,label"},
+                         {"audio", {
+                            {"max_duration","2000 milliseconds"},
+                            {"frame_length","1024 samples"},
+                            {"frame_stride","256 samples"},
+                            {"sample_freq_hz",44100},
+                            {"feature_type","specgram"}}},
+                         {"label", {}}};
+    auto media = nervana::train_provider_factory::create(js);
+    const vector<nervana::shape_type>& oshapes = media->get_oshapes();
+
+    size_t dsize = oshapes[0].get_byte_size();
+    size_t tsize = 4;
+
+    size_t batch_size = 128;
+
+    wav_data wav(sinewave_generator(400, 200), 3, 16000, false);
+    vector<char> buf(wav_data::HEADER_SIZE + wav.nbytes());
+    wav.write_to_buffer(&buf[0], buf.size());
+
+    buffer_in_array bp({0,0});
+    buffer_in& data_p = *bp[0];
+    buffer_in& target_p = *bp[1];
+
+    buffer_out_array outBuf({dsize, tsize}, batch_size);
+
+    for (int i=0; i<batch_size; i++) {
+        data_p.addItem(buf);
+        vector<char> packed_int(4);
+        pack_le<int>(&packed_int[0], 42 + i);
+        target_p.addItem( packed_int );
+    }
+
+    EXPECT_EQ(data_p.getItemCount(),batch_size);
+
+    for (int i=0; i<batch_size; i++ ) {
+        media->provide(i, bp, outBuf);
+    }
+
+    for (int i=0; i<batch_size; i++ ) {
+        int target_value = unpack_le<int>(outBuf[1]->getItem(i));
+        EXPECT_EQ(42+i, target_value);
+    }
+}
+
+
 TEST(provider,audio_transcript) {
-    nlohmann::json js = {{"type","audio_transcript"},
-                         {"data_config",{
-                            {"type", "audio"},
-                            {"config", {
-                              {"max_duration","2000 milliseconds"},
-                              {"frame_length","1024 samples"},
-                              {"frame_stride","256 samples"},
-                              {"sample_freq_hz",44100},
-                              {"feature_type","specgram"}
-                            }}}},
-                         {"target_config",{
-                            {"type", "transcript"},
-                            {"config", {
-                              {"alphabet","ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()"},
-                              {"pack_for_ctc", true},
-                              {"max_length",50}
-                            }}}}};
+    nlohmann::json js = {{"type","audio,transcript"},
+                         {"audio", {
+                            {"max_duration","2000 milliseconds"},
+                            {"frame_length","1024 samples"},
+                            {"frame_stride","256 samples"},
+                            {"sample_freq_hz",44100},
+                            {"feature_type","specgram"}}},
+                         {"transcript", {
+                            {"alphabet","ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()"},
+                            {"pack_for_ctc", true},
+                            {"max_length",50}}}};
 
     // Create the config
     auto media = dynamic_pointer_cast<transcribed_audio>(nervana::train_provider_factory::create(js));
@@ -129,6 +172,10 @@ TEST(provider,audio_transcript) {
         char c = combined_string[i % combined_string.size()];
         ASSERT_EQ(unpack_le<uint8_t>(target_ptr++),
                   cmap[std::toupper(c)]);
+    }
+    for (int i=packed_length; i<outBuf[1]->getSize(); i++)
+    {
+        ASSERT_EQ(0, *(target_ptr++));
     }
 
 }

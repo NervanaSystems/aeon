@@ -13,7 +13,6 @@ namespace nervana {
         class decoded;
 
         class extractor;
-        class transformer;
         class loader;
     }
 
@@ -76,18 +75,6 @@ namespace nervana {
 
     private:
         bool _binary = true;
-    };
-
-
-    class label::transformer : public interface::transformer<label::decoded, nervana::params> {
-    public:
-        transformer(const label::config&) {}
-
-        ~transformer() {}
-
-        std::shared_ptr<label::decoded> transform(
-                            std::shared_ptr<nervana::params> txs,
-                            std::shared_ptr<label::decoded> mp) override { return mp; }
     };
 
     class label::loader : public interface::loader<label::decoded> {

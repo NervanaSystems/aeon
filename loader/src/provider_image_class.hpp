@@ -21,7 +21,6 @@ namespace nervana {
         image::param_factory        image_factory;
 
         label::extractor            label_extractor;
-        label::transformer          label_transformer;
         label::loader               label_loader;
     };
 

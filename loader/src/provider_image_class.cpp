@@ -10,7 +10,6 @@ image_decoder::image_decoder(const nlohmann::json js) :
     image_loader(image_config),
     image_factory(image_config),
     label_extractor(label_config),
-    label_transformer(label_config),
     label_loader(label_config)
 {
     std::cout << js << std::endl;
@@ -38,7 +37,7 @@ void image_decoder::provide(int idx, buffer_in_array& in_buf, buffer_out_array& 
 
     // Process target data
     auto label_dec = label_extractor.extract(target_in.data(), target_in.size());
-    label_loader.load(target_out, label_transformer.transform(image_params, label_dec));
+    label_loader.load(target_out, label_dec);
 }
 
 localization_decoder::localization_decoder(nlohmann::json js) :
