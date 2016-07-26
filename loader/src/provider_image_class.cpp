@@ -14,8 +14,8 @@ const nlohmann::json json_get(const nlohmann::json js, const std::string key, co
 }
 
 image_classifier::image_classifier(const nlohmann::json js) :
+    image_config(js["image"]),
     // must use a default value {} otherwise, segfault ...
-    image_config(json_get(js, "image", nlohmann::json("{}"))),
     label_config(json_get(js, "label", nlohmann::json("{}"))),
     image_extractor(image_config),
     image_transformer(image_config),
