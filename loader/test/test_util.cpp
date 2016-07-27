@@ -18,10 +18,15 @@
 #include <sstream>
 #include <random>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include "gtest/gtest.h"
 #include "util.hpp"
 #include "wav_data.hpp"
 #include "cap_mjpeg_decoder.hpp"
+#include "image.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -188,5 +193,68 @@ TEST(util,memstream) {
     EXPECT_EQ(false,is.good());
 
     // test stream reset
+}
+
+TEST(util,mixchannels) {
+    int rows = 10;
+    int cols = 10;
+    {
+        int channels = 1;
+        vector<cv::Mat> source;
+        vector<cv::Mat> target;
+        vector<int> from_to;
+        source.emplace_back(rows,cols,CV_8UC(channels));
+        uint8_t* p = source.back().ptr<uint8_t>();
+        int index = 0;
+        for(int i=0; i<rows*cols; i++) {
+            for(int j=0; j<channels; j++) {
+                p[index++] = i;
+            }
+        }
+        for(int i=0; i<channels; i++) {
+            target.emplace_back(rows,cols,CV_8UC1);
+            from_to.push_back(i);
+            from_to.push_back(i);
+        }
+        image::convertMixChannels(source, target, from_to);
+
+        p = target[0].ptr<uint8_t>();
+        index = 0;
+        for(int i=0; i<rows*cols; i++) {
+            for(int j=0; j<channels; j++) {
+                EXPECT_EQ(i, p[index++]);
+            }
+        }
+    }
+
+    {
+        int channels = 1;
+        vector<cv::Mat> source;
+        vector<cv::Mat> target;
+        vector<int> from_to;
+        source.emplace_back(rows,cols,CV_8UC(channels));
+        uint8_t* p = source.back().ptr<uint8_t>();
+        int index = 0;
+        for(int i=0; i<rows*cols; i++) {
+            for(int j=0; j<channels; j++) {
+                p[index++] = i;
+            }
+        }
+        for(int i=0; i<channels; i++) {
+            target.emplace_back(rows,cols,CV_32SC1);
+            from_to.push_back(i);
+            from_to.push_back(i);
+        }
+        image::convertMixChannels(source, target, from_to);
+
+        int* p1 = target[0].ptr<int32_t>();
+        index = 0;
+        for(int i=0; i<rows*cols; i++) {
+            for(int j=0; j<channels; j++) {
+                EXPECT_EQ(i, p1[index++]);
+            }
+        }
+    }
+
 }
 

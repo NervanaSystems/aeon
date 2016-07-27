@@ -9,6 +9,7 @@ namespace nervana {
         void resize(const cv::Mat&, cv::Mat&, const cv::Size2i&, bool interpolate=true);
         void shift_cropbox(const cv::Size2f &, cv::Rect &, float, float);
         void rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interpolate=true, const cv::Scalar& border=cv::Scalar());
+        void convertMixChannels(std::vector<cv::Mat>& source, std::vector<cv::Mat>& target, std::vector<int>& from_to);
 
         class photometric {
         public:

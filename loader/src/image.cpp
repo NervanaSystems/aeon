@@ -41,6 +41,29 @@ void image::shift_cropbox(const cv::Size2f &in_size, cv::Rect &crop_box, float x
     crop_box.y = (in_size.height - crop_box.height) * yoff;
 }
 
+void image::convertMixChannels(vector<cv::Mat>& source, vector<cv::Mat>& target, vector<int>& from_to)
+{
+    if(source.size() == 0) throw invalid_argument("convertMixChannels source size must be > 0");
+    if(target.size() == 0) throw invalid_argument("convertMixChannels target size must be > 0");
+    if(from_to.size() == 0) throw invalid_argument("convertMixChannels from_to size must be > 0");
+
+    const vector<cv::Mat>* prepared_source = &source;
+    vector<cv::Mat>  tmp_source;
+    if(source[0].depth() == target[0].depth()) {
+        // No conversion required
+    } else {
+        // Conversion required
+        for(cv::Mat mat : source) {
+            cv::Mat tmp;
+            mat.convertTo(tmp, target[0].type());
+            tmp_source.push_back(tmp);
+        }
+        prepared_source = &tmp_source;
+    }
+    cv::mixChannels(*prepared_source, target, from_to);
+}
+
+
 /* Transform:
     image::config will be a supplied bunch of params used by this provider.
     on each record, the transformer will use the config along with the supplied
