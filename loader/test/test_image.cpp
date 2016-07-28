@@ -235,6 +235,146 @@ TEST(etl, image_transform_flip) {
     EXPECT_TRUE(check_value(transformed,0,19,119,169));
 }
 
+TEST(etl, image_noconvert_nosplit) {
+    nlohmann::json js = {
+        {"width", 10},
+        {"height",10},
+        {"channels", 3},
+        {"channel_major", false},
+        {"type_string", "uint8_t"}
+    };
+    image::config cfg(js);
+
+    cv::Mat input_image(100, 100, CV_8UC3);
+    input_image = cv::Scalar(50, 100, 200);
+    cv::Mat output_image(100, 100, CV_8UC3);
+
+    vector<unsigned char> image_data;
+    cv::imencode(".png", input_image, image_data);
+
+    image::extractor ext{cfg};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
+
+    image::loader loader(cfg);
+    loader.load((char*)output_image.data, decoded);
+
+    cv::imwrite("image_noconvert_nosplit.png", output_image);
+    uint8_t* input = (uint8_t*)(output_image.data);
+    int index = 0;
+    for(int row = 0; row < output_image.rows; row++) {
+        for(int col = 0; col < output_image.cols; col++) {
+            ASSERT_EQ(50, input[index++]);       // b
+            ASSERT_EQ(100, input[index++]);      // g
+            ASSERT_EQ(200, input[index++]);      // r
+        }
+    }
+}
+
+TEST(etl, image_noconvert_split) {
+    nlohmann::json js = {
+        {"width", 10},
+        {"height",10},
+        {"channels", 3},
+        {"channel_major", true},
+        {"type_string", "uint8_t"}
+    };
+    image::config cfg(js);
+
+    cv::Mat input_image(100, 100, CV_8UC3);
+    input_image = cv::Scalar(50, 100, 150);
+    cv::Mat output_image(300, 100, CV_8UC1);
+
+    vector<unsigned char> image_data;
+    cv::imencode(".png", input_image, image_data);
+
+    image::extractor ext{cfg};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
+
+    image::loader loader(cfg);
+    loader.load((char*)output_image.data, decoded);
+
+    cv::imwrite("image_noconvert_split.png", output_image);
+    uint8_t* input = (uint8_t*)(output_image.data);
+    int index = 0;
+    for(int ch = 0; ch < 3; ch++) {
+        for(int row = 0; row < input_image.rows; row++) {
+            for(int col = 0; col < input_image.cols; col++) {
+                ASSERT_EQ(50 * (ch+1), input[index++]);
+            }
+        }
+    }
+}
+
+TEST(etl, image_convert_nosplit) {
+    nlohmann::json js = {
+        {"width", 10},
+        {"height",10},
+        {"channels", 3},
+        {"channel_major", false},
+        {"type_string", "uint32_t"}
+    };
+    image::config cfg(js);
+
+    cv::Mat input_image(100, 100, CV_8UC3);
+    input_image = cv::Scalar(50, 100, 200);
+    cv::Mat output_image(100, 100, CV_32SC3);
+
+    vector<unsigned char> image_data;
+    cv::imencode(".png", input_image, image_data);
+
+    image::extractor ext{cfg};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
+
+    image::loader loader(cfg);
+    loader.load((char*)output_image.data, decoded);
+
+    cv::imwrite("image_convert_nosplit.png", output_image);
+    int32_t* input = (int32_t*)(output_image.data);
+    int index = 0;
+    for(int row = 0; row < output_image.rows; row++) {
+        for(int col = 0; col < output_image.cols; col++) {
+            ASSERT_EQ( 50, input[index++]);      // b
+            ASSERT_EQ(100, input[index++]);      // g
+            ASSERT_EQ(200, input[index++]);      // r
+        }
+    }
+}
+
+TEST(etl, image_convert_split) {
+    nlohmann::json js = {
+        {"width", 10},
+        {"height",10},
+        {"channels", 3},
+        {"channel_major", true},
+        {"type_string", "uint32_t"}
+    };
+    image::config cfg(js);
+
+    cv::Mat input_image(100, 100, CV_8UC3);
+    input_image = cv::Scalar(50, 100, 150);
+    cv::Mat output_image(300, 100, CV_32SC1);
+
+    vector<unsigned char> image_data;
+    cv::imencode(".png", input_image, image_data);
+
+    image::extractor ext{cfg};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
+
+    image::loader loader(cfg);
+    loader.load((char*)output_image.data, decoded);
+
+    cv::imwrite("image_convert_split.png", output_image);
+    int32_t* input = (int32_t*)(output_image.data);
+    int index = 0;
+    for(int ch = 0; ch < 3; ch++) {
+        for(int row = 0; row < input_image.rows; row++) {
+            for(int col = 0; col < input_image.cols; col++) {
+                ASSERT_EQ(50 * (ch+1), input[index++]);
+            }
+        }
+    }
+}
+
 TEST(etl, multi_crop) {
     auto indexed = generate_indexed_image();  // 256 x 256
     vector<unsigned char> img;

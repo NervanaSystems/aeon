@@ -30,10 +30,6 @@ image::config::config(nlohmann::json js) {
 
     // Now fill in derived
     otype = nervana::output_type(type_string);
-    if (type_string != "uint8_t") {
-        throw std::runtime_error("Invalid load type for images " + type_string);
-    }
-
     if (channel_major) {
         shape = std::vector<uint32_t> {channels, height, width};
     } else{
@@ -261,28 +257,32 @@ void image::loader::load(char* outbuf, shared_ptr<image::decoded> input)
 {
     // TODO: Generalize this to also handle multi_crop case
     auto img = input->get_image(0);
-    int image_size = img.channels() * img.total();
     auto cv_type = _cfg.get_shape_type().get_otype().cv_type;
+    auto element_size = _cfg.get_shape_type().get_otype().size;
+    int image_size = img.channels() * img.total() * element_size;
 
     for (int i=0; i < input->get_image_count(); i++) {
         auto outbuf_i = outbuf + (i * image_size);
         img = input->get_image(i);
         vector<cv::Mat> source;
-        source.push_back(img);
+        vector<cv::Mat> target;
+        vector<int>     from_to;
 
+        source.push_back(img);
         if (_cfg.channel_major) {
-            vector<cv::Mat> target;
-            vector<int> from_to;
-            cv::Size2i size = img.size();
             for(int ch=0; ch<_cfg.channels; ch++) {
-                target.emplace_back(size, cv_type, (char*)(outbuf_i + ch * img.total()));
+                target.emplace_back(img.size(), cv_type, (char*)(outbuf_i + ch * img.total() * element_size));
                 from_to.push_back(ch);
                 from_to.push_back(ch);
             }
-            image::convertMixChannels(source, target, from_to);
         } else {
-            memcpy(outbuf_i, img.data, image_size);
+            target.emplace_back(img.size(), CV_MAKETYPE(cv_type, _cfg.channels), (char*)(outbuf_i));
+            for(int ch=0; ch<_cfg.channels; ch++) {
+                from_to.push_back(ch);
+                from_to.push_back(ch);
+            }
         }
+        image::convertMixChannels(source, target, from_to);
     }
 }
 
