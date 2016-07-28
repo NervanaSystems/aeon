@@ -37,7 +37,7 @@ void BatchFileLoader::loadBlock(buffer_in_array& dest, uint block_num, uint bloc
     // begin_i and end_i contain the indexes into the manifest file which
     // hold the requested block
     size_t begin_i = block_num * block_size;
-    size_t end_i = min((block_num + 1) * (size_t)block_size, _manifest->getSize());
+    size_t end_i = min((block_num + 1) * (size_t)block_size, _manifest->objectCount());
 
     if (_subsetPercent != 100) {
         // adjust end_i in relation to begin_i.  We want to scale (end_i
@@ -49,8 +49,8 @@ void BatchFileLoader::loadBlock(buffer_in_array& dest, uint block_num, uint bloc
     }
 
     // ensure we stay within bounds of manifest
-    assert(begin_i <= _manifest->getSize());
-    assert(end_i <= _manifest->getSize());
+    assert(begin_i <= _manifest->objectCount());
+    assert(end_i <= _manifest->objectCount());
 
     // TODO: move index offset logic and bounds asserts into Manifest
     // interface to more easily support things like offset/limit queries.
@@ -102,5 +102,6 @@ off_t BatchFileLoader::getFileSize(const string& filename) {
 }
 
 uint BatchFileLoader::objectCount() {
-    return _manifest->getSize();
+
+    return _manifest->objectCount();
 }

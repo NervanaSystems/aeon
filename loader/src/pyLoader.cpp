@@ -263,7 +263,7 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
                                       _lcfg->shuffle_manifest,
                                       _lcfg->random_seed);
 
-    if(_manifest->getSize() == 0) {
+    if(_manifest->objectCount() == 0) {
         throw std::runtime_error("manifest file is empty");
     }
 

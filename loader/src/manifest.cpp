@@ -77,7 +77,7 @@ void Manifest::parse() {
     parseStream(infile);
 }
 
-size_t Manifest::getSize() const {
+size_t Manifest::objectCount() const {
     return _filename_lists.size();
 }
 

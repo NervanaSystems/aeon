@@ -89,14 +89,14 @@ TEST(manifest, parse_file_doesnt_exist) {
     string tmpname = tmp_manifest_file(0, {0, 0});
     Manifest manifest(tmpname, false);
 
-    ASSERT_EQ(manifest.getSize(), 0);
+    ASSERT_EQ(manifest.objectCount(), 0);
 }
 
 TEST(manifest, parse_file) {
     string tmpname = tmp_manifest_file(2, {0, 0});
 
     Manifest manifest(tmpname, false);
-    ASSERT_EQ(manifest.getSize(), 2);
+    ASSERT_EQ(manifest.objectCount(), 2);
 }
 
 TEST(manifest, no_shuffle) {

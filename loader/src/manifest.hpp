@@ -44,7 +44,7 @@ public:
 
     std::string hash();
     std::string version();
-    size_t getSize() const;
+    size_t objectCount() const;
 
     // begin and end provide iterators over the FilenameLists
     iter begin() const;
