@@ -102,6 +102,13 @@ off_t BatchFileLoader::getFileSize(const string& filename) {
 }
 
 uint BatchFileLoader::objectCount() {
-
-    return _manifest->objectCount();
+    if (_subsetPercent == 100) {
+        return blockCount();
+    } else {
+        uint full_block_count = int(_manifest->objectCount() / _block_size);
+        uint subset_object_count = full_block_count * int((_block_size * _subsetPercent) / 100);
+        uint leftover_object_count = _manifest->objectCount() - full_block_count * _block_size;
+        subset_object_count += (leftover_object_count * _subsetPercent) / 100;
+        return subset_object_count;
+    }
 }

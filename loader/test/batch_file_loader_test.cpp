@@ -94,3 +94,13 @@ TEST(blocked_file_loader, exception) {
         ASSERT_EQ(string("Could not find "), string(e.what()).substr(0, 15));
     }
 }
+
+TEST(blocked_file_loader, subset_object_count) {
+    BatchFileLoader bfl(
+        make_shared<Manifest>(
+            tmp_manifest_file(13, {16, 16}), false
+        ), 50, 5
+    );
+
+    ASSERT_EQ(bfl.objectCount(), 2 + 2 + 1);
+}
