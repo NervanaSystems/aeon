@@ -25,20 +25,10 @@
 
 using namespace std;
 
-const int makeRandomSeed() {
-    // helper for deligated constructor below
-    std::random_device rd;
-    return rd();
-}
-
-Manifest::Manifest(string filename, bool shuffle, const int randomSeed)
-: _filename(filename), _shuffle(shuffle), _randomSeed(randomSeed) {
+Manifest::Manifest(string filename, bool shuffle)
+: _filename(filename), _shuffle(shuffle) {
     // for now parse the entire manifest on creation
     parse();
-}
-
-Manifest::Manifest(string filename, bool shuffle)
-    : Manifest(filename, shuffle, makeRandomSeed()) {
 }
 
 string Manifest::hash() {
@@ -124,7 +114,11 @@ void Manifest::shuffleFilenameLists() {
     // shuffles _filename_lists.  It is possible that the order of the
     // filenames in the manifest file were in some sorted order and we
     // don't want our blocks to be biased by that order.
-    std::shuffle(_filename_lists.begin(), _filename_lists.end(), std::mt19937(_randomSeed));
+
+    // hardcode random seed to 0 since this step can be cached into a
+    // CPIO file.  We don't want to cache anything that is based on a
+    // changing random seed, so don't use a changing random seed.
+    std::shuffle(_filename_lists.begin(), _filename_lists.end(), std::mt19937(0));
 }
 
 Manifest::iter Manifest::begin() const {

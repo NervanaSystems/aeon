@@ -36,7 +36,6 @@
  */
 class Manifest {
 public:
-    Manifest(std::string filename, bool shuffle, const int randomSeed);
     Manifest(std::string filename, bool shuffle);
 
     typedef std::vector<std::string> FilenameList;
@@ -58,7 +57,6 @@ protected:
 private:
     const std::string _filename;
     const bool _shuffle;
-    const int _randomSeed;
 
     std::vector<FilenameList> _filename_lists;
 };

@@ -260,8 +260,7 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
 
     // the manifest defines which data should be included in the dataset
     _manifest = make_shared<Manifest>(_lcfg->manifest_filename,
-                                      _lcfg->shuffle_manifest,
-                                      _lcfg->random_seed);
+                                      _lcfg->shuffle_manifest);
 
     if(_manifest->objectCount() == 0) {
         throw std::runtime_error("manifest file is empty");
