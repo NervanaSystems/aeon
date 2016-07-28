@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "image.hpp"
 
 using namespace nervana;
@@ -49,9 +51,7 @@ void image::convertMixChannels(vector<cv::Mat>& source, vector<cv::Mat>& target,
 
     const vector<cv::Mat>* prepared_source = &source;
     vector<cv::Mat>  tmp_source;
-    if(source[0].depth() == target[0].depth()) {
-        // No conversion required
-    } else {
+    if(source[0].depth() != target[0].depth()) {
         // Conversion required
         for(cv::Mat mat : source) {
             cv::Mat tmp;
@@ -60,7 +60,14 @@ void image::convertMixChannels(vector<cv::Mat>& source, vector<cv::Mat>& target,
         }
         prepared_source = &tmp_source;
     }
-    cv::mixChannels(*prepared_source, target, from_to);
+
+    if(prepared_source->size() == 1 && target.size() == 1) {
+        size_t size = target[0].total() * target[0].elemSize();
+        memcpy(target[0].data, (*prepared_source)[0].data, size);
+    }
+    else {
+        cv::mixChannels(*prepared_source, target, from_to);
+    }
 }
 
 
