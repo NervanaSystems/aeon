@@ -31,9 +31,7 @@ shared_ptr<image::decoded> pixel_mask::extractor::extract(const char* inbuf, int
         image = target;
     }
 
-    auto rc = make_shared<image::decoded>();
-    rc->add(image);    // don't need to check return for single image
-    return rc;
+    return make_shared<image::decoded>(image);
 }
 
 pixel_mask::transformer::transformer(const image::config& config)
@@ -46,55 +44,25 @@ pixel_mask::transformer::~transformer()
 
 std::shared_ptr<image::decoded> pixel_mask::transformer::transform(
                     std::shared_ptr<image::params> img_xform,
-                    std::shared_ptr<image::decoded> img)
+                    std::shared_ptr<image::decoded> image_list)
 {
-    vector<cv::Mat> finalImageList;
-    for(int i=0; i<img->get_image_count(); i++) {
-        cv::Mat rotatedImage;
-        cv::Scalar border{0,0,0};
-        image::rotate(img->get_image(i), rotatedImage, img_xform->angle, false, border);
+    if(image_list->get_image_count() != 1) throw invalid_argument("pixel_mask transform only supports a single image");
 
-        cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
+    cv::Mat rotatedImage;
+    cv::Scalar border{0,0,0};
+    image::rotate(image_list->get_image(0), rotatedImage, img_xform->angle, false, border);
 
-        cv::Mat resizedImage;
-        image::resize(croppedImage, resizedImage, img_xform->output_size, false);
+    cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
 
-        cv::Mat *finalImage = &resizedImage;
-        cv::Mat flippedImage;
-        if (img_xform->flip) {
-            cv::flip(resizedImage, flippedImage, 1);
-            finalImage = &flippedImage;
-        }
-        finalImageList.push_back(*finalImage);
+    cv::Mat resizedImage;
+    image::resize(croppedImage, resizedImage, img_xform->output_size, false);
+
+    cv::Mat *finalImage = &resizedImage;
+    cv::Mat flippedImage;
+    if (img_xform->flip) {
+        cv::flip(resizedImage, flippedImage, 1);
+        finalImage = &flippedImage;
     }
 
-    auto rc = make_shared<image::decoded>();
-    if(rc->add(finalImageList) == false) {
-        rc = nullptr;
-    }
-    return rc;
-}
-
-pixel_mask::loader::loader(const image::config& _config) :
-    cfg(_config)
-{
-
-}
-
-pixel_mask::loader::~loader()
-{
-
-}
-
-void pixel_mask::loader::load(char* outbuf, std::shared_ptr<image::decoded> input)
-{
-    cv::Mat  image = input->get_image(0);
-    uint8_t* data = image.data;
-    int*     out = (int*)outbuf;
-    int      image_size = image.total();
-
-    for(int i=0; i<image_size; i++)
-    {
-        out[i] = data[i];
-    }
+    return make_shared<image::decoded>(*finalImage);
 }

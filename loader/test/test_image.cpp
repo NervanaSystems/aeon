@@ -260,7 +260,7 @@ TEST(etl, image_noconvert_nosplit) {
     image::loader loader(cfg);
     loader.load((char*)output_image.data, decoded);
 
-    cv::imwrite("image_noconvert_nosplit.png", output_image);
+//    cv::imwrite("image_noconvert_nosplit.png", output_image);
     uint8_t* input = (uint8_t*)(output_image.data);
     int index = 0;
     for(int row = 0; row < output_image.rows; row++) {
@@ -295,7 +295,7 @@ TEST(etl, image_noconvert_split) {
     image::loader loader(cfg);
     loader.load((char*)output_image.data, decoded);
 
-    cv::imwrite("image_noconvert_split.png", output_image);
+//    cv::imwrite("image_noconvert_split.png", output_image);
     uint8_t* input = (uint8_t*)(output_image.data);
     int index = 0;
     for(int ch = 0; ch < 3; ch++) {
@@ -330,7 +330,7 @@ TEST(etl, image_convert_nosplit) {
     image::loader loader(cfg);
     loader.load((char*)output_image.data, decoded);
 
-    cv::imwrite("image_convert_nosplit.png", output_image);
+//    cv::imwrite("image_convert_nosplit.png", output_image);
     int32_t* input = (int32_t*)(output_image.data);
     int index = 0;
     for(int row = 0; row < output_image.rows; row++) {
@@ -365,7 +365,7 @@ TEST(etl, image_convert_split) {
     image::loader loader(cfg);
     loader.load((char*)output_image.data, decoded);
 
-    cv::imwrite("image_convert_split.png", output_image);
+//    cv::imwrite("image_convert_split.png", output_image);
     int32_t* input = (int32_t*)(output_image.data);
     int index = 0;
     for(int ch = 0; ch < 3; ch++) {

@@ -81,19 +81,22 @@ namespace nervana {
         std::default_random_engine  _r_eng;
     };
 
-    class pixel_mask_decoder : public provider_interface {
+    class provider_pixel_mask : public provider_interface {
     public:
-        pixel_mask_decoder(nlohmann::json js);
+        provider_pixel_mask(nlohmann::json js);
 
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
 
     private:
         image::config               image_config;
+        image::config               target_config;
         image::extractor            image_extractor;
         image::transformer          image_transformer;
         image::loader               image_loader;
         image::param_factory        image_factory;
 
+        pixel_mask::extractor       target_extractor;
         pixel_mask::transformer     target_transformer;
+        image::loader               target_loader;
     };
 }

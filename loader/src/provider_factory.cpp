@@ -26,7 +26,7 @@ std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::cr
     } else if( mediaType == "image_localization" ) {
         rc = make_shared<localization_decoder>(configJs);
     } else if( mediaType == "image_pixelmask" ) {
-        rc = make_shared<pixel_mask_decoder>(configJs);
+        rc = make_shared<provider_pixel_mask>(configJs);
     } else if( mediaType == "image_boundingbox" ) {
         rc = make_shared<bbox_provider>(configJs);
     } else {

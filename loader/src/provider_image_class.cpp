@@ -154,17 +154,20 @@ void bbox_provider::provide(int idx, buffer_in_array& in_buf, buffer_out_array& 
     bbox_loader.load(target_out, bbox_transformer.transform(image_params, target_dec));
 }
 
-pixel_mask_decoder::pixel_mask_decoder(nlohmann::json js) :
+provider_pixel_mask::provider_pixel_mask(nlohmann::json js) :
     image_config(js["data_config"]["config"]),
+    target_config(js["target_config"]["config"]),
     image_extractor(image_config),
     image_transformer(image_config),
     image_loader(image_config),
     image_factory(image_config),
-    target_transformer(image_config)
+    target_extractor(target_config),
+    target_transformer(target_config),
+    target_loader(target_config)
 {
 }
 
-void pixel_mask_decoder::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
+void provider_pixel_mask::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
     std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
     std::vector<char>& target_in = in_buf[1]->getItem(idx);
     char* datum_out  = out_buf[0]->getItem(idx);
