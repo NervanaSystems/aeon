@@ -267,23 +267,23 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
         throw std::runtime_error("manifest file is empty");
     }
 
-    shared_ptr<BatchLoader> batchLoader = make_shared<BatchFileLoader>(
+    _batchLoader = make_shared<BatchFileLoader>(
         _manifest, _lcfg->subset_percent
     );
 
     if(_lcfg->cache_directory.length() > 0) {
-        batchLoader = make_shared<BatchLoaderCPIOCache>(_lcfg->cache_directory,
+        _batchLoader = make_shared<BatchLoaderCPIOCache>(_lcfg->cache_directory,
                                                         _manifest->hash(),
                                                         _manifest->version(),
-                                                        batchLoader);
+                                                        _batchLoader);
     }
 
     if (_lcfg->shuffle_every_epoch) {
-        _batch_iterator = make_shared<ShuffledBatchIterator>(batchLoader,
+        _batch_iterator = make_shared<ShuffledBatchIterator>(_batchLoader,
                                                              _lcfg->macrobatch_size,
                                                              _lcfg->random_seed);
     } else {
-        _batch_iterator = make_shared<SequentialBatchIterator>(batchLoader,
+        _batch_iterator = make_shared<SequentialBatchIterator>(_batchLoader,
                                                                _lcfg->macrobatch_size);
     }
 

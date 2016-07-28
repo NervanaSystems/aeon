@@ -26,6 +26,7 @@
 
 #include "pyBackendWrapper.hpp"
 #include "threadpool.hpp"
+#include "batch_loader.hpp"
 #include "batch_iterator.hpp"
 #include "manifest.hpp"
 #include "provider_factory.hpp"
@@ -179,6 +180,7 @@ private:
     std::shared_ptr<buffer_pool_out>    _decodeBufs = nullptr;
     std::unique_ptr<ReadThread>         _readThread = nullptr;
     std::unique_ptr<pyDecodeThreadPool> _decodeThreads = nullptr;
+    std::shared_ptr<BatchLoader>        _batchLoader = nullptr;
     std::shared_ptr<BatchIterator>      _batch_iterator = nullptr;
     std::shared_ptr<Manifest>           _manifest = nullptr;
     std::shared_ptr<pyLoaderConfig>     _lcfg = nullptr;
