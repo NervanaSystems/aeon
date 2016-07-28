@@ -16,7 +16,6 @@ import ctypes as ct
 import os
 import atexit
 import json
-import math
 
 
 class LoaderRuntimeError(RuntimeError):
@@ -196,7 +195,6 @@ class DataLoader(object):
         """
         compute the number of batches for the next epoch
         """
-
         self._nbatches = -((self._item_index - self.item_count) // self.minibatch_size)
 
     @property
@@ -226,9 +224,6 @@ class DataLoader(object):
         it.  The next epoch will not repeat the data used to fill the last
         minibatch.
         """
-
-        self._compute_nbatches()
-
         for _ in range(self._nbatches):
             try:
                 yield self.next()
@@ -236,11 +231,11 @@ class DataLoader(object):
                 # TODO: log this somewhere instead of printing
                 print e
             finally:
-                # keep track of where we are in the dataset so we know which epoch
-                # we are on
+                # keep track of where we are in the dataset so we know which epoch we are on
                 self._item_index += self.minibatch_size
                 if self._item_index >= self.item_count:
                     self._item_index -= self.item_count
+                    self._compute_nbatches()
 
     # UNUSED
     # these are reference for how we could switch to explicit epoch handling
@@ -255,9 +250,7 @@ class DataLoader(object):
     def nbatches_at_epoch(self, epoch_index):
         """ returns the number of minibatches which will be in epoch #
         `epoch_index` """
-        return math.ceil(
-            (self.item_count - self.start_item_index(epoch_index)) / float(self.minibatch_size)
-        )
+        return -((self.start_item_index(epoch_index) - self.item_count) // self.minibatch_size)
 
     def minibatch_index(self, epoch_index):
         """ returns the minibatch_index that `epoch_index` starts with """
