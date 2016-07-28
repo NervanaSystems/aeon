@@ -164,7 +164,6 @@ public:
     PyObject* shapes();
     PyObject* next(int bufIdx);
 
-    std::shared_ptr<BatchIterator> getBatchIterator() { return _batch_iterator; }
     int itemCount() { return _batchLoader->objectCount(); }
 
 private:
