@@ -12,8 +12,20 @@ namespace nervana {
         class loader;
     }
 
-    // image extractor used
+    //-------------------------------------------------------------------------
+    // Extract
+    //-------------------------------------------------------------------------
 
+    class pixel_mask::extractor : public interface::extractor<image::decoded> {
+        extractor(const image::config&);
+        virtual ~extractor();
+        virtual std::shared_ptr<image::decoded> extract(const char*, int) override;
+    private:
+    };
+
+    //-------------------------------------------------------------------------
+    // Transform
+    //-------------------------------------------------------------------------
 
     class pixel_mask::transformer : public interface::transformer<image::decoded, image::params> {
     public:
@@ -24,5 +36,17 @@ namespace nervana {
                             std::shared_ptr<image::decoded> mp) override;
     };
 
-    // image loader used
+    //-------------------------------------------------------------------------
+    // Load
+    //-------------------------------------------------------------------------
+
+    class pixel_mask::loader : public interface::loader<image::decoded> {
+    public:
+        loader(const image::config&);
+        virtual ~loader();
+        virtual void load(char*, std::shared_ptr<image::decoded>) override;
+
+    private:
+        const image::config& cfg;
+    };
 }

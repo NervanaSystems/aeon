@@ -61,65 +61,16 @@ namespace nervana {
         std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
         std::bernoulli_distribution           flip{0};
 
-        std::string type_string{"uint8_t"};
-        bool do_area_scale = false;
-        bool channel_major = true;
-        uint32_t channels = 3;
+        std::string                           type_string{"uint8_t"};
+        bool                                  do_area_scale = false;
+        bool                                  channel_major = true;
+        uint32_t                              channels = 3;
 
-        config(nlohmann::json js) {
-            if(js.is_null()) {
-                throw std::runtime_error("missing image config in json config");
-            }
-
-            parse_value(height, "height", js, mode::REQUIRED);
-            parse_value(width, "width", js, mode::REQUIRED);
-
-            parse_value(seed, "seed", js);
-
-            parse_value(type_string, "type_string", js);
-
-            parse_value(do_area_scale, "do_area_scale", js, mode::OPTIONAL);
-            parse_value(channels, "channels", js);
-            parse_value(channel_major, "channel_major", js);
-
-            auto dist_params = js["distribution"];
-            parse_dist(angle, "angle", dist_params);
-            parse_dist(scale, "scale", dist_params);
-            parse_dist(lighting, "lighting", dist_params);
-            parse_dist(aspect_ratio, "aspect_ratio", dist_params);
-            parse_dist(photometric, "photometric", dist_params);
-            parse_dist(crop_offset, "crop_offset", dist_params);
-            parse_dist(flip, "flip", dist_params);
-
-            // Now fill in derived
-            otype = nervana::output_type(type_string);
-            if (type_string != "uint8_t") {
-                throw std::runtime_error("Invalid load type for images " + type_string);
-            }
-
-            if (channel_major) {
-                shape = std::vector<uint32_t> {channels, height, width};
-            } else{
-                shape = std::vector<uint32_t> {height, width, channels};
-            }
-
-            validate();
-        }
+        config(nlohmann::json js);
 
     private:
         config() = delete;
-        void validate() {
-            if(crop_offset.param().a() > crop_offset.param().b()) {
-                throw std::invalid_argument("invalid crop_offset");
-            }
-            if(width <= 0) {
-                throw std::invalid_argument("invalid width");
-            }
-            if(height <= 0) {
-                throw std::invalid_argument("invalid height");
-            }
-            base_validate();
-        }
+        void validate();
     };
 
     class image::param_factory : public interface::param_factory<image::decoded, image::params> {
