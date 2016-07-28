@@ -29,7 +29,7 @@ TEST(minibatch_iterator, simple) {
 
     // a little odd here that our block size is 3 and our minibatchsize is 13 ...
     MinibatchIterator mi(
-        make_shared<SequentialBatchIterator>(make_shared<MockBatchLoader>(), 3),
+        make_shared<SequentialBatchIterator>(make_shared<MockBatchLoader>(3)),
         13
     );
 

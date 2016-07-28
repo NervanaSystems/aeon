@@ -268,7 +268,7 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
     }
 
     _batchLoader = make_shared<BatchFileLoader>(
-        _manifest, _lcfg->subset_percent
+        _manifest, _lcfg->subset_percent, _lcfg->macrobatch_size
     );
 
     if(_lcfg->cache_directory.length() > 0) {
@@ -280,11 +280,9 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
 
     if (_lcfg->shuffle_every_epoch) {
         _batch_iterator = make_shared<ShuffledBatchIterator>(_batchLoader,
-                                                             _lcfg->macrobatch_size,
                                                              _lcfg->random_seed);
     } else {
-        _batch_iterator = make_shared<SequentialBatchIterator>(_batchLoader,
-                                                               _lcfg->macrobatch_size);
+        _batch_iterator = make_shared<SequentialBatchIterator>(_batchLoader);
     }
 
     _batch_iterator = make_shared<MinibatchIterator>(_batch_iterator, _lcfg->minibatch_size);

@@ -32,7 +32,7 @@ BatchLoaderCPIOCache::BatchLoaderCPIOCache(const string& rootCacheDir,
                                            const string& hash,
                                            const string& version,
                                            shared_ptr<BatchLoader> loader)
-: _loader(loader) {
+: BatchLoader(loader->blockSize()), _loader(loader) {
     invalidateOldCache(rootCacheDir, hash, version);
 
     _cacheDir = rootCacheDir + "/" + hash + "_" + version;
@@ -40,14 +40,14 @@ BatchLoaderCPIOCache::BatchLoaderCPIOCache(const string& rootCacheDir,
     makeDirectory(_cacheDir);
 }
 
-void BatchLoaderCPIOCache::loadBlock(buffer_in_array& dest, uint block_num, uint block_size) {
-    if(loadBlockFromCache(dest, block_num, block_size)) {
+void BatchLoaderCPIOCache::loadBlock(buffer_in_array& dest, uint block_num) {
+    if(loadBlockFromCache(dest, block_num)) {
         return;
     } else {
-        _loader->loadBlock(dest, block_num, block_size);
+        _loader->loadBlock(dest, block_num);
 
         try {
-            writeBlockToCache(dest, block_num, block_size);
+            writeBlockToCache(dest, block_num);
         } catch (std::exception& e) {
             // failure to write block to cache doesn't stop execution, only print an error
             cerr << "ERROR writing block to cache: " << e.what() << endl;
@@ -55,13 +55,13 @@ void BatchLoaderCPIOCache::loadBlock(buffer_in_array& dest, uint block_num, uint
     }
 }
 
-bool BatchLoaderCPIOCache::loadBlockFromCache(buffer_in_array& dest, uint block_num, uint block_size) {
+bool BatchLoaderCPIOCache::loadBlockFromCache(buffer_in_array& dest, uint block_num) {
     // load a block from cpio cache into dest.  If file doesn't exist,
     // return false.  If loading from cpio cache was successful return
     // true.
     CPIOFileReader reader;
 
-    if(!reader.open(blockFilename(block_num, block_size))) {
+    if(!reader.open(blockFilename(block_num))) {
         // couldn't load the file
         return false;
     }
@@ -83,9 +83,9 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(buffer_in_array& dest, uint block_
     return true;
 }
 
-void BatchLoaderCPIOCache::writeBlockToCache(buffer_in_array& buff, uint block_num, uint block_size) {
+void BatchLoaderCPIOCache::writeBlockToCache(buffer_in_array& buff, uint block_num) {
     CPIOFileWriter writer;
-    writer.open(blockFilename(block_num, block_size));
+    writer.open(blockFilename(block_num));
 
     // would be nice if this was taken care of the BufferPair
     assert(buff[0]->getItemCount() == buff[1]->getItemCount());
@@ -187,9 +187,9 @@ void BatchLoaderCPIOCache::makeDirectory(const string& dir) {
     }
 }
 
-string BatchLoaderCPIOCache::blockFilename(uint block_num, uint block_size) {
+string BatchLoaderCPIOCache::blockFilename(uint block_num) {
     stringstream s;
-    s << _cacheDir << "/" << block_num << "-" << block_size << ".cpio";
+    s << _cacheDir << "/" << block_num << "-" << _block_size << ".cpio";
     return s.str();
 }
 

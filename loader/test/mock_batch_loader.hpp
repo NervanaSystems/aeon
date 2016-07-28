@@ -20,6 +20,7 @@
 
 class MockBatchLoader : public BatchLoader {
 public:
-    void loadBlock(buffer_in_array &dest, uint block_num, uint block_size);
+    MockBatchLoader(uint block_size);
+    void loadBlock(buffer_in_array &dest, uint block_num);
     uint objectCount();
 };

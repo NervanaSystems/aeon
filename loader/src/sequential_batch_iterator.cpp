@@ -19,15 +19,15 @@
 
 using namespace std;
 
-SequentialBatchIterator::SequentialBatchIterator(shared_ptr<BatchLoader> loader, uint block_size)
-    : _loader(loader), _block_size(block_size) {
-    _count = _loader->blockCount(block_size);
+SequentialBatchIterator::SequentialBatchIterator(shared_ptr<BatchLoader> loader)
+    : _loader(loader) {
+    _count = _loader->blockCount();
 
     reset();
 };
 
 void SequentialBatchIterator::read(buffer_in_array& dest) {
-    _loader->loadBlock(dest, _i, _block_size);
+    _loader->loadBlock(dest, _i);
 
     ++_i;
 

@@ -6,12 +6,12 @@
 
 using namespace std;
 
-ShuffledBatchIterator::ShuffledBatchIterator(shared_ptr<BatchLoader> loader, uint block_size, uint seed)
-    : _rand(seed), _loader(loader), _block_size(block_size), _seed(seed), _epoch(0) {
+ShuffledBatchIterator::ShuffledBatchIterator(shared_ptr<BatchLoader> loader, uint seed)
+    : _rand(seed), _loader(loader), _seed(seed), _epoch(0) {
 
     // fill indices with integers from  0 to _count.  indices can then be
     // shuffled and used to iterate randomly through the blocks.
-    uint _count = _loader->blockCount(block_size);
+    uint _count = _loader->blockCount();
     for(uint i = 0; i < _count; ++i) {
         _indices.push_back(i);
     }
@@ -24,7 +24,7 @@ void ShuffledBatchIterator::shuffle() {
 }
 
 void ShuffledBatchIterator::read(buffer_in_array &dest) {
-    _loader->loadBlock(dest, *_it, _block_size);
+    _loader->loadBlock(dest, *_it);
 
     // shuffle the objects in BufferPair dest
     // seed the shuffle with the seed passed in the constructor + the _epoch

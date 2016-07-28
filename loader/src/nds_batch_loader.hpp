@@ -24,18 +24,18 @@
 
 class NDSBatchLoader : public BatchLoader {
 public:
-    NDSBatchLoader(const std::string baseurl, int tag_id, int shard_count=1, int shard_index=0);
+    NDSBatchLoader(const std::string baseurl, int tag_id, uint block_size, int shard_count=1, int shard_index=0);
     ~NDSBatchLoader();
 
-    void loadBlock(buffer_in_array& dest, uint block_num, uint block_size);
+    void loadBlock(buffer_in_array& dest, uint block_num);
     uint objectCount();
 
-    uint blockCount(uint block_size);
+    uint blockCount();
 
 private:
     void get(const std::string url, std::stringstream& stream);
 
-    const std::string loadBlockURL(uint block_num, uint block_size);
+    const std::string loadBlockURL(uint block_num);
     const std::string _baseurl;
     const int _tag_id;
     const int _shard_count;

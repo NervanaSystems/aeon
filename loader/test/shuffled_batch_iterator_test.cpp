@@ -22,7 +22,7 @@
 using namespace std;
 
 TEST(shuffled_batch_iterator, sequential_batch_loader) {
-    MockBatchLoader bl;
+    MockBatchLoader bl(3);
 
     // buffer_in* dataBuffer = new buffer_in(0);
     // buffer_in* targetBuffer = new buffer_in(0);
@@ -31,9 +31,9 @@ TEST(shuffled_batch_iterator, sequential_batch_loader) {
 
     // ensure that loading successive blocks from SequentialBatchLoader
     // result in sorted strings
-    bl.loadBlock(bp, 0, 3);
-    bl.loadBlock(bp, 1, 3);
-    bl.loadBlock(bp, 2, 3);
+    bl.loadBlock(bp, 0);
+    bl.loadBlock(bp, 1);
+    bl.loadBlock(bp, 2);
 
     vector<string> words = buffer_to_vector_of_strings(*bp[0]);
 
@@ -42,7 +42,7 @@ TEST(shuffled_batch_iterator, sequential_batch_loader) {
 
 TEST(shuffled_batch_iterator, shuffled_block) {
     ShuffledBatchIterator sbi(
-        make_shared<MockBatchLoader>(), 3, 0
+        make_shared<MockBatchLoader>(3), 0
     );
     // buffer_in* dataBuffer = new buffer_in(0);
     // buffer_in* targetBuffer = new buffer_in(0);

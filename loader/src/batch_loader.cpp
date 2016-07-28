@@ -2,6 +2,14 @@
 
 #include "batch_loader.hpp"
 
-uint BatchLoader::blockCount(uint block_size) {
-    return ceil((float)objectCount() / (float)block_size);
+BatchLoader::BatchLoader(uint block_size) :
+    _block_size(block_size) {
+}
+
+uint BatchLoader::blockSize() {
+    return _block_size;
+}
+
+uint BatchLoader::blockCount() {
+    return ceil((float)objectCount() / (float)_block_size);
 }

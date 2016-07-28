@@ -33,8 +33,8 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
     return size * nmemb;
 }
 
-NDSBatchLoader::NDSBatchLoader(const std::string baseurl, int tag_id, int shard_count, int shard_index)
-    : _baseurl(baseurl), _tag_id(tag_id), _shard_count(shard_count),
+NDSBatchLoader::NDSBatchLoader(const std::string baseurl, int tag_id, uint block_size, int shard_count, int shard_index)
+    : BatchLoader(block_size), _baseurl(baseurl), _tag_id(tag_id), _shard_count(shard_count),
       _shard_index(shard_index) {
     assert(shard_index < shard_count);
 
@@ -46,13 +46,13 @@ NDSBatchLoader::~NDSBatchLoader() {
     curl_easy_cleanup(_curl);
 }
 
-void NDSBatchLoader::loadBlock(buffer_in_array& dest, uint block_num, uint block_size) {
+void NDSBatchLoader::loadBlock(buffer_in_array& dest, uint block_num) {
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
 
     // get data from url and write it into cpio_stream
     stringstream cpio_stream;
-    get(loadBlockURL(block_num, block_size), cpio_stream);
+    get(loadBlockURL(block_num), cpio_stream);
 
     // parse cpio_stream into dest one object/target pair at a time
     CPIOReader reader(&cpio_stream);
@@ -90,11 +90,11 @@ void NDSBatchLoader::get(const string url, stringstream &stream) {
     }
 }
 
-const string NDSBatchLoader::loadBlockURL(uint block_num, uint block_size) {
+const string NDSBatchLoader::loadBlockURL(uint block_num) {
     stringstream ss;
     ss << _baseurl << "/macrobatch?";
     ss << "macro_batch_index=" << block_num;
-    ss << "&macro_batch_max_size=" << block_size;
+    ss << "&macro_batch_max_size=" << _block_size;
     ss << "&tag_id=" << _tag_id;
     ss << "&shard_count=" << _shard_count;
     ss << "&shard_index=" << _shard_index;
@@ -105,6 +105,6 @@ uint NDSBatchLoader::objectCount() {
     throw std::runtime_error("Object count not implemented");
 }
 
-uint NDSBatchLoader::blockCount(uint block_size) {
+uint NDSBatchLoader::blockCount() {
     throw std::runtime_error("Block count not implemented");
 }

@@ -23,12 +23,12 @@
 
 using namespace std;
 
-BatchFileLoader::BatchFileLoader(shared_ptr<Manifest> manifest, uint subsetPercent)
-: _manifest(manifest), _subsetPercent(subsetPercent) {
+BatchFileLoader::BatchFileLoader(shared_ptr<Manifest> manifest, uint subsetPercent, uint block_size)
+: BatchLoader(block_size), _manifest(manifest), _subsetPercent(subsetPercent) {
     assert(_subsetPercent >= 0 && _subsetPercent <= 100);
 }
 
-void BatchFileLoader::loadBlock(buffer_in_array& dest, uint block_num, uint block_size) {
+void BatchFileLoader::loadBlock(buffer_in_array& dest, uint block_num) {
     // NOTE: thread safe so long as you aren't modifying the manifest
     // NOTE: dest memory must already be allocated at the correct size
     // NOTE: end_i - begin_i may not be a full block for the last
@@ -36,8 +36,8 @@ void BatchFileLoader::loadBlock(buffer_in_array& dest, uint block_num, uint bloc
 
     // begin_i and end_i contain the indexes into the manifest file which
     // hold the requested block
-    size_t begin_i = block_num * block_size;
-    size_t end_i = min((block_num + 1) * (size_t)block_size, _manifest->objectCount());
+    size_t begin_i = block_num * _block_size;
+    size_t end_i = min((block_num + 1) * (size_t)_block_size, _manifest->objectCount());
 
     if (_subsetPercent != 100) {
         // adjust end_i in relation to begin_i.  We want to scale (end_i

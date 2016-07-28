@@ -21,7 +21,7 @@ using namespace std;
 
 TEST(blocked_file_loader, constructor) {
     string tmpname = tmp_manifest_file(0, {0, 0});
-    BatchFileLoader bfl(make_shared<Manifest>(tmpname, true), 100);
+    BatchFileLoader bfl(make_shared<Manifest>(tmpname, true), 100, 4);
 }
 
 TEST(blocked_file_loader, loadBlock) {
@@ -30,11 +30,11 @@ TEST(blocked_file_loader, loadBlock) {
     uint object_size = 16;
     uint target_size = 16;
 
-    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(4, {object_size, target_size}), true), 100);
+    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(4, {object_size, target_size}), true), 100, block_size);
 
     buffer_in_array bp(vector<size_t>{0, 0});
 
-    bfl.loadBlock(bp, 0, block_size);
+    bfl.loadBlock(bp, 0);
 
     // the object_data and target_data should be full of repeating
     // uints.  the uints in target_data will be 1 bigger than the uints
@@ -56,20 +56,20 @@ TEST(blocked_file_loader, subsetPercent) {
     uint object_size = 16;
     uint target_size = 16;
 
-    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(10, {object_size, target_size}), true), 50);
+    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(10, {object_size, target_size}), true), 50, block_size);
 
     buffer_in_array bp(vector<size_t>{0, 0});
 
 
-    bfl.loadBlock(bp, 0, block_size);
+    bfl.loadBlock(bp, 0);
     ASSERT_EQ(bp[0]->getItemCount(), block_size / 2);
     bp[0]->reset();
 
-    bfl.loadBlock(bp, 1, block_size);
+    bfl.loadBlock(bp, 1);
     ASSERT_EQ(bp[0]->getItemCount(), block_size / 2);
     bp[0]->reset();
 
-    bfl.loadBlock(bp, 2, block_size);
+    bfl.loadBlock(bp, 2);
     ASSERT_EQ(bp[0]->getItemCount(), 1);
     bp[0]->reset();
 }
@@ -78,13 +78,13 @@ TEST(blocked_file_loader, exception) {
     BatchFileLoader bfl(
         make_shared<Manifest>(
             tmp_manifest_file_with_invalid_filename(), false
-        ), 100
+        ), 100, 1
     );
 
     buffer_in_array bp(vector<size_t>{0, 0});
 
     // loadBlock doesn't actually raise the exception
-    bfl.loadBlock(bp, 0, 1);
+    bfl.loadBlock(bp, 0);
 
     // Could not find file exception raised when we try to access the item
     try {
