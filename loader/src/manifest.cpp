@@ -17,10 +17,10 @@
 
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <fstream>
 #include <string>
 #include <sstream>
-
 #include "manifest.hpp"
 
 using namespace std;
@@ -75,6 +75,7 @@ void Manifest::parseStream(istream& is) {
     // parse istream is and load the entire thing into _filename_lists
     string line;
 
+    uint prev_num_fields = 0, lineno = 0;
     // read in each line, then from that istringstream, break into
     // comma-separated fields.
     while(std::getline(is, line)) {
@@ -84,19 +85,25 @@ void Manifest::parseStream(istream& is) {
         while (std::getline(lineis, field, ',')) {
             filename_list.push_back(field);
         }
-
-        if(filename_list.size() != 2) {
-            stringstream ss;
-            ss << "manifest file has a line with more than 2 files (";
-            ss << filename_list.size() << "): ";
-            for (uint i = 0; i < filename_list.size() - 1; i++) {
-                ss << filename_list[i] << ", ";
-            }
-            ss << filename_list[filename_list.size() - 1];
-            throw std::runtime_error(ss.str());
+        if (lineno == 0) {
+            prev_num_fields = filename_list.size();
         }
 
+        if(filename_list.size() != prev_num_fields) {
+            // nlohmann::json f_list(filename_list);
+
+            ostringstream ss;
+            ss << "at line: " << lineno;
+            ss << ", manifest file has a line with differing number of files (";
+            ss << filename_list.size() << ") vs (" << prev_num_fields << "): ";
+
+            std::copy(filename_list.begin(), filename_list.end(),
+                      ostream_iterator<std::string>(ss, " "));
+            throw std::runtime_error(ss.str());
+        }
+        prev_num_fields = filename_list.size();
         _filename_lists.push_back(filename_list);
+        lineno++;
     }
 
     // If we don't need to shuffle, there may be small performance

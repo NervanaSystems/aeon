@@ -91,13 +91,13 @@ public:
     std::string manifest_filename;
     int minibatch_size;
 
-    std::string cache_directory = "";
-    int macrobatch_size      = 0;
-    bool shuffle_every_epoch = false;
-    bool shuffle_manifest    = false;
-    bool single_thread       = false;
-    int subset_percent        = 100;
-    int random_seed           = 0;
+    std::string cache_directory     = "";
+    int         macrobatch_size     = 0;
+    float       subset_fraction     = 1.0;
+    bool        shuffle_every_epoch = false;
+    bool        shuffle_manifest    = false;
+    bool        single_thread       = false;
+    int         random_seed         = 0;
 
     pyLoaderConfig(nlohmann::json js)
     {
@@ -109,7 +109,7 @@ public:
         parse_value(macrobatch_size,     "macrobatch_size", js);
         parse_value(shuffle_every_epoch, "shuffle_every_epoch", js);
         parse_value(shuffle_manifest,    "shuffle_manifest", js);
-        parse_value(subset_percent,      "subset_percent", js);
+        parse_value(subset_fraction,     "subset_fraction", js);
         parse_value(random_seed,         "random_seed", js);
 
         if(macrobatch_size == 0) {

@@ -7,6 +7,19 @@
 #include "etl_pixel_mask.hpp"
 
 namespace nervana {
+    class image_inference : public provider_interface {
+    public:
+        image_inference(const nlohmann::json js);
+        void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
+
+    private:
+        image::config               image_config;
+        image::extractor            image_extractor;
+        image::transformer          image_transformer;
+        image::loader               image_loader;
+        image::param_factory        image_factory;
+    };
+
     class image_classifier : public provider_interface {
     public:
         image_classifier(const nlohmann::json js);

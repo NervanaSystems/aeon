@@ -267,7 +267,7 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
     }
 
     _batchLoader = make_shared<BatchFileLoader>(
-        _manifest, _lcfg->subset_percent, _lcfg->macrobatch_size
+        _manifest, _lcfg->subset_fraction, _lcfg->macrobatch_size
     );
 
     if(_lcfg->cache_directory.length() > 0) {

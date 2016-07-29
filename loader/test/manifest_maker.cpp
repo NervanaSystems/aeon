@@ -98,3 +98,18 @@ std::string tmp_manifest_file_with_invalid_filename() {
     f.close();
     return tmpname;
 }
+
+std::string tmp_manifest_file_with_ragged_fields() {
+    string tmpname = tmp_filename();
+    ofstream f(tmpname);
+
+    for(uint i = 0; i < 10; ++i) {
+        for(uint j = 0; j < i % 3 + 1; ++j) {
+            f << (j != 0 ? "," : "") << tmp_filename();
+        }
+        f << endl;
+    }
+
+    f.close();
+    return tmpname;
+}

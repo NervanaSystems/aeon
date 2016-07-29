@@ -125,15 +125,28 @@ TEST(manifest, shuffle) {
     ASSERT_EQ(different, true);
 }
 
-TEST(manifest, too_many_files) {
-    string filename = tmp_manifest_file(20, {4, 4, 4});
+TEST(manifest, non_paired_manifests) {
+    {
+        string filename = tmp_manifest_file(20, {4, 4, 4});
+        Manifest manifest1(filename, false);
+        ASSERT_EQ(manifest1.objectCount(), 20);
+    }
+    {
+        string filename = tmp_manifest_file(20, {4});
+        Manifest manifest1(filename, false);
+        ASSERT_EQ(manifest1.objectCount(), 20);
+    }
+}
+
+TEST(manifest, uneven_records) {
+    string filename = tmp_manifest_file_with_ragged_fields();
     try {
         Manifest manifest1(filename, false);
         FAIL();
     } catch (std::exception& e) {
         ASSERT_EQ(
-            string("manifest file has a line with more than 2 files "),
-            string(e.what()).substr(0, 48)
+            string("at line: 1, manifest file has a line with differing"),
+            string(e.what()).substr(0, 51)
         );
     }
 }

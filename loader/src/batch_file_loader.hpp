@@ -26,7 +26,7 @@
  */
 class BatchFileLoader : public BatchLoader {
 public:
-    BatchFileLoader(std::shared_ptr<Manifest> manifest, uint subsetPercent, uint block_size);
+    BatchFileLoader(std::shared_ptr<Manifest> manifest, float subset_fraction, uint block_size);
 
     void loadBlock(buffer_in_array& dest, uint block_num);
     void loadFile(buffer_in* buff, const std::string& filename);
@@ -36,5 +36,5 @@ private:
     off_t getFileSize(const std::string& filename);
 
     const std::shared_ptr<Manifest> _manifest;
-    uint _subsetPercent;
+    float _subset_fraction;
 };

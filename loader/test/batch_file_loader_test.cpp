@@ -21,7 +21,7 @@ using namespace std;
 
 TEST(blocked_file_loader, constructor) {
     string tmpname = tmp_manifest_file(0, {0, 0});
-    BatchFileLoader bfl(make_shared<Manifest>(tmpname, true), 100, 4);
+    BatchFileLoader bfl(make_shared<Manifest>(tmpname, true), 1.0, 4);
 }
 
 TEST(blocked_file_loader, loadBlock) {
@@ -29,8 +29,13 @@ TEST(blocked_file_loader, loadBlock) {
     uint block_size = 2;
     uint object_size = 16;
     uint target_size = 16;
+    float subset_fraction = 1.0;
 
-    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(4, {object_size, target_size}), true), 100, block_size);
+    BatchFileLoader bfl(
+        make_shared<Manifest>(tmp_manifest_file(4, {object_size, target_size}), true),
+        subset_fraction,
+        block_size
+    );
 
     buffer_in_array bp(vector<size_t>{0, 0});
 
@@ -48,25 +53,30 @@ TEST(blocked_file_loader, loadBlock) {
     }
 }
 
-TEST(blocked_file_loader, subsetPercent) {
+TEST(blocked_file_loader, subset_fraction) {
     // a 10 object manifest iterated through blocks sized 4 with
     // percentSubset 50 should result in an output block size of 2, 2
     // and then 1.
     uint block_size = 4;
     uint object_size = 16;
     uint target_size = 16;
+    float subset_fraction = 0.5;
 
-    BatchFileLoader bfl(make_shared<Manifest>(tmp_manifest_file(10, {object_size, target_size}), true), 50, block_size);
+    BatchFileLoader bfl(
+        make_shared<Manifest>(tmp_manifest_file(10, {object_size, target_size}), true),
+        subset_fraction,
+        block_size
+    );
 
     buffer_in_array bp(vector<size_t>{0, 0});
 
 
     bfl.loadBlock(bp, 0);
-    ASSERT_EQ(bp[0]->getItemCount(), block_size / 2);
+    ASSERT_EQ(bp[0]->getItemCount(), block_size * subset_fraction);
     bp[0]->reset();
 
     bfl.loadBlock(bp, 1);
-    ASSERT_EQ(bp[0]->getItemCount(), block_size / 2);
+    ASSERT_EQ(bp[0]->getItemCount(), block_size * subset_fraction);
     bp[0]->reset();
 
     bfl.loadBlock(bp, 2);
@@ -75,10 +85,12 @@ TEST(blocked_file_loader, subsetPercent) {
 }
 
 TEST(blocked_file_loader, exception) {
+    float subset_fraction = 1.0;
+
     BatchFileLoader bfl(
-        make_shared<Manifest>(
-            tmp_manifest_file_with_invalid_filename(), false
-        ), 100, 1
+        make_shared<Manifest>(tmp_manifest_file_with_invalid_filename(), false),
+        subset_fraction,
+        1
     );
 
     buffer_in_array bp(vector<size_t>{0, 0});
@@ -96,10 +108,11 @@ TEST(blocked_file_loader, exception) {
 }
 
 TEST(blocked_file_loader, subset_object_count) {
+    float subset_fraction = 0.5;
     BatchFileLoader bfl(
-        make_shared<Manifest>(
-            tmp_manifest_file(13, {16, 16}), false
-        ), 50, 5
+        make_shared<Manifest>(tmp_manifest_file(13, {16, 16}), false),
+        subset_fraction,
+        5
     );
 
     ASSERT_EQ(bfl.objectCount(), 2 + 2 + 1);
