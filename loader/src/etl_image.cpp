@@ -8,8 +8,16 @@ image::config::config(nlohmann::json js) {
         throw std::runtime_error("missing image config in json config");
     }
 
-    parse_value(height,        "height",        js,  mode::REQUIRED);
-    parse_value(width,         "width",         js,  mode::REQUIRED);
+    cout << "***********************************************************\n";
+    nervana::interface::config_info<uint32_t> x( height, "height", mode::REQUIRED, parse_value<uint32_t>, [](uint32_t v){} );
+    for(auto& info : config_list) {
+        cout << "name '"<< info->name() << "'" << endl;
+        info->parse(js);
+    }
+    cout << "***********************************************************\n";
+
+    parse_value(height, "height", js, mode::REQUIRED);
+    parse_value(width, "width", js, mode::REQUIRED);
 
     parse_value(seed,          "seed",          js);
 

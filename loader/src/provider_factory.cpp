@@ -23,11 +23,11 @@ std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::cr
         rc = make_shared<audio_classifier>(configJs);
     } else if( mediaType == "audio,inference" ) {
         rc = make_shared<audio_inference>(configJs);
-    } else if( mediaType == "image_localization" ) {
+    } else if( mediaType == "image,localization" ) {
         rc = make_shared<localization_decoder>(configJs);
-    } else if( mediaType == "image_pixelmask" ) {
+    } else if( mediaType == "image,pixelmask" ) {
         rc = make_shared<provider_pixel_mask>(configJs);
-    } else if( mediaType == "image_boundingbox" ) {
+    } else if( mediaType == "image,boundingbox" ) {
         rc = make_shared<bbox_provider>(configJs);
     } else {
         rc = nullptr;

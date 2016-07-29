@@ -69,6 +69,10 @@ namespace nervana {
         config(nlohmann::json js);
 
     private:
+        std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+            std::make_shared<interface::config_info<uint32_t>>( height, "height", mode::REQUIRED, parse_value<uint32_t>, [](uint32_t v){} )
+        };
+
         config() = delete;
         void validate();
     };
