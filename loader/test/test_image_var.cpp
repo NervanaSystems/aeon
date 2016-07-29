@@ -54,10 +54,7 @@ TEST(image_var, decoded_image) {
 }
 
 TEST(image_var, image_config) {
-    nlohmann::json js = {{"min_size",300},{"max_size",400},{"channels",3},{
-    "distribution",{
-        {"flip",{false}}
-    }}};
+    nlohmann::json js = {{"min_size",300},{"max_size",400},{"channels",3},{"flip", {false}}};
 
     image_var::config config(js);
     EXPECT_EQ(300,config.min_size);
@@ -79,10 +76,7 @@ TEST(image_var, resize) {
     vector<unsigned char> img;
     cv::imencode( ".png", mat, img );
 
-    nlohmann::json jsConfig = {{"min_size",300},{"max_size",400},{"channels",3},{
-    "distribution",{
-        {"flip",{false}}
-    }}};
+    nlohmann::json jsConfig = {{"min_size",300},{"max_size",400},{"channels",3},{"flip", {false}}};
 
     image_var::config config_ptr{jsConfig};
 
@@ -105,11 +99,7 @@ TEST(image_var, transform_flip) {
     auto indexed = generate_indexed_image();
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
-
-    nlohmann::json jsConfig = {{"min_size",256},{"max_size",256},{"channels",3},{
-    "distribution",{
-        {"flip",{true}}
-    }}};
+    nlohmann::json jsConfig = {{"min_size",256},{"max_size",256},{"channels",3},{"flip", {false}}};
 
     image_var::config config_ptr{jsConfig};
 

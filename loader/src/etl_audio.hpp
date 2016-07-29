@@ -102,12 +102,11 @@ namespace nervana {
             parse_value(seed,            "seed",           js, mode::OPTIONAL);
             parse_value(type_string,     "type_string",    js, mode::OPTIONAL);
 
-            auto dist_params = js["distribution"];
-            parse_dist(time_scale_fraction,   "time_scale_fraction",   dist_params);
-            parse_dist(add_noise,             "add_noise",             dist_params);
-            parse_dist(noise_index,           "noise_index",           dist_params);
-            parse_dist(noise_level,           "noise_level",           dist_params);
-            parse_dist(noise_offset_fraction, "noise_offset_fraction", dist_params);
+            parse_dist(time_scale_fraction,   "time_scale_fraction", js);
+            parse_dist(add_noise,             "add_noise", js);
+            parse_dist(noise_index,           "noise_index", js);
+            parse_dist(noise_level,           "noise_level", js);
+            parse_dist(noise_offset_fraction, "noise_offset_fraction", js);
 
             // Now fill in derived variables
             parse_samples_or_seconds(max_duration, max_duration_ms, max_duration_tn);

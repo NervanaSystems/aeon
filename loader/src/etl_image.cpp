@@ -8,25 +8,24 @@ image::config::config(nlohmann::json js) {
         throw std::runtime_error("missing image config in json config");
     }
 
-    parse_value(height, "height", js, mode::REQUIRED);
-    parse_value(width, "width", js, mode::REQUIRED);
+    parse_value(height,        "height",        js,  mode::REQUIRED);
+    parse_value(width,         "width",         js,  mode::REQUIRED);
 
-    parse_value(seed, "seed", js);
+    parse_value(seed,          "seed",          js);
 
-    parse_value(type_string, "type_string", js);
+    parse_value(type_string,   "type_string",   js);
 
-    parse_value(do_area_scale, "do_area_scale", js, mode::OPTIONAL);
-    parse_value(channels, "channels", js);
+    parse_value(do_area_scale, "do_area_scale", js);
+    parse_value(channels,      "channels",      js);
     parse_value(channel_major, "channel_major", js);
 
-    auto dist_params = js["distribution"];
-    parse_dist(angle, "angle", dist_params);
-    parse_dist(scale, "scale", dist_params);
-    parse_dist(lighting, "lighting", dist_params);
-    parse_dist(aspect_ratio, "aspect_ratio", dist_params);
-    parse_dist(photometric, "photometric", dist_params);
-    parse_dist(crop_offset, "crop_offset", dist_params);
-    parse_dist(flip, "flip", dist_params);
+    parse_dist(angle,          "angle",         js);
+    parse_dist(scale,          "scale",         js);
+    parse_dist(lighting,       "lighting",      js);
+    parse_dist(aspect_ratio,   "aspect_ratio",  js);
+    parse_dist(photometric,    "photometric",   js);
+    parse_dist(crop_offset,    "crop_offset",   js);
+    parse_dist(flip,           "flip",          js);
 
     // Now fill in derived
     otype = nervana::output_type(type_string);

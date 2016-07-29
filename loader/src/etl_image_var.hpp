@@ -54,8 +54,7 @@ namespace nervana {
             parse_value(channel_major, "channel_major", js);
             parse_value(seed, "seed", js);
 
-            auto dist_params = js["distribution"];
-            parse_dist(flip, "flip", dist_params);
+            parse_dist(flip, "flip", js);
 
             validate();
         }

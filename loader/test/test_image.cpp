@@ -47,14 +47,15 @@ cv::Mat generate_indexed_image() {
 }
 
 void test_image(vector<unsigned char>& img, int channels) {
-    nlohmann::json js = {{"height",30},{"width",30},{"channels",channels},{
-    "distribution",{
+    nlohmann::json js = {
+        {"height",30},
+        {"width",30},
+        {"channels", channels},
         {"angle",{-20,20}},
         {"scale",{0.2,0.8}},
         {"lighting",{0.0,0.1}},
         {"aspect_ratio",{0.75,1.33}},
-        {"flip",{false}}
-    }}};
+        {"flip",{false}}};
 
     image::config itpj(js);
 
@@ -104,14 +105,15 @@ TEST(etl, decoded_image) {
 }
 
 TEST(etl, image_config) {
-    nlohmann::json js = {{"height",30},{"width",30},{"channels",3},{
-    "distribution",{
+    nlohmann::json js = {
+        {"height",30},
+        {"width",30},
+        {"channels",3},
         {"angle",{-20,20}},
         {"scale",{0.2,0.8}},
         {"lighting",{0.0,0.1}},
         {"aspect_ratio",{0.75,1.33}},
-        {"flip",{false}}
-    }}};
+        {"flip",{false}}};
 
     image::config config(js);
     EXPECT_EQ(30,config.height);

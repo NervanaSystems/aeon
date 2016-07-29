@@ -18,7 +18,11 @@ using namespace nervana;
 
 TEST(provider,image) {
     nlohmann::json js = {{"type","image,label"},
-                         {"image", {{"height",128},{"width",128},{"channel_major",false},{"flip",true}}},
+                         {"image", {
+                            {"height",128},
+                            {"width",128},
+                            {"channel_major",false},
+                            {"flip",{true}}}},
                          {"label", {}}};
 
     auto media = nervana::train_provider_factory::create(js);
@@ -74,13 +78,11 @@ TEST(provider, argtype) {
             {
                 "height": 30,
                 "width" : 30,
-                "distribution":{
-                    "angle" : [-20, 20],
-                    "scale" : [0.2, 0.8],
-                    "lighting" : [0.0, 0.1],
-                    "aspect_ratio" : [0.75, 1.33],
-                    "flip" : [false]
-                }
+                "angle" : [-20, 20],
+                "scale" : [0.2, 0.8],
+                "lighting" : [0.0, 0.1],
+                "aspect_ratio" : [0.75, 1.33],
+                "flip" : [false]
             }
         )";
 
