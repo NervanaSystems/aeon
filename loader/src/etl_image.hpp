@@ -45,6 +45,11 @@ namespace nervana {
         params() {}
     };
 
+#define ADD_SCALAR(var, mode) \
+    std::make_shared<interface::config_info<decltype(var)>>( var, #var, mode, parse_value<decltype(var)>, [](decltype(var) v){} )
+#define ADD_DISTRIBUTION(var, mode) \
+    std::make_shared<interface::config_info<decltype(var)>>( var, #var, mode, parse_dist<decltype(var)>, [](decltype(var) v){} )
+
     class image::config : public interface::config {
         friend class video::config;
     public:
@@ -59,7 +64,7 @@ namespace nervana {
         std::uniform_real_distribution<float> aspect_ratio{1.0f, 1.0f};
         std::uniform_real_distribution<float> photometric{0.0f, 0.0f};
         std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
-        std::bernoulli_distribution           flip{0};
+        std::bernoulli_distribution           flip_distribution{0};
 
         std::string                           type_string{"uint8_t"};
         bool                                  do_area_scale = false;
@@ -70,11 +75,26 @@ namespace nervana {
 
     private:
         std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
-            std::make_shared<interface::config_info<uint32_t>>( height, "height", mode::REQUIRED, parse_value<uint32_t>, [](uint32_t v){} )
+            ADD_SCALAR(height, mode::REQUIRED),
+            ADD_SCALAR(width, mode::REQUIRED),
+            ADD_SCALAR(seed, mode::OPTIONAL),
+            ADD_DISTRIBUTION(scale, mode::OPTIONAL),
+            ADD_DISTRIBUTION(angle, mode::OPTIONAL),
+            ADD_DISTRIBUTION(lighting, mode::OPTIONAL),
+            ADD_DISTRIBUTION(aspect_ratio, mode::OPTIONAL),
+            ADD_DISTRIBUTION(photometric, mode::OPTIONAL),
+            ADD_DISTRIBUTION(crop_offset, mode::OPTIONAL),
+            ADD_SCALAR(flip, mode::OPTIONAL),
+            ADD_SCALAR(type_string, mode::OPTIONAL),
+            ADD_SCALAR(do_area_scale, mode::OPTIONAL),
+            ADD_SCALAR(channel_major, mode::OPTIONAL),
+            ADD_SCALAR(channels, mode::OPTIONAL)
         };
 
         config() = delete;
         void validate();
+
+        bool                                  flip;
     };
 
     class image::param_factory : public interface::param_factory<image::decoded, image::params> {

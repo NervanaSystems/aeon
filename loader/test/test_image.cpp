@@ -55,7 +55,8 @@ void test_image(vector<unsigned char>& img, int channels) {
         {"scale",{0.2,0.8}},
         {"lighting",{0.0,0.1}},
         {"aspect_ratio",{0.75,1.33}},
-        {"flip",{false}}};
+        {"flip",false}
+    }}};
 
     image::config itpj(js);
 
@@ -113,7 +114,8 @@ TEST(etl, image_config) {
         {"scale",{0.2,0.8}},
         {"lighting",{0.0,0.1}},
         {"aspect_ratio",{0.75,1.33}},
-        {"flip",{false}}};
+        {"flip",false}
+    }}};
 
     image::config config(js);
     EXPECT_EQ(30,config.height);
@@ -140,7 +142,7 @@ TEST(etl, image_config) {
     EXPECT_FLOAT_EQ(0.5,config.crop_offset.a());
     EXPECT_FLOAT_EQ(0.5,config.crop_offset.b());
 
-    EXPECT_FLOAT_EQ(0.0,config.flip.p());
+    EXPECT_FLOAT_EQ(0.0,config.flip_distribution.p());
 }
 
 TEST(etl, image_extract1) {

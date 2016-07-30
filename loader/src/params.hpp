@@ -44,29 +44,36 @@ public:
 //    // pass json by value so set_config gets a non-const copy
 //    virtual bool set_config(nlohmann::json js) = 0;
 
-    template<typename T> void parse_dist(T& value, const std::string key, const nlohmann::json &js)
+    template<typename T, typename S> static void set_dist_params(T& dist, S& params)
     {
-        auto val = js.find(key);
-        if (val != js.end()) {
-            auto params = val->get<std::vector<typename T::result_type>>();
-            set_dist_params(value, params);
-        }
-    }
-
-    template<typename T, typename S> inline void set_dist_params(T& dist, S& params)
-    {
+        std::cout << "general dist " << std::endl;
         dist = T{params[0], params[1]};
     }
 
     // Specialization for a bernoulli coin flipping random var
-    inline void set_dist_params(std::bernoulli_distribution& dist, std::vector<bool>& params)
+    static void set_dist_params(std::bernoulli_distribution& dist, std::vector<bool>& params)
     {
+        std::cout << "bernoulli dist " << std::endl;
         dist = std::bernoulli_distribution{params[0] ? 0.5 : 0.0};
+    }
+
+    template<typename T> static void parse_dist(T& value, const std::string& key, const nlohmann::json& js,
+                                         mode required=mode::OPTIONAL)
+    {
+        std::cout << "parse dist " << key << std::endl;
+        auto val = js.find(key);
+        if (val != js.end()) {
+            std::cout << "found key " << key << std::endl;
+            auto params = val->get<std::vector<typename T::result_type>>();
+            for(auto x : params) { std::cout << "   dist value " << x << std::endl; }
+            set_dist_params(value, params);
+        }
+        std::cout << "parse dist done " << key << std::endl;
     }
 
     template<typename T> static void parse_value(
                                     T& value,
-                                    const std::string key,
+                                    const std::string& key,
                                     const nlohmann::json &js,
                                     mode required=mode::OPTIONAL)
     {

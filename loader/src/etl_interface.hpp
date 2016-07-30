@@ -51,7 +51,6 @@ public:
 
     void parse(nlohmann::json js) {
         parse_function(target_variable, var_name, js, parse_mode);
-        std::cout << js.dump(4) << std::endl;
         std::cout << "got value for " << var_name << " = " << target_variable << std::endl;
     }
 

@@ -7,33 +7,34 @@ image::config::config(nlohmann::json js) {
     if(js.is_null()) {
         throw std::runtime_error("missing image config in json config");
     }
+    cout << js.dump(4) << endl;
 
     cout << "***********************************************************\n";
-    nervana::interface::config_info<uint32_t> x( height, "height", mode::REQUIRED, parse_value<uint32_t>, [](uint32_t v){} );
     for(auto& info : config_list) {
         cout << "name '"<< info->name() << "'" << endl;
         info->parse(js);
     }
     cout << "***********************************************************\n";
 
-    parse_value(height, "height", js, mode::REQUIRED);
-    parse_value(width, "width", js, mode::REQUIRED);
+//    parse_value(height, "height", js, mode::REQUIRED);
+//    parse_value(width, "width", js, mode::REQUIRED);
 
-    parse_value(seed,          "seed",          js);
+//    parse_value(seed, "seed", js);
 
-    parse_value(type_string,   "type_string",   js);
+//    parse_value(type_string, "type_string", js);
 
-    parse_value(do_area_scale, "do_area_scale", js);
-    parse_value(channels,      "channels",      js);
-    parse_value(channel_major, "channel_major", js);
+//    parse_value(do_area_scale, "do_area_scale", js, mode::OPTIONAL);
+//    parse_value(channels, "channels", js);
+//    parse_value(channel_major, "channel_major", js);
 
-    parse_dist(angle,          "angle",         js);
-    parse_dist(scale,          "scale",         js);
-    parse_dist(lighting,       "lighting",      js);
-    parse_dist(aspect_ratio,   "aspect_ratio",  js);
-    parse_dist(photometric,    "photometric",   js);
-    parse_dist(crop_offset,    "crop_offset",   js);
-    parse_dist(flip,           "flip",          js);
+//    auto dist_params = js["distribution"];
+//    parse_dist(angle, "angle", js);
+//    parse_dist(scale, "scale", js);
+//    parse_dist(lighting, "lighting", js);
+//    parse_dist(aspect_ratio, "aspect_ratio", js);
+//    parse_dist(photometric, "photometric", js);
+//    parse_dist(crop_offset, "crop_offset", js);
+//    parse_dist(flip, "flip", js);
 
     // Now fill in derived
     otype = nervana::output_type(type_string);
@@ -159,7 +160,7 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
     imgstgs->output_size = cv::Size2i(_cfg.width, _cfg.height);
 
     imgstgs->angle = _cfg.angle(_dre);
-    imgstgs->flip  = _cfg.flip(_dre);
+    imgstgs->flip  = _cfg.flip_distribution(_dre);
 
     cv::Size2f in_size = input->get_image_size();
 
