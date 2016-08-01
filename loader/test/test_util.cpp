@@ -255,6 +255,12 @@ TEST(util,mixchannels) {
             }
         }
     }
+}
 
+TEST(util,distance) {
+    std::string s1 = "aspect_ratio";
+    std::string s2 = "crops_per_scale";
+
+    EXPECT_EQ(12, LevenshteinDistance(s1, s2));
 }
 

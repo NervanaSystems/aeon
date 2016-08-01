@@ -3,7 +3,8 @@
 using namespace std;
 using namespace nervana;
 
-image::config::config(nlohmann::json js) {
+image::config::config(nlohmann::json js)
+{
     if(js.is_null()) {
         throw std::runtime_error("missing image config in json config");
     }
@@ -28,6 +29,7 @@ image::config::config(nlohmann::json js) {
         shape = std::vector<uint32_t> {height, width, channels};
     }
 
+    verify_config(config_list, js);
     validate();
 }
 

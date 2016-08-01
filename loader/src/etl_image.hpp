@@ -33,13 +33,13 @@ namespace nervana {
 
         void dump(std::ostream & = std::cout);
 
-        cv::Rect cropbox;
-        cv::Size2i output_size;
-        int angle = 0;
-        bool flip = false;
-        std::vector<float> lighting;  // pixelwise random values
-        float color_noise_std = 0;
-        std::vector<float> photometric;  // contrast, brightness, saturation
+        cv::Rect            cropbox;
+        cv::Size2i          output_size;
+        int                 angle = 0;
+        bool                flip = false;
+        std::vector<float>  lighting;  // pixelwise random values
+        float               color_noise_std = 0;
+        std::vector<float>  photometric;  // contrast, brightness, saturation
     private:
         params() {}
     };
@@ -47,10 +47,13 @@ namespace nervana {
     class image::config : public interface::config {
         friend class video::config;
     public:
-        uint32_t height;
-        uint32_t width;
-
-        int32_t seed = 0; // Default is to seed deterministically
+        uint32_t                              height;
+        uint32_t                              width;
+        int32_t                               seed = 0; // Default is to seed deterministically
+        std::string                           type_string{"uint8_t"};
+        bool                                  do_area_scale = false;
+        bool                                  channel_major = true;
+        uint32_t                              channels = 3;
 
         std::uniform_real_distribution<float> scale{1.0f, 1.0f};
         std::uniform_int_distribution<int>    angle{0, 0};
@@ -59,11 +62,6 @@ namespace nervana {
         std::uniform_real_distribution<float> photometric{0.0f, 0.0f};
         std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
         std::bernoulli_distribution           flip_distribution{0};
-
-        std::string                           type_string{"uint8_t"};
-        bool                                  do_area_scale = false;
-        bool                                  channel_major = true;
-        uint32_t                              channels = 3;
 
         config(nlohmann::json js);
 

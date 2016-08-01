@@ -41,6 +41,8 @@ namespace nervana {
 
     std::string tolower(const std::string& s);
 
+    int LevenshteinDistance(const std::string& s1, const std::string& s2);
+
     template<typename CharT, typename TraitsT = std::char_traits<CharT> >
     class memstream : public std::basic_streambuf<CharT, TraitsT> {
     public:

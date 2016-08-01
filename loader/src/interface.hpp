@@ -41,6 +41,8 @@ public:
         if(otype.valid() == false) throw std::invalid_argument("config missing output type");
     }
 
+    void verify_config(const std::vector<std::shared_ptr<interface::config_info_interface>>& config, nlohmann::json js);
+
     enum class mode {
         OPTIONAL,
         REQUIRED
@@ -105,7 +107,6 @@ protected:
     nervana::output_type otype;
     std::vector<uint32_t> shape;
 };
-
 
 template<typename T>
 class nervana::interface::config_info : public nervana::interface::config_info_interface {

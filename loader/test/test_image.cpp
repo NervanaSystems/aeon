@@ -113,7 +113,8 @@ TEST(etl, image_config) {
         {"scale",{0.2,0.8}},
         {"lighting",{0.0,0.1}},
         {"aspect_ratio",{0.75,1.33}},
-        {"flip",false}
+        {"flip",false},
+        {"flop",true}
     };
 
     image::config config(js);
