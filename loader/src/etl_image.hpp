@@ -3,8 +3,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <chrono>
-#include "etl_interface.hpp"
-#include "params.hpp"
+#include "interface.hpp"
 #include "image.hpp"
 
 namespace nervana {
@@ -28,7 +27,7 @@ namespace nervana {
         class transformer;
     }
 
-    class image::params : public nervana::params {
+    class image::params : public nervana::interface::params {
         friend class image::param_factory;
     public:
 
@@ -44,11 +43,6 @@ namespace nervana {
     private:
         params() {}
     };
-
-#define ADD_SCALAR(var, mode) \
-    std::make_shared<interface::config_info<decltype(var)>>( var, #var, mode, parse_value<decltype(var)>, [](decltype(var) v){} )
-#define ADD_DISTRIBUTION(var, mode) \
-    std::make_shared<interface::config_info<decltype(var)>>( var, #var, mode, parse_dist<decltype(var)>, [](decltype(var) v){} )
 
     class image::config : public interface::config {
         friend class video::config;
@@ -122,7 +116,7 @@ namespace nervana {
 // Decoded
 // ===============================================================================================
 
-    class image::decoded : public decoded_media {
+    class image::decoded : public interface::decoded_media {
     public:
         decoded() {}
         decoded(cv::Mat img) { _images.push_back(img); }

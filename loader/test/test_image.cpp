@@ -24,7 +24,6 @@
 
 #include "gtest/gtest.h"
 
-#include "params.hpp"
 #include "etl_image.hpp"
 #include "json.hpp"
 #include "helpers.hpp"

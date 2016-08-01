@@ -24,8 +24,7 @@
 
 #define private public
 
-#include "params.hpp"
-#include "etl_interface.hpp"
+#include "interface.hpp"
 #include "etl_image.hpp"
 #include "etl_label.hpp"
 #include "etl_bbox.hpp"

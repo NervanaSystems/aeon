@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <opencv2/core/core.hpp>
 
-#include "etl_interface.hpp"
+#include "interface.hpp"
 
 namespace nervana {
     namespace label_map {
@@ -18,7 +18,7 @@ namespace nervana {
         class config;
     }
 
-    class label_map::params : public nervana::params {
+    class label_map::params : public interface::params {
     public:
         params() {}
     };
@@ -35,7 +35,7 @@ namespace nervana {
         int                         _max_label_count = 100;
     };
 
-    class label_map::decoded : public decoded_media {
+    class label_map::decoded : public interface::decoded_media {
         friend class transformer;
         friend class extractor;
     public:

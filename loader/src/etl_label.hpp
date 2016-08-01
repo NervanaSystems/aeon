@@ -2,8 +2,7 @@
 
 #include <sstream>
 
-#include "etl_interface.hpp"
-#include "params.hpp"
+#include "interface.hpp"
 #include "util.hpp"
 
 namespace nervana {
@@ -33,7 +32,7 @@ namespace nervana {
         }
     };
 
-    class label::decoded : public decoded_media {
+    class label::decoded : public interface::decoded_media {
     public:
         decoded(int index) :
             _index{index} {}

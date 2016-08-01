@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "params.hpp"
 #include "util.hpp"
+#include "interface.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -22,6 +22,6 @@ TEST(params,parse_enum) {
     foo bar;
     nlohmann::json j1 = {{"test", "TEST2"}};
 
-    json_config_parser::parse_enum(bar, "test", j1);
+    interface::config::parse_enum(bar, "test", j1);
     EXPECT_EQ(bar, foo::TEST2);
 }

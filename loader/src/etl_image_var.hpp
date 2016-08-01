@@ -4,8 +4,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <chrono>
 
-#include "etl_interface.hpp"
-#include "params.hpp"
+#include "interface.hpp"
 
 
 namespace nervana {
@@ -21,7 +20,7 @@ namespace nervana {
         class loader;
     }
 
-    class image_var::params : public nervana::params {
+    class image_var::params : public nervana::interface::params {
         friend class image_var::param_factory;
     public:
 
@@ -94,7 +93,7 @@ namespace nervana {
 // Decoded
 // ===============================================================================================
 
-    class image_var::decoded : public decoded_media {
+    class image_var::decoded : public interface::decoded_media {
     public:
         decoded() {}
         decoded(cv::Mat img) : _image{img} {}

@@ -26,7 +26,6 @@
 
 #define private public
 
-#include "params.hpp"
 #include "etl_image_var.hpp"
 #include "json.hpp"
 

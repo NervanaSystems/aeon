@@ -38,6 +38,7 @@ SRCS="
     avi.cpp
 	nds_batch_loader.cpp
     provider_image_class.cpp
+    interface.cpp
 "
 # remove newlines
 export SRCS="$(echo ${SRCS} | sed 's/\n//g')"

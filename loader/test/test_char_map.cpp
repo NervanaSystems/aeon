@@ -22,7 +22,6 @@
 #include "gen_image.hpp"
 #include "cpio.hpp"
 
-#include "params.hpp"
 #include "etl_char_map.hpp"
 
 using namespace std;

@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <cstdint>
 
-#include "etl_interface.hpp"
+#include "interface.hpp"
 
 namespace nervana {
     namespace char_map {
@@ -80,7 +80,7 @@ namespace nervana {
         }
     };
 
-    class char_map::decoded : public decoded_media {
+    class char_map::decoded : public interface::decoded_media {
     public:
         decoded(std::vector<uint8_t> char_ints, uint32_t nvalid)
         : _labels{char_ints}, _nvalid{nvalid}

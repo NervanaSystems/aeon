@@ -26,7 +26,6 @@
 
 #define private public
 
-#include "params.hpp"
 #include "provider_image_class.hpp"
 #include "etl_image.hpp"
 #include "json.hpp"

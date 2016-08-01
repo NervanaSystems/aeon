@@ -18,10 +18,10 @@
 #include <opencv2/core/core.hpp>
 
 #include "wav_data.hpp"
-#include "params.hpp"
+#include "interface.hpp"
 
 
-class NoiseConfig : public nervana::json_config_parser {
+class NoiseConfig : public nervana::interface::config {
 public:
     std::string              noise_dir   {""};
     std::vector<std::string> noise_files {};

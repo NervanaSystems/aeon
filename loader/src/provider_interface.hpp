@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include "util.hpp"
-#include "etl_interface.hpp"
+#include "interface.hpp"
 #include "buffer_in.hpp"
 #include "buffer_out.hpp"
 

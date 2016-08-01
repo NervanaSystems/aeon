@@ -21,11 +21,8 @@
 #include "gtest/gtest.h"
 #include "gen_image.hpp"
 
-
 #define private public
 
-
-#include "params.hpp"
 #include "etl_image_var.hpp"
 #include "etl_localization.hpp"
 #include "json.hpp"

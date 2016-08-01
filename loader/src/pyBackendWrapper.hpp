@@ -1,6 +1,6 @@
 #pragma once
 #include <map>
-#include "etl_interface.hpp"
+#include "interface.hpp"
 #include <Python.h>
 
 #include <assert.h>

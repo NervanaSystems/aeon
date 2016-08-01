@@ -1,7 +1,6 @@
 #pragma once
-#include "etl_interface.hpp"
+#include "interface.hpp"
 #include "etl_image.hpp"
-#include "params.hpp"
 #include "util.hpp"
 
 namespace nervana {

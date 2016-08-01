@@ -63,7 +63,7 @@ namespace nervana {
         config() = delete;
     };
 
-    class video::params : public nervana::params {
+    class video::params : public interface::params {
     public:
         params(std::shared_ptr<image::params>);
         void dump(std::ostream & = std::cout);

@@ -18,8 +18,7 @@
 #include <vector>
 #include <chrono>
 
-#include "params.hpp"
-#include "etl_interface.hpp"
+#include "interface.hpp"
 #include "wav_data.hpp"
 #include "specgram.hpp"
 #include "noise_clips.hpp"
@@ -40,7 +39,7 @@ namespace nervana {
         class loader;
     }
 
-    class audio::params : public nervana::params {
+    class audio::params : public interface::params {
         friend class audio::param_factory;
     public:
         void dump(std::ostream & = std::cout);
@@ -198,7 +197,7 @@ namespace nervana {
 
 
 
-    class audio::decoded : public decoded_media {
+    class audio::decoded : public interface::decoded_media {
     public:
         decoded(std::shared_ptr<wav_data> raw) : time_rep(raw) {}
         size_t getSize() { return time_rep->nsamples(); }

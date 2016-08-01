@@ -4,10 +4,9 @@
 #include <tuple>
 #include <random>
 
-#include "etl_interface.hpp"
+#include "interface.hpp"
 #include "etl_bbox.hpp"
 #include "etl_image_var.hpp"
-#include "params.hpp"
 #include "util.hpp"
 #include "box.hpp"
 

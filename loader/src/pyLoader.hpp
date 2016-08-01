@@ -86,7 +86,7 @@ private:
     std::vector<int>            _endInds;
 };
 
-class pyLoaderConfig : public nervana::json_config_parser {
+class pyLoaderConfig : public nervana::interface::config {
 public:
     std::string manifest_filename;
     int minibatch_size;

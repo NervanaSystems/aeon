@@ -3,11 +3,10 @@
 #include <string>
 #include <unordered_map>
 
-#include "etl_interface.hpp"
+#include "interface.hpp"
 #include "etl_image.hpp"
 #include "json.hpp"
 #include "box.hpp"
-#include "params.hpp"
 
 namespace nervana {
     namespace bbox {
@@ -44,7 +43,7 @@ private:
     void validate();
 };
 
-class nervana::bbox::decoded : public decoded_media {
+class nervana::bbox::decoded : public interface::decoded_media {
     friend class transformer;
     friend class extractor;
 public:
