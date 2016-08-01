@@ -56,7 +56,7 @@ void test_image(vector<unsigned char>& img, int channels) {
         {"lighting",{0.0,0.1}},
         {"aspect_ratio",{0.75,1.33}},
         {"flip",false}
-    }}};
+    };
 
     image::config itpj(js);
 
@@ -115,7 +115,7 @@ TEST(etl, image_config) {
         {"lighting",{0.0,0.1}},
         {"aspect_ratio",{0.75,1.33}},
         {"flip",false}
-    }}};
+    };
 
     image::config config(js);
     EXPECT_EQ(30,config.height);
