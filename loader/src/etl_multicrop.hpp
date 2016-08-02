@@ -1,3 +1,10 @@
+#pragma once
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+#include "interface.hpp"
 #include "etl_image.hpp"
 
 namespace nervana {
@@ -8,34 +15,52 @@ namespace nervana {
     }
 
 
-    class multicrop::config : public image::config {
+    class multicrop::config : public interface::config {
     public:
 
         // Required config variables
-        std::vector<float> multicrop_scales;
+        std::vector<float>  multicrop_scales;
 
         // Optional config variables
-        int crops_per_scale = 5;
-        bool include_flips = true;
+        int                 crops_per_scale = 5;
+        bool                include_flips = true;
+
+        // Stuff from image::config
+        uint32_t                              height;
+        uint32_t                              width;
+        int32_t                               seed = 0; // Default is to seed deterministically
+        std::string                           type_string{"uint8_t"};
+        bool                                  do_area_scale = false;
+        bool                                  channel_major = true;
+        uint32_t                              channels = 3;
+        std::uniform_real_distribution<float> scale{1.0f, 1.0f};
+        std::uniform_int_distribution<int>    angle{0, 0};
+        std::normal_distribution<float>       lighting{0.0f, 0.0f};
+        std::uniform_real_distribution<float> aspect_ratio{1.0f, 1.0f};
+        std::uniform_real_distribution<float> photometric{0.0f, 0.0f};
+        std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
+        std::bernoulli_distribution           flip_distribution{0};
+        bool                                  flip;
 
         // Derived config variables
         std::vector<cv::Point2f> offsets;
-        cv::Size2i output_size;
+        cv::Size2i               output_size;
 
-        config(nlohmann::json js) :
-            image::config::config(js)
+        config(nlohmann::json js)
         {
-            // Parse required and optional variables
-            parse_value(multicrop_scales, "multicrop_scales", js, mode::REQUIRED);
-            parse_value(crops_per_scale, "crops_per_scale", js);
-            parse_value(include_flips, "include_flips", js);
+            if(js.is_null()) {
+                throw std::runtime_error("missing image config in json config");
+            }
 
-            if (!validate()) {
-                throw std::runtime_error("invalid configuration values");
+            for(auto& info : config_list) {
+                info->parse(js);
             }
 
             // Fill in derived variables
             offsets.push_back(cv::Point2f(0.5, 0.5)); // Center
+            if(flip) {
+                flip_distribution = std::bernoulli_distribution{0.5};
+            }
             if (crops_per_scale == 5) {
                 offsets.push_back(cv::Point2f(0.0, 0.0)); // NW
                 offsets.push_back(cv::Point2f(0.0, 1.0)); // SW
@@ -52,6 +77,29 @@ namespace nervana {
         }
 
     private:
+        std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+            // from image class
+            ADD_SCALAR(height, mode::REQUIRED),
+            ADD_SCALAR(width, mode::REQUIRED),
+            ADD_SCALAR(seed, mode::OPTIONAL),
+            ADD_DISTRIBUTION(scale, mode::OPTIONAL),
+            ADD_DISTRIBUTION(angle, mode::OPTIONAL),
+            ADD_DISTRIBUTION(lighting, mode::OPTIONAL),
+            ADD_DISTRIBUTION(aspect_ratio, mode::OPTIONAL),
+            ADD_DISTRIBUTION(photometric, mode::OPTIONAL),
+            ADD_DISTRIBUTION(crop_offset, mode::OPTIONAL),
+            ADD_SCALAR(flip, mode::OPTIONAL),
+            ADD_SCALAR(type_string, mode::OPTIONAL),
+            ADD_SCALAR(do_area_scale, mode::OPTIONAL),
+            ADD_SCALAR(channel_major, mode::OPTIONAL),
+            ADD_SCALAR(channels, mode::OPTIONAL),
+
+            // local params
+            ADD_SCALAR(multicrop_scales, mode::REQUIRED),
+            ADD_SCALAR(crops_per_scale, mode::OPTIONAL),
+            ADD_SCALAR(include_flips, mode::OPTIONAL)
+
+        };
         bool validate()
         {
             bool isvalid = true;
