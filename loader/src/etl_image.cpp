@@ -16,7 +16,7 @@ image::config::config(nlohmann::json js)
 
     // Now fill in derived
     otype = nervana::output_type(type_string);
-    if (flip) {
+    if (flip_enable) {
         flip_distribution = bernoulli_distribution{0.5};
     }
 

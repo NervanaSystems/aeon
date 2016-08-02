@@ -34,7 +34,7 @@ void interface::config::verify_config(
                     }
                 }
                 stringstream ss;
-                ss << "key not found '" << key << "'" << " did you mean '" << suggestion << "'";
+                ss << "key '" << key << "'" << " not found, did you mean '" << suggestion << "'";
                 throw invalid_argument(ss.str());
             }
         }

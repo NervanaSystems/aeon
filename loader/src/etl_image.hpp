@@ -75,7 +75,7 @@ namespace nervana {
             ADD_DISTRIBUTION(lighting, mode::OPTIONAL),
             ADD_DISTRIBUTION(aspect_ratio, mode::OPTIONAL),
             ADD_DISTRIBUTION(photometric, mode::OPTIONAL),
-            ADD_SCALAR(flip, mode::OPTIONAL),
+            ADD_SCALAR(flip_enable, mode::OPTIONAL),
             ADD_SCALAR(center, mode::OPTIONAL),
             ADD_SCALAR(type_string, mode::OPTIONAL),
             ADD_SCALAR(do_area_scale, mode::OPTIONAL),
@@ -86,7 +86,7 @@ namespace nervana {
         config() = delete;
         void validate();
 
-        bool                                  flip = false;
+        bool                                  flip_enable = false;
         bool                                  center = true;
     };
 
