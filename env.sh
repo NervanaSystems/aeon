@@ -39,6 +39,7 @@ SRCS="
 	nds_batch_loader.cpp
     provider_image_class.cpp
     interface.cpp
+    etl_multicrop.cpp
 "
 # remove newlines
 export SRCS="$(echo ${SRCS} | sed 's/\n//g')"
