@@ -14,9 +14,14 @@ image::config::config(nlohmann::json js) {
 
     // Now fill in derived
     otype = nervana::output_type(type_string);
-    if(flip) {
+    if (flip) {
         flip_distribution = bernoulli_distribution{0.5};
     }
+
+    if (!center) {
+        crop_offset = uniform_real_distribution<float> {0.0f, 1.0f};
+    }
+
     if (channel_major) {
         shape = std::vector<uint32_t> {channels, height, width};
     } else{

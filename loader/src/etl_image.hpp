@@ -77,8 +77,8 @@ namespace nervana {
             ADD_DISTRIBUTION(lighting, mode::OPTIONAL),
             ADD_DISTRIBUTION(aspect_ratio, mode::OPTIONAL),
             ADD_DISTRIBUTION(photometric, mode::OPTIONAL),
-            ADD_DISTRIBUTION(crop_offset, mode::OPTIONAL),
             ADD_SCALAR(flip, mode::OPTIONAL),
+            ADD_SCALAR(center, mode::OPTIONAL),
             ADD_SCALAR(type_string, mode::OPTIONAL),
             ADD_SCALAR(do_area_scale, mode::OPTIONAL),
             ADD_SCALAR(channel_major, mode::OPTIONAL),
@@ -88,7 +88,8 @@ namespace nervana {
         config() = delete;
         void validate();
 
-        bool                                  flip;
+        bool                                  flip = false;
+        bool                                  center = true;
     };
 
     class image::param_factory : public interface::param_factory<image::decoded, image::params> {
