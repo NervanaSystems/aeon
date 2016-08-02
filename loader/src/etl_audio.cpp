@@ -77,13 +77,14 @@ void audio::loader::load(char* outbuf, shared_ptr<audio::decoded> input)
     auto nframes = input->valid_frames;
     auto frames = input->get_freq_data();
     int cv_type = _cfg.get_shape_type().get_otype().cv_type;
-    cv::Mat dst(_cfg.time_steps, _cfg.freq_steps, cv_type, (void *) outbuf);
-
+    cv::Mat padded_frames(_cfg.time_steps, _cfg.freq_steps, frames.type());
     if (nframes >= _cfg.time_steps) {
-        frames(cv::Range(0, _cfg.time_steps), cv::Range::all()).copyTo(dst);
+        frames(cv::Range(0, _cfg.time_steps), cv::Range::all()).copyTo(padded_frames);
     } else {
-        frames.copyTo(dst(cv::Range(0, nframes), cv::Range::all()));
-        dst(cv::Range(nframes, _cfg.time_steps), cv::Range::all()) = cv::Scalar::all(0);
+        frames.copyTo(padded_frames(cv::Range(0, nframes), cv::Range::all()));
+        padded_frames(cv::Range(nframes, _cfg.time_steps), cv::Range::all()) = cv::Scalar::all(0);
     }
+    cv::Mat dst(_cfg.freq_steps, _cfg.time_steps, cv_type, (void *) outbuf);
+    cv::transpose(padded_frames, dst);
 }
 
