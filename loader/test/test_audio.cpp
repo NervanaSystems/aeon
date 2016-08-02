@@ -104,7 +104,7 @@ TEST(etl, audio_transform) {
             "frame_stride": "256 samples",
             "sample_freq_hz": 44100,
             "feature_type": "mfcc",
-            "num_filts": 64
+            "num_filters": 64
         }
     )"_json;
 

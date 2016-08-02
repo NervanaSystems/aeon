@@ -88,24 +88,14 @@ namespace nervana {
         float       max_duration_ms, frame_length_ms, frame_stride_ms;
 
         config(nlohmann::json js) {
-            parse_value(max_duration, "max_duration", js, mode::REQUIRED);
-            parse_value(frame_stride, "frame_stride", js, mode::REQUIRED);
-            parse_value(frame_length, "frame_length", js, mode::REQUIRED);
+            if(js.is_null()) {
+                throw std::runtime_error("missing image config in json config");
+            }
 
-            parse_value(sample_freq_hz,  "sample_freq_hz", js, mode::OPTIONAL);
-            parse_value(num_cepstra,     "num_cepstra",    js, mode::OPTIONAL);
-            parse_value(num_filters,     "num_filters",    js, mode::OPTIONAL);
-            parse_value(window_type,     "window_type",    js, mode::OPTIONAL);
-            parse_value(feature_type,    "feature_type",   js, mode::OPTIONAL);
-
-            parse_value(seed,            "seed",           js, mode::OPTIONAL);
-            parse_value(type_string,     "type_string",    js, mode::OPTIONAL);
-
-            parse_dist(time_scale_fraction,   "time_scale_fraction", js);
-            parse_dist(add_noise,             "add_noise", js);
-            parse_dist(noise_index,           "noise_index", js);
-            parse_dist(noise_level,           "noise_level", js);
-            parse_dist(noise_offset_fraction, "noise_offset_fraction", js);
+            for(auto& info : config_list) {
+                info->parse(js);
+            }
+            verify_config(config_list, js);
 
             // Now fill in derived variables
             parse_samples_or_seconds(max_duration, max_duration_ms, max_duration_tn);
@@ -149,6 +139,25 @@ namespace nervana {
             base_validate();
         }
     private:
+        std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+            ADD_SCALAR(max_duration, mode::REQUIRED),
+            ADD_SCALAR(frame_stride, mode::REQUIRED),
+            ADD_SCALAR(frame_length, mode::REQUIRED),
+            ADD_SCALAR(seed, mode::OPTIONAL),
+            ADD_SCALAR(num_cepstra, mode::OPTIONAL),
+            ADD_SCALAR(num_filters, mode::OPTIONAL),
+            ADD_SCALAR(type_string, mode::OPTIONAL),
+            ADD_SCALAR(feature_type, mode::OPTIONAL),
+            ADD_SCALAR(window_type, mode::OPTIONAL),
+            ADD_SCALAR(noise_index_file, mode::OPTIONAL),
+            ADD_SCALAR(sample_freq_hz, mode::OPTIONAL),
+            ADD_DISTRIBUTION(time_scale_fraction, mode::OPTIONAL),
+            ADD_DISTRIBUTION(add_noise, mode::OPTIONAL),
+            ADD_DISTRIBUTION(noise_index, mode::OPTIONAL),
+            ADD_DISTRIBUTION(noise_level, mode::OPTIONAL),
+            ADD_DISTRIBUTION(noise_offset_fraction, mode::OPTIONAL)
+        };
+
         void parse_samples_or_seconds(const std::string &unit, float &ms, uint32_t &tn)
         {
             // There's got to be a better way to do this (json parsing doesn't allow getting

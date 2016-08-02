@@ -105,6 +105,20 @@ TEST(etl, decoded_image) {
     EXPECT_FALSE(decoded.add(v2));
 }
 
+TEST(etl, missing_config_arg) {
+    nlohmann::json js = {
+        {"width",30},
+        {"channels", 1},
+        {"angle",{-20,20}},
+        {"scale",{0.2,0.8}},
+        {"lighting",{0.0,0.1}},
+        {"aspect_ratio",{0.75,1.33}},
+        {"flip_enable",false}
+    };
+
+    EXPECT_THROW(image::config itpj(js), std::invalid_argument);
+}
+
 TEST(etl, image_config) {
     nlohmann::json js = {
         {"height",30},
