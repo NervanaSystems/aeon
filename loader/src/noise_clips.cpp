@@ -30,12 +30,12 @@ void NoiseClips::load_index(const std::string& index_file)
         throw std::ios_base::failure("Could not open " + index_file);
     }
 
-    std::stringstream file_contents_buffer;
-    file_contents_buffer << ifs.rdbuf();
+    string line;
+    while(getline(ifs, line)) {
+        _noise_files.push_back(line);
+    }
 
-    _cfg = NoiseConfig(nlohmann::json::parse(file_contents_buffer.str()));
-
-    if (_cfg.noise_files.empty()) {
+    if (_noise_files.empty()) {
         throw std::runtime_error("No noise files provided in " + index_file);
     }
 }
@@ -86,27 +86,11 @@ void NoiseClips::addNoise(cv::Mat& wav_mat,
     }
     // Superimpose noise without overflowing (opencv handles saturation cast for non CV_32S)
     cv::addWeighted(wav_mat, 1.0f, noise, noise_level, 0.0f, wav_mat);
-    // cv::Mat convData;
-    // data.convertTo(convData, CV_32F);
-    // cv::Mat convNoise;
-    // noise.convertTo(convNoise, CV_32F);
 
-    // convNoise *= noise_level;
-    // convData += convNoise;
-    // double min, max;
-    // cv::minMaxLoc(convData, &min, &max);
-    // if (-min > 0x8000) {
-    //     convData *= 0x8000 / -min;
-    //     cv::minMaxLoc(convData, &min, &max);
-    // }
-    // if (max > 0x7FFF) {
-    //     convData *= 0x7FFF / max;
-    // }
-    // convData.convertTo(data, CV_16S);
 }
 
 void NoiseClips::load_data() {
-    for(auto nfile: _cfg.noise_files) {
+    for(auto nfile: _noise_files) {
         int len = 0;
         read_noise(nfile, &len);
         _noise_data.push_back(make_shared<nervana::wav_data>(_buf, len));
@@ -114,15 +98,11 @@ void NoiseClips::load_data() {
 }
 
 void NoiseClips::read_noise(std::string& noise_file, int* dataLen) {
-    std::string path = noise_file;
-    if (path[0] != '/') {
-        path = _cfg.noise_dir + '/' + path;
-    }
 
     struct stat stats;
-    int result = stat(path.c_str(), &stats);
+    int result = stat(noise_file.c_str(), &stats);
     if (result == -1) {
-        throw std::runtime_error("Could not find " + path);
+        throw std::runtime_error("Could not find " + noise_file);
     }
 
     off_t size = stats.st_size;
@@ -132,11 +112,11 @@ void NoiseClips::read_noise(std::string& noise_file, int* dataLen) {
         _bufLen = size + size / 8;
     }
 
-    std::ifstream ifs(path, std::ios::binary);
+    std::ifstream ifs(noise_file, std::ios::binary);
     ifs.read(_buf, size);
 
     if (size == 0) {
-        throw std::runtime_error("Could not read " + path);
+        throw std::runtime_error("Could not read " + noise_file);
     }
     *dataLen = size;
 }

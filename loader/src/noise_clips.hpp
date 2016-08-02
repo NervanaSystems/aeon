@@ -18,21 +18,6 @@
 #include <opencv2/core/core.hpp>
 
 #include "wav_data.hpp"
-#include "interface.hpp"
-
-
-class NoiseConfig : public nervana::interface::config {
-public:
-    std::string              noise_dir   {""};
-    std::vector<std::string> noise_files {};
-    NoiseConfig() {}
-
-    NoiseConfig(nlohmann::json js)
-    {
-        parse_value(noise_dir,   "noise_dir",   js, mode::OPTIONAL);
-        parse_value(noise_files, "noise_files", js, mode::OPTIONAL);
-    }
-};
 
 class NoiseClips {
 public:
@@ -51,8 +36,8 @@ private:
     void read_noise(std::string& noise_file, int* dataLen);
 
 private:
-    NoiseConfig _cfg;
     std::vector<std::shared_ptr<nervana::wav_data>> _noise_data;
-    char*                                  _buf = 0;
-    int                                    _bufLen = 0;
+    std::vector<std::string>                        _noise_files;
+    char*                                           _buf          = 0;
+    int                                             _bufLen       = 0;
 };
