@@ -49,12 +49,13 @@ namespace nervana {
         config(nlohmann::json js)
         {
             if(js.is_null()) {
-                throw std::runtime_error("missing image config in json config");
+                throw std::runtime_error("missing multicrop config in json config");
             }
 
             for(auto& info : config_list) {
                 info->parse(js);
             }
+            verify_config(config_list, js);
 
             // Fill in derived variables
             offsets.push_back(cv::Point2f(0.5, 0.5)); // Center

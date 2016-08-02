@@ -25,14 +25,21 @@ namespace nervana {
 
     class label_map::config : public interface::config {
     public:
+        std::string                 type_string = "uint32_t";
+        std::vector<std::string>    labels;
+        int                         max_labels = 100;
+
         config(nlohmann::json js);
-        const std::vector<std::string> labels() const { return _label_list; }
-        int max_label_count() const { return _max_label_count; }
+        int max_label_count() const { return max_labels; }
 
     private:
+        std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+            ADD_SCALAR(type_string, mode::OPTIONAL),
+            ADD_SCALAR(labels, mode::REQUIRED),
+            ADD_SCALAR(max_labels, mode::OPTIONAL)
+        };
+
         config() = delete;
-        std::vector<std::string>    _label_list;
-        int                         _max_label_count = 100;
     };
 
     class label_map::decoded : public interface::decoded_media {

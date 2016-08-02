@@ -12,6 +12,7 @@ image::config::config(nlohmann::json js)
     for(auto& info : config_list) {
         info->parse(js);
     }
+    verify_config(config_list, js);
 
     // Now fill in derived
     otype = nervana::output_type(type_string);
@@ -29,7 +30,6 @@ image::config::config(nlohmann::json js)
         shape = std::vector<uint32_t> {height, width, channels};
     }
 
-    verify_config(config_list, js);
     validate();
 }
 

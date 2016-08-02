@@ -123,7 +123,7 @@ bbox_provider::bbox_provider(nlohmann::json js) :
     image_transformer(image_config),
     image_loader(image_config),
     image_factory(image_config),
-    bbox_extractor(bbox_config),
+    bbox_extractor(bbox_config.label_map),
     bbox_transformer(bbox_config),
     bbox_loader(bbox_config)
 {

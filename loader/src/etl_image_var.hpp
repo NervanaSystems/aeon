@@ -34,26 +34,32 @@ namespace nervana {
 
     class image_var::config : public interface::config {
     public:
-        int min_size;
-        int max_size;
+        int                             min_size;
+        int                             max_size;
+        bool                            flip_enable = false;
+        bool                            channel_major = true;
+        int                             channels = 3;
+        int32_t                         seed = 0; // Default is to seed deterministically
+        std::string                     type_string{"int32_t"};
 
-        std::bernoulli_distribution           flip{0};
-
-        bool channel_major = true;
-        int channels = 3;
-
-        int32_t seed = 0; // Default is to seed deterministically
+        std::bernoulli_distribution     flip_distribution{0};
 
         config(nlohmann::json js)
         {
-            parse_value(min_size, "min_size", js, mode::REQUIRED);
-            parse_value(max_size, "max_size", js, mode::REQUIRED);
+            if(js.is_null()) {
+                throw std::runtime_error("missing image_var config in json config");
+            }
 
-            parse_value(channels, "channels", js);
-            parse_value(channel_major, "channel_major", js);
-            parse_value(seed, "seed", js);
+            for(auto& info : config_list) {
+                info->parse(js);
+            }
+            verify_config(config_list, js);
 
-            parse_dist(flip, "flip", js);
+            // Now fill in derived
+            otype = nervana::output_type(type_string);
+            if(flip_enable) {
+                flip_distribution = std::bernoulli_distribution{0.5};
+            }
 
             validate();
         }
@@ -61,6 +67,16 @@ namespace nervana {
         virtual int num_crops() const { return 1; }
 
     private:
+        std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+            ADD_SCALAR(min_size, mode::REQUIRED),
+            ADD_SCALAR(max_size, mode::REQUIRED),
+            ADD_SCALAR(type_string, mode::OPTIONAL),
+            ADD_SCALAR(flip_enable, mode::OPTIONAL),
+            ADD_SCALAR(channel_major, mode::OPTIONAL),
+            ADD_SCALAR(channels, mode::OPTIONAL),
+            ADD_SCALAR(seed, mode::OPTIONAL)
+        };
+
         config() = delete;
         bool validate() {
             return max_size >= min_size;

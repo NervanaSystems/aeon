@@ -17,19 +17,31 @@ namespace nervana {
 
     class label::config : public interface::config {
     public:
-        bool binary = true;
+        bool        binary = true;
         std::string type_string{"uint32_t"};
 
         config(nlohmann::json js)
         {
-            parse_value(binary,      "binary",      js, mode::OPTIONAL);
-            parse_value(type_string, "type_string", js, mode::OPTIONAL);
+//            if(js.is_null()) {
+//                throw std::runtime_error("missing label config in json config");
+//            }
+
+            for(auto& info : config_list) {
+                info->parse(js);
+            }
+            verify_config(config_list, js);
 
             otype = nervana::output_type(type_string);
             shape = std::vector<uint32_t> {1};
 
             base_validate();
         }
+
+    private:
+        std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+            ADD_SCALAR(binary, mode::OPTIONAL),
+            ADD_SCALAR(type_string, mode::OPTIONAL)
+        };
     };
 
     class label::decoded : public interface::decoded_media {

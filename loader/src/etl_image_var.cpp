@@ -80,7 +80,7 @@ image_var::param_factory::make_params(shared_ptr<const decoded> input)
 {
     auto imgstgs = shared_ptr<image_var::params>();
 
-    imgstgs->flip  = _cfg.flip(_dre);
+    imgstgs->flip  = _cfg.flip_distribution(_dre);
 
     return imgstgs;
 }

@@ -6,13 +6,16 @@ using namespace std;
 using namespace nervana::label_map;
 
 config::config(nlohmann::json js) {
-    string type_string = "uint32_t";
+    if(js.is_null()) {
+        throw std::runtime_error("missing label_map config in json config");
+    }
 
-    parse_value(_label_list,      "labels",          js, mode::REQUIRED);
+    for(auto& info : config_list) {
+        info->parse(js);
+    }
+    verify_config(config_list, js);
 
-    parse_value(type_string,     "type_string",     js, mode::OPTIONAL);
-    parse_value(_max_label_count, "max_label_count", js, mode::OPTIONAL);
-
+    // Derived types
     otype = nervana::output_type(type_string);
     shape.push_back(otype.size);
 
@@ -28,7 +31,7 @@ decoded::decoded() {
 
 extractor::extractor( const label_map::config& cfg) {
     int index = 0;
-    for( const string& label : cfg.labels() ) {
+    for( const string& label : cfg.labels ) {
         _dictionary.insert({label,index++});
     }
 }

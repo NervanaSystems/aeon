@@ -79,7 +79,7 @@ TEST(bbox, extractor) {
     {
         string data = read_file(CURDIR"/test_data/000001.json");
         auto cfg = make_bbox_config(100);
-        bbox::extractor extractor{cfg};
+        bbox::extractor extractor{cfg.label_map};
         auto decoded = extractor.extract(&data[0],data.size());
         ASSERT_NE(nullptr,decoded);
         auto boxes = decoded->boxes();
@@ -104,7 +104,7 @@ TEST(bbox, extractor) {
     {
         string data = read_file(CURDIR"/test_data/006637.json");
         auto cfg = make_bbox_config(100);
-        bbox::extractor extractor{cfg};
+        bbox::extractor extractor{cfg.label_map};
         auto decoded = extractor.extract(&data[0],data.size());
         ASSERT_NE(nullptr,decoded);
         auto boxes = decoded->boxes();
@@ -122,7 +122,7 @@ TEST(bbox, extractor) {
     {
         string data = read_file(CURDIR"/test_data/009952.json");
         auto cfg = make_bbox_config(100);
-        bbox::extractor extractor{cfg};
+        bbox::extractor extractor{cfg.label_map};
         auto decoded = extractor.extract(&data[0],data.size());
         ASSERT_NE(nullptr,decoded);
         auto boxes = decoded->boxes();
@@ -143,7 +143,7 @@ TEST(bbox, bbox) {
     string buffer = j.dump();
 
     auto cfg = make_bbox_config(100);
-    bbox::extractor extractor{cfg};
+    bbox::extractor extractor{cfg.label_map};
     auto decoded = extractor.extract( &buffer[0], buffer.size() );
     vector<bbox::box> boxes = decoded->boxes();
     ASSERT_EQ(3,boxes.size());
@@ -184,7 +184,7 @@ TEST(bbox, crop) {
     string buffer = j.dump();
 
     auto cfg = make_bbox_config(100);
-    bbox::extractor extractor{cfg};
+    bbox::extractor extractor{cfg.label_map};
     auto decoded = extractor.extract( &buffer[0], buffer.size() );
     vector<bbox::box> boxes = decoded->boxes();
 
@@ -234,7 +234,7 @@ TEST(bbox, rescale) {
     string buffer = j.dump();
 
     auto cfg = make_bbox_config(100);
-    bbox::extractor extractor{cfg};
+    bbox::extractor extractor{cfg.label_map};
     auto decoded = extractor.extract( &buffer[0], buffer.size() );
     vector<bbox::box> boxes = decoded->boxes();
 
@@ -264,7 +264,7 @@ TEST(bbox, angle) {
     string buffer = j.dump();
 
     auto cfg = make_bbox_config(100);
-    bbox::extractor extractor{cfg};
+    bbox::extractor extractor{cfg.label_map};
     auto decoded = extractor.extract( &buffer[0], buffer.size() );
     vector<bbox::box> boxes = decoded->boxes();
 
@@ -307,7 +307,7 @@ TEST(bbox, load_pad) {
     size_t bbox_max = 10;
     auto cfg = make_bbox_config(bbox_max);
 
-    bbox::extractor extractor{cfg};
+    bbox::extractor extractor{cfg.label_map};
     bbox::loader loader{cfg};
 
     vector<float> outbuf(bbox_max*4+1);     // xmin, ymin, xmax, ymax
@@ -354,7 +354,7 @@ TEST(bbox, load_full) {
     size_t bbox_max = 6;
     auto cfg = make_bbox_config(bbox_max);
 
-    bbox::extractor extractor{cfg};
+    bbox::extractor extractor{cfg.label_map};
     bbox::loader loader{cfg};
 
     vector<float> outbuf(bbox_max*4+1);     // xmin, ymin, xmax, ymax

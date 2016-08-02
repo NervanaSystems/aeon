@@ -13,21 +13,22 @@ ostream& operator<<(ostream& out, const nervana::bbox::box& b) {
 
 nervana::bbox::config::config(nlohmann::json js, bool ignore_errors)
 {
-    label_map.clear();
-    vector<string> label_list;
-    parse_value(label_list, "labels", js, mode::REQUIRED);
-    for( int i=0; i<label_list.size(); i++ ) {
-        label_map.insert({label_list[i],i});
+    if(js.is_null()) {
+        throw std::runtime_error("missing bbox config in json config");
     }
-    // TODO -- need to fill in the shape and type information here
-    string type_string = "float";
-    parse_value(type_string,    "type_string", js);
-    parse_value(height,         "height", js, mode::REQUIRED);
-    parse_value(width,          "width", js, mode::REQUIRED);
-    parse_value(max_bbox,       "max_bbox_count", js, mode::REQUIRED);
 
-    shape = {uint32_t(max_bbox), uint32_t(4*sizeof(float))};
+    for(auto& info : config_list) {
+        info->parse(js);
+    }
+    verify_config(config_list, js);
+
+    // Derived values
+    shape = {uint32_t(max_bbox_count), uint32_t(4*sizeof(float))};
     otype = nervana::output_type(type_string);
+    label_map.clear();
+    for( int i=0; i<labels.size(); i++ ) {
+        label_map.insert({labels[i],i});
+    }
 
     if(!ignore_errors) validate();
 }
@@ -40,8 +41,8 @@ void nervana::bbox::config::validate() {
 nervana::bbox::decoded::decoded() {
 }
 
-nervana::bbox::extractor::extractor(const config& cfg) :
-    label_map{cfg.label_map}
+nervana::bbox::extractor::extractor(const std::unordered_map<std::string,int>& map) :
+    label_map{map}
 {
 }
 
@@ -136,7 +137,7 @@ shared_ptr<bbox::decoded> nervana::bbox::transformer::transform(shared_ptr<image
 }
 
 nervana::bbox::loader::loader(const bbox::config& cfg) :
-    max_bbox{cfg.max_bbox}
+    max_bbox{cfg.max_bbox_count}
 {
 
 }

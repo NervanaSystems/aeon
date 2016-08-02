@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include "interface.hpp"
 #include "util.hpp"
@@ -23,7 +24,6 @@ void interface::config::verify_config(
                 }
             }
             if(!found) {
-                cout << "key not found '" << key << "'" << endl;
                 int distance = numeric_limits<int>::max();
                 string suggestion;
                 for(auto item : config) {
@@ -33,7 +33,9 @@ void interface::config::verify_config(
                         suggestion = item->name();
                     }
                 }
-                cout << "did you mean '" << suggestion << "'" << endl;
+                stringstream ss;
+                ss << "key not found '" << key << "'" << " did you mean '" << suggestion << "'";
+                throw invalid_argument(ss.str());
             }
         }
         return true;

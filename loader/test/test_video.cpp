@@ -29,7 +29,7 @@ TEST(etl, video_extract_transform) {
     vector<unsigned char> vid = gen_video().encode(1000);
 
     // extract
-    nlohmann::json js = {{"width", width},{"height",height},{"num_frames",5}};
+    nlohmann::json js = {{"width", width},{"height",height},{"frame_count",5}};
     video::config config(js);
 
     video::extractor extractor{config};
@@ -41,11 +41,10 @@ TEST(etl, video_extract_transform) {
     // transform
     video::transformer transformer = video::transformer(config);
 
-    image::param_factory factory(config);
-    auto imageParams = factory.make_params(decoded_vid);
+    video::param_factory factory(config);
+    auto params = factory.make_params(decoded_vid);
 
-    imageParams->output_size = cv::Size2i(width/2, height/2);
-    auto params = make_shared<video::params>(imageParams);
+    params->output_size = cv::Size2i(width/2, height/2);
     auto transformed_vid = transformer.transform(params, decoded_vid);
     ASSERT_NE(nullptr, transformed_vid);
 
@@ -92,14 +91,14 @@ TEST(etl, video_loader) {
     // each dimension is unique to help debug and detect incorrect
     // dimension ordering
     // extract
-    nlohmann::json js = {{"height",4},{"width",2},{"channels",3},{"num_frames",5}};
+    nlohmann::json js = {{"height",4},{"width",2},{"channels",3},{"frame_count",5}};
     video::config vconfig{js};
 
     int channels, height, width, depth;
     tie(channels, height, width, depth) = make_tuple(vconfig.channels,
                                                      vconfig.height,
                                                      vconfig.width,
-                                                     vconfig.num_frames);
+                                                     vconfig.frame_count);
 
     shared_ptr<video::decoded> decoded = make_shared<video::decoded>();
 

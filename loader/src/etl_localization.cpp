@@ -13,22 +13,16 @@ template<typename T> string join(const T& v, const string& sep) {
     return ss.str();
 }
 
-nervana::localization::config::config(nlohmann::json js) :
-    bbox::config::config(js, true)
+nervana::localization::config::config(nlohmann::json js)
 {
-    string type_string = "float";
-    parse_value(images_per_batch,       "images_per_batch", js);
-    parse_value(rois_per_image,         "rois_per_image", js);
-    parse_value(min_size,               "min_size", js);
-    parse_value(max_size,               "max_size", js);
-    parse_value(base_size,              "base_size", js);
-    parse_value(scaling_factor,         "scaling_factor", js);
-    parse_value(ratios,                 "ratios", js);
-    parse_value(scales,                 "scales", js);
-    parse_value(negative_overlap,       "negative_overlap", js);
-    parse_value(positive_overlap,       "positive_overlap", js);
-    parse_value(foreground_fraction,    "foreground_fraction", js);
-    parse_value(type_string,            "type_string", js);
+    if(js.is_null()) {
+        throw std::runtime_error("missing localization config in json config");
+    }
+
+    for(auto& info : config_list) {
+        info->parse(js);
+    }
+    verify_config(config_list, js);
 
     size_t dev_y_labels_size = total_anchors() * 2 * sizeof(float);             // 69192
     size_t dev_y_labels_mask_size = total_anchors() * 2 * sizeof(float);        // 69192
@@ -37,6 +31,10 @@ nervana::localization::config::config(nlohmann::json js) :
     output_buffer_size = dev_y_labels_size + dev_y_labels_mask_size + dev_y_bbtargets_size + dev_y_bbtargets_mask_size;
     shape.push_back(output_buffer_size);
     otype = nervana::output_type(type_string);
+    label_map.clear();
+    for( int i=0; i<labels.size(); i++ ) {
+        label_map.insert({labels[i],i});
+    }
 
     validate();
 }
@@ -52,10 +50,9 @@ void nervana::localization::config::validate() {
 }
 
 localization::extractor::extractor(const localization::config& cfg) :
-    bbox_extractor{cfg}
+    bbox_extractor{cfg.label_map}
 {
 }
-
 
 localization::transformer::transformer(const localization::config& _cfg) :
     cfg{_cfg},

@@ -30,15 +30,25 @@ std::ostream& operator<<(std::ostream&,const nervana::bbox::box&);
 
 class nervana::bbox::config : public nervana::interface::config {
 public:
-    size_t height;
-    size_t width;
-    size_t max_bbox;
+    size_t                      height;
+    size_t                      width;
+    size_t                      max_bbox_count;
+    std::vector<std::string>    labels;
+    std::string                 type_string = "float";
 
     std::unordered_map<std::string,int> label_map;
 
     config(nlohmann::json js, bool ignore_errors=false);
 
 private:
+    std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+        ADD_SCALAR(height, mode::REQUIRED),
+        ADD_SCALAR(width, mode::REQUIRED),
+        ADD_SCALAR(max_bbox_count, mode::REQUIRED),
+        ADD_SCALAR(labels, mode::REQUIRED),
+        ADD_SCALAR(type_string, mode::OPTIONAL)
+    };
+
     config() = delete;
     void validate();
 };
@@ -66,10 +76,11 @@ private:
 
 class nervana::bbox::extractor : public nervana::interface::extractor<nervana::bbox::decoded> {
 public:
-    extractor(const bbox::config&);
+    extractor(const std::unordered_map<std::string,int>&);
     virtual ~extractor(){}
     virtual std::shared_ptr<bbox::decoded> extract(const char*, int) override;
     void extract(const char*, int, std::shared_ptr<bbox::decoded>&);
+
 private:
     extractor() = delete;
     std::unordered_map<std::string,int> label_map;

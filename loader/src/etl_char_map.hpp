@@ -19,18 +19,20 @@ namespace nervana {
     class char_map::config : public interface::config {
         friend class extractor;
     public:
-        uint32_t max_length;
-        std::string alphabet;
-        bool pack_for_ctc = false;
-
-        std::string type_string{"uint8_t"};
+        uint32_t        max_length;
+        std::string     alphabet;
+        bool            pack_for_ctc = false;
+        std::string     type_string{"uint8_t"};
 
         config(nlohmann::json js) {
-            parse_value(max_length,  "max_length",  js,  mode::REQUIRED);
-            parse_value(alphabet,    "alphabet",    js,  mode::REQUIRED);
+            if(js.is_null()) {
+                throw std::runtime_error("missing char_map config in json config");
+            }
 
-            parse_value(pack_for_ctc, "pack_for_ctc", js);
-            parse_value(type_string, "type_string", js);
+            for(auto& info : config_list) {
+                info->parse(js);
+            }
+            verify_config(config_list, js);
 
             // Now fill in derived
             otype = nervana::output_type(type_string);
@@ -47,6 +49,12 @@ namespace nervana {
         const std::unordered_map<char, uint8_t>& get_cmap() const {return _cmap;}
 
     private:
+        std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+            ADD_SCALAR(max_length, mode::REQUIRED),
+            ADD_SCALAR(alphabet, mode::REQUIRED),
+            ADD_SCALAR(pack_for_ctc, mode::OPTIONAL),
+            ADD_SCALAR(type_string, mode::OPTIONAL),
+        };
         std::unordered_map<char, uint8_t> _cmap;
 
         config() = delete;

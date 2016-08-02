@@ -22,7 +22,7 @@ TEST(provider,image) {
                             {"height",128},
                             {"width",128},
                             {"channel_major",false},
-                            {"flip",true}}},
+                            {"flip_enable",true}}},
                          {"label", {}}};
 
     auto media = nervana::train_provider_factory::create(js);
@@ -82,7 +82,7 @@ TEST(provider, argtype) {
                 "scale" : [0.2, 0.8],
                 "lighting" : [0.0, 0.1],
                 "aspect_ratio" : [0.75, 1.33],
-                "flip" : false
+                "flip_enable" : false
             }
         )";
 

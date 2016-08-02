@@ -41,7 +41,7 @@ static string read_file( const string& path ) {
 }
 
 static localization::config make_localization_config() {
-    nlohmann::json js = {{"height",100},{"width",150},{"labels",label_list},{"max_bbox_count",100}};
+    nlohmann::json js = {{"labels",label_list},{"max_bbox_count",100}};
     return localization::config(js);
 }
 
@@ -215,7 +215,7 @@ TEST(DISABLED_localization,plot) {
 }
 
 TEST(localization,config) {
-    nlohmann::json js = {{"height",100},{"width",150},{"labels",label_list},{"max_bbox_count",100}};
+    nlohmann::json js = {{"labels",label_list},{"max_bbox_count",100}};
 
     EXPECT_NO_THROW(localization::config cfg(js));
 }
