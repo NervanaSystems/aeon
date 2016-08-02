@@ -28,6 +28,21 @@
 #include "cap_mjpeg_decoder.hpp"
 #include "image.hpp"
 
+
+#define private public
+
+#include "etl_audio.hpp"
+#include "etl_bbox.hpp"
+#include "etl_char_map.hpp"
+#include "etl_image.hpp"
+#include "etl_image_var.hpp"
+#include "etl_label.hpp"
+#include "etl_label_map.hpp"
+#include "etl_localization.hpp"
+#include "etl_multicrop.hpp"
+#include "etl_pixel_mask.hpp"
+#include "etl_video.hpp"
+
 using namespace std;
 using namespace nervana;
 
@@ -262,5 +277,30 @@ TEST(util,distance) {
     std::string s2 = "crops_per_scale";
 
     EXPECT_EQ(12, LevenshteinDistance(s1, s2));
+}
+
+#define DUMP_CONFIG(arg) \
+{ \
+    arg::config cfg; \
+    f << #arg << ":\n"; \
+    for(auto x: cfg.config_list) \
+    { \
+        f << "   " << x->name() << ", " << x->type() << ", " << (x->required() ? "REQUIRED" : "OPTIONAL") << "\n"; \
+    } \
+}
+
+TEST(util,param_dump) {
+    ofstream f("config_args.txt",ios::trunc);
+    DUMP_CONFIG(audio);
+    DUMP_CONFIG(bbox);
+    DUMP_CONFIG(char_map);
+    DUMP_CONFIG(image);
+    DUMP_CONFIG(image_var);
+    DUMP_CONFIG(label);
+    DUMP_CONFIG(label_map);
+    DUMP_CONFIG(localization);
+    DUMP_CONFIG(multicrop);
+    DUMP_CONFIG(video);
+//    pyLoaderConfig
 }
 

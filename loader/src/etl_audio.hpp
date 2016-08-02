@@ -139,6 +139,7 @@ namespace nervana {
             base_validate();
         }
     private:
+        config(){}
         std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
             ADD_SCALAR(max_duration, mode::REQUIRED),
             ADD_SCALAR(frame_stride, mode::REQUIRED),
@@ -179,7 +180,6 @@ namespace nervana {
             } else {
                 throw std::runtime_error("Unknown time unit " + unit_type);
             }
-
         }
     };
 

@@ -39,7 +39,7 @@ namespace nervana {
             ADD_SCALAR(max_labels, mode::OPTIONAL)
         };
 
-        config() = delete;
+        config() {}
     };
 
     class label_map::decoded : public interface::decoded_media {

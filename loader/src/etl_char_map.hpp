@@ -57,7 +57,7 @@ namespace nervana {
         };
         std::unordered_map<char, uint8_t> _cmap;
 
-        config() = delete;
+        config() {}
         void validate() {
             if (type_string != "uint8_t") {
                 throw std::runtime_error("Invalid load type for char map " + type_string);

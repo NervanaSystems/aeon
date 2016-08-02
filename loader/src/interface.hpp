@@ -4,6 +4,9 @@
 #include <numeric>
 #include <functional>
 #include <exception>
+#ifndef _MSC_VER
+#   include <cxxabi.h>
+#endif
 
 #include "typemap.hpp"
 #include "util.hpp"
@@ -27,7 +30,8 @@ class nervana::interface::config_info_interface {
 public:
     virtual const std::string& name() const = 0;
     virtual void parse(nlohmann::json js) = 0;
-
+    virtual bool required() const = 0;
+    virtual std::string type() const = 0;
 };
 
 class nervana::interface::config {
@@ -49,9 +53,9 @@ public:
     };
 
 #define ADD_SCALAR(var, mode) \
-    std::make_shared<interface::config_info<decltype(var)>>( var, #var, mode, parse_value<decltype(var)>, [](decltype(var) v){} )
+    std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode, parse_value<decltype(var)>, [](decltype(var) v){} )
 #define ADD_DISTRIBUTION(var, mode) \
-    std::make_shared<interface::config_info<decltype(var)>>( var, #var, mode, parse_dist<decltype(var)>, [](decltype(var) v){} )
+    std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode, parse_dist<decltype(var)>, [](decltype(var) v){} )
 
     template<typename T, typename S> static void set_dist_params(T& dist, S& params)
     {
@@ -108,6 +112,34 @@ protected:
     std::vector<uint32_t> shape;
 };
 
+
+    template <class T>
+    std::string
+    type_name()
+    {
+        typedef typename std::remove_reference<T>::type TR;
+        std::unique_ptr<char, void(*)(void*)> own
+               (
+    #ifndef _MSC_VER
+                    abi::__cxa_demangle(typeid(TR).name(), nullptr,
+                                               nullptr, nullptr),
+    #else
+                    nullptr,
+    #endif
+                    std::free
+               );
+        std::string r = own != nullptr ? own.get() : typeid(TR).name();
+        if (std::is_const<TR>::value)
+            r += " const";
+        if (std::is_volatile<TR>::value)
+            r += " volatile";
+        if (std::is_lvalue_reference<T>::value)
+            r += "&";
+        else if (std::is_rvalue_reference<T>::value)
+            r += "&&";
+        return r;
+    }
+
 template<typename T>
 class nervana::interface::config_info : public nervana::interface::config_info_interface {
 public:
@@ -126,6 +158,10 @@ public:
     {
         return var_name;
     }
+
+    bool required() const override { return parse_mode == interface::config::mode::REQUIRED; }
+
+    std::string type() const override { return type_name<T>(); }
 
     void parse(nlohmann::json js) {
         parse_function(target_variable, var_name, js, parse_mode);

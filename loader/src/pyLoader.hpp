@@ -89,7 +89,7 @@ private:
 class pyLoaderConfig : public nervana::interface::config {
 public:
     std::string manifest_filename;
-    int minibatch_size;
+    int         minibatch_size;
 
     std::string cache_directory     = "";
     int         macrobatch_size     = 0;
@@ -101,16 +101,14 @@ public:
 
     pyLoaderConfig(nlohmann::json js)
     {
-        parse_value(manifest_filename, "manifest_filename", js, mode::REQUIRED);
-        parse_value(minibatch_size,    "minibatch_size", js, mode::REQUIRED);
+        if(js.is_null()) {
+            throw std::runtime_error("missing pyLoader config in json config");
+        }
 
-        parse_value(single_thread,       "single_thread", js);
-        parse_value(cache_directory,     "cache_directory", js);
-        parse_value(macrobatch_size,     "macrobatch_size", js);
-        parse_value(shuffle_every_epoch, "shuffle_every_epoch", js);
-        parse_value(shuffle_manifest,    "shuffle_manifest", js);
-        parse_value(subset_fraction,     "subset_fraction", js);
-        parse_value(random_seed,         "random_seed", js);
+        for(auto& info : config_list) {
+            info->parse(js);
+        }
+        verify_config(config_list, js);
 
         if(macrobatch_size == 0) {
             macrobatch_size = minibatch_size;
@@ -120,6 +118,18 @@ public:
     }
 
 private:
+    std::vector<std::shared_ptr<nervana::interface::config_info_interface>> config_list = {
+        ADD_SCALAR(manifest_filename, mode::REQUIRED),
+        ADD_SCALAR(minibatch_size, mode::REQUIRED),
+        ADD_SCALAR(cache_directory, mode::OPTIONAL),
+        ADD_SCALAR(macrobatch_size, mode::OPTIONAL),
+        ADD_SCALAR(subset_fraction, mode::OPTIONAL),
+        ADD_SCALAR(shuffle_every_epoch, mode::OPTIONAL),
+        ADD_SCALAR(shuffle_manifest, mode::OPTIONAL),
+        ADD_SCALAR(single_thread, mode::OPTIONAL),
+        ADD_SCALAR(random_seed, mode::OPTIONAL),
+    };
+
     pyLoaderConfig() = delete;
     bool validate() { return true; }
 };

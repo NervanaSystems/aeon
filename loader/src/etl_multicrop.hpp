@@ -79,6 +79,7 @@ namespace nervana {
         }
 
     private:
+        config() {}
         std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
             // from image class
             ADD_SCALAR(height, mode::REQUIRED),

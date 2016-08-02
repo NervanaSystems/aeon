@@ -83,7 +83,7 @@ namespace nervana {
             ADD_SCALAR(channels, mode::OPTIONAL)
         };
 
-        config() = delete;
+        config() {}
         void validate();
 
         bool                                  flip_enable = false;

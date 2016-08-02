@@ -49,7 +49,7 @@ private:
         ADD_SCALAR(type_string, mode::OPTIONAL)
     };
 
-    config() = delete;
+    config() {}
     void validate();
 };
 

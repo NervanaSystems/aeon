@@ -83,7 +83,7 @@ namespace nervana {
             ADD_SCALAR(seed, mode::OPTIONAL)
         };
 
-        config() = delete;
+        config() {}
         void validate() {
             if(max_size < min_size) {
                 throw std::invalid_argument("max_size must be greater than or equal to min_size");

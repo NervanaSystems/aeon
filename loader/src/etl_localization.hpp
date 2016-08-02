@@ -112,7 +112,7 @@ namespace nervana {
             ADD_SCALAR(labels, mode::REQUIRED)
         };
 
-        config() = delete;
+        config() {}
         void validate();
     };
 

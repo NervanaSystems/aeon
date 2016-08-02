@@ -92,7 +92,7 @@ namespace nervana {
         }
 
     private:
-        config() = delete;
+        config() {}
         std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
             ADD_SCALAR(height, mode::REQUIRED),
             ADD_SCALAR(width, mode::REQUIRED),
