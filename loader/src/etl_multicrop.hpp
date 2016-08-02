@@ -58,6 +58,7 @@ namespace nervana {
             verify_config(config_list, js);
 
             // Fill in derived variables
+            otype = nervana::output_type(type_string);
             offsets.push_back(cv::Point2f(0.5, 0.5)); // Center
             if(flip) {
                 flip_distribution = std::bernoulli_distribution{0.5};
@@ -101,15 +102,18 @@ namespace nervana {
             ADD_SCALAR(include_flips, mode::OPTIONAL)
 
         };
-        bool validate()
+        void validate()
         {
-            bool isvalid = true;
-            isvalid &= ( crops_per_scale == 5 || crops_per_scale == 1);
+            if(crops_per_scale != 5 && crops_per_scale != 1) {
+                throw std::invalid_argument("crops_per_scale must be 1 or 5");
+            }
 
             for (const float &s: multicrop_scales) {
-                isvalid &= ( (0.0 < s) && (s < 1.0));
+                if(!( (0.0 < s) && (s < 1.0))) {
+                    throw std::invalid_argument("multicrop_scales values must be between 0.0 and 1.0");
+                }
             }
-            return isvalid;
+            base_validate();
         }
     };
 

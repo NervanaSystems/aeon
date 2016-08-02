@@ -38,7 +38,7 @@ public:
 
     std::unordered_map<std::string,int> label_map;
 
-    config(nlohmann::json js, bool ignore_errors=false);
+    config(nlohmann::json js);
 
 private:
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {

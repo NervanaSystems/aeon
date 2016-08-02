@@ -88,7 +88,7 @@ namespace nervana {
             }
             shape.insert(shape.begin() + 1, frame_count); // This is for the depth after channels
 
-//            validate();
+            base_validate();
         }
 
     private:

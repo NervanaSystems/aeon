@@ -11,7 +11,7 @@ ostream& operator<<(ostream& out, const nervana::bbox::box& b) {
     return out;
 }
 
-nervana::bbox::config::config(nlohmann::json js, bool ignore_errors)
+nervana::bbox::config::config(nlohmann::json js)
 {
     if(js.is_null()) {
         throw std::runtime_error("missing bbox config in json config");
@@ -30,7 +30,7 @@ nervana::bbox::config::config(nlohmann::json js, bool ignore_errors)
         label_map.insert({labels[i],i});
     }
 
-    if(!ignore_errors) validate();
+    validate();
 }
 
 void nervana::bbox::config::validate() {

@@ -57,6 +57,12 @@ namespace nervana {
 
             // Now fill in derived
             otype = nervana::output_type(type_string);
+            if (channel_major) {
+                shape = std::vector<uint32_t> {(uint32_t)channels, (uint32_t)max_size, (uint32_t)max_size};
+            } else{
+                shape = std::vector<uint32_t> {(uint32_t)max_size, (uint32_t)max_size, (uint32_t)channels};
+            }
+
             if(flip_enable) {
                 flip_distribution = std::bernoulli_distribution{0.5};
             }
@@ -78,8 +84,11 @@ namespace nervana {
         };
 
         config() = delete;
-        bool validate() {
-            return max_size >= min_size;
+        void validate() {
+            if(max_size < min_size) {
+                throw std::invalid_argument("max_size must be greater than or equal to min_size");
+            }
+            base_validate();
         }
     };
 
