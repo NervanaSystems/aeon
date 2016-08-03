@@ -33,8 +33,8 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
     return size * nmemb;
 }
 
-NDSBatchLoader::NDSBatchLoader(const std::string baseurl, int tag_id, uint block_size, int shard_count, int shard_index)
-    : BatchLoader(block_size), _baseurl(baseurl), _tag_id(tag_id), _shard_count(shard_count),
+NDSBatchLoader::NDSBatchLoader(const std::string baseurl, int collection_id, uint block_size, int shard_count, int shard_index)
+    : BatchLoader(block_size), _baseurl(baseurl), _collection_id(collection_id), _shard_count(shard_count),
       _shard_index(shard_index) {
     assert(shard_index < shard_count);
 
@@ -95,7 +95,7 @@ const string NDSBatchLoader::loadBlockURL(uint block_num) {
     ss << _baseurl << "/macrobatch?";
     ss << "macro_batch_index=" << block_num;
     ss << "&macro_batch_max_size=" << _block_size;
-    ss << "&tag_id=" << _tag_id;
+    ss << "&collection_id=" << _collection_id;
     ss << "&shard_count=" << _shard_count;
     ss << "&shard_index=" << _shard_index;
     return ss.str();
