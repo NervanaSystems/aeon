@@ -130,7 +130,7 @@ private:
         ADD_SCALAR(random_seed, mode::OPTIONAL),
     };
 
-    pyLoaderConfig() = delete;
+    pyLoaderConfig() {}
     bool validate() { return true; }
 };
 
