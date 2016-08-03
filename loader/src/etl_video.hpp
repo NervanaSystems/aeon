@@ -54,7 +54,6 @@ namespace nervana {
         int32_t                               seed = 0; // Default is to seed deterministically
         std::string                           type_string{"uint8_t"};
         bool                                  do_area_scale = false;
-        bool                                  channel_major = true;
         uint32_t                              channels = 3;
 
         std::uniform_real_distribution<float> scale{1.0f, 1.0f};
@@ -77,18 +76,11 @@ namespace nervana {
             }
             verify_config(config_list, js);
 
-            otype = nervana::output_type(type_string);
             if(flip_enable) {
                 flip_distribution = std::bernoulli_distribution{0.5};
             }
-            if (channel_major) {
-                shape = std::vector<uint32_t> {channels, height, width};
-            } else{
-                shape = std::vector<uint32_t> {height, width, channels};
-            }
-            shape.insert(shape.begin() + 1, frame_count); // This is for the depth after channels
-
-            base_validate();
+            // channel major only
+            add_shape_type({channels, frame_count, height, width}, type_string);
         }
 
     private:
@@ -106,7 +98,6 @@ namespace nervana {
             ADD_SCALAR(flip_enable, mode::OPTIONAL),
             ADD_SCALAR(type_string, mode::OPTIONAL),
             ADD_SCALAR(do_area_scale, mode::OPTIONAL),
-            ADD_SCALAR(channel_major, mode::OPTIONAL),
             ADD_SCALAR(channels, mode::OPTIONAL),
 
             ADD_SCALAR(frame_count, mode::REQUIRED)

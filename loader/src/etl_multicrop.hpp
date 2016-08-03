@@ -58,7 +58,6 @@ namespace nervana {
             verify_config(config_list, js);
 
             // Fill in derived variables
-            otype = nervana::output_type(type_string);
             offsets.push_back(cv::Point2f(0.5, 0.5)); // Center
             if(flip) {
                 flip_distribution = std::bernoulli_distribution{0.5};
@@ -73,14 +72,15 @@ namespace nervana {
 
             // shape is going to be different because of multiple images
             uint32_t num_views = crops_per_scale * multicrop_scales.size() * (include_flips ? 2 : 1);
-            shape.insert(shape.begin(), num_views);
+            add_shape_type({num_views}, type_string);
 
             validate();
         }
 
     private:
         config() {}
-        std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+        std::vector<std::shared_ptr<interface::config_info_interface>> config_list =
+        {
             // from image class
             ADD_SCALAR(height, mode::REQUIRED),
             ADD_SCALAR(width, mode::REQUIRED),
@@ -101,8 +101,8 @@ namespace nervana {
             ADD_SCALAR(multicrop_scales, mode::REQUIRED),
             ADD_SCALAR(crops_per_scale, mode::OPTIONAL),
             ADD_SCALAR(include_flips, mode::OPTIONAL)
-
         };
+
         void validate()
         {
             if(crops_per_scale != 5 && crops_per_scale != 1) {
@@ -114,7 +114,6 @@ namespace nervana {
                     throw std::invalid_argument("multicrop_scales values must be between 0.0 and 1.0");
                 }
             }
-            base_validate();
         }
     };
 

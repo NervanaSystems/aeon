@@ -91,7 +91,8 @@ localization_decoder::localization_decoder(nlohmann::json js) :
 {
     num_inputs = 2;
     oshapes.push_back(image_config.get_shape_type());
-    oshapes.push_back(localization_config.get_shape_type());
+    auto os = localization_config.get_shape_type_list();
+    oshapes.insert(oshapes.end(), os.begin(), os.end());
 }
 
 void localization_decoder::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {

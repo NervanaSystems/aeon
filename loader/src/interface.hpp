@@ -24,6 +24,7 @@ namespace nervana {
         class decoded_media;
         class params;
     }
+    typedef std::vector<size_t> shape_t;
 }
 
 class nervana::interface::config_info_interface {
@@ -38,12 +39,12 @@ class nervana::interface::config {
 public:
     config() {}
 
-    nervana::shape_type get_shape_type() const { return shape_type(shape, otype); }
-
-    void base_validate() {
-        if(shape.size() == 0)      throw std::invalid_argument("config missing output shape");
-        if(otype.valid() == false) throw std::invalid_argument("config missing output type");
+    nervana::shape_type get_shape_type() const
+    {
+        if(shape_type_list.empty()) throw std::runtime_error("config missing output shape");
+        return shape_type_list[0];
     }
+    const std::vector<nervana::shape_type>& get_shape_type_list() const { return shape_type_list; }
 
     void verify_config(const std::vector<std::shared_ptr<interface::config_info_interface>>& config, nlohmann::json js);
 
@@ -107,9 +108,14 @@ public:
         }
     }
 
-protected:
-    nervana::output_type otype;
-    std::vector<uint32_t> shape;
+    void add_shape_type(const std::vector<size_t>& sh, const std::string& type_string) {
+        shape_type_list.emplace_back(sh, nervana::output_type{type_string});
+    }
+    void add_shape_type(const std::vector<size_t>& sh, const nervana::output_type& ot) {
+        shape_type_list.emplace_back(sh, ot);
+    }
+private:
+    std::vector<nervana::shape_type> shape_type_list;
 };
 
 

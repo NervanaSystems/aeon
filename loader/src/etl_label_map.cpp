@@ -16,14 +16,12 @@ config::config(nlohmann::json js) {
     verify_config(config_list, js);
 
     // Derived types
-    otype = nervana::output_type(type_string);
-    shape.push_back(otype.size);
+    auto otype = nervana::output_type(type_string);
+    add_shape_type({otype.size}, otype);
 
     if (type_string != "uint32_t") {
         throw std::runtime_error("Invalid load type for label map " + type_string);
     }
-
-    base_validate();
 }
 
 decoded::decoded() {

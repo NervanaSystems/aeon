@@ -114,11 +114,10 @@ namespace nervana {
                 throw std::runtime_error("Unknown feature type " + feature_type);
             }
 
-            otype = nervana::output_type(type_string);
             if (type_string != "uint8_t") {
                 throw std::runtime_error("Invalid load type for audio " + type_string);
             }
-            shape = std::vector<uint32_t> {1, freq_steps, time_steps};
+            add_shape_type({1, freq_steps, time_steps}, type_string);
             validate();
         }
 
@@ -135,8 +134,6 @@ namespace nervana {
             if(noise_offset_fraction.param().b() > 1.0f) {
                 throw std::invalid_argument("noise_offset_fraction.param().b() > 1.0f");
             }
-
-            base_validate();
         }
     private:
         config(){}

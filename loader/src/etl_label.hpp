@@ -31,10 +31,7 @@ namespace nervana {
             }
             verify_config(config_list, js);
 
-            otype = nervana::output_type(type_string);
-            shape = std::vector<uint32_t> {1};
-
-            base_validate();
+            add_shape_type({1}, type_string);
         }
 
     private:

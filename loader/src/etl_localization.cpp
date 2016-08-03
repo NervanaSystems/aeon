@@ -29,8 +29,7 @@ nervana::localization::config::config(nlohmann::json js)
     size_t dev_y_bbtargets_size = total_anchors() * 4 * sizeof(float);          // 138384
     size_t dev_y_bbtargets_mask_size = total_anchors() * 4 * sizeof(float);     // 138384
     output_buffer_size = dev_y_labels_size + dev_y_labels_mask_size + dev_y_bbtargets_size + dev_y_bbtargets_mask_size;
-    shape.push_back(output_buffer_size);
-    otype = nervana::output_type(type_string);
+    add_shape_type({output_buffer_size}, type_string);
     label_map.clear();
     for( int i=0; i<labels.size(); i++ ) {
         label_map.insert({labels[i],i});
@@ -46,7 +45,6 @@ void nervana::localization::config::validate() {
     if(positive_overlap    < 0.0) throw invalid_argument("positive_overlap");
     if(positive_overlap    > 1.0) throw invalid_argument("positive_overlap");
     if(foreground_fraction > 1.0) throw invalid_argument("foreground_fraction");
-    base_validate();
 }
 
 localization::extractor::extractor(const localization::config& cfg) :

@@ -23,8 +23,7 @@ nervana::bbox::config::config(nlohmann::json js)
     verify_config(config_list, js);
 
     // Derived values
-    shape = {uint32_t(max_bbox_count), uint32_t(4*sizeof(float))};
-    otype = nervana::output_type(type_string);
+    add_shape_type({max_bbox_count, 4*sizeof(float)}, type_string);
     label_map.clear();
     for( int i=0; i<labels.size(); i++ ) {
         label_map.insert({labels[i],i});
@@ -34,9 +33,7 @@ nervana::bbox::config::config(nlohmann::json js)
 }
 
 void nervana::bbox::config::validate() {
-    base_validate();
 }
-
 
 nervana::bbox::decoded::decoded() {
 }

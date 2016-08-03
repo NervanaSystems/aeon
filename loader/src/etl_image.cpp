@@ -15,7 +15,7 @@ image::config::config(nlohmann::json js)
     verify_config(config_list, js);
 
     // Now fill in derived
-    otype = nervana::output_type(type_string);
+    shape_t shape;
     if (flip_enable) {
         flip_distribution = bernoulli_distribution{0.5};
     }
@@ -25,10 +25,11 @@ image::config::config(nlohmann::json js)
     }
 
     if (channel_major) {
-        shape = std::vector<uint32_t> {channels, height, width};
+        shape = {channels, height, width};
     } else{
-        shape = std::vector<uint32_t> {height, width, channels};
+        shape = {height, width, channels};
     }
+    add_shape_type(shape, type_string);
 
     validate();
 }
@@ -43,7 +44,6 @@ void image::config::validate() {
     if(height <= 0) {
         throw std::invalid_argument("invalid height");
     }
-    base_validate();
 }
 
 void image::params::dump(ostream & ostr)

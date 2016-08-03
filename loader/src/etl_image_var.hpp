@@ -34,11 +34,11 @@ namespace nervana {
 
     class image_var::config : public interface::config {
     public:
-        int                             min_size;
-        int                             max_size;
+        size_t                          min_size;
+        size_t                          max_size;
         bool                            flip_enable = false;
         bool                            channel_major = true;
-        int                             channels = 3;
+        size_t                          channels = 3;
         int32_t                         seed = 0; // Default is to seed deterministically
         std::string                     type_string{"int32_t"};
 
@@ -56,12 +56,13 @@ namespace nervana {
             verify_config(config_list, js);
 
             // Now fill in derived
-            otype = nervana::output_type(type_string);
+            shape_t shape;
             if (channel_major) {
-                shape = std::vector<uint32_t> {(uint32_t)channels, (uint32_t)max_size, (uint32_t)max_size};
+                shape = {channels, max_size, max_size};
             } else{
-                shape = std::vector<uint32_t> {(uint32_t)max_size, (uint32_t)max_size, (uint32_t)channels};
+                shape = {max_size, max_size, channels};
             }
+            add_shape_type(shape, type_string);
 
             if(flip_enable) {
                 flip_distribution = std::bernoulli_distribution{0.5};
@@ -88,7 +89,6 @@ namespace nervana {
             if(max_size < min_size) {
                 throw std::invalid_argument("max_size must be greater than or equal to min_size");
             }
-            base_validate();
         }
     };
 

@@ -35,8 +35,7 @@ namespace nervana {
             verify_config(config_list, js);
 
             // Now fill in derived
-            otype = nervana::output_type(type_string);
-            shape = std::vector<uint32_t> {1, max_length};
+            add_shape_type({1, max_length}, type_string);
 
             uint8_t index = 0;
             for (auto c: alphabet)
@@ -65,7 +64,6 @@ namespace nervana {
             if (!unique_chars(alphabet)) {
                 throw std::runtime_error("alphabet does not consist of unique chars " + alphabet);
             }
-            base_validate();
         }
 
         bool unique_chars(std::string test_string)
