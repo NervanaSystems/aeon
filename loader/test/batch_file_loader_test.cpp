@@ -15,13 +15,13 @@
 
 #include "gtest/gtest.h"
 #include "batch_file_loader.hpp"
-#include "manifest_maker.hpp"
+#include "csv_manifest_maker.hpp"
 
 using namespace std;
 
 TEST(blocked_file_loader, constructor) {
     string tmpname = tmp_manifest_file(0, {0, 0});
-    BatchFileLoader bfl(make_shared<Manifest>(tmpname, true), 1.0, 4);
+    BatchFileLoader bfl(make_shared<CSVManifest>(tmpname, true), 1.0, 4);
 }
 
 TEST(blocked_file_loader, loadBlock) {
@@ -32,7 +32,7 @@ TEST(blocked_file_loader, loadBlock) {
     float subset_fraction = 1.0;
 
     BatchFileLoader bfl(
-        make_shared<Manifest>(tmp_manifest_file(4, {object_size, target_size}), true),
+        make_shared<CSVManifest>(tmp_manifest_file(4, {object_size, target_size}), true),
         subset_fraction,
         block_size
     );
@@ -63,7 +63,7 @@ TEST(blocked_file_loader, subset_fraction) {
     float subset_fraction = 0.5;
 
     BatchFileLoader bfl(
-        make_shared<Manifest>(tmp_manifest_file(10, {object_size, target_size}), true),
+        make_shared<CSVManifest>(tmp_manifest_file(10, {object_size, target_size}), true),
         subset_fraction,
         block_size
     );
@@ -88,7 +88,7 @@ TEST(blocked_file_loader, exception) {
     float subset_fraction = 1.0;
 
     BatchFileLoader bfl(
-        make_shared<Manifest>(tmp_manifest_file_with_invalid_filename(), false),
+        make_shared<CSVManifest>(tmp_manifest_file_with_invalid_filename(), false),
         subset_fraction,
         1
     );
@@ -110,7 +110,7 @@ TEST(blocked_file_loader, exception) {
 TEST(blocked_file_loader, subset_object_count) {
     float subset_fraction = 0.5;
     BatchFileLoader bfl(
-        make_shared<Manifest>(tmp_manifest_file(13, {16, 16}), false),
+        make_shared<CSVManifest>(tmp_manifest_file(13, {16, 16}), false),
         subset_fraction,
         5
     );

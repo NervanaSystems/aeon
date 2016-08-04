@@ -36,8 +36,8 @@ TEST_SRCS := \
     test_video.cpp \
     test_types.cpp \
     test_params.cpp \
-    manifest_test.cpp \
-    manifest_maker.cpp \
+    csv_manifest_test.cpp \
+    csv_manifest_maker.cpp \
     batch_file_loader_test.cpp \
     batch_loader_cpio_cache_test.cpp \
     buffer_test.cpp \

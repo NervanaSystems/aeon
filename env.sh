@@ -23,6 +23,8 @@ SRCS="
     util.cpp
     wav_data.cpp
     manifest.cpp
+    csv_manifest.cpp
+    nds_manifest.cpp
     provider_factory.cpp
     batch_file_loader.cpp
     batch_loader_cpio_cache.cpp

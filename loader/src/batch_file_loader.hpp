@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "manifest.hpp"
+#include "csv_manifest.hpp"
 #include "buffer_in.hpp"
 #include "batch_loader.hpp"
 
@@ -26,7 +26,7 @@
  */
 class BatchFileLoader : public BatchLoader {
 public:
-    BatchFileLoader(std::shared_ptr<Manifest> manifest, float subset_fraction, uint block_size);
+    BatchFileLoader(std::shared_ptr<CSVManifest> manifest, float subset_fraction, uint block_size);
 
     void loadBlock(buffer_in_array& dest, uint block_num);
     void loadFile(buffer_in* buff, const std::string& filename);
@@ -35,6 +35,6 @@ public:
 private:
     off_t getFileSize(const std::string& filename);
 
-    const std::shared_ptr<Manifest> _manifest;
+    const std::shared_ptr<CSVManifest> _manifest;
     float _subset_fraction;
 };

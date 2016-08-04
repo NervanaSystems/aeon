@@ -28,6 +28,8 @@
 #include "sequential_batch_iterator.hpp"
 #include "shuffled_batch_iterator.hpp"
 #include "minibatch_iterator.hpp"
+#include "nds_manifest.hpp"
+#include "nds_batch_loader.hpp"
 
 using namespace std;
 
@@ -258,23 +260,39 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
     _lcfg = make_shared<pyLoaderConfig>(_lcfg_json);
     _batchSize = _lcfg->minibatch_size;
 
-    // the manifest defines which data should be included in the dataset
-    _manifest = make_shared<Manifest>(_lcfg->manifest_filename,
-                                      _lcfg->shuffle_manifest);
+    shared_ptr<Manifest> base_manifest = nullptr;
 
-    if(_manifest->objectCount() == 0) {
-        throw std::runtime_error("manifest file is empty");
+    if(NDSManifest::isLikelyJSON(_lcfg->manifest_filename)) {
+        auto manifest = make_shared<NDSManifest>(_lcfg->manifest_filename);
+
+        // TODO: add shard_count/shard_index to cfg
+        _batchLoader = make_shared<NDSBatchLoader>(manifest->baseurl,
+                                                   manifest->token,
+                                                   manifest->collection_id,
+                                                   _lcfg->macrobatch_size);
+
+        base_manifest = manifest;
+    } else {
+        // the manifest defines which data should be included in the dataset
+        auto manifest = make_shared<CSVManifest>(_lcfg->manifest_filename,
+                                                 _lcfg->shuffle_manifest);
+
+        if(manifest->objectCount() == 0) {
+            throw std::runtime_error("manifest file is empty");
+        }
+
+        _batchLoader = make_shared<BatchFileLoader>(
+            manifest, _lcfg->subset_fraction, _lcfg->macrobatch_size
+        );
+
+        base_manifest = manifest;
     }
-
-    _batchLoader = make_shared<BatchFileLoader>(
-        _manifest, _lcfg->subset_fraction, _lcfg->macrobatch_size
-    );
 
     if(_lcfg->cache_directory.length() > 0) {
         _batchLoader = make_shared<BatchLoaderCPIOCache>(_lcfg->cache_directory,
-                                                        _manifest->hash(),
-                                                        _manifest->version(),
-                                                        _batchLoader);
+                                                         base_manifest->hash(),
+                                                         base_manifest->version(),
+                                                         _batchLoader);
     }
 
     if (_lcfg->shuffle_every_epoch) {

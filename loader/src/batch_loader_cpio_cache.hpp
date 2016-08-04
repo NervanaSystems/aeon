@@ -24,6 +24,10 @@
  * caches loadBlock function in BatchLoader out to cpio files in
  * `cacheDir`.
  *
+ * The hash is used to unquely identify a particular dataset and the version
+ * is used to help invalidate old versions of the same dataset.  If a cache is
+ * created with the same hash as an existing cache, but a different version,
+ * old version is deleted.
  */
 
 class BatchLoaderCPIOCache : public BatchLoader {

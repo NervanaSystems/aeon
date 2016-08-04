@@ -13,7 +13,7 @@
  limitations under the License.
 */
 
-#include "manifest_maker.hpp"
+#include "csv_manifest_maker.hpp"
 
 #include <string.h>
 #include <stdlib.h>

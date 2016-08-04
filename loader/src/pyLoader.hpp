@@ -191,7 +191,6 @@ private:
     std::unique_ptr<pyDecodeThreadPool> _decodeThreads = nullptr;
     std::shared_ptr<BatchLoader>        _batchLoader = nullptr;
     std::shared_ptr<BatchIterator>      _batch_iterator = nullptr;
-    std::shared_ptr<Manifest>           _manifest = nullptr;
     std::shared_ptr<pyLoaderConfig>     _lcfg = nullptr;
 
     int                                 _batchSize;

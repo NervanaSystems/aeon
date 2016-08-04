@@ -23,7 +23,7 @@
 
 using namespace std;
 
-BatchFileLoader::BatchFileLoader(shared_ptr<Manifest> manifest,
+BatchFileLoader::BatchFileLoader(shared_ptr<CSVManifest> manifest,
                                  float subset_fraction,
                                  uint block_size)
 : BatchLoader(block_size),

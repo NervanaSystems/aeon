@@ -24,7 +24,7 @@
 
 class NDSBatchLoader : public BatchLoader {
 public:
-    NDSBatchLoader(const std::string baseurl, int collection_id, uint block_size, int shard_count=1, int shard_index=0);
+    NDSBatchLoader(const std::string baseurl, const std::string token, int collection_id, uint block_size, int shard_count=1, int shard_index=0);
     ~NDSBatchLoader();
 
     void loadBlock(buffer_in_array& dest, uint block_num);
@@ -33,13 +33,20 @@ public:
     uint blockCount();
 
 private:
+    void loadMetadata();
+
     void get(const std::string url, std::stringstream& stream);
 
     const std::string loadBlockURL(uint block_num);
+    const std::string metadataURL();
+
     const std::string _baseurl;
+    const std::string _token;
     const int _collection_id;
     const int _shard_count;
     const int _shard_index;
+    unsigned int _objectCount;
+    unsigned int _blockCount;
 
     // reuse connection across requests
     void* _curl;

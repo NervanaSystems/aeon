@@ -17,8 +17,19 @@
 
 #include <string>
 
-class Manifest {
+#include "manifest.hpp"
+
+class NDSManifest : public Manifest {
 public:
-    virtual std::string hash() = 0;
-    virtual std::string version() = 0;
+    NDSManifest(const std::string filename);
+    ~NDSManifest();
+
+    std::string hash();
+    std::string version();
+
+    static bool isLikelyJSON(const std::string filename);
+
+    std::string baseurl;
+    std::string token;
+    int collection_id;
 };

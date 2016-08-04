@@ -20,6 +20,7 @@
 #include <curl/easy.h>
 #include <curl/curlbuild.h>
 
+#include "json.hpp"
 #include "nds_batch_loader.hpp"
 
 using namespace std;
@@ -33,13 +34,15 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
     return size * nmemb;
 }
 
-NDSBatchLoader::NDSBatchLoader(const std::string baseurl, int collection_id, uint block_size, int shard_count, int shard_index)
-    : BatchLoader(block_size), _baseurl(baseurl), _collection_id(collection_id), _shard_count(shard_count),
-      _shard_index(shard_index) {
+NDSBatchLoader::NDSBatchLoader(const std::string baseurl, const std::string token, int collection_id, uint block_size, int shard_count, int shard_index)
+    : BatchLoader(block_size), _baseurl(baseurl), _token(token), _collection_id(collection_id),
+      _shard_count(shard_count), _shard_index(shard_index) {
     assert(shard_index < shard_count);
 
     // reuse curl connection across requests
     _curl = curl_easy_init();
+
+    loadMetadata();
 }
 
 NDSBatchLoader::~NDSBatchLoader() {
@@ -98,13 +101,36 @@ const string NDSBatchLoader::loadBlockURL(uint block_num) {
     ss << "&collection_id=" << _collection_id;
     ss << "&shard_count=" << _shard_count;
     ss << "&shard_index=" << _shard_index;
+    ss << "&token=" << _token;
     return ss.str();
 }
 
+const string NDSBatchLoader::metadataURL() {
+    stringstream ss;
+    ss << _baseurl << "/object_count?";
+    ss << "macro_batch_max_size=" << _block_size;
+    ss << "&collection_id=" << _collection_id;
+    ss << "&shard_count=" << _shard_count;
+    ss << "&shard_index=" << _shard_index;
+    ss << "&token=" << _token;
+    return ss.str();
+}
+
+void NDSBatchLoader::loadMetadata() {
+    // fetch metadata and store in local attributes
+
+    stringstream cpio_stream;
+    get(metadataURL(), cpio_stream);
+    auto metadata = nlohmann::json::parse(cpio_stream.str());
+
+    _objectCount = metadata["record_count"];
+    _blockCount = metadata["block_count"];
+}
+
 uint NDSBatchLoader::objectCount() {
-    throw std::runtime_error("Object count not implemented");
+    return _objectCount;
 }
 
 uint NDSBatchLoader::blockCount() {
-    throw std::runtime_error("Block count not implemented");
+    return _blockCount;
 }
