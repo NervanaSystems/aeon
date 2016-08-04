@@ -108,7 +108,6 @@ public:
         for(auto& info : config_list) {
             info->parse(js);
         }
-        verify_config(config_list, js);
 
         if(macrobatch_size == 0) {
             macrobatch_size = minibatch_size;
