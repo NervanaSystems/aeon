@@ -82,7 +82,7 @@ namespace nervana {
         loader(const label_map::config&);
         virtual ~loader(){}
 
-        virtual void load(char*, std::shared_ptr<label_map::decoded>) override;
+        virtual void load(const std::vector<void*>&, std::shared_ptr<label_map::decoded>) override;
     private:
         int max_label_count;
     };

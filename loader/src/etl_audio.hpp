@@ -254,7 +254,7 @@ namespace nervana {
     public:
         loader(const audio::config& cfg) : _cfg{cfg} {}
         ~loader() {}
-        virtual void load(char*, std::shared_ptr<audio::decoded>) override;
+        virtual void load(const std::vector<void*>&, std::shared_ptr<audio::decoded>) override;
 
     private:
         const audio::config& _cfg;

@@ -313,7 +313,7 @@ TEST(bbox, load_pad) {
     vector<float> outbuf(bbox_max*4+1);     // xmin, ymin, xmax, ymax
     outbuf[outbuf.size()-1] = -1;           // one past the end of the buffer
     auto extracted = extractor.extract(buffer.data(), buffer.size());
-    loader.load((char*)outbuf.data(), extracted);
+    loader.load({(char*)outbuf.data()}, extracted);
 
     test_values(r0, &outbuf[0]);
     test_values(r1, &outbuf[4]);
@@ -360,7 +360,7 @@ TEST(bbox, load_full) {
     vector<float> outbuf(bbox_max*4+1);     // xmin, ymin, xmax, ymax
     outbuf[outbuf.size()-1] = -1;           // one past the end of the buffer
     auto extracted = extractor.extract(buffer.data(), buffer.size());
-    loader.load((char*)outbuf.data(), extracted);
+    loader.load({(char*)outbuf.data()}, extracted);
 
     test_values(r0, &outbuf[0]);
     test_values(r1, &outbuf[4]);

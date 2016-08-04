@@ -65,9 +65,9 @@ loader::loader(const nervana::label_map::config& cfg) :
 {
 }
 
-void loader::load(char* data, shared_ptr<decoded> media) {
+void loader::load(const vector<void*>& data, shared_ptr<decoded> media) {
     int i=0;
-    uint32_t* data_p = (uint32_t*)data;
+    uint32_t* data_p = (uint32_t*)data[0];
     for(; i<media->get_data().size() && i<max_label_count; i++ ) {
         data_p[i] = media->get_data()[i];
     }

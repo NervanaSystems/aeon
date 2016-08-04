@@ -91,8 +91,9 @@ namespace nervana {
         loader(const label::config& cfg) : _cfg{cfg} {}
         ~loader() {}
 
-        void load(char* buf, std::shared_ptr<label::decoded> mp) override
+        void load(const std::vector<void*>& buflist, std::shared_ptr<label::decoded> mp) override
         {
+            char* buf = (char*)buflist[0];
             int index = mp->get_index();
             memcpy(buf, &index, _cfg.get_shape_type().get_otype().size);
         }

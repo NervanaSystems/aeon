@@ -1,6 +1,7 @@
 #include "provider_image_class.hpp"
 
 using namespace nervana;
+using namespace std;
 
 const nlohmann::json json_get(const nlohmann::json js, const std::string key, const nlohmann::json default_value) {
     // get the value in js at key.  If the value is null, return
@@ -37,7 +38,7 @@ void image_inference::provide(int idx, buffer_in_array& in_buf, buffer_out_array
     // Process image data
     auto image_dec = image_extractor.extract(datum_in.data(), datum_in.size());
     auto image_params = image_factory.make_params(image_dec);
-    image_loader.load(datum_out, image_transformer.transform(image_params, image_dec));
+    image_loader.load({datum_out}, image_transformer.transform(image_params, image_dec));
 }
 
 image_classifier::image_classifier(const nlohmann::json js) :
@@ -71,16 +72,16 @@ void image_classifier::provide(int idx, buffer_in_array& in_buf, buffer_out_arra
     // Process image data
     auto image_dec = image_extractor.extract(datum_in.data(), datum_in.size());
     auto image_params = image_factory.make_params(image_dec);
-    image_loader.load(datum_out, image_transformer.transform(image_params, image_dec));
+    image_loader.load({datum_out}, image_transformer.transform(image_params, image_dec));
 
     // Process target data
     auto label_dec = label_extractor.extract(target_in.data(), target_in.size());
-    label_loader.load(target_out, label_dec);
+    label_loader.load({target_out}, label_dec);
 }
 
 localization_decoder::localization_decoder(nlohmann::json js) :
-    image_config(js["data_config"]["config"]),
-    localization_config(js["target_config"]["config"]),
+    image_config(js["image"]),
+    localization_config(js["localization"]),
     image_extractor(image_config),
     image_transformer(image_config),
     image_loader(image_config),
@@ -96,11 +97,32 @@ localization_decoder::localization_decoder(nlohmann::json js) :
 }
 
 void localization_decoder::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
-    std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
-    std::vector<char>& target_in = in_buf[1]->getItem(idx);
+    vector<char>& datum_in  = in_buf[0]->getItem(idx);
+    vector<char>& target_in = in_buf[1]->getItem(idx);
 
-    char* datum_out  = out_buf[0]->getItem(idx);
-    char* target_out = out_buf[1]->getItem(idx);
+    char* datum_out             = out_buf[0]->getItem(idx);
+    char* y_bbtargets_out       = out_buf[1]->getItem(idx);
+    char* y_bbtargets_mask_out  = out_buf[2]->getItem(idx);
+    char* y_labels_flat_out     = out_buf[3]->getItem(idx);
+    char* y_labels_mask_out     = out_buf[4]->getItem(idx);
+    char* im_shape_out          = out_buf[5]->getItem(idx);
+    char* gt_boxes_out          = out_buf[6]->getItem(idx);
+    char* num_gt_boxes_out      = out_buf[7]->getItem(idx);
+    char* gt_classes_out        = out_buf[8]->getItem(idx);
+    char* im_scale_out          = out_buf[9]->getItem(idx);
+
+    vector<void*> target_list = {
+        datum_out,
+        y_bbtargets_out,
+        y_bbtargets_mask_out,
+        y_labels_flat_out,
+        y_labels_mask_out,
+        im_shape_out,
+        gt_boxes_out,
+        num_gt_boxes_out,
+        gt_classes_out,
+        im_scale_out
+    };
 
     if (datum_in.size() == 0) {
         std::stringstream ss;
@@ -110,11 +132,11 @@ void localization_decoder::provide(int idx, buffer_in_array& in_buf, buffer_out_
 
     auto image_dec = image_extractor.extract(datum_in.data(), datum_in.size());
     auto image_params = image_factory.make_params(image_dec);
-    image_loader.load(datum_out, image_transformer.transform(image_params, image_dec));
+    image_loader.load({datum_out}, image_transformer.transform(image_params, image_dec));
 
     // Process target data
     auto target_dec = localization_extractor.extract(target_in.data(), target_in.size());
-    localization_loader.load(target_out, localization_transformer.transform(image_params, target_dec));
+    localization_loader.load(target_list, localization_transformer.transform(image_params, target_dec));
 }
 
 bbox_provider::bbox_provider(nlohmann::json js) :
@@ -148,11 +170,11 @@ void bbox_provider::provide(int idx, buffer_in_array& in_buf, buffer_out_array& 
 
     auto image_dec = image_extractor.extract(datum_in.data(), datum_in.size());
     auto image_params = image_factory.make_params(image_dec);
-    image_loader.load(datum_out, image_transformer.transform(image_params, image_dec));
+    image_loader.load({datum_out}, image_transformer.transform(image_params, image_dec));
 
     // Process target data
     auto target_dec = bbox_extractor.extract(target_in.data(), target_in.size());
-    bbox_loader.load(target_out, bbox_transformer.transform(image_params, target_dec));
+    bbox_loader.load({target_out}, bbox_transformer.transform(image_params, target_dec));
 }
 
 provider_pixel_mask::provider_pixel_mask(nlohmann::json js) :
@@ -183,10 +205,10 @@ void provider_pixel_mask::provide(int idx, buffer_in_array& in_buf, buffer_out_a
     auto image_dec = image_extractor.extract(datum_in.data(), datum_in.size());
     auto image_params = image_factory.make_params(image_dec);
     auto image_transformed = image_transformer.transform(image_params, image_dec);
-    image_loader.load(datum_out, image_transformed);
+    image_loader.load({datum_out}, image_transformed);
 
     // Process target data
     auto target_dec = image_extractor.extract(target_in.data(), target_in.size());
     auto target_transformed = target_transformer.transform(image_params, target_dec);
-    image_loader.load(target_out, target_transformed);
+    image_loader.load({target_out}, target_transformed);
 }

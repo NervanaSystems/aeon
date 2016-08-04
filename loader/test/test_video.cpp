@@ -121,7 +121,7 @@ TEST(etl, video_loader) {
     outbuf.resize(outbuf_size);
 
     video::loader loader(vconfig);
-    loader.load((char*)outbuf.data(), decoded);
+    loader.load({outbuf.data()}, decoded);
 
     // make sure outbuf has data in it like we expect
     for(int c = 0; c < channels; ++c) {

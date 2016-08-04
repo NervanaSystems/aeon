@@ -101,7 +101,7 @@ class nervana::bbox::loader : public nervana::interface::loader<nervana::bbox::d
 public:
     loader(const bbox::config&);
     virtual ~loader(){}
-    virtual void load(char*, std::shared_ptr<bbox::decoded>) override;
+    virtual void load(const std::vector<void*>&, std::shared_ptr<bbox::decoded>) override;
 
 private:
     const size_t max_bbox;

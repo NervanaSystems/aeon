@@ -26,6 +26,7 @@
 #include "etl_image_var.hpp"
 #include "etl_localization.hpp"
 #include "json.hpp"
+#include "provider_factory.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -814,3 +815,20 @@ TEST(localization, compute_targets) {
     EXPECT_NEAR(dh_1_expected, result[1].dh, acceptable_error);
 }
 
+TEST(localization,provider) {
+    nlohmann::json js = {{"type","image,localization"},
+                         {"image", {
+                              {"min_size", 600},
+                              {"max_size", 1000},
+                            {"channel_major",false},
+                            {"flip_enable",true}}},
+                         {"localization", {
+                              {"min_size", 600},
+                              {"max_size", 1000},
+                              {"max_bbox_count", 64},
+                              {"labels", {"if", "and", "or"}}
+                          }}};
+
+    auto media = nervana::train_provider_factory::create(js);
+    const vector<nervana::shape_type>& oshapes = media->get_oshapes();
+}

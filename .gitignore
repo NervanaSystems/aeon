@@ -33,7 +33,7 @@
 *.config
 *.files
 *.includes
-*.user
+*.creator.user*
 *.autosave
 
 .DS_Store

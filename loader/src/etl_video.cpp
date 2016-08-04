@@ -228,8 +228,9 @@ std::shared_ptr<video::decoded> video::transformer::transform(
     return rc;
 }
 
-void video::loader::load(char* outbuf, shared_ptr<video::decoded> input)
+void video::loader::load(const vector<void*>& buflist, shared_ptr<video::decoded> input)
 {
+    char* outbuf = (char*)buflist[0];
     // loads in channel x depth(frame) x height x width
 
     int num_channels = input->get_image_channels();

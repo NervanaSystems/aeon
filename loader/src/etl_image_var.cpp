@@ -91,8 +91,9 @@ image_var::loader::loader(const image_var::config& cfg)
     _load_size     = 1;
 }
 
-void image_var::loader::load(char* outbuf, shared_ptr<image_var::decoded> input)
+void image_var::loader::load(const vector<void*>& outlist, shared_ptr<image_var::decoded> input)
 {
+    char* outbuf = (char*)outlist[0];
     auto img = input->get_image();
     int image_size = img.channels() * img.total();
 

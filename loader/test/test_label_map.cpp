@@ -73,7 +73,7 @@ TEST(etl, label_map) {
             const int buffer_size = data_size + pad_size;
             vector<char> buffer(buffer_size);
             fill_n(buffer.begin(), buffer.size(), 0xFF);
-            loader.load(buffer.data(), decoded);
+            loader.load({buffer.data()}, decoded);
 
             int* data_p = (int*)buffer.data();
             int i = 0;

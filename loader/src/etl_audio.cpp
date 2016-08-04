@@ -72,7 +72,7 @@ std::shared_ptr<audio::decoded> audio::transformer::transform(
     return decoded;
 }
 
-void audio::loader::load(char* outbuf, shared_ptr<audio::decoded> input)
+void audio::loader::load(const vector<void*>& outbuf, shared_ptr<audio::decoded> input)
 {
     auto nframes = input->valid_frames;
     auto frames = input->get_freq_data();
@@ -84,7 +84,7 @@ void audio::loader::load(char* outbuf, shared_ptr<audio::decoded> input)
         frames.copyTo(padded_frames(cv::Range(0, nframes), cv::Range::all()));
         padded_frames(cv::Range(nframes, _cfg.time_steps), cv::Range::all()) = cv::Scalar::all(0);
     }
-    cv::Mat dst(_cfg.freq_steps, _cfg.time_steps, cv_type, (void *) outbuf);
+    cv::Mat dst(_cfg.freq_steps, _cfg.time_steps, cv_type, outbuf[0]);
     cv::transpose(padded_frames, dst);
 }
 

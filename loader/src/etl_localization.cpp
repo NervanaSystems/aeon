@@ -24,12 +24,33 @@ nervana::localization::config::config(nlohmann::json js)
     }
     verify_config(config_list, js);
 
-    size_t dev_y_labels_size = total_anchors() * 2 * sizeof(float);             // 69192
-    size_t dev_y_labels_mask_size = total_anchors() * 2 * sizeof(float);        // 69192
-    size_t dev_y_bbtargets_size = total_anchors() * 4 * sizeof(float);          // 138384
-    size_t dev_y_bbtargets_mask_size = total_anchors() * 4 * sizeof(float);     // 138384
-    output_buffer_size = dev_y_labels_size + dev_y_labels_mask_size + dev_y_bbtargets_size + dev_y_bbtargets_mask_size;
-    add_shape_type({output_buffer_size}, type_string);
+    // # For training, the RPN needs:
+    // # 1. bounding box target coordinates
+    // # 2. bounding box target masks (keep positive anchors only)
+    // self.dev_y_bbtargets = self.be.zeros((self._total_anchors * 4, 1))
+    // self.dev_y_bbtargets_mask = self.be.zeros((self._total_anchors * 4, 1))
+    add_shape_type({total_anchors() * 4}, "float");
+    add_shape_type({total_anchors() * 4}, "float");
+
+    // # 3. anchor labels of objectness
+    // # 4. objectness mask (ignore neutral anchors)
+    // self.dev_y_labels_flat = self.be.zeros((1, self._total_anchors), dtype=np.int32)
+    // self.dev_y_labels_mask = self.be.zeros((2 * self._total_anchors, 1), dtype=np.int32)
+    add_shape_type({total_anchors()}, "int32_t");
+    add_shape_type({total_anchors() * 2}, "int32_t");
+
+    // # we also consume some metadata for the proposalLayer
+    // self.im_shape = self.be.zeros((2, 1), dtype=np.int32)  # image shape
+    // self.gt_boxes = self.be.zeros((64, 4), dtype=np.float32)  # gt_boxes, padded to 64
+    // self.num_gt_boxes = self.be.zeros((1, 1), dtype=np.int32)  # number of gt_boxes
+    // self.gt_classes = self.be.zeros((64, 1), dtype=np.int32)   # gt_classes, padded to 64
+    // self.im_scale = self.be.zeros((1, 1), dtype=np.float32)    # image scaling factor
+    add_shape_type({2}, "int32_t");
+    add_shape_type({64,4}, "float");
+    add_shape_type({1}, "int32_t");
+    add_shape_type({64}, "int32_t");
+    add_shape_type({1}, "float");
+
     label_map.clear();
     for( int i=0; i<labels.size(); i++ ) {
         label_map.insert({labels[i],i});
@@ -344,12 +365,13 @@ void localization::loader::build_output(std::shared_ptr<localization::decoded> m
 
 }
 
-void localization::loader::load(char* buf, std::shared_ptr<localization::decoded> mp) {
+void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<localization::decoded> mp) {
 //    mp->labels;
 //    mp->bbox_targets;
 //    mp->anchor_index;
 //    mp->anchors;
 
+    cout << "localization load output size " << buf_list.size() << endl;
     vector<float> dev_y_labels(total_anchors*2);
     vector<float> dev_y_labels_mask(total_anchors*2);
     vector<float> dev_y_bbtargets(total_anchors*4);
@@ -357,7 +379,6 @@ void localization::loader::load(char* buf, std::shared_ptr<localization::decoded
 
     build_output(mp, dev_y_labels, dev_y_labels_mask, dev_y_bbtargets, dev_y_bbtargets_mask);
 }
-
 
 localization::anchor::anchor(const localization::config& _cfg) :
     cfg{_cfg},

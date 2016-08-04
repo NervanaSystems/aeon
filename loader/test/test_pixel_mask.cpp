@@ -173,7 +173,7 @@ TEST(pixel_mask, load_int) {
     cv::Mat tximg = transformed->get_image(0);
 
     cv::Mat output_image(256, 256, CV_32SC1);
-    loader.load((char*)output_image.data, transformed);
+    loader.load({output_image.data}, transformed);
 
     {
         int32_t* output = (int32_t*)(output_image.data);

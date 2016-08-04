@@ -162,7 +162,7 @@ namespace nervana {
     public:
         loader(const image_var::config&);
         virtual ~loader() {}
-        virtual void load(char*, std::shared_ptr<image_var::decoded>) override;
+        virtual void load(const std::vector<void*>&, std::shared_ptr<image_var::decoded>) override;
 
 //        void fill_info(count_size_type* cst) override
 //        {

@@ -32,7 +32,7 @@ namespace nervana {
             // Process audio data
             auto audio_dec = audio_extractor.extract(datum_in.data(), datum_in.size());
             auto audio_params = audio_factory.make_params(audio_dec);
-            audio_loader.load(datum_out, audio_transformer.transform(audio_params, audio_dec));
+            audio_loader.load({datum_out}, audio_transformer.transform(audio_params, audio_dec));
         }
 
     private:
@@ -81,11 +81,11 @@ namespace nervana {
             // Process audio data
             auto audio_dec = audio_extractor.extract(datum_in.data(), datum_in.size());
             auto audio_params = audio_factory.make_params(audio_dec);
-            audio_loader.load(datum_out, audio_transformer.transform(audio_params, audio_dec));
+            audio_loader.load({datum_out}, audio_transformer.transform(audio_params, audio_dec));
 
             // Process target data
             auto trans_dec = trans_extractor.extract(target_in.data(), target_in.size());
-            trans_loader.load(target_out, trans_dec);
+            trans_loader.load({target_out}, trans_dec);
 
             // Save out the length
             uint32_t trans_length = trans_dec->get_length();
@@ -155,11 +155,11 @@ namespace nervana {
             // Process audio data
             auto audio_dec = audio_extractor.extract(datum_in.data(), datum_in.size());
             auto audio_params = audio_factory.make_params(audio_dec);
-            audio_loader.load(datum_out, audio_transformer.transform(audio_params, audio_dec));
+            audio_loader.load({datum_out}, audio_transformer.transform(audio_params, audio_dec));
 
             // Process target data
             auto label_dec = label_extractor.extract(target_in.data(), target_in.size());
-            label_loader.load(target_out, label_dec);
+            label_loader.load({target_out}, label_dec);
         }
 
     private:

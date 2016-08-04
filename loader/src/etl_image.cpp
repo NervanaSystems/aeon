@@ -205,8 +205,9 @@ void image::param_factory::scale_cropbox(
     }
 }
 
-void image::loader::load(char* outbuf, shared_ptr<image::decoded> input)
+void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::decoded> input)
 {
+    char* outbuf = (char*)outlist[0];
     // TODO: Generalize this to also handle multi_crop case
     auto img = input->get_image(0);
     auto cv_type = _cfg.get_shape_type().get_otype().cv_type;

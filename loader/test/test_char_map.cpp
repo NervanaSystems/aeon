@@ -70,7 +70,7 @@ TEST(etl, char_map) {
         {
             string t1 = "now is the winter of our discontent";
             auto decoded = extractor.extract(&t1[0], t1.size());
-            loader.load(outbuf, decoded);
+            loader.load({outbuf}, decoded);
 
             ASSERT_EQ(outbuf[max_length - 1], 5);
         }
@@ -79,7 +79,7 @@ TEST(etl, char_map) {
         {
             string t1 = "now";
             auto decoded = extractor.extract(&t1[0], t1.size());
-            loader.load(outbuf, decoded);
+            loader.load({outbuf}, decoded);
             ASSERT_EQ(outbuf[max_length - 1], 0);
         }
 

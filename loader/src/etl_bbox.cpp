@@ -139,8 +139,8 @@ nervana::bbox::loader::loader(const bbox::config& cfg) :
 
 }
 
-void nervana::bbox::loader::load(char* buffer, shared_ptr<bbox::decoded> boxes) {
-    float* data = (float*)buffer;
+void nervana::bbox::loader::load(const vector<void*>& outlist, shared_ptr<bbox::decoded> boxes) {
+    float* data = (float*)outlist[0];
     size_t output_count = min(max_bbox, boxes->boxes().size());
     int i=0;
     for(; i<output_count; i++) {

@@ -204,7 +204,7 @@ public:
 template<typename T> class nervana::interface::loader {
 public:
     virtual ~loader() {}
-    virtual void load(char*, std::shared_ptr<T>) = 0;
+    virtual void load(const std::vector<void*>&, std::shared_ptr<T>) = 0;
 };
 
 

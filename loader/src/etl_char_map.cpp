@@ -20,10 +20,11 @@ std::shared_ptr<char_map::decoded> char_map::extractor::extract(const char* in_a
 }
 
 
-void char_map::loader::load(char* out_ptr, std::shared_ptr<char_map::decoded> dc)
+void char_map::loader::load(const vector<void*>& outlist, std::shared_ptr<char_map::decoded> dc)
 {
+    char* outbuf = (char*)outlist[0];
     for (auto c: dc->get_data())
     {
-        *(out_ptr++) = c;
+        *(outbuf++) = c;
     }
 }

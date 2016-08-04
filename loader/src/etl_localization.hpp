@@ -69,11 +69,11 @@ namespace nervana {
 
     class localization::config : public nervana::interface::config {
     public:
-        int                 images_per_batch = 1;
-        int                 rois_per_image = 256;
-        int                 min_size = 600;
-        int                 max_size = 1000;
-        int                 base_size = 16;
+        size_t              images_per_batch = 1;
+        size_t              rois_per_image = 256;
+        size_t              min_size = 600;
+        size_t              max_size = 1000;
+        size_t              base_size = 16;
         float               scaling_factor = 1.0 / 16.;
         std::vector<float>  ratios = {0.5, 1, 2};
         std::vector<float>  scales = {8, 16, 32};
@@ -84,13 +84,25 @@ namespace nervana {
         size_t                      max_bbox_count;
         std::vector<std::string>    labels;
 
+        enum class buffer_index {
+            y_bbtargets = 1,        // bounding box target coordinates
+            y_bbtargets_mask,       // bounding box target masks (keep positive anchors only)
+            y_labels_flat,          // anchor labels of objectness
+            y_labels_mask,          // objectness mask (ignore neutral anchors)
+            im_shape,               // image shape
+            gt_boxes,               // gt_boxes, padded to 64
+            num_gt_boxes,           // number of gt_boxes
+            gt_classes,             // gt_classes, padded to 64
+            im_scale                // image scaling factor
+        };
+
         // Derived values
-        uint32_t output_buffer_size;
+        size_t output_buffer_size;
         std::unordered_map<std::string,int> label_map;
 
         config(nlohmann::json js);
 
-        int total_anchors() const {
+        size_t total_anchors() const {
             return ratios.size() * scales.size() * (int)pow(int(std::floor(max_size * scaling_factor)),2);
         }
 
@@ -178,7 +190,7 @@ namespace nervana {
 
         virtual ~loader() {}
 
-        void load(char* buf, std::shared_ptr<localization::decoded> mp) override;
+        void load(const std::vector<void*>& buf_list, std::shared_ptr<localization::decoded> mp) override;
     private:
         loader() = delete;
         void build_output(std::shared_ptr<localization::decoded> mp, std::vector<float>& dev_y_labels, std::vector<float>& dev_y_labels_mask, std::vector<float>& dev_y_bbtargets, std::vector<float>& dev_y_bbtargets_mask);

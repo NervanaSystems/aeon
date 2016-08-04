@@ -188,7 +188,7 @@ namespace nervana {
     public:
         loader(const video::config&) {}
         virtual ~loader() {}
-        virtual void load(char*, std::shared_ptr<video::decoded>) override;
+        virtual void load(const std::vector<void*>&, std::shared_ptr<video::decoded>) override;
 
     private:
         loader() = delete;

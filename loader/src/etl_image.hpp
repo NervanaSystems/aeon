@@ -181,7 +181,7 @@ namespace nervana {
     public:
         loader(const image::config& cfg) : _cfg{cfg} {}
         ~loader() {}
-        virtual void load(char*, std::shared_ptr<image::decoded>) override;
+        virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) override;
 
     private:
         const image::config& _cfg;

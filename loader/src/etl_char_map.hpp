@@ -118,7 +118,7 @@ namespace nervana {
     public:
         loader( const char_map::config& cfg) {}
         virtual ~loader(){}
-        virtual void load(char*, std::shared_ptr<char_map::decoded>) override;
+        virtual void load(const std::vector<void*>&, std::shared_ptr<char_map::decoded>) override;
     private:
     };
 }
