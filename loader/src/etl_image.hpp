@@ -44,6 +44,12 @@ namespace nervana {
         params() {}
     };
 
+    /**
+     * \brief Configuration for image ETL
+     *
+     * An instantiation of this class controls the ETL of image data into the 
+     * target memory buffers from the source CPIO archives.
+     */
     class image::config : public interface::config {
         friend class video::config;
     public:
@@ -55,12 +61,19 @@ namespace nervana {
         bool                                  channel_major = true;
         uint32_t                              channels = 3;
 
+        /** Scale the image (width, height) */
         std::uniform_real_distribution<float> scale{1.0f, 1.0f};
+        /** Rotate the image (rho, phi) */
         std::uniform_int_distribution<int>    angle{0, 0};
+        /** Adjust lighting */
         std::normal_distribution<float>       lighting{0.0f, 0.0f};
+        /** Adjust aspect ratio */
         std::uniform_real_distribution<float> aspect_ratio{1.0f, 1.0f};
+        /** Not sure what this guy does */
         std::uniform_real_distribution<float> photometric{0.0f, 0.0f};
+        /** Not sure what this guy does */
         std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
+        /** Flip the image left to right */
         std::bernoulli_distribution           flip_distribution{0};
 
         config(nlohmann::json js);
