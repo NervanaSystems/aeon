@@ -64,7 +64,7 @@ std::shared_ptr<audio::decoded> audio::transformer::transform(
 
     // place into a destination with the appropriate time dimensions
     cv::Mat resized;
-    cv::resize(decoded->get_freq_data(), resized, cv::Size(), params->time_scale_fraction, 1.0,
+    cv::resize(decoded->get_freq_data(), resized, cv::Size(), 1.0, params->time_scale_fraction,
                (params->time_scale_fraction > 1.0) ? CV_INTER_CUBIC : CV_INTER_AREA);
     decoded->get_freq_data() = resized;
     decoded->valid_frames = std::min((uint32_t) resized.rows, (uint32_t) _cfg.time_steps);
@@ -78,13 +78,20 @@ void audio::loader::load(const vector<void*>& outbuf, shared_ptr<audio::decoded>
     auto frames = input->get_freq_data();
     int cv_type = _cfg.get_shape_type().get_otype().cv_type;
     cv::Mat padded_frames(_cfg.time_steps, _cfg.freq_steps, frames.type());
-    if (nframes >= _cfg.time_steps) {
-        frames(cv::Range(0, _cfg.time_steps), cv::Range::all()).copyTo(padded_frames);
-    } else {
-        frames.copyTo(padded_frames(cv::Range(0, nframes), cv::Range::all()));
+
+    frames(cv::Range(0, nframes), cv::Range::all()).copyTo(
+        padded_frames(cv::Range(0, nframes), cv::Range::all()));
+
+    if (nframes < _cfg.time_steps) {
         padded_frames(cv::Range(nframes, _cfg.time_steps), cv::Range::all()) = cv::Scalar::all(0);
     }
-    cv::Mat dst(_cfg.freq_steps, _cfg.time_steps, cv_type, outbuf[0]);
-    cv::transpose(padded_frames, dst);
+
+    cv::normalize(padded_frames, padded_frames, 0, 255, CV_MINMAX, CV_8UC1);
+    cv::Mat tmp(padded_frames.size(), cv_type);
+    padded_frames.copyTo(tmp);
+
+    cv::Mat dst(_cfg.freq_steps, _cfg.time_steps, cv_type, (void *) outbuf[0]);
+    cv::transpose(tmp, dst);
+    cv::flip(dst, dst, 0);
 }
 
