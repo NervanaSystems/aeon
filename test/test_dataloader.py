@@ -102,7 +102,8 @@ def test_loader_non_existant_manifest():
 
 
 def test_loader_invalid_manifest():
-    config = generic_config(invalid_image('/tmp/this_manifest_file_is_empty'))
+    filename = tempfile.mkstemp()[1]
+    config = generic_config(invalid_image(filename))
 
     with pytest.raises(Exception):
         dl = DataLoader(config, gen_backend(backend='cpu'))
