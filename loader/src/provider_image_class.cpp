@@ -112,7 +112,6 @@ void localization_decoder::provide(int idx, buffer_in_array& in_buf, buffer_out_
     char* im_scale_out          = out_buf[9]->getItem(idx);
 
     vector<void*> target_list = {
-        datum_out,
         y_bbtargets_out,
         y_bbtargets_mask_out,
         y_labels_flat_out,

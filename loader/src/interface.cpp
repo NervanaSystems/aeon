@@ -10,7 +10,7 @@ using namespace nlohmann;
 
 void interface::config::verify_config(
         const vector<shared_ptr<interface::config_info_interface>>& config,
-        nlohmann::json js)
+        nlohmann::json js) const
 {
     string text = js.dump();
     json::parser_callback_t cb = [&](int depth, json::parse_event_t event, json& parsed) {

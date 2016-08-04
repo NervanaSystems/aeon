@@ -25,15 +25,15 @@ nervana::localization::config::config(nlohmann::json js)
     verify_config(config_list, js);
 
     // # For training, the RPN needs:
-    // # 1. bounding box target coordinates
-    // # 2. bounding box target masks (keep positive anchors only)
+    // # 0. bounding box target coordinates
+    // # 1. bounding box target masks (keep positive anchors only)
     // self.dev_y_bbtargets = self.be.zeros((self._total_anchors * 4, 1))
     // self.dev_y_bbtargets_mask = self.be.zeros((self._total_anchors * 4, 1))
     add_shape_type({total_anchors() * 4}, "float");
     add_shape_type({total_anchors() * 4}, "float");
 
-    // # 3. anchor labels of objectness
-    // # 4. objectness mask (ignore neutral anchors)
+    // # 2. anchor labels of objectness
+    // # 3. objectness mask (ignore neutral anchors)
     // self.dev_y_labels_flat = self.be.zeros((1, self._total_anchors), dtype=np.int32)
     // self.dev_y_labels_mask = self.be.zeros((2 * self._total_anchors, 1), dtype=np.int32)
     add_shape_type({total_anchors()}, "int32_t");
@@ -300,8 +300,8 @@ localization::loader::loader(const localization::config& cfg)
 //    _load_count    = cfg.width * cfg.height * cfg.channels * cfg.num_crops();
 }
 
-void localization::loader::build_output(std::shared_ptr<localization::decoded> mp, vector<float>& dev_y_labels, vector<float>& dev_y_labels_mask, vector<float>& dev_y_bbtargets, vector<float>& dev_y_bbtargets_mask) {
-
+void localization::loader::build_output(std::shared_ptr<localization::decoded> mp, vector<float>& dev_y_labels, vector<float>& dev_y_labels_mask, vector<float>& dev_y_bbtargets, vector<float>& dev_y_bbtargets_mask)
+{
 //    cout << "labels size " << mp->labels.size() << endl;
 //    cout << "bbox_targets size " << mp->bbox_targets.size() << endl;
 //    cout << "anchor_index size " << mp->anchor_index.size() << endl;
@@ -365,19 +365,41 @@ void localization::loader::build_output(std::shared_ptr<localization::decoded> m
 
 }
 
-void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<localization::decoded> mp) {
-//    mp->labels;
-//    mp->bbox_targets;
-//    mp->anchor_index;
-//    mp->anchors;
-
+void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<localization::decoded> mp)
+{
     cout << "localization load output size " << buf_list.size() << endl;
-    vector<float> dev_y_labels(total_anchors*2);
-    vector<float> dev_y_labels_mask(total_anchors*2);
-    vector<float> dev_y_bbtargets(total_anchors*4);
-    vector<float> dev_y_bbtargets_mask(total_anchors*4);
+//    vector<float> dev_y_labels(total_anchors*2);
+//    vector<float> dev_y_labels_mask(total_anchors*2);
+//    vector<float> dev_y_bbtargets(total_anchors*4);
+//    vector<float> dev_y_bbtargets_mask(total_anchors*4);
+//    build_output(mp, dev_y_labels, dev_y_labels_mask, dev_y_bbtargets, dev_y_bbtargets_mask);
 
-    build_output(mp, dev_y_labels, dev_y_labels_mask, dev_y_bbtargets, dev_y_bbtargets_mask);
+
+    // # 0. bounding box target coordinates
+    // # 1. bounding box target masks (keep positive anchors only)
+    // self.dev_y_bbtargets = self.be.zeros((self._total_anchors * 4, 1))
+    // self.dev_y_bbtargets_mask = self.be.zeros((self._total_anchors * 4, 1))
+    float*   bbtargets          = (float*)buf_list[0];
+    float*   bbtargets_mask     = (float*)buf_list[1];
+
+    // # 2. anchor labels of objectness
+    // # 3. objectness mask (ignore neutral anchors)
+    // self.dev_y_labels_flat = self.be.zeros((1, self._total_anchors), dtype=np.int32)
+    // self.dev_y_labels_mask = self.be.zeros((2 * self._total_anchors, 1), dtype=np.int32)
+    int32_t* labels_flat        = (int32_t*)buf_list[2];
+    int32_t* labels_mask        = (int32_t*)buf_list[3];
+
+    // # we also consume some metadata for the proposalLayer
+    // self.im_shape = self.be.zeros((2, 1), dtype=np.int32)  # image shape
+    // self.gt_boxes = self.be.zeros((64, 4), dtype=np.float32)  # gt_boxes, padded to 64
+    // self.num_gt_boxes = self.be.zeros((1, 1), dtype=np.int32)  # number of gt_boxes
+    // self.gt_classes = self.be.zeros((64, 1), dtype=np.int32)   # gt_classes, padded to 64
+    // self.im_scale = self.be.zeros((1, 1), dtype=np.float32)    # image scaling factor
+    int32_t* im_shape           = (int32_t*)buf_list[4];
+    float*   gt_boxes           = (float*  )buf_list[5];
+    int32_t* num_gt_boxes       = (int32_t*)buf_list[6];
+    int32_t* gt_classes         = (int32_t*)buf_list[7];
+    float*   im_scale           = (float*  )buf_list[8];
 }
 
 localization::anchor::anchor(const localization::config& _cfg) :

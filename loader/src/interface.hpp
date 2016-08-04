@@ -46,7 +46,7 @@ public:
     }
     const std::vector<nervana::shape_type>& get_shape_type_list() const { return shape_type_list; }
 
-    void verify_config(const std::vector<std::shared_ptr<interface::config_info_interface>>& config, nlohmann::json js);
+    void verify_config(const std::vector<std::shared_ptr<interface::config_info_interface>>& config, nlohmann::json js) const;
 
     enum class mode {
         OPTIONAL,
