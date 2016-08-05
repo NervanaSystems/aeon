@@ -13,7 +13,7 @@ config::config(nlohmann::json js) {
     for(auto& info : config_list) {
         info->parse(js);
     }
-    verify_config(config_list, js);
+    verify_config("label_map", config_list, js);
 
     // Derived types
     auto otype = nervana::output_type(type_string);

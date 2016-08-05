@@ -53,7 +53,7 @@ namespace nervana {
             for(auto& info : config_list) {
                 info->parse(js);
             }
-            verify_config(config_list, js);
+            verify_config("image_var", config_list, js);
 
             // Now fill in derived
             shape_t shape;

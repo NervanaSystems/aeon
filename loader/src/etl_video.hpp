@@ -74,7 +74,7 @@ namespace nervana {
             for(auto& info : config_list) {
                 info->parse(js);
             }
-            verify_config(config_list, js);
+            verify_config("video", config_list, js);
 
             if(flip_enable) {
                 flip_distribution = std::bernoulli_distribution{0.5};

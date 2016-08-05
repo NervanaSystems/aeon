@@ -32,7 +32,7 @@ namespace nervana {
             for(auto& info : config_list) {
                 info->parse(js);
             }
-            verify_config(config_list, js);
+            verify_config("char_map", config_list, js);
 
             // Now fill in derived
             add_shape_type({1, max_length}, type_string);

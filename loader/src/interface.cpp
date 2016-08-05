@@ -9,10 +9,10 @@ using namespace std;
 using namespace nlohmann;
 
 void interface::config::verify_config(
+        const std::string& location,
         const vector<shared_ptr<interface::config_info_interface>>& config,
         nlohmann::json js) const
 {
-    string text = js.dump();
     json::parser_callback_t cb = [&](int depth, json::parse_event_t event, json& parsed) {
         if(event == json::parse_event_t::key) {
             string key = parsed;
@@ -40,5 +40,15 @@ void interface::config::verify_config(
         }
         return true;
     };
-    json::parse(text, cb);
+
+    string text;
+    try {
+        text = js.dump();
+        json::parse(text, cb);
+    } catch( exception err ) {
+        // This is not an error, it just means the json is empty
+//        stringstream ss;
+//        ss << "parse error for json '" << text << "' in " << location;
+//        throw runtime_error(ss.str());
+    }
 }

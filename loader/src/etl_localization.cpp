@@ -22,7 +22,7 @@ nervana::localization::config::config(nlohmann::json js)
     for(auto& info : config_list) {
         info->parse(js);
     }
-    verify_config(config_list, js);
+    verify_config("localization", config_list, js);
 
     // # For training, the RPN needs:
     // # 0. bounding box target coordinates

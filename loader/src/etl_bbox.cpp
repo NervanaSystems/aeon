@@ -20,7 +20,7 @@ nervana::bbox::config::config(nlohmann::json js)
     for(auto& info : config_list) {
         info->parse(js);
     }
-    verify_config(config_list, js);
+    verify_config("bbox", config_list, js);
 
     // Derived values
     add_shape_type({max_bbox_count, 4*sizeof(float)}, type_string);

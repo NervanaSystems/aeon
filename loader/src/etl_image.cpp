@@ -12,7 +12,7 @@ image::config::config(nlohmann::json js)
     for(auto& info : config_list) {
         info->parse(js);
     }
-    verify_config(config_list, js);
+    verify_config("image", config_list, js);
 
     // Now fill in derived
     shape_t shape;

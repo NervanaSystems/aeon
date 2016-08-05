@@ -16,6 +16,18 @@ extern gen_image image_dataset;
 using namespace std;
 using namespace nervana;
 
+//TEST(provider,empty_config) {
+//    nlohmann::json js = {{"type","image,label"},
+//                         {"image", {
+//                            {"height",128},
+//                            {"width",128},
+//                            {"channel_major",false},
+//                            {"flip_enable",true}}},
+//                         };
+
+//    nervana::train_provider_factory::create(js);
+//}
+
 TEST(provider,image) {
     nlohmann::json js = {{"type","image,label"},
                          {"image", {

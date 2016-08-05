@@ -95,7 +95,7 @@ namespace nervana {
             for(auto& info : config_list) {
                 info->parse(js);
             }
-            verify_config(config_list, js);
+            verify_config("audio", config_list, js);
 
             // Now fill in derived variables
             parse_samples_or_seconds(max_duration, max_duration_ms, max_duration_tn);

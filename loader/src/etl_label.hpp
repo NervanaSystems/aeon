@@ -29,7 +29,7 @@ namespace nervana {
             for(auto& info : config_list) {
                 info->parse(js);
             }
-            verify_config(config_list, js);
+            verify_config("label", config_list, js);
 
             add_shape_type({1}, type_string);
         }
