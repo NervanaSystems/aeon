@@ -9,7 +9,7 @@
 namespace nervana {
     class image_inference : public provider_interface {
     public:
-        image_inference(const nlohmann::json js);
+        image_inference(nlohmann::json js);
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
 
     private:
@@ -22,7 +22,7 @@ namespace nervana {
 
     class image_classifier : public provider_interface {
     public:
-        image_classifier(const nlohmann::json js);
+        image_classifier(nlohmann::json js);
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
 
     private:
