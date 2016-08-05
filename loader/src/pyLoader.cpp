@@ -324,14 +324,7 @@ int PyLoader::start()
 
         vector<shared_ptr<nervana::provider_interface>> providers;
         for (int i=0; i<nthreads; i++) {
-            try {
-                providers.push_back(nervana::train_provider_factory::create(_lcfg_json));
-            } catch (const std::invalid_argument e) {
-                stringstream ss;
-                ss << "exception while parsing provider_factory: ";
-                ss << e.what();
-                throw std::runtime_error(ss.str());
-            }
+            providers.push_back(nervana::train_provider_factory::create(_lcfg_json));
         }
 
         // variable size buffers for reading encoded data (start off zero and grow as needed)
