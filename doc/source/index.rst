@@ -14,26 +14,40 @@
 .. ---------------------------------------------------------------------------
 .. neon documentation master file
 
-aeon
-====
+Nervana aeon
+================
 
 :Release: |version|
 :Date: |today|
 
-|aeon|_ is Nervana_ ’s data loader.
+aeon_ is Nervana_ ’s project to enable fast and flexible access to data when 
+training your neon_ neural network models. You probably want to get started 
+with :doc:`installation and getting started <getting_started>` followed by more 
+detailed :doc:`dataLoader <dataloader>` documentation.
 
-..
+This project is evolving quickly, so feel free to send us feature requests and 
+bug reports at aeon_issues_ .
+
+.. _nervana: http://nervanasys.com
+.. _neon: https://github.com/NervanaSystems/neon
+.. _aeon: https://github.com/NervanaSystems/aeon
+.. _aeon_issues: https://github.com/NervanaSystems/aeon/issues
+
+
 .. toctree::
    :hidden:
    :maxdepth: 0
    :caption: Introduction
 
-   test.rst
-   faq.rst
+   getting_started
+   dataloader
+   test
+   faq
 
 .. toctree::
    :hidden:
    :maxdepth: 1
-   :caption: Full API
+   :caption: Full APIs
 
-   api.rst
+   python_api
+   cpp_api
