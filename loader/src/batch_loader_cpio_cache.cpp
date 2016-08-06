@@ -67,11 +67,11 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(buffer_in_array& dest, uint block_
     }
     // load cpio file into dest one item at a time
     for(int i=0; i < reader.itemCount(); ++i) {
-        for(int j=0; j < 2; ++j) {
+        for (auto d : dest) {
             try {
-                reader.read(*dest[j]);
+                reader.read(*d);
             } catch (std::exception& e) {
-                dest[j]->addException(std::current_exception());
+                d->addException(std::current_exception());
             }
         }
     }
@@ -86,20 +86,7 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(buffer_in_array& dest, uint block_
 void BatchLoaderCPIOCache::writeBlockToCache(buffer_in_array& buff, uint block_num) {
     CPIOFileWriter writer;
     writer.open(blockFilename(block_num));
-
-    // would be nice if this was taken care of the BufferPair
-    assert(buff[0]->getItemCount() == buff[1]->getItemCount());
-
-    for(int i=0; i < buff[0]->getItemCount(); ++i) {
-        // TODO: standardize on name object/datum
-        // TODO: standardize on size type int returned from getItem but
-        // uint desired from writeItem
-        vector<char>& datum = buff[0]->getItem(i);
-        vector<char>& target = buff[1]->getItem(i);
-
-        writer.writeItem(datum.data(), target.data(), datum.size(), target.size());
-    }
-
+    writer.write_all_records(buff);
     writer.close();
 }
 

@@ -47,7 +47,7 @@ private:
     std::map<int, std::exception_ptr> exceptions;
 };
 
-// buffer_in_array holds a vector of buffer_in*.  Each buffer_in* holds eather
+// buffer_in_array holds a vector of buffer_in*.  Each buffer_in* holds either
 // the datums or the targets.  Each buffer_in* should have the same length.
 class buffer_in_array {
 public:

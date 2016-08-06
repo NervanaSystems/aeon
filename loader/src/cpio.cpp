@@ -106,8 +106,7 @@ void RecordHeader::write(ostream& ofs, uint fileSize, const char* fileName) {
 
 CPIOHeader::CPIOHeader()
 : _formatVersion(FORMAT_VERSION), _writerVersion(WRITER_VERSION),
-  _itemCount(0), _maxDatumSize(0), _maxTargetSize(0),
-  _totalDataSize(0), _totalTargetsSize(0) {
+  _itemCount(0) {
     memset(_dataType, 0, sizeof(_dataType));
     memset(_unused, 0, sizeof(_unused));
 }
@@ -121,10 +120,6 @@ void CPIOHeader::read(istream& ifs) {
     read_single_value(ifs, &_writerVersion);
     read_single_value(ifs, &_dataType);
     read_single_value(ifs, &_itemCount);
-    read_single_value(ifs, &_maxDatumSize);
-    read_single_value(ifs, &_maxTargetSize);
-    read_single_value(ifs, &_totalDataSize);
-    read_single_value(ifs, &_totalTargetsSize);
     read_single_value(ifs, &_unused);
 }
 
@@ -134,10 +129,6 @@ void CPIOHeader::write(ostream& ofs) {
     write_single_value(ofs, &_writerVersion);
     write_single_value(ofs, &_dataType);
     write_single_value(ofs, &_itemCount);
-    write_single_value(ofs, &_maxDatumSize);
-    write_single_value(ofs, &_maxTargetSize);
-    write_single_value(ofs, &_totalDataSize);
-    write_single_value(ofs, &_totalTargetsSize);
     write_single_value(ofs, &_unused);
 }
 
@@ -236,11 +227,13 @@ void CPIOFileReader::close() {
 
 
 
-CPIOFileWriter::~CPIOFileWriter() {
+CPIOFileWriter::~CPIOFileWriter()
+{
     close();
 }
 
-void CPIOFileWriter::open(const std::string& fileName, const std::string& dataType) {
+void CPIOFileWriter::open(const std::string& fileName, const std::string& dataType)
+{
     static_assert(sizeof(_header) == 64, "file header is not 64 bytes");
     _fileName = fileName;
     _tempName = fileName + ".tmp";
@@ -255,7 +248,8 @@ void CPIOFileWriter::open(const std::string& fileName, const std::string& dataTy
     _header.write(_ofs);
 }
 
-void CPIOFileWriter::close() {
+void CPIOFileWriter::close()
+{
     if (_ofs.is_open() == true) {
         // Write the trailer.
         static_assert(sizeof(_trailer) == 16,
@@ -277,31 +271,31 @@ void CPIOFileWriter::close() {
     }
 }
 
-void CPIOFileWriter::writeItem(const char* datum, const char* target,
-               uint datumSize, uint targetSize) {
-    char fileName[16];
-    // Write the datum.
-    sprintf(fileName, "datum_%d",  _header._itemCount);
-    _recordHeader.write(_ofs, datumSize, fileName);
-    _ofs.write(datum, datumSize);
-    writePadding(_ofs, datumSize);
-    // Write the target.
-    sprintf(fileName, "target_%d",  _header._itemCount);
-    _recordHeader.write(_ofs, targetSize, fileName);
-    _ofs.write(target, targetSize);
-    writePadding(_ofs, targetSize);
-
-    _header._maxDatumSize =
-            std::max(datumSize, _header._maxDatumSize);
-    _header._maxTargetSize =
-            std::max(targetSize, _header._maxTargetSize);
-    _header._totalDataSize += datumSize;
-    _header._totalTargetsSize += targetSize;
-    _header._itemCount++;
+void CPIOFileWriter::write_all_records(buffer_in_array& buff)
+{
+    int num_records = buff[0]->getItemCount();
+    for (int i=0; i<num_records; ++i)
+    {
+        write_record(buff, i);
+    }
 }
 
-void CPIOFileWriter::writeItem(const vector<char> &datum, const vector<char> &target) {
-    uint    datumSize = datum.size();
-    uint    targetSize = target.size();
-    writeItem(&datum[0], &target[0], datumSize, targetSize);
+void CPIOFileWriter::write_record(buffer_in_array& buff, int record_idx)
+{
+    uint element_idx = 0;
+    for (auto b : buff)
+    {
+        const vector<char>& record_element = b->getItem(record_idx);
+        write_record_element(record_element.data(), record_element.size(), element_idx++);
+    }
+    increment_record_count();
+}
+
+void CPIOFileWriter::write_record_element(const char* elem, uint elem_size, uint element_idx)
+{
+    char fileName[16];
+    sprintf(fileName, "rec_%07d.%02d", _header._itemCount, element_idx);
+    _recordHeader.write(_ofs, elem_size, fileName);
+    _ofs.write(elem, elem_size);
+    writePadding(_ofs, elem_size);
 }

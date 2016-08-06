@@ -66,9 +66,13 @@ public:
                 CPIOFileWriter writer;
                 writer.open(fileName);
                 for(int i=0; i<batchSize; i++) {
-                    std::vector<unsigned char> target = render_target( datumNumber );
-                    std::vector<unsigned char> datum = render_datum( datumNumber );
-                    writer.writeItem((char*)datum.data(),(char*)target.data(),(uint)datum.size(),(uint)target.size());
+                    const std::vector<unsigned char> datum = render_datum( datumNumber );
+                    writer.write_record_element((char *) datum.data(), datum.size(), 0);
+
+                    const std::vector<unsigned char> target = render_target( datumNumber );
+                    writer.write_record_element((char *) target.data(), target.size(), 1);
+
+                    writer.increment_record_count();
                     datumNumber++;
                 }
                 writer.close();

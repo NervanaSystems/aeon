@@ -9,6 +9,9 @@ MinibatchIterator::MinibatchIterator(std::shared_ptr<BatchIterator> macroBatchIt
 }
 
 void MinibatchIterator::read(buffer_in_array& dest) {
+    if (_macrobatch.size() != dest.size()) {
+        _macrobatch = buffer_in_array(std::vector<size_t>(dest.size(), (size_t) 0));
+    }
     // read `_minibatchSize` items from _macrobatch into `dest`
     for(auto i = 0; i < _minibatchSize; ++i) {
         popItemFromMacrobatch(dest);
@@ -16,8 +19,9 @@ void MinibatchIterator::read(buffer_in_array& dest) {
 }
 
 void MinibatchIterator::reset() {
-    _macrobatch[0]->reset();
-    _macrobatch[1]->reset();
+    for (auto m: _macrobatch) {
+        m->reset();
+    }
 
     _macroBatchIterator->reset();
 
@@ -35,8 +39,9 @@ void MinibatchIterator::transferBufferItem(buffer_in* dest, buffer_in* src) {
 void MinibatchIterator::popItemFromMacrobatch(buffer_in_array& dest) {
     // load a new macrobatch if we've already iterated through the previous one
     if(_i >= _macrobatch[0]->getItemCount()) {
-        _macrobatch[0]->reset();
-        _macrobatch[1]->reset();
+        for (auto m: _macrobatch) {
+            m->reset();
+        }
 
         _macroBatchIterator->read(_macrobatch);
 
@@ -47,8 +52,9 @@ void MinibatchIterator::popItemFromMacrobatch(buffer_in_array& dest) {
     // reorders the index, we can't just read a large contiguous block of
     // memory out of the _macrobatch.  We must copy out each element one at
     // a time
-    transferBufferItem(dest[0], _macrobatch[0]);
-    transferBufferItem(dest[1], _macrobatch[1]);
+    for (uint idx=0; idx < _macrobatch.size(); ++idx) {
+        transferBufferItem(dest[idx], _macrobatch[idx]);
+    }
 
     _i += 1;
 }

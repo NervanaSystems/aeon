@@ -94,11 +94,7 @@ private:
     uint32_t                    _writerVersion;
     char                        _dataType[8];
     uint32_t                    _itemCount;
-    uint32_t                    _maxDatumSize;
-    uint32_t                    _maxTargetSize;
-    uint32_t                    _totalDataSize;
-    uint32_t                    _totalTargetsSize;
-    uint8_t                     _unused[24];
+    uint8_t                     _unused[40];
 #pragma pack()
 };
 
@@ -155,10 +151,10 @@ public:
     void open(const std::string& fileName, const std::string& dataType = "");
     void close();
 
-    void writeItem(const char* datum, const char* target,
-                   uint datumSize, uint targetSize);
-
-    void writeItem(const std::vector<char> &datum, const std::vector<char> &target);
+    void write_all_records(buffer_in_array& buff);
+    void write_record(buffer_in_array& buff, int record_idx);
+    void write_record_element(const char* elem, uint elem_size, uint element_idx);
+    void increment_record_count() { _header._itemCount++;}
 
 private:
     std::ofstream               _ofs;
