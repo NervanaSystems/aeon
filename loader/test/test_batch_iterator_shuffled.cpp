@@ -16,12 +16,12 @@
 #include "gtest/gtest.h"
 
 #include "helpers.hpp"
-#include "shuffled_batch_iterator.hpp"
+#include "batch_iterator_shuffled.hpp"
 #include "mock_batch_loader.hpp"
 
 using namespace std;
 
-TEST(shuffled_batch_iterator, sequential_batch_loader) {
+TEST(batch_iterator_shuffled, batch_loader_sequential) {
     MockBatchLoader bl(3);
 
     // buffer_in* dataBuffer = new buffer_in(0);
@@ -40,8 +40,8 @@ TEST(shuffled_batch_iterator, sequential_batch_loader) {
     ASSERT_EQ(sorted(words), true);
 }
 
-TEST(shuffled_batch_iterator, shuffled_block) {
-    ShuffledBatchIterator sbi(
+TEST(batch_iterator_shuffled, shuffled_block) {
+    BatchIteratorShuffled sbi(
         make_shared<MockBatchLoader>(3), 0
     );
     // buffer_in* dataBuffer = new buffer_in(0);

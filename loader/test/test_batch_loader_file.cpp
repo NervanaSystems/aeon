@@ -14,14 +14,14 @@
 */
 
 #include "gtest/gtest.h"
-#include "batch_file_loader.hpp"
+#include "batch_loader_file.hpp"
 #include "csv_manifest_maker.hpp"
 
 using namespace std;
 
 TEST(blocked_file_loader, constructor) {
     string tmpname = tmp_manifest_file(0, {0, 0});
-    BatchFileLoader bfl(make_shared<CSVManifest>(tmpname, true), 1.0, 4);
+    BatchLoaderFile blf(make_shared<CSVManifest>(tmpname, true), 1.0, 4);
 }
 
 TEST(blocked_file_loader, loadBlock) {
@@ -31,7 +31,7 @@ TEST(blocked_file_loader, loadBlock) {
     uint target_size = 16;
     float subset_fraction = 1.0;
 
-    BatchFileLoader bfl(
+    BatchLoaderFile blf(
         make_shared<CSVManifest>(tmp_manifest_file(4, {object_size, target_size}), true),
         subset_fraction,
         block_size
@@ -39,7 +39,7 @@ TEST(blocked_file_loader, loadBlock) {
 
     buffer_in_array bp(vector<size_t>{0, 0});
 
-    bfl.loadBlock(bp, 0);
+    blf.loadBlock(bp, 0);
 
     // the object_data and target_data should be full of repeating
     // uints.  the uints in target_data will be 1 bigger than the uints
@@ -62,7 +62,7 @@ TEST(blocked_file_loader, subset_fraction) {
     uint target_size = 16;
     float subset_fraction = 0.5;
 
-    BatchFileLoader bfl(
+    BatchLoaderFile blf(
         make_shared<CSVManifest>(tmp_manifest_file(10, {object_size, target_size}), true),
         subset_fraction,
         block_size
@@ -71,15 +71,15 @@ TEST(blocked_file_loader, subset_fraction) {
     buffer_in_array bp(vector<size_t>{0, 0});
 
 
-    bfl.loadBlock(bp, 0);
+    blf.loadBlock(bp, 0);
     ASSERT_EQ(bp[0]->getItemCount(), block_size * subset_fraction);
     bp[0]->reset();
 
-    bfl.loadBlock(bp, 1);
+    blf.loadBlock(bp, 1);
     ASSERT_EQ(bp[0]->getItemCount(), block_size * subset_fraction);
     bp[0]->reset();
 
-    bfl.loadBlock(bp, 2);
+    blf.loadBlock(bp, 2);
     ASSERT_EQ(bp[0]->getItemCount(), 1);
     bp[0]->reset();
 }
@@ -87,7 +87,7 @@ TEST(blocked_file_loader, subset_fraction) {
 TEST(blocked_file_loader, exception) {
     float subset_fraction = 1.0;
 
-    BatchFileLoader bfl(
+    BatchLoaderFile blf(
         make_shared<CSVManifest>(tmp_manifest_file_with_invalid_filename(), false),
         subset_fraction,
         1
@@ -96,7 +96,7 @@ TEST(blocked_file_loader, exception) {
     buffer_in_array bp(vector<size_t>{0, 0});
 
     // loadBlock doesn't actually raise the exception
-    bfl.loadBlock(bp, 0);
+    blf.loadBlock(bp, 0);
 
     // Could not find file exception raised when we try to access the item
     try {
@@ -109,11 +109,11 @@ TEST(blocked_file_loader, exception) {
 
 TEST(blocked_file_loader, subset_object_count) {
     float subset_fraction = 0.5;
-    BatchFileLoader bfl(
+    BatchLoaderFile blf(
         make_shared<CSVManifest>(tmp_manifest_file(13, {16, 16}), false),
         subset_fraction,
         5
     );
 
-    ASSERT_EQ(bfl.objectCount(), 2 + 2 + 1);
+    ASSERT_EQ(blf.objectCount(), 2 + 2 + 1);
 }

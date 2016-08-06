@@ -57,11 +57,12 @@ void NDSBatchLoader::loadBlock(buffer_in_array& dest, uint block_num) {
     stringstream cpio_stream;
     get(loadBlockURL(block_num), cpio_stream);
 
-    // parse cpio_stream into dest one object/target pair at a time
+    // parse cpio_stream into dest one record (consisting of multiple elements) at a time
     CPIOReader reader(&cpio_stream);
     for(int i=0; i < reader.itemCount(); ++i) {
-        reader.read(*dest[0]);
-        reader.read(*dest[1]);
+        for (auto d: dest) {
+            reader.read(*d);
+        }
     }
 }
 

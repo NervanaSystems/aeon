@@ -1,6 +1,7 @@
-#include "minibatch_iterator.hpp"
+#include "batch_iterator_minibatch.hpp"
 
-MinibatchIterator::MinibatchIterator(std::shared_ptr<BatchIterator> macroBatchIterator, int minibatchSize)
+BatchIteratorMinibatch::BatchIteratorMinibatch(std::shared_ptr<BatchIterator> macroBatchIterator,
+                                               int minibatchSize)
     : _macroBatchIterator(macroBatchIterator),
       _minibatchSize(minibatchSize),
       _macrobatch{std::vector<size_t>{0,0}}
@@ -8,7 +9,8 @@ MinibatchIterator::MinibatchIterator(std::shared_ptr<BatchIterator> macroBatchIt
     reset();
 }
 
-void MinibatchIterator::read(buffer_in_array& dest) {
+void BatchIteratorMinibatch::read(buffer_in_array& dest)
+{
     if (_macrobatch.size() != dest.size()) {
         _macrobatch = buffer_in_array(std::vector<size_t>(dest.size(), (size_t) 0));
     }
@@ -18,7 +20,8 @@ void MinibatchIterator::read(buffer_in_array& dest) {
     }
 }
 
-void MinibatchIterator::reset() {
+void BatchIteratorMinibatch::reset()
+{
     for (auto m: _macrobatch) {
         m->reset();
     }
@@ -28,7 +31,8 @@ void MinibatchIterator::reset() {
     _i = 0;
 }
 
-void MinibatchIterator::transferBufferItem(buffer_in* dest, buffer_in* src) {
+void BatchIteratorMinibatch::transferBufferItem(buffer_in* dest, buffer_in* src)
+{
     try {
         dest->addItem(src->getItem(_i));
     } catch (std::exception& e) {
@@ -36,7 +40,8 @@ void MinibatchIterator::transferBufferItem(buffer_in* dest, buffer_in* src) {
     }
 }
 
-void MinibatchIterator::popItemFromMacrobatch(buffer_in_array& dest) {
+void BatchIteratorMinibatch::popItemFromMacrobatch(buffer_in_array& dest)
+{
     // load a new macrobatch if we've already iterated through the previous one
     if(_i >= _macrobatch[0]->getItemCount()) {
         for (auto m: _macrobatch) {

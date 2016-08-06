@@ -16,20 +16,21 @@
 #include "gtest/gtest.h"
 
 #include "helpers.hpp"
-#include "minibatch_iterator.hpp"
+#include "batch_iterator_minibatch.hpp"
+#include "batch_iterator_sequential.hpp"
 #include "mock_batch_loader.hpp"
-#include "sequential_batch_iterator.hpp"
+
 
 using namespace std;
 
 TEST(minibatch_iterator, simple) {
-    // give a MinibatchIterator a MacroBatchIterator and make sure
-    // that reading through the MinibatchIterator results in reading
-    // all of the records in the MacroBatchIterator.
+    // give a BatchIteratorMinibatch a block-level BatchIterator and make sure
+    // that reading through the BatchIteratorMinibatch results in reading
+    // all of the records in the block-level BatchIterator.
 
     // a little odd here that our block size is 3 and our minibatchsize is 13 ...
-    MinibatchIterator mi(
-        make_shared<SequentialBatchIterator>(make_shared<MockBatchLoader>(3)),
+    BatchIteratorMinibatch mi(
+        make_shared<BatchIteratorSequential>(make_shared<MockBatchLoader>(3)),
         13
     );
 

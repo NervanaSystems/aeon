@@ -20,9 +20,9 @@
 
 // This batch iterator shuffles the order that macro blocks are used as
 // well as shuffling the data in the buffers.
-class ShuffledBatchIterator : public BatchIterator {
+class BatchIteratorShuffled : public BatchIterator {
 public:
-    ShuffledBatchIterator(std::shared_ptr<BatchLoader> loader, uint seed);
+    BatchIteratorShuffled(std::shared_ptr<BatchLoader> loader, uint seed);
 
     void read(buffer_in_array& dest);
     void reset();

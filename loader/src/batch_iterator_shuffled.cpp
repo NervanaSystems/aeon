@@ -2,11 +2,11 @@
 #include <algorithm>
 #include <random>
 
-#include "shuffled_batch_iterator.hpp"
+#include "batch_iterator_shuffled.hpp"
 
 using namespace std;
 
-ShuffledBatchIterator::ShuffledBatchIterator(shared_ptr<BatchLoader> loader, uint seed)
+BatchIteratorShuffled::BatchIteratorShuffled(shared_ptr<BatchLoader> loader, uint seed)
     : _rand(seed), _loader(loader), _seed(seed), _epoch(0) {
 
     // fill indices with integers from  0 to _count.  indices can then be
@@ -19,11 +19,11 @@ ShuffledBatchIterator::ShuffledBatchIterator(shared_ptr<BatchLoader> loader, uin
     reset();
 }
 
-void ShuffledBatchIterator::shuffle() {
+void BatchIteratorShuffled::shuffle() {
     std::shuffle(_indices.begin(), _indices.end(), _rand);
 }
 
-void ShuffledBatchIterator::read(buffer_in_array &dest) {
+void BatchIteratorShuffled::read(buffer_in_array &dest) {
     _loader->loadBlock(dest, *_it);
 
     // shuffle the objects in BufferPair dest
@@ -43,7 +43,7 @@ void ShuffledBatchIterator::read(buffer_in_array &dest) {
     }
 }
 
-void ShuffledBatchIterator::reset() {
+void BatchIteratorShuffled::reset() {
     shuffle();
 
     _it = _indices.begin();

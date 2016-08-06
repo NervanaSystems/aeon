@@ -25,9 +25,9 @@
 #include "matrix.hpp"
 #include "pyLoader.hpp"
 #include "batch_loader_cpio_cache.hpp"
-#include "sequential_batch_iterator.hpp"
-#include "shuffled_batch_iterator.hpp"
-#include "minibatch_iterator.hpp"
+#include "batch_iterator_sequential.hpp"
+#include "batch_iterator_shuffled.hpp"
+#include "batch_iterator_minibatch.hpp"
 #include "nds_manifest.hpp"
 #include "nds_batch_loader.hpp"
 
@@ -281,7 +281,7 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
             throw std::runtime_error("manifest file is empty");
         }
 
-        _batchLoader = make_shared<BatchFileLoader>(
+        _batchLoader = make_shared<BatchLoaderFile>(
             manifest, _lcfg->subset_fraction, _lcfg->macrobatch_size
         );
 
@@ -296,13 +296,13 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
     }
 
     if (_lcfg->shuffle_every_epoch) {
-        _batch_iterator = make_shared<ShuffledBatchIterator>(_batchLoader,
+        _batch_iterator = make_shared<BatchIteratorShuffled>(_batchLoader,
                                                              _lcfg->random_seed);
     } else {
-        _batch_iterator = make_shared<SequentialBatchIterator>(_batchLoader);
+        _batch_iterator = make_shared<BatchIteratorSequential>(_batchLoader);
     }
 
-    _batch_iterator = make_shared<MinibatchIterator>(_batch_iterator, _lcfg->minibatch_size);
+    _batch_iterator = make_shared<BatchIteratorMinibatch>(_batch_iterator, _lcfg->minibatch_size);
 }
 
 int PyLoader::start()

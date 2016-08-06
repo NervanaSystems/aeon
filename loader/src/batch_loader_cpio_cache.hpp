@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "batch_file_loader.hpp"
+#include "batch_loader_file.hpp"
 
 /* BatchLoaderCPIOCache
  *

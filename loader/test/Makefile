@@ -38,14 +38,14 @@ TEST_SRCS := \
     test_params.cpp \
     csv_manifest_test.cpp \
     csv_manifest_maker.cpp \
-    batch_file_loader_test.cpp \
-    batch_loader_cpio_cache_test.cpp \
+    test_batch_loader_file.cpp \
+    test_batch_loader_cpio_cache.cpp \
+    test_batch_iterator_minibatch.cpp \
+    test_batch_iterator_shuffled.cpp \
     buffer_test.cpp \
-    shuffled_batch_iterator_test.cpp \
     helpers.cpp \
     simple_loader.cpp \
     mock_batch_loader.cpp \
-    minibatch_iterator_test.cpp \
     test_localization.cpp \
     test_audio.cpp \
     test_logging.cpp \

@@ -18,8 +18,7 @@
 #include "buffer_in.hpp"
 
 /*
- * A BatchLoader is something which can load blocks of data into a
- * BufferPair
+ * A BatchLoader is something which can load blocks of data into a buffer_in_array
  */
 
 class BatchLoader {

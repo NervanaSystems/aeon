@@ -15,18 +15,18 @@
 
 #include <math.h>
 
-#include "sequential_batch_iterator.hpp"
+#include "batch_iterator_sequential.hpp"
 
 using namespace std;
 
-SequentialBatchIterator::SequentialBatchIterator(shared_ptr<BatchLoader> loader)
+BatchIteratorSequential::BatchIteratorSequential(shared_ptr<BatchLoader> loader)
     : _loader(loader) {
     _count = _loader->blockCount();
 
     reset();
 };
 
-void SequentialBatchIterator::read(buffer_in_array& dest) {
+void BatchIteratorSequential::read(buffer_in_array& dest) {
     _loader->loadBlock(dest, _i);
 
     ++_i;
@@ -36,6 +36,6 @@ void SequentialBatchIterator::read(buffer_in_array& dest) {
     }
 }
 
-void SequentialBatchIterator::reset() {
+void BatchIteratorSequential::reset() {
     _i = 0;
 }

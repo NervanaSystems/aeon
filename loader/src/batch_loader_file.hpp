@@ -19,14 +19,14 @@
 #include "buffer_in.hpp"
 #include "batch_loader.hpp"
 
-/* BatchFileLoader
+/* BatchLoaderFile
  *
  * Loads blocks of files from a Manifest into a BufferPair.
  *
  */
-class BatchFileLoader : public BatchLoader {
+class BatchLoaderFile : public BatchLoader {
 public:
-    BatchFileLoader(std::shared_ptr<CSVManifest> manifest, float subset_fraction, uint block_size);
+    BatchLoaderFile(std::shared_ptr<CSVManifest> manifest, float subset_fraction, uint block_size);
 
     void loadBlock(buffer_in_array& dest, uint block_num);
     void loadFile(buffer_in* buff, const std::string& filename);

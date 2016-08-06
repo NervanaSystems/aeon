@@ -21,9 +21,9 @@
 #include "batch_iterator.hpp"
 
 // This can inherit from BatchIterator, but should it?
-class MinibatchIterator : public BatchIterator {
+class BatchIteratorMinibatch : public BatchIterator {
 public:
-    MinibatchIterator(std::shared_ptr<BatchIterator> macroBatchIterator, int minibatch_size);
+    BatchIteratorMinibatch(std::shared_ptr<BatchIterator> macroBatchIterator, int minibatch_size);
 
     void read(buffer_in_array& dest);
     void reset();

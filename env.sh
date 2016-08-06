@@ -26,11 +26,11 @@ SRCS="
     csv_manifest.cpp
     nds_manifest.cpp
     provider_factory.cpp
-    batch_file_loader.cpp
+    batch_loader_file.cpp
     batch_loader_cpio_cache.cpp
-    sequential_batch_iterator.cpp
-    shuffled_batch_iterator.cpp
-    minibatch_iterator.cpp
+    batch_iterator_sequential.cpp
+    batch_iterator_shuffled.cpp
+    batch_iterator_minibatch.cpp
     batch_loader.cpp
     box.cpp
     buffer_pool.cpp

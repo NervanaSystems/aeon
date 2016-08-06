@@ -19,11 +19,11 @@
 #include <sstream>
 #include <fstream>
 
-#include "batch_file_loader.hpp"
+#include "batch_loader_file.hpp"
 
 using namespace std;
 
-BatchFileLoader::BatchFileLoader(shared_ptr<CSVManifest> manifest,
+BatchLoaderFile::BatchLoaderFile(shared_ptr<CSVManifest> manifest,
                                  float subset_fraction,
                                  uint block_size)
 : BatchLoader(block_size),
@@ -33,7 +33,8 @@ BatchFileLoader::BatchFileLoader(shared_ptr<CSVManifest> manifest,
     assert(_subset_fraction > 0.0 && _subset_fraction <= 1.0);
 }
 
-void BatchFileLoader::loadBlock(buffer_in_array& dest, uint block_num) {
+void BatchLoaderFile::loadBlock(buffer_in_array& dest, uint block_num)
+{
     // NOTE: thread safe so long as you aren't modifying the manifest
     // NOTE: dest memory must already be allocated at the correct size
     // NOTE: end_i - begin_i may not be a full block for the last
@@ -86,13 +87,15 @@ void BatchFileLoader::loadBlock(buffer_in_array& dest, uint block_num) {
     }
 }
 
-void BatchFileLoader::loadFile(buffer_in* buff, const string& filename) {
+void BatchLoaderFile::loadFile(buffer_in* buff, const string& filename)
+{
     off_t size = getFileSize(filename);
     ifstream fin(filename, ios::binary);
     buff->read(fin, size);
 }
 
-off_t BatchFileLoader::getFileSize(const string& filename) {
+off_t BatchLoaderFile::getFileSize(const string& filename)
+{
     // ensure that filename exists and get its size
 
     struct stat stats;
@@ -106,7 +109,8 @@ off_t BatchFileLoader::getFileSize(const string& filename) {
     return stats.st_size;
 }
 
-uint BatchFileLoader::objectCount() {
+uint BatchLoaderFile::objectCount()
+{
     if (_subset_fraction == 1.0) {
         return _manifest->objectCount();
     } else {

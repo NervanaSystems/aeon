@@ -18,9 +18,9 @@
 #include "batch_loader.hpp"
 #include "batch_iterator.hpp"
 
-class SequentialBatchIterator : public BatchIterator {
+class BatchIteratorSequential : public BatchIterator {
 public:
-    SequentialBatchIterator(std::shared_ptr<BatchLoader> loader);
+    BatchIteratorSequential(std::shared_ptr<BatchLoader> loader);
 
     void read(buffer_in_array& dest);
     void reset();
