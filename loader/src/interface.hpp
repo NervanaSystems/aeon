@@ -39,7 +39,7 @@ class nervana::interface::config {
 public:
     config() {}
 
-    nervana::shape_type get_shape_type() const
+    const nervana::shape_type& get_shape_type() const
     {
         if(shape_type_list.empty()) throw std::runtime_error("config missing output shape");
         return shape_type_list[0];

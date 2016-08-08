@@ -4,15 +4,6 @@
 using namespace std;
 using namespace nervana;
 
-template<typename T> string join(const T& v, const string& sep) {
-    ostringstream ss;
-    for(const auto& x : v) {
-        if(&x != &v[0]) ss << sep;
-        ss << x;
-    }
-    return ss.str();
-}
-
 nervana::localization::config::config(nlohmann::json js)
 {
     if(js.is_null()) {
@@ -84,7 +75,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
                     shared_ptr<localization::decoded> mp) {
     cv::Size im_size{mp->width(), mp->height()};
     float im_scale;
-    tie(im_scale, im_size) = calculate_scale_shape(im_size, cfg.min_size, cfg.max_size);
+    tie(im_scale, im_size) = image::calculate_scale_shape(im_size, cfg.min_size, cfg.max_size);
     mp->image_scale = im_scale;
     mp->image_size = im_size;
 
@@ -155,7 +146,9 @@ shared_ptr<localization::decoded> localization::transformer::transform(
                 max = value;
             }
         }
-        argmax.push_back(scaled_bbox[index]);
+        if(index<scaled_bbox.size()) {
+            argmax.push_back(scaled_bbox[index]);
+        }
     }
 
     auto bbox_targets = compute_targets(argmax, anchors_inside);
@@ -278,21 +271,6 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const
     return overlaps;
 }
 
-tuple<float,cv::Size> localization::transformer::calculate_scale_shape(cv::Size size, int min_size, int max_size) {
-    int im_size_min = std::min(size.width,size.height);
-    int im_size_max = max(size.width,size.height);
-    float im_scale = float(min_size) / float(im_size_min);
-    // Prevent the biggest axis from being more than FRCN_MAX_SIZE
-    if(round(im_scale * im_size_max) > max_size) {
-        im_scale = float(max_size) / float(im_size_max);
-    }
-    cv::Size im_shape{int(round(size.width*im_scale)), int(round(size.height*im_scale))};
-    return make_tuple(im_scale, im_shape);
-}
-
-
-
-
 
 localization::loader::loader(const localization::config& cfg)
 {
@@ -368,6 +346,13 @@ void localization::loader::build_output(std::shared_ptr<localization::decoded> m
 void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<localization::decoded> mp)
 {
     cout << "localization load output size " << buf_list.size() << endl;
+
+    cout << "anchors      " << mp->anchors.size() << endl;
+    cout << "anchor_index " << mp->anchor_index.size() << endl;
+    cout << "bbox_targets " << mp->bbox_targets.size() << endl;
+    cout << "anchors      " << mp->anchors.size() << endl;
+    cout << "image_scale  " << mp->image_scale << endl;
+    cout << "image_size   " << mp->image_size << endl;
 //    vector<float> dev_y_labels(total_anchors*2);
 //    vector<float> dev_y_labels_mask(total_anchors*2);
 //    vector<float> dev_y_bbtargets(total_anchors*4);

@@ -61,9 +61,10 @@ shared_ptr<image_var::decoded> image_var::transformer::transform(
     cv::Mat output;
     cv::Size im_size;
     float im_scale;
-    tie(im_scale, im_size) = localization::transformer::calculate_scale_shape(image.size(), min_size, max_size);
+    tie(im_scale, im_size) = image::calculate_scale_shape(image.size(), min_size, max_size);
 
     nervana::image::resize(image, output, im_size);
+    cout << __FILE__ << " " << __LINE__ << " transformed size " << output.size() << endl;
 
     if (img_xform->flip) {
         cv::Mat flippedImage;
@@ -78,14 +79,18 @@ shared_ptr<image_var::decoded> image_var::transformer::transform(
 shared_ptr<image_var::params>
 image_var::param_factory::make_params(shared_ptr<const decoded> input)
 {
-    auto imgstgs = shared_ptr<image_var::params>();
+    // Must use this method for creating a shared_ptr rather than make_shared
+    // since the params default ctor is private and factory is friend
+    // make_shared is not friend :(
+    auto imgstgs = shared_ptr<image_var::params>(new image_var::params());
 
-    imgstgs->flip  = _cfg.flip_distribution(_dre);
+    imgstgs->flip  = _cfg.flip_distribution(generator);
 
     return imgstgs;
 }
 
-image_var::loader::loader(const image_var::config& cfg)
+image_var::loader::loader(const image_var::config& cfg) :
+    stype{cfg.get_shape_type()}
 {
     _channel_major = cfg.channel_major;
     _load_size     = 1;
@@ -96,11 +101,31 @@ void image_var::loader::load(const vector<void*>& outlist, shared_ptr<image_var:
     char* outbuf = (char*)outlist[0];
     auto img = input->get_image();
     int image_size = img.channels() * img.total();
+    for(int i=0; i<image_size; i++) outbuf[i] = 0;
+    vector<size_t> shape = stype.get_shape();
+    cv::Mat input_image = input->get_image();
 
     if (_channel_major) {
-        this->split(img, outbuf);
+        cout << "image_var::loader::load _channel_major true" << endl;
+        // Split into separate channels
+        int width  = shape[1];
+        int height = shape[2];
+        int pix_per_channel = width * height;
+        cv::Mat b(width, height, CV_8U, outbuf);
+        cv::Mat g(width, height, CV_8U, outbuf + pix_per_channel);
+        cv::Mat r(width, height, CV_8U, outbuf + 2 * pix_per_channel);
+        cv::Rect roi(0, 0, input_image.cols, input_image.rows);
+        cout << "width=" << width << ", height=" << height << endl;
+        cout << "input image size " << input_image.size() << endl;
+        cv::Mat b_roi = b(roi);
+        cv::Mat g_roi = g(roi);
+        cv::Mat r_roi = r(roi);
+        cv::Mat channels[3] = {b_roi, g_roi, r_roi};
+        cv::split(img, channels);
     } else {
-        memcpy(outbuf, img.data, image_size);
+        cv::Mat output(shape[0], shape[1], CV_8UC(shape[2]), outbuf);
+        cv::Mat target_roi = output(cv::Rect(0, 0, input_image.cols, input_image.rows));
+        input_image.copyTo(target_roi);
     }
 }
 

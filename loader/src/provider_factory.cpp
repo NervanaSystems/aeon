@@ -14,6 +14,7 @@ std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::cr
         throw std::invalid_argument("must have a property 'type' with type string.");
     }
     std::string mediaType = configJs["type"];
+
     if( mediaType == "image,label" ) {
         rc = make_shared<image_classifier>(configJs);
     } else if( mediaType == "image,inference" ) {

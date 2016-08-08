@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 #include <cassert>
 
 namespace nervana {
@@ -35,6 +36,15 @@ namespace nervana {
         for(int i=0; i<count; i++) {
             data[offset+i] = (char)(value >> (8*(count-i-1)));
         }
+    }
+
+    template<typename T> std::string join(const T& v, const std::string& sep) {
+        std::ostringstream ss;
+        for(const auto& x : v) {
+            if(&x != &v[0]) ss << sep;
+            ss << x;
+        }
+        return ss.str();
     }
 
     void dump( const void*, size_t );

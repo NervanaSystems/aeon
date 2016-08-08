@@ -23,10 +23,9 @@ namespace nervana {
     class image_var::params : public nervana::interface::params {
         friend class image_var::param_factory;
     public:
-
         void dump(std::ostream & = std::cout);
 
-        bool flip = false;
+        bool flip                = false;
         bool debug_deterministic = false;
     private:
         params() {}
@@ -40,7 +39,7 @@ namespace nervana {
         bool                            channel_major = true;
         size_t                          channels = 3;
         int32_t                         seed = 0; // Default is to seed deterministically
-        std::string                     type_string{"int32_t"};
+        std::string                     type_string{"uint8_t"};
 
         std::bernoulli_distribution     flip_distribution{0};
 
@@ -94,13 +93,15 @@ namespace nervana {
 
     class image_var::param_factory : public interface::param_factory<image_var::decoded, image_var::params> {
     public:
-        param_factory(image_var::config& cfg) : _cfg{cfg}, _dre{0}
+        param_factory(image_var::config& cfg) :
+            _cfg{cfg},
+            generator{0}
         {
             // A positive provided seed means to run deterministic with that seed
             if (_cfg.seed >= 0) {
-                _dre.seed((uint32_t) _cfg.seed);
+                generator.seed((uint32_t) _cfg.seed);
             } else {
-                _dre.seed(std::chrono::system_clock::now().time_since_epoch().count());
+                generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
             }
         }
 
@@ -111,7 +112,7 @@ namespace nervana {
         void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
 
         image_var::config&         _cfg;
-        std::default_random_engine _dre;
+        std::default_random_engine generator;
     };
 
 // ===============================================================================================
@@ -175,5 +176,6 @@ namespace nervana {
         size_t _load_size;
         void split(cv::Mat&, char*);
         bool _channel_major;
+        const shape_type& stype;
     };
 }

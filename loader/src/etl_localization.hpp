@@ -153,6 +153,7 @@ namespace nervana {
             auto rc = std::make_shared<localization::decoded>();
             auto bb = std::static_pointer_cast<bbox::decoded>(rc);
             bbox_extractor.extract(data, size, bb);
+            if(!bb) rc = nullptr;
             return rc;
         }
 
@@ -171,8 +172,6 @@ namespace nervana {
         std::shared_ptr<localization::decoded> transform(
                             std::shared_ptr<image_var::params> txs,
                             std::shared_ptr<localization::decoded> mp) override;
-
-        static std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size, int min_size, int max_size);
     private:
         transformer() = delete;
         cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<box>& query_boxes);

@@ -1,5 +1,6 @@
 #include <sstream>
 #include "etl_bbox.hpp"
+#include "log.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -75,7 +76,7 @@ void nervana::bbox::extractor::extract(const char* data, int size, std::shared_p
         if( found == label_map.end() ) {
             // did not find the label in the ctor supplied label list
             rc = nullptr;
-            cout << "label '" << name << "' not found in label list" << endl;
+            ERR << "label '" << name << "' not found in label list";
             break;
         } else {
             b.label = found->second;

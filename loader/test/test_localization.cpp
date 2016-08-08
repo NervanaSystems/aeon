@@ -18,6 +18,10 @@
 #include <sstream>
 #include <random>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include "gtest/gtest.h"
 #include "gen_image.hpp"
 
@@ -221,13 +225,12 @@ TEST(localization,config) {
     EXPECT_NO_THROW(localization::config cfg(js));
 }
 
-TEST(localization,calculate_scale_shape) {
-
-    auto cfg = make_localization_config();
-    localization::transformer transformer(cfg);
+TEST(image,calculate_scale_shape) {
+    int min_size = 600;
+    int max_size = 1000;
     cv::Size size{500,375};
     float scale;
-    tie(scale,size) = transformer.calculate_scale_shape(size, cfg.min_size, cfg.max_size);
+    tie(scale,size) = image::calculate_scale_shape(size, min_size, max_size);
     EXPECT_FLOAT_EQ(1.6,scale);
     EXPECT_EQ(800,size.width);
     EXPECT_EQ(600,size.height);
@@ -776,7 +779,7 @@ TEST(localization, compute_targets) {
     // hgt 265.0, rp 352.0, dh -0.283901349612
 
     gt_bb.emplace_back(561.6,  329.6,  713.6,  593.6);
-    rp_bb.emplace_back(624.,  248.,  799.,  599.);
+    rp_bb.emplace_back(624.0,  248.0,  799.0,  599.0);
 
     float dx_0_expected = -0.419886363636;
     float dy_0_expected =  0.108238636364;
@@ -791,7 +794,7 @@ TEST(localization, compute_targets) {
     // hgt 265.0, rp 352.0, dh -0.283901349612
 
     gt_bb.emplace_back(561.6,  329.6,  713.6,  593.6);
-    rp_bb.emplace_back(496.,  248.,  671.,  599.);
+    rp_bb.emplace_back(496.0,  248.0,  671.0,  599.0);
 
     float dx_1_expected =  0.307386363636;
     float dy_1_expected =  0.108238636364;
@@ -818,17 +821,106 @@ TEST(localization, compute_targets) {
 TEST(localization,provider) {
     nlohmann::json js = {{"type","image,localization"},
                          {"image", {
-                              {"min_size", 600},
-                              {"max_size", 1000},
+                            {"min_size", 600},
+                            {"max_size", 1000},
                             {"channel_major",false},
                             {"flip_enable",true}}},
                          {"localization", {
-                              {"min_size", 600},
-                              {"max_size", 1000},
-                              {"max_bbox_count", 64},
-                              {"labels", {"if", "and", "or"}}
+                            {"min_size", 600},
+                            {"max_size", 1000},
+                            {"max_bbox_count", 64},
+                            {"labels", {"bicycle", "person"}}
                           }}};
 
-    auto media = nervana::train_provider_factory::create(js);
-    const vector<nervana::shape_type>& oshapes = media->get_oshapes();
+    shared_ptr<provider_interface> media = train_provider_factory::create(js);
+    const vector<shape_type>& oshapes = media->get_oshapes();
+    ASSERT_NE(nullptr,media);
+    ASSERT_EQ(10, oshapes.size());
+
+    string target = read_file(CURDIR"/test_data/006637.json");
+    vector<char> target_data;
+    target_data.insert(target_data.begin(), target.begin(), target.end());
+    // Image size is from the 006637.json target data file
+    cv::Mat image(375, 500, CV_8UC3);
+    image = cv::Scalar(50, 100, 200);
+    vector<uint8_t> image_data;
+    vector<char> image_cdata;
+    cv::imencode(".png", image, image_data);
+    for(auto c: image_data) { image_cdata.push_back(c); };
+
+    buffer_in_array  in_buf({0,0});
+    in_buf[0]->addItem(image_cdata);
+    in_buf[1]->addItem(target_data);
+
+    vector<size_t> output_sizes;
+    for(const shape_type& shape: oshapes) {
+        cout << shape.get_byte_size() << endl;
+        output_sizes.push_back(shape.get_byte_size());
+    }
+    buffer_out_array out_buf(output_sizes, 1);
+    const shape_type& image_shape = oshapes[0];
+
+    media->provide(0, in_buf, out_buf);
+
+    cout << __FILE__ << " " << __LINE__ << " " << join(image_shape.get_shape(), "x") << endl;
+    int width    = image_shape.get_shape()[0];
+    int height   = image_shape.get_shape()[1];
+    int channels = image_shape.get_shape()[2];
+    cv::Mat result(height, width, CV_8UC(channels), out_buf[0]->getItem(0));
+    cv::imwrite("localization_provider_source.png", image);
+    cv::imwrite("localization_provider.png", result);
+}
+
+TEST(localization,provider_channel_major) {
+    nlohmann::json js = {{"type","image,localization"},
+                         {"image", {
+                            {"min_size", 600},
+                            {"max_size", 1000},
+                            {"channel_major",true},
+                            {"flip_enable",true}}},
+                         {"localization", {
+                            {"min_size", 600},
+                            {"max_size", 1000},
+                            {"max_bbox_count", 64},
+                            {"labels", {"bicycle", "person"}}
+                          }}};
+
+    shared_ptr<provider_interface> media = train_provider_factory::create(js);
+    const vector<shape_type>& oshapes = media->get_oshapes();
+    ASSERT_NE(nullptr,media);
+    ASSERT_EQ(10, oshapes.size());
+
+    string target = read_file(CURDIR"/test_data/006637.json");
+    vector<char> target_data;
+    target_data.insert(target_data.begin(), target.begin(), target.end());
+    // Image size is from the 006637.json target data file
+    cv::Mat image(375, 500, CV_8UC3);
+    image = cv::Scalar(50, 100, 200);
+    vector<uint8_t> image_data;
+    vector<char> image_cdata;
+    cv::imencode(".png", image, image_data);
+    for(auto c: image_data) { image_cdata.push_back(c); };
+
+    buffer_in_array  in_buf({0,0});
+    in_buf[0]->addItem(image_cdata);
+    in_buf[1]->addItem(target_data);
+
+    vector<size_t> output_sizes;
+    for(const shape_type& shape: oshapes) {
+        cout << shape.get_byte_size() << endl;
+        output_sizes.push_back(shape.get_byte_size());
+    }
+    buffer_out_array out_buf(output_sizes, 1);
+    const shape_type& image_shape = oshapes[0];
+
+    media->provide(0, in_buf, out_buf);
+
+    cout << __FILE__ << " " << __LINE__ << " " << join(image_shape.get_shape(), "x") << endl;
+    int width    = image_shape.get_shape()[1];
+    int height   = image_shape.get_shape()[2];
+    int channels = image_shape.get_shape()[0];
+    cv::Mat result(height*3, width, CV_8UC1, out_buf[0]->getItem(0));
+    cout << "result shape " << result.size() << ", " << result.channels() << endl;
+    cout << "total " << result.total() << endl;
+    cv::imwrite("localization_provider_channel_major.png", result);
 }

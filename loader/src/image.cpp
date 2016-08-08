@@ -70,6 +70,17 @@ void image::convertMixChannels(vector<cv::Mat>& source, vector<cv::Mat>& target,
     }
 }
 
+tuple<float,cv::Size> image::calculate_scale_shape(cv::Size size, int min_size, int max_size) {
+    int im_size_min = std::min(size.width,size.height);
+    int im_size_max = max(size.width,size.height);
+    float im_scale = float(min_size) / float(im_size_min);
+    // Prevent the biggest axis from being more than FRCN_MAX_SIZE
+    if(round(im_scale * im_size_max) > max_size) {
+        im_scale = float(max_size) / float(im_size_max);
+    }
+    cv::Size im_shape{int(round(size.width*im_scale)), int(round(size.height*im_scale))};
+    return make_tuple(im_scale, im_shape);
+}
 
 /* Transform:
     image::config will be a supplied bunch of params used by this provider.

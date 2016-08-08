@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tuple>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -10,6 +12,8 @@ namespace nervana {
         void shift_cropbox(const cv::Size2f &, cv::Rect &, float, float);
         void rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interpolate=true, const cv::Scalar& border=cv::Scalar());
         void convertMixChannels(std::vector<cv::Mat>& source, std::vector<cv::Mat>& target, std::vector<int>& from_to);
+
+        std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size, int min_size, int max_size);
 
         class photometric {
         public:

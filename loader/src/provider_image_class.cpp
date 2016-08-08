@@ -119,12 +119,16 @@ void localization_decoder::provide(int idx, buffer_in_array& in_buf, buffer_out_
     }
 
     auto image_dec = image_extractor.extract(datum_in.data(), datum_in.size());
-    auto image_params = image_factory.make_params(image_dec);
-    image_loader.load({datum_out}, image_transformer.transform(image_params, image_dec));
+    if(image_dec) {
+        auto image_params = image_factory.make_params(image_dec);
+        image_loader.load({datum_out}, image_transformer.transform(image_params, image_dec));
 
-    // Process target data
-    auto target_dec = localization_extractor.extract(target_in.data(), target_in.size());
-    localization_loader.load(target_list, localization_transformer.transform(image_params, target_dec));
+        // Process target data
+        auto target_dec = localization_extractor.extract(target_in.data(), target_in.size());
+        if(target_dec) {
+            localization_loader.load(target_list, localization_transformer.transform(image_params, target_dec));
+        }
+    }
 }
 
 bbox_provider::bbox_provider(nlohmann::json js) :

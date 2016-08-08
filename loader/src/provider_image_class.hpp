@@ -54,8 +54,6 @@ namespace nervana {
         localization::extractor     localization_extractor;
         localization::transformer   localization_transformer;
         localization::loader        localization_loader;
-
-        std::default_random_engine  _r_eng;
     };
 
     class bbox_provider : public provider_interface {

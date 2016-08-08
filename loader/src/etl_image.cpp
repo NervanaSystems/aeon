@@ -141,6 +141,9 @@ shared_ptr<image::decoded> image::transformer::transform(
 shared_ptr<image::params>
 image::param_factory::make_params(shared_ptr<const decoded> input)
 {
+    // Must use this method for creating a shared_ptr rather than make_shared
+    // since the params default ctor is private and factory is friend
+    // make_shared is not friend :(
     auto imgstgs = shared_ptr<image::params>(new image::params());
 
     imgstgs->output_size = cv::Size2i(_cfg.width, _cfg.height);
