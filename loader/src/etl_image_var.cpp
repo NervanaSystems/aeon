@@ -64,7 +64,6 @@ shared_ptr<image_var::decoded> image_var::transformer::transform(
     tie(im_scale, im_size) = image::calculate_scale_shape(image.size(), min_size, max_size);
 
     nervana::image::resize(image, output, im_size);
-    cout << __FILE__ << " " << __LINE__ << " transformed size " << output.size() << endl;
 
     if (img_xform->flip) {
         cv::Mat flippedImage;
@@ -100,13 +99,12 @@ void image_var::loader::load(const vector<void*>& outlist, shared_ptr<image_var:
 {
     char* outbuf = (char*)outlist[0];
     auto img = input->get_image();
-    int image_size = img.channels() * img.total();
-    for(int i=0; i<image_size; i++) outbuf[i] = 0;
     vector<size_t> shape = stype.get_shape();
+    int output_buffer_size = stype.get_byte_size();
+    for(int i=0; i<output_buffer_size; i++) outbuf[i] = 0;
     cv::Mat input_image = input->get_image();
 
     if (_channel_major) {
-        cout << "image_var::loader::load _channel_major true" << endl;
         // Split into separate channels
         int width  = shape[1];
         int height = shape[2];
@@ -115,8 +113,6 @@ void image_var::loader::load(const vector<void*>& outlist, shared_ptr<image_var:
         cv::Mat g(width, height, CV_8U, outbuf + pix_per_channel);
         cv::Mat r(width, height, CV_8U, outbuf + 2 * pix_per_channel);
         cv::Rect roi(0, 0, input_image.cols, input_image.rows);
-        cout << "width=" << width << ", height=" << height << endl;
-        cout << "input image size " << input_image.size() << endl;
         cv::Mat b_roi = b(roi);
         cv::Mat g_roi = g(roi);
         cv::Mat r_roi = r(roi);

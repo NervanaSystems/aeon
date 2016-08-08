@@ -867,8 +867,8 @@ TEST(localization,provider) {
     int height   = image_shape.get_shape()[1];
     int channels = image_shape.get_shape()[2];
     cv::Mat result(height, width, CV_8UC(channels), out_buf[0]->getItem(0));
-    cv::imwrite("localization_provider_source.png", image);
-    cv::imwrite("localization_provider.png", result);
+//    cv::imwrite("localization_provider_source.png", image);
+//    cv::imwrite("localization_provider.png", result);
 }
 
 TEST(localization,provider_channel_major) {
@@ -915,12 +915,27 @@ TEST(localization,provider_channel_major) {
 
     media->provide(0, in_buf, out_buf);
 
-    cout << __FILE__ << " " << __LINE__ << " " << join(image_shape.get_shape(), "x") << endl;
     int width    = image_shape.get_shape()[1];
     int height   = image_shape.get_shape()[2];
-    int channels = image_shape.get_shape()[0];
     cv::Mat result(height*3, width, CV_8UC1, out_buf[0]->getItem(0));
-    cout << "result shape " << result.size() << ", " << result.channels() << endl;
-    cout << "total " << result.total() << endl;
-    cv::imwrite("localization_provider_channel_major.png", result);
+//    cv::imwrite("localization_provider_channel_major.png", result);
+    uint8_t* data = result.data;
+    for(int row=0; row<result.rows; row++) {
+        for(int col=0; col<result.cols; col++) {
+            if(col<800) {
+                if(       row >=    0 && row <  600) {
+                    ASSERT_EQ( 50, *data) << "row=" << row << ", col=" << col;
+                } else if(row >= 1000 && row < 1600) {
+                    ASSERT_EQ(100, *data) << "row=" << row << ", col=" << col;
+                } else if(row >= 2000 && row < 2600) {
+                    ASSERT_EQ(200, *data) << "row=" << row << ", col=" << col;
+                } else {
+                    ASSERT_EQ(  0, *data) << "row=" << row << ", col=" << col;
+                }
+            } else {
+                ASSERT_EQ(  0, *data) << "row=" << row << ", col=" << col;
+            }
+            data++;
+        }
+    }
 }
