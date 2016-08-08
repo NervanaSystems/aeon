@@ -17,16 +17,14 @@
 
 #include "helpers.hpp"
 #include "batch_iterator_shuffled.hpp"
+#include "batch_iterator_sequential.hpp"
+
 #include "mock_batch_loader.hpp"
 
 using namespace std;
 
 TEST(batch_iterator_shuffled, batch_loader_sequential) {
-    MockBatchLoader bl(3);
-
-    // buffer_in* dataBuffer = new buffer_in(0);
-    // buffer_in* targetBuffer = new buffer_in(0);
-    // buffer_in_array bp{dataBuffer, targetBuffer};
+    MockBatchLoader bl(8);
     buffer_in_array bp(vector<size_t>{0, 0});
 
     // ensure that loading successive blocks from SequentialBatchLoader
@@ -41,27 +39,32 @@ TEST(batch_iterator_shuffled, batch_loader_sequential) {
 }
 
 TEST(batch_iterator_shuffled, shuffled_block) {
-    BatchIteratorShuffled sbi(
-        make_shared<MockBatchLoader>(3), 0
-    );
-    // buffer_in* dataBuffer = new buffer_in(0);
-    // buffer_in* targetBuffer = new buffer_in(0);
-    // buffer_in_array bp{dataBuffer, targetBuffer};
+    auto mbl = make_shared<MockBatchLoader>(5);
+    BatchIteratorShuffled bis(mbl, 0);
+    // BatchIteratorSequential bis(mbl);
     buffer_in_array bp(vector<size_t>{0, 0});
 
+    uint num_records = mbl->objectCount();
 
-    // ensure that loading successive blocks from SequentialBatchLoader
-    // result in sorted strings
-    for(int i = 0; i < 26; ++i) {
-        sbi.read(bp);
+    // ensure that loading successive blocks from shuffling iterator
+    // result in unsorted strings
+    for(int i = 0; i < mbl->blockCount(); ++i) {
+        bis.read(bp);
     }
 
-    vector<string> words = buffer_to_vector_of_strings(*bp[0]);
+    vector<string> words_a = buffer_to_vector_of_strings(*bp[0]);
+    vector<string> words_b = buffer_to_vector_of_strings(*bp[1]);
 
-    ASSERT_EQ(sorted(words), false);
+    ASSERT_EQ(words_a.size(), num_records);
+    ASSERT_EQ(words_b.size(), num_records);
 
+    // ensure that there is correspondence between the elements of each record
+    for (uint i = 0; i<num_records; i++) {
+        ASSERT_EQ(words_a[i], words_b[i]);
+    }
+
+    ASSERT_EQ(sorted(words_a), false);
     // now sort the words and make sure they are all unique.  We should
     // have loaded an entire 'epoch' and have no duplicates
-
-    assert_vector_unique(words);
+    assert_vector_unique(words_a);
 }

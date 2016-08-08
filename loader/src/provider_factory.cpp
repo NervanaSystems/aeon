@@ -1,6 +1,7 @@
 #include "provider_factory.hpp"
 #include "provider_image_class.hpp"
 #include "provider_audio.hpp"
+#include "provider_video.hpp"
 
 #include <sstream>
 
@@ -29,6 +30,10 @@ std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::cr
         rc = make_shared<provider_pixel_mask>(configJs);
     } else if( mediaType == "image,boundingbox" ) {
         rc = make_shared<bbox_provider>(configJs);
+    } else if( mediaType == "video,label" ) {
+        rc = make_shared<video_classifier>(configJs);
+    } else if( mediaType == "video,inference" ) {
+        rc = make_shared<video_inference>(configJs);
     } else {
         rc = nullptr;
         stringstream ss;

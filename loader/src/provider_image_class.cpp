@@ -3,18 +3,7 @@
 using namespace nervana;
 using namespace std;
 
-const nlohmann::json json_get(const nlohmann::json js, const std::string key, const nlohmann::json default_value) {
-    // get the value in js at key.  If the value is null, return
-    // default_value instead.
-    auto value = js[key];
-    if(value.is_null()) {
-        return default_value;
-    } else {
-        return value;
-    }
-}
-
-image_inference::image_inference(const nlohmann::json js) :
+image_inference::image_inference(nlohmann::json js) :
     image_config(js["image"]),
     image_extractor(image_config),
     image_transformer(image_config),

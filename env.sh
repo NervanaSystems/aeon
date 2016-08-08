@@ -1,47 +1,49 @@
 #!/bin/bash
 
 SRCS="
-    cpio.cpp
-    buffer_in.cpp
-    buffer_out.cpp
-    pyBackendWrapper.cpp
-    pyLoader.cpp
     api_pversion.cpp
-    etl_audio.cpp
-    noise_clips.cpp
-    specgram.cpp
-    log.cpp
-    image.cpp
-    etl_pixel_mask.cpp
-    etl_image.cpp
-    etl_image_var.cpp
-    etl_bbox.cpp
-    etl_label_map.cpp
-    etl_char_map.cpp
-    etl_localization.cpp
-    etl_video.cpp
-    util.cpp
-    wav_data.cpp
-    manifest.cpp
-    csv_manifest.cpp
-    nds_manifest.cpp
-    provider_factory.cpp
-    batch_loader_file.cpp
-    batch_loader_cpio_cache.cpp
+    avi.cpp
+    batch_iterator_minibatch.cpp
     batch_iterator_sequential.cpp
     batch_iterator_shuffled.cpp
-    batch_iterator_minibatch.cpp
     batch_loader.cpp
+    batch_loader_cpio_cache.cpp
+    batch_loader_file.cpp
     box.cpp
+    buffer_in.cpp
+    buffer_out.cpp
     buffer_pool.cpp
     buffer_pool_in.cpp
     buffer_pool_out.cpp
     cap_mjpeg_decoder.cpp
-    avi.cpp
-	nds_batch_loader.cpp
-    provider_image_class.cpp
-    interface.cpp
+    cpio.cpp
+    csv_manifest.cpp
+    etl_audio.cpp
+    etl_bbox.cpp
+    etl_char_map.cpp
+    etl_image.cpp
+    etl_image_var.cpp
+    etl_label_map.cpp
+    etl_localization.cpp
     etl_multicrop.cpp
+    etl_pixel_mask.cpp
+    etl_video.cpp
+    image.cpp
+    interface.cpp
+    log.cpp
+    manifest.cpp
+    nds_batch_loader.cpp
+    nds_manifest.cpp
+    noise_clips.cpp
+    provider_audio.cpp
+    provider_factory.cpp
+    provider_image_class.cpp
+    provider_video.cpp
+    pyBackendWrapper.cpp
+    pyLoader.cpp
+    specgram.cpp
+    util.cpp
+    wav_data.cpp
 "
 # remove newlines
 export SRCS="$(echo ${SRCS} | sed 's/\n//g')"
