@@ -862,13 +862,28 @@ TEST(localization,provider) {
 
     media->provide(0, in_buf, out_buf);
 
-    cout << __FILE__ << " " << __LINE__ << " " << join(image_shape.get_shape(), "x") << endl;
     int width    = image_shape.get_shape()[0];
     int height   = image_shape.get_shape()[1];
     int channels = image_shape.get_shape()[2];
     cv::Mat result(height, width, CV_8UC(channels), out_buf[0]->getItem(0));
 //    cv::imwrite("localization_provider_source.png", image);
 //    cv::imwrite("localization_provider.png", result);
+
+    uint8_t* data = result.data;
+    for(int row=0; row<result.rows; row++) {
+        for(int col=0; col<result.cols; col++) {
+            if(col < 800 && row < 600) {
+                    ASSERT_EQ( 50, data[0]) << "row=" << row << ", col=" << col;
+                    ASSERT_EQ(100, data[1]) << "row=" << row << ", col=" << col;
+                    ASSERT_EQ(200, data[2]) << "row=" << row << ", col=" << col;
+            } else {
+                ASSERT_EQ(0, data[0]) << "row=" << row << ", col=" << col;
+                ASSERT_EQ(0, data[1]) << "row=" << row << ", col=" << col;
+                ASSERT_EQ(0, data[2]) << "row=" << row << ", col=" << col;
+            }
+            data += 3;
+        }
+    }
 }
 
 TEST(localization,provider_channel_major) {
