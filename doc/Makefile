@@ -70,6 +70,7 @@ clean:
 
 doxygen:
 	doxygen doxygen.conf
+	mkdir -p $(BUILDDIR)
 
 html: doxygen
 	$(SPHINXENVCMD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
