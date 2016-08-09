@@ -20,22 +20,19 @@
 using namespace std;
 
 BatchIteratorSequential::BatchIteratorSequential(shared_ptr<BatchLoader> loader)
-    : _loader(loader) {
-    _count = _loader->blockCount();
+: _loader(loader), _count(_loader->blockCount()), _i(0)
+{
+}
 
-    reset();
-};
-
-void BatchIteratorSequential::read(buffer_in_array& dest) {
+void BatchIteratorSequential::read(buffer_in_array& dest)
+{
     _loader->loadBlock(dest, _i);
-
-    ++_i;
-
-    if(_i == _count) {
+    if (_i++ == _count) {
         reset();
     }
 }
 
-void BatchIteratorSequential::reset() {
+void BatchIteratorSequential::reset()
+{
     _i = 0;
 }

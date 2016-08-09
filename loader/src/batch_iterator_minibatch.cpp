@@ -4,9 +4,10 @@ BatchIteratorMinibatch::BatchIteratorMinibatch(std::shared_ptr<BatchIterator> ma
                                                int minibatchSize)
     : _macroBatchIterator(macroBatchIterator),
       _minibatchSize(minibatchSize),
-      _macrobatch{std::vector<size_t>{0,0}}
+      _macrobatch{std::vector<size_t>{0,0}},
+      _i(0)
 {
-    reset();
+    _macroBatchIterator->reset();
 }
 
 void BatchIteratorMinibatch::read(buffer_in_array& dest)
