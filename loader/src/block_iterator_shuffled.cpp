@@ -36,7 +36,7 @@ void block_iterator_shuffled::read(buffer_in_array &dest)
         d->shuffle(_seed + _epoch);
     }
 
-    if(_it++ == _indices.end()) {
+    if(++_it == _indices.end()) {
         reset();
     }
 }

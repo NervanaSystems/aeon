@@ -15,7 +15,7 @@
 
 #pragma once
 #include "cpio.hpp"
-#include "pyLoader.hpp"
+#include "loader.hpp"
 
 extern "C" {
 
@@ -24,10 +24,10 @@ static std::string last_error_message;
 extern const char* get_error_message();
 extern int error();
 extern void* start(const char* loaderConfigString, PyObject* pbackend);
-extern PyObject* next(PyLoader* loader, int bufIdx);
-extern int reset(PyLoader* loader);
-extern int stop(PyLoader* loader);
-extern int itemCount(PyLoader* loader);
-extern PyObject* shapes(PyLoader* loader);
+extern PyObject* next(loader* data_loader, int bufIdx);
+extern int reset(loader* data_loader);
+extern int stop(loader* data_loader);
+extern int itemCount(loader* data_loader);
+extern PyObject* shapes(loader* data_loader);
 
 }

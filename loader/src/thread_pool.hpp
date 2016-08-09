@@ -27,16 +27,16 @@
 #include <utility>
 #include <algorithm>
 
-/* ThreadPool
+/* thread_pool
  *
  * A collection of a constant number of threads implemented
  * using std::thread.  Methods are provided to start, stop and join all
  * N threads simultaneously.
  *
  */
-class ThreadPool {
+class thread_pool {
 public:
-    explicit ThreadPool(int count)
+    explicit thread_pool(int count)
     : _count(count), _done(false) {
         _stopped = new bool[count];
         for (int i = 0; i < count; i++) {
@@ -44,7 +44,7 @@ public:
         }
     }
 
-    virtual ~ThreadPool() {
+    virtual ~thread_pool() {
         for (auto t : _threads) {
             t->join();
             delete t;
@@ -54,7 +54,7 @@ public:
 
     virtual void start() {
         for (int i = 0; i < _count; i++) {
-            _threads.push_back(new std::thread(&ThreadPool::run, this, i));
+            _threads.push_back(new std::thread(&thread_pool::run, this, i));
         }
     }
 

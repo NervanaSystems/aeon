@@ -24,7 +24,7 @@ block_iterator_sequential::block_iterator_sequential(shared_ptr<block_loader> lo
 void block_iterator_sequential::read(buffer_in_array& dest)
 {
     _loader->loadBlock(dest, _i);
-    if (_i++ == _count) {
+    if (++_i == _count) {
         reset();
     }
 }

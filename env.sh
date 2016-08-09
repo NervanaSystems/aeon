@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SRCS="
-    api_pversion.cpp
+    api.cpp
     avi.cpp
     batch_iterator.cpp
     block_iterator_sequential.cpp
@@ -31,6 +31,7 @@ SRCS="
     etl_video.cpp
     image.cpp
     interface.cpp
+    loader.cpp
     log.cpp
     manifest.cpp
     nds_manifest.cpp
@@ -39,8 +40,7 @@ SRCS="
     provider_factory.cpp
     provider_image_class.cpp
     provider_video.cpp
-    pyBackendWrapper.cpp
-    pyLoader.cpp
+    python_backend.cpp
     specgram.cpp
     util.cpp
     wav_data.cpp

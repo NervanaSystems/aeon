@@ -1,21 +1,21 @@
-#include "pyBackendWrapper.hpp"
+#include "python_backend.hpp"
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
 using namespace nervana;
 using namespace std;
 
-pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
+python_backend::python_backend(PyObject* py_obj_backend,
                                    const vector<nervana::shape_type>& oshape_types,
                                    int batchSize)
-: _oshape_types(oshape_types), _batchSize(batchSize), _pBackend(pBackend)
+: _oshape_types(oshape_types), _batchSize(batchSize), _py_obj_backend(py_obj_backend)
 {
-    if (_pBackend == NULL) {
+    if (_py_obj_backend == NULL) {
         throw std::runtime_error("Python Backend object does not exist");
     }
 
-    Py_INCREF(_pBackend);
-    _f_consume = PyObject_GetAttrString(_pBackend, "consume");
+    Py_INCREF(_py_obj_backend);
+    _f_consume = PyObject_GetAttrString(_py_obj_backend, "consume");
 
     if (!PyCallable_Check(_f_consume)) {
         throw std::runtime_error("Backend 'consume' function does not exist or is not callable");
@@ -35,7 +35,7 @@ pyBackendWrapper::pyBackendWrapper(PyObject* pBackend,
     }
 }
 
-PyObject* pyBackendWrapper::get_shapes()
+PyObject* python_backend::get_shapes()
 {
     uint num_shapes = _oshape_types.size();
     PyObject* all_shapes = PyTuple_New(num_shapes);
@@ -52,7 +52,7 @@ PyObject* pyBackendWrapper::get_shapes()
     return all_shapes;
 }
 
-PyObject* pyBackendWrapper::initPyList(int length)
+PyObject* python_backend::initPyList(int length)
 {
     PyObject* pylist = PyList_New(length);
     for (int i=0; i<length; ++i) {
@@ -64,7 +64,7 @@ PyObject* pyBackendWrapper::initPyList(int length)
     return pylist;
 }
 
-pyBackendWrapper::~pyBackendWrapper()
+python_backend::~python_backend()
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -76,18 +76,18 @@ pyBackendWrapper::~pyBackendWrapper()
     }
 
     Py_XDECREF(_f_consume);
-    Py_XDECREF(_pBackend);
+    Py_XDECREF(_py_obj_backend);
     PyGILState_Release(gstate);
 
 }
 
-bool pyBackendWrapper::use_pinned_memory()
+bool python_backend::use_pinned_memory()
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
     bool result = false;
-    PyObject *pinned_mem = PyObject_GetAttrString(_pBackend, "use_pinned_mem");
+    PyObject *pinned_mem = PyObject_GetAttrString(_py_obj_backend, "use_pinned_mem");
     if (pinned_mem != NULL) {
         if (PyObject_IsTrue(pinned_mem)) {
             result = true;
@@ -99,7 +99,7 @@ bool pyBackendWrapper::use_pinned_memory()
 }
 
 // Copy to device.
-void pyBackendWrapper::call_backend_transfer(buffer_out_array &outBuf, int bufIdx)
+void python_backend::call_backend_transfer(buffer_out_array &outBuf, int bufIdx)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -124,7 +124,7 @@ void pyBackendWrapper::call_backend_transfer(buffer_out_array &outBuf, int bufId
     PyGILState_Release(gstate);
 }
 
-PyObject* pyBackendWrapper::get_host_tuple(int bufIdx)
+PyObject* python_backend::get_host_tuple(int bufIdx)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -151,7 +151,7 @@ PyObject* pyBackendWrapper::get_host_tuple(int bufIdx)
     return result;
 }
 
-void pyBackendWrapper::wrap_buffer_pool(PyObject *list, buffer_out *buf, int bufIdx,
+void python_backend::wrap_buffer_pool(PyObject *list, buffer_out *buf, int bufIdx,
                                         const nervana::shape_type& st)
 {
     PyObject *hdItem = PyList_GetItem(list, bufIdx);

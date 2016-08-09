@@ -42,7 +42,7 @@
 #include "etl_multicrop.hpp"
 #include "etl_pixel_mask.hpp"
 #include "etl_video.hpp"
-#include "pyLoader.hpp"
+#include "loader.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -303,8 +303,8 @@ TEST(util,param_dump) {
     DUMP_CONFIG(multicrop);
     DUMP_CONFIG(video);
     {
-        pyLoaderConfig cfg;
-        f << "pyLoaderConfig" << ":\n";
+        loader_config cfg;
+        f << "loader_config" << ":\n";
         for(auto x: cfg.config_list)
         {
             f << "   " << x->name() << ", " << x->type() << ", " << (x->required() ? "REQUIRED" : "OPTIONAL") << "\n";

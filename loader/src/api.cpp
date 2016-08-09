@@ -12,32 +12,32 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-#include "api_pversion.hpp"
+#include "api.hpp"
 
 extern "C" {
 
-extern const char* get_error_message() {
+extern const char* get_error_message()
+{
     return last_error_message.c_str();
 }
 
-extern void* start(const char* loaderConfigString,
-                   PyObject* pbackend
-                   ) {
+extern void* start(const char* loaderConfigString, PyObject* pbackend)
+{
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
     try {
 
-        PyLoader* loader = new PyLoader(loaderConfigString, pbackend);
+        loader* data_loader = new loader(loaderConfigString, pbackend);
 
-        int result = loader->start();
+        int result = data_loader->start();
         if (result != 0) {
             std::stringstream ss;
             ss << "Could not start data loader. Error " << result;
             last_error_message = ss.str();
-            delete loader;
+            delete data_loader;
 
             return 0;
         }
-        return reinterpret_cast<void*>(loader);
+        return reinterpret_cast<void*>(data_loader);
     } catch(std::exception& ex) {
         last_error_message = ex.what();
 
@@ -45,7 +45,8 @@ extern void* start(const char* loaderConfigString,
     }
 }
 
-extern int error() {
+extern int error()
+{
     try {
         throw std::runtime_error("abc error");
     } catch(std::exception& ex) {
@@ -54,9 +55,10 @@ extern int error() {
     }
 }
 
-extern PyObject* next(PyLoader* loader, int bufIdx) {
+extern PyObject* next(loader* data_loader, int bufIdx)
+{
     try {
-        return loader->next(bufIdx);
+        return data_loader->next(bufIdx);
     } catch(std::exception& ex) {
         last_error_message = ex.what();
 
@@ -65,9 +67,10 @@ extern PyObject* next(PyLoader* loader, int bufIdx) {
     }
 }
 
-extern PyObject* shapes(PyLoader* loader) {
+extern PyObject* shapes(loader* data_loader)
+{
     try {
-        return loader->shapes();
+        return data_loader->shapes();
     } catch(std::exception& ex) {
         last_error_message = ex.what();
 
@@ -76,28 +79,31 @@ extern PyObject* shapes(PyLoader* loader) {
     }
 }
 
-extern int itemCount(PyLoader* loader) {
+extern int itemCount(loader* data_loader)
+{
     try {
-        return loader->itemCount();
+        return data_loader->itemCount();
     } catch(std::exception& ex) {
         last_error_message = ex.what();
         return -1;
     }
 }
 
-extern int reset(PyLoader* loader) {
+extern int reset(loader* data_loader)
+{
     try {
-        return loader->reset();
+        return data_loader->reset();
     } catch(std::exception& ex) {
         last_error_message = ex.what();
         return -1;
     }
 }
 
-extern int stop(PyLoader* loader) {
+extern int stop(loader* data_loader)
+{
     try {
-        loader->stop();
-        delete loader;
+        data_loader->stop();
+        delete data_loader;
         return 0;
     } catch(std::exception& ex) {
         last_error_message = ex.what();

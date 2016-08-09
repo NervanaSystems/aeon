@@ -24,8 +24,8 @@
 #include <utility>
 #include <algorithm>
 
-#include "pyBackendWrapper.hpp"
-#include "threadpool.hpp"
+#include "python_backend.hpp"
+#include "thread_pool.hpp"
 #include "block_loader.hpp"
 #include "block_iterator.hpp"
 #include "batch_iterator.hpp"
@@ -34,22 +34,22 @@
 #include "buffer_pool_in.hpp"
 #include "buffer_pool_out.hpp"
 
-/* DecodeThreadPool
+/* decode_thread_pool
  *
- * DecodeThreadPool takes data from the BufferPool `in`, transforms it
+ * decode_thread_pool takes data from the BufferPool `in`, transforms it
  * using `count` threads with a Media::transform built from
  * `mediaParams`.  Each minibatch is transposed by a manager thread and
  * then copied to the `device`.
  *
  */
-class pyDecodeThreadPool : public ThreadPool {
+class decode_thread_pool : public thread_pool {
 public:
-    pyDecodeThreadPool(int count,
+    decode_thread_pool(int count,
                        const std::shared_ptr<buffer_pool_in>& in,
                        const std::shared_ptr<buffer_pool_out>& out,
-                       const std::shared_ptr<pyBackendWrapper>& pbe);
+                       const std::shared_ptr<python_backend>& pbe);
 
-    virtual ~pyDecodeThreadPool();
+    virtual ~decode_thread_pool();
     virtual void start();
     virtual void stop();
     void add_provider(std::shared_ptr<nervana::provider_interface> prov);
@@ -62,23 +62,23 @@ protected:
     void manage();
 
 private:
-    pyDecodeThreadPool();
-    pyDecodeThreadPool(const pyDecodeThreadPool&);
+    decode_thread_pool();
+    decode_thread_pool(const decode_thread_pool&);
 
     int                         _itemsPerThread;
     std::shared_ptr<buffer_pool_in> _in;
     std::shared_ptr<buffer_pool_out> _out;
-    std::shared_ptr<pyBackendWrapper> _pbe;
+    std::shared_ptr<python_backend> _python_backend;
     std::mutex                  _mutex;
     std::condition_variable     _started;
     std::condition_variable     _ended;
+    int                         _batchSize;
     int                         _endSignaled    = 0;
     std::thread*                _manager        = 0;
     bool                        _stopManager    = false;
     bool                        _managerStopped = false;
     buffer_in_array*            _inputBuf       = 0;
     int                         _bufferIndex    = 0;
-    int                         _batchSize;
 
     std::vector<std::shared_ptr<nervana::provider_interface>> _providers;
 
@@ -87,7 +87,7 @@ private:
     std::vector<int>            _endInds;
 };
 
-class pyLoaderConfig : public nervana::interface::config {
+class loader_config : public nervana::interface::config {
 public:
     std::string manifest_filename;
     int         minibatch_size;
@@ -100,10 +100,10 @@ public:
     bool        single_thread       = false;
     int         random_seed         = 0;
 
-    pyLoaderConfig(nlohmann::json js)
+    loader_config(nlohmann::json js)
     {
         if(js.is_null()) {
-            throw std::runtime_error("missing pyLoader config in json config");
+            throw std::runtime_error("missing loader config in json config");
         }
 
         for(auto& info : config_list) {
@@ -130,44 +130,44 @@ private:
         ADD_SCALAR(random_seed, mode::OPTIONAL),
     };
 
-    pyLoaderConfig() {}
+    loader_config() {}
     bool validate() { return true; }
 };
 
 /*
- * The ReadThread wraps BatchIterator in a thread an coordinates work
+ * The read_thread_pool wraps BatchIterator in a thread an coordinates work
  * with other threads via locks on the output BufferPool `out`
  *
  */
 
-class ReadThread: public ThreadPool {
+class read_thread_pool: public thread_pool {
 public:
-    ReadThread(const std::shared_ptr<buffer_pool_in>& out,
-               const std::shared_ptr<batch_iterator>& batch_iterator);
+    read_thread_pool(const std::shared_ptr<buffer_pool_in>& out,
+                     const std::shared_ptr<batch_iterator>& batch_iterator);
 
 protected:
     virtual void work(int id);
 
 private:
-    ReadThread();
-    ReadThread(const ReadThread&);
+    read_thread_pool();
+    read_thread_pool(const read_thread_pool&);
     std::shared_ptr<buffer_pool_in> _out;
     std::shared_ptr<batch_iterator> _batch_iterator;
 };
 
 
-/* PyLoader
+/* loader
  *
- * The PyLoader instantiates and then coordinates the effort of loading ingested data, caching
+ * The loader instantiates and then coordinates the effort of loading ingested data, caching
  * blocks of it in contiguous disk (using cpio file format), transforming the data and finally
  * loading the data into device memory
 */
 
-class PyLoader {
+class loader {
 public:
-    PyLoader(const char* PyloaderConfigString, PyObject *pbe);
+    loader(const char*, PyObject *);
 
-    virtual ~PyLoader() {}
+    virtual ~loader() {}
     int start();
     void stop();
     int reset();
@@ -180,21 +180,21 @@ private:
     void drain();
 
 private:
-    PyLoader();
-    PyLoader(const PyLoader&);
+    loader();
+    loader(const loader&);
 
     bool                                _first = true;
+    bool                                _single_thread_mode = false;
 
-    std::shared_ptr<buffer_pool_in>     _readBufs = nullptr;
-    std::shared_ptr<buffer_pool_out>    _decodeBufs = nullptr;
-    std::unique_ptr<ReadThread>         _readThread = nullptr;
-    std::unique_ptr<pyDecodeThreadPool> _decodeThreads = nullptr;
+    std::shared_ptr<buffer_pool_in>     _read_buffers = nullptr;
+    std::shared_ptr<buffer_pool_out>    _decode_buffers = nullptr;
+    std::unique_ptr<read_thread_pool>   _read_thread_pool = nullptr;
+    std::unique_ptr<decode_thread_pool> _decode_thread_pool = nullptr;
     std::shared_ptr<block_loader>       _block_loader = nullptr;
     std::shared_ptr<batch_iterator>     _batch_iterator = nullptr;
-    std::shared_ptr<pyLoaderConfig>     _lcfg = nullptr;
 
     int                                 _batchSize;
     nlohmann::json                      _lcfg_json;
-    PyObject*                           _pbe;
-    std::shared_ptr<pyBackendWrapper>   _pyBackend;
+    PyObject*                           _py_obj_backend;
+    std::shared_ptr<python_backend>     _python_backend;
 };

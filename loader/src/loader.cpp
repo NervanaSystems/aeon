@@ -23,7 +23,7 @@
 #include <algorithm>
 
 #include "matrix.hpp"
-#include "pyLoader.hpp"
+#include "loader.hpp"
 #include "block_loader_cpio_cache.hpp"
 #include "block_iterator_sequential.hpp"
 #include "block_iterator_shuffled.hpp"
@@ -33,21 +33,20 @@
 
 using namespace std;
 
-pyDecodeThreadPool::pyDecodeThreadPool(int count,
+decode_thread_pool::decode_thread_pool(int count,
                                        const shared_ptr<buffer_pool_in>& in,
                                        const shared_ptr<buffer_pool_out>& out,
-                                       const shared_ptr<pyBackendWrapper>& pbe)
-: ThreadPool(count), _in(in), _out(out), _pbe(pbe)
+                                       const shared_ptr<python_backend>& pbe)
+: thread_pool(count), _in(in), _out(out),
+  _python_backend(pbe), _batchSize(_python_backend->_batchSize)
 {
-    _batchSize = _pbe->_batchSize;
     _itemsPerThread = (_batchSize - 1) / _count + 1;
-
     assert(_itemsPerThread * count >= _batchSize);
     assert(_itemsPerThread * (count - 1) < _batchSize);
 }
 
 
-void pyDecodeThreadPool::add_provider(std::shared_ptr<nervana::provider_interface> prov)
+void decode_thread_pool::add_provider(std::shared_ptr<nervana::provider_interface> prov)
 {
     _providers.push_back(prov);
     _startSignaled.push_back(0);
@@ -56,7 +55,7 @@ void pyDecodeThreadPool::add_provider(std::shared_ptr<nervana::provider_interfac
     _endInds.push_back(0);
 }
 
-pyDecodeThreadPool::~pyDecodeThreadPool()
+decode_thread_pool::~decode_thread_pool()
 {
     if (_manager != 0) {
         _manager->join();
@@ -66,17 +65,17 @@ pyDecodeThreadPool::~pyDecodeThreadPool()
     // of the parent class.
 }
 
-void pyDecodeThreadPool::start()
+void decode_thread_pool::start()
 {
     for (int i = 0; i < _count; i++) {
-        _threads.push_back(new thread(&pyDecodeThreadPool::run, this, i));
+        _threads.push_back(new thread(&decode_thread_pool::run, this, i));
     }
-    _manager = new thread(&pyDecodeThreadPool::manage, this);
+    _manager = new thread(&decode_thread_pool::manage, this);
 }
 
-void pyDecodeThreadPool::stop()
+void decode_thread_pool::stop()
 {
-    ThreadPool::stop();
+    thread_pool::stop();
     while (stopped() == false) {
         std::this_thread::yield();
         _in->advanceWritePos();
@@ -93,7 +92,7 @@ void pyDecodeThreadPool::stop()
     }
 }
 
-void pyDecodeThreadPool::run(int id)
+void decode_thread_pool::run(int id)
 {
     // Initialize worker threads by computing memory offsets for the
     // data this thread should work on
@@ -113,12 +112,12 @@ void pyDecodeThreadPool::run(int id)
 
         _stopped[id] = true;
     } catch (std::exception& e) {
-        cerr << "fatal exception in DecodeThreadPool::run: " << e.what() << endl;
+        cerr << "fatal exception in decode_thread_pool::run: " << e.what() << endl;
         // TODO: fail gracefully, not seg fault
     }
 }
 
-void pyDecodeThreadPool::work(int id)
+void decode_thread_pool::work(int id)
 {
     // Thread function.
     {
@@ -150,7 +149,7 @@ void pyDecodeThreadPool::work(int id)
     _ended.notify_one();
 }
 
-void pyDecodeThreadPool::produce()
+void decode_thread_pool::produce()
 {
     // lock on output buffers and copy to device
     {
@@ -179,7 +178,7 @@ void pyDecodeThreadPool::produce()
         _providers[0]->post_process(outBuf);
 
         // Copy to device.
-        _pbe->call_backend_transfer(outBuf, _bufferIndex);
+        _python_backend->call_backend_transfer(outBuf, _bufferIndex);
 
         _bufferIndex = (_bufferIndex == 0) ? 1 : 0;
         _out->advanceWritePos();
@@ -187,7 +186,7 @@ void pyDecodeThreadPool::produce()
     _out->signalNonEmpty();
 }
 
-void pyDecodeThreadPool::consume()
+void decode_thread_pool::consume()
 {
     // lock on input buffers and call produce
     {
@@ -205,7 +204,7 @@ void pyDecodeThreadPool::consume()
     _in->signalNonFull();
 }
 
-void pyDecodeThreadPool::manage()
+void decode_thread_pool::manage()
 {
     try {
         // Thread function.
@@ -219,20 +218,20 @@ void pyDecodeThreadPool::manage()
         }
         _managerStopped = true;
     } catch (std::exception& e) {
-        cerr << "exception in DecodeThreadPool::manage: " << e.what() << endl;
+        cerr << "exception in decode_thread_pool::manage: " << e.what() << endl;
         // TODO: fail gracefully, not seg fault
     }
 }
 
 
-ReadThread::ReadThread(const shared_ptr<buffer_pool_in>& out,
+read_thread_pool::read_thread_pool(const shared_ptr<buffer_pool_in>& out,
                        const shared_ptr<batch_iterator>& b_it)
-: ThreadPool(1), _out(out), _batch_iterator(b_it)
+: thread_pool(1), _out(out), _batch_iterator(b_it)
 {
     assert(_count == 1);
 }
 
-void ReadThread::work(int id)
+void read_thread_pool::work(int id)
 {
     // Fill input buffers.
     {
@@ -253,29 +252,30 @@ void ReadThread::work(int id)
 }
 
 
-PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
-: _pbe(pbe)
+loader::loader(const char* cfg_string, PyObject *py_obj_backend)
+: _py_obj_backend(py_obj_backend)
 {
-    _lcfg_json = nlohmann::json::parse(pyloaderConfigString);
-    _lcfg = make_shared<pyLoaderConfig>(_lcfg_json);
-    _batchSize = _lcfg->minibatch_size;
+    _lcfg_json = nlohmann::json::parse(cfg_string);
+    loader_config lcfg(_lcfg_json);
 
+    _batchSize = lcfg.minibatch_size;
+    _single_thread_mode = lcfg.single_thread;
     shared_ptr<Manifest> base_manifest = nullptr;
 
-    if(NDSManifest::isLikelyJSON(_lcfg->manifest_filename)) {
-        auto manifest = make_shared<NDSManifest>(_lcfg->manifest_filename);
+    if(NDSManifest::isLikelyJSON(lcfg.manifest_filename)) {
+        auto manifest = make_shared<NDSManifest>(lcfg.manifest_filename);
 
         // TODO: add shard_count/shard_index to cfg
         _block_loader = make_shared<block_loader_nds>(manifest->baseurl,
                                                       manifest->token,
                                                       manifest->collection_id,
-                                                      _lcfg->macrobatch_size);
+                                                      lcfg.macrobatch_size);
 
         base_manifest = manifest;
     } else {
         // the manifest defines which data should be included in the dataset
-        auto manifest = make_shared<CSVManifest>(_lcfg->manifest_filename,
-                                                 _lcfg->shuffle_manifest);
+        auto manifest = make_shared<CSVManifest>(lcfg.manifest_filename,
+                                                 lcfg.shuffle_manifest);
 
         // TODO: make the constructor throw this error
         if(manifest->objectCount() == 0) {
@@ -283,40 +283,37 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
         }
 
         _block_loader = make_shared<block_loader_file>(manifest,
-                                                       _lcfg->subset_fraction,
-                                                       _lcfg->macrobatch_size);
+                                                       lcfg.subset_fraction,
+                                                       lcfg.macrobatch_size);
         base_manifest = manifest;
     }
 
-    if(_lcfg->cache_directory.length() > 0) {
-        _block_loader = make_shared<block_loader_cpio_cache>(_lcfg->cache_directory,
+    if(lcfg.cache_directory.length() > 0) {
+        _block_loader = make_shared<block_loader_cpio_cache>(lcfg.cache_directory,
                                                              base_manifest->hash(),
                                                              base_manifest->version(),
                                                              _block_loader);
     }
 
     shared_ptr<block_iterator> block_iter;
-    if (_lcfg->shuffle_every_epoch) {
-        block_iter = make_shared<block_iterator_shuffled>(_block_loader, _lcfg->random_seed);
+    if (lcfg.shuffle_every_epoch) {
+        block_iter = make_shared<block_iterator_shuffled>(_block_loader, lcfg.random_seed);
     } else {
         block_iter = make_shared<block_iterator_sequential>(_block_loader);
     }
 
-    _batch_iterator = make_shared<batch_iterator>(block_iter, _lcfg->minibatch_size);
+    _batch_iterator = make_shared<batch_iterator>(block_iter, lcfg.minibatch_size);
 }
 
-int PyLoader::start()
+int loader::start()
 {
     _first = true;
     try {
         int ncores         = thread::hardware_concurrency();
         int itemsPerThread = (_batchSize - 1) /  ncores + 1;
         int nthreads       = (_batchSize - 1) / itemsPerThread + 1;
-        nthreads           = std::min(nthreads, _batchSize);
-        if (_lcfg->single_thread)
-        {
-            nthreads = 1;
-        }
+        nthreads           = _single_thread_mode ? 1 : std::min(nthreads, _batchSize);
+
         if (nthreads <= 0)
         {
             throw std::invalid_argument("Number of threads must be > 0");
@@ -334,8 +331,9 @@ int PyLoader::start()
         {
             read_sizes.push_back(0);
         }
-        _readBufs = make_shared<buffer_pool_in>(read_sizes);
-        _readThread = unique_ptr<ReadThread>(new ReadThread(_readBufs, _batch_iterator));
+        _read_buffers = make_shared<buffer_pool_in>(read_sizes);
+        _read_thread_pool = unique_ptr<read_thread_pool>(
+                        new read_thread_pool(_read_buffers, _batch_iterator));
 
         // fixed size buffers for writing out decoded data
         const vector<nervana::shape_type>& oshapes = providers[0]->get_oshapes();
@@ -346,82 +344,88 @@ int PyLoader::start()
         }
 
         // Bind the python backend here
-        _pyBackend = make_shared<pyBackendWrapper>(_pbe, oshapes, _batchSize);
+        _python_backend = make_shared<python_backend>(_py_obj_backend, oshapes, _batchSize);
 
         // These are fixed size output buffers (need batchSize for stride)
-        _decodeBufs = make_shared<buffer_pool_out>(write_sizes, (size_t)_batchSize,
-                                                   _pyBackend->use_pinned_memory());
-        _decodeThreads = unique_ptr<pyDecodeThreadPool>(
-                            new pyDecodeThreadPool(nthreads, _readBufs, _decodeBufs, _pyBackend));
+        _decode_buffers = make_shared<buffer_pool_out>(write_sizes,
+                                                       (size_t)_batchSize,
+                                                       _python_backend->use_pinned_memory());
+
+        _decode_thread_pool = unique_ptr<decode_thread_pool>(
+                new decode_thread_pool(nthreads, _read_buffers, _decode_buffers, _python_backend));
+
         for (auto& p: providers)
         {
-            _decodeThreads->add_provider(p);
+            _decode_thread_pool->add_provider(p);
         }
 
     } catch(std::bad_alloc&) {
         return -1;
     }
-    _decodeThreads->start();
-    _readThread->start();
+    _decode_thread_pool->start();
+    _read_thread_pool->start();
     return 0;
 }
 
-void PyLoader::stop()
+void loader::stop()
 {
-    _readThread->stop();
-    while (_readThread->stopped() == false) {
+    _read_thread_pool->stop();
+    while (_read_thread_pool->stopped() == false)
+    {
         std::this_thread::yield();
         drain();
     }
-    while ((_decodeBufs->empty() == false) ||
-           (_readBufs->empty() == false)) {
+    while ((_decode_buffers->empty() == false) ||
+           (_read_buffers->empty() == false))
+    {
         drain();
     }
-    _decodeThreads->stop();
+    _decode_thread_pool->stop();
 
-    _readThread    = nullptr;
-    _decodeBufs    = nullptr;
-    _decodeThreads = nullptr;
-    _pyBackend     = nullptr;
+    _read_thread_pool   = nullptr;
+    _decode_buffers     = nullptr;
+    _decode_thread_pool = nullptr;
+    _python_backend         = nullptr;
 }
 
-int PyLoader::reset()
+int loader::reset()
 {
     stop();
     _batch_iterator->reset();
     return start();
 }
 
-PyObject* PyLoader::next(int bufIdx)
+PyObject* loader::next(int bufIdx)
 {
-    unique_lock<mutex> lock(_decodeBufs->getMutex());
+    unique_lock<mutex> lock(_decode_buffers->getMutex());
     if (_first == true) {
         _first = false;
     } else {
         // Unlock the buffer used for the previous minibatch.
-        _decodeBufs->advanceReadPos();
-        _decodeBufs->signalNonFull();
+        _decode_buffers->advanceReadPos();
+        _decode_buffers->signalNonFull();
     }
-    while (_decodeBufs->empty()) {
-        _decodeBufs->waitForNonEmpty(lock);
+    while (_decode_buffers->empty()) {
+        _decode_buffers->waitForNonEmpty(lock);
     }
     // TODO: should this actually be somewhere above the various locks/signals?
-    _decodeBufs->reraiseException();
-    return _pyBackend->get_host_tuple(bufIdx);
+    _decode_buffers->reraiseException();
+    return _python_backend->get_host_tuple(bufIdx);
 }
 
-PyObject* PyLoader::shapes() {
-    return _pyBackend->get_shapes();
+PyObject* loader::shapes()
+{
+    return _python_backend->get_shapes();
 }
 
-void PyLoader::drain()
+void loader::drain()
 {
     {
-        unique_lock<mutex> lock(_decodeBufs->getMutex());
-        if (_decodeBufs->empty() == true) {
+        unique_lock<mutex> lock(_decode_buffers->getMutex());
+        if (_decode_buffers->empty() == true) {
             return;
         }
-        _decodeBufs->advanceReadPos();
+        _decode_buffers->advanceReadPos();
     }
-    _decodeBufs->signalNonFull();
+    _decode_buffers->signalNonFull();
 }
