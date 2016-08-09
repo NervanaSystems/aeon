@@ -52,7 +52,7 @@ TEST(provider,image) {
 
     CPIOFileReader reader;
     EXPECT_EQ(reader.open(files[0]), true);
-    buffer_in_array bp({0,0});
+    buffer_in_array bp(2);
     buffer_in& data_p = *bp[0];
     buffer_in& target_p = *bp[1];
     for(int i=0; i<reader.itemCount()/2; i++) {

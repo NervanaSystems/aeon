@@ -37,7 +37,7 @@ TEST(blocked_file_loader, loadBlock) {
         block_size
     );
 
-    buffer_in_array bp(vector<size_t>{0, 0});
+    buffer_in_array bp(2);
 
     blf.loadBlock(bp, 0);
 
@@ -68,7 +68,7 @@ TEST(blocked_file_loader, subset_fraction) {
         block_size
     );
 
-    buffer_in_array bp(vector<size_t>{0, 0});
+    buffer_in_array bp(2);
 
 
     blf.loadBlock(bp, 0);
@@ -93,7 +93,7 @@ TEST(blocked_file_loader, exception) {
         1
     );
 
-    buffer_in_array bp(vector<size_t>{0, 0});
+    buffer_in_array bp(2);
 
     // loadBlock doesn't actually raise the exception
     blf.loadBlock(bp, 0);

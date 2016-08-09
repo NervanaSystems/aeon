@@ -23,10 +23,7 @@ using namespace std;
 
 string load_string(block_loader_cpio_cache cache) {
     // call loadBlock from cache and cast the resulting item to a uint
-
-    // buffer_in* dataBuffer = new buffer_in(0);
-    // buffer_in* targetBuffer = new buffer_in(0);
-    buffer_in_array bp(vector<size_t>{0, 0});
+    buffer_in_array bp(2);  // 2 buffer_in:  1 for datum, 1 for target
 
     cache.loadBlock(bp, 1);
 

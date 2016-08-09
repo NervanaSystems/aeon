@@ -52,7 +52,7 @@ TEST(provider,audio_classify) {
     vector<char> buf(wav_data::HEADER_SIZE + wav.nbytes());
     wav.write_to_buffer(&buf[0], buf.size());
 
-    buffer_in_array bp({0,0});
+    buffer_in_array bp(2);
     buffer_in& data_p = *bp[0];
     buffer_in& target_p = *bp[1];
 
@@ -117,7 +117,7 @@ TEST(provider,audio_transcript) {
     vector<char> tr1_char(tr[1].begin(), tr[1].end());
 
     // Create the input buffer
-    buffer_in_array bp({0,0});
+    buffer_in_array bp(2);
     buffer_in& data_p = *bp[0];
     buffer_in& target_p = *bp[1];
 

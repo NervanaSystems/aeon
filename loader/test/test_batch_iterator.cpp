@@ -36,7 +36,7 @@ TEST(minibatch_iterator, simple) {
     // 6 minibatches fo 13 out.  They should all be unique and still in
     // sorted order.
 
-    buffer_in_array bp(vector<size_t>{0, 0});
+    buffer_in_array bp(2);
 
     // read 6 minibatches
     for(int i = 0; i < 6; ++i) {
@@ -67,7 +67,7 @@ TEST(minibatch_iterator, shuffled) {
     // 6 minibatches fo 13 out.  They should all be unique and still in
     // sorted order.
 
-    buffer_in_array bp(vector<size_t>{0, 0});
+    buffer_in_array bp(2);
 
     // read 6 minibatches
     for(int i = 0; i < 6; ++i) {

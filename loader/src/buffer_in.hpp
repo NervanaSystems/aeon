@@ -26,8 +26,8 @@
 
 class buffer_in {
 public:
-    explicit buffer_in(size_t size);
-    virtual ~buffer_in();
+    buffer_in() {}
+    virtual ~buffer_in() {}
 
     void read(std::istream& is, int size);
     void reset();
@@ -41,26 +41,27 @@ public:
     uint getSize();
 
 private:
-    buffer_in() = delete;
-
     std::vector<std::vector<char>> buffers;
     std::map<int, std::exception_ptr> exceptions;
 };
 
-// buffer_in_array holds a vector of buffer_in*.  Each buffer_in* holds either
-// the datums or the targets.  Each buffer_in* should have the same length.
+// buffer_in_array holds a vector of buffer_in*.  Each buffer_in* holds one component
+// of a particular record (i.e. datum, target, meta, etc).
+// Each buffer_in* should have the same length.
 class buffer_in_array {
 public:
-    buffer_in_array(const std::vector<size_t>& initial_sizes)
+    buffer_in_array(unsigned int nbuffers_in)
     {
-        for (auto sz : initial_sizes) {
-            data.push_back(new buffer_in(sz));
+        for (uint i=0; i<nbuffers_in; ++i)
+        {
+            data.push_back(new buffer_in());
         }
     }
 
     ~buffer_in_array()
     {
-        for (auto buf : data) {
+        for (auto buf : data)
+        {
             delete buf;
         }
     }

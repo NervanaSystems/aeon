@@ -325,13 +325,7 @@ int loader::start()
         }
 
         // variable size buffers for reading encoded data (start off zero and grow as needed)
-        const uint32_t nbuffers_in = providers[0]->num_inputs;
-        vector<size_t> read_sizes;
-        for (uint i=0; i<nbuffers_in; i++)
-        {
-            read_sizes.push_back(0);
-        }
-        _read_buffers = make_shared<buffer_pool_in>(read_sizes);
+        _read_buffers = make_shared<buffer_pool_in>(providers[0]->num_inputs);
         _read_thread_pool = unique_ptr<read_thread_pool>(
                         new read_thread_pool(_read_buffers, _batch_iterator));
 

@@ -30,7 +30,7 @@ TEST(buffer, shuffle) {
     // that they are sorted, then shuffle, then assert that they are
     // not sorted
 
-    buffer_in b(0);
+    buffer_in b;
 
     read(b, "abc");
     read(b, "asd");
@@ -63,13 +63,13 @@ void setup_buffer_exception(buffer_in& b) {
 }
 
 TEST(buffer, write_exception) {
-    buffer_in b(0);
+    buffer_in b;
 
     setup_buffer_exception(b);
 }
 
 TEST(buffer, read_exception) {
-    buffer_in b(0);
+    buffer_in b;
 
     setup_buffer_exception(b);
 

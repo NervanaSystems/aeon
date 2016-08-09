@@ -4,7 +4,7 @@ batch_iterator::batch_iterator(std::shared_ptr<block_iterator> macroBatchIterato
                                int minibatchSize)
     : _macroBatchIterator(macroBatchIterator),
       _minibatchSize(minibatchSize),
-      _macrobatch{std::vector<size_t>{0,0}},
+      _macrobatch{2},
       _i(0)
 {
     _macroBatchIterator->reset();
@@ -13,7 +13,7 @@ batch_iterator::batch_iterator(std::shared_ptr<block_iterator> macroBatchIterato
 void batch_iterator::read(buffer_in_array& dest)
 {
     if (_macrobatch.size() != dest.size()) {
-        _macrobatch = buffer_in_array(std::vector<size_t>(dest.size(), (size_t) 0));
+        _macrobatch = buffer_in_array(dest.size());
     }
     // read `_minibatchSize` items from _macrobatch into `dest`
     for(auto i = 0; i < _minibatchSize; ++i) {

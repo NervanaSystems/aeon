@@ -25,7 +25,7 @@
 
 class buffer_pool_in : public buffer_pool {
 public:
-    buffer_pool_in(const std::vector<size_t>& initial_sizes);
+    buffer_pool_in(unsigned int nbuffers_in);
     virtual ~buffer_pool_in();
     buffer_in_array& getForWrite();
     buffer_in_array& getForRead();

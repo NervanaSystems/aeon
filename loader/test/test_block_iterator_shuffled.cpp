@@ -23,7 +23,7 @@ using namespace std;
 
 TEST(block_iterator_shuffled, sequential_block) {
     block_loader_alphabet bl(8);
-    buffer_in_array bp(vector<size_t>{0, 0});
+    buffer_in_array bp(2);
 
     // ensure that loading successive blocks from block_loader_sequential
     // result in sorted strings
@@ -39,7 +39,7 @@ TEST(block_iterator_shuffled, sequential_block) {
 TEST(block_iterator_shuffled, shuffled_block) {
     auto mbl = make_shared<block_loader_alphabet>(5);
     block_iterator_shuffled bis(mbl, 0);
-    buffer_in_array bp(vector<size_t>{0, 0});
+    buffer_in_array bp(2);
 
     uint num_records = mbl->objectCount();
 
