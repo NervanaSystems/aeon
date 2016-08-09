@@ -81,7 +81,7 @@ namespace nervana {
         float               positive_overlap = 0.7;  // positive anchors have > 0.7 overlap with at least one gt box
         float               foreground_fraction = 0.5;  // at most, positive anchors are 0.5 of the total rois
         std::string         type_string = "float";
-        size_t                      max_bbox_count;
+        size_t              max_gt_boxes = 64;
         std::vector<std::string>    labels;
 
         enum class buffer_index {
@@ -120,7 +120,7 @@ namespace nervana {
             ADD_SCALAR(positive_overlap, mode::OPTIONAL),
             ADD_SCALAR(foreground_fraction, mode::OPTIONAL),
             ADD_SCALAR(type_string, mode::OPTIONAL),
-            ADD_SCALAR(max_bbox_count, mode::REQUIRED),
+            ADD_SCALAR(max_gt_boxes, mode::OPTIONAL),
             ADD_SCALAR(labels, mode::REQUIRED)
         };
 
@@ -192,7 +192,8 @@ namespace nervana {
         void load(const std::vector<void*>& buf_list, std::shared_ptr<localization::decoded> mp) override;
     private:
         loader() = delete;
-        void build_output(std::shared_ptr<localization::decoded> mp, std::vector<float>& dev_y_labels, std::vector<float>& dev_y_labels_mask, std::vector<float>& dev_y_bbtargets, std::vector<float>& dev_y_bbtargets_mask);
-        int total_anchors;
+        int                     total_anchors;
+        size_t                  max_gt_boxes;
+        std::vector<shape_type> shape_type_list;
     };
 }

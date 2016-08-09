@@ -61,13 +61,13 @@ public:
     bool extract(const char* data, int size, const std::unordered_map<std::string,int>& label_map);
     virtual ~decoded() {}
 
-    const std::vector<box>& boxes() const { return _boxes; }
+    const std::vector<bbox::box>& boxes() const { return _boxes; }
     int width() const { return _width; }
     int height() const { return _height; }
     int depth() const { return _depth; }
 
 private:
-    std::vector<box> _boxes;
+    std::vector<bbox::box> _boxes;
     int _width;
     int _height;
     int _depth;
