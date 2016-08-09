@@ -889,7 +889,7 @@ TEST(localization,provider) {
     cv::imencode(".png", image, image_data);
     for(auto c: image_data) { image_cdata.push_back(c); };
 
-    buffer_in_array  in_buf({0,0});
+    buffer_in_array  in_buf(2);
     in_buf[0]->addItem(image_cdata);
     in_buf[1]->addItem(target_data);
 
@@ -956,7 +956,7 @@ TEST(localization,provider_channel_major) {
     cv::imencode(".png", image, image_data);
     for(auto c: image_data) { image_cdata.push_back(c); };
 
-    buffer_in_array  in_buf({0,0});
+    buffer_in_array  in_buf(2);
     in_buf[0]->addItem(image_cdata);
     in_buf[1]->addItem(target_data);
 
