@@ -24,12 +24,12 @@
 
 #include "matrix.hpp"
 #include "pyLoader.hpp"
-#include "batch_loader_cpio_cache.hpp"
-#include "batch_iterator_sequential.hpp"
-#include "batch_iterator_shuffled.hpp"
-#include "batch_iterator_minibatch.hpp"
+#include "block_loader_cpio_cache.hpp"
+#include "block_iterator_sequential.hpp"
+#include "block_iterator_shuffled.hpp"
+#include "batch_iterator.hpp"
 #include "nds_manifest.hpp"
-#include "nds_batch_loader.hpp"
+#include "block_loader_nds.hpp"
 
 using namespace std;
 
@@ -226,8 +226,8 @@ void pyDecodeThreadPool::manage()
 
 
 ReadThread::ReadThread(const shared_ptr<buffer_pool_in>& out,
-                       const shared_ptr<BatchIterator>& batch_iterator)
-: ThreadPool(1), _out(out), _batch_iterator(batch_iterator)
+                       const shared_ptr<batch_iterator>& b_it)
+: ThreadPool(1), _out(out), _batch_iterator(b_it)
 {
     assert(_count == 1);
 }
@@ -266,10 +266,10 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
         auto manifest = make_shared<NDSManifest>(_lcfg->manifest_filename);
 
         // TODO: add shard_count/shard_index to cfg
-        _batchLoader = make_shared<NDSBatchLoader>(manifest->baseurl,
-                                                   manifest->token,
-                                                   manifest->collection_id,
-                                                   _lcfg->macrobatch_size);
+        _block_loader = make_shared<block_loader_nds>(manifest->baseurl,
+                                                      manifest->token,
+                                                      manifest->collection_id,
+                                                      _lcfg->macrobatch_size);
 
         base_manifest = manifest;
     } else {
@@ -277,32 +277,32 @@ PyLoader::PyLoader(const char* pyloaderConfigString, PyObject *pbe)
         auto manifest = make_shared<CSVManifest>(_lcfg->manifest_filename,
                                                  _lcfg->shuffle_manifest);
 
+        // TODO: make the constructor throw this error
         if(manifest->objectCount() == 0) {
             throw std::runtime_error("manifest file is empty");
         }
 
-        _batchLoader = make_shared<BatchLoaderFile>(
-            manifest, _lcfg->subset_fraction, _lcfg->macrobatch_size
-        );
-
+        _block_loader = make_shared<block_loader_file>(manifest,
+                                                       _lcfg->subset_fraction,
+                                                       _lcfg->macrobatch_size);
         base_manifest = manifest;
     }
 
     if(_lcfg->cache_directory.length() > 0) {
-        _batchLoader = make_shared<BatchLoaderCPIOCache>(_lcfg->cache_directory,
-                                                         base_manifest->hash(),
-                                                         base_manifest->version(),
-                                                         _batchLoader);
+        _block_loader = make_shared<block_loader_cpio_cache>(_lcfg->cache_directory,
+                                                             base_manifest->hash(),
+                                                             base_manifest->version(),
+                                                             _block_loader);
     }
 
+    shared_ptr<block_iterator> block_iter;
     if (_lcfg->shuffle_every_epoch) {
-        _batch_iterator = make_shared<BatchIteratorShuffled>(_batchLoader,
-                                                             _lcfg->random_seed);
+        block_iter = make_shared<block_iterator_shuffled>(_block_loader, _lcfg->random_seed);
     } else {
-        _batch_iterator = make_shared<BatchIteratorSequential>(_batchLoader);
+        block_iter = make_shared<block_iterator_sequential>(_block_loader);
     }
 
-    _batch_iterator = make_shared<BatchIteratorMinibatch>(_batch_iterator, _lcfg->minibatch_size);
+    _batch_iterator = make_shared<batch_iterator>(block_iter, _lcfg->minibatch_size);
 }
 
 int PyLoader::start()

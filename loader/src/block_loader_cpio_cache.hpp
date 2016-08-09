@@ -17,11 +17,11 @@
 
 #include <string>
 
-#include "batch_loader_file.hpp"
+#include "block_loader_file.hpp"
 
-/* BatchLoaderCPIOCache
+/* block_loader_cpio_cache
  *
- * caches loadBlock function in BatchLoader out to cpio files in
+ * caches loadBlock function in block_loader out to cpio files in
  * `cacheDir`.
  *
  * The hash is used to unquely identify a particular dataset and the version
@@ -30,11 +30,11 @@
  * old version is deleted.
  */
 
-class BatchLoaderCPIOCache : public BatchLoader {
+class block_loader_cpio_cache : public block_loader {
 public:
-    BatchLoaderCPIOCache(const std::string& rootCacheDir,
-                         const std::string& hash, const std::string& version,
-                         std::shared_ptr<BatchLoader> loader);
+    block_loader_cpio_cache(const std::string& rootCacheDir,
+                            const std::string& hash, const std::string& version,
+                            std::shared_ptr<block_loader> loader);
 
     void loadBlock(buffer_in_array& dest, uint block_num);
     uint objectCount();
@@ -51,5 +51,5 @@ private:
     static int rm(const char *path, const struct stat *s, int flag, struct FTW *f);
 
     std::string _cacheDir;
-    std::shared_ptr<BatchLoader> _loader;
+    std::shared_ptr<block_loader> _loader;
 };

@@ -16,11 +16,10 @@
 #pragma once
 
 #include "buffer_in.hpp"
-#include "batch_loader.hpp"
 
-class MockBatchLoader : public BatchLoader {
+class block_iterator
+{
 public:
-    MockBatchLoader(uint block_size);
-    void loadBlock(buffer_in_array &dest, uint block_num);
-    uint objectCount();
+    virtual void read(buffer_in_array& dest) = 0;
+    virtual void reset() = 0;
 };

@@ -21,34 +21,32 @@ include ../Makefile.base
 # specific to TEST
 
 TEST_SRCS := \
-    main.cpp \
+    buffer_test.cpp \
+    csv_manifest_maker.cpp \
+    csv_manifest_test.cpp \
     gen_image.cpp \
     gen_video.cpp \
+    helpers.cpp \
+    main.cpp \
+    test_audio.cpp \
+    test_batch_iterator.cpp \
     test_bbox.cpp \
+    test_block_iterator_shuffled.cpp \
+    test_block_loader_cpio_cache.cpp \
+    test_block_loader_file.cpp \
+    test_char_map.cpp \
     test_image.cpp \
     test_image_var.cpp \
     test_label_map.cpp \
+    test_localization.cpp \
+    test_logging.cpp \
+    test_params.cpp \
     test_pixel_mask.cpp \
-    test_char_map.cpp \
     test_provider.cpp \
     test_provider_audio.cpp \
+    test_types.cpp \
     test_util.cpp \
     test_video.cpp \
-    test_types.cpp \
-    test_params.cpp \
-    csv_manifest_test.cpp \
-    csv_manifest_maker.cpp \
-    test_batch_loader_file.cpp \
-    test_batch_loader_cpio_cache.cpp \
-    test_batch_iterator_minibatch.cpp \
-    test_batch_iterator_shuffled.cpp \
-    buffer_test.cpp \
-    helpers.cpp \
-    simple_loader.cpp \
-    mock_batch_loader.cpp \
-    test_localization.cpp \
-    test_audio.cpp \
-    test_logging.cpp \
 
 OBJS             = $(subst .cpp,.o,$(TEST_SRCS))
 INC             := -I../src $(INC)

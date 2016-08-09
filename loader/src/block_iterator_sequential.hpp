@@ -15,22 +15,17 @@
 
 #pragma once
 
-#include "buffer_in.hpp"
+#include "block_loader.hpp"
+#include "block_iterator.hpp"
 
-/*
- * A BatchLoader is something which can load blocks of data into a buffer_in_array
- */
-
-class BatchLoader {
+class block_iterator_sequential : public block_iterator {
 public:
-    virtual void loadBlock(buffer_in_array& dest, uint block_num) = 0;
-    virtual uint objectCount() = 0;
+    block_iterator_sequential(std::shared_ptr<block_loader> loader);
+    void read(buffer_in_array& dest);
+    void reset();
 
-    uint blockCount();
-    uint blockSize();
-
-protected:
-    BatchLoader(uint block_size);
-
-    uint _block_size;
+private:
+    std::shared_ptr<block_loader> _loader;
+    uint _count;
+    uint _i;
 };

@@ -20,12 +20,12 @@
 
 #include "buffer_in.hpp"
 #include "cpio.hpp"
-#include "batch_loader.hpp"
+#include "block_loader.hpp"
 
-class NDSBatchLoader : public BatchLoader {
+class block_loader_nds : public block_loader {
 public:
-    NDSBatchLoader(const std::string baseurl, const std::string token, int collection_id, uint block_size, int shard_count=1, int shard_index=0);
-    ~NDSBatchLoader();
+    block_loader_nds(const std::string baseurl, const std::string token, int collection_id, uint block_size, int shard_count=1, int shard_index=0);
+    ~block_loader_nds();
 
     void loadBlock(buffer_in_array& dest, uint block_num);
     uint objectCount();

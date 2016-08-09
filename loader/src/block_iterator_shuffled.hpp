@@ -1,5 +1,5 @@
 /*
- Copyright 2016 Nervana Systems Inc.
+ Copyright 2015 Nervana Systems Inc.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -14,19 +14,26 @@
 */
 
 #pragma once
+#include <random>
+#include "block_loader.hpp"
+#include "block_iterator.hpp"
 
-#include "batch_loader.hpp"
-#include "batch_iterator.hpp"
-
-class BatchIteratorSequential : public BatchIterator {
+// This batch iterator shuffles the order that macro blocks are used as
+// well as shuffling the data in the buffers.
+class block_iterator_shuffled : public block_iterator {
 public:
-    BatchIteratorSequential(std::shared_ptr<BatchLoader> loader);
-
+    block_iterator_shuffled(std::shared_ptr<block_loader> loader, uint seed);
     void read(buffer_in_array& dest);
     void reset();
 
+protected:
+    void shuffle();
+
 private:
-    std::shared_ptr<BatchLoader> _loader;
-    uint _i;
-    uint _count;
+    std::minstd_rand0 _rand;
+    std::shared_ptr<block_loader> _loader;
+    std::vector<uint> _indices;
+    std::vector<uint>::iterator _it;
+    uint _seed;
+    uint _epoch;
 };

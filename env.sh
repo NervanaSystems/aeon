@@ -3,12 +3,13 @@
 SRCS="
     api_pversion.cpp
     avi.cpp
-    batch_iterator_minibatch.cpp
-    batch_iterator_sequential.cpp
-    batch_iterator_shuffled.cpp
-    batch_loader.cpp
-    batch_loader_cpio_cache.cpp
-    batch_loader_file.cpp
+    batch_iterator.cpp
+    block_iterator_sequential.cpp
+    block_iterator_shuffled.cpp
+    block_loader.cpp
+    block_loader_cpio_cache.cpp
+    block_loader_file.cpp
+    block_loader_nds.cpp
     box.cpp
     buffer_in.cpp
     buffer_out.cpp
@@ -32,7 +33,6 @@ SRCS="
     interface.cpp
     log.cpp
     manifest.cpp
-    nds_batch_loader.cpp
     nds_manifest.cpp
     noise_clips.cpp
     provider_audio.cpp

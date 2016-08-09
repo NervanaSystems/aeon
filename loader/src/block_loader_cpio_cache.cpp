@@ -21,18 +21,19 @@
 #include <ftw.h>
 
 #include "cpio.hpp"
-#include "batch_loader_cpio_cache.hpp"
+#include "block_loader_cpio_cache.hpp"
 
 using namespace std;
 
 // maximum number of files opened by nftw file enumeration function
 #define OPEN_MAX 128
 
-BatchLoaderCPIOCache::BatchLoaderCPIOCache(const string& rootCacheDir,
-                                           const string& hash,
-                                           const string& version,
-                                           shared_ptr<BatchLoader> loader)
-: BatchLoader(loader->blockSize()), _loader(loader) {
+block_loader_cpio_cache::block_loader_cpio_cache(const string& rootCacheDir,
+                                                 const string& hash,
+                                                 const string& version,
+                                                 shared_ptr<block_loader> loader)
+: block_loader(loader->blockSize()), _loader(loader)
+{
     invalidateOldCache(rootCacheDir, hash, version);
 
     _cacheDir = rootCacheDir + "/" + hash + "_" + version;
@@ -40,7 +41,8 @@ BatchLoaderCPIOCache::BatchLoaderCPIOCache(const string& rootCacheDir,
     makeDirectory(_cacheDir);
 }
 
-void BatchLoaderCPIOCache::loadBlock(buffer_in_array& dest, uint block_num) {
+void block_loader_cpio_cache::loadBlock(buffer_in_array& dest, uint block_num)
+{
     if(loadBlockFromCache(dest, block_num)) {
         return;
     } else {
@@ -55,7 +57,8 @@ void BatchLoaderCPIOCache::loadBlock(buffer_in_array& dest, uint block_num) {
     }
 }
 
-bool BatchLoaderCPIOCache::loadBlockFromCache(buffer_in_array& dest, uint block_num) {
+bool block_loader_cpio_cache::loadBlockFromCache(buffer_in_array& dest, uint block_num)
+{
     // load a block from cpio cache into dest.  If file doesn't exist,
     // return false.  If loading from cpio cache was successful return
     // true.
@@ -83,16 +86,18 @@ bool BatchLoaderCPIOCache::loadBlockFromCache(buffer_in_array& dest, uint block_
     return true;
 }
 
-void BatchLoaderCPIOCache::writeBlockToCache(buffer_in_array& buff, uint block_num) {
+void block_loader_cpio_cache::writeBlockToCache(buffer_in_array& buff, uint block_num)
+{
     CPIOFileWriter writer;
     writer.open(blockFilename(block_num));
     writer.write_all_records(buff);
     writer.close();
 }
 
-void BatchLoaderCPIOCache::invalidateOldCache(const string& rootCacheDir,
-                                              const string& hash,
-                                              const string& version) {
+void block_loader_cpio_cache::invalidateOldCache(const string& rootCacheDir,
+                                                 const string& hash,
+                                                 const string& version)
+{
     // remove cache directories that match rootCacheDir and hash but not version
 
     DIR *dir;
@@ -112,9 +117,10 @@ void BatchLoaderCPIOCache::invalidateOldCache(const string& rootCacheDir,
     }
 }
 
-bool BatchLoaderCPIOCache::filenameHoldsInvalidCache(const string& filename,
-                                                     const string& hash,
-                                                     const string& version) {
+bool block_loader_cpio_cache::filenameHoldsInvalidCache(const string& filename,
+                                                        const string& hash,
+                                                        const string& version)
+{
     // in order for `filename` to hold invalid cache, it must begin with
     // `hash`, but not contain `version`
 
@@ -130,7 +136,8 @@ bool BatchLoaderCPIOCache::filenameHoldsInvalidCache(const string& filename,
     return false;
 }
 
-int BatchLoaderCPIOCache::rm(const char *path, const struct stat *s, int flag, struct FTW *f) {
+int block_loader_cpio_cache::rm(const char *path, const struct stat *s, int flag, struct FTW *f)
+{
     // see http://stackoverflow.com/a/1149837/2093984
     // Call unlink or rmdir on the path, as appropriate.
     int (*rm_func)(const char *);
@@ -150,7 +157,8 @@ int BatchLoaderCPIOCache::rm(const char *path, const struct stat *s, int flag, s
     return status;
 }
 
-void BatchLoaderCPIOCache::removeDirectory(const string& dir) {
+void block_loader_cpio_cache::removeDirectory(const string& dir)
+{
     // see http://stackoverflow.com/a/1149837/2093984
     // FTW_DEPTH: handle directories after its contents
     // FTW_PHYS: do not follow symbolic links
@@ -161,7 +169,8 @@ void BatchLoaderCPIOCache::removeDirectory(const string& dir) {
     }
 }
 
-void BatchLoaderCPIOCache::makeDirectory(const string& dir) {
+void block_loader_cpio_cache::makeDirectory(const string& dir)
+{
     if(mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) {
         if(errno == EEXIST) {
             // not really an error, the directory already exists
@@ -174,12 +183,14 @@ void BatchLoaderCPIOCache::makeDirectory(const string& dir) {
     }
 }
 
-string BatchLoaderCPIOCache::blockFilename(uint block_num) {
+string block_loader_cpio_cache::blockFilename(uint block_num)
+{
     stringstream s;
     s << _cacheDir << "/" << block_num << "-" << _block_size << ".cpio";
     return s.str();
 }
 
-uint BatchLoaderCPIOCache::objectCount() {
+uint block_loader_cpio_cache::objectCount()
+{
     return _loader->objectCount();
 }

@@ -16,24 +16,21 @@
 #include "gtest/gtest.h"
 
 #include "helpers.hpp"
-#include "batch_iterator_minibatch.hpp"
-#include "batch_iterator_sequential.hpp"
-#include "batch_iterator_shuffled.hpp"
-
-#include "mock_batch_loader.hpp"
-
+#include "batch_iterator.hpp"
+#include "block_iterator_sequential.hpp"
+#include "block_iterator_shuffled.hpp"
 
 using namespace std;
 
 TEST(minibatch_iterator, simple) {
-    // give a BatchIteratorMinibatch a block-level BatchIterator and make sure
-    // that reading through the BatchIteratorMinibatch results in reading
-    // all of the records in the block-level BatchIterator.
+    // give a batch_iterator a block-level block_iterator and make sure
+    // that reading through the batch_iterator results in reading
+    // all of the records in the block-level block_iterator.
 
     // a little odd here that our block size is 3 and our minibatchsize is 13 ...
-    auto mbl = make_shared<MockBatchLoader>(3);
-    auto bis = make_shared<BatchIteratorSequential>(mbl);
-    BatchIteratorMinibatch mi(bis, 13);
+    auto mbl = make_shared<block_loader_alphabet>(3);
+    auto bis = make_shared<block_iterator_sequential>(mbl);
+    batch_iterator mi(bis, 13);
 
     // we know there are 3 * 26 objects in the dataset so we should get
     // 6 minibatches fo 13 out.  They should all be unique and still in
@@ -57,14 +54,14 @@ TEST(minibatch_iterator, simple) {
 }
 
 TEST(minibatch_iterator, shuffled) {
-    // give a BatchIteratorMinibatch a block-level BatchIterator and make sure
-    // that reading through the BatchIteratorMinibatch results in reading
-    // all of the records in the block-level BatchIterator.
+    // give a batch_iterator a block-level block_iterator and make sure
+    // that reading through the batch_iterator results in reading
+    // all of the records in the block-level block_iterator.
 
     // a little odd here that our block size is 3 and our minibatchsize is 13 ...
-    auto mbl = make_shared<MockBatchLoader>(3);
-    auto bis = make_shared<BatchIteratorShuffled>(mbl, 0);
-    BatchIteratorMinibatch mi(bis, 13);
+    auto mbl = make_shared<block_loader_alphabet>(3);
+    auto bis = make_shared<block_iterator_shuffled>(mbl, 0);
+    batch_iterator mi(bis, 13);
 
     // we know there are 3 * 26 objects in the dataset so we should get
     // 6 minibatches fo 13 out.  They should all be unique and still in

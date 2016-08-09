@@ -21,7 +21,7 @@
 #include <curl/curlbuild.h>
 
 #include "json.hpp"
-#include "nds_batch_loader.hpp"
+#include "block_loader_nds.hpp"
 
 using namespace std;
 
@@ -34,8 +34,8 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
     return size * nmemb;
 }
 
-NDSBatchLoader::NDSBatchLoader(const std::string baseurl, const std::string token, int collection_id, uint block_size, int shard_count, int shard_index)
-    : BatchLoader(block_size), _baseurl(baseurl), _token(token), _collection_id(collection_id),
+block_loader_nds::block_loader_nds(const std::string baseurl, const std::string token, int collection_id, uint block_size, int shard_count, int shard_index)
+    : block_loader(block_size), _baseurl(baseurl), _token(token), _collection_id(collection_id),
       _shard_count(shard_count), _shard_index(shard_index) {
     assert(shard_index < shard_count);
 
@@ -45,11 +45,11 @@ NDSBatchLoader::NDSBatchLoader(const std::string baseurl, const std::string toke
     loadMetadata();
 }
 
-NDSBatchLoader::~NDSBatchLoader() {
+block_loader_nds::~block_loader_nds() {
     curl_easy_cleanup(_curl);
 }
 
-void NDSBatchLoader::loadBlock(buffer_in_array& dest, uint block_num) {
+void block_loader_nds::loadBlock(buffer_in_array& dest, uint block_num) {
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
 
@@ -66,7 +66,7 @@ void NDSBatchLoader::loadBlock(buffer_in_array& dest, uint block_num) {
     }
 }
 
-void NDSBatchLoader::get(const string url, stringstream &stream) {
+void block_loader_nds::get(const string url, stringstream &stream) {
     // given a url, make an HTTP GET request and fill stream with
     // the body of the response
 
@@ -94,7 +94,7 @@ void NDSBatchLoader::get(const string url, stringstream &stream) {
     }
 }
 
-const string NDSBatchLoader::loadBlockURL(uint block_num) {
+const string block_loader_nds::loadBlockURL(uint block_num) {
     stringstream ss;
     ss << _baseurl << "/macrobatch?";
     ss << "macro_batch_index=" << block_num;
@@ -106,7 +106,7 @@ const string NDSBatchLoader::loadBlockURL(uint block_num) {
     return ss.str();
 }
 
-const string NDSBatchLoader::metadataURL() {
+const string block_loader_nds::metadataURL() {
     stringstream ss;
     ss << _baseurl << "/object_count?";
     ss << "macro_batch_max_size=" << _block_size;
@@ -117,7 +117,7 @@ const string NDSBatchLoader::metadataURL() {
     return ss.str();
 }
 
-void NDSBatchLoader::loadMetadata() {
+void block_loader_nds::loadMetadata() {
     // fetch metadata and store in local attributes
 
     stringstream cpio_stream;
@@ -128,10 +128,10 @@ void NDSBatchLoader::loadMetadata() {
     _blockCount = metadata["block_count"];
 }
 
-uint NDSBatchLoader::objectCount() {
+uint block_loader_nds::objectCount() {
     return _objectCount;
 }
 
-uint NDSBatchLoader::blockCount() {
+uint block_loader_nds::blockCount() {
     return _blockCount;
 }

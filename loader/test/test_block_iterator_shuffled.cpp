@@ -16,18 +16,16 @@
 #include "gtest/gtest.h"
 
 #include "helpers.hpp"
-#include "batch_iterator_shuffled.hpp"
-#include "batch_iterator_sequential.hpp"
-
-#include "mock_batch_loader.hpp"
+#include "block_iterator_shuffled.hpp"
+#include "block_iterator_sequential.hpp"
 
 using namespace std;
 
-TEST(batch_iterator_shuffled, batch_loader_sequential) {
-    MockBatchLoader bl(8);
+TEST(block_iterator_shuffled, sequential_block) {
+    block_loader_alphabet bl(8);
     buffer_in_array bp(vector<size_t>{0, 0});
 
-    // ensure that loading successive blocks from SequentialBatchLoader
+    // ensure that loading successive blocks from block_loader_sequential
     // result in sorted strings
     bl.loadBlock(bp, 0);
     bl.loadBlock(bp, 1);
@@ -38,10 +36,9 @@ TEST(batch_iterator_shuffled, batch_loader_sequential) {
     ASSERT_EQ(sorted(words), true);
 }
 
-TEST(batch_iterator_shuffled, shuffled_block) {
-    auto mbl = make_shared<MockBatchLoader>(5);
-    BatchIteratorShuffled bis(mbl, 0);
-    // BatchIteratorSequential bis(mbl);
+TEST(block_iterator_shuffled, shuffled_block) {
+    auto mbl = make_shared<block_loader_alphabet>(5);
+    block_iterator_shuffled bis(mbl, 0);
     buffer_in_array bp(vector<size_t>{0, 0});
 
     uint num_records = mbl->objectCount();

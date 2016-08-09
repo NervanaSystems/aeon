@@ -26,7 +26,8 @@
 
 #include "pyBackendWrapper.hpp"
 #include "threadpool.hpp"
-#include "batch_loader.hpp"
+#include "block_loader.hpp"
+#include "block_iterator.hpp"
 #include "batch_iterator.hpp"
 #include "manifest.hpp"
 #include "provider_factory.hpp"
@@ -142,7 +143,7 @@ private:
 class ReadThread: public ThreadPool {
 public:
     ReadThread(const std::shared_ptr<buffer_pool_in>& out,
-               const std::shared_ptr<BatchIterator>& batch_iterator);
+               const std::shared_ptr<batch_iterator>& batch_iterator);
 
 protected:
     virtual void work(int id);
@@ -151,7 +152,7 @@ private:
     ReadThread();
     ReadThread(const ReadThread&);
     std::shared_ptr<buffer_pool_in> _out;
-    std::shared_ptr<BatchIterator> _batch_iterator;
+    std::shared_ptr<batch_iterator> _batch_iterator;
 };
 
 
@@ -173,7 +174,7 @@ public:
     PyObject* shapes();
     PyObject* next(int bufIdx);
 
-    int itemCount() { return _batchLoader->objectCount(); }
+    int itemCount() { return _block_loader->objectCount(); }
 
 private:
     void drain();
@@ -188,8 +189,8 @@ private:
     std::shared_ptr<buffer_pool_out>    _decodeBufs = nullptr;
     std::unique_ptr<ReadThread>         _readThread = nullptr;
     std::unique_ptr<pyDecodeThreadPool> _decodeThreads = nullptr;
-    std::shared_ptr<BatchLoader>        _batchLoader = nullptr;
-    std::shared_ptr<BatchIterator>      _batch_iterator = nullptr;
+    std::shared_ptr<block_loader>       _block_loader = nullptr;
+    std::shared_ptr<batch_iterator>     _batch_iterator = nullptr;
     std::shared_ptr<pyLoaderConfig>     _lcfg = nullptr;
 
     int                                 _batchSize;

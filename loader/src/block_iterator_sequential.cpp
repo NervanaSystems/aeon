@@ -12,19 +12,16 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-
-#include <math.h>
-
-#include "batch_iterator_sequential.hpp"
+#include "block_iterator_sequential.hpp"
 
 using namespace std;
 
-BatchIteratorSequential::BatchIteratorSequential(shared_ptr<BatchLoader> loader)
+block_iterator_sequential::block_iterator_sequential(shared_ptr<block_loader> loader)
 : _loader(loader), _count(_loader->blockCount()), _i(0)
 {
 }
 
-void BatchIteratorSequential::read(buffer_in_array& dest)
+void block_iterator_sequential::read(buffer_in_array& dest)
 {
     _loader->loadBlock(dest, _i);
     if (_i++ == _count) {
@@ -32,7 +29,7 @@ void BatchIteratorSequential::read(buffer_in_array& dest)
     }
 }
 
-void BatchIteratorSequential::reset()
+void block_iterator_sequential::reset()
 {
     _i = 0;
 }
