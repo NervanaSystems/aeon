@@ -7,8 +7,7 @@ using namespace nervana;
 using namespace nlohmann;   // json stuff
 
 ostream& operator<<(ostream& out, const nervana::bbox::box& b) {
-    out << b.label << " (" << b.xmax << "," << b.xmin << ")(" << b.ymax << "," << b.ymin << ") "
-        << b.difficult << " " << b.truncated;
+    out << (nervana::box)b << " label=" << b.label;
     return out;
 }
 

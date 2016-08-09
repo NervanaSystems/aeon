@@ -47,10 +47,12 @@ namespace nervana {
             _shape{shape},
             _otype{otype}
         {
-            _byte_size = static_cast<size_t> (_otype.size *
-                std::accumulate(_shape.begin(), _shape.end(), 1, std::multiplies<uint32_t>()));
+            _byte_size = static_cast<size_t> (_otype.size * get_element_count());
         }
 
+        size_t get_element_count() const {
+            return std::accumulate(_shape.begin(), _shape.end(), 1, std::multiplies<uint32_t>());
+        }
         size_t get_byte_size() const { return _byte_size; }
         const std::vector<size_t>& get_shape() const { return _shape; }
         const output_type& get_otype() const { return _otype; }

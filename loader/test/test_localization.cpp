@@ -305,7 +305,7 @@ TEST(localization, transform) {
 //    }
 }
 
-TEST(DISABLED_localization, loader) {
+TEST(localization, loader) {
     vector<int> bbox_mask_index = {
           1200,   1262,   1324,   1386,  23954,  24016,  24078,  24090,
          24140,  24152,  24202,  24214,  24264,  24276,  24338,  24400,
@@ -613,6 +613,7 @@ TEST(DISABLED_localization, loader) {
         520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530, 531, 532
     };
 
+    // bg and fg
     vector<int> labels_mask_idx = {
           192,   193,   194,   195,   196,   197,   198,   199,
           200,   201,   202,   203,   204,   205,   206,   207,
@@ -681,7 +682,7 @@ TEST(DISABLED_localization, loader) {
     };
 
     string data = read_file(CURDIR"/test_data/006637.json");
-    auto cfg = make_localization_config();
+    localization::config cfg = make_localization_config();
     localization::extractor extractor{cfg};
     localization::transformer transformer{cfg};
     localization::loader loader{cfg};
@@ -699,70 +700,110 @@ TEST(DISABLED_localization, loader) {
         EXPECT_EQ(bg_idx[i], transformed_data->anchor_index[i+fg_idx.size()]);
     }
 
-    vector<float> dev_y_labels;
-    vector<float> dev_y_labels_mask;
-    vector<float> dev_y_bbtargets;
-    vector<float> dev_y_bbtargets_mask;
+    vector<float>   bbtargets;
+    vector<float>   bbtargets_mask;
+    vector<int32_t> labels_flat;
+    vector<int32_t> labels_mask;
+    vector<int32_t> im_shape;
+    vector<float>   gt_boxes;
+    vector<int32_t> num_gt_boxes;
+    vector<int32_t> gt_classes;
+    vector<float>   im_scale;
 
-//    loader.build_output(transformed_data, dev_y_labels, dev_y_labels_mask, dev_y_bbtargets, dev_y_bbtargets_mask);
+    vector<void*> buf_list;
+    const vector<shape_type>& shapes = cfg.get_shape_type_list();
+    ASSERT_EQ(9, shapes.size());
 
-    EXPECT_EQ(69192, dev_y_labels.size());
-    EXPECT_EQ(69192, dev_y_labels_mask.size());
-    EXPECT_EQ(138384, dev_y_bbtargets.size());
-    EXPECT_EQ(138384, dev_y_bbtargets_mask.size());
+    bbtargets.resize(shapes[0].get_element_count());
+    bbtargets_mask.resize(shapes[1].get_element_count());
+    labels_flat.resize(shapes[2].get_element_count());
+    labels_mask.resize(shapes[3].get_element_count());
+    im_shape.resize(shapes[4].get_element_count());
+    gt_boxes.resize(shapes[5].get_element_count());
+    num_gt_boxes.resize(shapes[6].get_element_count());
+    gt_classes.resize(shapes[7].get_element_count());
+    im_scale.resize(shapes[8].get_element_count());
 
-    vector<int> fg_doubled = fg_idx;
-    for(auto i : fg_idx) fg_doubled.push_back(i+34596);
+    buf_list.push_back(bbtargets.data());
+    buf_list.push_back(bbtargets_mask.data());
+    buf_list.push_back(labels_flat.data());
+    buf_list.push_back(labels_mask.data());
+    buf_list.push_back(im_shape.data());
+    buf_list.push_back(gt_boxes.data());
+    buf_list.push_back(num_gt_boxes.data());
+    buf_list.push_back(gt_classes.data());
+    buf_list.push_back(im_scale.data());
+
+    loader.load(buf_list, transformed_data);
+
+//    loader.build_output(transformed_data, labels, labels_mask, bbtargets, bbtargets_mask);
+
+    size_t anchors_total = 34596;
+    EXPECT_EQ(anchors_total, labels_flat.size());
+    EXPECT_EQ(2 * anchors_total, labels_mask.size());
+    EXPECT_EQ(anchors_total * 4, bbtargets.size());
+    EXPECT_EQ(anchors_total * 4, bbtargets_mask.size());
 
     //-------------------------------------------------------------------------
-    // dev_y_labels
+    // labels
     //-------------------------------------------------------------------------
-    for(int i=0; i<dev_y_labels.size(); i++) {
-        float set_value = (i<34596 ? 0 : 1);
-        float clear_value = (i<34596 ? 1 : 0);
-        auto p = find(fg_doubled.begin(), fg_doubled.end(), i);
-        if(p != fg_doubled.end()) {
-            EXPECT_EQ(set_value, dev_y_labels[i]);
+    for(size_t i=0; i<labels_flat.size(); i++) {
+        auto p = find(fg_idx.begin(), fg_idx.end(), i);
+        if(p != fg_idx.end()) {
+            ASSERT_EQ(0, labels_flat[i]) << "at index " << i;
         } else {
-            EXPECT_EQ(clear_value, dev_y_labels[i]);
+            ASSERT_EQ(1, labels_flat[i]) << "at index " << i;
         }
     }
 
     //-------------------------------------------------------------------------
-    // dev_y_labels_mask
+    // labels_mask
     //-------------------------------------------------------------------------
-    for(int i=0; i<dev_y_labels_mask.size(); i++) {
+    for(size_t i=0; i<labels_mask.size(); i++) {
         auto p = find(labels_mask_idx.begin(), labels_mask_idx.end(), i);
         if(p != labels_mask_idx.end()) {
-            EXPECT_EQ(1., dev_y_labels_mask[i]);
+            ASSERT_EQ(1, labels_mask[i]) << "at index " << i;
         } else {
-            EXPECT_EQ(0., dev_y_labels_mask[i]);
+            ASSERT_EQ(0, labels_mask[i]) << "at index " << i;
         }
     }
 
     //-------------------------------------------------------------------------
-    // dev_y_bbtargets
+    // bbtargets
     //-------------------------------------------------------------------------
-    for(int i=0; i<dev_y_bbtargets.size(); i++) {
+    for(int i=0; i<bbtargets.size(); i++) {
         auto p = bbox_targets.find(i);
         if(p != bbox_targets.end()) {
-            EXPECT_NEAR(p->second, dev_y_bbtargets[i], 0.000001) << "at index " << i;
+            ASSERT_NEAR(p->second, bbtargets[i], 0.000001) << "at index " << i;
         } else {
-            EXPECT_EQ(0.,dev_y_bbtargets[i]) << "at index " << i;
+            ASSERT_EQ(0.,bbtargets[i]) << "at index " << i;
         }
     }
 
     //-------------------------------------------------------------------------
-    // dev_y_bbtargets_mask
+    // bbtargets_mask
     //-------------------------------------------------------------------------
-    for(int i=0; i<dev_y_bbtargets_mask.size(); i++) {
+    for(int i=0; i<bbtargets_mask.size(); i++) {
         auto p = bbox_targets.find(i);
         if(p != bbox_targets.end()) {
-            EXPECT_EQ(1., dev_y_bbtargets_mask[i]) << "at index " << i;
+            ASSERT_EQ(1., bbtargets_mask[i]) << "at index " << i;
         } else {
-            EXPECT_EQ(0., dev_y_bbtargets_mask[i]) << "at index " << i;
+            ASSERT_EQ(0., bbtargets_mask[i]) << "at index " << i;
         }
     }
+
+    EXPECT_EQ(375, im_shape[0]) << "height";
+    EXPECT_EQ(500, im_shape[1]) << "width";
+    EXPECT_EQ(6, num_gt_boxes[0]);
+    for(int i=0; i<6; i++) {
+        const bbox::box& box = transformed_data->boxes()[i];
+        EXPECT_EQ(box.xmin, gt_boxes[i*4+0]);
+        EXPECT_EQ(box.ymin, gt_boxes[i*4+1]);
+        EXPECT_EQ(box.xmax, gt_boxes[i*4+2]);
+        EXPECT_EQ(box.ymax, gt_boxes[i*4+3]);
+        EXPECT_EQ(box.label, gt_classes[i]);
+    }
+    EXPECT_FLOAT_EQ(1.6, im_scale[0]);
 }
 
 TEST(localization, compute_targets) {
