@@ -55,25 +55,24 @@ void NoiseClips::addNoise(cv::Mat& wav_mat,
     // Assume a single channel with 16 bit samples for now.
     assert(wav_mat.cols == 1);
     assert(wav_mat.type() == CV_16SC1);
-    cv::Mat noise = cv::Mat::zeros(wav_mat.size(), wav_mat.type());
 
     // Collect enough noise data to cover the entire input clip.
+    cv::Mat noise_dst = cv::Mat::zeros(wav_mat.size(), wav_mat.type());
     const cv::Mat& noise_src = _noise_data[ noise_index % _noise_data.size() ]->get_data();
 
     assert(noise_src.type() == wav_mat.type());
 
     uint32_t src_offset = noise_src.rows * noise_offset_fraction;
-    uint32_t src_left = noise_src.rows - src_offset;
+    uint32_t src_left   = noise_src.rows - src_offset;
     uint32_t dst_offset = 0;
-    uint32_t dst_left = wav_mat.rows;
+    uint32_t dst_left   = wav_mat.rows;
+
     while (dst_left > 0) {
         uint32_t copy_size = std::min(dst_left, src_left);
+        cv::Rect src_roi = cv::Rect(cv::Point2i(0, src_offset), cv::Size2i(1, copy_size));
+        cv::Rect dst_roi = cv::Rect(cv::Point2i(0, dst_offset), cv::Size2i(1, copy_size));
 
-        const cv::Mat& src = noise_src(cv::Range::all(),
-                                       cv::Range(src_offset, src_offset + copy_size));
-        const cv::Mat& dst = noise(cv::Range::all(),
-                                       cv::Range(dst_offset, dst_offset + copy_size));
-        src.copyTo(dst);
+        noise_src(src_roi).copyTo(noise_dst(dst_roi));
 
         if (src_left > dst_left) {
             dst_left = 0;
@@ -85,7 +84,7 @@ void NoiseClips::addNoise(cv::Mat& wav_mat,
         }
     }
     // Superimpose noise without overflowing (opencv handles saturation cast for non CV_32S)
-    cv::addWeighted(wav_mat, 1.0f, noise, noise_level, 0.0f, wav_mat);
+    cv::addWeighted(wav_mat, 1.0f, noise_dst, noise_level, 0.0f, wav_mat);
 
 }
 

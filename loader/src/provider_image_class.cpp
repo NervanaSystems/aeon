@@ -32,7 +32,6 @@ void image_inference::provide(int idx, buffer_in_array& in_buf, buffer_out_array
 
 image_classifier::image_classifier(nlohmann::json js) :
     image_config(js["image"]),
-    // must use a default value {} otherwise, segfault ...
     label_config(js["label"]),
     image_extractor(image_config),
     image_transformer(image_config),

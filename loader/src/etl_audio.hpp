@@ -77,15 +77,18 @@ namespace nervana {
         uint32_t    sample_freq_hz   {16000};
 
         std::uniform_real_distribution<float>    time_scale_fraction   {1.0f, 1.0f};
-        std::bernoulli_distribution              add_noise             {0.0f};
-        std::uniform_int_distribution<uint32_t>  noise_index           {0,    UINT32_MAX};
         std::uniform_real_distribution<float>    noise_level           {0.0f, 0.5f};
-        std::uniform_real_distribution<float>    noise_offset_fraction {0.0f, 1.0f};
 
         // Dependent variables
         uint32_t    time_steps, freq_steps;
         uint32_t    max_duration_tn, frame_length_tn, frame_stride_tn;
         float       max_duration_ms, frame_length_ms, frame_stride_ms;
+
+        // This derived distribution gets filled by parsing add_noise_probability
+        std::bernoulli_distribution              add_noise             {0.0f};
+        std::uniform_int_distribution<uint32_t>  noise_index           {0,    UINT32_MAX};
+        std::uniform_real_distribution<float>    noise_offset_fraction {0.0f, 1.0f};
+
 
         config(nlohmann::json js) {
             if(js.is_null()) {
@@ -117,6 +120,7 @@ namespace nervana {
             if (type_string != "uint8_t") {
                 throw std::runtime_error("Invalid load type for audio " + type_string);
             }
+            add_noise = std::bernoulli_distribution{add_noise_probability};
             add_shape_type({1, freq_steps, time_steps}, type_string);
             validate();
         }
@@ -148,12 +152,11 @@ namespace nervana {
             ADD_SCALAR(feature_type, mode::OPTIONAL),
             ADD_SCALAR(window_type, mode::OPTIONAL),
             ADD_SCALAR(noise_index_file, mode::OPTIONAL),
+            ADD_SCALAR(add_noise_probability, mode::OPTIONAL),
             ADD_SCALAR(sample_freq_hz, mode::OPTIONAL),
             ADD_DISTRIBUTION(time_scale_fraction, mode::OPTIONAL),
-            ADD_DISTRIBUTION(add_noise, mode::OPTIONAL),
-            ADD_DISTRIBUTION(noise_index, mode::OPTIONAL),
+            // ADD_DISTRIBUTION(noise_index, mode::OPTIONAL),
             ADD_DISTRIBUTION(noise_level, mode::OPTIONAL),
-            ADD_DISTRIBUTION(noise_offset_fraction, mode::OPTIONAL)
         };
 
         void parse_samples_or_seconds(const std::string &unit, float &ms, uint32_t &tn)
@@ -178,6 +181,8 @@ namespace nervana {
                 throw std::runtime_error("Unknown time unit " + unit_type);
             }
         }
+        float add_noise_probability = 0.0f;
+
     };
 
 
