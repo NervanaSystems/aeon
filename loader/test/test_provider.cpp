@@ -10,6 +10,7 @@
 #include "cpio.hpp"
 #include "util.hpp"
 #include "provider_factory.hpp"
+#include "loader.hpp"
 
 extern gen_image image_dataset;
 
