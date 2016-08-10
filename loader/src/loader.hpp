@@ -92,6 +92,7 @@ public:
     std::string manifest_filename;
     int         minibatch_size;
 
+    std::string type;
     std::string cache_directory     = "";
     int         macrobatch_size     = 0;
     float       subset_fraction     = 1.0;
@@ -120,6 +121,7 @@ public:
 
 private:
     std::vector<std::shared_ptr<nervana::interface::config_info_interface>> config_list = {
+        ADD_SCALAR(type, mode::REQUIRED),
         ADD_SCALAR(manifest_filename, mode::REQUIRED),
         ADD_SCALAR(minibatch_size, mode::REQUIRED),
         ADD_SCALAR(cache_directory, mode::OPTIONAL),

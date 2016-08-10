@@ -35,6 +35,21 @@ std::string nervana::tolower(const std::string& s) {
     return rc;
 }
 
+vector<string> nervana::split(const string& src, const string& delimiter)
+{
+    size_t pos = 0;
+    string s = src;
+    string token;
+    vector<string> rc;
+    while ((pos = s.find(delimiter)) != std::string::npos) {
+        token = s.substr(0, pos);
+        rc.push_back(token);
+        s.erase(0, pos + delimiter.length());
+    }
+    if(s.size() > 0) rc.push_back(s);
+    return rc;
+}
+
 int nervana::LevenshteinDistance(const string& s, const string& t)
 {
     // degenerate cases

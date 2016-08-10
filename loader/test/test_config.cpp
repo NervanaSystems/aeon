@@ -7,6 +7,7 @@ using namespace std;
 using namespace nervana;
 
 TEST(config,loader) {
+    // config is valid
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", "blah"},
                          {"minibatch_size", 128},
@@ -20,6 +21,7 @@ TEST(config,loader) {
 }
 
 TEST(config,throws) {
+    // config is missing a required parameter
     nlohmann::json js = {{"type","image,label"},
                          {"minibatch_size", 128},
                          {"image", {

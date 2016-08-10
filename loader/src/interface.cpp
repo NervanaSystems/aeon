@@ -13,39 +13,19 @@ void interface::config::verify_config(
         const vector<shared_ptr<interface::config_info_interface>>& config,
         nlohmann::json js) const
 {
+    vector<string> ignore_list;
     json::parser_callback_t cb = [&](int depth, json::parse_event_t event, json& parsed) {
-//        switch(event) {
-//        /// the parser read `{` and started to process a JSON object
-//        case nlohmann::json::parse_event_t::object_start:
-//            cout << "object_start" << endl;
-//            break;
-//        /// the parser read `}` and finished processing a JSON object
-//        case nlohmann::json::parse_event_t::object_end:
-//            cout << "object_end" << endl;
-//            break;
-//        /// the parser read `[` and started to process a JSON array
-//        case nlohmann::json::parse_event_t::array_start:
-//            cout << "array_start" << endl;
-//            break;
-//        /// the parser read `]` and finished processing a JSON array
-//        case nlohmann::json::parse_event_t::array_end:
-//            cout << "array_end" << endl;
-//            break;
-//        /// the parser read a key of a value in an object
-//        case nlohmann::json::parse_event_t::key:
-//            cout << "key" << endl;
-//            break;
-//        /// the parser finished reading a JSON value
-//        case nlohmann::json::parse_event_t::value:
-//            cout << "value" << endl;
-//            break;
-//        }
-
-        if(event == json::parse_event_t::key) {
+        if(event == json::parse_event_t::key && depth == 1) {
             string key = parsed;
             bool found = false;
             for(auto item : config) {
                 if(item->name() == key) {
+                    found = true;
+                    break;
+                }
+            }
+            for(const string& s : ignore_list) {
+                if(key == s) {
                     found = true;
                     break;
                 }
@@ -67,6 +47,13 @@ void interface::config::verify_config(
         }
         return true;
     };
+
+    // type is required only for the top-level config
+    auto obj = js.find("type");
+    if(obj != js.end()) {
+        string type = obj.value();
+        ignore_list = split(type, ",");
+    }
 
     string text;
     try {

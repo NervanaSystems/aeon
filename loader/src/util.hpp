@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <cassert>
+#include <vector>
 
 namespace nervana {
 
@@ -50,6 +51,7 @@ namespace nervana {
     void dump( const void*, size_t );
 
     std::string tolower(const std::string& s);
+    std::vector<std::string> split(const std::string& s, const std::string& delimiter);
 
     int LevenshteinDistance(const std::string& s1, const std::string& s2);
 
