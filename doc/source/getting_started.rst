@@ -19,12 +19,15 @@ Getting Started
 Installation
 ------------
 
-To install aeon::
+First grab some prerequisites (at the very least)::
+
+  sudo apt-get install libcurl4-openssl-dev clang
+
+Then to install aeon::
 
   git clone https://github.com/NervanaSystems/aeon.git
   cd aeon
   sudo python setup.py install
-
 
 Usage
 -----
@@ -86,3 +89,9 @@ shown here)::
     callbacks = Callbacks(model, eval_set=valid, metric=valmetric, **args.callback_args)
     cost = GeneralizedCost(costfunc=CrossEntropyMulti())
     model.fit(train, optimizer=opt, num_epochs=args.epochs, cost=cost, callbacks=callbacks)
+
+When running this example with ``python alexnet.py``, you should expect 
+training to pause for ~10 seconds between runs of minibatches. This is expected 
+and a result of the DataLoader dumping cached data into CPIO archives. Once 
+this is complete for the entire dataset, then training will continue without IO 
+induced pauses.
