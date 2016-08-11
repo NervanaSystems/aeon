@@ -32,6 +32,7 @@ void image_inference::provide(int idx, buffer_in_array& in_buf, buffer_out_array
 
 image_classifier::image_classifier(nlohmann::json js) :
     image_config(js["image"]),
+    // must use a default value {} otherwise, segfault ...
     label_config(js["label"]),
     image_extractor(image_config),
     image_transformer(image_config),
@@ -131,8 +132,8 @@ void localization_decoder::provide(int idx, buffer_in_array& in_buf, buffer_out_
 }
 
 bbox_provider::bbox_provider(nlohmann::json js) :
-    image_config(js["data_config"]["config"]),
-    bbox_config(js["target_config"]["config"]),
+    image_config(js["image"]),
+    bbox_config(js["boundingbox"]),
     image_extractor(image_config),
     image_transformer(image_config),
     image_loader(image_config),
@@ -169,8 +170,8 @@ void bbox_provider::provide(int idx, buffer_in_array& in_buf, buffer_out_array& 
 }
 
 provider_pixel_mask::provider_pixel_mask(nlohmann::json js) :
-    image_config(js["data_config"]["config"]),
-    target_config(js["target_config"]["config"]),
+    image_config(js["image"]),
+    target_config(js["pixelmask"]),
     image_extractor(image_config),
     image_transformer(image_config),
     image_loader(image_config),
@@ -179,6 +180,9 @@ provider_pixel_mask::provider_pixel_mask(nlohmann::json js) :
     target_transformer(target_config),
     target_loader(target_config)
 {
+    num_inputs = 2;
+    oshapes.push_back(image_config.get_shape_type());
+    oshapes.push_back(target_config.get_shape_type());
 }
 
 void provider_pixel_mask::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
@@ -199,7 +203,7 @@ void provider_pixel_mask::provide(int idx, buffer_in_array& in_buf, buffer_out_a
     image_loader.load({datum_out}, image_transformed);
 
     // Process target data
-    auto target_dec = image_extractor.extract(target_in.data(), target_in.size());
+    auto target_dec = target_extractor.extract(target_in.data(), target_in.size());
     auto target_transformed = target_transformer.transform(image_params, target_dec);
-    image_loader.load({target_out}, target_transformed);
+    target_loader.load({target_out}, target_transformed);
 }
