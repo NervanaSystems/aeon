@@ -113,7 +113,7 @@ public:
     CPIOReader();
     CPIOReader(std::istream* is);
 
-    void read(buffer_in& dest);
+    void read(nervana::buffer_in& dest);
 
     int itemCount() ;
 
@@ -151,8 +151,8 @@ public:
     void open(const std::string& fileName, const std::string& dataType = "");
     void close();
 
-    void write_all_records(buffer_in_array& buff);
-    void write_record(buffer_in_array& buff, int record_idx);
+    void write_all_records(nervana::buffer_in_array& buff);
+    void write_record(nervana::buffer_in_array& buff, int record_idx);
     void write_record_element(const char* elem, uint elem_size, uint element_idx);
     void increment_record_count() { _header._itemCount++;}
 

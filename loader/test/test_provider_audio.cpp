@@ -59,20 +59,20 @@ TEST(provider,audio_classify) {
     buffer_out_array outBuf({dsize, tsize}, batch_size);
 
     for (int i=0; i<batch_size; i++) {
-        data_p.addItem(buf);
+        data_p.add_item(buf);
         vector<char> packed_int(4);
         pack_le<int>(&packed_int[0], 42 + i);
-        target_p.addItem( packed_int );
+        target_p.add_item( packed_int );
     }
 
-    EXPECT_EQ(data_p.getItemCount(),batch_size);
+    EXPECT_EQ(data_p.get_item_count(),batch_size);
 
     for (int i=0; i<batch_size; i++ ) {
         media->provide(i, bp, outBuf);
     }
 
     for (int i=0; i<batch_size; i++ ) {
-        int target_value = unpack_le<int>(outBuf[1]->getItem(i));
+        int target_value = unpack_le<int>(outBuf[1]->get_item(i));
         EXPECT_EQ(42+i, target_value);
     }
 }
@@ -123,12 +123,12 @@ TEST(provider,audio_transcript) {
 
     // Fill the input buffer
     for (int i=0; i<batch_size; i++) {
-        data_p.addItem(buf);
-        target_p.addItem( ( (i % 2) == 0 ? tr0_char : tr1_char) );
+        data_p.add_item(buf);
+        target_p.add_item( ( (i % 2) == 0 ? tr0_char : tr1_char) );
     }
 
-    EXPECT_EQ(data_p.getItemCount(), batch_size);
-    EXPECT_EQ(target_p.getItemCount(), batch_size);
+    EXPECT_EQ(data_p.get_item_count(), batch_size);
+    EXPECT_EQ(target_p.get_item_count(), batch_size);
 
     // Generate output buffers using shapes from the provider
     buffer_out_array outBuf({media->get_oshapes()[0].get_byte_size(),
@@ -145,7 +145,7 @@ TEST(provider,audio_transcript) {
     // Check target sequences against their source string
     for (int i=0; i<batch_size; i++)
     {
-        char* target_out = outBuf[1]->getItem(i);
+        char* target_out = outBuf[1]->get_item(i);
         auto orig_string = tr[i % 2];
         for (auto c : orig_string)
         {
@@ -157,7 +157,7 @@ TEST(provider,audio_transcript) {
     // Check the transcript lengths match source string length
     for (int i=0; i<batch_size; i++)
     {
-        ASSERT_EQ(unpack_le<uint32_t>(outBuf[2]->getItem(i)), tr[i % 2].length());
+        ASSERT_EQ(unpack_le<uint32_t>(outBuf[2]->get_item(i)), tr[i % 2].length());
     }
 
     // Do the packing
@@ -173,7 +173,7 @@ TEST(provider,audio_transcript) {
         ASSERT_EQ(unpack_le<uint8_t>(target_ptr++),
                   cmap[std::toupper(c)]);
     }
-    for (int i=packed_length; i<outBuf[1]->getSize(); i++)
+    for (int i=packed_length; i<outBuf[1]->size(); i++)
     {
         ASSERT_EQ(0, *(target_ptr++));
     }

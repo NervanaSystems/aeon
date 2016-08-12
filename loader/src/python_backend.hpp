@@ -14,7 +14,7 @@ public:
     ~python_backend();
 
     bool use_pinned_memory();
-    void call_backend_transfer(buffer_out_array &outBuf, int bufIdx);
+    void call_backend_transfer(nervana::buffer_out_array &outBuf, int bufIdx);
     PyObject* get_host_tuple(int bufIdx);
     PyObject* get_shapes();
     const std::vector<nervana::shape_type>& _oshape_types;
@@ -22,7 +22,7 @@ public:
 private:
     python_backend() = delete;
     PyObject* initPyList(int length=2);
-    void wrap_buffer_pool(PyObject *list, buffer_out *buf, int bufIdx,
+    void wrap_buffer_pool(PyObject *list, nervana::buffer_out *buf, int bufIdx,
                           const nervana::shape_type& shape_type);
 
     PyObject*                   _py_obj_backend;

@@ -172,7 +172,7 @@ void CPIOReader::readHeader() {
     _header.read(*_is);
 }
 
-void CPIOReader::read(buffer_in& dest) {
+void CPIOReader::read(nervana::buffer_in& dest) {
     uint datumSize;
     _recordHeader.read(*_is, &datumSize);
     dest.read(*_is, datumSize);
@@ -271,21 +271,21 @@ void CPIOFileWriter::close()
     }
 }
 
-void CPIOFileWriter::write_all_records(buffer_in_array& buff)
+void CPIOFileWriter::write_all_records(nervana::buffer_in_array& buff)
 {
-    int num_records = buff[0]->getItemCount();
+    int num_records = buff[0]->get_item_count();
     for (int i=0; i<num_records; ++i)
     {
         write_record(buff, i);
     }
 }
 
-void CPIOFileWriter::write_record(buffer_in_array& buff, int record_idx)
+void CPIOFileWriter::write_record(nervana::buffer_in_array& buff, int record_idx)
 {
     uint element_idx = 0;
     for (auto b : buff)
     {
-        const vector<char>& record_element = b->getItem(record_idx);
+        const vector<char>& record_element = b->get_item(record_idx);
         write_record_element(record_element.data(), record_element.size(), element_idx++);
     }
     increment_record_count();

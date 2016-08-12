@@ -23,7 +23,7 @@
 class block_iterator_shuffled : public block_iterator {
 public:
     block_iterator_shuffled(std::shared_ptr<block_loader> loader, uint seed);
-    void read(buffer_in_array& dest);
+    void read(nervana::buffer_in_array& dest);
     void reset();
 
 protected:

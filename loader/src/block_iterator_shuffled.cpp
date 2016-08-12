@@ -22,7 +22,7 @@ void block_iterator_shuffled::shuffle()
     std::shuffle(_indices.begin(), _indices.end(), _rand);
 }
 
-void block_iterator_shuffled::read(buffer_in_array &dest)
+void block_iterator_shuffled::read(nervana::buffer_in_array &dest)
 {
     _loader->loadBlock(dest, *_it);
 

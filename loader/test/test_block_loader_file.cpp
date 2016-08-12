@@ -18,6 +18,7 @@
 #include "csv_manifest_maker.hpp"
 
 using namespace std;
+using namespace nervana;
 
 TEST(blocked_file_loader, constructor) {
     string tmpname = tmp_manifest_file(0, {0, 0});
@@ -45,8 +46,8 @@ TEST(blocked_file_loader, loadBlock) {
     // uints.  the uints in target_data will be 1 bigger than the uints
     // in object_data.  Make sure that this is the case here.
     for(int block=0; block<block_size; block++) {
-        uint* object_data = (uint*)bp[0]->getItem(block).data();
-        uint* target_data = (uint*)bp[1]->getItem(block).data();
+        uint* object_data = (uint*)bp[0]->get_item(block).data();
+        uint* target_data = (uint*)bp[1]->get_item(block).data();
         for(int offset=0; offset<object_size / sizeof(uint); offset++) {
             ASSERT_EQ(object_data[offset] + 1, target_data[offset]);
         }
@@ -72,15 +73,15 @@ TEST(blocked_file_loader, subset_fraction) {
 
 
     blf.loadBlock(bp, 0);
-    ASSERT_EQ(bp[0]->getItemCount(), block_size * subset_fraction);
+    ASSERT_EQ(bp[0]->get_item_count(), block_size * subset_fraction);
     bp[0]->reset();
 
     blf.loadBlock(bp, 1);
-    ASSERT_EQ(bp[0]->getItemCount(), block_size * subset_fraction);
+    ASSERT_EQ(bp[0]->get_item_count(), block_size * subset_fraction);
     bp[0]->reset();
 
     blf.loadBlock(bp, 2);
-    ASSERT_EQ(bp[0]->getItemCount(), 1);
+    ASSERT_EQ(bp[0]->get_item_count(), 1);
     bp[0]->reset();
 }
 
@@ -100,7 +101,7 @@ TEST(blocked_file_loader, exception) {
 
     // Could not find file exception raised when we try to access the item
     try {
-        bp[0]->getItem(0);
+        bp[0]->get_item(0);
         FAIL();
     } catch (std::exception& e) {
         ASSERT_EQ(string("Could not find "), string(e.what()).substr(0, 15));

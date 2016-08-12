@@ -23,24 +23,26 @@
 #include "buffer_pool.hpp"
 #include "buffer_in.hpp"
 
-class buffer_pool_in : public buffer_pool {
+namespace nervana {
+    class buffer_pool_in;
+}
+
+class nervana::buffer_pool_in : public nervana::buffer_pool {
 public:
     buffer_pool_in(unsigned int nbuffers_in);
     virtual ~buffer_pool_in();
-    buffer_in_array& getForWrite();
-    buffer_in_array& getForRead();
-    buffer_in_array& getPair(int bufIdx);  // mark for delete?
-    int getCount() { return _bufs.size();}
+    buffer_in_array& get_for_write();
+    buffer_in_array& get_for_read();
 
-    void advanceReadPos();
-    void advanceWritePos();
+    void advance_read_pos();
+    void advance_write_pos();
     bool empty();
     bool full();
-    std::mutex& getMutex();
-    void waitForNonEmpty(std::unique_lock<std::mutex>& lock);
-    void waitForNonFull(std::unique_lock<std::mutex>& lock);
-    void signalNonEmpty();
-    void signalNonFull();
+    std::mutex& get_mutex();
+    void wait_for_not_empty(std::unique_lock<std::mutex>& lock);
+    void wait_for_non_full(std::unique_lock<std::mutex>& lock);
+    void signal_not_empty();
+    void signal_not_full();
 
 protected:
     void advance(int& index);

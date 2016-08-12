@@ -16,8 +16,8 @@ video_only::video_only(nlohmann::json js) :
 
 void video_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
-    std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
-    char* datum_out  = out_buf[0]->getItem(idx);
+    std::vector<char>& datum_in  = in_buf[0]->get_item(idx);
+    char* datum_out  = out_buf[0]->get_item(idx);
 
     if (datum_in.size() == 0) {
         std::stringstream ss;
@@ -48,10 +48,10 @@ video_classifier::video_classifier(nlohmann::json js) :
 
 void video_classifier::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
-    std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
-    std::vector<char>& target_in = in_buf[1]->getItem(idx);
-    char* datum_out  = out_buf[0]->getItem(idx);
-    char* target_out = out_buf[1]->getItem(idx);
+    std::vector<char>& datum_in  = in_buf[0]->get_item(idx);
+    std::vector<char>& target_in = in_buf[1]->get_item(idx);
+    char* datum_out  = out_buf[0]->get_item(idx);
+    char* target_out = out_buf[1]->get_item(idx);
 
     if (datum_in.size() == 0) {
         std::stringstream ss;

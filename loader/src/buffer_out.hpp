@@ -24,16 +24,21 @@
 #include <cuda.h>
 #endif
 
-class buffer_out {
+namespace nervana {
+    class buffer_out;
+    class buffer_out_array;
+}
+
+class nervana::buffer_out {
 public:
     explicit buffer_out(size_t element_size, size_t batch_size, bool pinned = false);
     virtual ~buffer_out();
 
-    char* getItem(size_t index);
+    char* get_item(size_t index);
     char* data() { return _data; }
 
-    size_t getItemCount();
-    size_t getSize();
+    size_t get_item_count();
+    size_t size();
 
 private:
     buffer_out() = delete;
@@ -50,7 +55,7 @@ private:
 };
 
 // in cases with (object, target) pairs, buffer_out is length 2
-class buffer_out_array {
+class nervana::buffer_out_array {
 public:
     buffer_out_array(const std::vector<size_t>& write_sizes,
                      size_t batch_size, bool pinned = false)

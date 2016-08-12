@@ -29,6 +29,7 @@
 #include "buffer_pool_out.hpp"
 
 using namespace std;
+using namespace nervana;
 
 buffer_pool_out::buffer_pool_out(const std::vector<size_t>& writeSizes,
                                  size_t batchSize, bool pinned)
@@ -43,33 +44,27 @@ buffer_pool_out::buffer_pool_out(const std::vector<size_t>& writeSizes,
 buffer_pool_out::~buffer_pool_out()
 {}
 
-buffer_out_array& buffer_pool_out::getForWrite()
+buffer_out_array& buffer_pool_out::get_for_write()
 {
     return *_bufs[_writePos];
 }
 
-buffer_out_array& buffer_pool_out::getForRead()
+buffer_out_array& buffer_pool_out::get_for_read()
 {
     return *_bufs[_readPos];
 }
 
-buffer_out_array& buffer_pool_out::getPair(int bufIdx)
-{
-    assert(bufIdx >= 0 && bufIdx < _count);
-    return *_bufs[bufIdx];
-}
-
-void buffer_pool_out::advanceReadPos()
+void buffer_pool_out::advance_read_pos()
 {
     _used--;
     advance(_readPos);
 }
 
-void buffer_pool_out::advanceWritePos()
+void buffer_pool_out::advance_write_pos()
 {
     _used++;
     advance(_writePos);
-    clearException();
+    clear_exception();
 }
 
 bool buffer_pool_out::empty()
@@ -84,27 +79,27 @@ bool buffer_pool_out::full()
     return (_used == _count);
 }
 
-std::mutex& buffer_pool_out::getMutex()
+std::mutex& buffer_pool_out::get_mutex()
 {
     return _mutex;
 }
 
-void buffer_pool_out::waitForNonEmpty(std::unique_lock<std::mutex>& lock)
+void buffer_pool_out::wait_for_not_empty(std::unique_lock<std::mutex>& lock)
 {
     _nonEmpty.wait(lock);
 }
 
-void buffer_pool_out::waitForNonFull(std::unique_lock<std::mutex>& lock)
+void buffer_pool_out::wait_for_non_full(std::unique_lock<std::mutex>& lock)
 {
     _nonFull.wait(lock);
 }
 
-void buffer_pool_out::signalNonEmpty()
+void buffer_pool_out::signal_not_empty()
 {
     _nonEmpty.notify_all();
 }
 
-void buffer_pool_out::signalNonFull()
+void buffer_pool_out::signal_not_full()
 {
     _nonFull.notify_all();
 }

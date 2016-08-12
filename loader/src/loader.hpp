@@ -45,8 +45,8 @@
 class decode_thread_pool : public thread_pool {
 public:
     decode_thread_pool(int count,
-                       const std::shared_ptr<buffer_pool_in>& in,
-                       const std::shared_ptr<buffer_pool_out>& out,
+                       const std::shared_ptr<nervana::buffer_pool_in>& in,
+                       const std::shared_ptr<nervana::buffer_pool_out>& out,
                        const std::shared_ptr<python_backend>& pbe);
 
     virtual ~decode_thread_pool();
@@ -66,8 +66,8 @@ private:
     decode_thread_pool(const decode_thread_pool&);
 
     int                         _itemsPerThread;
-    std::shared_ptr<buffer_pool_in> _in;
-    std::shared_ptr<buffer_pool_out> _out;
+    std::shared_ptr<nervana::buffer_pool_in> _in;
+    std::shared_ptr<nervana::buffer_pool_out> _out;
     std::shared_ptr<python_backend> _python_backend;
     std::mutex                  _mutex;
     std::condition_variable     _started;
@@ -77,7 +77,7 @@ private:
     std::thread*                _manager        = 0;
     bool                        _stopManager    = false;
     bool                        _managerStopped = false;
-    buffer_in_array*            _inputBuf       = 0;
+    nervana::buffer_in_array*   _inputBuf       = 0;
     int                         _bufferIndex    = 0;
 
     std::vector<std::shared_ptr<nervana::provider_interface>> _providers;
@@ -145,7 +145,7 @@ private:
 
 class read_thread_pool: public thread_pool {
 public:
-    read_thread_pool(const std::shared_ptr<buffer_pool_in>& out,
+    read_thread_pool(const std::shared_ptr<nervana::buffer_pool_in>& out,
                      const std::shared_ptr<batch_iterator>& batch_iterator);
 
 protected:
@@ -154,7 +154,7 @@ protected:
 private:
     read_thread_pool();
     read_thread_pool(const read_thread_pool&);
-    std::shared_ptr<buffer_pool_in> _out;
+    std::shared_ptr<nervana::buffer_pool_in> _out;
     std::shared_ptr<batch_iterator> _batch_iterator;
 };
 
@@ -189,8 +189,8 @@ private:
     bool                                _first = true;
     bool                                _single_thread_mode = false;
 
-    std::shared_ptr<buffer_pool_in>     _read_buffers = nullptr;
-    std::shared_ptr<buffer_pool_out>    _decode_buffers = nullptr;
+    std::shared_ptr<nervana::buffer_pool_in>     _read_buffers = nullptr;
+    std::shared_ptr<nervana::buffer_pool_out>    _decode_buffers = nullptr;
     std::unique_ptr<read_thread_pool>   _read_thread_pool = nullptr;
     std::unique_ptr<decode_thread_pool> _decode_thread_pool = nullptr;
     std::shared_ptr<block_loader>       _block_loader = nullptr;

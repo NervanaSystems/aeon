@@ -24,16 +24,16 @@ class batch_iterator {
 public:
     batch_iterator(std::shared_ptr<block_iterator> src_block_iterator, int batch_size);
 
-    void read(buffer_in_array& dst_buffer_array);
+    void read(nervana::buffer_in_array& dst_buffer_array);
     void reset();
 protected:
-    void pop_item_from_block(buffer_in_array& dst_buffer_array);
-    void transfer_buffer_item(buffer_in* dst, buffer_in* src);
+    void pop_item_from_block(nervana::buffer_in_array& dst_buffer_array);
+    void transfer_buffer_item(nervana::buffer_in* dst, nervana::buffer_in* src);
 
     std::shared_ptr<block_iterator> _src_block_iterator;
     int _batch_size;
 
-    std::shared_ptr<buffer_in_array> _src_buffer_array_ptr;
+    std::shared_ptr<nervana::buffer_in_array> _src_buffer_array_ptr;
     // the index into the _macrobatch to read next
     int _i;
 };

@@ -25,6 +25,7 @@
 #include "buffer_in.hpp"
 
 using namespace std;
+using namespace nervana;
 
 void buffer_in::reset() {
     buffers.clear();
@@ -36,7 +37,7 @@ void buffer_in::shuffle(uint seed) {
     std::shuffle(buffers.begin(), buffers.end(), rand_items);
 }
 
-vector<char>& buffer_in::getItem(int index) {
+vector<char>& buffer_in::get_item(int index) {
     if (index >= (int) buffers.size()) {
         throw invalid_argument("index out-of-range");
     }
@@ -49,11 +50,11 @@ vector<char>& buffer_in::getItem(int index) {
     return buffers[index];
 }
 
-void buffer_in::addItem(const std::vector<char>& buf) {
+void buffer_in::add_item(const std::vector<char>& buf) {
     buffers.push_back(buf);
 }
 
-void buffer_in::addException(std::exception_ptr e) {
+void buffer_in::add_exception(std::exception_ptr e) {
     // add an axception to exceptions
     exceptions[buffers.size()] = e;
 
@@ -62,7 +63,7 @@ void buffer_in::addException(std::exception_ptr e) {
     buffers.push_back(empty);
 }
 
-int buffer_in::getItemCount() {
+int buffer_in::get_item_count() {
     return buffers.size();
 }
 

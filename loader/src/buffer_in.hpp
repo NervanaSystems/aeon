@@ -24,21 +24,26 @@
 #include <iostream>
 #include <map>
 
-class buffer_in {
+namespace nervana {
+    class buffer_in;
+    class buffer_in_array;
+}
+
+class nervana::buffer_in {
 public:
     buffer_in() {}
     virtual ~buffer_in() {}
 
     void read(std::istream& is, int size);
     void reset();
-    std::vector<char>& getItem(int index);
-    void addItem(const std::vector<char>&);
-    void addException(std::exception_ptr);
+    std::vector<char>& get_item(int index);
+    void add_item(const std::vector<char>&);
+    void add_exception(std::exception_ptr);
 
     void shuffle(uint seed);
 
-    int getItemCount();
-    uint getSize();
+    int get_item_count();
+    uint size();
 
 private:
     std::vector<std::vector<char>> buffers;
@@ -48,7 +53,7 @@ private:
 // buffer_in_array holds a vector of buffer_in*.  Each buffer_in* holds one component
 // of a particular record (i.e. datum, target, meta, etc).
 // Each buffer_in* should have the same length.
-class buffer_in_array {
+class nervana::buffer_in_array {
 public:
     buffer_in_array(unsigned int nbuffers_in)
     {

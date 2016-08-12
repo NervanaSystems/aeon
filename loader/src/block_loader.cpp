@@ -3,6 +3,7 @@
 #include "block_loader.hpp"
 
 using namespace std;
+using namespace nervana;
 
 block_loader::block_loader(uint block_size)
 : _block_size(block_size)
@@ -35,7 +36,7 @@ void block_loader_alphabet::loadBlock(buffer_in_array &dest, uint block_num)
         string s = ss.str();
 
         for (auto d: dest) {
-            d->addItem(vector<char>(s.begin(), s.end()));
+            d->add_item(vector<char>(s.begin(), s.end()));
         }
     }
 }
@@ -47,11 +48,11 @@ void block_loader_random::loadBlock(buffer_in_array &dest, uint block_num)
 
     string object_string = randomString();
     vector<char> obj(object_string.begin(), object_string.end());
-    dest[0]->addItem(obj);
+    dest[0]->add_item(obj);
 
     string target = randomString();
     vector<char> tgt(target.begin(), target.end());
-    dest[1]->addItem(tgt);
+    dest[1]->add_item(tgt);
 }
 
 string block_loader_random::randomString()

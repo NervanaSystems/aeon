@@ -211,7 +211,7 @@ namespace nervana {
     class audio::decoded : public interface::decoded_media {
     public:
         decoded(std::shared_ptr<wav_data> raw) : time_rep(raw) {}
-        size_t getSize() { return time_rep->nsamples(); }
+        size_t size() { return time_rep->nsamples(); }
 
         std::shared_ptr<wav_data> get_time_data() { return time_rep; }
         cv::Mat& get_freq_data() { return freq_rep; }

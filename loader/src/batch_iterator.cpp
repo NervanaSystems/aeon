@@ -1,5 +1,7 @@
 #include "batch_iterator.hpp"
 
+using namespace nervana;
+
 batch_iterator::batch_iterator(std::shared_ptr<block_iterator> src_block_iterator,
                                int batch_size)
     : _src_block_iterator(src_block_iterator),
@@ -39,9 +41,9 @@ void batch_iterator::reset()
 void batch_iterator::transfer_buffer_item(buffer_in* dst, buffer_in* src)
 {
     try {
-        dst->addItem(src->getItem(_i));
+        dst->add_item(src->get_item(_i));
     } catch (std::exception& e) {
-        dst->addException(std::current_exception());
+        dst->add_exception(std::current_exception());
     }
 }
 
@@ -50,7 +52,7 @@ void batch_iterator::pop_item_from_block(buffer_in_array& dst_buffer_array)
     // load a new macrobatch if we've already iterated through the previous one
     buffer_in_array &src_buffer_array = *_src_buffer_array_ptr;
 
-    if(_i >= src_buffer_array[0]->getItemCount()) {
+    if(_i >= src_buffer_array[0]->get_item_count()) {
         for (auto m: src_buffer_array) {
             m->reset();
         }

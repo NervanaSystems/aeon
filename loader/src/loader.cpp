@@ -31,6 +31,7 @@
 #include "block_loader_nds.hpp"
 
 using namespace std;
+using namespace nervana;
 
 decode_thread_pool::decode_thread_pool(int count,
                                        const shared_ptr<buffer_pool_in>& in,
@@ -76,15 +77,15 @@ void decode_thread_pool::stop()
     thread_pool::stop();
     while (stopped() == false) {
         std::this_thread::yield();
-        _in->advanceWritePos();
-        _in->signalNonEmpty();
+        _in->advance_write_pos();
+        _in->signal_not_empty();
     }
 
     _stopManager = true;
     while (_managerStopped == false) {
         std::this_thread::yield();
-        _in->advanceWritePos();
-        _in->signalNonEmpty();
+        _in->advance_write_pos();
+        _in->signal_not_empty();
         _endSignaled++;
         _ended.notify_one();
     }
@@ -133,10 +134,10 @@ void decode_thread_pool::work(int id)
     // No locking required because threads write into non-overlapping regions.
     try {
         for (int i = _startInds[id]; i < _endInds[id]; i++) {
-            _providers[id]->provide(i, *_inputBuf, _out->getForWrite());
+            _providers[id]->provide(i, *_inputBuf, _out->get_for_write());
         }
     } catch (std::exception& e) {
-        _out->writeException(std::current_exception());
+        _out->write_exception(std::current_exception());
     }
 
     {
@@ -151,9 +152,9 @@ void decode_thread_pool::produce()
 {
     // lock on output buffers and copy to device
     {
-        unique_lock<mutex> lock(_out->getMutex());
+        unique_lock<mutex> lock(_out->get_mutex());
         while (_out->full() == true) {
-            _out->waitForNonFull(lock);
+            _out->wait_for_non_full(lock);
         }
         {
             lock_guard<mutex> lock(_mutex);
@@ -170,7 +171,7 @@ void decode_thread_pool::produce()
             _endSignaled = 0;
         }
         // At this point, we have decoded data for the whole minibatch.
-        buffer_out_array& outBuf = _out->getForWrite();
+        buffer_out_array& outBuf = _out->get_for_write();
 
         // Do any messy cross datum stuff you may need to do that requires minibatch consistency
         _providers[0]->post_process(outBuf);
@@ -179,27 +180,27 @@ void decode_thread_pool::produce()
         _python_backend->call_backend_transfer(outBuf, _bufferIndex);
 
         _bufferIndex = (_bufferIndex == 0) ? 1 : 0;
-        _out->advanceWritePos();
+        _out->advance_write_pos();
     }
-    _out->signalNonEmpty();
+    _out->signal_not_empty();
 }
 
 void decode_thread_pool::consume()
 {
     // lock on input buffers and call produce
     {
-        unique_lock<mutex> lock(_in->getMutex());
+        unique_lock<mutex> lock(_in->get_mutex());
         while (_in->empty() == true) {
-            _in->waitForNonEmpty(lock);
+            _in->wait_for_not_empty(lock);
             if (_stopManager == true) {
                 return;
             }
         }
-        _inputBuf = &_in->getForRead();
+        _inputBuf = &_in->get_for_read();
         produce();
-        _in->advanceReadPos();
+        _in->advance_read_pos();
     }
-    _in->signalNonFull();
+    _in->signal_not_full();
 }
 
 void decode_thread_pool::manage()
@@ -233,20 +234,20 @@ void read_thread_pool::work(int id)
 {
     // Fill input buffers.
     {
-        unique_lock<mutex> lock(_out->getMutex());
+        unique_lock<mutex> lock(_out->get_mutex());
         while (_out->full() == true) {
-            _out->waitForNonFull(lock);
+            _out->wait_for_non_full(lock);
         }
 
         try {
-            _batch_iterator->read(_out->getForWrite());
+            _batch_iterator->read(_out->get_for_write());
         } catch(std::exception& e) {
-            _out->writeException(std::current_exception());
+            _out->write_exception(std::current_exception());
         }
 
-        _out->advanceWritePos();
+        _out->advance_write_pos();
     }
-    _out->signalNonEmpty();
+    _out->signal_not_empty();
 }
 
 
@@ -388,19 +389,19 @@ int loader::reset()
 
 PyObject* loader::next(int bufIdx)
 {
-    unique_lock<mutex> lock(_decode_buffers->getMutex());
+    unique_lock<mutex> lock(_decode_buffers->get_mutex());
     if (_first == true) {
         _first = false;
     } else {
         // Unlock the buffer used for the previous minibatch.
-        _decode_buffers->advanceReadPos();
-        _decode_buffers->signalNonFull();
+        _decode_buffers->advance_read_pos();
+        _decode_buffers->signal_not_full();
     }
     while (_decode_buffers->empty()) {
-        _decode_buffers->waitForNonEmpty(lock);
+        _decode_buffers->wait_for_not_empty(lock);
     }
     // TODO: should this actually be somewhere above the various locks/signals?
-    _decode_buffers->reraiseException();
+    _decode_buffers->reraise_exception();
     return _python_backend->get_host_tuple(bufIdx);
 }
 
@@ -412,11 +413,11 @@ PyObject* loader::shapes()
 void loader::drain()
 {
     {
-        unique_lock<mutex> lock(_decode_buffers->getMutex());
+        unique_lock<mutex> lock(_decode_buffers->get_mutex());
         if (_decode_buffers->empty() == true) {
             return;
         }
-        _decode_buffers->advanceReadPos();
+        _decode_buffers->advance_read_pos();
     }
-    _decode_buffers->signalNonFull();
+    _decode_buffers->signal_not_full();
 }

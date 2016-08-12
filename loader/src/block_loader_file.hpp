@@ -30,8 +30,8 @@ public:
                       float subset_fraction,
                       uint block_size);
 
-    void loadBlock(buffer_in_array& dest, uint block_num);
-    void loadFile(buffer_in* buff, const std::string& filename);
+    void loadBlock(nervana::buffer_in_array& dest, uint block_num);
+    void loadFile(nervana::buffer_in* buff, const std::string& filename);
     uint objectCount();
 
 private:

@@ -16,8 +16,8 @@ audio_only::audio_only(nlohmann::json js) :
 
 void audio_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
-    vector<char>& datum_in  = in_buf[0]->getItem(idx);
-    char* datum_out  = out_buf[0]->getItem(idx);
+    vector<char>& datum_in  = in_buf[0]->get_item(idx);
+    char* datum_out  = out_buf[0]->get_item(idx);
 
     if (datum_in.size() == 0) {
         cout << "no data " << idx << endl;
@@ -50,12 +50,12 @@ audio_transcriber::audio_transcriber(nlohmann::json js) :
 
 void audio_transcriber::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
-    vector<char>& datum_in  = in_buf[0]->getItem(idx);
-    vector<char>& target_in = in_buf[1]->getItem(idx);
+    vector<char>& datum_in  = in_buf[0]->get_item(idx);
+    vector<char>& target_in = in_buf[1]->get_item(idx);
 
-    char* datum_out  = out_buf[0]->getItem(idx);
-    char* target_out = out_buf[1]->getItem(idx);
-    char* length_out = out_buf[2]->getItem(idx);
+    char* datum_out  = out_buf[0]->get_item(idx);
+    char* target_out = out_buf[1]->get_item(idx);
+    char* length_out = out_buf[2]->get_item(idx);
 
     if (datum_in.size() == 0) {
         cout << "no data " << idx << endl;
@@ -79,16 +79,16 @@ void audio_transcriber::provide(int idx, buffer_in_array& in_buf, buffer_out_arr
 void audio_transcriber::post_process(buffer_out_array& out_buf)
 {
     if (trans_config.pack_for_ctc) {
-        auto num_items = out_buf[1]->getItemCount();
+        auto num_items = out_buf[1]->get_item_count();
         char* dptr = out_buf[1]->data();
         uint32_t packed_len = 0;
 
         for (int i=0; i<num_items; i++) {
-            uint32_t len = unpack_le<uint32_t>(out_buf[2]->getItem(i));
-            memmove(dptr + packed_len, out_buf[1]->getItem(i), len);
+            uint32_t len = unpack_le<uint32_t>(out_buf[2]->get_item(i));
+            memmove(dptr + packed_len, out_buf[1]->get_item(i), len);
             packed_len += len;
         }
-        memset(dptr + packed_len, 0, out_buf[1]->getSize() - packed_len);
+        memset(dptr + packed_len, 0, out_buf[1]->size() - packed_len);
     }
 }
 
@@ -109,11 +109,11 @@ audio_classifier::audio_classifier(nlohmann::json js) :
 
 void audio_classifier::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
-    vector<char>& datum_in  = in_buf[0]->getItem(idx);
-    vector<char>& target_in = in_buf[1]->getItem(idx);
+    vector<char>& datum_in  = in_buf[0]->get_item(idx);
+    vector<char>& target_in = in_buf[1]->get_item(idx);
 
-    char* datum_out  = out_buf[0]->getItem(idx);
-    char* target_out = out_buf[1]->getItem(idx);
+    char* datum_out  = out_buf[0]->get_item(idx);
+    char* target_out = out_buf[1]->get_item(idx);
 
     if (datum_in.size() == 0) {
         cout << "no data " << idx << endl;

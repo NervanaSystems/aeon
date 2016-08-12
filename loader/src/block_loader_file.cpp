@@ -33,7 +33,7 @@ block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst,
     assert(_subset_fraction > 0.0 && _subset_fraction <= 1.0);
 }
 
-void block_loader_file::loadBlock(buffer_in_array& dest, uint block_num)
+void block_loader_file::loadBlock(nervana::buffer_in_array& dest, uint block_num)
 {
     // NOTE: thread safe so long as you aren't modifying the manifest
     // NOTE: dest memory must already be allocated at the correct size
@@ -81,13 +81,13 @@ void block_loader_file::loadBlock(buffer_in_array& dest, uint block_num)
             try {
                 loadFile(dest[i], file_list[i]);
             } catch (std::exception& e) {
-                dest[i]->addException(std::current_exception());
+                dest[i]->add_exception(std::current_exception());
             }
         }
     }
 }
 
-void block_loader_file::loadFile(buffer_in* buff, const string& filename)
+void block_loader_file::loadFile(nervana::buffer_in* buff, const string& filename)
 {
     off_t size = getFileSize(filename);
     ifstream fin(filename, ios::binary);

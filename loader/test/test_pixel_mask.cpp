@@ -30,6 +30,7 @@
 #include "etl_image.hpp"
 #include "json.hpp"
 #include "helpers.hpp"
+#include "provider_factory.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -55,12 +56,10 @@ static bool verify_image(cv::Mat img) {
     int index = 0;
     for(int row = 0; row < img.rows; row++) {
         for(int col = 0; col < img.cols; col++) {
-            if(data[index] != 0x00 && data[index] != 0xFF) return false;
-            index++;
-            if(data[index] != 0x00 && data[index] != 0xFF) return false;
-            index++;
-            if(data[index] != 0x00 && data[index] != 0xFF) return false;
-            index++;
+            for(int channel=0; channel<img.channels(); channel++) {
+                if(data[index] != 0x00 && data[index] != 0xFF) return false;
+                index++;
+            }
         }
     }
     return true;
@@ -75,7 +74,7 @@ TEST(pixel_mask, scale_up) {
     nlohmann::json js = {{"width", 256},{"height",256}};
     image::config cfg(js);
 
-    image::extractor        extractor{cfg};
+    pixel_mask::extractor   extractor{cfg};
     pixel_mask::transformer transformer{cfg};
     image::loader           loader{cfg};
     image::param_factory    factory{cfg};
@@ -98,7 +97,7 @@ TEST(pixel_mask, scale_down) {
     nlohmann::json js = {{"width", 256},{"height",256}};
     image::config cfg(js);
 
-    image::extractor        extractor{cfg};
+    pixel_mask::extractor   extractor{cfg};
     pixel_mask::transformer transformer{cfg};
     image::loader           loader{cfg};
     image::param_factory    factory{cfg};
@@ -121,7 +120,7 @@ TEST(pixel_mask, rotate) {
     nlohmann::json js = {{"width", 256},{"height",256}};
     image::config cfg(js);
 
-    image::extractor        extractor{cfg};
+    pixel_mask::extractor   extractor{cfg};
     pixel_mask::transformer transformer{cfg};
     image::loader           loader{cfg};
     image::param_factory    factory{cfg};
@@ -161,7 +160,7 @@ TEST(pixel_mask, load_int) {
     };
     image::config cfg(js);
 
-    image::extractor        extractor{cfg};
+    pixel_mask::extractor   extractor{cfg};
     pixel_mask::transformer transformer{cfg};
     image::loader           loader{cfg};
     image::param_factory    factory{cfg};
@@ -187,36 +186,58 @@ TEST(pixel_mask, load_int) {
     }
 }
 
-//TEST(pixel_mask, read_test) {
-//    string path = "/home/users/robert/segnet/";
-//    string train = path+"train/";
-//    string trainannot = path+"trainannot/";
-//    string base_name = "0001TP_006690.png";
-//    string train_path = train+base_name;
-//    string trainannot_path = trainannot+base_name;
+//TEST(pixel_mask, provider) {
+//    string image_path = CURDIR"/test_data/segnet/image/0001TP_006690.png";
+//    string annot_path = CURDIR"/test_data/segnet/annot/0001TP_006690.png";
 
-//    nlohmann::json js = {{"width", 512},{"height",256}};
-//    image::config cfg(js);
+//    nlohmann::json js = {{"type","image,pixelmask"},
+//                         {"image", {
+//                            {"height",256},
+//                            {"width",512},
+//                            {"channel_major",false}
+//                            }},
+//                         {"pixelmask", {
+//                            {"height",256},
+//                            {"width",512},
+//                            {"channel_major",false},
+//                            {"channels", 1}
+//                            }}
+//                        };
 
-//    auto train_data = read_file_contents(train_path);
-//    auto trainannot_data = read_file_contents(trainannot_path);
-//    ASSERT_TRUE(train_data.size()>0) << train_path;
-//    ASSERT_TRUE(trainannot_data.size()>0) << trainannot_path;
+//    auto media = nervana::train_provider_factory::create(js);
+//    ASSERT_NE(nullptr, media);
 
-////    cv::Mat mat;
-////    cv::imdecode(trainannot_data,CV_LOAD_IMAGE_COLOR,&mat);
-////    cout << "pixel size " << mat.elemSize() << endl;
+//    auto image_data = read_file_contents(image_path);
+//    auto annot_data = read_file_contents(annot_path);
+//    ASSERT_TRUE(image_data.size()>0) << image_path;
+//    ASSERT_TRUE(annot_data.size()>0) << annot_path;
 
-//    image::extractor        extractor{cfg};
-//    pixel_mask::transformer transformer{cfg};
-//    image::loader           loader{cfg};
-//    image::param_factory    factory{cfg};
+//    size_t batch_size = 4;
 
-//    auto extracted = extractor.extract((const char*)trainannot_data.data(), trainannot_data.size());
-//    image_params_builder builder(factory.make_params(extracted));
-//    shared_ptr<image::params> params_ptr = builder;
-//    shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
-//    cv::Mat tximg = transformed->get_image(0);
+//    buffer_in_array bp(2);
+//    buffer_in& data_p = *bp[0];
+//    buffer_in& target_p = *bp[1];
+
+//    for (int i=0; i<batch_size; i++) {
+//        data_p.add_item(image_data);
+//        target_p.add_item(annot_data);
+//    }
+
+//    EXPECT_EQ(data_p.get_item_count(), batch_size);
+//    EXPECT_EQ(target_p.get_item_count(), batch_size);
+
+//    ASSERT_EQ(2, media->get_oshapes().size());
+
+//    // Generate output buffers using shapes from the provider
+//    buffer_out_array outBuf({media->get_oshapes()[0].get_byte_size(),
+//                             media->get_oshapes()[1].get_byte_size()},
+//                            batch_size);
+
+//    // Call the provider
+//    for (int i=0; i<batch_size; i++)
+//    {
+//        media->provide(i, bp, outBuf);
+//    }
 
 ////    unsigned char *data = (unsigned char*)(tximg.data);
 ////    int index = 0;

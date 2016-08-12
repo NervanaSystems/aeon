@@ -20,6 +20,7 @@
 #include "block_iterator_sequential.hpp"
 
 using namespace std;
+using namespace nervana;
 
 TEST(block_iterator_shuffled, sequential_block) {
     block_loader_alphabet bl(8);

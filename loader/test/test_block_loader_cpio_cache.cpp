@@ -19,7 +19,7 @@
 #include "block_loader_cpio_cache.hpp"
 
 using namespace std;
-
+using namespace nervana;
 
 string load_string(block_loader_cpio_cache cache) {
     // call loadBlock from cache and cast the resulting item to a uint
@@ -27,7 +27,7 @@ string load_string(block_loader_cpio_cache cache) {
 
     cache.loadBlock(bp, 1);
 
-    vector<char>& x = bp[0]->getItem(0);
+    vector<char>& x = bp[0]->get_item(0);
     string str(x.data(), x.size());
     return str;
 }

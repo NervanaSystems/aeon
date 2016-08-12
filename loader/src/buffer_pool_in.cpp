@@ -29,6 +29,7 @@
 #include "buffer_pool_in.hpp"
 
 using namespace std;
+using namespace nervana;
 
 buffer_pool_in::buffer_pool_in(unsigned int nbuffers_in)
 : buffer_pool()
@@ -41,7 +42,7 @@ buffer_pool_in::buffer_pool_in(unsigned int nbuffers_in)
 
 buffer_pool_in::~buffer_pool_in() {}
 
-buffer_in_array& buffer_pool_in::getForWrite()
+buffer_in_array& buffer_pool_in::get_for_write()
 {
     buffer_in_array& buf_ary = *_bufs[_writePos];
     for (auto &b : buf_ary) {
@@ -50,29 +51,23 @@ buffer_in_array& buffer_pool_in::getForWrite()
     return buf_ary;
 }
 
-buffer_in_array& buffer_pool_in::getForRead()
+buffer_in_array& buffer_pool_in::get_for_read()
 {
-    reraiseException();
+    reraise_exception();
     return *_bufs[_readPos];
 }
 
-buffer_in_array& buffer_pool_in::getPair(int bufIdx)
-{
-    assert(bufIdx >= 0 && bufIdx < _count);
-    return *_bufs[bufIdx];
-}
-
-void buffer_pool_in::advanceReadPos()
+void buffer_pool_in::advance_read_pos()
 {
     _used--;
     advance(_readPos);
 }
 
-void buffer_pool_in::advanceWritePos()
+void buffer_pool_in::advance_write_pos()
 {
     _used++;
     advance(_writePos);
-    clearException();
+    clear_exception();
 }
 
 bool buffer_pool_in::empty()
@@ -87,27 +82,27 @@ bool buffer_pool_in::full()
     return (_used == _count);
 }
 
-std::mutex& buffer_pool_in::getMutex()
+std::mutex& buffer_pool_in::get_mutex()
 {
     return _mutex;
 }
 
-void buffer_pool_in::waitForNonEmpty(std::unique_lock<std::mutex>& lock)
+void buffer_pool_in::wait_for_not_empty(std::unique_lock<std::mutex>& lock)
 {
     _nonEmpty.wait(lock);
 }
 
-void buffer_pool_in::waitForNonFull(std::unique_lock<std::mutex>& lock)
+void buffer_pool_in::wait_for_non_full(std::unique_lock<std::mutex>& lock)
 {
     _nonFull.wait(lock);
 }
 
-void buffer_pool_in::signalNonEmpty()
+void buffer_pool_in::signal_not_empty()
 {
     _nonEmpty.notify_all();
 }
 
-void buffer_pool_in::signalNonFull()
+void buffer_pool_in::signal_not_full()
 {
     _nonFull.notify_all();
 }

@@ -29,6 +29,7 @@
 #include "buffer_out.hpp"
 
 using namespace std;
+using namespace nervana;
 
 buffer_out::buffer_out(size_t element_size, size_t minibatch_size, bool pinned) :
     _size(element_size * minibatch_size),
@@ -44,22 +45,22 @@ buffer_out::~buffer_out() {
     dealloc(_data);
 }
 
-char* buffer_out::getItem(size_t index) {
+char* buffer_out::get_item(size_t index) {
     size_t offset = index * _stride;
     if (index >= (int)_batch_size) {
         // TODO: why not raise exception here?  Is anyone actually
-        // checking the return value of getItem to make sure it is
+        // checking the return value of get_item to make sure it is
         // non-0?
         return 0;
     }
     return &_data[offset];
 }
 
-size_t buffer_out::getItemCount() {
+size_t buffer_out::get_item_count() {
     return _size / _item_size;
 }
 
-size_t buffer_out::getSize() {
+size_t buffer_out::size() {
     return _size;
 }
 

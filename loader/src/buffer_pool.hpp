@@ -17,17 +17,21 @@
 
 #include <vector>
 
+namespace nervana {
+    class buffer_pool;
+}
+
 /* Base class buffer_pool only deals in exception handling for now */
 
-class buffer_pool {
+class nervana::buffer_pool {
 protected:
     buffer_pool();
 public:
-    void writeException(std::exception_ptr exception_ptr);
-    void reraiseException();
+    void write_exception(std::exception_ptr exception_ptr);
+    void reraise_exception();
 
 protected:
-    void clearException();
+    void clear_exception();
 
     std::vector<std::exception_ptr> _exceptions;
     int                             _readPos = 0;

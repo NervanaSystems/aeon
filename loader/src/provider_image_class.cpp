@@ -15,8 +15,8 @@ image_only::image_only(nlohmann::json js) :
 }
 
 void image_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
-    std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
-    char* datum_out  = out_buf[0]->getItem(idx);
+    std::vector<char>& datum_in  = in_buf[0]->get_item(idx);
+    char* datum_out  = out_buf[0]->get_item(idx);
 
     if (datum_in.size() == 0) {
         std::stringstream ss;
@@ -47,10 +47,10 @@ image_classifier::image_classifier(nlohmann::json js) :
 }
 
 void image_classifier::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
-    std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
-    std::vector<char>& target_in = in_buf[1]->getItem(idx);
-    char* datum_out  = out_buf[0]->getItem(idx);
-    char* target_out = out_buf[1]->getItem(idx);
+    std::vector<char>& datum_in  = in_buf[0]->get_item(idx);
+    std::vector<char>& target_in = in_buf[1]->get_item(idx);
+    char* datum_out  = out_buf[0]->get_item(idx);
+    char* target_out = out_buf[1]->get_item(idx);
 
     if (datum_in.size() == 0) {
         std::stringstream ss;
@@ -86,19 +86,19 @@ localization_decoder::localization_decoder(nlohmann::json js) :
 }
 
 void localization_decoder::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
-    vector<char>& datum_in  = in_buf[0]->getItem(idx);
-    vector<char>& target_in = in_buf[1]->getItem(idx);
+    vector<char>& datum_in  = in_buf[0]->get_item(idx);
+    vector<char>& target_in = in_buf[1]->get_item(idx);
 
-    char* datum_out             = out_buf[0]->getItem(idx);
-    char* y_bbtargets_out       = out_buf[1]->getItem(idx);
-    char* y_bbtargets_mask_out  = out_buf[2]->getItem(idx);
-    char* y_labels_flat_out     = out_buf[3]->getItem(idx);
-    char* y_labels_mask_out     = out_buf[4]->getItem(idx);
-    char* im_shape_out          = out_buf[5]->getItem(idx);
-    char* gt_boxes_out          = out_buf[6]->getItem(idx);
-    char* num_gt_boxes_out      = out_buf[7]->getItem(idx);
-    char* gt_classes_out        = out_buf[8]->getItem(idx);
-    char* im_scale_out          = out_buf[9]->getItem(idx);
+    char* datum_out             = out_buf[0]->get_item(idx);
+    char* y_bbtargets_out       = out_buf[1]->get_item(idx);
+    char* y_bbtargets_mask_out  = out_buf[2]->get_item(idx);
+    char* y_labels_flat_out     = out_buf[3]->get_item(idx);
+    char* y_labels_mask_out     = out_buf[4]->get_item(idx);
+    char* im_shape_out          = out_buf[5]->get_item(idx);
+    char* gt_boxes_out          = out_buf[6]->get_item(idx);
+    char* num_gt_boxes_out      = out_buf[7]->get_item(idx);
+    char* gt_classes_out        = out_buf[8]->get_item(idx);
+    char* im_scale_out          = out_buf[9]->get_item(idx);
 
     vector<void*> target_list = {
         y_bbtargets_out,
@@ -148,11 +148,11 @@ bbox_provider::bbox_provider(nlohmann::json js) :
 }
 
 void bbox_provider::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
-    std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
-    std::vector<char>& target_in = in_buf[1]->getItem(idx);
+    std::vector<char>& datum_in  = in_buf[0]->get_item(idx);
+    std::vector<char>& target_in = in_buf[1]->get_item(idx);
 
-    char* datum_out  = out_buf[0]->getItem(idx);
-    char* target_out = out_buf[1]->getItem(idx);
+    char* datum_out  = out_buf[0]->get_item(idx);
+    char* target_out = out_buf[1]->get_item(idx);
 
     if (datum_in.size() == 0) {
         std::stringstream ss;
@@ -186,10 +186,10 @@ provider_pixel_mask::provider_pixel_mask(nlohmann::json js) :
 }
 
 void provider_pixel_mask::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
-    std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
-    std::vector<char>& target_in = in_buf[1]->getItem(idx);
-    char* datum_out  = out_buf[0]->getItem(idx);
-    char* target_out = out_buf[1]->getItem(idx);
+    std::vector<char>& datum_in  = in_buf[0]->get_item(idx);
+    std::vector<char>& target_in = in_buf[1]->get_item(idx);
+    char* datum_out  = out_buf[0]->get_item(idx);
+    char* target_out = out_buf[1]->get_item(idx);
 
     if (datum_in.size() == 0) {
         std::stringstream ss;

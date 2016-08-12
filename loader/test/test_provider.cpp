@@ -60,7 +60,7 @@ TEST(provider,image) {
         reader.read(data_p);
         reader.read(target_p);
     }
-    EXPECT_GT(data_p.getItemCount(),batch_size);
+    EXPECT_GT(data_p.get_item_count(),batch_size);
     for (int i=0; i<batch_size; i++ ) {
         media->provide(i, bp, outBuf);
 
@@ -69,7 +69,7 @@ TEST(provider,image) {
 //        cv::imwrite(filename,mat);
     }
     for (int i=0; i<batch_size; i++ ) {
-        int target_value = unpack_le<int>(outBuf[1]->getItem(i));
+        int target_value = unpack_le<int>(outBuf[1]->get_item(i));
         EXPECT_EQ(42+i,target_value);
     }
 }

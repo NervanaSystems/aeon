@@ -21,6 +21,7 @@
 #include "block_iterator_shuffled.hpp"
 
 using namespace std;
+using namespace nervana;
 
 TEST(minibatch_iterator, simple) {
     // give a batch_iterator a block-level block_iterator and make sure

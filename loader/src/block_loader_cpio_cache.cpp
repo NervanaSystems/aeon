@@ -24,6 +24,7 @@
 #include "block_loader_cpio_cache.hpp"
 
 using namespace std;
+using namespace nervana;
 
 // maximum number of files opened by nftw file enumeration function
 #define OPEN_MAX 128
@@ -73,7 +74,7 @@ bool block_loader_cpio_cache::loadBlockFromCache(buffer_in_array& dest, uint blo
             try {
                 reader.read(*d);
             } catch (std::exception& e) {
-                d->addException(std::current_exception());
+                d->add_exception(std::current_exception());
             }
         }
     }

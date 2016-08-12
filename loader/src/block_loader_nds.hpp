@@ -27,7 +27,7 @@ public:
     block_loader_nds(const std::string baseurl, const std::string token, int collection_id, uint block_size, int shard_count=1, int shard_index=0);
     ~block_loader_nds();
 
-    void loadBlock(buffer_in_array& dest, uint block_num);
+    void loadBlock(nervana::buffer_in_array& dest, uint block_num);
     uint objectCount();
 
     uint blockCount();

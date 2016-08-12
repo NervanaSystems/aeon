@@ -23,25 +23,27 @@
 #include "buffer_pool.hpp"
 #include "buffer_out.hpp"
 
+namespace nervana {
+    class buffer_pool_out;
+}
+
 // buffer_pool_out acts as our double buffer to hold data before copying to device
-class buffer_pool_out : public buffer_pool {
+class nervana::buffer_pool_out : public nervana::buffer_pool {
 public:
     buffer_pool_out(const std::vector<size_t>& writeSizes, size_t batchSize, bool pinned = false);
     virtual ~buffer_pool_out();
-    buffer_out_array& getForWrite();
-    buffer_out_array& getForRead();
-    buffer_out_array& getPair(int bufIdx);
-    int getCount() { return _count;}
+    buffer_out_array& get_for_write();
+    buffer_out_array& get_for_read();
 
-    void advanceReadPos();
-    void advanceWritePos();
+    void advance_read_pos();
+    void advance_write_pos();
     bool empty();
     bool full();
-    std::mutex& getMutex();
-    void waitForNonEmpty(std::unique_lock<std::mutex>& lock);
-    void waitForNonFull(std::unique_lock<std::mutex>& lock);
-    void signalNonEmpty();
-    void signalNonFull();
+    std::mutex& get_mutex();
+    void wait_for_not_empty(std::unique_lock<std::mutex>& lock);
+    void wait_for_non_full(std::unique_lock<std::mutex>& lock);
+    void signal_not_empty();
+    void signal_not_full();
 
 protected:
     void advance(int& index);

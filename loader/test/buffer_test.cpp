@@ -19,6 +19,7 @@
 #include "helpers.hpp"
 
 using namespace std;
+using namespace nervana;
 
 void read(buffer_in& b, const char* str) {
     istringstream is(str);
@@ -55,7 +56,7 @@ void setup_buffer_exception(buffer_in& b) {
     try {
         throw std::runtime_error("expect me");
     } catch (std::exception& e) {
-        b.addException(std::current_exception());
+        b.add_exception(std::current_exception());
     }
 
     read(b, "c");
@@ -74,13 +75,13 @@ TEST(buffer, read_exception) {
     setup_buffer_exception(b);
 
     // no exceptions if we hit index 0, 2 and 3
-    ASSERT_EQ(b.getItem(0)[0], 'a');
-    ASSERT_EQ(b.getItem(2)[0], 'c');
-    ASSERT_EQ(b.getItem(3)[0], 'd');
+    ASSERT_EQ(b.get_item(0)[0], 'a');
+    ASSERT_EQ(b.get_item(2)[0], 'c');
+    ASSERT_EQ(b.get_item(3)[0], 'd');
 
     // assert that exception is raised
     try {
-        b.getItem(1);
+        b.get_item(1);
         FAIL();
     } catch (std::exception& e) {
         ASSERT_STREQ("expect me", e.what());

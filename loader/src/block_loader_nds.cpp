@@ -49,7 +49,7 @@ block_loader_nds::~block_loader_nds() {
     curl_easy_cleanup(_curl);
 }
 
-void block_loader_nds::loadBlock(buffer_in_array& dest, uint block_num) {
+void block_loader_nds::loadBlock(nervana::buffer_in_array& dest, uint block_num) {
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
 
