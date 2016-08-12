@@ -14,11 +14,13 @@
 */
 
 #pragma once
-
 #include <string>
 
-class Manifest {
-public:
-    virtual std::string hash() = 0;
-    virtual std::string version() = 0;
-};
+namespace nervana {
+
+    class manifest {
+    public:
+        virtual std::string hash() = 0;
+        virtual std::string version() = 0;
+    };
+}

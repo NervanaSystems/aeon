@@ -28,32 +28,32 @@ using namespace std;
 
 TEST(manifest, constructor) {
     string tmpname = tmp_manifest_file(0, {0, 0});
-    CSVManifest manifest(tmpname, false);
+    nervana::manifest_csv manifest0(tmpname, false);
 }
 
 TEST(manifest, no_file) {
-    ASSERT_THROW(CSVManifest manifest(
+    ASSERT_THROW(nervana::manifest_csv manifest0(
         "/tmp/jsdkfjsjkfdjaskdfj_doesnt_exist", false
     ), std::runtime_error);
 }
 
 TEST(manifest, hash_eq) {
     string tmpname = tmp_manifest_file(0, {0, 0});
-    CSVManifest manifest1(tmpname, false);
-    CSVManifest manifest2(tmpname, false);
+    nervana::manifest_csv manifest1(tmpname, false);
+    nervana::manifest_csv manifest2(tmpname, false);
     ASSERT_EQ(manifest1.hash(), manifest2.hash());
 }
 
 TEST(manifest, hash_ne) {
-    CSVManifest manifest1(tmp_manifest_file(0, {0, 0}), false);
-    CSVManifest manifest2(tmp_manifest_file(0, {0, 0}), false);
+    nervana::manifest_csv manifest1(tmp_manifest_file(0, {0, 0}), false);
+    nervana::manifest_csv manifest2(tmp_manifest_file(0, {0, 0}), false);
     ASSERT_NE(manifest1.hash(), manifest2.hash());
 }
 
 TEST(manifest, version_eq) {
     string tmpname = tmp_manifest_file(0, {0, 0});
-    CSVManifest manifest1(tmpname, false);
-    CSVManifest manifest2(tmpname, false);
+    nervana::manifest_csv manifest1(tmpname, false);
+    nervana::manifest_csv manifest2(tmpname, false);
     ASSERT_EQ(manifest1.version(), manifest2.version());
 }
 
@@ -74,35 +74,35 @@ void touch(const std::string& filename)
 
 TEST(manifest, version_ne) {
     string tmpname = tmp_manifest_file(0, {0, 0});
-    CSVManifest manifest(tmpname, false);
-    string v1 = manifest.version();
+    nervana::manifest_csv manifest0(tmpname, false);
+    string v1 = manifest0.version();
 
     sleep(1);
     touch(tmpname);
 
-    string v2 = manifest.version();
+    string v2 = manifest0.version();
 
     ASSERT_NE(v1, v2);
 }
 
 TEST(manifest, parse_file_doesnt_exist) {
     string tmpname = tmp_manifest_file(0, {0, 0});
-    CSVManifest manifest(tmpname, false);
+    nervana::manifest_csv manifest0(tmpname, false);
 
-    ASSERT_EQ(manifest.objectCount(), 0);
+    ASSERT_EQ(manifest0.objectCount(), 0);
 }
 
 TEST(manifest, parse_file) {
     string tmpname = tmp_manifest_file(2, {0, 0});
 
-    CSVManifest manifest(tmpname, false);
-    ASSERT_EQ(manifest.objectCount(), 2);
+    nervana::manifest_csv manifest0(tmpname, false);
+    ASSERT_EQ(manifest0.objectCount(), 2);
 }
 
 TEST(manifest, no_shuffle) {
     string filename = tmp_manifest_file(20, {4, 4});
-    CSVManifest manifest1(filename, false);
-    CSVManifest manifest2(filename, false);
+    nervana::manifest_csv manifest1(filename, false);
+    nervana::manifest_csv manifest2(filename, false);
 
     for(auto it1 = manifest1.begin(), it2 = manifest2.begin(); it1 != manifest1.end(); ++it1, ++it2) {
         ASSERT_EQ((*it1)[0], (*it2)[0]);
@@ -112,8 +112,8 @@ TEST(manifest, no_shuffle) {
 
 TEST(manifest, shuffle) {
     string filename = tmp_manifest_file(20, {4, 4});
-    CSVManifest manifest1(filename, false);
-    CSVManifest manifest2(filename, true);
+    nervana::manifest_csv manifest1(filename, false);
+    nervana::manifest_csv manifest2(filename, true);
 
     bool different = false;
 
@@ -128,12 +128,12 @@ TEST(manifest, shuffle) {
 TEST(manifest, non_paired_manifests) {
     {
         string filename = tmp_manifest_file(20, {4, 4, 4});
-        CSVManifest manifest1(filename, false);
+        nervana::manifest_csv manifest1(filename, false);
         ASSERT_EQ(manifest1.objectCount(), 20);
     }
     {
         string filename = tmp_manifest_file(20, {4});
-        CSVManifest manifest1(filename, false);
+        nervana::manifest_csv manifest1(filename, false);
         ASSERT_EQ(manifest1.objectCount(), 20);
     }
 }
@@ -141,7 +141,7 @@ TEST(manifest, non_paired_manifests) {
 TEST(manifest, uneven_records) {
     string filename = tmp_manifest_file_with_ragged_fields();
     try {
-        CSVManifest manifest1(filename, false);
+        nervana::manifest_csv manifest1(filename, false);
         FAIL();
     } catch (std::exception& e) {
         ASSERT_EQ(

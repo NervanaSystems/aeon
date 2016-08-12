@@ -24,8 +24,9 @@
 #include "manifest_csv.hpp"
 
 using namespace std;
+using namespace nervana;
 
-CSVManifest::CSVManifest(string filename, bool shuffle)
+manifest_csv::manifest_csv(string filename, bool shuffle)
 : _filename(filename), _shuffle(shuffle)
 {
     // for now parse the entire manifest on creation
@@ -39,7 +40,7 @@ CSVManifest::CSVManifest(string filename, bool shuffle)
     parse_stream(infile);
 }
 
-string CSVManifest::hash()
+string manifest_csv::hash()
 {
     // returns a hash of the _filename
     std::size_t h = std::hash<std::string>()(_filename);
@@ -48,7 +49,7 @@ string CSVManifest::hash()
     return ss.str();
 }
 
-string CSVManifest::version()
+string manifest_csv::version()
 {
     // return the manifest version (just the file timestamp in this case)
     struct stat stats;
@@ -61,7 +62,7 @@ string CSVManifest::version()
     return to_string(stats.st_mtime);
 }
 
-void CSVManifest::parse_stream(istream& is)
+void manifest_csv::parse_stream(istream& is)
 {
     // parse istream is and load the entire thing into _filename_lists
     uint prev_num_fields = 0, lineno = 0;
@@ -106,7 +107,7 @@ void CSVManifest::parse_stream(istream& is)
     }
 }
 
-void CSVManifest::shuffle_filename_lists()
+void manifest_csv::shuffle_filename_lists()
 {
     // shuffles _filename_lists.  It is possible that the order of the
     // filenames in the manifest file were in some sorted order and we

@@ -258,10 +258,10 @@ loader::loader(const char* cfg_string, PyObject *py_obj_backend)
 
     _batchSize = lcfg.minibatch_size;
     _single_thread_mode = lcfg.single_thread;
-    shared_ptr<Manifest> base_manifest = nullptr;
+    shared_ptr<nervana::manifest> base_manifest = nullptr;
 
-    if(NDSManifest::isLikelyJSON(lcfg.manifest_filename)) {
-        auto manifest = make_shared<NDSManifest>(lcfg.manifest_filename);
+    if(nervana::manifest_nds::is_likely_json(lcfg.manifest_filename)) {
+        auto manifest = make_shared<nervana::manifest_nds>(lcfg.manifest_filename);
 
         // TODO: add shard_count/shard_index to cfg
         _block_loader = make_shared<block_loader_nds>(manifest->baseurl,
@@ -272,8 +272,8 @@ loader::loader(const char* cfg_string, PyObject *py_obj_backend)
         base_manifest = manifest;
     } else {
         // the manifest defines which data should be included in the dataset
-        auto manifest = make_shared<CSVManifest>(lcfg.manifest_filename,
-                                                 lcfg.shuffle_manifest);
+        auto manifest = make_shared<nervana::manifest_csv>(lcfg.manifest_filename,
+                                                           lcfg.shuffle_manifest);
 
         // TODO: make the constructor throw this error
         if(manifest->objectCount() == 0) {

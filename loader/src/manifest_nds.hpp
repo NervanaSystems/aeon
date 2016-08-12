@@ -19,17 +19,21 @@
 
 #include "manifest.hpp"
 
-class NDSManifest : public Manifest {
-public:
-    NDSManifest(const std::string filename);
-    ~NDSManifest();
+namespace nervana {
+    class manifest_nds : public manifest {
+    public:
+        manifest_nds(const std::string filename);
+        ~manifest_nds() {}
 
-    std::string hash();
-    std::string version();
+        std::string hash();
 
-    static bool isLikelyJSON(const std::string filename);
+        // NDS manifests doesn't have versions since collections are immutable
+        std::string version() { return ""; }
 
-    std::string baseurl;
-    std::string token;
-    int collection_id;
-};
+        static bool is_likely_json(const std::string filename);
+
+        std::string baseurl;
+        std::string token;
+        int collection_id;
+    };
+}

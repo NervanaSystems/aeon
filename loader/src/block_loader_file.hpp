@@ -26,7 +26,9 @@
  */
 class block_loader_file : public block_loader {
 public:
-    block_loader_file(std::shared_ptr<CSVManifest> manifest, float subset_fraction, uint block_size);
+    block_loader_file(std::shared_ptr<nervana::manifest_csv> manifest,
+                      float subset_fraction,
+                      uint block_size);
 
     void loadBlock(buffer_in_array& dest, uint block_num);
     void loadFile(buffer_in* buff, const std::string& filename);
@@ -35,6 +37,6 @@ public:
 private:
     off_t getFileSize(const std::string& filename);
 
-    const std::shared_ptr<CSVManifest> _manifest;
+    const std::shared_ptr<nervana::manifest_csv> _manifest;
     float _subset_fraction;
 };

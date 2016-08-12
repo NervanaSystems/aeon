@@ -36,29 +36,31 @@
  * a key instead.
  *
  */
-class CSVManifest : public Manifest {
-public:
-    CSVManifest(std::string filename, bool shuffle);
+namespace nervana {
 
-    typedef std::vector<std::string> FilenameList;
-    typedef std::vector<FilenameList>::const_iterator iter;
+    class manifest_csv : public manifest {
+    public:
+        manifest_csv(std::string filename, bool shuffle);
 
-    std::string hash();
-    std::string version();
-    size_t objectCount() const { return _filename_lists.size(); }
+        typedef std::vector<std::string> FilenameList;
+        typedef std::vector<FilenameList>::const_iterator iter;
 
-    // begin and end provide iterators over the FilenameLists
-    iter begin() const { return _filename_lists.begin(); }
-    iter end() const { return _filename_lists.end(); }
+        std::string hash();
+        std::string version();
+        size_t objectCount() const { return _filename_lists.size(); }
 
-protected:
-    void parse_stream(std::istream& is);
-    void shuffle_filename_lists();
+        // begin and end provide iterators over the FilenameLists
+        iter begin() const { return _filename_lists.begin(); }
+        iter end() const { return _filename_lists.end(); }
 
-private:
-    const std::string _filename;
-    const bool _shuffle;
+    protected:
+        void parse_stream(std::istream& is);
+        void shuffle_filename_lists();
 
-    std::vector<FilenameList> _filename_lists;
-};
+    private:
+        const std::string _filename;
+        const bool _shuffle;
 
+        std::vector<FilenameList> _filename_lists;
+    };
+}

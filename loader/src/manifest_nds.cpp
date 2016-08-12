@@ -20,8 +20,9 @@
 #include "manifest_nds.hpp"
 
 using namespace std;
+using namespace nervana;
 
-NDSManifest::NDSManifest(const std::string filename) {
+manifest_nds::manifest_nds(const std::string filename) {
     auto j = nlohmann::json::parse(filename);
 
     baseurl = j["baseurl"];
@@ -29,10 +30,7 @@ NDSManifest::NDSManifest(const std::string filename) {
     collection_id = j["params"]["collection_id"];
 }
 
-NDSManifest::~NDSManifest() {
-}
-
-string NDSManifest::hash() {
+string manifest_nds::hash() {
     stringstream contents;
     contents << baseurl << collection_id;
     std::size_t h = std::hash<std::string>()(contents.str());
@@ -41,12 +39,7 @@ string NDSManifest::hash() {
     return ss.str();
 }
 
-string NDSManifest::version() {
-    // NDS Manifest doesn't have versions since collections are immutable
-    return "";
-}
-
-bool NDSManifest::isLikelyJSON(const std::string filename) {
+bool manifest_nds::is_likely_json(const std::string filename) {
     // check the first character of the file to see if it is a json
     // object.  If so, we want to parse this as an NDS Manifest
     // instead of a CSV

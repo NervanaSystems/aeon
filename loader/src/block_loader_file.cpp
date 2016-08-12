@@ -23,11 +23,11 @@
 
 using namespace std;
 
-block_loader_file::block_loader_file(shared_ptr<CSVManifest> manifest,
+block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst,
                                      float subset_fraction,
                                      uint block_size)
 : block_loader(block_size),
-  _manifest(manifest),
+  _manifest(mfst),
   _subset_fraction(subset_fraction)
 {
     assert(_subset_fraction > 0.0 && _subset_fraction <= 1.0);
@@ -99,11 +99,8 @@ off_t block_loader_file::getFileSize(const string& filename)
     // ensure that filename exists and get its size
 
     struct stat stats;
-    int result = stat(filename.c_str(), &stats);
-    if (result == -1) {
-        stringstream ss;
-        ss << "Could not find " << filename;
-        throw std::runtime_error(ss.str());
+    if (stat(filename.c_str(), &stats) == -1) {
+        throw std::runtime_error("Could not find " + filename);
     }
 
     return stats.st_size;
