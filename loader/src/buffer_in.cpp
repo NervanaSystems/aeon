@@ -70,5 +70,6 @@ void buffer_in::read(istream& is, int size) {
     // read `size` bytes out of `ifs` and push into buffer
     vector<char> b(size);
     is.read(b.data(), size);
+    printf("buffer_size %d made_size %d, numbufs %d\n", size, b.size(), buffers.size());
     buffers.push_back(b);
 }

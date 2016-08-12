@@ -12,6 +12,7 @@ audio_inference::audio_inference(nlohmann::json js) :
 {
     num_inputs = 1;
     oshapes.push_back(audio_config.get_shape_type());
+    printf("Created an inference provider\n");
 }
 
 void audio_inference::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)

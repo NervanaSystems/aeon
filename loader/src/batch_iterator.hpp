@@ -33,7 +33,7 @@ protected:
     std::shared_ptr<block_iterator> _macroBatchIterator;
     int _minibatchSize;
 
-    buffer_in_array _macrobatch;
+    std::shared_ptr<buffer_in_array> _macrobatch;
     // the index into the _macrobatch to read next
     int _i;
 };

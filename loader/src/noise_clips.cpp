@@ -101,7 +101,7 @@ void NoiseClips::read_noise(std::string& noise_file, int* dataLen) {
     struct stat stats;
     int result = stat(noise_file.c_str(), &stats);
     if (result == -1) {
-        throw std::runtime_error("Could not find " + noise_file);
+        throw std::runtime_error("NoiseClips: Could not find " + noise_file);
     }
 
     off_t size = stats.st_size;
@@ -115,7 +115,7 @@ void NoiseClips::read_noise(std::string& noise_file, int* dataLen) {
     ifs.read(_buf, size);
 
     if (size == 0) {
-        throw std::runtime_error("Could not read " + noise_file);
+        throw std::runtime_error("NoiseClips:  Could not read " + noise_file);
     }
     *dataLen = size;
 }
