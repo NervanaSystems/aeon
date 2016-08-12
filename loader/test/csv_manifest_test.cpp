@@ -14,7 +14,7 @@
 */
 
 #include "gtest/gtest.h"
-#include "csv_manifest.hpp"
+#include "manifest_csv.hpp"
 #include "csv_manifest_maker.hpp"
 #include <fcntl.h>
 #include <unistd.h>

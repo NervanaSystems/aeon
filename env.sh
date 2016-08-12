@@ -18,7 +18,6 @@ SRCS="
     buffer_pool_out.cpp
     cap_mjpeg_decoder.cpp
     cpio.cpp
-    csv_manifest.cpp
     etl_audio.cpp
     etl_bbox.cpp
     etl_char_map.cpp
@@ -33,8 +32,8 @@ SRCS="
     interface.cpp
     loader.cpp
     log.cpp
-    manifest.cpp
-    nds_manifest.cpp
+    manifest_csv.cpp
+    manifest_nds.cpp
     noise_clips.cpp
     provider_audio.cpp
     provider_factory.cpp

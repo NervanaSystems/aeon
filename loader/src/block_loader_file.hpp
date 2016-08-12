@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "csv_manifest.hpp"
+#include "manifest_csv.hpp"
 #include "buffer_in.hpp"
 #include "block_loader.hpp"
 

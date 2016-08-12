@@ -44,7 +44,7 @@ block_loader_cpio_cache make_cache(const string& rootCacheDir,
 TEST(block_loader_cpio_cache, integration) {
     // load the same block twice and make sure it has the same value.
     // block_loader_random always returns a different uint value no matter
-    // the block_num.  The only way two consequetive calls are the same
+    // the block_num.  The only way two consecutive calls are the same
     // is if the cache is working properly
 
     auto cache = make_cache("/tmp", block_loader_random::randomString(), "version123");

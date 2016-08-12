@@ -21,17 +21,26 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include "csv_manifest.hpp"
+#include "manifest_csv.hpp"
 
 using namespace std;
 
 CSVManifest::CSVManifest(string filename, bool shuffle)
-: _filename(filename), _shuffle(shuffle) {
+: _filename(filename), _shuffle(shuffle)
+{
     // for now parse the entire manifest on creation
-    parse();
+    ifstream infile(_filename);
+
+    if(!infile.is_open())
+    {
+        throw std::runtime_error("Manifest file " + _filename + " doesn't exist.");
+    }
+
+    parse_stream(infile);
 }
 
-string CSVManifest::hash() {
+string CSVManifest::hash()
+{
     // returns a hash of the _filename
     std::size_t h = std::hash<std::string>()(_filename);
     stringstream ss;
@@ -39,70 +48,50 @@ string CSVManifest::hash() {
     return ss.str();
 }
 
-string CSVManifest::version() {
-    // return the manifest version.  In this case it is just the timestamp
-    // on the file
+string CSVManifest::version()
+{
+    // return the manifest version (just the file timestamp in this case)
     struct stat stats;
-    int result = stat(_filename.c_str(), &stats);
-    if (result == -1) {
-        stringstream ss;
-        ss << "Could not find manifest file " << _filename;
-        throw std::runtime_error(ss.str());
+
+    if (stat(_filename.c_str(), &stats) == -1)
+    {
+        throw std::runtime_error("Could not find manifest file " + _filename);
     }
 
-    stringstream ss;
-    ss << stats.st_mtime;
-    return ss.str();
+    return to_string(stats.st_mtime);
 }
 
-void CSVManifest::parse() {
-    ifstream infile(_filename);
-
-    if(!infile.is_open()) {
-        stringstream ss;
-        ss << "Manifest file " << _filename << " doesnt exit.";
-        throw std::runtime_error(ss.str());
-    }
-
-    parseStream(infile);
-}
-
-size_t CSVManifest::objectCount() const {
-    return _filename_lists.size();
-}
-
-void CSVManifest::parseStream(istream& is) {
+void CSVManifest::parse_stream(istream& is)
+{
     // parse istream is and load the entire thing into _filename_lists
+    uint prev_num_fields = 0, lineno = 0;
     string line;
 
-    uint prev_num_fields = 0, lineno = 0;
     // read in each line, then from that istringstream, break into
     // comma-separated fields.
     while(std::getline(is, line)) {
         istringstream lineis(line);
         string field;
-        vector<string> filename_list;
+        vector<string> field_list;
         while (std::getline(lineis, field, ',')) {
-            filename_list.push_back(field);
+            field_list.push_back(field);
         }
         if (lineno == 0) {
-            prev_num_fields = filename_list.size();
+            prev_num_fields = field_list.size();
         }
 
-        if(filename_list.size() != prev_num_fields) {
-            // nlohmann::json f_list(filename_list);
-
+        if(field_list.size() != prev_num_fields) {
             ostringstream ss;
             ss << "at line: " << lineno;
             ss << ", manifest file has a line with differing number of files (";
-            ss << filename_list.size() << ") vs (" << prev_num_fields << "): ";
+            ss << field_list.size() << ") vs (" << prev_num_fields << "): ";
 
-            std::copy(filename_list.begin(), filename_list.end(),
+            std::copy(field_list.begin(), field_list.end(),
                       ostream_iterator<std::string>(ss, " "));
             throw std::runtime_error(ss.str());
         }
-        prev_num_fields = filename_list.size();
-        _filename_lists.push_back(filename_list);
+        prev_num_fields = field_list.size();
+        _filename_lists.push_back(field_list);
         lineno++;
     }
 
@@ -113,11 +102,12 @@ void CSVManifest::parseStream(istream& is) {
     // may need to be able to jump around and read random blocks of the
     // file, so a purely stream based interface is not sufficient.
     if(_shuffle) {
-        shuffleFilenameLists();
+        shuffle_filename_lists();
     }
 }
 
-void CSVManifest::shuffleFilenameLists() {
+void CSVManifest::shuffle_filename_lists()
+{
     // shuffles _filename_lists.  It is possible that the order of the
     // filenames in the manifest file were in some sorted order and we
     // don't want our blocks to be biased by that order.
@@ -126,12 +116,4 @@ void CSVManifest::shuffleFilenameLists() {
     // CPIO file.  We don't want to cache anything that is based on a
     // changing random seed, so don't use a changing random seed.
     std::shuffle(_filename_lists.begin(), _filename_lists.end(), std::mt19937(0));
-}
-
-CSVManifest::iter CSVManifest::begin() const {
-    return _filename_lists.begin();
-}
-
-CSVManifest::iter CSVManifest::end() const {
-    return _filename_lists.end();
 }

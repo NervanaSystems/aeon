@@ -22,13 +22,12 @@
 #include <utility>
 #include <algorithm>
 
-#include "matrix.hpp"
 #include "loader.hpp"
 #include "block_loader_cpio_cache.hpp"
 #include "block_iterator_sequential.hpp"
 #include "block_iterator_shuffled.hpp"
 #include "batch_iterator.hpp"
-#include "nds_manifest.hpp"
+#include "manifest_nds.hpp"
 #include "block_loader_nds.hpp"
 
 using namespace std;
@@ -61,8 +60,7 @@ decode_thread_pool::~decode_thread_pool()
         _manager->join();
         delete _manager;
     }
-    // The other thread objects are freed in the destructor
-    // of the parent class.
+    // Other thread objects are freed in the destructor of the parent class.
 }
 
 void decode_thread_pool::start()

@@ -45,16 +45,15 @@ public:
 
     std::string hash();
     std::string version();
-    size_t objectCount() const;
+    size_t objectCount() const { return _filename_lists.size(); }
 
     // begin and end provide iterators over the FilenameLists
-    iter begin() const;
-    iter end() const;
+    iter begin() const { return _filename_lists.begin(); }
+    iter end() const { return _filename_lists.end(); }
 
 protected:
-    void parse();
-    void parseStream(std::istream& is);
-    void shuffleFilenameLists();
+    void parse_stream(std::istream& is);
+    void shuffle_filename_lists();
 
 private:
     const std::string _filename;

@@ -17,7 +17,7 @@
 #include <sstream>
 
 #include "json.hpp"
-#include "nds_manifest.hpp"
+#include "manifest_nds.hpp"
 
 using namespace std;
 

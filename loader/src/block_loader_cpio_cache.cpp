@@ -59,9 +59,8 @@ void block_loader_cpio_cache::loadBlock(buffer_in_array& dest, uint block_num)
 
 bool block_loader_cpio_cache::loadBlockFromCache(buffer_in_array& dest, uint block_num)
 {
-    // load a block from cpio cache into dest.  If file doesn't exist,
-    // return false.  If loading from cpio cache was successful return
-    // true.
+    // load a block from cpio cache into dest.  If file doesn't exist, return false.
+    //  If loading from cpio cache was successful return true.
     CPIOFileReader reader;
 
     if(!reader.open(blockFilename(block_num))) {
@@ -111,9 +110,7 @@ void block_loader_cpio_cache::invalidateOldCache(const string& rootCacheDir,
         closedir(dir);
     }
     else {
-        stringstream message;
-        message << "error enumerating old cache in " << rootCacheDir;
-        throw std::runtime_error(message.str());
+        throw std::runtime_error("error enumerating old cache in " + rootCacheDir);
     }
 }
 
@@ -163,9 +160,7 @@ void block_loader_cpio_cache::removeDirectory(const string& dir)
     // FTW_DEPTH: handle directories after its contents
     // FTW_PHYS: do not follow symbolic links
     if(nftw(dir.c_str(), rm, OPEN_MAX, FTW_DEPTH | FTW_PHYS)) {
-        stringstream message;
-        message << "error deleting directory " << dir;
-        throw std::runtime_error(message.str());
+        throw std::runtime_error("error deleting directory " + dir);
     }
 }
 
@@ -176,18 +171,13 @@ void block_loader_cpio_cache::makeDirectory(const string& dir)
             // not really an error, the directory already exists
             return;
         }
-        stringstream message;
-        message << "error making directory " << dir;
-        message << " " << strerror(errno);
-        throw std::runtime_error(message.str());
+        throw std::runtime_error("error making directory " + dir + " " + strerror(errno));
     }
 }
 
 string block_loader_cpio_cache::blockFilename(uint block_num)
 {
-    stringstream s;
-    s << _cacheDir << "/" << block_num << "-" << _block_size << ".cpio";
-    return s.str();
+     return _cacheDir + "/" + to_string(block_num) + "-" + to_string(_block_size) + ".cpio";
 }
 
 uint block_loader_cpio_cache::objectCount()
