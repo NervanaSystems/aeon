@@ -92,7 +92,7 @@ namespace nervana {
 
         config(nlohmann::json js) {
             if(js.is_null()) {
-                throw std::runtime_error("missing image config in json config");
+                throw std::runtime_error("missing audio config in json config");
             }
 
             for(auto& info : config_list) {

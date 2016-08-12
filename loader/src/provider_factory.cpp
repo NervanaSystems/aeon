@@ -19,7 +19,7 @@ std::shared_ptr<nervana::provider_interface> nervana::provider_factory::create(n
         rc = make_shared<image_classifier>(configJs);
     } else if( mediaType == "image" ) {
         rc = make_shared<image_only>(configJs);
-    } else if( mediaType == "audio,transcribe" ) {
+    } else if( mediaType == "audio,transcription" ) {
         rc = make_shared<audio_transcriber>(configJs);
     } else if( mediaType == "audio,label" ) {
         rc = make_shared<audio_classifier>(configJs);

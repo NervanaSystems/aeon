@@ -32,7 +32,7 @@ void audio_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out
 
 audio_transcriber::audio_transcriber(nlohmann::json js) :
     audio_config(js["audio"]),
-    trans_config(js["transcript"]),
+    trans_config(js["transcription"]),
     audio_extractor(),
     audio_transformer(audio_config),
     audio_loader(audio_config),
@@ -129,4 +129,3 @@ void audio_classifier::provide(int idx, buffer_in_array& in_buf, buffer_out_arra
     auto label_dec = label_extractor.extract(target_in.data(), target_in.size());
     label_loader.load({target_out}, label_dec);
 }
-

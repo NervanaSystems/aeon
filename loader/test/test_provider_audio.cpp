@@ -79,14 +79,14 @@ TEST(provider,audio_classify) {
 
 
 TEST(provider,audio_transcript) {
-    nlohmann::json js = {{"type","audio,transcribe"},
+    nlohmann::json js = {{"type","audio,transcription"},
                          {"audio", {
                             {"max_duration","2000 milliseconds"},
                             {"frame_length","1024 samples"},
                             {"frame_stride","256 samples"},
                             {"sample_freq_hz",44100},
                             {"feature_type","specgram"}}},
-                         {"transcript", {
+                         {"transcription", {
                             {"alphabet","ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()"},
                             {"pack_for_ctc", true},
                             {"max_length",50}}}};
