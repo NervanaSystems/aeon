@@ -335,7 +335,6 @@ int loader::start()
         for (auto& o: oshapes)
         {
             write_sizes.push_back(o.get_byte_size());
-            cout << o.get_element_count() << endl;
         }
 
         // Bind the python backend here
