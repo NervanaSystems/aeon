@@ -26,8 +26,7 @@
 
 class buffer_in {
 public:
-    buffer_in()
-    { printf("On startup buffer_size %d \n", buffers.size());}
+    buffer_in() {}
     virtual ~buffer_in() {}
 
     void read(std::istream& is, int size);
@@ -53,10 +52,8 @@ class buffer_in_array {
 public:
     buffer_in_array(unsigned int nbuffers_in)
     {
-        printf("buffer-in_arrya nbuffers_in %d\n", nbuffers_in);
         for (uint i=0; i<nbuffers_in; ++i)
         {
-            printf("Iterating through %d\n", i);
             data.push_back(new buffer_in());
         }
     }

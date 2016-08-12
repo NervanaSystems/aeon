@@ -325,7 +325,6 @@ int loader::start()
         }
 
         // variable size buffers for reading encoded data (start off zero and grow as needed)
-        cout << "Number of inputs: " << providers[0]->num_inputs << endl;
         _read_buffers = make_shared<buffer_pool_in>(providers[0]->num_inputs);
         _read_thread_pool = unique_ptr<read_thread_pool>(
                         new read_thread_pool(_read_buffers, _batch_iterator));
@@ -333,7 +332,6 @@ int loader::start()
         // fixed size buffers for writing out decoded data
         const vector<nervana::shape_type>& oshapes = providers[0]->get_oshapes();
         vector<size_t> write_sizes;
-        cout << _lcfg_json << " " << oshapes.size() << endl;
         for (auto& o: oshapes)
         {
             write_sizes.push_back(o.get_byte_size());
@@ -342,7 +340,6 @@ int loader::start()
 
         // Bind the python backend here
         _python_backend = make_shared<python_backend>(_py_obj_backend, oshapes, _batchSize);
-        cout << "Completed backend creation" << endl;
         // These are fixed size output buffers (need batchSize for stride)
         _decode_buffers = make_shared<buffer_pool_out>(write_sizes,
                                                        (size_t)_batchSize,
