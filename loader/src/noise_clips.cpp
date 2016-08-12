@@ -6,8 +6,9 @@
 #include <sys/stat.h>
 
 using namespace std;
+using namespace nervana;
 
-NoiseClips::NoiseClips(const std::string noiseIndexFile)
+noise_clips::noise_clips(const std::string noiseIndexFile)
 {
     if (!noiseIndexFile.empty()) {
         load_index(noiseIndexFile);
@@ -15,14 +16,14 @@ NoiseClips::NoiseClips(const std::string noiseIndexFile)
     }
 }
 
-NoiseClips::~NoiseClips()
+noise_clips::~noise_clips()
 {
     if (_bufLen != 0) {
         delete[] _buf;
     }
 }
 
-void NoiseClips::load_index(const std::string& index_file)
+void noise_clips::load_index(const std::string& index_file)
 {
     ifstream ifs(index_file);
 
@@ -41,7 +42,7 @@ void NoiseClips::load_index(const std::string& index_file)
 }
 
 // From Factory, get add_noise, offset (frac), noise index, noise level
-void NoiseClips::addNoise(cv::Mat& wav_mat,
+void noise_clips::addNoise(cv::Mat& wav_mat,
                           bool add_noise,
                           uint32_t noise_index,
                           float noise_offset_fraction,
@@ -88,7 +89,7 @@ void NoiseClips::addNoise(cv::Mat& wav_mat,
 
 }
 
-void NoiseClips::load_data() {
+void noise_clips::load_data() {
     for(auto nfile: _noise_files) {
         int len = 0;
         read_noise(nfile, &len);
@@ -96,12 +97,12 @@ void NoiseClips::load_data() {
     }
 }
 
-void NoiseClips::read_noise(std::string& noise_file, int* dataLen) {
+void noise_clips::read_noise(std::string& noise_file, int* dataLen) {
 
     struct stat stats;
     int result = stat(noise_file.c_str(), &stats);
     if (result == -1) {
-        throw std::runtime_error("NoiseClips: Could not find " + noise_file);
+        throw std::runtime_error("noise_clips: Could not find " + noise_file);
     }
 
     off_t size = stats.st_size;
@@ -115,7 +116,7 @@ void NoiseClips::read_noise(std::string& noise_file, int* dataLen) {
     ifs.read(_buf, size);
 
     if (size == 0) {
-        throw std::runtime_error("NoiseClips:  Could not read " + noise_file);
+        throw std::runtime_error("noise_clips:  Could not read " + noise_file);
     }
     *dataLen = size;
 }

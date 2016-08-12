@@ -34,6 +34,17 @@
 #define MAGIC_STRING    "MACR"
 #define CPIO_FOOTER     "TRAILER!!!"
 
+namespace nervana {
+    namespace cpio {
+        class record_header;
+        class header;
+        class trailer;
+        class reader;
+        class file_reader;
+        class file_writer;
+    }
+}
+
 /*
 
 The data is stored as a cpio archive and may be unpacked using the
@@ -54,9 +65,9 @@ Each of these items comprises of a cpio header record followed by data.
 
 */
 
-class RecordHeader {
+class nervana::cpio::record_header {
 public:
-    RecordHeader();
+    record_header();
     void loadDoubleShort(uint32_t* dst, uint16_t src[2]);
 
     void saveDoubleShort(uint16_t* dst, uint32_t src);
@@ -79,11 +90,11 @@ public:
     uint16_t                    _filesize[2];
 };
 
-class CPIOHeader {
-friend class CPIOReader;
-friend class CPIOFileWriter;
+class nervana::cpio::header {
+friend class reader;
+friend class file_writer;
 public:
-    CPIOHeader();
+    header();
     void read(std::istream& ifs);
     void write(std::ostream& ofs);
 
@@ -98,9 +109,9 @@ private:
 #pragma pack()
 };
 
-class CPIOTrailer {
+class nervana::cpio::trailer {
 public:
-    CPIOTrailer() ;
+    trailer() ;
     void write(std::ostream& ofs);
     void read(std::istream& ifs);
 
@@ -108,10 +119,10 @@ private:
     uint32_t                    _unused[4];
 };
 
-class CPIOReader {
+class nervana::cpio::reader {
 public:
-    CPIOReader();
-    CPIOReader(std::istream* is);
+    reader();
+    reader(std::istream* is);
 
     void read(nervana::buffer_in& dest);
 
@@ -122,9 +133,9 @@ protected:
 
     std::istream*               _is;
 
-    CPIOHeader                  _header;
-    CPIOTrailer                 _trailer;
-    RecordHeader                _recordHeader;
+    header                  _header;
+    trailer                 _trailer;
+    record_header                _recordHeader;
 };
 
 /*
@@ -132,10 +143,10 @@ protected:
  * which only deals in istreams
  */
 
-class CPIOFileReader : public CPIOReader {
+class nervana::cpio::file_reader : public reader {
 public:
-    CPIOFileReader();
-    ~CPIOFileReader();
+    file_reader();
+    ~file_reader();
 
     bool open(const std::string& fileName);
     void close();
@@ -144,9 +155,9 @@ private:
     std::ifstream               _ifs;
 };
 
-class CPIOFileWriter {
+class nervana::cpio::file_writer {
 public:
-    ~CPIOFileWriter();
+    ~file_writer();
 
     void open(const std::string& fileName, const std::string& dataType = "");
     void close();
@@ -158,9 +169,9 @@ public:
 
 private:
     std::ofstream               _ofs;
-    CPIOHeader                  _header;
-    CPIOTrailer                 _trailer;
-    RecordHeader                _recordHeader;
+    header                  _header;
+    trailer                 _trailer;
+    record_header                _recordHeader;
     int                         _fileHeaderOffset;
     std::string                 _fileName;
     std::string                 _tempName;

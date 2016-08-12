@@ -8,7 +8,11 @@
 #include "util.hpp"
 #include "buffer_out.hpp"
 
-class python_backend {
+namespace nervana {
+    class python_backend;
+}
+
+class nervana::python_backend {
 public:
     python_backend(PyObject*, const std::vector<nervana::shape_type>&, int);
     ~python_backend();

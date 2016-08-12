@@ -10,6 +10,10 @@
 
 using namespace std;
 
+namespace nervana {
+    class thread_starter;
+}
+
 string                      nervana::logger::log_path;
 deque<string>               nervana::logger::queue;
 static mutex                queue_mutex;
@@ -17,7 +21,7 @@ condition_variable          queue_condition;
 static unique_ptr<thread>   queue_thread;
 static bool                 active = false;
 
-class thread_starter {
+class nervana::thread_starter {
 public:
     thread_starter() {
         nervana::logger::start();
@@ -27,7 +31,7 @@ public:
     }
 };
 
-static thread_starter _starter;
+static nervana::thread_starter _starter;
 
 void nervana::logger::set_log_path(const string& path) {
     log_path = path;

@@ -14,6 +14,8 @@
 */
 #include "api.hpp"
 
+using namespace nervana;
+
 extern "C" {
 
 extern const char* get_error_message()

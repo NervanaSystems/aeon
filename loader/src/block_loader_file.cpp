@@ -22,6 +22,7 @@
 #include "block_loader_file.hpp"
 
 using namespace std;
+using namespace nervana;
 
 block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst,
                                      float subset_fraction,

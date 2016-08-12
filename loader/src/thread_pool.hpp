@@ -27,6 +27,10 @@
 #include <utility>
 #include <algorithm>
 
+namespace nervana {
+    class thread_pool;
+}
+
 /* thread_pool
  *
  * A collection of a constant number of threads implemented
@@ -34,7 +38,7 @@
  * N threads simultaneously.
  *
  */
-class thread_pool {
+class nervana::thread_pool {
 public:
     explicit thread_pool(int count)
     : _count(count), _done(false) {
@@ -80,7 +84,7 @@ public:
 protected:
     virtual void work(int id) = 0;
 
-    void run(int id) {
+    virtual void run(int id) {
         while (_done == false) {
             work(id);
         }

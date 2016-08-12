@@ -24,6 +24,7 @@
 #include "block_loader_nds.hpp"
 
 using namespace std;
+using namespace nervana;
 
 size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
     // callback used by curl.  writes data from ptr into the
@@ -58,7 +59,7 @@ void block_loader_nds::loadBlock(nervana::buffer_in_array& dest, uint block_num)
     get(loadBlockURL(block_num), cpio_stream);
 
     // parse cpio_stream into dest one record (consisting of multiple elements) at a time
-    CPIOReader reader(&cpio_stream);
+    nervana::cpio::reader reader(&cpio_stream);
     for(int i=0; i < reader.itemCount(); ++i) {
         for (auto d: dest) {
             reader.read(*d);

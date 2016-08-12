@@ -27,7 +27,7 @@ audio::transformer::transformer(const audio::config& config) :
     specgram::create_window(_cfg.window_type, _cfg.frame_length_tn, _window);
     specgram::create_filterbanks(_cfg.num_filters, _cfg.frame_length_tn, _cfg.sample_freq_hz,
                                  _filterbank);
-    _noisemaker = make_shared<NoiseClips>(_cfg.noise_index_file);
+    _noisemaker = make_shared<noise_clips>(_cfg.noise_index_file);
 }
 
 audio::transformer::~transformer()

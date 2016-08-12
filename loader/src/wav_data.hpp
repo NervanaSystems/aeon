@@ -8,33 +8,32 @@
 #include <opencv2/core/core.hpp>
 #include "util.hpp"
 
+namespace nervana {
 
 #pragma pack(1)
-struct RiffMainHeader
-{
-    uint32_t dwRiffCC;
-    uint32_t dwRiffLen;
-    uint32_t dwWaveID;
-};
-struct FmtHeader
-{
-    uint32_t dwFmtCC;
-    uint32_t dwFmtLen;
-    uint16_t hwFmtTag;
-    uint16_t hwChannels;
-    uint32_t dwSampleRate;
-    uint32_t dwBytesPerSec;
-    uint16_t hwBlockAlign;
-    uint16_t hwBitDepth;
-};
-struct DataHeader
-{
-    uint32_t dwDataCC;
-    uint32_t dwDataLen;
-};
+    struct RiffMainHeader
+    {
+        uint32_t dwRiffCC;
+        uint32_t dwRiffLen;
+        uint32_t dwWaveID;
+    };
+    struct FmtHeader
+    {
+        uint32_t dwFmtCC;
+        uint32_t dwFmtLen;
+        uint16_t hwFmtTag;
+        uint16_t hwChannels;
+        uint32_t dwSampleRate;
+        uint32_t dwBytesPerSec;
+        uint16_t hwBlockAlign;
+        uint16_t hwBitDepth;
+    };
+    struct DataHeader
+    {
+        uint32_t dwDataCC;
+        uint32_t dwDataLen;
+    };
 #pragma pack()
-
-namespace nervana {
 
     constexpr uint32_t FOURCC ( char a, char b, char c, char d )
     {

@@ -16,6 +16,7 @@
 #include "cpio.hpp"
 
 using namespace std;
+using namespace nervana;
 
 template <typename T>
 void read_single_value(istream& ifs, T* data) {
@@ -45,23 +46,23 @@ void writePadding(ostream& ofs, uint length) {
     write_single_value(ofs, &byte);
 }
 
-RecordHeader::RecordHeader()
+cpio::record_header::record_header()
 : _magic(070707), _dev(0), _ino(0), _mode(0100644), _uid(0), _gid(0),
   _nlink(0), _rdev(0), _namesize(0) {
     memset((void*) _mtime, 0, 2 * sizeof(short));
     memset((void*) _filesize, 0, 2 * sizeof(short));
 }
 
-void RecordHeader::loadDoubleShort(uint* dst, ushort src[2]) {
+void cpio::record_header::loadDoubleShort(uint* dst, ushort src[2]) {
     *dst =  ((uint) src[0]) << 16 | (uint) src[1];
 }
 
-void RecordHeader::saveDoubleShort(ushort* dst, uint src) {
+void cpio::record_header::saveDoubleShort(ushort* dst, uint src) {
     dst[0] = (ushort) (src >> 16);
     dst[1] = (ushort) src;
 }
 
-void RecordHeader::read(istream& ifs, uint* fileSize) {
+void cpio::record_header::read(istream& ifs, uint* fileSize) {
     read_single_value(ifs, &_magic);
     assert(_magic == 070707);
     read_single_value(ifs, &_dev);
@@ -82,7 +83,7 @@ void RecordHeader::read(istream& ifs, uint* fileSize) {
     readPadding(ifs, _namesize);
 }
 
-void RecordHeader::write(ostream& ofs, uint fileSize, const char* fileName) {
+void cpio::record_header::write(ostream& ofs, uint fileSize, const char* fileName) {
     _namesize = strlen(fileName) + 1;
     write_single_value(ofs, &_magic);
     write_single_value(ofs, &_dev);
@@ -104,14 +105,14 @@ void RecordHeader::write(ostream& ofs, uint fileSize, const char* fileName) {
     writePadding(ofs, _namesize);
 }
 
-CPIOHeader::CPIOHeader()
+cpio::header::header()
 : _formatVersion(FORMAT_VERSION), _writerVersion(WRITER_VERSION),
   _itemCount(0) {
     memset(_dataType, 0, sizeof(_dataType));
     memset(_unused, 0, sizeof(_unused));
 }
 
-void CPIOHeader::read(istream& ifs) {
+void cpio::header::read(istream& ifs) {
     read_single_value(ifs, &_magic);
     if (strncmp(_magic, MAGIC_STRING, 4) != 0) {
         throw std::runtime_error("Unrecognized format\n");
@@ -123,7 +124,7 @@ void CPIOHeader::read(istream& ifs) {
     read_single_value(ifs, &_unused);
 }
 
-void CPIOHeader::write(ostream& ofs) {
+void cpio::header::write(ostream& ofs) {
     ofs.write((char*) MAGIC_STRING, strlen(MAGIC_STRING));
     write_single_value(ofs, &_formatVersion);
     write_single_value(ofs, &_writerVersion);
@@ -132,15 +133,15 @@ void CPIOHeader::write(ostream& ofs) {
     write_single_value(ofs, &_unused);
 }
 
-CPIOTrailer::CPIOTrailer() {
+cpio::trailer::trailer() {
     memset(_unused, 0, sizeof(_unused));
 }
 
-void CPIOTrailer::write(ostream& ofs) {
+void cpio::trailer::write(ostream& ofs) {
     write_single_value(ofs, &_unused);
 }
 
-void CPIOTrailer::read(istream& ifs) {
+void cpio::trailer::read(istream& ifs) {
     read_single_value(ifs, &_unused);
 }
 
@@ -151,15 +152,15 @@ void CPIOTrailer::read(istream& ifs) {
 
 
 
-CPIOReader::CPIOReader() {
+cpio::reader::reader() {
 }
 
-CPIOReader::CPIOReader(istream* is) {
+cpio::reader::reader(istream* is) {
     _is = is;
     readHeader();
 }
 
-void CPIOReader::readHeader() {
+void cpio::reader::readHeader() {
     uint fileSize;
     _recordHeader.read(*_is, &fileSize);
     if(fileSize != sizeof(_header)) {
@@ -172,25 +173,25 @@ void CPIOReader::readHeader() {
     _header.read(*_is);
 }
 
-void CPIOReader::read(nervana::buffer_in& dest) {
+void cpio::reader::read(nervana::buffer_in& dest) {
     uint datumSize;
     _recordHeader.read(*_is, &datumSize);
     dest.read(*_is, datumSize);
     readPadding(*_is, datumSize);
 }
 
-int CPIOReader::itemCount() {
+int cpio::reader::itemCount() {
     return _header._itemCount;
 }
 
-CPIOFileReader::CPIOFileReader() {
+cpio::file_reader::file_reader() {
 }
 
-CPIOFileReader::~CPIOFileReader() {
+cpio::file_reader::~file_reader() {
     close();
 }
 
-bool CPIOFileReader::open(const string& fileName) {
+bool cpio::file_reader::open(const string& fileName) {
     // returns true if file was opened successfully.
     assert(_ifs.is_open() == false);
 
@@ -206,33 +207,18 @@ bool CPIOFileReader::open(const string& fileName) {
     return true;
 }
 
-void CPIOFileReader::close() {
+void cpio::file_reader::close() {
     if (_ifs.is_open() == true) {
         _ifs.close();
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-CPIOFileWriter::~CPIOFileWriter()
+cpio::file_writer::~file_writer()
 {
     close();
 }
 
-void CPIOFileWriter::open(const std::string& fileName, const std::string& dataType)
+void cpio::file_writer::open(const std::string& fileName, const std::string& dataType)
 {
     static_assert(sizeof(_header) == 64, "file header is not 64 bytes");
     _fileName = fileName;
@@ -248,7 +234,7 @@ void CPIOFileWriter::open(const std::string& fileName, const std::string& dataTy
     _header.write(_ofs);
 }
 
-void CPIOFileWriter::close()
+void cpio::file_writer::close()
 {
     if (_ofs.is_open() == true) {
         // Write the trailer.
@@ -271,7 +257,7 @@ void CPIOFileWriter::close()
     }
 }
 
-void CPIOFileWriter::write_all_records(nervana::buffer_in_array& buff)
+void cpio::file_writer::write_all_records(nervana::buffer_in_array& buff)
 {
     int num_records = buff[0]->get_item_count();
     for (int i=0; i<num_records; ++i)
@@ -280,7 +266,7 @@ void CPIOFileWriter::write_all_records(nervana::buffer_in_array& buff)
     }
 }
 
-void CPIOFileWriter::write_record(nervana::buffer_in_array& buff, int record_idx)
+void cpio::file_writer::write_record(nervana::buffer_in_array& buff, int record_idx)
 {
     uint element_idx = 0;
     for (auto b : buff)
@@ -291,7 +277,7 @@ void CPIOFileWriter::write_record(nervana::buffer_in_array& buff, int record_idx
     increment_record_count();
 }
 
-void CPIOFileWriter::write_record_element(const char* elem, uint elem_size, uint element_idx)
+void cpio::file_writer::write_record_element(const char* elem, uint elem_size, uint element_idx)
 {
     char fileName[16];
     sprintf(fileName, "rec_%07d.%02d", _header._itemCount, element_idx);

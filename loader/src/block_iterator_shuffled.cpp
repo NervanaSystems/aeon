@@ -5,6 +5,7 @@
 #include "block_iterator_shuffled.hpp"
 
 using namespace std;
+using namespace nervana;
 
 block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader, uint seed)
 : _rand(seed), _loader(loader), _seed(seed), _epoch(0)

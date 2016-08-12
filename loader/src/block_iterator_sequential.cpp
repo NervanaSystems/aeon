@@ -15,6 +15,7 @@
 #include "block_iterator_sequential.hpp"
 
 using namespace std;
+using namespace nervana;
 
 block_iterator_sequential::block_iterator_sequential(shared_ptr<block_loader> loader)
 : _loader(loader), _count(_loader->blockCount()), _i(0)

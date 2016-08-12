@@ -22,9 +22,4 @@ TEST(logger,error) {
     INFO << "This is info";
     WARN << "This is warn";
     ERR << "This is error";
-
-
-    INFO_OBJ(out);
-    out.stream() << "\nthis is a string\n";
-    out.stream() << "and so is this";
 }

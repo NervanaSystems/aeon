@@ -17,7 +17,11 @@
 
 #include "buffer_in.hpp"
 
-class block_iterator
+namespace nervana {
+    class block_iterator;
+}
+
+class nervana::block_iterator
 {
 public:
     virtual void read(nervana::buffer_in_array& dest) = 0;

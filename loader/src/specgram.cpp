@@ -14,9 +14,11 @@
 */
 
 #include "specgram.hpp"
+
 using cv::Mat;
 using cv::Range;
 using namespace std;
+using namespace nervana;
 
 // These can all be static
 void specgram::wav_to_specgram(const Mat& wav_col_mat,

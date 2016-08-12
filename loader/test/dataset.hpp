@@ -63,7 +63,7 @@ public:
                 int batchSize = std::min(remainder,_maxItems);
                 std::string fileName = _path + "/" + _prefix + std::to_string(fileNo++) + ".cpio";
                 _fileList.push_back(fileName);
-                CPIOFileWriter writer;
+                nervana::cpio::file_writer writer;
                 writer.open(fileName);
                 for(int i=0; i<batchSize; i++) {
                     const std::vector<unsigned char> datum = render_datum( datumNumber );

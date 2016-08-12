@@ -24,7 +24,12 @@
  * Loads blocks of files from a Manifest into a BufferPair.
  *
  */
-class block_loader_file : public block_loader {
+
+namespace nervana {
+    class block_loader_file;
+}
+
+class nervana::block_loader_file : public block_loader {
 public:
     block_loader_file(std::shared_ptr<nervana::manifest_csv> manifest,
                       float subset_fraction,

@@ -22,10 +22,13 @@
 
 #include <cmath>
 
-
 static_assert(sizeof(short) == 2, "Unsupported platform");
 
-class specgram {
+namespace nervana {
+    class specgram;
+}
+
+class nervana::specgram {
 public:
     specgram() {}
     virtual ~specgram() {}

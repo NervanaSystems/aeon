@@ -62,7 +62,7 @@ bool block_loader_cpio_cache::loadBlockFromCache(buffer_in_array& dest, uint blo
 {
     // load a block from cpio cache into dest.  If file doesn't exist, return false.
     //  If loading from cpio cache was successful return true.
-    CPIOFileReader reader;
+    cpio::file_reader reader;
 
     if(!reader.open(blockFilename(block_num))) {
         // couldn't load the file
@@ -88,7 +88,7 @@ bool block_loader_cpio_cache::loadBlockFromCache(buffer_in_array& dest, uint blo
 
 void block_loader_cpio_cache::writeBlockToCache(buffer_in_array& buff, uint block_num)
 {
-    CPIOFileWriter writer;
+    cpio::file_writer writer;
     writer.open(blockFilename(block_num));
     writer.write_all_records(buff);
     writer.close();

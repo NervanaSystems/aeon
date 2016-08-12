@@ -78,8 +78,4 @@ private:
 #define ERR  nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_ERROR,   nervana::get_file_name(__FILE__), __LINE__, __PRETTY_FUNCTION__).stream()
 #define WARN nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_WARNING, nervana::get_file_name(__FILE__), __LINE__, __PRETTY_FUNCTION__).stream()
 #define INFO nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_INFO,    nervana::get_file_name(__FILE__), __LINE__, __PRETTY_FUNCTION__).stream()
-
-#define ERR_OBJ(obj)  nervana::log_helper obj(nervana::LOG_TYPE::_LOG_TYPE_ERROR,   nervana::get_file_name(__FILE__), __LINE__, __PRETTY_FUNCTION__)
-#define WARN_OBJ(obj) nervana::log_helper obj(nervana::LOG_TYPE::_LOG_TYPE_WARNING, nervana::get_file_name(__FILE__), __LINE__, __PRETTY_FUNCTION__)
-#define INFO_OBJ(obj) nervana::log_helper obj(nervana::LOG_TYPE::_LOG_TYPE_INFO,    nervana::get_file_name(__FILE__), __LINE__, __PRETTY_FUNCTION__)
 }

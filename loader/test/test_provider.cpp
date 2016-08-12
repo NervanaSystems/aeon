@@ -51,7 +51,7 @@ TEST(provider,image) {
     auto files = image_dataset.GetFiles();
     ASSERT_NE(0,files.size());
 
-    CPIOFileReader reader;
+    cpio::file_reader reader;
     EXPECT_EQ(reader.open(files[0]), true);
     buffer_in_array bp(2);
     buffer_in& data_p = *bp[0];

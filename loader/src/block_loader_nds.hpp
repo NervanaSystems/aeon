@@ -22,7 +22,11 @@
 #include "cpio.hpp"
 #include "block_loader.hpp"
 
-class block_loader_nds : public block_loader {
+namespace nervana {
+    class block_loader_nds;
+}
+
+class nervana::block_loader_nds : public block_loader {
 public:
     block_loader_nds(const std::string baseurl, const std::string token, int collection_id, uint block_size, int shard_count=1, int shard_index=0);
     ~block_loader_nds();

@@ -23,7 +23,7 @@
 #include "specgram.hpp"
 #include "noise_clips.hpp"
 
-class NoiseClips;
+class noise_clips;
 
 namespace nervana {
     namespace audio {
@@ -247,7 +247,7 @@ namespace nervana {
         transformer() = delete;
         void scale_time(cv::Mat& img, float scale_fraction);
 
-        std::shared_ptr<NoiseClips>    _noisemaker {nullptr};
+        std::shared_ptr<noise_clips>    _noisemaker {nullptr};
         const audio::config&           _cfg;
         cv::Mat                        _window     {};
         cv::Mat                        _filterbank {};

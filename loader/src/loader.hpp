@@ -34,6 +34,13 @@
 #include "buffer_pool_in.hpp"
 #include "buffer_pool_out.hpp"
 
+namespace nervana {
+    class decode_thread_pool;
+    class loader_config;
+    class read_thread_pool;
+    class loader;
+}
+
 /* decode_thread_pool
  *
  * decode_thread_pool takes data from the BufferPool `in`, transforms it
@@ -42,7 +49,7 @@
  * then copied to the `device`.
  *
  */
-class decode_thread_pool : public thread_pool {
+class nervana::decode_thread_pool : public nervana::thread_pool {
 public:
     decode_thread_pool(int count,
                        const std::shared_ptr<nervana::buffer_pool_in>& in,
@@ -50,13 +57,13 @@ public:
                        const std::shared_ptr<python_backend>& pbe);
 
     virtual ~decode_thread_pool();
-    virtual void start();
-    virtual void stop();
+    virtual void start() override;
+    virtual void stop() override;
     void add_provider(std::shared_ptr<nervana::provider_interface> prov);
 
 protected:
-    virtual void run(int id);
-    virtual void work(int id);
+    virtual void run(int id) override;
+    virtual void work(int id) override;
     void produce();
     void consume();
     void manage();
@@ -87,7 +94,7 @@ private:
     std::vector<int>            _endInds;
 };
 
-class loader_config : public nervana::interface::config {
+class nervana::loader_config : public nervana::interface::config {
 public:
     std::string manifest_filename;
     int         minibatch_size;
@@ -143,19 +150,19 @@ private:
  *
  */
 
-class read_thread_pool: public thread_pool {
+class nervana::read_thread_pool: public thread_pool {
 public:
     read_thread_pool(const std::shared_ptr<nervana::buffer_pool_in>& out,
-                     const std::shared_ptr<batch_iterator>& batch_iterator);
+                     const std::shared_ptr<nervana::batch_iterator>& batch_iterator);
 
 protected:
-    virtual void work(int id);
+    virtual void work(int id) override;
 
 private:
     read_thread_pool();
     read_thread_pool(const read_thread_pool&);
     std::shared_ptr<nervana::buffer_pool_in> _out;
-    std::shared_ptr<batch_iterator> _batch_iterator;
+    std::shared_ptr<nervana::batch_iterator> _batch_iterator;
 };
 
 
@@ -166,7 +173,7 @@ private:
  * loading the data into device memory
 */
 
-class loader {
+class nervana::loader {
 public:
     loader(const char*, PyObject *);
 
@@ -186,18 +193,18 @@ private:
     loader();
     loader(const loader&);
 
-    bool                                _first = true;
-    bool                                _single_thread_mode = false;
+    bool                                        _first = true;
+    bool                                        _single_thread_mode = false;
 
-    std::shared_ptr<nervana::buffer_pool_in>     _read_buffers = nullptr;
-    std::shared_ptr<nervana::buffer_pool_out>    _decode_buffers = nullptr;
-    std::unique_ptr<read_thread_pool>   _read_thread_pool = nullptr;
-    std::unique_ptr<decode_thread_pool> _decode_thread_pool = nullptr;
-    std::shared_ptr<block_loader>       _block_loader = nullptr;
-    std::shared_ptr<batch_iterator>     _batch_iterator = nullptr;
+    std::shared_ptr<nervana::buffer_pool_in>    _read_buffers = nullptr;
+    std::shared_ptr<nervana::buffer_pool_out>   _decode_buffers = nullptr;
+    std::unique_ptr<nervana::read_thread_pool>  _read_thread_pool = nullptr;
+    std::unique_ptr<decode_thread_pool>         _decode_thread_pool = nullptr;
+    std::shared_ptr<nervana::block_loader>      _block_loader = nullptr;
+    std::shared_ptr<nervana::batch_iterator>    _batch_iterator = nullptr;
 
-    int                                 _batchSize;
-    nlohmann::json                      _lcfg_json;
-    PyObject*                           _py_obj_backend;
-    std::shared_ptr<python_backend>     _python_backend;
+    int                                         _batchSize;
+    nlohmann::json                              _lcfg_json;
+    PyObject*                                   _py_obj_backend;
+    std::shared_ptr<python_backend>             _python_backend;
 };

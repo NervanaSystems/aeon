@@ -18,7 +18,11 @@
 #include "block_loader.hpp"
 #include "block_iterator.hpp"
 
-class block_iterator_sequential : public block_iterator {
+namespace nervana {
+    class block_iterator_sequential;
+}
+
+class nervana::block_iterator_sequential : public block_iterator {
 public:
     block_iterator_sequential(std::shared_ptr<block_loader> loader);
     void read(nervana::buffer_in_array& dest);

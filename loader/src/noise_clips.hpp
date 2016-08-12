@@ -19,10 +19,14 @@
 
 #include "wav_data.hpp"
 
-class NoiseClips {
+namespace nervana {
+    class noise_clips;
+}
+
+class nervana::noise_clips {
 public:
-    NoiseClips(const std::string noiseIndexFile);
-    virtual ~NoiseClips();
+    noise_clips(const std::string noiseIndexFile);
+    virtual ~noise_clips();
     void addNoise(cv::Mat& wav_mat,
                   bool add_noise,
                   uint32_t noise_index,
