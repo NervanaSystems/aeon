@@ -40,7 +40,7 @@ TEST(provider,audio_classify) {
                             {"sample_freq_hz",44100},
                             {"feature_type","specgram"}}},
                          {"label", {}}};
-    auto media = nervana::train_provider_factory::create(js);
+    auto media = nervana::provider_factory::create(js);
     const vector<nervana::shape_type>& oshapes = media->get_oshapes();
 
     size_t dsize = oshapes[0].get_byte_size();
@@ -92,7 +92,7 @@ TEST(provider,audio_transcript) {
                             {"max_length",50}}}};
 
     // Create the config
-    auto media = dynamic_pointer_cast<audio_transcriber>(nervana::train_provider_factory::create(js));
+    auto media = dynamic_pointer_cast<audio_transcriber>(nervana::provider_factory::create(js));
 
     // Get the character map
     auto cmap = media->get_cmap();

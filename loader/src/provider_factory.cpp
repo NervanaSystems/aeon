@@ -7,7 +7,7 @@
 
 using namespace std;
 
-std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::create(nlohmann::json configJs)
+std::shared_ptr<nervana::provider_interface> nervana::provider_factory::create(nlohmann::json configJs)
 {
     std::shared_ptr<nervana::provider_interface> rc;
     if(!configJs["type"].is_string()) {
@@ -17,14 +17,14 @@ std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::cr
 
     if( mediaType == "image,label" ) {
         rc = make_shared<image_classifier>(configJs);
-    } else if( mediaType == "image,inference" ) {
-        rc = make_shared<image_inference>(configJs);
+    } else if( mediaType == "image" ) {
+        rc = make_shared<image_only>(configJs);
     } else if( mediaType == "audio,transcribe" ) {
         rc = make_shared<audio_transcriber>(configJs);
     } else if( mediaType == "audio,label" ) {
         rc = make_shared<audio_classifier>(configJs);
-    } else if( mediaType == "audio,inference" ) {
-        rc = make_shared<audio_inference>(configJs);
+    } else if( mediaType == "audio" ) {
+        rc = make_shared<audio_only>(configJs);
     } else if( mediaType == "image,localization" ) {
         rc = make_shared<localization_decoder>(configJs);
     } else if( mediaType == "image,pixelmask" ) {
@@ -33,8 +33,8 @@ std::shared_ptr<nervana::provider_interface> nervana::train_provider_factory::cr
         rc = make_shared<bbox_provider>(configJs);
     } else if( mediaType == "video,label" ) {
         rc = make_shared<video_classifier>(configJs);
-    } else if( mediaType == "video,inference" ) {
-        rc = make_shared<video_inference>(configJs);
+    } else if( mediaType == "video" ) {
+        rc = make_shared<video_only>(configJs);
     } else {
         rc = nullptr;
         stringstream ss;

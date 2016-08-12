@@ -3,7 +3,7 @@
 using namespace nervana;
 using namespace std;
 
-audio_inference::audio_inference(nlohmann::json js) :
+audio_only::audio_only(nlohmann::json js) :
     audio_config(js["audio"]),
     audio_extractor(),
     audio_transformer(audio_config),
@@ -14,7 +14,7 @@ audio_inference::audio_inference(nlohmann::json js) :
     oshapes.push_back(audio_config.get_shape_type());
 }
 
-void audio_inference::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
+void audio_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
     vector<char>& datum_in  = in_buf[0]->getItem(idx);
     char* datum_out  = out_buf[0]->getItem(idx);

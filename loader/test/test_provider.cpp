@@ -26,7 +26,7 @@ TEST(provider,empty_config) {
                             {"flip_enable",true}}},
                          };
 
-    nervana::train_provider_factory::create(js);
+    nervana::provider_factory::create(js);
 }
 
 TEST(provider,image) {
@@ -38,7 +38,7 @@ TEST(provider,image) {
                             {"flip_enable",true}}},
                          {"label", {}}};
 
-    auto media = nervana::train_provider_factory::create(js);
+    auto media = nervana::provider_factory::create(js);
     const vector<nervana::shape_type>& oshapes = media->get_oshapes();
 
     size_t dsize = oshapes[0].get_byte_size();

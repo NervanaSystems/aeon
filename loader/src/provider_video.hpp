@@ -5,9 +5,9 @@
 #include "provider_interface.hpp"
 
 namespace nervana {
-    class video_inference : public provider_interface {
+    class video_only : public provider_interface {
     public:
-        video_inference(nlohmann::json js);
+        video_only(nlohmann::json js);
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
 
     private:

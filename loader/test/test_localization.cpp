@@ -873,7 +873,7 @@ TEST(localization,provider) {
                             {"labels", {"bicycle", "person"}}
                           }}};
 
-    shared_ptr<provider_interface> media = train_provider_factory::create(js);
+    shared_ptr<provider_interface> media = provider_factory::create(js);
     const vector<shape_type>& oshapes = media->get_oshapes();
     ASSERT_NE(nullptr,media);
     ASSERT_EQ(10, oshapes.size());
@@ -940,7 +940,7 @@ TEST(localization,provider_channel_major) {
                             {"labels", {"bicycle", "person"}}
                           }}};
 
-    shared_ptr<provider_interface> media = train_provider_factory::create(js);
+    shared_ptr<provider_interface> media = provider_factory::create(js);
     const vector<shape_type>& oshapes = media->get_oshapes();
     ASSERT_NE(nullptr,media);
     ASSERT_EQ(10, oshapes.size());

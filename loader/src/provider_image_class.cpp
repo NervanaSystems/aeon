@@ -3,7 +3,7 @@
 using namespace nervana;
 using namespace std;
 
-image_inference::image_inference(nlohmann::json js) :
+image_only::image_only(nlohmann::json js) :
     image_config(js["image"]),
     image_extractor(image_config),
     image_transformer(image_config),
@@ -14,7 +14,7 @@ image_inference::image_inference(nlohmann::json js) :
     oshapes.push_back(image_config.get_shape_type());
 }
 
-void image_inference::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
+void image_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
     std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
     char* datum_out  = out_buf[0]->getItem(idx);
 

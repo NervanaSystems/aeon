@@ -319,7 +319,7 @@ int loader::start()
 
         vector<shared_ptr<nervana::provider_interface>> providers;
         for (int i=0; i<nthreads; i++) {
-            providers.push_back(nervana::train_provider_factory::create(_lcfg_json));
+            providers.push_back(nervana::provider_factory::create(_lcfg_json));
         }
 
         // variable size buffers for reading encoded data (start off zero and grow as needed)

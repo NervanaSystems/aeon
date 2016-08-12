@@ -7,9 +7,9 @@
 namespace nervana {
 
 
-    class audio_inference : public provider_interface {
+    class audio_only : public provider_interface {
     public:
-        audio_inference(nlohmann::json js);
+        audio_only(nlohmann::json js);
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override;
 
     private:

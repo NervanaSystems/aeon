@@ -3,7 +3,7 @@
 using namespace nervana;
 using namespace std;
 
-video_inference::video_inference(nlohmann::json js) :
+video_only::video_only(nlohmann::json js) :
     video_config(js["video"]),
     video_extractor(video_config),
     video_transformer(video_config),
@@ -14,7 +14,7 @@ video_inference::video_inference(nlohmann::json js) :
     oshapes.push_back(video_config.get_shape_type());
 }
 
-void video_inference::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
+void video_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
     std::vector<char>& datum_in  = in_buf[0]->getItem(idx);
     char* datum_out  = out_buf[0]->getItem(idx);
