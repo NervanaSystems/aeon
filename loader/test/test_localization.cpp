@@ -750,9 +750,9 @@ TEST(localization, loader) {
     for(size_t i=0; i<labels_flat.size(); i++) {
         auto p = find(fg_idx.begin(), fg_idx.end(), i);
         if(p != fg_idx.end()) {
-            ASSERT_EQ(0, labels_flat[i]) << "at index " << i;
-        } else {
             ASSERT_EQ(1, labels_flat[i]) << "at index " << i;
+        } else {
+            ASSERT_EQ(0, labels_flat[i]) << "at index " << i;
         }
     }
 

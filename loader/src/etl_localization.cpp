@@ -277,73 +277,7 @@ localization::loader::loader(const localization::config& cfg)
     total_anchors = cfg.total_anchors();
     shape_type_list = cfg.get_shape_type_list();
     max_gt_boxes = cfg.max_gt_boxes;
-//    _load_count    = cfg.width * cfg.height * cfg.channels * cfg.num_crops();
 }
-
-//void localization::loader::build_output(std::shared_ptr<localization::decoded> mp, vector<float>& dev_y_labels, vector<float>& dev_y_labels_mask, vector<float>& dev_y_bbtargets, vector<float>& dev_y_bbtargets_mask)
-//{
-////    cout << "labels size " << mp->labels.size() << endl;
-////    cout << "bbox_targets size " << mp->bbox_targets.size() << endl;
-////    cout << "anchor_index size " << mp->anchor_index.size() << endl;
-////    cout << "anchors size " << mp->anchors.size() << endl;
-
-////    self.labels_flat[:] = label.reshape((1, -1))
-////    self.labels_onehot[:] = self.be.onehot(self.labels_flat, axis=0)
-////    self.labels = self.labels_onehot.reshape((-1, 1))
-//    labels.resize(total_anchors*2);
-//    labels_mask.resize(total_anchors*2);
-//    bbtargets.resize(total_anchors*4);
-//    bbtargets_mask.resize(total_anchors*4);
-//    int i;
-//    for(i = 0; i<total_anchors; i++) labels[i] = 1;
-//    for(; i<labels.size(); i++) labels[i] = 0;
-//    fill_n(labels_mask.begin(), labels_mask.size(), 0);
-//    fill_n(bbtargets_mask.begin(), bbtargets_mask.size(), 0.);
-//    for(int index : mp->anchor_index) {
-//        if(mp->labels[index] == 1) {
-//            labels[index] = 0;
-//            labels[index+total_anchors] = 1;
-//        }
-//        labels_mask[index] = 1;
-//        labels_mask[index+total_anchors] = 1;
-
-//        bbtargets[index]                 = mp->bbox_targets[index].dx;
-//        bbtargets[index+total_anchors]   = mp->bbox_targets[index].dy;
-//        bbtargets[index+total_anchors*2] = mp->bbox_targets[index].dw;
-//        bbtargets[index+total_anchors*3] = mp->bbox_targets[index].dh;
-
-//        bbtargets_mask[index]                 = 1.;
-//        bbtargets_mask[index+total_anchors]   = 1.;
-//        bbtargets_mask[index+total_anchors*2] = 1.;
-//        bbtargets_mask[index+total_anchors*3] = 1.;
-//    }
-////    for(int i=0; i<labels.size(); i++) {
-////        cout << i << " [" << labels[i] << "]" << endl;
-////    }
-
-////    label_mask.fill(0)
-////    label_mask[anchors_blob, :] = 1
-////    self.labels_mask[:] = np.vstack([label_mask, label_mask])
-
-////    bbtargets.fill(0)
-////    bbtargets[anchors_blob, :] = bbox_targets_blob
-////    self.bbtargets[:] = bbtargets.T.reshape((-1, 1))
-
-////    bbtargets_mask.fill(0)
-////    bbtargets_mask[np.where(label == 1)[0]] = 1
-////    self.bbtargets_mask[:] = bbtargets_mask.T.reshape((-1, 1))
-
-////    X = self.dev_X_img
-////    Y = ((self.labels, self.labels_mask),
-////         (self.bbtargets, self.bbtargets_mask))
-
-
-////    sizeof labels 69192
-////    sizeof labels_mask 69192
-////    sizeof bbtargets 138384
-////    sizeof bbtargets_mask 138384
-
-//}
 
 void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<localization::decoded> mp)
 {
@@ -373,31 +307,12 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
     int32_t* gt_classes         = (int32_t*)buf_list[7];
     float*   im_scale           = (float*  )buf_list[8];
 
-//    cout << "localization load output size " << buf_list.size() << endl;
-
-//    cout << "anchors      " << mp->anchors.size() << endl;
-//    cout << "anchor_index " << mp->anchor_index.size() << endl;
-//    cout << "bbox_targets " << mp->bbox_targets.size() << endl;
-//    cout << "anchors      " << mp->anchors.size() << endl;
-//    cout << "image_scale  " << mp->image_scale << endl;
-//    cout << "image_size   " << mp->image_size << endl;
-
-//    cout << "**********************" << endl;
-//    cout << "shape_type_list size = " << shape_type_list.size() << endl;
-//    cout << "bbtargets rows = " << shape_type_list[0].get_byte_size() / (4*sizeof(float)) << endl;
-//    for(const shape_type& st : shape_type_list)
-//    {
-//        cout << "byte size = " << st.get_byte_size() << ", shapes = " << join(st.get_shape(), "x") << ", count = " << st.get_byte_size()/st.get_otype().size << endl;
-//    }
-//    cout << "**********************" << endl;
-
-
-    for(int i = 0; i<total_anchors; i++) labels_flat[i] = 1;
+    for(int i = 0; i<total_anchors; i++) labels_flat[i] = 0;
     for(int i = 0; i<total_anchors * 2; i++) labels_mask[i] = 0;
     for(int i = 0; i<total_anchors * 4; i++) bbtargets_mask[i] = 0.;
     for(int index : mp->anchor_index) {
         if(mp->labels[index] == 1) {
-            labels_flat[index] = 0;
+            labels_flat[index] = 1;
         }
         labels_mask[index] = 1;
         labels_mask[index+total_anchors] = 1;
@@ -412,42 +327,6 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
         bbtargets_mask[index+total_anchors*2] = 1.;
         bbtargets_mask[index+total_anchors*3] = 1.;
     }
-
-
-
-
-//    for(const target& t : mp->bbox_targets)
-//    {
-//        *bbtargets++ = t.dx;
-//        *bbtargets++ = t.dy;
-//        *bbtargets++ = t.dw;
-//        *bbtargets++ = t.dh;
-//        *bbtargets_mask++ = (t.dx == 0 ? 0 : 1);
-//        *bbtargets_mask++ = (t.dy == 0 ? 0 : 1);
-//        *bbtargets_mask++ = (t.dw == 0 ? 0 : 1);
-//        *bbtargets_mask++ = (t.dh == 0 ? 0 : 1);
-//    }
-
-//    int32_t* labels_mask_0 = labels_mask;
-//    int32_t* labels_mask_1 = &labels_mask[mp->labels.size()];
-//    for(int i=0; i<mp->labels.size(); i++) {
-//        int32_t label = mp->labels[i];
-//        if(label == 1) {
-//            cout << "      1 " << i << endl;
-//            labels_flat[i]   = 1;
-//            labels_mask_0[i] = 1;
-//            labels_mask_1[i] = 0;
-//        } else if(label == 0) {
-//            cout << "      0 " << i << endl;
-//            labels_flat[i]   = 0;
-//            labels_mask_0[i] = 1;
-//            labels_mask_1[i] = 0;
-//        } else {
-//            labels_flat[i]   = 0;
-//            labels_mask_0[i] = 0;
-//            labels_mask_1[i] = 1;
-//        }
-//    }
 
     im_shape[0] = mp->height();
     im_shape[1] = mp->width();
