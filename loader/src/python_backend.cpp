@@ -41,17 +41,21 @@ python_backend::python_backend(PyObject* py_obj_backend,
     PyOS_sighandler_t sighandler = PyOS_getsig(SIGINT);
     import_array();
     PyOS_setsig(SIGINT, sighandler);
-    PyGILState_Release(gstate);
 
     for (uint i = 0; i < _oshape_types.size(); ++i)
     {
         _host_lists.push_back(initPyList());
         _dev_lists.push_back(initPyList());
     }
+
+    PyGILState_Release(gstate);
 }
 
 PyObject* python_backend::get_shapes()
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     uint num_shapes = _oshape_types.size();
     PyObject* all_shapes = PyTuple_New(num_shapes);
     for (uint idx = 0; idx < num_shapes; ++idx)
@@ -64,6 +68,10 @@ PyObject* python_backend::get_shapes()
         }
         PyTuple_SetItem(all_shapes, idx, this_shape);
     }
+
+
+    PyGILState_Release(gstate);
+
     return all_shapes;
 }
 
