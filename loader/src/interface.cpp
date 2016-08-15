@@ -67,7 +67,7 @@ void interface::config::verify_config(
     auto obj = js.find("type");
     if(obj != js.end()) {
         string type = obj.value();
-        ignore_list = split(type, ",");
+        ignore_list = split(type, ',');
     }
 
     string text;

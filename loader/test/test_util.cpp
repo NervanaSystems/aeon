@@ -312,3 +312,62 @@ TEST(util,param_dump) {
     }
 }
 
+TEST(util,split) {
+    {
+        string s1 = "this,is,a,test";
+        auto r1 = split(s1,',');
+        ASSERT_EQ(4, r1.size());
+        EXPECT_STRCASEEQ("this", r1[0].c_str());
+        EXPECT_STRCASEEQ("is",   r1[1].c_str());
+        EXPECT_STRCASEEQ("a",    r1[2].c_str());
+        EXPECT_STRCASEEQ("test", r1[3].c_str());
+    }
+
+    {
+        string s1 = "this,is,a,test,";
+        auto r1 = split(s1,',');
+        ASSERT_EQ(5, r1.size());
+        EXPECT_STRCASEEQ("this", r1[0].c_str());
+        EXPECT_STRCASEEQ("is",   r1[1].c_str());
+        EXPECT_STRCASEEQ("a",    r1[2].c_str());
+        EXPECT_STRCASEEQ("test", r1[3].c_str());
+        EXPECT_STRCASEEQ("",     r1[4].c_str());
+    }
+
+    {
+        string s1 = ",this,is,a,test";
+        auto r1 = split(s1,',');
+        ASSERT_EQ(5, r1.size());
+        EXPECT_STRCASEEQ("",     r1[0].c_str());
+        EXPECT_STRCASEEQ("this", r1[1].c_str());
+        EXPECT_STRCASEEQ("is",   r1[2].c_str());
+        EXPECT_STRCASEEQ("a",    r1[3].c_str());
+        EXPECT_STRCASEEQ("test", r1[4].c_str());
+    }
+
+    {
+        string s1 = "this,,is,a,test";
+        auto r1 = split(s1,',');
+        ASSERT_EQ(5, r1.size());
+        EXPECT_STRCASEEQ("this", r1[0].c_str());
+        EXPECT_STRCASEEQ("",     r1[1].c_str());
+        EXPECT_STRCASEEQ("is",   r1[2].c_str());
+        EXPECT_STRCASEEQ("a",    r1[3].c_str());
+        EXPECT_STRCASEEQ("test", r1[4].c_str());
+    }
+
+    {
+        string s1 = "this";
+        auto r1 = split(s1,',');
+        ASSERT_EQ(1, r1.size());
+        EXPECT_STRCASEEQ("this", r1[0].c_str());
+    }
+
+    {
+        string s1 = "";
+        auto r1 = split(s1,',');
+        ASSERT_EQ(1, r1.size());
+        EXPECT_STRCASEEQ("", r1[0].c_str());
+    }
+}
+

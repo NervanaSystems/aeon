@@ -50,18 +50,21 @@ std::string nervana::tolower(const std::string& s) {
     return rc;
 }
 
-vector<string> nervana::split(const string& src, const string& delimiter)
+vector<string> nervana::split(const string& src, char delimiter)
 {
-    size_t pos = 0;
-    string s = src;
+    size_t pos;
     string token;
+    size_t start = 0;
     vector<string> rc;
-    while ((pos = s.find(delimiter)) != std::string::npos) {
-        token = s.substr(0, pos);
+    while ((pos = src.find(delimiter, start)) != std::string::npos) {
+        token = src.substr(start, pos-start);
+        start = pos + 1;
         rc.push_back(token);
-        s.erase(0, pos + delimiter.length());
     }
-    if(s.size() > 0) rc.push_back(s);
+    if(start <= src.size()) {
+        token = src.substr(start);
+        rc.push_back(token);
+    }
     return rc;
 }
 
