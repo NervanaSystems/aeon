@@ -4,7 +4,7 @@
 #include "provider_factory.hpp"
 
 #include "etl_image.hpp"
-#include "etl_bbox.hpp"
+#include "etl_boundingbox.hpp"
 #include "etl_label_map.hpp"
 #include "json.hpp"
 #include "cpio.hpp"

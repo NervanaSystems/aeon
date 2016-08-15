@@ -19,7 +19,7 @@ SRCS="
     cap_mjpeg_decoder.cpp
     cpio.cpp
     etl_audio.cpp
-    etl_bbox.cpp
+    etl_boundingbox.cpp
     etl_char_map.cpp
     etl_image.cpp
     etl_image_var.cpp
@@ -35,10 +35,17 @@ SRCS="
     manifest_csv.cpp
     manifest_nds.cpp
     noise_clips.cpp
-    provider_audio.cpp
+    provider_audio_classifier.cpp
+    provider_audio_only.cpp
+    provider_audio_transcriber.cpp
     provider_factory.cpp
-    provider_image_class.cpp
-    provider_video.cpp
+    provider_image_boundingbox.cpp
+    provider_image_classifier.cpp
+    provider_image_localization.cpp
+    provider_image_only.cpp
+    provider_image_pixelmask.cpp
+    provider_video_classifier.cpp
+    provider_video_only.cpp
     python_backend.cpp
     specgram.cpp
     util.cpp

@@ -9,7 +9,7 @@
 #include "box.hpp"
 
 namespace nervana {
-    namespace bbox {
+    namespace boundingbox {
         class decoded;
         class config;
         class extractor;
@@ -19,16 +19,16 @@ namespace nervana {
     }
 }
 
-class nervana::bbox::box : public nervana::box {
+class nervana::boundingbox::box : public nervana::box {
 public:
     bool difficult = false;
     bool truncated = false;
     int label;
 };
 
-std::ostream& operator<<(std::ostream&,const nervana::bbox::box&);
+std::ostream& operator<<(std::ostream&,const nervana::boundingbox::box&);
 
-class nervana::bbox::config : public nervana::interface::config {
+class nervana::boundingbox::config : public nervana::interface::config {
 public:
     size_t                      height;
     size_t                      width;
@@ -53,7 +53,7 @@ private:
     void validate();
 };
 
-class nervana::bbox::decoded : public interface::decoded_media {
+class nervana::boundingbox::decoded : public interface::decoded_media {
     friend class transformer;
     friend class extractor;
 public:
@@ -61,47 +61,47 @@ public:
     bool extract(const char* data, int size, const std::unordered_map<std::string,int>& label_map);
     virtual ~decoded() {}
 
-    const std::vector<bbox::box>& boxes() const { return _boxes; }
+    const std::vector<boundingbox::box>& boxes() const { return _boxes; }
     int width() const { return _width; }
     int height() const { return _height; }
     int depth() const { return _depth; }
 
 private:
-    std::vector<bbox::box> _boxes;
+    std::vector<boundingbox::box> _boxes;
     int _width;
     int _height;
     int _depth;
 };
 
 
-class nervana::bbox::extractor : public nervana::interface::extractor<nervana::bbox::decoded> {
+class nervana::boundingbox::extractor : public nervana::interface::extractor<nervana::boundingbox::decoded> {
 public:
     extractor(const std::unordered_map<std::string,int>&);
     virtual ~extractor(){}
-    virtual std::shared_ptr<bbox::decoded> extract(const char*, int) override;
-    void extract(const char*, int, std::shared_ptr<bbox::decoded>&);
+    virtual std::shared_ptr<boundingbox::decoded> extract(const char*, int) override;
+    void extract(const char*, int, std::shared_ptr<boundingbox::decoded>&);
 
 private:
     extractor() = delete;
     std::unordered_map<std::string,int> label_map;
 };
 
-class nervana::bbox::transformer : public nervana::interface::transformer<nervana::bbox::decoded, nervana::image::params> {
+class nervana::boundingbox::transformer : public nervana::interface::transformer<nervana::boundingbox::decoded, nervana::image::params> {
 public:
-    transformer(const bbox::config&);
+    transformer(const boundingbox::config&);
     virtual ~transformer(){}
-    virtual std::shared_ptr<bbox::decoded> transform(
+    virtual std::shared_ptr<boundingbox::decoded> transform(
                                             std::shared_ptr<image::params>,
-                                            std::shared_ptr<bbox::decoded>) override;
+                                            std::shared_ptr<boundingbox::decoded>) override;
 
 private:
 };
 
-class nervana::bbox::loader : public nervana::interface::loader<nervana::bbox::decoded> {
+class nervana::boundingbox::loader : public nervana::interface::loader<nervana::boundingbox::decoded> {
 public:
-    loader(const bbox::config&);
+    loader(const boundingbox::config&);
     virtual ~loader(){}
-    virtual void load(const std::vector<void*>&, std::shared_ptr<bbox::decoded>) override;
+    virtual void load(const std::vector<void*>&, std::shared_ptr<boundingbox::decoded>) override;
 
 private:
     const size_t max_bbox;

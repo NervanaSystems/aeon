@@ -18,7 +18,9 @@
 #include <typeinfo>
 
 #include "provider_factory.hpp"
-#include "provider_audio.hpp"
+#include "provider_audio_classifier.hpp"
+#include "provider_audio_only.hpp"
+#include "provider_audio_transcriber.hpp"
 #include "etl_audio.hpp"
 #include "etl_label.hpp"
 #include "etl_char_map.hpp"

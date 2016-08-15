@@ -27,7 +27,7 @@
 #include "interface.hpp"
 #include "etl_image.hpp"
 #include "etl_label.hpp"
-#include "etl_bbox.hpp"
+#include "etl_boundingbox.hpp"
 #include "etl_label_map.hpp"
 #include "json.hpp"
 
@@ -57,13 +57,13 @@ static nlohmann::json create_metadata( const vector<nlohmann::json>& boxes, int 
     return j;
 }
 
-static bbox::config make_bbox_config(int max_boxes) {
+static boundingbox::config make_bbox_config(int max_boxes) {
     nlohmann::json obj = {{"height",100},{"width",150},{"max_bbox_count",max_boxes}};
     obj["labels"] = label_list;
-    return bbox::config(obj);
+    return boundingbox::config(obj);
 }
 
-cv::Mat draw( int width, int height, const vector<bbox::box>& blist, cv::Rect crop=cv::Rect() ) {
+cv::Mat draw( int width, int height, const vector<boundingbox::box>& blist, cv::Rect crop=cv::Rect() ) {
     cv::Mat image = cv::Mat( width, height, CV_8UC3 );
     image = cv::Scalar(255,255,255);
     for( auto box : blist ) {
@@ -79,7 +79,7 @@ TEST(bbox, extractor) {
     {
         string data = read_file(CURDIR"/test_data/000001.json");
         auto cfg = make_bbox_config(100);
-        bbox::extractor extractor{cfg.label_map};
+        boundingbox::extractor extractor{cfg.label_map};
         auto decoded = extractor.extract(&data[0],data.size());
         ASSERT_NE(nullptr,decoded);
         auto boxes = decoded->boxes();
@@ -104,7 +104,7 @@ TEST(bbox, extractor) {
     {
         string data = read_file(CURDIR"/test_data/006637.json");
         auto cfg = make_bbox_config(100);
-        bbox::extractor extractor{cfg.label_map};
+        boundingbox::extractor extractor{cfg.label_map};
         auto decoded = extractor.extract(&data[0],data.size());
         ASSERT_NE(nullptr,decoded);
         auto boxes = decoded->boxes();
@@ -122,7 +122,7 @@ TEST(bbox, extractor) {
     {
         string data = read_file(CURDIR"/test_data/009952.json");
         auto cfg = make_bbox_config(100);
-        bbox::extractor extractor{cfg.label_map};
+        boundingbox::extractor extractor{cfg.label_map};
         auto decoded = extractor.extract(&data[0],data.size());
         ASSERT_NE(nullptr,decoded);
         auto boxes = decoded->boxes();
@@ -143,9 +143,9 @@ TEST(bbox, bbox) {
     string buffer = j.dump();
 
     auto cfg = make_bbox_config(100);
-    bbox::extractor extractor{cfg.label_map};
+    boundingbox::extractor extractor{cfg.label_map};
     auto decoded = extractor.extract( &buffer[0], buffer.size() );
-    vector<bbox::box> boxes = decoded->boxes();
+    vector<boundingbox::box> boxes = decoded->boxes();
     ASSERT_EQ(3,boxes.size());
     EXPECT_EQ(r0,boxes[0].rect());
     EXPECT_EQ(r1,boxes[1].rect());
@@ -154,7 +154,7 @@ TEST(bbox, bbox) {
     EXPECT_EQ(8,boxes[1].label);
     EXPECT_EQ(7,boxes[2].label);
 
-    bbox::transformer transform(cfg);
+    boundingbox::transformer transform(cfg);
     shared_ptr<image::params> iparam = make_shared<image::params>();
     auto tx = transform.transform( iparam, decoded );
 }
@@ -184,13 +184,13 @@ TEST(bbox, crop) {
     string buffer = j.dump();
 
     auto cfg = make_bbox_config(100);
-    bbox::extractor extractor{cfg.label_map};
+    boundingbox::extractor extractor{cfg.label_map};
     auto decoded = extractor.extract( &buffer[0], buffer.size() );
-    vector<bbox::box> boxes = decoded->boxes();
+    vector<boundingbox::box> boxes = decoded->boxes();
 
     ASSERT_EQ(8,boxes.size());
 
-    bbox::transformer transform(cfg);
+    boundingbox::transformer transform(cfg);
     shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
 
@@ -200,7 +200,7 @@ TEST(bbox, crop) {
 
     iparam->output_size = cv::Size(256, 256);
     auto tx_decoded = transform.transform( iparam, decoded );
-    vector<bbox::box> tx_boxes = tx_decoded->boxes();
+    vector<boundingbox::box> tx_boxes = tx_decoded->boxes();
     ASSERT_EQ(6,tx_boxes.size());
     EXPECT_EQ(cv::Rect(35,35,5,5),tx_boxes[0].rect());
     EXPECT_EQ(cv::Rect(50,50,10,10),tx_boxes[1].rect());
@@ -234,18 +234,18 @@ TEST(bbox, rescale) {
     string buffer = j.dump();
 
     auto cfg = make_bbox_config(100);
-    bbox::extractor extractor{cfg.label_map};
+    boundingbox::extractor extractor{cfg.label_map};
     auto decoded = extractor.extract( &buffer[0], buffer.size() );
-    vector<bbox::box> boxes = decoded->boxes();
+    vector<boundingbox::box> boxes = decoded->boxes();
 
     ASSERT_EQ(8,boxes.size());
 
-    bbox::transformer transform(cfg);
+    boundingbox::transformer transform(cfg);
     shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
     iparam->output_size = cv::Size(512, 1024);
     auto tx_decoded = transform.transform( iparam, decoded );
-    vector<bbox::box> tx_boxes = tx_decoded->boxes();
+    vector<boundingbox::box> tx_boxes = tx_decoded->boxes();
     ASSERT_EQ(6,tx_boxes.size());
     EXPECT_EQ(cv::Rect(35*2,35*4,5*2,5*4),tx_boxes[0].rect());
     EXPECT_EQ(cv::Rect(50*2,50*4,10*2,10*4),tx_boxes[1].rect());
@@ -264,13 +264,13 @@ TEST(bbox, angle) {
     string buffer = j.dump();
 
     auto cfg = make_bbox_config(100);
-    bbox::extractor extractor{cfg.label_map};
+    boundingbox::extractor extractor{cfg.label_map};
     auto decoded = extractor.extract( &buffer[0], buffer.size() );
-    vector<bbox::box> boxes = decoded->boxes();
+    vector<boundingbox::box> boxes = decoded->boxes();
 
     ASSERT_EQ(1,boxes.size());
 
-    bbox::transformer transform(cfg);
+    boundingbox::transformer transform(cfg);
     shared_ptr<image::params> iparam = make_shared<image::params>();
     iparam->angle = 5;
     auto tx_decoded = transform.transform( iparam, decoded );
@@ -307,8 +307,8 @@ TEST(bbox, load_pad) {
     size_t bbox_max = 10;
     auto cfg = make_bbox_config(bbox_max);
 
-    bbox::extractor extractor{cfg.label_map};
-    bbox::loader loader{cfg};
+    boundingbox::extractor extractor{cfg.label_map};
+    boundingbox::loader loader{cfg};
 
     vector<float> outbuf(bbox_max*4+1);     // xmin, ymin, xmax, ymax
     outbuf[outbuf.size()-1] = -1;           // one past the end of the buffer
@@ -354,8 +354,8 @@ TEST(bbox, load_full) {
     size_t bbox_max = 6;
     auto cfg = make_bbox_config(bbox_max);
 
-    bbox::extractor extractor{cfg.label_map};
-    bbox::loader loader{cfg};
+    boundingbox::extractor extractor{cfg.label_map};
+    boundingbox::loader loader{cfg};
 
     vector<float> outbuf(bbox_max*4+1);     // xmin, ymin, xmax, ymax
     outbuf[outbuf.size()-1] = -1;           // one past the end of the buffer

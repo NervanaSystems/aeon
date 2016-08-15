@@ -32,7 +32,7 @@
 #define private public
 
 #include "etl_audio.hpp"
-#include "etl_bbox.hpp"
+#include "etl_boundingbox.hpp"
 #include "etl_char_map.hpp"
 #include "etl_image.hpp"
 #include "etl_image_var.hpp"
@@ -293,7 +293,7 @@ TEST(util,distance) {
 TEST(util,param_dump) {
     ofstream f("config_args.txt",ios::trunc);
     DUMP_CONFIG(audio);
-    DUMP_CONFIG(bbox);
+    DUMP_CONFIG(boundingbox);
     DUMP_CONFIG(char_map);
     DUMP_CONFIG(image);
     DUMP_CONFIG(image_var);

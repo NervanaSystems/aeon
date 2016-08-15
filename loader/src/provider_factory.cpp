@@ -1,7 +1,14 @@
 #include "provider_factory.hpp"
-#include "provider_image_class.hpp"
-#include "provider_audio.hpp"
-#include "provider_video.hpp"
+#include "provider_image_boundingbox.hpp"
+#include "provider_image_classifier.hpp"
+#include "provider_image_localization.hpp"
+#include "provider_image_only.hpp"
+#include "provider_image_pixelmask.hpp"
+#include "provider_audio_classifier.hpp"
+#include "provider_audio_only.hpp"
+#include "provider_audio_transcriber.hpp"
+#include "provider_video_classifier.hpp"
+#include "provider_video_only.hpp"
 
 #include <sstream>
 
@@ -26,11 +33,11 @@ std::shared_ptr<nervana::provider_interface> nervana::provider_factory::create(n
     } else if( mediaType == "audio" ) {
         rc = make_shared<audio_only>(configJs);
     } else if( mediaType == "image,localization" ) {
-        rc = make_shared<localization_decoder>(configJs);
+        rc = make_shared<image_localization>(configJs);
     } else if( mediaType == "image,pixelmask" ) {
-        rc = make_shared<provider_pixel_mask>(configJs);
+        rc = make_shared<image_pixelmask>(configJs);
     } else if( mediaType == "image,boundingbox" ) {
-        rc = make_shared<bbox_provider>(configJs);
+        rc = make_shared<image_boundingbox>(configJs);
     } else if( mediaType == "video,label" ) {
         rc = make_shared<video_classifier>(configJs);
     } else if( mediaType == "video" ) {

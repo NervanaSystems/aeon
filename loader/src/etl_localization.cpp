@@ -86,7 +86,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 
     // compute bbox overlaps
     vector<box> scaled_bbox;
-    for(const bbox::box& b : mp->boxes()) {
+    for(const boundingbox::box& b : mp->boxes()) {
         box r = b*im_scale;
         scaled_bbox.push_back(r);
     }
@@ -333,7 +333,7 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
 
     *num_gt_boxes = min(max_gt_boxes, mp->boxes().size());
     for(int i=0; i<*num_gt_boxes; i++) {
-        const bbox::box& gt = mp->boxes()[i];
+        const boundingbox::box& gt = mp->boxes()[i];
         *gt_boxes++ = gt.xmin;
         *gt_boxes++ = gt.ymin;
         *gt_boxes++ = gt.xmax;

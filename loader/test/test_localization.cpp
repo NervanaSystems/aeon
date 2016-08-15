@@ -796,7 +796,7 @@ TEST(localization, loader) {
     EXPECT_EQ(500, im_shape[1]) << "width";
     EXPECT_EQ(6, num_gt_boxes[0]);
     for(int i=0; i<6; i++) {
-        const bbox::box& box = transformed_data->boxes()[i];
+        const boundingbox::box& box = transformed_data->boxes()[i];
         EXPECT_EQ(box.xmin, gt_boxes[i*4+0]);
         EXPECT_EQ(box.ymin, gt_boxes[i*4+1]);
         EXPECT_EQ(box.xmax, gt_boxes[i*4+2]);

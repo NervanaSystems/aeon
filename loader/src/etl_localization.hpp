@@ -5,7 +5,7 @@
 #include <random>
 
 #include "interface.hpp"
-#include "etl_bbox.hpp"
+#include "etl_boundingbox.hpp"
 #include "etl_image_var.hpp"
 #include "util.hpp"
 #include "box.hpp"
@@ -127,7 +127,7 @@ namespace nervana {
         void validate();
     };
 
-    class localization::decoded : public bbox::decoded {
+    class localization::decoded : public boundingbox::decoded {
     public:
         decoded() {}
         virtual ~decoded() override {}
@@ -150,7 +150,7 @@ namespace nervana {
 
         virtual std::shared_ptr<localization::decoded> extract(const char* data, int size) override {
             auto rc = std::make_shared<localization::decoded>();
-            auto bb = std::static_pointer_cast<bbox::decoded>(rc);
+            auto bb = std::static_pointer_cast<boundingbox::decoded>(rc);
             bbox_extractor.extract(data, size, bb);
             if(!bb) rc = nullptr;
             return rc;
@@ -159,7 +159,7 @@ namespace nervana {
         virtual ~extractor() {}
     private:
         extractor() = delete;
-        bbox::extractor bbox_extractor;
+        boundingbox::extractor bbox_extractor;
     };
 
     class localization::transformer : public interface::transformer<localization::decoded, image_var::params> {

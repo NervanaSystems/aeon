@@ -26,8 +26,7 @@
 
 #define private public
 
-#include "provider_image_class.hpp"
-#include "etl_image.hpp"
+#include "provider_image_pixelmask.hpp"
 #include "json.hpp"
 #include "helpers.hpp"
 #include "provider_factory.hpp"
