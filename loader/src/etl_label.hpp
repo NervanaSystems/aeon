@@ -90,7 +90,7 @@ namespace nervana {
                     ss << "label_extractor::extract received " << bufSize << " bytes";
                     throw std::runtime_error(ss.str());
                 }
-                lbl = unpack_le<int>(buf);
+                lbl = unpack<int>(buf);
             } else {
                 lbl = std::stoi(std::string(buf, (size_t) bufSize));
             }

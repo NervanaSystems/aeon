@@ -50,60 +50,64 @@ using namespace nervana;
 TEST(util, unpack_le) {
     {
         char data[] = {1,0,0,0};
-        int actual = unpack_le<int>(data);
+        int actual = unpack<int>(data);
         EXPECT_EQ(0x00000001,actual);
     }
     {
         char data[] = {0,1,0,0};
-        int actual = unpack_le<int>(data);
+        int actual = unpack<int>(data);
         EXPECT_EQ(0x00000100,actual);
     }
     {
         char data[] = {0,0,0,1};
-        int actual = unpack_le<int>(data);
+        int actual = unpack<int>(data);
         EXPECT_EQ(0x01000000,actual);
     }
+    // {
+    //     char data[] = {0,0,0,1};
+    //     int actual = unpack<int>(data,0);
+    //     EXPECT_EQ(0,actual);
+    // }
     {
         char data[] = {0,0,0,1};
-        int actual = unpack_le<int>(data,0,3);
-        EXPECT_EQ(0,actual);
-    }
-    {
-        char data[] = {0,0,0,1};
-        int actual = unpack_le<int>(data,1,3);
+        int actual = unpack<int>(data,1);
         EXPECT_EQ(0x00010000,actual);
     }
     {
         char data[] = {(char)0x80,0,0,0};
-        int actual = unpack_le<int>(data);
+        int actual = unpack<int>(data);
         EXPECT_EQ(128,actual);
+    }
+
+    {
+        float a = 25.234;
+        char data[4];
+        pack<float>(data, a);
+
+        float b = unpack<float>(data);
+        EXPECT_FLOAT_EQ(a, b);
     }
 }
 
 TEST(util, unpack_be) {
     {
         char data[] = {0,0,0,1};
-        int actual = unpack_be<int>(data);
+        int actual = unpack<int>(data, 0, endian::BIG);
         EXPECT_EQ(0x00000001,actual);
     }
     {
         char data[] = {0,0,1,0};
-        int actual = unpack_be<int>(data);
+        int actual = unpack<int>(data, 0, endian::BIG);
         EXPECT_EQ(0x00000100,actual);
     }
     {
         char data[] = {1,0,0,0};
-        int actual = unpack_be<int>(data);
+        int actual = unpack<int>(data, 0, endian::BIG);
         EXPECT_EQ(0x01000000,actual);
     }
     {
         char data[] = {1,0,0,0};
-        int actual = unpack_be<int>(data,0,3);
-        EXPECT_EQ(0x00010000,actual);
-    }
-    {
-        char data[] = {1,0,0,0};
-        int actual = unpack_be<int>(data,1,3);
+        int actual = unpack<int>(data, 1, endian::BIG);
         EXPECT_EQ(0,actual);
     }
 }
@@ -113,21 +117,22 @@ TEST(util, pack_le) {
     {
         char actual[] = {0,0,0,0};
         char expected[] = {1,0,0,0};
-        pack_le<int>(actual,1);
+        pack<int>(actual,1);
         EXPECT_EQ(*(unsigned int*)expected,*(unsigned int*)actual);
     }
     {
         char actual[] = {0,0,0,0};
         char expected[] = {0,1,0,0};
-        pack_le<int>(actual,0x00000100);
+        pack<int>(actual,0x00000100);
         EXPECT_EQ(*(unsigned int*)expected,*(unsigned int*)actual);
     }
     {
         char actual[] = {0,0,0,0};
         char expected[] = {0,0,0,1};
-        pack_le<int>(actual,0x01000000);
+        pack<int>(actual,0x01000000);
         EXPECT_EQ(*(unsigned int*)expected,*(unsigned int*)actual);
     }
+
 //    {
 //        char actual[] = {0,0,0,0};
 //        char expected[] = {0,0,0,1};

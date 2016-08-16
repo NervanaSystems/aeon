@@ -63,6 +63,6 @@ vector<unsigned char> gen_image::render_datum( int number ) {
 vector<unsigned char> gen_image::render_target( int number ) {
     int target = number + 42;
     vector<unsigned char> rc(4);
-    nervana::pack_le<int>((char*)&rc[0],target);
+    nervana::pack<int>((char*)&rc[0],target);
     return rc;
 }

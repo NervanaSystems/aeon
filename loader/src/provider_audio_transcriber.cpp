@@ -65,15 +65,13 @@ void audio_transcriber::provide(int idx, buffer_in_array& in_buf, buffer_out_arr
 
     // Save out the length
     uint32_t trans_length = trans_dec->get_length();
-    pack_le(length_out, trans_length);
+    pack(length_out, trans_length);
 
     // Get the length of each audio record as a percentage of
     // maximum utterance length
     float valid_pct = 100 * (float)audio_dec->valid_frames / (float)audio_config.time_steps;
 
-    // Since valid_pct is a float, we need to trick the compiler into
-    // interpreting it as an int. It will still be read into python as a float.
-    pack_le(valid_out, *(int*)&valid_pct);
+    pack(valid_out, valid_pct);
 }
 
 void audio_transcriber::post_process(buffer_out_array& out_buf)
@@ -84,7 +82,7 @@ void audio_transcriber::post_process(buffer_out_array& out_buf)
         uint32_t packed_len = 0;
 
         for (int i=0; i<num_items; i++) {
-            uint32_t len = unpack_le<uint32_t>(out_buf[2]->get_item(i));
+            uint32_t len = unpack<uint32_t>(out_buf[2]->get_item(i));
             memmove(dptr + packed_len, out_buf[1]->get_item(i), len);
             packed_len += len;
         }

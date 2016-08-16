@@ -63,7 +63,7 @@ TEST(provider,audio_classify) {
     for (int i=0; i<batch_size; i++) {
         data_p.add_item(buf);
         vector<char> packed_int(4);
-        pack_le<int>(&packed_int[0], 42 + i);
+        pack<int>(&packed_int[0], 42 + i);
         target_p.add_item( packed_int );
     }
 
@@ -74,7 +74,7 @@ TEST(provider,audio_classify) {
     }
 
     for (int i=0; i<batch_size; i++ ) {
-        int target_value = unpack_le<int>(outBuf[1]->get_item(i));
+        int target_value = unpack<int>(outBuf[1]->get_item(i));
         EXPECT_EQ(42+i, target_value);
     }
 }
@@ -152,7 +152,7 @@ TEST(provider,audio_transcript) {
         auto orig_string = tr[i % 2];
         for (auto c : orig_string)
         {
-            ASSERT_EQ(unpack_le<uint8_t>(target_out++),
+            ASSERT_EQ(unpack<uint8_t>(target_out++),
                       cmap[std::toupper(c)]);
         }
     }
@@ -160,12 +160,12 @@ TEST(provider,audio_transcript) {
     // Check the transcript lengths match source string length
     for (int i=0; i<batch_size; i++)
     {
-        ASSERT_EQ(unpack_le<uint32_t>(outBuf[2]->get_item(i)), tr[i % 2].length());
+        ASSERT_EQ(unpack<uint32_t>(outBuf[2]->get_item(i)), tr[i % 2].length());
     }
 
     for (int i=0; i<batch_size; i++)
     {
-        ASSERT_EQ(unpack_le<float>(outBuf[3]->get_item(i)), float(100));
+        ASSERT_FLOAT_EQ(unpack<float>(outBuf[3]->get_item(i)), float(100));
     }
 
     // Do the packing
@@ -178,7 +178,7 @@ TEST(provider,audio_transcript) {
     for (int i=0; i<packed_length; i++)
     {
         char c = combined_string[i % combined_string.size()];
-        ASSERT_EQ(unpack_le<uint8_t>(target_ptr++),
+        ASSERT_EQ(unpack<uint8_t>(target_ptr++),
                   cmap[std::toupper(c)]);
     }
     for (int i=packed_length; i<outBuf[1]->size(); i++)

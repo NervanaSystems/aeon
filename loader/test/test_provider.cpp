@@ -69,7 +69,7 @@ TEST(provider,image) {
 //        cv::imwrite(filename,mat);
     }
     for (int i=0; i<batch_size; i++ ) {
-        int target_value = unpack_le<int>(outBuf[1]->get_item(i));
+        int target_value = unpack<int>(outBuf[1]->get_item(i));
         EXPECT_EQ(42+i,target_value);
     }
 }

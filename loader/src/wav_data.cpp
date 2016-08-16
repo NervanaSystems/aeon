@@ -16,8 +16,8 @@
 #include "wav_data.hpp"
 
 using namespace std;
-using nervana::pack_le;
-using nervana::unpack_le;
+using nervana::pack;
+using nervana::unpack;
 
 namespace nervana {
 
@@ -44,7 +44,7 @@ namespace nervana {
 
         // Skip any subchunks between "fmt" and "data".
         while (strncmp(buf + pos, "data", 4) != 0) {
-            uint32_t chunk_sz = unpack_le<uint32_t>(buf + pos + 4);
+            uint32_t chunk_sz = unpack<uint32_t>(buf + pos + 4);
             wav_assert(chunk_sz == 4 || strncmp(buf + pos, "fact", 4), "Malformed fact chunk");
             pos += 4 + sizeof(chunk_sz) + chunk_sz; // chunk tag, chunk size, chunk
         }
@@ -60,7 +60,7 @@ namespace nervana {
 
         for (uint32_t n = 0; n < data.rows; ++n) {
             for (uint32_t c = 0; c < data.cols; ++c) {
-                data.at<int16_t>(n, c) = unpack_le<int16_t>(buf + pos);
+                data.at<int16_t>(n, c) = unpack<int16_t>(buf + pos);
                 pos += sizeof(int16_t);
             }
         }
@@ -134,7 +134,7 @@ namespace nervana {
         for (int n = 0; n < data.rows; n++) {
             int16_t *ptr = data.ptr<int16_t>(n);
             for (int c = 0; c < data.cols; c++) {
-                pack_le(buf, ptr[c], (n * data.cols + c) * sizeof(int16_t));
+                pack(buf, ptr[c], (n * data.cols + c) * sizeof(int16_t));
             }
         }
     }
