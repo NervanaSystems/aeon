@@ -28,6 +28,7 @@
 #include "etl_multicrop.hpp"
 #include "json.hpp"
 #include "helpers.hpp"
+#include "image.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -85,6 +86,55 @@ void test_image(vector<unsigned char>& img, int channels) {
     //         }
     //     }
     // }
+}
+
+TEST(etl,image_passthrough) {
+    cv::Mat test_image = cv::Mat( 256, 512, CV_8UC3 );
+    unsigned char *input = (unsigned char*)(test_image.data);
+    int index = 0;
+    for(int row = 0; row < test_image.rows; row++) {
+        for(int col = 0; col < test_image.cols; col++) {
+            input[index++] = col;     // b
+            input[index++] = row;       // g
+            input[index++] = 0;         // r
+        }
+    }
+
+    vector<unsigned char> image_data;
+    cv::imencode( ".png", test_image, image_data );
+
+    nlohmann::json js = {{"width", 512},{"height",256}};
+    image::config cfg(js);
+
+    image::extractor ext{cfg};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
+
+    image::param_factory factory(cfg);
+
+    shared_ptr<image::params> params_ptr = factory.make_params(decoded);
+
+    image::transformer trans{cfg};
+    shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+    cv::Mat image = transformed->get_image(0);
+
+    cv::imwrite("size_input_image.png", test_image);
+    cv::imwrite("size_output_image.png", image);
+
+    unsigned char *input_data = (unsigned char*)(test_image.data);
+    unsigned char *output_data = (unsigned char*)(image.data);
+
+    for(int i=0; i<test_image.rows * test_image.cols * 3; i++) {
+        ASSERT_EQ(input_data[i], output_data[i]);
+    }
+
+//    EXPECT_EQ(20,image.size().width);
+//    EXPECT_EQ(30,image.size().height);
+
+//    EXPECT_TRUE(check_value(transformed,0,0,100,150));
+//    EXPECT_TRUE(check_value(transformed,19,0,119,150));
+//    EXPECT_TRUE(check_value(transformed,0,29,100,179));
+
 }
 
 TEST(etl, decoded_image) {
@@ -504,5 +554,46 @@ TEST(etl, multi_crop) {
             EXPECT_EQ(cv::sum(image != resize_crop), Scalar(0,0,0,0));
         }
     }
+}
 
+TEST(image,cropbox_max_proportional) {
+    {
+        cv::Size2f in(100,50);
+        cv::Size2f out(200,100);
+        cv::Size2f result = image::cropbox_max_proportional(in, out);
+        EXPECT_EQ(100, result.width);
+        EXPECT_EQ(50, result.height);
+    }
+
+    {
+        cv::Size2f in(100,50);
+        cv::Size2f out(50,25);
+        cv::Size2f result = image::cropbox_max_proportional(in, out);
+        EXPECT_EQ(100, result.width);
+        EXPECT_EQ(50, result.height);
+    }
+
+    {
+        cv::Size2f in(100,50);
+        cv::Size2f out(200,50);
+        cv::Size2f result = image::cropbox_max_proportional(in, out);
+        EXPECT_EQ(100, result.width);
+        EXPECT_EQ(25, result.height);
+    }
+
+    {
+        cv::Size2f in(100,50);
+        cv::Size2f out(50,100);
+        cv::Size2f result = image::cropbox_max_proportional(in, out);
+        EXPECT_EQ(25, result.width);
+        EXPECT_EQ(50, result.height);
+    }
+
+    {
+        cv::Size2f in(100,50);
+        cv::Size2f out(10,10);
+        cv::Size2f result = image::cropbox_max_proportional(in, out);
+        EXPECT_EQ(50, result.width);
+        EXPECT_EQ(50, result.height);
+    }
 }

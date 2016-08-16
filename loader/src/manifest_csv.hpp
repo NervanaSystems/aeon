@@ -60,7 +60,6 @@ namespace nervana {
     private:
         const std::string _filename;
         const bool _shuffle;
-
         std::vector<FilenameList> _filename_lists;
     };
 }

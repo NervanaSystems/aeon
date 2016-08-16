@@ -29,6 +29,6 @@ namespace nervana {
         video::extractor            video_extractor;
         video::transformer          video_transformer;
         video::loader               video_loader;
-        video::param_factory        video_factory;
+        image::param_factory        frame_factory;
     };
 }

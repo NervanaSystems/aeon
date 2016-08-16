@@ -22,83 +22,10 @@
 using namespace std;
 using namespace nervana;
 
-void video::params::dump(ostream & ostr) {
-    ostr << "FrameParams: ";
-
-    ostr << "Frames Per Clip: " << _framesPerClip << " ";
-}
-
-
-shared_ptr<video::params>
-video::param_factory::make_params(shared_ptr<const image::decoded> input)
-{
-    auto imgstgs = shared_ptr<video::params>(new video::params());
-
-    imgstgs->output_size = cv::Size2i(_cfg.width, _cfg.height);
-
-    imgstgs->angle = _cfg.angle(_dre);
-    imgstgs->flip  = _cfg.flip_distribution(_dre);
-
-    cv::Size2f in_size = input->get_image_size();
-
-    float scale = _cfg.scale(_dre);
-    float aspect_ratio = _cfg.aspect_ratio(_dre);
-    scale_cropbox(in_size, imgstgs->cropbox, aspect_ratio, scale);
-
-    float c_off_x = _cfg.crop_offset(_dre);
-    float c_off_y = _cfg.crop_offset(_dre);
-    image::shift_cropbox(in_size, imgstgs->cropbox, c_off_x, c_off_y);
-
-    if (_cfg.lighting.stddev() != 0) {
-        for( int i=0; i<3; i++ ) {
-            imgstgs->lighting.push_back(_cfg.lighting(_dre));
-        }
-        imgstgs->color_noise_std = _cfg.lighting.stddev();
-    }
-    if (_cfg.photometric.a()!=_cfg.photometric.b()) {
-        for( int i=0; i<3; i++ ) {
-            imgstgs->photometric.push_back(_cfg.photometric(_dre));
-        }
-    }
-    return imgstgs;
-}
-
-void video::param_factory::scale_cropbox(
-                            const cv::Size2f &in_size,
-                            cv::Rect &crop_box,
-                            float tgt_aspect_ratio,
-                            float tgt_scale )
-{
-
-    float out_a_r = static_cast<float>(_cfg.width) / _cfg.height;
-    float in_a_r  = in_size.width / in_size.height;
-
-    float crop_a_r = out_a_r * tgt_aspect_ratio;
-
-    if (_cfg.do_area_scale) {
-        // Area scaling -- use pctge of original area subject to aspect ratio constraints
-        float max_scale = in_a_r > crop_a_r ? crop_a_r /  in_a_r : in_a_r / crop_a_r;
-        float tgt_area  = std::min(tgt_scale, max_scale) * in_size.area();
-
-        crop_box.height = sqrt(tgt_area / crop_a_r);
-        crop_box.width  = crop_box.height * crop_a_r;
-    } else {
-        // Linear scaling -- make the long crop box side  the scale pct of the short orig side
-        float short_side = std::min(in_size.width, in_size.height);
-
-        if (crop_a_r < 1) { // long side is height
-            crop_box.height = tgt_scale * short_side;
-            crop_box.width  = crop_box.height * crop_a_r;
-        } else {
-            crop_box.width  = tgt_scale * short_side;
-            crop_box.height = crop_box.width / crop_a_r;
-        }
-    }
-}
-
 
 video::extractor::extractor(const video::config&)
-    : _pFormat(AV_PIX_FMT_BGR24) {
+ : _pFormat(AV_PIX_FMT_BGR24)
+{
     // AV_PIX_FMT_BGR24 in ffmpeg corresponds to CV_8UC3 in opencv
     _pFrameRGB = av_frame_alloc();
     _pFrame = av_frame_alloc();
@@ -109,14 +36,16 @@ video::extractor::extractor(const video::config&)
     // https://ffmpeg.org/doxygen/2.1/pixfmt_8h.html#a9a8e335cf3be472042bc9f0cf80cd4c5
 }
 
-video::extractor::~extractor() {
+video::extractor::~extractor()
+{
     av_frame_free(&_pFrameRGB);
     av_frame_free(&_pFrame);
 }
 
-std::shared_ptr<video::decoded> video::extractor::extract(const char* item, int itemSize) {
+std::shared_ptr<image::decoded> video::extractor::extract(const char* item, int itemSize)
+{
     // copy-pasted from video.cpp
-    _out = make_shared<video::decoded>();
+    _out = make_shared<image::decoded>();
 
     // copy item for some unknown reason
     AVFormatContext* formatCtx = avformat_alloc_context();
@@ -166,7 +95,8 @@ std::shared_ptr<video::decoded> video::extractor::extract(const char* item, int 
     return _out;
 }
 
-void video::extractor::decode_video_frame(AVCodecContext* codecCtx, AVPacket& packet) {
+void video::extractor::decode_video_frame(AVCodecContext* codecCtx, AVPacket& packet)
+{
     int frameFinished;
 
     avcodec_decode_video2(codecCtx, _pFrame, &frameFinished, &packet);
@@ -179,7 +109,8 @@ void video::extractor::decode_video_frame(AVCodecContext* codecCtx, AVPacket& pa
     }
 }
 
-int video::extractor::findVideoStream(AVCodecContext* &codecCtx, AVFormatContext* formatCtx) {
+int video::extractor::findVideoStream(AVCodecContext* &codecCtx, AVFormatContext* formatCtx)
+{
     for (int streamIdx = 0; streamIdx < (int) formatCtx->nb_streams; streamIdx++) {
         codecCtx = formatCtx->streams[streamIdx]->codec;
         if (codecCtx->coder_type == AVMEDIA_TYPE_VIDEO) {
@@ -190,7 +121,8 @@ int video::extractor::findVideoStream(AVCodecContext* &codecCtx, AVFormatContext
 }
 
 void video::extractor::convertFrameFormat(AVCodecContext* codecCtx, AVPixelFormat pFormat,
-                                          AVFrame* &pFrame) {
+                                          AVFrame* &pFrame)
+{
     // supposedly, some codecs allow the raw parameters like the frame size
     // to be changed at any frame, so we cant reuse this imgConvertCtx
 
@@ -208,42 +140,29 @@ void video::extractor::convertFrameFormat(AVCodecContext* codecCtx, AVPixelForma
     sws_freeContext(imgConvertCtx);
 }
 
-video::transformer::transformer(const video::config& config) {
-}
+video::transformer::transformer(const video::config& config)
+ : frame_transformer(config.frame),
+   max_frame_count(config.max_frame_count)
+{}
 
-std::shared_ptr<video::decoded> video::transformer::transform(
-    std::shared_ptr<video::params> img_xform,
-    std::shared_ptr<video::decoded> img)
+std::shared_ptr<image::decoded> video::transformer::transform(
+    std::shared_ptr<image::params> img_xform,
+    std::shared_ptr<image::decoded> img)
 {
-    vector<cv::Mat> finalImageList;
-    for(int i=0; i<img->get_image_count(); i++) {
-        cv::Mat rotatedImage;
-        image::rotate(img->get_image(i), rotatedImage, img_xform->angle);
+    auto out_img = frame_transformer.transform(img_xform, img);
 
-        cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
-
-        cv::Mat resizedImage;
-        image::resize(croppedImage, resizedImage, img_xform->output_size);
-        photo.cbsjitter(resizedImage, img_xform->photometric);
-        photo.lighting(resizedImage, img_xform->lighting, img_xform->color_noise_std);
-
-        cv::Mat *finalImage = &resizedImage;
-        cv::Mat flippedImage;
-        if (img_xform->flip) {
-            cv::flip(resizedImage, flippedImage, 1);
-            finalImage = &flippedImage;
+    // Now pad out if necessary
+    cv::Mat pad_frame = cv::Mat::zeros(img_xform->output_size, img->get_image(0).type());
+    while (out_img->get_image_count() < max_frame_count) {
+        if (out_img->add(pad_frame) == false) {
+            out_img = nullptr;
         }
-        finalImageList.push_back(*finalImage);
     }
 
-    auto rc = make_shared<video::decoded>();
-    if(rc->add(finalImageList) == false) {
-        rc = nullptr;
-    }
-    return rc;
+    return out_img;
 }
 
-void video::loader::load(const vector<void*>& buflist, shared_ptr<video::decoded> input)
+void video::loader::load(const vector<void*>& buflist, shared_ptr<image::decoded> input)
 {
     char* outbuf = (char*)buflist[0];
     // loads in channel x depth(frame) x height x width

@@ -24,11 +24,16 @@ namespace nervana {
     namespace image {
         // These functions may be common across different transformers
         void resize(const cv::Mat&, cv::Mat&, const cv::Size2i&, bool interpolate=true);
-        void shift_cropbox(const cv::Size2f &, cv::Rect &, float, float);
+        cv::Rect scale_cropbox(const cv::Size2f& insize, const cv::Size2f& outsize, float, float, bool do_area_scale);
         void rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interpolate=true, const cv::Scalar& border=cv::Scalar());
         void convertMixChannels(std::vector<cv::Mat>& source, std::vector<cv::Mat>& target, std::vector<int>& from_to);
 
         std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size, int min_size, int max_size);
+
+        cv::Size2f cropbox_max_proportional(const cv::Size2f& in_size, const cv::Size2f& out_size);
+        cv::Size2f cropbox_linear_scale(const cv::Size2f& in_size, float scale);
+        cv::Size2f cropbox_area_scale(const cv::Size2f& in_size, float scale);
+        cv::Point2f cropbox_shift(const cv::Size2f&, const cv::Size2f&, float, float);
 
         class photometric {
         public:

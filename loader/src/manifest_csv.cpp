@@ -22,6 +22,7 @@
 #include <string>
 #include <sstream>
 #include "manifest_csv.hpp"
+#include "util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -71,12 +72,14 @@ void manifest_csv::parse_stream(istream& is)
     // read in each line, then from that istringstream, break into
     // comma-separated fields.
     while(std::getline(is, line)) {
-        istringstream lineis(line);
-        string field;
-        vector<string> field_list;
-        while (std::getline(lineis, field, ',')) {
-            field_list.push_back(field);
+
+        if (line.empty() || line[0] == '#')  //Skip comments and empty lines
+        {
+            continue;
         }
+
+        auto field_list = split(line, ',');
+
         if (lineno == 0) {
             prev_num_fields = field_list.size();
         }

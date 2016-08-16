@@ -27,12 +27,12 @@ namespace nervana {
 
     private:
         video::config               video_config;
-        label::config               label_config;
         video::extractor            video_extractor;
         video::transformer          video_transformer;
         video::loader               video_loader;
-        video::param_factory        video_factory;
+        image::param_factory        frame_factory;
 
+        label::config               label_config;
         label::extractor            label_extractor;
         label::loader               label_loader;
     };

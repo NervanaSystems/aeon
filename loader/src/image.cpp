@@ -52,12 +52,6 @@ void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size
     }
 }
 
-void image::shift_cropbox(const cv::Size2f &in_size, cv::Rect &crop_box, float xoff, float yoff)
-{
-    crop_box.x = (in_size.width - crop_box.width) * xoff;
-    crop_box.y = (in_size.height - crop_box.height) * yoff;
-}
-
 void image::convertMixChannels(vector<cv::Mat>& source, vector<cv::Mat>& target, vector<int>& from_to)
 {
     if(source.size() == 0) throw invalid_argument("convertMixChannels source size must be > 0");
@@ -95,6 +89,71 @@ tuple<float,cv::Size> image::calculate_scale_shape(cv::Size size, int min_size, 
     }
     cv::Size im_shape{int(round(size.width*im_scale)), int(round(size.height*im_scale))};
     return make_tuple(im_scale, im_shape);
+}
+
+cv::Size2f image::cropbox_max_proportional(const cv::Size2f& in_size, const cv::Size2f& out_size) {
+    cv::Size2f result = out_size;
+    float scale = in_size.width / result.width;
+    result = result * scale;
+    if(result.height > in_size.height) {
+        scale = in_size.height / result.height;
+        result = result * scale;
+    }
+    return result;
+}
+
+cv::Size2f image::cropbox_linear_scale(const cv::Size2f& in_size, float scale)
+{
+    return in_size * scale;
+}
+
+cv::Size2f image::cropbox_area_scale(const cv::Size2f& in_size, float scale)
+{
+    cv::Size2f result = in_size;
+    return result;
+}
+
+cv::Point2f image::cropbox_shift(const cv::Size2f& in_size, const cv::Size2f& crop_box, float xoff, float yoff)
+{
+    cv::Point2f result;
+    result.x = (in_size.width - crop_box.width) * xoff;
+    result.y = (in_size.height - crop_box.height) * yoff;
+    return result;
+}
+
+cv::Rect image::scale_cropbox(
+                            const cv::Size2f &in_size,
+                            const cv::Size2f &out_size,
+                            float tgt_aspect_ratio,
+                            float tgt_scale,
+                            bool do_area_scale)
+{
+    cv::Rect crop_box;
+    float out_a_r = static_cast<float>(out_size.width) / out_size.height;
+    float in_a_r  = in_size.width / in_size.height;
+
+    float crop_a_r = out_a_r * tgt_aspect_ratio;
+
+    if (do_area_scale) {
+        // Area scaling -- use pctge of original area subject to aspect ratio constraints
+        float max_scale = in_a_r > crop_a_r ? crop_a_r /  in_a_r : in_a_r / crop_a_r;
+        float tgt_area  = std::min(tgt_scale, max_scale) * in_size.area();
+
+        crop_box.height = sqrt(tgt_area / crop_a_r);
+        crop_box.width  = crop_box.height * crop_a_r;
+    } else {
+        // Linear scaling -- make the long crop box side  the scale pct of the short orig side
+        float short_side = std::min(in_size.width, in_size.height);
+
+        if (crop_a_r < 1) { // long side is height
+            crop_box.width  = tgt_scale * short_side;
+            crop_box.height = crop_box.width / crop_a_r;
+        } else {
+            crop_box.height = tgt_scale * short_side;
+            crop_box.width  = crop_box.height * crop_a_r;
+        }
+    }
+    return crop_box;
 }
 
 /* Transform:

@@ -169,12 +169,21 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
     cv::Size2f in_size = input->get_image_size();
 
     float scale = _cfg.scale(_dre);
-    float aspect_ratio = _cfg.aspect_ratio(_dre);
-    scale_cropbox(in_size, imgstgs->cropbox, aspect_ratio, scale);
+    float horizontal_distortion = _cfg.aspect_ratio(_dre);
+    cv::Size2f out_shape(_cfg.width * horizontal_distortion, _cfg.height);
+
+    cv::Size2f cropbox_size = cropbox_max_proportional(in_size, out_shape);
+    if(_cfg.do_area_scale) {
+        throw std::runtime_error("area scale not implemented");
+    } else {
+        cropbox_size = cropbox_linear_scale(cropbox_size, scale);
+    }
 
     float c_off_x = _cfg.crop_offset(_dre);
     float c_off_y = _cfg.crop_offset(_dre);
-    shift_cropbox(in_size, imgstgs->cropbox, c_off_x, c_off_y);
+
+    cv::Point2f cropbox_origin = cropbox_shift(in_size, cropbox_size, c_off_x, c_off_y);
+    imgstgs->cropbox = cv::Rect(cropbox_origin, cropbox_size);
 
     if (_cfg.lighting.stddev() != 0) {
         for( int i=0; i<3; i++ ) {
@@ -188,39 +197,6 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
         }
     }
     return imgstgs;
-}
-
-void image::param_factory::scale_cropbox(
-                            const cv::Size2f &in_size,
-                            cv::Rect &crop_box,
-                            float tgt_aspect_ratio,
-                            float tgt_scale )
-{
-
-    float out_a_r = static_cast<float>(_cfg.width) / _cfg.height;
-    float in_a_r  = in_size.width / in_size.height;
-
-    float crop_a_r = out_a_r * tgt_aspect_ratio;
-
-    if (_cfg.do_area_scale) {
-        // Area scaling -- use pctge of original area subject to aspect ratio constraints
-        float max_scale = in_a_r > crop_a_r ? crop_a_r /  in_a_r : in_a_r / crop_a_r;
-        float tgt_area  = std::min(tgt_scale, max_scale) * in_size.area();
-
-        crop_box.height = sqrt(tgt_area / crop_a_r);
-        crop_box.width  = crop_box.height * crop_a_r;
-    } else {
-        // Linear scaling -- make the long crop box side  the scale pct of the short orig side
-        float short_side = std::min(in_size.width, in_size.height);
-
-        if (crop_a_r < 1) { // long side is height
-            crop_box.height = tgt_scale * short_side;
-            crop_box.width  = crop_box.height * crop_a_r;
-        } else {
-            crop_box.width  = tgt_scale * short_side;
-            crop_box.height = crop_box.width / crop_a_r;
-        }
-    }
 }
 
 void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::decoded> input)

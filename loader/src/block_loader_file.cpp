@@ -101,7 +101,7 @@ off_t block_loader_file::getFileSize(const string& filename)
 
     struct stat stats;
     if (stat(filename.c_str(), &stats) == -1) {
-        throw std::runtime_error("Could not find " + filename);
+        throw std::runtime_error("Could not find file: \"" + filename + "\"");
     }
 
     return stats.st_size;

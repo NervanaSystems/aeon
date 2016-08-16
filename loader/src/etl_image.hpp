@@ -134,7 +134,6 @@ namespace nervana {
 
         std::shared_ptr<image::params> make_params(std::shared_ptr<const image::decoded> input);
     private:
-        void scale_cropbox(const cv::Size2f&, cv::Rect&, float, float);
 
         image::config& _cfg;
         std::default_random_engine _dre;

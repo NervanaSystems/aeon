@@ -20,11 +20,11 @@ using namespace std;
 
 video_classifier::video_classifier(nlohmann::json js) :
     video_config(js["video"]),
-    label_config(js["label"]),
     video_extractor(video_config),
     video_transformer(video_config),
     video_loader(video_config),
-    video_factory(video_config),
+    frame_factory(video_config.frame),
+    label_config(js["label"]),
     label_extractor(label_config),
     label_loader(label_config)
 {
@@ -41,15 +41,13 @@ void video_classifier::provide(int idx, buffer_in_array& in_buf, buffer_out_arra
     char* target_out = out_buf[1]->get_item(idx);
 
     if (datum_in.size() == 0) {
-        std::stringstream ss;
-        ss << "received encoded video with size 0, at idx " << idx;
-        throw std::runtime_error(ss.str());
+        throw std::runtime_error("received encoded video with size 0, at idx " + to_string(idx));
     }
 
     // Process video data
     auto video_dec = video_extractor.extract(datum_in.data(), datum_in.size());
-    auto video_params = video_factory.make_params(video_dec);
-    video_loader.load({datum_out}, video_transformer.transform(video_params, video_dec));
+    auto frame_params = frame_factory.make_params(video_dec);
+    video_loader.load({datum_out}, video_transformer.transform(frame_params, video_dec));
 
     // Process target data
     auto label_dec = label_extractor.extract(target_in.data(), target_in.size());

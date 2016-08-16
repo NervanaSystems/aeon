@@ -71,6 +71,8 @@ public:
 
 #define ADD_SCALAR(var, mode) \
     std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode, parse_value<decltype(var)>, [](decltype(var) v){} )
+#define ADD_IGNORE(var) \
+    std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode::OPTIONAL, [](decltype(var), const std::string&, const nlohmann::json&, mode){}, [](decltype(var) v){} )
 #define ADD_DISTRIBUTION(var, mode) \
     std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode, parse_dist<decltype(var)>, [](decltype(var) v){} )
 
@@ -98,7 +100,7 @@ public:
     template<typename T> static void parse_value(
                                     T& value,
                                     const std::string& key,
-                                    const nlohmann::json &js,
+                                    const nlohmann::json& js,
                                     mode required=mode::OPTIONAL)
     {
         auto val = js.find(key);

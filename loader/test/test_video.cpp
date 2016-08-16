@@ -29,7 +29,11 @@ TEST(etl, video_extract_transform) {
     vector<unsigned char> vid = gen_video().encode(1000);
 
     // extract
-    nlohmann::json js = {{"width", width},{"height",height},{"frame_count",5}};
+    nlohmann::json js = {{"max_frame_count", 5},
+                         {"frame", {
+                            {"height",height},
+                            {"width",width}}}};
+
     video::config config(js);
 
     video::extractor extractor{config};
@@ -41,7 +45,7 @@ TEST(etl, video_extract_transform) {
     // transform
     video::transformer transformer = video::transformer(config);
 
-    video::param_factory factory(config);
+    image::param_factory factory(config.frame);
     auto params = factory.make_params(decoded_vid);
 
     params->output_size = cv::Size2i(width/2, height/2);
@@ -59,7 +63,7 @@ TEST(etl, video_image_transform) {
     int height = 288;
 
     auto decoded_image = make_shared<image::decoded>();
-    cv::Mat mat_image(width, height, CV_8UC3, 0.0);
+    cv::Mat mat_image(height, width, CV_8UC3, 0.0);
     decoded_image->add(mat_image);
 
     nlohmann::json js = {{"width", width},{"height",height}};
@@ -91,16 +95,20 @@ TEST(etl, video_loader) {
     // each dimension is unique to help debug and detect incorrect
     // dimension ordering
     // extract
-    nlohmann::json js = {{"height",4},{"width",2},{"channels",3},{"frame_count",5}};
+    nlohmann::json js = {{"max_frame_count", 5},
+                         {"frame", {
+                            {"channels",3},
+                            {"height",4},
+                            {"width",2}}}};
     video::config vconfig{js};
 
     int channels, height, width, depth;
-    tie(channels, height, width, depth) = make_tuple(vconfig.channels,
-                                                     vconfig.height,
-                                                     vconfig.width,
-                                                     vconfig.frame_count);
+    tie(channels, height, width, depth) = make_tuple(vconfig.frame.channels,
+                                                     vconfig.frame.height,
+                                                     vconfig.frame.width,
+                                                     vconfig.max_frame_count);
 
-    shared_ptr<video::decoded> decoded = make_shared<video::decoded>();
+    auto decoded_vid = make_shared<image::decoded>();
 
     for(int d = 0; d < depth; ++d) {
         cv::Mat image(height, width, CV_8UC3, 0.0);
@@ -111,7 +119,7 @@ TEST(etl, video_loader) {
                 }
             }
         }
-        decoded->add(image);
+        decoded_vid->add(image);
     }
 
     // now run the loader
@@ -121,7 +129,7 @@ TEST(etl, video_loader) {
     outbuf.resize(outbuf_size);
 
     video::loader loader(vconfig);
-    loader.load({outbuf.data()}, decoded);
+    loader.load({outbuf.data()}, decoded_vid);
 
     // make sure outbuf has data in it like we expect
     for(int c = 0; c < channels; ++c) {
