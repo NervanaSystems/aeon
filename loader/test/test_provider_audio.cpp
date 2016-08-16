@@ -135,7 +135,8 @@ TEST(provider,audio_transcript) {
     // Generate output buffers using shapes from the provider
     buffer_out_array outBuf({media->get_oshapes()[0].get_byte_size(),
                              media->get_oshapes()[1].get_byte_size(),
-                             media->get_oshapes()[2].get_byte_size()},
+                             media->get_oshapes()[2].get_byte_size(),
+                             media->get_oshapes()[3].get_byte_size()},
                             batch_size);
 
     // Call the provider
@@ -160,6 +161,11 @@ TEST(provider,audio_transcript) {
     for (int i=0; i<batch_size; i++)
     {
         ASSERT_EQ(unpack_le<uint32_t>(outBuf[2]->get_item(i)), tr[i % 2].length());
+    }
+
+    for (int i=0; i<batch_size; i++)
+    {
+        ASSERT_EQ(unpack_le<float>(outBuf[3]->get_item(i)), float(100));
     }
 
     // Do the packing
