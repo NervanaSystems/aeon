@@ -27,14 +27,14 @@
 using namespace std;
 using namespace nervana;
 
-TEST(etl, bad_char_map) {
+TEST(char_map, bad) {
     nlohmann::json js = {{"alphabet", "abcccc "},
                          {"max_length", 15}};
     EXPECT_THROW(char_map::config cfg{js}, std::runtime_error);
 
 }
 
-TEST(etl, char_map) {
+TEST(char_map, test) {
     {
         nlohmann::json js = {{"alphabet", "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()"},
                              {"max_length", 20}};

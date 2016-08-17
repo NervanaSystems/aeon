@@ -7,7 +7,7 @@
 using namespace std;
 using namespace nervana;
 
-TEST(logger,conststring) {
+TEST(logging,conststring) {
     {
         const char* s = find_last("this/is/a/test",'/');
         EXPECT_STREQ("test",s);
@@ -18,7 +18,7 @@ TEST(logger,conststring) {
     }
 }
 
-TEST(logger,error) {
+TEST(logging,error) {
     INFO << "This is info";
     WARN << "This is warn";
     ERR << "This is error";

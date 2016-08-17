@@ -32,7 +32,7 @@
 using namespace std;
 using namespace nervana;
 
-TEST(etl, label_map) {
+TEST(label_map, test) {
     {
         nlohmann::json js = {{"labels",{"a","and","the","quick","fox","cow","dog","blue",
             "black","brown","happy","lazy","skip","jumped","run","under","over","around"}}};

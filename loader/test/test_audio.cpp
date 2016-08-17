@@ -24,7 +24,7 @@ using namespace nervana;
 
 // This test is for comparing that a generated wav_data structure can write its data out to
 // 16-bit PCM that can be read via extractor (just via buffer rather than actually touching disk)
-TEST(etl, wav_compare) {
+TEST(wav,compare) {
     sinewave_generator sg{400, 500};
     wav_data wav(sg, 2, 16000, false);
 
@@ -55,7 +55,7 @@ TEST(etl, wav_compare) {
     ASSERT_EQ(all_eq, true);
 }
 
-TEST(etl, specgram) {
+TEST(audio, specgram) {
     // This test generates a 1kHz signal and ensures that the spectrogram creates the correct
     // line image
     float signal_freq = 1000;
@@ -95,7 +95,7 @@ TEST(etl, specgram) {
 }
 
 
-TEST(etl, audio_transform) {
+TEST(audio,transform) {
 
     auto js = R"(
         {
@@ -137,7 +137,7 @@ TEST(etl, audio_transform) {
     delete[] databuf;
 }
 
-TEST(etl, wav_read) {
+TEST(wav,read) {
     // requires sox : `apt-get install sox` on ubuntu
     auto a = system("sox -r 16000 -b 16 -e s -n output.wav synth 3 sine 400 vol 0.5");
     string test_file = "output.wav";
@@ -159,7 +159,7 @@ TEST(etl, wav_read) {
 }
 
 
-TEST(etl, audio_transform2) {
+TEST(audio,transform2) {
 
     auto js = R"(
         {

@@ -21,7 +21,7 @@
 using namespace std;
 using namespace nervana;
 
-TEST(etl, video_extract_transform) {
+TEST(video,extract_transform) {
     int width = 352;
     int height = 288;
 
@@ -58,7 +58,7 @@ TEST(etl, video_extract_transform) {
     ASSERT_EQ(transformed_vid->get_image_size(), cv::Size2i(width/2, height/2));
 }
 
-TEST(etl, video_image_transform) {
+TEST(video,image_transform) {
     int width = 352;
     int height = 288;
 
@@ -85,7 +85,7 @@ unsigned char expected_value(int d, int h, int w, int c) {
     return (((((c * 5) + d) * 4) + h) * 2) + w;
 }
 
-TEST(etl, video_loader) {
+TEST(video,loader) {
     // set up video::decoded with specific values
     // the color of any pixel channel should
     // = channel

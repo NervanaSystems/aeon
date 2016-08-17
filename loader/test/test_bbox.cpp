@@ -75,7 +75,7 @@ cv::Mat draw( int width, int height, const vector<boundingbox::box>& blist, cv::
     return image;
 }
 
-TEST(bbox, extractor) {
+TEST(boundingbox, extractor) {
     {
         string data = read_file(CURDIR"/test_data/000001.json");
         auto cfg = make_bbox_config(100);
@@ -130,7 +130,7 @@ TEST(bbox, extractor) {
     }
 }
 
-TEST(bbox, bbox) {
+TEST(boundingbox, bbox) {
     // Create test metadata
     cv::Rect r0 = cv::Rect( 0, 0, 10, 15 );
     cv::Rect r1 = cv::Rect( 10, 10, 12, 13 );
@@ -159,7 +159,7 @@ TEST(bbox, bbox) {
     auto tx = transform.transform( iparam, decoded );
 }
 
-TEST(bbox, crop) {
+TEST(boundingbox, crop) {
     // Create test metadata
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
     cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
@@ -210,7 +210,7 @@ TEST(bbox, crop) {
     EXPECT_EQ(cv::Rect(35,35,40,40),tx_boxes[5].rect());
 }
 
-TEST(bbox, rescale) {
+TEST(boundingbox, rescale) {
     // Create test metadata
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
     cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
@@ -255,7 +255,7 @@ TEST(bbox, rescale) {
     EXPECT_EQ(cv::Rect(35*2,35*4,40*2,40*4),tx_boxes[5].rect());
 }
 
-TEST(bbox, angle) {
+TEST(boundingbox, angle) {
     // Create test metadata
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );
     auto list = {create_box( r0, "puma" )};
@@ -284,7 +284,7 @@ void test_values(const cv::Rect& r, float* outbuf) {
     EXPECT_EQ(r.y+r.height,(int)outbuf[3]);
 }
 
-TEST(bbox, load_pad) {
+TEST(boundingbox, load_pad) {
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
     cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
     cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]
@@ -331,7 +331,7 @@ TEST(bbox, load_pad) {
     EXPECT_EQ(-1,(int)outbuf[outbuf.size()-1]);
 }
 
-TEST(bbox, load_full) {
+TEST(boundingbox, load_full) {
     cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
     cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
     cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]

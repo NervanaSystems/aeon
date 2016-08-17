@@ -88,7 +88,7 @@ void test_image(vector<unsigned char>& img, int channels) {
     // }
 }
 
-TEST(etl,image_passthrough) {
+TEST(image,passthrough) {
     cv::Mat test_image = cv::Mat( 256, 512, CV_8UC3 );
     unsigned char *input = (unsigned char*)(test_image.data);
     int index = 0;
@@ -137,7 +137,7 @@ TEST(etl,image_passthrough) {
 
 }
 
-TEST(etl, decoded_image) {
+TEST(image, decoded) {
     cv::Mat img1 = cv::Mat( 256, 256, CV_8UC3 );
     cv::Mat img2 = cv::Mat( 256, 256, CV_8UC3 );
     cv::Mat img3 = cv::Mat( 256, 256, CV_8UC3 );
@@ -155,7 +155,7 @@ TEST(etl, decoded_image) {
     EXPECT_FALSE(decoded.add(v2));
 }
 
-TEST(etl, missing_config_arg) {
+TEST(image, missing_config_arg) {
     nlohmann::json js = {
         {"width",30},
         {"channels", 1},
@@ -169,7 +169,7 @@ TEST(etl, missing_config_arg) {
     EXPECT_THROW(image::config itpj(js), std::invalid_argument);
 }
 
-TEST(etl, image_config) {
+TEST(image, config) {
     nlohmann::json js = {
         {"height",30},
         {"width",30},
@@ -209,7 +209,7 @@ TEST(etl, image_config) {
     EXPECT_FLOAT_EQ(0.0,config.flip_distribution.p());
 }
 
-TEST(etl, image_extract1) {
+TEST(image, extract1) {
     auto indexed = generate_indexed_image();
     vector<unsigned char> png;
     cv::imencode( ".png", indexed, png );
@@ -217,7 +217,7 @@ TEST(etl, image_extract1) {
     test_image( png, 3 );
 }
 
-TEST(etl, image_extract2) {
+TEST(image,extract2) {
     auto indexed = generate_indexed_image();
     vector<unsigned char> png;
     cv::imencode( ".png", indexed, png );
@@ -225,7 +225,7 @@ TEST(etl, image_extract2) {
     test_image( png, 1 );
 }
 
-TEST(etl, image_extract3) {
+TEST(image,extract3) {
     cv::Mat img = cv::Mat( 256, 256, CV_8UC1, 0.0 );
     vector<unsigned char> png;
     cv::imencode( ".png", img, png );
@@ -233,7 +233,7 @@ TEST(etl, image_extract3) {
     test_image( png, 3 );
 }
 
-TEST(etl, image_extract4) {
+TEST(image,extract4) {
     cv::Mat img = cv::Mat( 256, 256, CV_8UC1, 0.0 );
     vector<unsigned char> png;
     cv::imencode( ".png", img, png );
@@ -247,7 +247,7 @@ bool check_value(shared_ptr<image::decoded> transformed, int x0, int y0, int x1,
     return x1 == (int)value[0] && y1 == (int)value[1];
 }
 
-TEST(etl, image_transform_crop) {
+TEST(image,transform_crop) {
     auto indexed = generate_indexed_image();
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
@@ -275,7 +275,7 @@ TEST(etl, image_transform_crop) {
     EXPECT_TRUE(check_value(transformed,0,29,100,179));
 }
 
-TEST(etl, image_transform_flip) {
+TEST(image,transform_flip) {
     auto indexed = generate_indexed_image();
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
@@ -303,7 +303,7 @@ TEST(etl, image_transform_flip) {
     EXPECT_TRUE(check_value(transformed,0,19,119,169));
 }
 
-TEST(etl, image_noconvert_nosplit) {
+TEST(image,noconvert_nosplit) {
     nlohmann::json js = {
         {"width", 10},
         {"height",10},
@@ -338,7 +338,7 @@ TEST(etl, image_noconvert_nosplit) {
     }
 }
 
-TEST(etl, image_noconvert_split) {
+TEST(image,noconvert_split) {
     nlohmann::json js = {
         {"width", 10},
         {"height",10},
@@ -373,7 +373,7 @@ TEST(etl, image_noconvert_split) {
     }
 }
 
-TEST(etl, image_convert_nosplit) {
+TEST(image,convert_nosplit) {
     nlohmann::json js = {
         {"width", 10},
         {"height",10},
@@ -408,7 +408,7 @@ TEST(etl, image_convert_nosplit) {
     }
 }
 
-TEST(etl, image_convert_split) {
+TEST(image,convert_split) {
     nlohmann::json js = {
         {"width", 10},
         {"height",10},
@@ -443,7 +443,7 @@ TEST(etl, image_convert_split) {
     }
 }
 
-TEST(etl, multi_crop) {
+TEST(image, multi_crop) {
     auto indexed = generate_indexed_image();  // 256 x 256
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
@@ -596,4 +596,15 @@ TEST(image,cropbox_max_proportional) {
         EXPECT_EQ(50, result.width);
         EXPECT_EQ(50, result.height);
     }
+}
+
+TEST(image,calculate_scale_shape) {
+    int min_size = 600;
+    int max_size = 1000;
+    cv::Size size{500,375};
+    float scale;
+    tie(scale,size) = image::calculate_scale_shape(size, min_size, max_size);
+    EXPECT_FLOAT_EQ(1.6,scale);
+    EXPECT_EQ(800,size.width);
+    EXPECT_EQ(600,size.height);
 }

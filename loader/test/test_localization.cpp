@@ -225,17 +225,6 @@ TEST(localization,config) {
     EXPECT_NO_THROW(localization::config cfg(js));
 }
 
-TEST(image,calculate_scale_shape) {
-    int min_size = 600;
-    int max_size = 1000;
-    cv::Size size{500,375};
-    float scale;
-    tie(scale,size) = image::calculate_scale_shape(size, min_size, max_size);
-    EXPECT_FLOAT_EQ(1.6,scale);
-    EXPECT_EQ(800,size.width);
-    EXPECT_EQ(600,size.height);
-}
-
 TEST(localization, sample_anchors) {
     string data = read_file(CURDIR"/test_data/006637.json");
     localization::config cfg = make_localization_config();
