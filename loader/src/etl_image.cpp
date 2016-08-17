@@ -229,7 +229,7 @@ void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::de
                 from_to.push_back(ch);
             }
         }
-        image::convertMixChannels(source, target, from_to);
+        image::convert_mix_channels(source, target, from_to);
     }
 }
 

@@ -237,7 +237,7 @@ TEST(util,mixchannels) {
             from_to.push_back(i);
             from_to.push_back(i);
         }
-        image::convertMixChannels(source, target, from_to);
+        image::convert_mix_channels(source, target, from_to);
 
         p = target[0].ptr<uint8_t>();
         index = 0;
@@ -266,7 +266,7 @@ TEST(util,mixchannels) {
             from_to.push_back(i);
             from_to.push_back(i);
         }
-        image::convertMixChannels(source, target, from_to);
+        image::convert_mix_channels(source, target, from_to);
 
         int* p1 = target[0].ptr<int32_t>();
         index = 0;

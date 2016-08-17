@@ -25,7 +25,7 @@ namespace nervana {
         // These functions may be common across different transformers
         void resize(const cv::Mat&, cv::Mat&, const cv::Size2i&, bool interpolate=true);
         void rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interpolate=true, const cv::Scalar& border=cv::Scalar());
-        void convertMixChannels(std::vector<cv::Mat>& source, std::vector<cv::Mat>& target, std::vector<int>& from_to);
+        void convert_mix_channels(std::vector<cv::Mat>& source, std::vector<cv::Mat>& target, std::vector<int>& from_to);
 
         std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size, int min_size, int max_size);
 

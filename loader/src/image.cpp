@@ -52,7 +52,7 @@ void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size
     }
 }
 
-void image::convertMixChannels(vector<cv::Mat>& source, vector<cv::Mat>& target, vector<int>& from_to)
+void image::convert_mix_channels(vector<cv::Mat>& source, vector<cv::Mat>& target, vector<int>& from_to)
 {
     if(source.size() == 0) throw invalid_argument("convertMixChannels source size must be > 0");
     if(target.size() == 0) throw invalid_argument("convertMixChannels target size must be > 0");
