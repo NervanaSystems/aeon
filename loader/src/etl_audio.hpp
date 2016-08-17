@@ -141,6 +141,7 @@ namespace nervana {
         }
     private:
         config(){}
+        float add_noise_probability = 0.0f;
         std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
             ADD_SCALAR(max_duration, mode::REQUIRED),
             ADD_SCALAR(frame_stride, mode::REQUIRED),
@@ -181,8 +182,6 @@ namespace nervana {
                 throw std::runtime_error("Unknown time unit " + unit_type);
             }
         }
-        float add_noise_probability = 0.0f;
-
     };
 
 

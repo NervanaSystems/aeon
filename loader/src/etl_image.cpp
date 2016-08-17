@@ -252,3 +252,38 @@ void image::loader::split(cv::Mat& img, char* buf)
         cv::split(img, channels);
     }
 }
+
+std::string dump_default(const std::string& s) { return s; }
+std::string dump_default(int v) { return std::to_string(v); }
+std::string dump_default(uint32_t v) { return std::to_string(v); }
+std::string dump_default(size_t v) { return std::to_string(v); }
+std::string dump_default(float v) { return std::to_string(v); }
+std::string dump_default(const std::vector<float>& v)
+{
+    return "blah";
+}
+
+std::string dump_default(const std::vector<std::string>& v)
+{
+    return "blah";
+}
+
+std::string dump_default(const std::uniform_real_distribution<float>& v)
+{
+    return "blah";
+}
+
+std::string dump_default(const std::uniform_int_distribution<int>& v)
+{
+    return "blah";
+}
+
+std::string dump_default(const std::normal_distribution<float>& v)
+{
+    return "blah";
+}
+
+std::string dump_default(const std::bernoulli_distribution& v)
+{
+    return "blah";
+}

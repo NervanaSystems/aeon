@@ -285,14 +285,18 @@ TEST(util,distance) {
     EXPECT_EQ(12, LevenshteinDistance(s1, s2));
 }
 
+void dump_config_info( ostream& f, shared_ptr<nervana::interface::config_info_interface> x )
+{
+    f << "   " << x->name() << "," << x->type() << "," << (x->required() ? "REQUIRED" : "OPTIONAL");
+    f << "," << (x->required() ? "" : x->get_default_value());
+    f << "\n";
+}
+
 #define DUMP_CONFIG(arg) \
 { \
     arg::config cfg; \
     f << #arg << ":\n"; \
-    for(auto x: cfg.config_list) \
-    { \
-        f << "   " << x->name() << ", " << x->type() << ", " << (x->required() ? "REQUIRED" : "OPTIONAL") << "\n"; \
-    } \
+    for(auto x: cfg.config_list) dump_config_info(f, x); \
 }
 
 TEST(util,param_dump) {
@@ -312,7 +316,7 @@ TEST(util,param_dump) {
         f << "loader_config" << ":\n";
         for(auto x: cfg.config_list)
         {
-            f << "   " << x->name() << ", " << x->type() << ", " << (x->required() ? "REQUIRED" : "OPTIONAL") << "\n";
+            dump_config_info(f, x);
         }
     }
 }

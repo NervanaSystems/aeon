@@ -83,3 +83,40 @@ void interface::config::verify_config(
 //        throw runtime_error(ss.str());
     }
 }
+
+std::string nervana::dump_default(const std::string& s)
+{
+    stringstream ss;
+    ss << '"' << s<< '"';
+    return ss.str();
+}
+std::string nervana::dump_default(int v) { return std::to_string(v); }
+std::string nervana::dump_default(uint32_t v) { return std::to_string(v); }
+std::string nervana::dump_default(size_t v) { return std::to_string(v); }
+std::string nervana::dump_default(float v) { return std::to_string(v); }
+std::string nervana::dump_default(const std::vector<float>& v) { return "["+join(v,",")+"]"; }
+std::string nervana::dump_default(const std::vector<std::string>& v) { return "["+join(v,",")+"]"; }
+std::string nervana::dump_default(const std::uniform_real_distribution<float>& v)
+{
+    stringstream ss;
+    ss << "{" << v.a() << "," << v.b() << "}";
+    return ss.str();
+}
+std::string nervana::dump_default(const std::uniform_int_distribution<int>& v)
+{
+    stringstream ss;
+    ss << "{" << v.a() << "," << v.b() << "}";
+    return ss.str();
+}
+std::string nervana::dump_default(const std::normal_distribution<float>& v)
+{
+    stringstream ss;
+    ss << "{" << v.mean() << "," << v.stddev() << "}";
+    return ss.str();
+}
+std::string nervana::dump_default(const std::bernoulli_distribution& v)
+{
+    stringstream ss;
+    ss << "{" << v.p() << "}";
+    return ss.str();
+}

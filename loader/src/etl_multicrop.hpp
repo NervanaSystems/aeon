@@ -55,7 +55,7 @@ namespace nervana {
         std::uniform_real_distribution<float> photometric{0.0f, 0.0f};
         std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
         std::bernoulli_distribution           flip_distribution{0};
-        bool                                  flip;
+        bool                                  flip = false;
 
         // Derived config variables
         std::vector<cv::Point2f> offsets;

@@ -20,6 +20,7 @@
 #include <numeric>
 #include <functional>
 #include <exception>
+#include <string>
 #ifndef _MSC_VER
 #   include <cxxabi.h>
 #endif
@@ -27,6 +28,8 @@
 #include "typemap.hpp"
 #include "util.hpp"
 #include "json.hpp"
+
+static int IGNORE_VALUE;
 
 namespace nervana {
     namespace interface {
@@ -41,6 +44,18 @@ namespace nervana {
         class params;
     }
     typedef std::vector<size_t> shape_t;
+
+    std::string dump_default(const std::string& s);
+    std::string dump_default(int v);
+    std::string dump_default(uint32_t v);
+    std::string dump_default(size_t v);
+    std::string dump_default(float v);
+    std::string dump_default(const std::vector<float>& v);
+    std::string dump_default(const std::vector<std::string>& v);
+    std::string dump_default(const std::uniform_real_distribution<float>& v);
+    std::string dump_default(const std::uniform_int_distribution<int>& v);
+    std::string dump_default(const std::normal_distribution<float>& v);
+    std::string dump_default(const std::bernoulli_distribution& v);
 }
 
 class nervana::interface::config_info_interface {
@@ -49,6 +64,7 @@ public:
     virtual void parse(nlohmann::json js) = 0;
     virtual bool required() const = 0;
     virtual std::string type() const = 0;
+    virtual std::string get_default_value() const = 0;
 };
 
 class nervana::interface::config {
@@ -72,7 +88,7 @@ public:
 #define ADD_SCALAR(var, mode) \
     std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode, parse_value<decltype(var)>, [](decltype(var) v){} )
 #define ADD_IGNORE(var) \
-    std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode::OPTIONAL, [](decltype(var), const std::string&, const nlohmann::json&, mode){}, [](decltype(var) v){} )
+    std::make_shared<nervana::interface::config_info<int>>( IGNORE_VALUE, #var, mode::OPTIONAL, [](int, const std::string&, const nlohmann::json&, mode){}, [](int v){} )
 #define ADD_DISTRIBUTION(var, mode) \
     std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode, parse_dist<decltype(var)>, [](decltype(var) v){} )
 
@@ -136,33 +152,35 @@ private:
     std::vector<nervana::shape_type> shape_type_list;
 };
 
-
-    template <class T>
-    std::string
-    type_name()
-    {
-        typedef typename std::remove_reference<T>::type TR;
-        std::unique_ptr<char, void(*)(void*)> own
-               (
-    #ifndef _MSC_VER
-                    abi::__cxa_demangle(typeid(TR).name(), nullptr,
-                                               nullptr, nullptr),
-    #else
-                    nullptr,
-    #endif
-                    std::free
-               );
-        std::string r = own != nullptr ? own.get() : typeid(TR).name();
-        if (std::is_const<TR>::value)
-            r += " const";
-        if (std::is_volatile<TR>::value)
-            r += " volatile";
-        if (std::is_lvalue_reference<T>::value)
-            r += "&";
-        else if (std::is_rvalue_reference<T>::value)
-            r += "&&";
-        return r;
-    }
+namespace nervana
+{
+template <class T>
+std::string
+type_name()
+{
+    typedef typename std::remove_reference<T>::type TR;
+    std::unique_ptr<char, void(*)(void*)> own
+           (
+#ifndef _MSC_VER
+                abi::__cxa_demangle(typeid(TR).name(), nullptr,
+                                           nullptr, nullptr),
+#else
+                nullptr,
+#endif
+                std::free
+           );
+    std::string r = own != nullptr ? own.get() : typeid(TR).name();
+    if (std::is_const<TR>::value)
+        r += " const";
+    if (std::is_volatile<TR>::value)
+        r += " volatile";
+    if (std::is_lvalue_reference<T>::value)
+        r += "&";
+    else if (std::is_rvalue_reference<T>::value)
+        r += "&&";
+    return r;
+}
+}
 
 template<typename T>
 class nervana::interface::config_info : public nervana::interface::config_info_interface {
@@ -174,7 +192,8 @@ public:
         var_name{name},
         parse_mode{m},
         parse_function{parse},
-        validate_function{validate}
+        validate_function{validate},
+        default_value{var}
     {
     }
 
@@ -187,6 +206,10 @@ public:
 
     std::string type() const override { return type_name<T>(); }
 
+    std::string get_default_value() const override {
+        return dump_default(default_value);
+    }
+
     void parse(nlohmann::json js) {
         parse_function(target_variable, var_name, js, parse_mode);
     }
@@ -198,6 +221,7 @@ private:
     nervana::interface::config::mode parse_mode;
     std::function<void(T&,const std::string&, const nlohmann::json&, nervana::interface::config::mode)> parse_function;
     std::function<void(T)>                                           validate_function;
+    T                       default_value;
 };
 
 
