@@ -67,7 +67,7 @@ namespace nervana {
             ADD_SCALAR(max_length, mode::REQUIRED),
             ADD_SCALAR(alphabet, mode::REQUIRED),
             ADD_SCALAR(pack_for_ctc, mode::OPTIONAL),
-            ADD_SCALAR(type_string, mode::OPTIONAL),
+            ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); })
         };
         std::unordered_map<char, uint8_t> _cmap;
 

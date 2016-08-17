@@ -21,6 +21,7 @@
 #include <functional>
 #include <exception>
 #include <string>
+#include <sstream>
 #ifndef _MSC_VER
 #   include <cxxabi.h>
 #endif
@@ -85,12 +86,12 @@ public:
         REQUIRED
     };
 
-#define ADD_SCALAR(var, mode) \
-    std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode, parse_value<decltype(var)>, [](decltype(var) v){} )
+#define ADD_SCALAR(var, mode, ...) \
+    std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode, parse_value<decltype(var)>, ##__VA_ARGS__ )
 #define ADD_IGNORE(var) \
-    std::make_shared<nervana::interface::config_info<int>>( IGNORE_VALUE, #var, mode::OPTIONAL, [](int, const std::string&, const nlohmann::json&, mode){}, [](int v){} )
-#define ADD_DISTRIBUTION(var, mode) \
-    std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode, parse_dist<decltype(var)>, [](decltype(var) v){} )
+    std::make_shared<nervana::interface::config_info<int>>( IGNORE_VALUE, #var, mode::OPTIONAL, [](int, const std::string&, const nlohmann::json&, mode){} )
+#define ADD_DISTRIBUTION(var, mode, ...) \
+    std::make_shared<nervana::interface::config_info<decltype(var)>>( var, #var, mode, parse_dist<decltype(var)>, ##__VA_ARGS__ )
 
     template<typename T, typename S> static void set_dist_params(T& dist, S& params)
     {
@@ -187,7 +188,7 @@ class nervana::interface::config_info : public nervana::interface::config_info_i
 public:
     config_info(T& var, const std::string& name, nervana::interface::config::mode m,
                 std::function<void(T&,const std::string&, const nlohmann::json&, nervana::interface::config::mode)> parse,
-                std::function<void(T)> validate ) :
+                std::function<bool(T)> validate = [](T)->bool{ return true; } ) :
         target_variable{var},
         var_name{name},
         parse_mode{m},
@@ -212,6 +213,12 @@ public:
 
     void parse(nlohmann::json js) {
         parse_function(target_variable, var_name, js, parse_mode);
+        if(!validate_function(target_variable))
+        {
+            std::stringstream ss;
+            ss << "value for '" << var_name << "' out of range";
+            throw std::invalid_argument(ss.str());
+        }
     }
 
 private:
@@ -220,7 +227,7 @@ private:
     const std::string       var_name;
     nervana::interface::config::mode parse_mode;
     std::function<void(T&,const std::string&, const nlohmann::json&, nervana::interface::config::mode)> parse_function;
-    std::function<void(T)>                                           validate_function;
+    std::function<bool(T)>                                           validate_function;
     T                       default_value;
 };
 

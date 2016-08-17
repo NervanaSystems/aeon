@@ -79,16 +79,22 @@ namespace nervana {
 
         /** Scale the image (width, height) */
         std::uniform_real_distribution<float> scale{1.0f, 1.0f};
+
         /** Rotate the image (rho, phi) */
         std::uniform_int_distribution<int>    angle{0, 0};
+
         /** Adjust lighting */
         std::normal_distribution<float>       lighting{0.0f, 0.0f};
+
         /** Adjust aspect ratio */
-        std::uniform_real_distribution<float> aspect_ratio{1.0f, 1.0f};
+        std::uniform_real_distribution<float> horizontal_distortion{1.0f, 1.0f};
+
         /** Not sure what this guy does */
         std::uniform_real_distribution<float> photometric{0.0f, 0.0f};
+
         /** Not sure what this guy does */
         std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
+
         /** Flip the image left to right */
         std::bernoulli_distribution           flip_distribution{0};
 
@@ -99,17 +105,19 @@ namespace nervana {
             ADD_SCALAR(height, mode::REQUIRED),
             ADD_SCALAR(width, mode::REQUIRED),
             ADD_SCALAR(seed, mode::OPTIONAL),
-            ADD_DISTRIBUTION(scale, mode::OPTIONAL),
-            ADD_DISTRIBUTION(angle, mode::OPTIONAL),
+            ADD_DISTRIBUTION(scale, mode::OPTIONAL, [](const std::uniform_real_distribution<float>& v){
+                return v.a() >= 0 && v.a() <= 1 && v.b() >= 0 && v.b() <= 1 && v.a() <= v.b();
+            }),
+            ADD_DISTRIBUTION(angle, mode::OPTIONAL, [](decltype(angle) v){ return v.a() <= v.b(); }),
             ADD_DISTRIBUTION(lighting, mode::OPTIONAL),
-            ADD_DISTRIBUTION(aspect_ratio, mode::OPTIONAL),
-            ADD_DISTRIBUTION(photometric, mode::OPTIONAL),
+            ADD_DISTRIBUTION(horizontal_distortion, mode::OPTIONAL, [](decltype(horizontal_distortion) v){ return v.a() <= v.b(); }),
+            ADD_DISTRIBUTION(photometric, mode::OPTIONAL, [](decltype(photometric) v){ return v.a() <= v.b(); }),
             ADD_SCALAR(flip_enable, mode::OPTIONAL),
             ADD_SCALAR(center, mode::OPTIONAL),
-            ADD_SCALAR(type_string, mode::OPTIONAL),
+            ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
             ADD_SCALAR(do_area_scale, mode::OPTIONAL),
             ADD_SCALAR(channel_major, mode::OPTIONAL),
-            ADD_SCALAR(channels, mode::OPTIONAL)
+            ADD_SCALAR(channels, mode::OPTIONAL, [](uint32_t v){ return v==1 || v==3; })
         };
 
         config() {}

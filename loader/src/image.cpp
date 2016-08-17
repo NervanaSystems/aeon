@@ -127,7 +127,7 @@ cv::Point2f image::cropbox_shift(const cv::Size2f& in_size, const cv::Size2f& cr
     record to fill a transform_params structure which will have
 
     Spatial distortion params:
-    randomly sampled crop box (based on params->center, params->aspect_ratio, params->scale_pct, record size)
+    randomly sampled crop box (based on params->center, params->horizontal_distortion, params->scale_pct, record size)
     randomly determined flip (based on params->flip)
     randomly sampled rotation angle (based on params->angle)
 

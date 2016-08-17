@@ -55,7 +55,7 @@ void test_image(vector<unsigned char>& img, int channels) {
         {"angle",{-20,20}},
         {"scale",{0.2,0.8}},
         {"lighting",{0.0,0.1}},
-        {"aspect_ratio",{0.75,1.33}},
+        {"horizontal_distortion",{0.75,1.33}},
         {"flip_enable",false}
     };
 
@@ -162,7 +162,7 @@ TEST(image, missing_config_arg) {
         {"angle",{-20,20}},
         {"scale",{0.2,0.8}},
         {"lighting",{0.0,0.1}},
-        {"aspect_ratio",{0.75,1.33}},
+        {"horizontal_distortion",{0.75,1.33}},
         {"flip_enable",false}
     };
 
@@ -177,7 +177,7 @@ TEST(image, config) {
         {"angle",{-20,20}},
         {"scale",{0.2,0.8}},
         {"lighting",{0.0,0.1}},
-        {"aspect_ratio",{0.75,1.33}},
+        {"horizontal_distortion",{0.75,1.33}},
         {"flip_enable",false}
     };
 
@@ -197,8 +197,8 @@ TEST(image, config) {
     EXPECT_FLOAT_EQ(0.0,config.lighting.mean());
     EXPECT_FLOAT_EQ(0.1,config.lighting.stddev());
 
-    EXPECT_FLOAT_EQ(0.75,config.aspect_ratio.a());
-    EXPECT_FLOAT_EQ(1.33,config.aspect_ratio.b());
+    EXPECT_FLOAT_EQ(0.75,config.horizontal_distortion.a());
+    EXPECT_FLOAT_EQ(1.33,config.horizontal_distortion.b());
 
     EXPECT_FLOAT_EQ(0.0,config.photometric.a());
     EXPECT_FLOAT_EQ(0.0,config.photometric.b());
@@ -618,4 +618,119 @@ TEST(image,calculate_scale_shape) {
     EXPECT_FLOAT_EQ(1.6,scale);
     EXPECT_EQ(800,size.width);
     EXPECT_EQ(600,size.height);
+}
+
+TEST(image,transform)
+{
+    vector<char> image_data = read_file_contents(CURDIR"/test_data/duty_calls.png");
+//        vector<char> image_data = read_file_contents(CURDIR"/test_data/test_image.jpg");
+    {
+        int height = 128;
+        int width = 256;
+        int channels = 3;
+        nlohmann::json js = {
+                                {"height",height},
+                                {"width",width},
+                                {"channels",channels},
+                                {"channel_major",false},
+                                {"flip_enable",false}
+                            };
+
+        image::config           cfg{js};
+        image::extractor        extractor{cfg};
+        image::transformer      transformer{cfg};
+        image::loader           loader{cfg};
+        image::param_factory    factory(cfg);
+
+        auto decoded = extractor.extract(image_data.data(), image_data.size());
+        auto params = factory.make_params(decoded);
+        auto transformed = transformer.transform(params, decoded);
+
+        cv::Mat output_image(height, width, CV_8UC(channels));
+        loader.load({output_image.data}, transformed);
+        string filename = "image_transform_1.png";
+        cv::imwrite(filename, output_image);
+    }
+    {
+        int height = 128;
+        int width = 256;
+        int channels = 3;
+        nlohmann::json js = {
+                                {"height",height},
+                                {"width",width},
+                                {"channels",channels},
+                                {"channel_major",false},
+                                {"flip_enable",false}
+                            };
+
+        image::config           cfg{js};
+        image::extractor        extractor{cfg};
+        image::transformer      transformer{cfg};
+        image::loader           loader{cfg};
+        image::param_factory    factory(cfg);
+
+        auto decoded = extractor.extract(image_data.data(), image_data.size());
+
+        shared_ptr<image::params> params = factory.make_params(decoded);
+        params->flip = true;
+
+        auto transformed = transformer.transform(params, decoded);
+
+        cv::Mat output_image(height, width, CV_8UC(channels));
+        loader.load({output_image.data}, transformed);
+        string filename = "image_transform_2.png";
+        cv::imwrite(filename, output_image);
+    }
+    {
+        int height = 128;
+        int width = 256;
+        int channels = 3;
+        nlohmann::json js =
+        {
+            {"height",height},
+            {"width",width},
+            {"channels",channels},
+            {"horizontal_distortion", {2, 2}},
+            {"scale", {0.5, 0.5}},
+            {"channel_major",false},
+            {"flip_enable",false}
+        };
+
+        image::config           cfg{js};
+        image::extractor        extractor{cfg};
+        image::transformer      transformer{cfg};
+        image::loader           loader{cfg};
+        image::param_factory    factory(cfg);
+
+        auto decoded = extractor.extract(image_data.data(), image_data.size());
+
+        shared_ptr<image::params> params = factory.make_params(decoded);
+        params->flip = false;
+
+        auto transformed = transformer.transform(params, decoded);
+
+        cv::Mat output_image(height, width, CV_8UC(channels));
+        loader.load({output_image.data}, transformed);
+        string filename = "image_transform_3.png";
+        cv::imwrite(filename, output_image);
+    }
+}
+
+TEST(image,config_bad_scale)
+{
+    int height = 128;
+    int width = 256;
+    int channels = 3;
+    nlohmann::json js =
+    {
+        {"height",height},
+        {"width",width},
+        {"channels",channels},
+        {"horizontal_distortion", {2, 2}},
+        {"scale", {0.5, 1.5}},
+        {"channel_major",false},
+        {"flip_enable",false}
+    };
+
+    EXPECT_THROW(image::config{js}, std::invalid_argument);
 }

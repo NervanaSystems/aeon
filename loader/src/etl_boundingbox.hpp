@@ -61,7 +61,7 @@ private:
         ADD_SCALAR(width, mode::REQUIRED),
         ADD_SCALAR(max_bbox_count, mode::REQUIRED),
         ADD_SCALAR(labels, mode::REQUIRED),
-        ADD_SCALAR(type_string, mode::OPTIONAL)
+        ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); })
     };
 
     config() {}

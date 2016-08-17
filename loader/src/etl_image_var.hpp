@@ -92,7 +92,7 @@ namespace nervana {
         std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
             ADD_SCALAR(min_size, mode::REQUIRED),
             ADD_SCALAR(max_size, mode::REQUIRED),
-            ADD_SCALAR(type_string, mode::OPTIONAL),
+            ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
             ADD_SCALAR(flip_enable, mode::OPTIONAL),
             ADD_SCALAR(channel_major, mode::OPTIONAL),
             ADD_SCALAR(channels, mode::OPTIONAL),

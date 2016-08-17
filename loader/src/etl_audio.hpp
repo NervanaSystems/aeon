@@ -149,15 +149,15 @@ namespace nervana {
             ADD_SCALAR(seed, mode::OPTIONAL),
             ADD_SCALAR(num_cepstra, mode::OPTIONAL),
             ADD_SCALAR(num_filters, mode::OPTIONAL),
-            ADD_SCALAR(type_string, mode::OPTIONAL),
+            ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
             ADD_SCALAR(feature_type, mode::OPTIONAL),
             ADD_SCALAR(window_type, mode::OPTIONAL),
             ADD_SCALAR(noise_index_file, mode::OPTIONAL),
             ADD_SCALAR(add_noise_probability, mode::OPTIONAL),
             ADD_SCALAR(sample_freq_hz, mode::OPTIONAL),
-            ADD_DISTRIBUTION(time_scale_fraction, mode::OPTIONAL),
+            ADD_DISTRIBUTION(time_scale_fraction, mode::OPTIONAL, [](decltype(time_scale_fraction) v){ return v.a() <= v.b(); }),
             // ADD_DISTRIBUTION(noise_index, mode::OPTIONAL),
-            ADD_DISTRIBUTION(noise_level, mode::OPTIONAL),
+            ADD_DISTRIBUTION(noise_level, mode::OPTIONAL, [](decltype(noise_level) v){ return v.a() <= v.b(); }),
         };
 
         void parse_samples_or_seconds(const std::string &unit, float &ms, uint32_t &tn)

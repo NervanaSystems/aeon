@@ -51,6 +51,10 @@ namespace nervana {
         bool valid() const {
             return tp_name.size() > 0;
         }
+        static bool is_valid_type( const std::string& s ) {
+            return all_outputs.find(s) != all_outputs.end();
+        }
+
         std::string tp_name;
         int np_type;
         int cv_type;

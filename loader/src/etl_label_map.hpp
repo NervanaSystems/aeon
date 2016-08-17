@@ -49,7 +49,7 @@ namespace nervana {
 
     private:
         std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
-            ADD_SCALAR(type_string, mode::OPTIONAL),
+            ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
             ADD_SCALAR(labels, mode::REQUIRED),
             ADD_SCALAR(max_labels, mode::OPTIONAL)
         };

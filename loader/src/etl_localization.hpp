@@ -133,7 +133,7 @@ namespace nervana {
             ADD_SCALAR(negative_overlap, mode::OPTIONAL),
             ADD_SCALAR(positive_overlap, mode::OPTIONAL),
             ADD_SCALAR(foreground_fraction, mode::OPTIONAL),
-            ADD_SCALAR(type_string, mode::OPTIONAL),
+            ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
             ADD_SCALAR(max_gt_boxes, mode::OPTIONAL),
             ADD_SCALAR(labels, mode::REQUIRED)
         };

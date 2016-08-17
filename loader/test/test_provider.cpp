@@ -94,7 +94,7 @@ TEST(provider, argtype) {
                 "angle" : [-20, 20],
                 "scale" : [0.2, 0.8],
                 "lighting" : [0.0, 0.1],
-                "aspect_ratio" : [0.75, 1.33],
+                "horizontal_distortion" : [0.75, 1.33],
                 "flip_enable" : false
             }
         )";
