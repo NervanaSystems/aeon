@@ -121,41 +121,6 @@ cv::Point2f image::cropbox_shift(const cv::Size2f& in_size, const cv::Size2f& cr
     return result;
 }
 
-cv::Rect image::scale_cropbox(
-                            const cv::Size2f &in_size,
-                            const cv::Size2f &out_size,
-                            float tgt_aspect_ratio,
-                            float tgt_scale,
-                            bool do_area_scale)
-{
-    cv::Rect crop_box;
-    float out_a_r = static_cast<float>(out_size.width) / out_size.height;
-    float in_a_r  = in_size.width / in_size.height;
-
-    float crop_a_r = out_a_r * tgt_aspect_ratio;
-
-    if (do_area_scale) {
-        // Area scaling -- use pctge of original area subject to aspect ratio constraints
-        float max_scale = in_a_r > crop_a_r ? crop_a_r /  in_a_r : in_a_r / crop_a_r;
-        float tgt_area  = std::min(tgt_scale, max_scale) * in_size.area();
-
-        crop_box.height = sqrt(tgt_area / crop_a_r);
-        crop_box.width  = crop_box.height * crop_a_r;
-    } else {
-        // Linear scaling -- make the long crop box side  the scale pct of the short orig side
-        float short_side = std::min(in_size.width, in_size.height);
-
-        if (crop_a_r < 1) { // long side is height
-            crop_box.width  = tgt_scale * short_side;
-            crop_box.height = crop_box.width / crop_a_r;
-        } else {
-            crop_box.height = tgt_scale * short_side;
-            crop_box.width  = crop_box.height * crop_a_r;
-        }
-    }
-    return crop_box;
-}
-
 /* Transform:
     image::config will be a supplied bunch of params used by this provider.
     on each record, the transformer will use the config along with the supplied

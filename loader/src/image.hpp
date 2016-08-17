@@ -24,7 +24,6 @@ namespace nervana {
     namespace image {
         // These functions may be common across different transformers
         void resize(const cv::Mat&, cv::Mat&, const cv::Size2i&, bool interpolate=true);
-        cv::Rect scale_cropbox(const cv::Size2f& insize, const cv::Size2f& outsize, float, float, bool do_area_scale);
         void rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interpolate=true, const cv::Scalar& border=cv::Scalar());
         void convertMixChannels(std::vector<cv::Mat>& source, std::vector<cv::Mat>& target, std::vector<int>& from_to);
 
