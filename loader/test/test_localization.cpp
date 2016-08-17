@@ -215,9 +215,9 @@ void plot(const string& path) {
     }
 }
 
-TEST(DISABLED_localization,plot) {
-    plot(CURDIR"/test_data/009952.json");
-}
+// TEST(DISABLED_localization,plot) {
+//     plot(CURDIR"/test_data/009952.json");
+// }
 
 TEST(localization,config) {
     nlohmann::json js = {{"labels",label_list},{"max_gt_boxes",100}};

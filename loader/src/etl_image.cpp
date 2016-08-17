@@ -127,23 +127,7 @@ shared_ptr<image::decoded> image::transformer::transform(
 {
     vector<cv::Mat> finalImageList;
     for(int i=0; i<img->get_image_count(); i++) {
-        cv::Mat rotatedImage;
-        rotate(img->get_image(i), rotatedImage, img_xform->angle);
-
-        cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
-
-        cv::Mat resizedImage;
-        image::resize(croppedImage, resizedImage, img_xform->output_size);
-        photo.cbsjitter(resizedImage, img_xform->photometric);
-        photo.lighting(resizedImage, img_xform->lighting, img_xform->color_noise_std);
-
-        cv::Mat *finalImage = &resizedImage;
-        cv::Mat flippedImage;
-        if (img_xform->flip) {
-            cv::flip(resizedImage, flippedImage, 1);
-            finalImage = &flippedImage;
-        }
-        finalImageList.push_back(*finalImage);
+        finalImageList.push_back(transform_single_image(img_xform, img->get_image(i)));
     }
 
     auto rc = make_shared<image::decoded>();
@@ -151,6 +135,28 @@ shared_ptr<image::decoded> image::transformer::transform(
         rc = nullptr;
     }
     return rc;
+}
+
+cv::Mat image::transformer::transform_single_image(
+                                            shared_ptr<image::params> img_xform,
+                                            cv::Mat& single_img)
+{
+    cv::Mat rotatedImage;
+    image::rotate(single_img, rotatedImage, img_xform->angle);
+    cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
+
+    cv::Mat resizedImage;
+    image::resize(croppedImage, resizedImage, img_xform->output_size);
+    photo.cbsjitter(resizedImage, img_xform->photometric);
+    photo.lighting(resizedImage, img_xform->lighting, img_xform->color_noise_std);
+
+    cv::Mat *finalImage = &resizedImage;
+    cv::Mat flippedImage;
+    if (img_xform->flip) {
+        cv::flip(resizedImage, flippedImage, 1);
+        finalImage = &flippedImage;
+    }
+    return *finalImage;
 }
 
 shared_ptr<image::params>

@@ -39,8 +39,7 @@ namespace nervana {
     }
 
     namespace multicrop {
-        class config;
-        class transformer;
+        class config;     // Forward decl for friending
     }
 
     class image::params : public nervana::interface::params {
@@ -68,6 +67,7 @@ namespace nervana {
      */
     class image::config : public interface::config {
         friend class video::config;
+        friend class multicrop::config;
     public:
         uint32_t                              height;
         uint32_t                              width;
@@ -200,6 +200,7 @@ namespace nervana {
                                                 std::shared_ptr<image::params>,
                                                 std::shared_ptr<image::decoded>) override;
 
+        cv::Mat transform_single_image(std::shared_ptr<image::params>, cv::Mat&);
     private:
         photometric photo;
     };

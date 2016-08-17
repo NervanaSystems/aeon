@@ -21,44 +21,93 @@
 using namespace std;
 using namespace nervana;
 
+using cv::Point2f;
+
+multicrop::config::config(nlohmann::json js)
+ : crop_config(js["crop_config"])
+{
+    if(js.is_null()) {
+        throw std::runtime_error("missing multicrop config in json config");
+    }
+
+    for(auto& info : config_list) {
+        info->parse(js);
+    }
+
+    verify_config("multicrop", config_list, js);
+
+    if (crop_config.flip_enable) {
+        orientations.push_back(true);
+    }
+
+    // shape is going to be different from crop_config because of multiple images
+    shape_t multicrop_shape = crop_config.get_shape_type().get_shape();
+
+    uint32_t num_views = num_crops * crop_scales.size() * (crop_config.flip_enable ? 2 : 1);
+    multicrop_shape.insert(multicrop_shape.begin(), num_views);
+    add_shape_type(multicrop_shape, crop_config.type_string);
+
+    validate();
+}
+
+void multicrop::config::validate()
+{
+    if(num_crops != 5 && num_crops != 1) {
+        throw std::invalid_argument("num_crops must be 1 or 5");
+    }
+
+    for (const float &s: crop_scales) {
+        if(!( (0.0 < s) && (s < 1.0))) {
+            throw std::invalid_argument("crop_scales values must be between 0.0 and 1.0");
+        }
+    }
+}
+
+
+multicrop::transformer::transformer(const multicrop::config& cfg)
+ : _crop_transformer{cfg.crop_config},
+   _crop_scales(cfg.crop_scales),
+   _orientations(cfg.orientations)
+{
+    if (cfg.num_crops == 5) {
+        _offsets.emplace_back(0.0, 0.0);  // NW
+        _offsets.emplace_back(0.0, 1.0);  // SW
+        _offsets.emplace_back(1.0, 0.0);  // NE
+        _offsets.emplace_back(1.0, 1.0);  // SE
+    }
+}
+
 shared_ptr<image::decoded> multicrop::transformer::transform(
-                                                shared_ptr<image::params> unused,
+                                                shared_ptr<image::params> crop_settings,
                                                 shared_ptr<image::decoded> input)
 {
     cv::Size2i in_size = input->get_image_size();
-    int short_side_in = std::min(in_size.width, in_size.height);
-    vector<cv::Rect> cropboxes;
+    auto cropbox_size = image::cropbox_max_proportional(in_size, crop_settings->output_size);
 
+    vector<cv::Rect> cropboxes;
     // Get the positional crop boxes
-    for (const float &s: _cfg.multicrop_scales) {
-        cv::Size2i boxdim(short_side_in * s, short_side_in * s);
+    for (const float& s: _crop_scales) {
+        cv::Size2i boxdim = cropbox_size * s;
         cv::Size2i border = in_size - boxdim;
-        for (const cv::Point2f &offset: _cfg.offsets) {
-            cv::Point2i corner(border);
-            corner.x *= offset.x;
-            corner.y *= offset.y;
+        for (const Point2f& offset: _offsets) {
+            cv::Point2i corner(border.width * offset.x, border.height * offset.y);
             cropboxes.push_back(cv::Rect(corner, boxdim));
         }
     }
 
     auto out_imgs = make_shared<image::decoded>();
-    add_resized_crops(input->get_image(0), out_imgs, cropboxes);
-    if (_cfg.include_flips) {
-        cv::Mat input_img;
-        cv::flip(input->get_image(0), input_img, 1);
-        add_resized_crops(input_img, out_imgs, cropboxes);
+
+    for (auto cropbox: cropboxes) {
+        crop_settings->cropbox = cropbox;
+        for (auto orientation: _orientations) {
+            crop_settings->flip = orientation;
+            bool add_ok = out_imgs->add(
+                    _crop_transformer.transform_single_image(crop_settings, input->get_image(0))
+                );
+            if (!add_ok) {
+                return nullptr;
+            }
+        }
     }
     return out_imgs;
-}
-
-void multicrop::transformer::add_resized_crops(
-                const cv::Mat& input,
-                shared_ptr<image::decoded> &out_img,
-                vector<cv::Rect> &cropboxes)
-{
-    for (auto cropbox: cropboxes) {
-        cv::Mat img_out;
-        image::resize(input(cropbox), img_out, _cfg.output_size);
-        out_img->add(img_out);
-    }
 }

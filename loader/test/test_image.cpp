@@ -29,7 +29,7 @@
 #include "json.hpp"
 #include "helpers.hpp"
 #include "image.hpp"
-
+#include "log.hpp"
 using namespace std;
 using namespace nervana;
 
@@ -448,29 +448,36 @@ TEST(image, multi_crop) {
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
 
-    nlohmann::json js = {{"width", 256},{"height",256}};
-    image::config cfg(js);
+    nlohmann::json exjs = {{"width", 256},{"height",256}};
+    image::config cfg(exjs);
 
     image::extractor ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
+
+
     // Just center crop
     {
+
         auto jsstring = R"(
             {
-                "width": 224,
-                "height": 224,
-                "multicrop_scales": [0.875],
-                "crops_per_scale": 1
+                "crop_config": {"width": 224,
+                                "height": 224,
+                                "flip_enable": true},
+                "crop_scales": [0.875],
+                "num_crops": 1
             }
         )";
         auto js = nlohmann::json::parse(jsstring);
-        multicrop::config mc_config_ptr(js);
+        multicrop::config mc_config(js);
+        image::param_factory factory(mc_config.crop_config);
+        shared_ptr<image::params> params_ptr = factory.make_params(decoded);
 
-        multicrop::transformer trans{mc_config_ptr};
-        shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
+        multicrop::transformer trans{mc_config};
+        shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
 
         cv::Mat image = transformed->get_image(0);
+
         EXPECT_EQ(224,image.size().width);
         EXPECT_EQ(224,image.size().height);
 
@@ -488,18 +495,20 @@ TEST(image, multi_crop) {
     {
         auto jsstring = R"(
             {
-                "width": 224,
-                "height": 224,
-                "multicrop_scales": [0.875],
-                "include_flips": false
+                "crop_config": {"width": 224,
+                                "height": 224,
+                                "flip_enable": false},
+                "crop_scales": [0.875]
             }
         )";
 
         auto js = nlohmann::json::parse(jsstring);
-        multicrop::config mc_config_ptr(js);
+        multicrop::config mc_config(js);
+        image::param_factory factory(mc_config.crop_config);
+        shared_ptr<image::params> params_ptr = factory.make_params(decoded);
 
-        multicrop::transformer trans{mc_config_ptr};
-        shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
+        multicrop::transformer trans{mc_config};
+        shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
 
         cv::Mat image = transformed->get_image(0);
         EXPECT_EQ(224,image.size().width);
@@ -520,20 +529,22 @@ TEST(image, multi_crop) {
     {
         auto jsstring = R"(
             {
-                "width": 112,
-                "height": 112,
-                "multicrop_scales": [0.875],
-                "include_flips": false
+                "crop_config": {"width": 112,
+                                "height": 112,
+                                "flip_enable": false},
+                "crop_scales": [0.875]
             }
         )";
         using namespace cv;
         using idxPt = std::pair<int, Point2i>;
 
         auto js = nlohmann::json::parse(jsstring);
-        multicrop::config mc_config_ptr(js);
+        multicrop::config mc_config(js);
+        image::param_factory factory(mc_config.crop_config);
+        shared_ptr<image::params> params_ptr = factory.make_params(decoded);
 
-        multicrop::transformer trans{mc_config_ptr};
-        shared_ptr<image::decoded> transformed = trans.transform(nullptr, decoded);
+        multicrop::transformer trans{mc_config};
+        shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
 
 
         EXPECT_EQ(transformed->get_image_count(), 5);
