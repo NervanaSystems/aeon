@@ -60,7 +60,7 @@ void block_loader_nds::loadBlock(nervana::buffer_in_array& dest, uint block_num)
 
     // parse cpio_stream into dest one record (consisting of multiple elements) at a time
     nervana::cpio::reader reader(&cpio_stream);
-    for(int i=0; i < reader.itemCount(); ++i) {
+    for(int i=0; i < reader.itemCount() / dest.size(); ++i) {
         for (auto d: dest) {
             reader.read(*d);
         }
