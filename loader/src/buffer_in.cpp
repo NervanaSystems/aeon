@@ -32,7 +32,6 @@ void buffer_in::reset() {
 }
 
 void buffer_in::shuffle(uint seed) {
-    // TODO: instead of reseeding the shuffle, store these in a pair
     std::minstd_rand0 rand_items(seed);
     std::shuffle(buffers.begin(), buffers.end(), rand_items);
 }

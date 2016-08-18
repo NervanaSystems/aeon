@@ -43,7 +43,6 @@ public:
     void shuffle(uint seed);
 
     int get_item_count();
-    uint size();
 
 private:
     std::vector<std::vector<char>> buffers;
