@@ -20,7 +20,7 @@ using namespace std;
 
 image_localization::image_localization(nlohmann::json js) :
     image_config(js["image"]),
-    localization_config(js["localization"]),
+    localization_config(js["localization"], image_config),
     image_extractor(image_config),
     image_transformer(image_config),
     image_loader(image_config),

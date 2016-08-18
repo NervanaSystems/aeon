@@ -19,7 +19,9 @@
 using namespace std;
 using namespace nervana;
 
-nervana::localization::config::config(nlohmann::json js)
+nervana::localization::config::config(nlohmann::json js, const image_var::config& iconfig) :
+    min_size{iconfig.min_size},
+    max_size{iconfig.max_size}
 {
     if(js.is_null()) {
         throw std::runtime_error("missing localization config in json config");

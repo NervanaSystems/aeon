@@ -46,8 +46,10 @@ static string read_file( const string& path ) {
 }
 
 static localization::config make_localization_config() {
+    nlohmann::json ijs = {{"min_size",600},{"max_size",1000},{"channels",3},{"flip_enable", false}};
     nlohmann::json js = {{"labels",label_list},{"max_gt_boxes",64}};
-    return localization::config(js);
+    image_var::config icfg{ijs};
+    return localization::config(js, icfg);
 }
 
 TEST(localization,generate_anchors) {
@@ -87,13 +89,11 @@ TEST(localization,generate_anchors) {
     anchor _anchor{cfg};
     vector<box> actual = _anchor.generate_anchors();
     ASSERT_EQ(expected.size(),actual.size());
-    for(int i=0; i<expected.size(); i++) {
-        EXPECT_EQ(expected[i], actual[i]);
-    }
-
     EXPECT_EQ(34596,cfg.total_anchors());
-
     EXPECT_EQ((9 * (62 * 62)),_anchor.all_anchors.size());
+    for(int i=0; i<expected.size(); i++) {
+        ASSERT_EQ(expected[i], actual[i]);
+    }
 }
 
 void plot(const vector<box>& list, const string& prefix) {
@@ -220,9 +220,11 @@ void plot(const string& path) {
 // }
 
 TEST(localization,config) {
+    nlohmann::json ijs = {{"min_size",300},{"max_size",400},{"channels",3},{"flip_enable", false}};
     nlohmann::json js = {{"labels",label_list},{"max_gt_boxes",100}};
+    image_var::config icfg{ijs};
 
-    EXPECT_NO_THROW(localization::config cfg(js));
+    EXPECT_NO_THROW(localization::config cfg(js, icfg));
 }
 
 TEST(localization, sample_anchors) {
@@ -260,17 +262,6 @@ TEST(localization, sample_anchors) {
 }
 
 TEST(localization, transform) {
-//    {
-//        string data = read_file(CURDIR"/test_data/000001.json");
-//        localization::extractor extractor{label_list};
-//        localization::transformer transformer;
-//        auto mdata = extractor.extract(&data[0],data.size());
-//        auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);
-//        ASSERT_NE(nullptr,decoded);
-//        auto params = make_shared<image::params>();
-//        transformer.transform(params, decoded);
-//        auto boxes = decoded->boxes();
-//    }
     {
         string data = read_file(CURDIR"/test_data/006637.json");
         auto cfg = make_localization_config();
@@ -281,17 +272,7 @@ TEST(localization, transform) {
         shared_ptr<image_var::params> params = make_shared<image_var::params>();
         params->debug_deterministic = true;
         shared_ptr<localization::decoded> transformed_data = transformer.transform(params, decoded_data);
-
-//        for(auto v: bbox_stuff) cout << v.first << ", " << v.second << endl;
     }
-//    {
-//        string data = read_file(CURDIR"/test_data/009952.json");
-//        localization::extractor extractor{label_list};
-//        auto mdata = extractor.extract(&data[0],data.size());
-//        auto decoded = static_pointer_cast<nervana::localization::decoded>(mdata);
-//        ASSERT_NE(nullptr,decoded);
-//        auto boxes = decoded->boxes();
-//    }
 }
 
 TEST(localization, loader) {
@@ -856,8 +837,6 @@ TEST(localization,provider) {
                             {"channel_major",false},
                             {"flip_enable",true}}},
                          {"localization", {
-                            {"min_size", 600},
-                            {"max_size", 1000},
                             {"max_gt_boxes", 64},
                             {"labels", {"bicycle", "person"}}
                           }}};
@@ -923,8 +902,6 @@ TEST(localization,provider_channel_major) {
                             {"channel_major",true},
                             {"flip_enable",true}}},
                          {"localization", {
-                            {"min_size", 600},
-                            {"max_size", 1000},
                             {"max_gt_boxes", 64},
                             {"labels", {"bicycle", "person"}}
                           }}};

@@ -83,19 +83,18 @@ namespace nervana {
 
     class localization::config : public nervana::interface::config {
     public:
-        size_t              images_per_batch = 1;
-        size_t              rois_per_image = 256;
-        size_t              min_size = 600;
-        size_t              max_size = 1000;
-        size_t              base_size = 16;
-        float               scaling_factor = 1.0 / 16.;
-        std::vector<float>  ratios = {0.5, 1, 2};
-        std::vector<float>  scales = {8, 16, 32};
-        float               negative_overlap = 0.3;  // negative anchors have < 0.3 overlap with any gt box
-        float               positive_overlap = 0.7;  // positive anchors have > 0.7 overlap with at least one gt box
-        float               foreground_fraction = 0.5;  // at most, positive anchors are 0.5 of the total rois
-        std::string         type_string = "float";
-        size_t              max_gt_boxes = 64;
+        size_t                      rois_per_image = 256;
+        size_t                      min_size;
+        size_t                      max_size;
+        size_t                      base_size = 16;
+        float                       scaling_factor = 1.0 / 16.;
+        std::vector<float>          ratios = {0.5, 1, 2};
+        std::vector<float>          scales = {8, 16, 32};
+        float                       negative_overlap = 0.3;  // negative anchors have < 0.3 overlap with any gt box
+        float                       positive_overlap = 0.7;  // positive anchors have > 0.7 overlap with at least one gt box
+        float                       foreground_fraction = 0.5;  // at most, positive anchors are 0.5 of the total rois
+        std::string                 type_string = "float";
+        size_t                      max_gt_boxes = 64;
         std::vector<std::string>    labels;
 
         enum class buffer_index {
@@ -114,7 +113,7 @@ namespace nervana {
         size_t output_buffer_size;
         std::unordered_map<std::string,int> label_map;
 
-        config(nlohmann::json js);
+        config(nlohmann::json js, const image_var::config& iconfig);
 
         size_t total_anchors() const {
             return ratios.size() * scales.size() * (int)pow(int(std::floor(max_size * scaling_factor)),2);
@@ -122,10 +121,7 @@ namespace nervana {
 
     private:
         std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
-            ADD_SCALAR(images_per_batch, mode::OPTIONAL),
             ADD_SCALAR(rois_per_image, mode::OPTIONAL),
-            ADD_SCALAR(min_size, mode::OPTIONAL),
-            ADD_SCALAR(max_size, mode::OPTIONAL),
             ADD_SCALAR(base_size, mode::OPTIONAL),
             ADD_SCALAR(scaling_factor, mode::OPTIONAL),
             ADD_SCALAR(ratios, mode::OPTIONAL),
