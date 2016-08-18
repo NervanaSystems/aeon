@@ -40,14 +40,10 @@ block_loader_nds::block_loader_nds(const std::string baseurl, const std::string 
       _shard_count(shard_count), _shard_index(shard_index) {
     assert(shard_index < shard_count);
 
-    // reuse curl connection across requests
-    _curl = curl_easy_init();
-
     loadMetadata();
 }
 
 block_loader_nds::~block_loader_nds() {
-    curl_easy_cleanup(_curl);
 }
 
 void block_loader_nds::loadBlock(nervana::buffer_in_array& dest, uint block_num) {
@@ -68,6 +64,9 @@ void block_loader_nds::loadBlock(nervana::buffer_in_array& dest, uint block_num)
 }
 
 void block_loader_nds::get(const string url, stringstream &stream) {
+    // reuse curl connection across requests
+    _curl = curl_easy_init();
+
     // given a url, make an HTTP GET request and fill stream with
     // the body of the response
 
@@ -91,8 +90,12 @@ void block_loader_nds::get(const string url, stringstream &stream) {
         ss << "HTTP GET on " << url << "failed. ";
         ss << "status code: " << http_code << ". ";
         ss << curl_easy_strerror(res);
+
+        curl_easy_cleanup(_curl);
         throw std::runtime_error(ss.str());
     }
+
+    curl_easy_cleanup(_curl);
 }
 
 const string block_loader_nds::loadBlockURL(uint block_num) {
