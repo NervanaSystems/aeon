@@ -28,7 +28,10 @@ build_test: Makefile
 	@cd src && make loader.a HAS_GPU=$(HAS_GPU) -j8
 	@cd test && make test HAS_GPU=$(HAS_GPU) -j8
 
-.PHONY: all test bin/loader.so build_test
+install_test:
+	@pip install flask
+
+.PHONY: all test bin/loader.so build_test install_test
 
 clean:
 	@cd src  && make clean
