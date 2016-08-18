@@ -100,7 +100,7 @@ void block_loader_nds::get(const string url, stringstream &stream) {
 
 const string block_loader_nds::loadBlockURL(uint block_num) {
     stringstream ss;
-    ss << _baseurl << "/macrobatch?";
+    ss << _baseurl << "/macrobatch/?";
     ss << "macro_batch_index=" << block_num;
     ss << "&macro_batch_max_size=" << _block_size;
     ss << "&collection_id=" << _collection_id;
@@ -112,7 +112,7 @@ const string block_loader_nds::loadBlockURL(uint block_num) {
 
 const string block_loader_nds::metadataURL() {
     stringstream ss;
-    ss << _baseurl << "/object_count?";
+    ss << _baseurl << "/object_count/?";
     ss << "macro_batch_max_size=" << _block_size;
     ss << "&collection_id=" << _collection_id;
     ss << "&shard_count=" << _shard_count;
