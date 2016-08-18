@@ -622,7 +622,7 @@ TEST(image,calculate_scale_shape) {
 
 TEST(image,transform)
 {
-    vector<char> image_data = read_file_contents(CURDIR"/test_data/duty_calls.png");
+    vector<char> image_data = read_file_contents(CURDIR"/test_data/img_2112_70.jpg");
 //        vector<char> image_data = read_file_contents(CURDIR"/test_data/test_image.jpg");
     {
         int height = 128;
