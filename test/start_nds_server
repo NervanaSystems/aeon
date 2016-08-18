@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# hard fail if there are any bash errors
+set -e
+
+# cd into the directory that this script is in
+cd "$(dirname "$0")"
+
+# kill the python process when this bash process gets terminated
+trap 'kill $(jobs -p)' EXIT
+
+# run nds_server
+python nds_server.py
