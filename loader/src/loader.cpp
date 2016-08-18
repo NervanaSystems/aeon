@@ -133,10 +133,15 @@ void decode_thread_pool::work(int id)
 
     // No locking required because threads write into non-overlapping regions.
     try {
+        if((*_inputBuf)[0]->get_item_count() == 0) {
+            throw std::runtime_error("input buffer to decoded_thread_pool is empty");
+        }
+
         for (int i = _startInds[id]; i < _endInds[id]; i++) {
             _providers[id]->provide(i, *_inputBuf, _out->get_for_write());
         }
     } catch (std::exception& e) {
+        cout << "decode_thread_pool exception: " << e.what() << endl;
         _out->write_exception(std::current_exception());
     }
 
@@ -170,14 +175,19 @@ void decode_thread_pool::produce()
             }
             _endSignaled = 0;
         }
-        // At this point, we have decoded data for the whole minibatch.
-        buffer_out_array& outBuf = _out->get_for_write();
 
-        // Do any messy cross datum stuff you may need to do that requires minibatch consistency
-        _providers[0]->post_process(outBuf);
+        try {
+            // At this point, we have decoded data for the whole minibatch.
+            buffer_out_array& outBuf = _out->get_for_write();
 
-        // Copy to device.
-        _python_backend->call_backend_transfer(outBuf, _bufferIndex);
+            // Do any messy cross datum stuff you may need to do that requires minibatch consistency
+            _providers[0]->post_process(outBuf);
+
+            // Copy to device.
+            _python_backend->call_backend_transfer(outBuf, _bufferIndex);
+        } catch (std::exception& e) {
+            cout << "exception in provider post_process/call to backend transfer: " << e.what();
+        }
 
         _bufferIndex = (_bufferIndex == 0) ? 1 : 0;
         _out->advance_write_pos();
@@ -207,7 +217,6 @@ void decode_thread_pool::manage()
 {
     try {
         // Thread function.
-        // int result = _device->init();
         int result = 0;
         if (result != 0) {
             _stopManager = true;
@@ -239,10 +248,20 @@ void read_thread_pool::work(int id)
             _out->wait_for_non_full(lock);
         }
 
-        try {
-            _batch_iterator->read(_out->get_for_write());
-        } catch(std::exception& e) {
-            _out->write_exception(std::current_exception());
+        uint tries = 0;
+        while(tries < 3) {
+            try {
+                tries += 1;
+                _batch_iterator->read(_out->get_for_write());
+                break;
+            } catch(std::exception& e) {
+                cout << "read_thread_pool exception:" << e.what() << endl;
+                _out->write_exception(std::current_exception());
+            }
+        }
+        if(tries == 3) {
+            cout << "tried reading 3 times and failed.  Giving up";
+            throw std::runtime_error("tried 3 times to read from batch_iterator and failed each time.");
         }
 
         _out->advance_write_pos();
@@ -356,6 +375,7 @@ int loader::start()
     }
     _decode_thread_pool->start();
     _read_thread_pool->start();
+
     return 0;
 }
 
@@ -397,10 +417,11 @@ PyObject* loader::next(int bufIdx)
         _decode_buffers->advance_read_pos();
         _decode_buffers->signal_not_full();
     }
+
     while (_decode_buffers->empty()) {
         _decode_buffers->wait_for_not_empty(lock);
     }
-    // TODO: should this actually be somewhere above the various locks/signals?
+
     _decode_buffers->reraise_exception();
     return _python_backend->get_host_tuple(bufIdx);
 }
