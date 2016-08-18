@@ -25,10 +25,16 @@ block_iterator_sequential::block_iterator_sequential(shared_ptr<block_loader> lo
 
 void block_iterator_sequential::read(nervana::buffer_in_array& dest)
 {
-    _loader->loadBlock(dest, _i);
+    // increment i before calling loadBlock so that if loadBlock throws an
+    // exception, we've still incremented _i and the next call will request
+    // the next i.  The policy here therefor is to skip blocks which throw
+    // exceptions, there is no retry logic.
+    auto i = _i;
     if (++_i == _count) {
         reset();
     }
+
+    _loader->loadBlock(dest, i);
 }
 
 void block_iterator_sequential::reset()
