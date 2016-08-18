@@ -18,16 +18,43 @@
 
 #include "json.hpp"
 #include "manifest_nds.hpp"
+#include "interface.hpp"
 
 using namespace std;
 using namespace nervana;
 
 manifest_nds::manifest_nds(const std::string filename) {
-    auto j = nlohmann::json::parse(filename);
+    // parse json
+    nlohmann::json j;
+    try {
+        ifstream ifs(filename);
+        ifs >> j;
+    } catch (std::exception& ex) {
+        stringstream ss;
+        ss << "Error while parsing manifest json: " << filename << " : ";
+        ss << ex.what();
+        throw std::runtime_error(ss.str());
+    }
 
-    baseurl = j["baseurl"];
-    token = j["params"]["token"];
-    collection_id = j["params"]["collection_id"];
+    // extract manifest params from parsed json
+    try {
+
+        interface::config::parse_value(baseurl, "url", j, interface::config::mode::REQUIRED);
+
+        auto val = j.find("params");
+        if(val != j.end()) {
+            nlohmann::json params = *val;
+            interface::config::parse_value(token, "token", params, interface::config::mode::REQUIRED);
+            interface::config::parse_value(collection_id, "collection_id", params, interface::config::mode::REQUIRED);
+        } else {
+            throw std::runtime_error("couldn't find key 'params' in nds manifest file.");
+        }
+    } catch (std::exception& ex) {
+        stringstream ss;
+        ss << "Error while pulling config out of manifest json: " << filename << " : ";
+        ss << ex.what();
+        throw std::runtime_error(ss.str());
+    }
 }
 
 string manifest_nds::hash() {
