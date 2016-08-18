@@ -734,3 +734,66 @@ TEST(image,config_bad_scale)
 
     EXPECT_THROW(image::config{js}, std::invalid_argument);
 }
+
+TEST(image,area_scale)
+{
+    vector<char> image_data = read_file_contents(CURDIR"/test_data/img_2112_70.jpg");
+    float max_cropbox_area;
+    float max_cropbox_ratio;
+    float source_image_area;
+
+    {
+        int height = 128;
+        int width = 256;
+        int channels = 3;
+        nlohmann::json js =
+        {
+            {"height",height},
+            {"width",width},
+            {"channels",channels},
+//            {"scale", {0.3, 0.3}},
+            {"channel_major",false},
+            {"do_area_scale", true},
+            {"flip_enable",false}
+        };
+
+        {
+            image::config           cfg{js};
+            image::extractor        extractor{cfg};
+            image::param_factory    factory(cfg);
+
+            auto decoded = extractor.extract(image_data.data(), image_data.size());
+            source_image_area = decoded->get_image_size().area();
+
+            shared_ptr<image::params> params = factory.make_params(decoded);
+            max_cropbox_area = params->cropbox.area();
+            max_cropbox_ratio = max_cropbox_area / source_image_area;
+        }
+        {
+            js["scale"] = {0.3, 0.3};
+            image::config           cfg{js};
+            image::extractor        extractor{cfg};
+            image::param_factory    factory(cfg);
+
+            auto decoded = extractor.extract(image_data.data(), image_data.size());
+
+            shared_ptr<image::params> params = factory.make_params(decoded);
+            float cropbox_area = params->cropbox.area();
+            float cropbox_ratio = cropbox_area / source_image_area;
+            EXPECT_NEAR(0.3, cropbox_ratio, 0.0001);
+        }
+        {
+            js["scale"] = {0.8, 0.8};
+            image::config           cfg{js};
+            image::extractor        extractor{cfg};
+            image::param_factory    factory(cfg);
+
+            auto decoded = extractor.extract(image_data.data(), image_data.size());
+
+            shared_ptr<image::params> params = factory.make_params(decoded);
+            float cropbox_area = params->cropbox.area();
+            float cropbox_ratio = cropbox_area / source_image_area;
+            EXPECT_FLOAT_EQ(max_cropbox_ratio, cropbox_ratio);
+        }
+    }
+}

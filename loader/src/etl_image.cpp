@@ -165,12 +165,12 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
     // Must use this method for creating a shared_ptr rather than make_shared
     // since the params default ctor is private and factory is friend
     // make_shared is not friend :(
-    auto imgstgs = shared_ptr<image::params>(new image::params());
+    auto settings = shared_ptr<image::params>(new image::params());
 
-    imgstgs->output_size = cv::Size2i(_cfg.width, _cfg.height);
+    settings->output_size = cv::Size2i(_cfg.width, _cfg.height);
 
-    imgstgs->angle = _cfg.angle(_dre);
-    imgstgs->flip  = _cfg.flip_distribution(_dre);
+    settings->angle = _cfg.angle(_dre);
+    settings->flip  = _cfg.flip_distribution(_dre);
 
     cv::Size2f in_size = input->get_image_size();
 
@@ -180,7 +180,17 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
 
     cv::Size2f cropbox_size = cropbox_max_proportional(in_size, out_shape);
     if(_cfg.do_area_scale) {
-        throw std::runtime_error("area scale not implemented");
+        float in_area = in_size.area();
+        float crop_area = cropbox_size.area();
+        float size_ratio = crop_area / in_area;
+        if(size_ratio > scale) {
+            float crop_aspect_ratio = cropbox_size.width / cropbox_size.height;
+            crop_area = in_area * scale;
+            float w2 = crop_area * crop_aspect_ratio;
+            float width = sqrt(w2);
+            float height = crop_area / width;
+            cropbox_size = cv::Size2f(width, height);
+        }
     } else {
         cropbox_size = cropbox_linear_scale(cropbox_size, scale);
     }
@@ -189,20 +199,20 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
     float c_off_y = _cfg.crop_offset(_dre);
 
     cv::Point2f cropbox_origin = cropbox_shift(in_size, cropbox_size, c_off_x, c_off_y);
-    imgstgs->cropbox = cv::Rect(cropbox_origin, cropbox_size);
+    settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
 
     if (_cfg.lighting.stddev() != 0) {
         for( int i=0; i<3; i++ ) {
-            imgstgs->lighting.push_back(_cfg.lighting(_dre));
+            settings->lighting.push_back(_cfg.lighting(_dre));
         }
-        imgstgs->color_noise_std = _cfg.lighting.stddev();
+        settings->color_noise_std = _cfg.lighting.stddev();
     }
     if (_cfg.photometric.a()!=_cfg.photometric.b()) {
         for( int i=0; i<3; i++ ) {
-            imgstgs->photometric.push_back(_cfg.photometric(_dre));
+            settings->photometric.push_back(_cfg.photometric(_dre));
         }
     }
-    return imgstgs;
+    return settings;
 }
 
 void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::decoded> input)
