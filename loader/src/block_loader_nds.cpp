@@ -22,6 +22,7 @@
 
 #include "json.hpp"
 #include "block_loader_nds.hpp"
+#include "interface.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -124,12 +125,23 @@ const string block_loader_nds::metadataURL() {
 void block_loader_nds::loadMetadata() {
     // fetch metadata and store in local attributes
 
-    stringstream cpio_stream;
-    get(metadataURL(), cpio_stream);
-    auto metadata = nlohmann::json::parse(cpio_stream.str());
+    stringstream json_stream;
+    get(metadataURL(), json_stream);
+    string json_str = json_stream.str();
+    nlohmann::json metadata;
+    try {
+        metadata = nlohmann::json::parse(json_str);
+    } catch (std::exception& ex) {
+        stringstream ss;
+        ss << "exception parsing metadata from nds ";
+        ss << metadataURL() << " " << ex.what() << " ";
+        ss << json_str;
+        cout << "json_str: " << json_str << endl;
+        throw std::runtime_error(ss.str());
+    }
 
-    _objectCount = metadata["record_count"];
-    _blockCount = metadata["block_count"];
+    nervana::interface::config::parse_value(_objectCount, "record_count", metadata, nervana::interface::config::mode::REQUIRED);
+    nervana::interface::config::parse_value(_blockCount, "macro_batch_per_shard", metadata, nervana::interface::config::mode::REQUIRED);
 }
 
 uint block_loader_nds::objectCount() {
