@@ -380,3 +380,26 @@ TEST(util,split) {
     }
 }
 
+TEST(util,unbiased_round)
+{
+    EXPECT_EQ(2, nervana::unbiased_round(1.5));
+    EXPECT_EQ(2, nervana::unbiased_round(2.5));
+    EXPECT_EQ(0, nervana::unbiased_round(-0.5));
+    EXPECT_EQ(0, nervana::unbiased_round(0.5));
+    EXPECT_EQ(622, nervana::unbiased_round(622.5));
+    EXPECT_EQ(622, nervana::unbiased_round(621.5));
+    EXPECT_EQ(1, nervana::unbiased_round(1.1));
+    EXPECT_EQ(2, nervana::unbiased_round(2.1));
+    EXPECT_EQ(901, nervana::unbiased_round(900.9));
+    EXPECT_EQ(-1, nervana::unbiased_round(-1.1));
+    EXPECT_EQ(-2, nervana::unbiased_round(-2.1));
+    EXPECT_EQ(-2, nervana::unbiased_round(-2.5));
+    EXPECT_EQ(-2, nervana::unbiased_round(-1.5));
+}
+
+TEST(DISABLED_util,dump)
+{
+    string text = "this is a text string used to test the dump function.";
+
+    dump(cout, text.data(), text.size());
+}

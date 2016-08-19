@@ -13,7 +13,6 @@
  limitations under the License.
 */
 
-#include <assert.h>
 #if HAS_GPU
 #include <cuda.h>
 #endif
@@ -27,6 +26,7 @@
 #include <fstream>
 
 #include "buffer_pool_in.hpp"
+#include "util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -72,13 +72,13 @@ void buffer_pool_in::advance_write_pos()
 
 bool buffer_pool_in::empty()
 {
-    assert(_used >= 0);
+    affirm(_used >= 0, "buffer_pool_in used < 0");
     return (_used == 0);
 }
 
 bool buffer_pool_in::full()
 {
-    assert(_used <= _count);
+    affirm(_used <= _count, "buffer_pool_in used > count");
     return (_used == _count);
 }
 

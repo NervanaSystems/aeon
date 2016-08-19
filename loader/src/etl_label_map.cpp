@@ -20,7 +20,8 @@
 using namespace std;
 using namespace nervana::label_map;
 
-config::config(nlohmann::json js) {
+config::config(nlohmann::json js)
+{
     if(js.is_null()) {
         throw std::runtime_error("missing label_map config in json config");
     }
@@ -39,25 +40,28 @@ config::config(nlohmann::json js) {
     }
 }
 
-decoded::decoded() {
+decoded::decoded()
+{
 }
 
-extractor::extractor( const label_map::config& cfg) {
+extractor::extractor( const label_map::config& cfg)
+{
     int index = 0;
     for( const string& label : cfg.labels ) {
-        _dictionary.insert({label,index++});
+        dictionary.insert({label,index++});
     }
 }
 
-shared_ptr<decoded> extractor::extract(const char* data, int size) {
+shared_ptr<decoded> extractor::extract(const char* data, int size)
+{
     auto rc = make_shared<decoded>();
     stringstream ss( string(data, size) );
     string label;
     while( ss >> label ) {
-        auto l = _dictionary.find(label);
-        if( l != _dictionary.end() ) {
+        auto l = dictionary.find(label);
+        if( l != dictionary.end() ) {
             // found label
-            rc->_labels.push_back(l->second);
+            rc->labels.push_back(l->second);
         } else {
             // label not found in dictionary
             rc = nullptr;
@@ -71,7 +75,8 @@ transformer::transformer() {
 
 }
 
-shared_ptr<decoded> transformer::transform(shared_ptr<params> pptr, shared_ptr<decoded> media) {
+shared_ptr<decoded> transformer::transform(shared_ptr<params> pptr, shared_ptr<decoded> media)
+{
     return media;
 }
 
@@ -80,7 +85,8 @@ loader::loader(const nervana::label_map::config& cfg) :
 {
 }
 
-void loader::load(const vector<void*>& data, shared_ptr<decoded> media) {
+void loader::load(const vector<void*>& data, shared_ptr<decoded> media)
+{
     int i=0;
     uint32_t* data_p = (uint32_t*)data[0];
     for(; i<media->get_data().size() && i<max_label_count; i++ ) {

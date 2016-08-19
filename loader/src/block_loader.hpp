@@ -44,7 +44,7 @@ protected:
 // mock alphabet block loader for use in tests
 class nervana::block_loader_alphabet : public block_loader {
 public:
-    block_loader_alphabet(uint block_size) : block_loader(block_size) {}
+    block_loader_alphabet(uint block_size);
     void loadBlock(nervana::buffer_in_array &dest, uint block_num);
     uint objectCount() { return 26 * _block_size; }
 };

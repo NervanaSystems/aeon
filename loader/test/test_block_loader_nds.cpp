@@ -45,6 +45,7 @@ public:
     }
 
     ~NDSMockServer() {
+        cout << "killing mock nds server ..." << endl;
         // kill the python process running the mock NDS
         kill(_pid, 15);
     }
@@ -53,9 +54,17 @@ private:
     pid_t _pid;
 };
 
-NDSMockServer s;
+std::shared_ptr<NDSMockServer> mock_server;
+
+static void start_server()
+{
+    if(mock_server == nullptr) {
+        mock_server = make_shared<NDSMockServer>();
+    }
+}
 
 TEST(block_loader_nds, curl_stream) {
+    start_server();
     block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 
     stringstream stream;
@@ -69,6 +78,7 @@ TEST(block_loader_nds, curl_stream) {
 }
 
 TEST(block_loader_nds, object_count) {
+    start_server();
     block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 
     // 200 and 5 are hard coded in the mock nds server
@@ -78,6 +88,7 @@ TEST(block_loader_nds, object_count) {
 
 
 TEST(block_loader_nds, cpio) {
+    start_server();
     block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 
     buffer_in_array dest(2);

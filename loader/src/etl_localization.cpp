@@ -44,7 +44,7 @@ nervana::localization::config::config(nlohmann::json js, const image_var::config
     // # 3. objectness mask (ignore neutral anchors)
     // self.dev_y_labels_flat = self.be.zeros((1, self._total_anchors), dtype=np.int32)
     // self.dev_y_labels_mask = self.be.zeros((2 * self._total_anchors, 1), dtype=np.int32)
-    add_shape_type({1, total_anchors()}, "int32_t");
+    add_shape_type({1, total_anchors() * 2}, "int32_t");
     add_shape_type({total_anchors() * 2, 1}, "int32_t");
 
     // # we also consume some metadata for the proposalLayer
@@ -67,7 +67,8 @@ nervana::localization::config::config(nlohmann::json js, const image_var::config
     validate();
 }
 
-void nervana::localization::config::validate() {
+void nervana::localization::config::validate()
+{
     if(max_size < min_size) throw invalid_argument("max_size < min_size");
     if(negative_overlap    < 0.0) throw invalid_argument("negative_overlap");
     if(negative_overlap    > 1.0) throw invalid_argument("negative_overlap");
@@ -83,21 +84,21 @@ localization::extractor::extractor(const localization::config& cfg) :
 
 localization::transformer::transformer(const localization::config& _cfg) :
     cfg{_cfg},
-    _anchor{cfg}
+    all_anchors{anchor::generate(_cfg)}
 {
 }
 
 shared_ptr<localization::decoded> localization::transformer::transform(
                     shared_ptr<image_var::params> txs,
-                    shared_ptr<localization::decoded> mp) {
+                    shared_ptr<localization::decoded> mp)
+{
     cv::Size im_size{mp->width(), mp->height()};
     float im_scale;
     tie(im_scale, im_size) = image::calculate_scale_shape(im_size, cfg.min_size, cfg.max_size);
     mp->image_scale = im_scale;
-    mp->image_size = im_size;
+    mp->output_image_size = im_size;
 
-    vector<int> idx_inside = _anchor.inside_image_bounds(im_size.width, im_size.height);
-    const vector<box> all_anchors = _anchor.get_all_anchors();
+    vector<int> idx_inside = anchor::inside_image_bounds(im_size.width, im_size.height, all_anchors);
     vector<box> anchors_inside;
     for(int i : idx_inside) anchors_inside.push_back(all_anchors[i]);
 
@@ -109,14 +110,11 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     }
     cv::Mat overlaps = bbox_overlaps(anchors_inside, scaled_bbox);
 
-    vector<int> labels(overlaps.rows);
-    fill_n(labels.begin(),labels.size(),-1.);
+    vector<int> labels(overlaps.rows, -1.0);
 
     // assign bg labels first
-    vector<float> row_max(overlaps.rows);
-    vector<float> column_max(overlaps.cols);
-    fill_n(row_max.begin(),overlaps.rows,0);
-    fill_n(column_max.begin(),overlaps.cols,0);
+    vector<float> row_max(overlaps.rows, 0.0);
+    vector<float> column_max(overlaps.cols, 0.0);
     for(int row=0; row<overlaps.rows; row++) {
         for(int col=0; col<overlaps.cols; col++) {
             auto value = overlaps.at<float>(row,col);
@@ -172,8 +170,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
 
     // map lists to original canvas
     {
-        vector<int> t_labels(all_anchors.size());
-        fill_n(t_labels.begin(), t_labels.size(), -1);
+        vector<int> t_labels(all_anchors.size(), -1);
         vector<target> t_bbox_targets(all_anchors.size());
         for(int i=0; i<idx_inside.size(); i++) {
             int index = idx_inside[i];
@@ -192,7 +189,8 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     return mp;
 }
 
-vector<int> localization::transformer::sample_anchors(const vector<int>& labels, bool debug) {
+vector<int> localization::transformer::sample_anchors(const vector<int>& labels, bool debug)
+{
     // subsample labels if needed
     int num_fg = int(cfg.foreground_fraction * cfg.rois_per_image);
     vector<int> fg_idx;
@@ -223,7 +221,8 @@ vector<int> localization::transformer::sample_anchors(const vector<int>& labels,
     return result_idx;
 }
 
-vector<localization::target> localization::transformer::compute_targets(const vector<box>& gt_bb, const vector<box>& rp_bb) {
+vector<localization::target> localization::transformer::compute_targets(const vector<box>& gt_bb, const vector<box>& rp_bb)
+{
     //  Given ground truth bounding boxes and proposed boxes, compute the regresssion
     //  targets according to:
 
@@ -251,7 +250,8 @@ vector<localization::target> localization::transformer::compute_targets(const ve
     return targets;
 }
 
-cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const vector<box>& bounding_boxes) {
+cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const vector<box>& bounding_boxes)
+{
     // Parameters
     // ----------
     // boxes: (N, 4) ndarray of float
@@ -287,7 +287,6 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const
     }
     return overlaps;
 }
-
 
 localization::loader::loader(const localization::config& cfg)
 {
@@ -326,28 +325,30 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
 
     for(int i = 0; i<total_anchors * 4; i++) bbtargets[i] = 0.;
     for(int i = 0; i<total_anchors * 4; i++) bbtargets_mask[i] = 0.;
-    for(int i = 0; i<total_anchors; i++) labels_flat[i] = 0;
+    for(int i = 0; i<total_anchors; i++) labels_flat[i] = 1;
+    for(int i = 0; i<total_anchors; i++) labels_flat[i + total_anchors] = 0;
     for(int i = 0; i<total_anchors * 2; i++) labels_mask[i] = 0;
     for(int index : mp->anchor_index) {
         if(mp->labels[index] == 1) {
-            labels_flat[index] = 1;
+            labels_flat[index + total_anchors * 0] = 0;
+            labels_flat[index + total_anchors * 1] = 1;
+
+            bbtargets_mask[index + total_anchors * 0] = 1.;
+            bbtargets_mask[index + total_anchors * 1] = 1.;
+            bbtargets_mask[index + total_anchors * 2] = 1.;
+            bbtargets_mask[index + total_anchors * 3] = 1.;
         }
         labels_mask[index] = 1;
         labels_mask[index+total_anchors] = 1;
 
-        bbtargets[index]                 = mp->bbox_targets[index].dx;
-        bbtargets[index+total_anchors]   = mp->bbox_targets[index].dy;
-        bbtargets[index+total_anchors*2] = mp->bbox_targets[index].dw;
-        bbtargets[index+total_anchors*3] = mp->bbox_targets[index].dh;
-
-        bbtargets_mask[index]                 = 1.;
-        bbtargets_mask[index+total_anchors]   = 1.;
-        bbtargets_mask[index+total_anchors*2] = 1.;
-        bbtargets_mask[index+total_anchors*3] = 1.;
+        bbtargets[index + total_anchors * 0] = mp->bbox_targets[index].dx;
+        bbtargets[index + total_anchors * 1] = mp->bbox_targets[index].dy;
+        bbtargets[index + total_anchors * 2] = mp->bbox_targets[index].dw;
+        bbtargets[index + total_anchors * 3] = mp->bbox_targets[index].dh;
     }
 
-    im_shape[0] = mp->height();
-    im_shape[1] = mp->width();
+    im_shape[0] = mp->output_image_size.width;
+    im_shape[1] = mp->output_image_size.height;
 
     *num_gt_boxes = min(max_gt_boxes, mp->boxes().size());
     for(int i=0; i<*num_gt_boxes; i++) {
@@ -369,29 +370,15 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
     *im_scale = mp->image_scale;
 }
 
-localization::anchor::anchor(const localization::config& _cfg) :
-    cfg{_cfg},
-    conv_size{int(std::floor(cfg.max_size * cfg.scaling_factor))}
+vector<box> localization::anchor::generate(const localization::config& cfg)
 {
-    all_anchors = add_anchors();
-}
+    int conv_size = int(std::floor(cfg.max_size * cfg.scaling_factor));
 
-vector<int> localization::anchor::inside_image_bounds(int width, int height) {
-    vector<int> rc;
-    for(int i=0; i<all_anchors.size(); i++) {
-        const box& b = all_anchors[i];
-        if( b.xmin >= 0 && b.ymin >= 0 && b.xmax < width && b.ymax < height ) {
-            rc.emplace_back(i);
-        }
-    }
-    return rc;
-}
-
-vector<box> localization::anchor::add_anchors() {
-    vector<box> anchors = generate_anchors();
+    vector<box> anchors = generate_anchors(cfg.base_size, cfg.ratios, cfg.scales);
+    std::vector<box> all_anchors;
 
     // generate shifts to apply to anchors
-    // note: 1/self.SCALE is the feature stride
+    // note: 1/SCALE is the feature stride
     vector<float> shift_x;
     vector<float> shift_y;
     for(float i=0; i<conv_size; i++) {
@@ -406,24 +393,35 @@ vector<box> localization::anchor::add_anchors() {
         }
     }
 
-    vector<box> all_anchors;
     for(const box& anchor_data : anchors ) {
         for(const box& row_data : shifts ) {
             box b = row_data+anchor_data;
             all_anchors.push_back(b);
         }
     }
-
     return all_anchors;
 }
 
-vector<box> localization::anchor::generate_anchors() {
-    box anchor{0.,0.,(float)(cfg.base_size-1),(float)(cfg.base_size-1)};
-    vector<box> ratio_anchors = ratio_enum(anchor, cfg.ratios);
+vector<int> localization::anchor::inside_image_bounds(int width, int height, const vector<box>& all_anchors)
+{
+    vector<int> rc;
+    for(int i=0; i<all_anchors.size(); i++) {
+        const box& b = all_anchors[i];
+        if( b.xmin >= 0 && b.ymin >= 0 && b.xmax < width && b.ymax < height ) {
+            rc.emplace_back(i);
+        }
+    }
+    return rc;
+}
+
+vector<box> localization::anchor::generate_anchors(size_t base_size, const vector<float>& ratios, const vector<float>& scales)
+{
+    box anchor{0.,0.,(float)(base_size-1),(float)(base_size-1)};
+    vector<box> ratio_anchors = ratio_enum(anchor, ratios);
 
     vector<box> result;
     for(const box& ratio_anchor : ratio_anchors) {
-        for(const box& b : scale_enum(ratio_anchor, cfg.scales)) {
+        for(const box& b : scale_enum(ratio_anchor, scales)) {
             result.push_back(b);
         }
     }
@@ -431,7 +429,8 @@ vector<box> localization::anchor::generate_anchors() {
     return result;
 }
 
-vector<box> localization::anchor::mkanchors(const vector<float>& ws, const vector<float>& hs, float x_ctr, float y_ctr) {
+vector<box> localization::anchor::mkanchors(const vector<float>& ws, const vector<float>& hs, float x_ctr, float y_ctr)
+{
     vector<box> rc;
     for(int i=0; i<ws.size(); i++) {
         rc.emplace_back(x_ctr - 0.5 *(ws[i]-1),
@@ -442,7 +441,8 @@ vector<box> localization::anchor::mkanchors(const vector<float>& ws, const vecto
     return rc;
 }
 
-vector<box> localization::anchor::ratio_enum(const box& anchor, const vector<float>& ratios) {
+vector<box> localization::anchor::ratio_enum(const box& anchor, const vector<float>& ratios)
+{
     int size = anchor.width() * anchor.height();
     vector<float> size_ratios;
     vector<float> ws;
@@ -454,7 +454,8 @@ vector<box> localization::anchor::ratio_enum(const box& anchor, const vector<flo
     return mkanchors(ws, hs, anchor.xcenter(), anchor.ycenter());
 }
 
-vector<box> localization::anchor::scale_enum(const box& anchor, const vector<float>& scales) {
+vector<box> localization::anchor::scale_enum(const box& anchor, const vector<float>& scales)
+{
     vector<float> ws;
     vector<float> hs;
     for(float scale : scales) {

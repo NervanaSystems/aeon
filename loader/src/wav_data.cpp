@@ -120,7 +120,7 @@ namespace nervana {
         dh.dwDataLen     = nbytes();
 
         // buf.resize();
-        assert(bufsize >= HEADER_SIZE);
+        wav_assert(bufsize >= HEADER_SIZE, "buffer is too small");
 
         memcpy(buf, &rh, sizeof(rh)); buf += sizeof(rh);
         memcpy(buf, &fh, sizeof(fh)); buf += sizeof(fh);
@@ -130,7 +130,7 @@ namespace nervana {
 
     void wav_data::write_data(char* buf, uint32_t bufsize)
     {
-        assert(bufsize >= nbytes());
+        wav_assert(bufsize >= nbytes(), "buffer is too small");
         for (int n = 0; n < data.rows; n++) {
             int16_t *ptr = data.ptr<int16_t>(n);
             for (int c = 0; c < data.cols; c++) {

@@ -86,11 +86,11 @@ TEST(localization,generate_anchors) {
 
     auto cfg = make_localization_config();
 
-    anchor _anchor{cfg};
-    vector<box> actual = _anchor.generate_anchors();
+    vector<box> actual = anchor::generate_anchors(cfg.base_size, cfg.ratios, cfg.scales);
+    vector<box> all_anchors = anchor::generate(cfg);
     ASSERT_EQ(expected.size(),actual.size());
-    EXPECT_EQ(34596,cfg.total_anchors());
-    EXPECT_EQ((9 * (62 * 62)),_anchor.all_anchors.size());
+    EXPECT_EQ(34596,all_anchors.size());
+    EXPECT_EQ((9 * (62 * 62)),all_anchors.size());
     for(int i=0; i<expected.size(); i++) {
         ASSERT_EQ(expected[i], actual[i]);
     }
@@ -175,7 +175,7 @@ void plot(const string& path) {
 //    }
 
     {
-        cv::Mat img(extracted_metadata->image_size, CV_8UC3);
+        cv::Mat img(extracted_metadata->output_image_size, CV_8UC3);
         img = cv::Scalar(255,255,255);
         // Draw foreground boxes
         for(int i=0; i<anchor_index.size(); i++) {
@@ -195,7 +195,7 @@ void plot(const string& path) {
     }
 
     {
-        cv::Mat img(extracted_metadata->image_size, CV_8UC3);
+        cv::Mat img(extracted_metadata->output_image_size, CV_8UC3);
         img = cv::Scalar(255,255,255);
         // Draw background boxes
         for(int i=0; i<anchor_index.size(); i++) {
@@ -683,6 +683,7 @@ TEST(localization, loader) {
     vector<void*> buf_list;
     const vector<shape_type>& shapes = cfg.get_shape_type_list();
     ASSERT_EQ(9, shapes.size());
+    size_t total_anchors = 34596;
 
     bbtargets.resize(shapes[0].get_element_count());
     bbtargets_mask.resize(shapes[1].get_element_count());
@@ -693,6 +694,16 @@ TEST(localization, loader) {
     num_gt_boxes.resize(shapes[6].get_element_count());
     gt_classes.resize(shapes[7].get_element_count());
     im_scale.resize(shapes[8].get_element_count());
+
+    ASSERT_EQ(total_anchors * 4, bbtargets.size());
+    ASSERT_EQ(total_anchors * 4, bbtargets_mask.size());
+    ASSERT_EQ(total_anchors * 2, labels_flat.size());
+    ASSERT_EQ(total_anchors * 2, labels_mask.size());
+    ASSERT_EQ(2, im_shape.size());
+    ASSERT_EQ(64 * 4, gt_boxes.size());
+    ASSERT_EQ(1, num_gt_boxes.size());
+    ASSERT_EQ(64, gt_classes.size());
+    ASSERT_EQ(1, im_scale.size());
 
     memset(bbtargets.data(), 0xFF, bbtargets.size()*sizeof(float));
     memset(bbtargets_mask.data(), 0xFF, bbtargets_mask.size()*sizeof(float));
@@ -718,21 +729,17 @@ TEST(localization, loader) {
 
 //    loader.build_output(transformed_data, labels, labels_mask, bbtargets, bbtargets_mask);
 
-    size_t anchors_total = 34596;
-    EXPECT_EQ(anchors_total, labels_flat.size());
-    EXPECT_EQ(2 * anchors_total, labels_mask.size());
-    EXPECT_EQ(anchors_total * 4, bbtargets.size());
-    EXPECT_EQ(anchors_total * 4, bbtargets_mask.size());
-
     //-------------------------------------------------------------------------
     // labels
     //-------------------------------------------------------------------------
-    for(size_t i=0; i<labels_flat.size(); i++) {
+    for(size_t i=0; i<labels_flat.size()/2; i++) {
         auto p = find(fg_idx.begin(), fg_idx.end(), i);
         if(p != fg_idx.end()) {
-            ASSERT_EQ(1, labels_flat[i]) << "at index " << i;
-        } else {
             ASSERT_EQ(0, labels_flat[i]) << "at index " << i;
+            ASSERT_EQ(1, labels_flat[i + total_anchors]) << "at index " << i;
+        } else {
+            ASSERT_EQ(1, labels_flat[i]) << "at index " << i;
+            ASSERT_EQ(0, labels_flat[i + total_anchors]) << "at index " << i;
         }
     }
 
@@ -763,17 +770,23 @@ TEST(localization, loader) {
     //-------------------------------------------------------------------------
     // bbtargets_mask
     //-------------------------------------------------------------------------
-    for(int i=0; i<bbtargets_mask.size(); i++) {
-        auto p = bbox_targets.find(i);
-        if(p != bbox_targets.end()) {
-            ASSERT_EQ(1., bbtargets_mask[i]) << "at index " << i;
+    for(int i=0; i<bbtargets_mask.size()/4; i++) {
+        auto fg = find(fg_idx.begin(), fg_idx.end(), i);
+        if(fg != fg_idx.end()) {
+            ASSERT_EQ(1, bbtargets_mask[i + total_anchors * 0]) << "at index " << i;
+            ASSERT_EQ(1, bbtargets_mask[i + total_anchors * 1]) << "at index " << i;
+            ASSERT_EQ(1, bbtargets_mask[i + total_anchors * 2]) << "at index " << i;
+            ASSERT_EQ(1, bbtargets_mask[i + total_anchors * 3]) << "at index " << i;
         } else {
-            ASSERT_EQ(0., bbtargets_mask[i]) << "at index " << i;
+            ASSERT_EQ(0, bbtargets_mask[i + total_anchors * 0]) << "at index " << i;
+            ASSERT_EQ(0, bbtargets_mask[i + total_anchors * 1]) << "at index " << i;
+            ASSERT_EQ(0, bbtargets_mask[i + total_anchors * 2]) << "at index " << i;
+            ASSERT_EQ(0, bbtargets_mask[i + total_anchors * 3]) << "at index " << i;
         }
     }
 
-    EXPECT_EQ(375, im_shape[0]) << "height";
-    EXPECT_EQ(500, im_shape[1]) << "width";
+    EXPECT_EQ(800, im_shape[0]) << "width";
+    EXPECT_EQ(600, im_shape[1]) << "height";
     EXPECT_EQ(6, num_gt_boxes[0]);
     for(int i=0; i<6; i++) {
         const boundingbox::box& box = transformed_data->boxes()[i];

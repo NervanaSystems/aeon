@@ -17,9 +17,8 @@
 
 #include <iostream>
 #include <sstream>
-#include <cassert>
 #include <vector>
-
+#include <stdexcept>
 
 namespace nervana {
 
@@ -58,11 +57,12 @@ namespace nervana {
         return ss.str();
     }
 
-    void dump( const void*, size_t );
+    void dump(std::ostream& out, const void*, size_t);
 
     std::string tolower(const std::string& s);
     std::vector<std::string> split(const std::string& s, char delimiter);
 
+    size_t unbiased_round(float f);
     int LevenshteinDistance(const std::string& s1, const std::string& s2);
 
     template<typename CharT, typename TraitsT = std::char_traits<CharT> >
@@ -104,4 +104,6 @@ namespace nervana {
     private:
         memstream<char> wrapper;
     };
+
+    void affirm(bool cond, const std::string& msg);
 }

@@ -13,7 +13,6 @@
  limitations under the License.
 */
 
-#include <assert.h>
 #if HAS_GPU
 #include <cuda.h>
 #endif

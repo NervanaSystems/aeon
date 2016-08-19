@@ -15,36 +15,50 @@
 
 #include <algorithm>
 #include <string>
+#include <cmath>
+#include <cassert>
+#include <iomanip>
 
 #include "util.hpp"
 
 using namespace std;
 
-void nervana::dump( const void* _data, size_t _size ) {
+void nervana::dump( ostream& out, const void* _data, size_t _size )
+{
     const uint8_t* data = reinterpret_cast<const uint8_t*>(_data);
     int len = _size;
-    assert(len % 16 == 0);
     int index = 0;
-    while (index < len) {
-        printf("%08x", index);
+    while (index < len)
+    {
+        out << std::hex << std::setw(8) << std::setfill('0') << index;
         for (int i = 0; i < 8; i++) {
-            printf(" %02x", data[i]);
+            if (index+i<len) {
+                out << " " << std::hex << std::setw(2) << std::setfill('0') << (uint32_t)data[i];
+            } else {
+                out << "   ";
+            }
         }
-        printf("  ");
+        cout << "  ";
         for (int i = 8; i < 16; i++) {
-            printf(" %02x", data[i]);
+            if (index+i<len) {
+                out << " " << std::hex << std::setw(2) << std::setfill('0') << (uint32_t)data[i];
+            } else {
+                out << "   ";
+            }
         }
-        printf(" ");
+        cout << "  ";
         for (int i = 0; i < 16; i++) {
-            printf("%c", (data[i] < 32)? '.' : data[i]);
+            char ch = (index+i<len ? data[i] : ' ');
+            cout << ((ch < 32) ? '.' : ch);
         }
-        printf("\n");
+        cout << "\n";
         data += 16;
         index += 16;
     }
 }
 
-std::string nervana::tolower(const std::string& s) {
+std::string nervana::tolower(const std::string& s)
+{
     std::string rc = s;
     std::transform(rc.begin(), rc.end(), rc.begin(), ::tolower);
     return rc;
@@ -106,4 +120,38 @@ int nervana::LevenshteinDistance(const string& s, const string& t)
     }
 
     return v1[t.size()];
+}
+
+size_t nervana::unbiased_round(float x)
+{
+    float i;
+    float fracpart = std::modf(x, &i);
+    int intpart = int(i);
+    int rc;
+
+    if (std::fabs(fracpart) == 0.5) {
+        if(intpart % 2 == 0) {
+            rc = intpart;
+        } else {
+
+            // return nearest even integer
+            rc = std::fabs(x) + 0.5;
+            rc = x < 0.0 ? -rc : rc;
+        }
+    } else {
+
+        // round to closest
+        rc = std::floor(std::fabs(x) + 0.5);
+        rc = x < 0.0 ? -rc : rc;
+
+    }
+    return rc;
+}
+
+void nervana::affirm(bool cond, const std::string& msg)
+{
+    if (!cond)
+    {
+        throw std::runtime_error(msg);
+    }
 }

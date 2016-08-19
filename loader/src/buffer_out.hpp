@@ -15,7 +15,6 @@
 
 #pragma once
 
-#include <assert.h>
 #include <vector>
 #include <cstring>
 #include <initializer_list>

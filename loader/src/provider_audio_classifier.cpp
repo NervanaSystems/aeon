@@ -41,11 +41,6 @@ void audio_classifier::provide(int idx, buffer_in_array& in_buf, buffer_out_arra
     char* datum_out  = out_buf[0]->get_item(idx);
     char* target_out = out_buf[1]->get_item(idx);
 
-    if (datum_in.size() == 0) {
-        cout << "no data " << idx << endl;
-        return;
-    }
-
     // Process audio data
     auto audio_dec = audio_extractor.extract(datum_in.data(), datum_in.size());
     auto audio_params = audio_factory.make_params(audio_dec);

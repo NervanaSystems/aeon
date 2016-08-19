@@ -14,6 +14,7 @@
 */
 
 #include "specgram.hpp"
+#include "util.hpp"
 
 using cv::Mat;
 using cv::Range;
@@ -44,7 +45,7 @@ void specgram::wav_to_specgram(const Mat& wav_col_mat,
         int num_frames = ((wav_mat.cols - frame_length_tn) / frame_stride_tn) + 1;
         num_frames = std::min(num_frames, max_time_steps);
         // ensure that there is enough data for at least one frame
-        assert(num_frames >= 0);
+        affirm(num_frames >= 0, "number of frames is negative");
 
         wav_frames.create(num_frames, frame_length_tn, wav_mat.type());
         for (int frame = 0; frame < num_frames; frame++) {
@@ -126,7 +127,7 @@ void specgram::cepsgram_to_mfcc(const Mat& cepsgram,
                                 const int num_cepstra,
                                 Mat& mfcc)
 {
-    assert(num_cepstra <= cepsgram.cols);
+    affirm(num_cepstra <= cepsgram.cols, "num_cepstra <= cepsgram.cols");
     Mat padcepsgram;
     if (cepsgram.cols % 2 == 0) {
         padcepsgram = cepsgram;

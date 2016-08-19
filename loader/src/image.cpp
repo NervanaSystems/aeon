@@ -16,6 +16,7 @@
 #include <iostream>
 
 #include "image.hpp"
+#include "util.hpp"
 
 using namespace nervana;
 using namespace std;
@@ -87,7 +88,7 @@ tuple<float,cv::Size> image::calculate_scale_shape(cv::Size size, int min_size, 
     if(round(im_scale * im_size_max) > max_size) {
         im_scale = float(max_size) / float(im_size_max);
     }
-    cv::Size im_shape{int(round(size.width*im_scale)), int(round(size.height*im_scale))};
+    cv::Size im_shape{int(unbiased_round(size.width*im_scale)), int(unbiased_round(size.height*im_scale))};
     return make_tuple(im_scale, im_shape);
 }
 

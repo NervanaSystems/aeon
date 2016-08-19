@@ -110,12 +110,12 @@ namespace nervana {
     class image_var::param_factory : public interface::param_factory<image_var::decoded, image_var::params> {
     public:
         param_factory(image_var::config& cfg) :
-            _cfg{cfg},
+            settings{cfg},
             generator{0}
         {
             // A positive provided seed means to run deterministic with that seed
-            if (_cfg.seed >= 0) {
-                generator.seed((uint32_t) _cfg.seed);
+            if (settings.seed >= 0) {
+                generator.seed((uint32_t) settings.seed);
             } else {
                 generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
             }
@@ -126,7 +126,7 @@ namespace nervana {
         std::shared_ptr<image_var::params> make_params(std::shared_ptr<const decoded>);
     private:
 
-        image_var::config&         _cfg;
+        image_var::config&         settings;
         std::default_random_engine generator;
     };
 
@@ -137,15 +137,15 @@ namespace nervana {
     class image_var::decoded : public interface::decoded_media {
     public:
         decoded() {}
-        decoded(cv::Mat img) : _image{img} {}
+        decoded(cv::Mat img) : image{img} {}
         virtual ~decoded() override {}
 
-        cv::Mat& get_image() { return _image; }
-        cv::Size2i get_image_size() const {return _image.size(); }
-        int get_image_channels() const { return _image.channels(); }
+        cv::Mat& get_image() { return image; }
+        cv::Size2i get_image_size() const {return image.size(); }
+        int get_image_channels() const { return image.channels(); }
 
     protected:
-        cv::Mat _image;
+        cv::Mat image;
     };
 
     class image_var::extractor : public interface::extractor<image_var::decoded> {
@@ -154,11 +154,11 @@ namespace nervana {
         virtual ~extractor() {}
         virtual std::shared_ptr<image_var::decoded> extract(const char*, int) override;
 
-        const int get_channel_count() {return _color_mode == CV_LOAD_IMAGE_COLOR ? 3 : 1;}
+        const int get_channel_count() {return color_mode == CV_LOAD_IMAGE_COLOR ? 3 : 1;}
         void resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size);
     private:
-        int _pixel_type;
-        int _color_mode;
+        int pixel_type;
+        int color_mode;
     };
 
     class image_var::transformer : public interface::transformer<image_var::decoded, image_var::params> {
@@ -170,8 +170,8 @@ namespace nervana {
                                                 std::shared_ptr<image_var::decoded>) override;
 
     private:
-        int min_size;
-        int max_size;
+        size_t min_size;
+        size_t max_size;
     };
 
     class image_var::loader : public interface::loader<image_var::decoded> {
@@ -180,17 +180,8 @@ namespace nervana {
         virtual ~loader() {}
         virtual void load(const std::vector<void*>&, std::shared_ptr<image_var::decoded>) override;
 
-//        void fill_info(count_size_type* cst) override
-//        {
-//            cst->count   = _load_count;
-//            cst->size    = _load_size;
-//            cst->type[0] = 'u';
-//        }
-
     private:
-        size_t _load_size;
-        void split(cv::Mat&, char*);
-        bool _channel_major;
-        const shape_type& stype;
+        bool                channel_major;
+        const shape_type&   stype;
     };
 }

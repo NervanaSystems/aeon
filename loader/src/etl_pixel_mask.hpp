@@ -31,7 +31,8 @@ namespace nervana {
     // Extract
     //-------------------------------------------------------------------------
 
-    class pixel_mask::extractor : public interface::extractor<image::decoded> {
+    class pixel_mask::extractor : public interface::extractor<image::decoded>
+    {
     public:
         extractor(const image::config&);
         virtual ~extractor();
@@ -43,7 +44,8 @@ namespace nervana {
     // Transform
     //-------------------------------------------------------------------------
 
-    class pixel_mask::transformer : public interface::transformer<image::decoded, image::params> {
+    class pixel_mask::transformer : public interface::transformer<image::decoded, image::params>
+    {
     public:
         transformer(const image::config&);
         ~transformer();

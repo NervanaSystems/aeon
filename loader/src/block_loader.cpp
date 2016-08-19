@@ -15,7 +15,9 @@
 
 #include <math.h>
 #include <sstream>
+
 #include "block_loader.hpp"
+#include "util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -34,6 +36,11 @@ uint block_loader::blockCount()
     return ceil((float)objectCount() / (float)_block_size);
 }
 
+block_loader_alphabet::block_loader_alphabet(uint block_size) :
+    block_loader(block_size)
+{
+    affirm(block_size < 26, "block_loader_alphabet block_size must be < 26");
+}
 
 void block_loader_alphabet::loadBlock(buffer_in_array &dest, uint block_num)
 {
@@ -41,8 +48,7 @@ void block_loader_alphabet::loadBlock(buffer_in_array &dest, uint block_num)
     // block_num 0: 'Aa', 'Ab', 'Ac'
     // block_num 1: 'Ba', 'Bb', 'Bc'
     // ...
-    assert(_block_size < 26);
-    assert(block_num < 26);
+    affirm(block_num < 26, "block_num must be < 26");
 
     for(uint i = 0; i < _block_size; ++i) {
         stringstream ss;

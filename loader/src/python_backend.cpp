@@ -127,8 +127,8 @@ void python_backend::call_backend_transfer(buffer_out_array &outBuf, int bufIdx)
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    assert(_host_lists.size() == _oshape_types.size());
-    assert(_dev_lists.size() == _host_lists.size());
+    affirm(_host_lists.size() == _oshape_types.size(), "host lists size does not match oshape size");
+    affirm(_dev_lists.size() == _host_lists.size(), "dev list size does not match host lists size");
 
     for (uint i=0; i<_host_lists.size(); i++) {
         wrap_buffer_pool(_host_lists[i], outBuf[i], bufIdx, _oshape_types[i]);

@@ -13,8 +13,6 @@
  limitations under the License.
 */
 
-#include <assert.h>
-
 #include <vector>
 #include <cstdio>
 #include <iostream>
@@ -36,15 +34,17 @@ using namespace nervana;
 decode_thread_pool::decode_thread_pool(int count,
                                        const shared_ptr<buffer_pool_in>& in,
                                        const shared_ptr<buffer_pool_out>& out,
-                                       const shared_ptr<python_backend>& pbe)
-: thread_pool(count), _in(in), _out(out),
-  _python_backend(pbe), _batchSize(_python_backend->_batchSize)
+                                       const shared_ptr<python_backend>& pbe) :
+    thread_pool(count),
+    _in(in),
+    _out(out),
+    _python_backend(pbe),
+    _batchSize(_python_backend->_batchSize)
 {
     _itemsPerThread = (_batchSize - 1) / _count + 1;
-    assert(_itemsPerThread * count >= _batchSize);
-    assert(_itemsPerThread * (count - 1) < _batchSize);
+    affirm(_itemsPerThread * count >= _batchSize, "_itemsPerThread * count >= _batchSize");
+    affirm(_itemsPerThread * (count - 1) < _batchSize, "_itemsPerThread * (count - 1) < _batchSize");
 }
-
 
 void decode_thread_pool::add_provider(std::shared_ptr<nervana::provider_interface> prov)
 {
@@ -96,7 +96,7 @@ void decode_thread_pool::run(int id)
     // Initialize worker threads by computing memory offsets for the
     // data this thread should work on
     try {
-        assert(id < _count);
+        affirm(id < _count, "id < _count");
         _startInds[id] = id * _itemsPerThread;
         int itemCount = _itemsPerThread;
         if (id == _count - 1) {
@@ -128,7 +128,7 @@ void decode_thread_pool::work(int id)
             }
         }
         _startSignaled[id]--;
-        assert(_startSignaled[id] == 0);
+        affirm(_startSignaled[id] == 0, "startSignaled not cleared");
     }
 
     // No locking required because threads write into non-overlapping regions.
@@ -148,7 +148,7 @@ void decode_thread_pool::work(int id)
     {
         lock_guard<mutex> lock(_mutex);
         _endSignaled++;
-        assert(_endSignaled <= _count);
+        affirm(_endSignaled <= _count, "endSignaled > count");
     }
     _ended.notify_one();
 }
@@ -233,10 +233,12 @@ void decode_thread_pool::manage()
 
 
 read_thread_pool::read_thread_pool(const shared_ptr<buffer_pool_in>& out,
-                       const shared_ptr<batch_iterator>& b_it)
-: thread_pool(1), _out(out), _batch_iterator(b_it)
+                       const shared_ptr<batch_iterator>& b_it) :
+    thread_pool(1),
+    _out(out),
+    _batch_iterator(b_it)
 {
-    assert(_count == 1);
+    affirm(_count == 1, "thread pool count > 1");
 }
 
 void read_thread_pool::work(int id)
@@ -397,7 +399,7 @@ void loader::stop()
     _read_thread_pool   = nullptr;
     _decode_buffers     = nullptr;
     _decode_thread_pool = nullptr;
-    _python_backend         = nullptr;
+    _python_backend     = nullptr;
 }
 
 int loader::reset()

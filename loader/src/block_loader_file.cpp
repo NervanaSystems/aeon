@@ -15,11 +15,11 @@
 
 #include <sys/stat.h>
 
-#include <cassert>
 #include <sstream>
 #include <fstream>
 
 #include "block_loader_file.hpp"
+#include "util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -31,7 +31,8 @@ block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst,
   _manifest(mfst),
   _subset_fraction(subset_fraction)
 {
-    assert(_subset_fraction > 0.0 && _subset_fraction <= 1.0);
+    affirm(_subset_fraction > 0.0 && _subset_fraction <= 1.0,
+           "subset_fraction must be >= 0 and <= 1");
 }
 
 void block_loader_file::loadBlock(nervana::buffer_in_array& dest, uint block_num)
@@ -56,8 +57,8 @@ void block_loader_file::loadBlock(nervana::buffer_in_array& dest, uint block_num
     }
 
     // ensure we stay within bounds of manifest
-    assert(begin_i <= _manifest->objectCount());
-    assert(end_i <= _manifest->objectCount());
+    affirm(begin_i <= _manifest->objectCount(), "block_loader_file begin outside manifest bounds");
+    affirm(end_i <= _manifest->objectCount(), "block_loader_file end outside manifest bounds");
 
     // TODO: move index offset logic and bounds asserts into Manifest
     // interface to more easily support things like offset/limit queries.

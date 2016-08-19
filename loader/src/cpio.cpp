@@ -14,57 +14,74 @@
 */
 
 #include "cpio.hpp"
+#include "util.hpp"
 
 using namespace std;
 using namespace nervana;
 
-template <typename T>
-void read_single_value(istream& ifs, T* data) {
-    ifs.read(reinterpret_cast<char*>(data), sizeof(T));
-}
-
-void readPadding(istream& ifs, uint length) {
-    // Read a byte if length is odd.
-    if (length % 2 == 0) {
-        return;
+namespace nervana
+{
+    template <typename T>
+    void read_single_value(istream& ifs, T* data)
+    {
+        ifs.read(reinterpret_cast<char*>(data), sizeof(T));
     }
-    char byte = 0;
-    read_single_value(ifs, &byte);
-}
 
-template <typename T>
-void write_single_value(ostream& ofs, T* data) {
-    ofs.write(reinterpret_cast<char*>(data), sizeof(T));
-}
-
-void writePadding(ostream& ofs, uint length) {
-    // Write a byte if length is odd.
-    if (length % 2 == 0) {
-        return;
+    void readPadding(istream& ifs, uint length)
+    {
+        // Read a byte if length is odd.
+        if (length % 2 != 0) {
+            char byte = 0;
+            read_single_value(ifs, &byte);
+        }
     }
-    char byte = 0;
-    write_single_value(ofs, &byte);
+
+    template <typename T>
+    void write_single_value(ostream& ofs, T* data)
+    {
+        ofs.write(reinterpret_cast<char*>(data), sizeof(T));
+    }
+
+    void writePadding(ostream& ofs, uint length)
+    {
+        // Write a byte if length is odd.
+        if (length % 2 != 0) {
+            char byte = 0;
+            write_single_value(ofs, &byte);
+        }
+    }
 }
 
-cpio::record_header::record_header()
-: _magic(070707), _dev(0), _ino(0), _mode(0100644), _uid(0), _gid(0),
-  _nlink(0), _rdev(0), _namesize(0) {
+cpio::record_header::record_header() :
+    _magic(070707),
+    _dev(0),
+    _ino(0),
+    _mode(0100644),
+    _uid(0),
+    _gid(0),
+    _nlink(0),
+    _rdev(0),
+    _namesize(0)
+{
     memset((void*) _mtime, 0, 2 * sizeof(short));
     memset((void*) _filesize, 0, 2 * sizeof(short));
 }
 
-void cpio::record_header::loadDoubleShort(uint* dst, ushort src[2]) {
+void cpio::record_header::loadDoubleShort(uint* dst, ushort src[2])
+{
     *dst =  ((uint) src[0]) << 16 | (uint) src[1];
 }
 
-void cpio::record_header::saveDoubleShort(ushort* dst, uint src) {
+void cpio::record_header::saveDoubleShort(ushort* dst, uint src)
+{
     dst[0] = (ushort) (src >> 16);
     dst[1] = (ushort) src;
 }
 
-void cpio::record_header::read(istream& ifs, uint* fileSize) {
+void cpio::record_header::read(istream& ifs, uint* fileSize)
+{
     read_single_value(ifs, &_magic);
-    assert(_magic == 070707);
+    affirm(_magic == 070707, "CPIO header magic incorrect");
     read_single_value(ifs, &_dev);
     read_single_value(ifs, &_ino);
     read_single_value(ifs, &_mode);
@@ -83,7 +100,8 @@ void cpio::record_header::read(istream& ifs, uint* fileSize) {
     readPadding(ifs, _namesize);
 }
 
-void cpio::record_header::write(ostream& ofs, uint fileSize, const char* fileName) {
+void cpio::record_header::write(ostream& ofs, uint fileSize, const char* fileName)
+{
     _namesize = strlen(fileName) + 1;
     write_single_value(ofs, &_magic);
     write_single_value(ofs, &_dev);
@@ -107,12 +125,14 @@ void cpio::record_header::write(ostream& ofs, uint fileSize, const char* fileNam
 
 cpio::header::header()
 : _formatVersion(FORMAT_VERSION), _writerVersion(WRITER_VERSION),
-  _itemCount(0) {
+  _itemCount(0)
+{
     memset(_dataType, 0, sizeof(_dataType));
     memset(_unused, 0, sizeof(_unused));
 }
 
-void cpio::header::read(istream& ifs) {
+void cpio::header::read(istream& ifs)
+{
     read_single_value(ifs, &_magic);
     if (strncmp(_magic, MAGIC_STRING, 4) != 0) {
         throw std::runtime_error("Unrecognized format\n");
@@ -124,7 +144,8 @@ void cpio::header::read(istream& ifs) {
     read_single_value(ifs, &_unused);
 }
 
-void cpio::header::write(ostream& ofs) {
+void cpio::header::write(ostream& ofs)
+{
     ofs.write((char*) MAGIC_STRING, strlen(MAGIC_STRING));
     write_single_value(ofs, &_formatVersion);
     write_single_value(ofs, &_writerVersion);
@@ -133,15 +154,18 @@ void cpio::header::write(ostream& ofs) {
     write_single_value(ofs, &_unused);
 }
 
-cpio::trailer::trailer() {
+cpio::trailer::trailer()
+{
     memset(_unused, 0, sizeof(_unused));
 }
 
-void cpio::trailer::write(ostream& ofs) {
+void cpio::trailer::write(ostream& ofs)
+{
     write_single_value(ofs, &_unused);
 }
 
-void cpio::trailer::read(istream& ifs) {
+void cpio::trailer::read(istream& ifs)
+{
     read_single_value(ifs, &_unused);
 }
 
@@ -193,18 +217,15 @@ cpio::file_reader::~file_reader() {
 
 bool cpio::file_reader::open(const string& fileName) {
     // returns true if file was opened successfully.
-    assert(_ifs.is_open() == false);
-
+    bool rc = false;
     _ifs.open(fileName, istream::binary);
-    if(!_ifs) {
-        return false;
+    if (_ifs) {
+        _is = &_ifs;
+        readHeader();
+        rc = true;
     }
 
-    _is = &_ifs;
-
-    readHeader();
-
-    return true;
+    return rc;
 }
 
 void cpio::file_reader::close() {
@@ -223,7 +244,6 @@ void cpio::file_writer::open(const std::string& fileName, const std::string& dat
     static_assert(sizeof(_header) == 64, "file header is not 64 bytes");
     _fileName = fileName;
     _tempName = fileName + ".tmp";
-    assert(_ofs.is_open() == false);
     _ofs.open(_tempName, ostream::binary);
     _recordHeader.write(_ofs, 64, "cpiohdr");
     _fileHeaderOffset = _ofs.tellp();
@@ -280,7 +300,7 @@ void cpio::file_writer::write_record(nervana::buffer_in_array& buff, int record_
 void cpio::file_writer::write_record_element(const char* elem, uint elem_size, uint element_idx)
 {
     char fileName[16];
-    sprintf(fileName, "rec_%07d.%02d", _header._itemCount, element_idx);
+    snprintf(fileName, sizeof(fileName), "rec_%07d.%02d", _header._itemCount, element_idx);
     _recordHeader.write(_ofs, elem_size, fileName);
     _ofs.write(elem, elem_size);
     writePadding(_ofs, elem_size);

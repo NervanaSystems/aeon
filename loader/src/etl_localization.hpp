@@ -52,33 +52,24 @@ namespace nervana {
 
     class localization::anchor {
     public:
-        anchor(const localization::config&);
-
-        std::vector<int> inside_image_bounds(int width, int height);
-        int total_anchors() const { return all_anchors.size(); }
-        const std::vector<box>& get_all_anchors() const { return all_anchors; }
+        static std::vector<box> generate(const localization::config& cfg);
+        static std::vector<int> inside_image_bounds(int width, int height, const std::vector<box>& all_anchors);
     private:
         anchor() = delete;
+
         //    Generate anchor (reference) windows by enumerating aspect ratios X
         //    scales wrt a reference (0, 0, 15, 15) window.
-        std::vector<box> generate_anchors();
+        static std::vector<box> generate_anchors(size_t base_size, const std::vector<float>& ratios, const std::vector<float>& scales);
 
         //    Enumerate a set of anchors for each aspect ratio wrt an anchor.
-        std::vector<box> ratio_enum(const box& anchor, const std::vector<float>& ratios);
+        static std::vector<box> ratio_enum(const box& anchor, const std::vector<float>& ratios);
 
         //    Given a vector of widths (ws) and heights (hs) around a center
         //    (x_ctr, y_ctr), output a set of anchors (windows).
-        std::vector<box> mkanchors(const std::vector<float>& ws, const std::vector<float>& hs, float x_ctr, float y_ctr);
+        static std::vector<box> mkanchors(const std::vector<float>& ws, const std::vector<float>& hs, float x_ctr, float y_ctr);
 
         //    Enumerate a set of anchors for each scale wrt an anchor.
-        std::vector<box> scale_enum(const box& anchor, const std::vector<float>& scales);
-
-        std::vector<box> add_anchors();
-
-        const localization::config& cfg;
-        int conv_size;
-
-        std::vector<box> all_anchors;
+        static std::vector<box> scale_enum(const box& anchor, const std::vector<float>& scales);
     };
 
     class localization::config : public nervana::interface::config {
@@ -148,18 +139,16 @@ namespace nervana {
         std::vector<target> bbox_targets;
         std::vector<int>    anchor_index;
         std::vector<box>    anchors;
-
-        float image_scale;
-        cv::Size image_size;
-
-    private:
+        float               image_scale;
+        cv::Size            output_image_size;
     };
 
     class localization::extractor : public nervana::interface::extractor<localization::decoded> {
     public:
         extractor(const localization::config&);
 
-        virtual std::shared_ptr<localization::decoded> extract(const char* data, int size) override {
+        virtual std::shared_ptr<localization::decoded> extract(const char* data, int size) override
+        {
             auto rc = std::make_shared<localization::decoded>();
             auto bb = std::static_pointer_cast<boundingbox::decoded>(rc);
             bbox_extractor.extract(data, size, bb);
@@ -189,8 +178,8 @@ namespace nervana {
         std::vector<int> sample_anchors(const std::vector<int>& labels, bool debug=false);
 
         const localization::config& cfg;
-        std::minstd_rand0 random;
-        anchor  _anchor;
+        std::minstd_rand0           random;
+        const std::vector<box>      all_anchors;
     };
 
     class localization::loader : public interface::loader<localization::decoded> {

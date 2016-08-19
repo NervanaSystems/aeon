@@ -27,7 +27,8 @@
 using namespace std;
 using namespace nervana;
 
-size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
+size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
+{
     // callback used by curl.  writes data from ptr into the
     // stringstream passed in to `stream`.
 
@@ -36,18 +37,21 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
     return size * nmemb;
 }
 
-block_loader_nds::block_loader_nds(const std::string baseurl, const std::string token, int collection_id, uint block_size, int shard_count, int shard_index)
+block_loader_nds::block_loader_nds(const std::string& baseurl, const std::string& token, int collection_id, uint block_size, int shard_count, int shard_index)
     : block_loader(block_size), _baseurl(baseurl), _token(token), _collection_id(collection_id),
-      _shard_count(shard_count), _shard_index(shard_index) {
-    assert(shard_index < shard_count);
+      _shard_count(shard_count), _shard_index(shard_index)
+{
+    affirm(shard_index < shard_count, "shard index must be less then shard count");
 
     loadMetadata();
 }
 
-block_loader_nds::~block_loader_nds() {
+block_loader_nds::~block_loader_nds()
+{
 }
 
-void block_loader_nds::loadBlock(nervana::buffer_in_array& dest, uint block_num) {
+void block_loader_nds::loadBlock(nervana::buffer_in_array& dest, uint block_num)
+{
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
 
@@ -64,7 +68,8 @@ void block_loader_nds::loadBlock(nervana::buffer_in_array& dest, uint block_num)
     }
 }
 
-void block_loader_nds::get(const string url, stringstream &stream) {
+void block_loader_nds::get(const string& url, stringstream &stream)
+{
     // reuse curl connection across requests
     _curl = curl_easy_init();
 
@@ -99,7 +104,8 @@ void block_loader_nds::get(const string url, stringstream &stream) {
     curl_easy_cleanup(_curl);
 }
 
-const string block_loader_nds::loadBlockURL(uint block_num) {
+const string block_loader_nds::loadBlockURL(uint block_num)
+{
     stringstream ss;
     ss << _baseurl << "/macrobatch/?";
     ss << "macro_batch_index=" << block_num;
@@ -111,7 +117,8 @@ const string block_loader_nds::loadBlockURL(uint block_num) {
     return ss.str();
 }
 
-const string block_loader_nds::metadataURL() {
+const string block_loader_nds::metadataURL()
+{
     stringstream ss;
     ss << _baseurl << "/object_count/?";
     ss << "macro_batch_max_size=" << _block_size;
@@ -122,7 +129,8 @@ const string block_loader_nds::metadataURL() {
     return ss.str();
 }
 
-void block_loader_nds::loadMetadata() {
+void block_loader_nds::loadMetadata()
+{
     // fetch metadata and store in local attributes
 
     stringstream json_stream;
@@ -136,7 +144,6 @@ void block_loader_nds::loadMetadata() {
         ss << "exception parsing metadata from nds ";
         ss << metadataURL() << " " << ex.what() << " ";
         ss << json_str;
-        cout << "json_str: " << json_str << endl;
         throw std::runtime_error(ss.str());
     }
 
@@ -144,10 +151,12 @@ void block_loader_nds::loadMetadata() {
     nervana::interface::config::parse_value(_blockCount, "macro_batch_per_shard", metadata, nervana::interface::config::mode::REQUIRED);
 }
 
-uint block_loader_nds::objectCount() {
+uint block_loader_nds::objectCount()
+{
     return _objectCount;
 }
 
-uint block_loader_nds::blockCount() {
+uint block_loader_nds::blockCount()
+{
     return _blockCount;
 }

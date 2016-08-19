@@ -19,7 +19,6 @@
 #include "interface.hpp"
 #include <Python.h>
 
-#include <assert.h>
 #include "buffer_in.hpp"
 #include "util.hpp"
 #include "buffer_out.hpp"

@@ -33,18 +33,21 @@ namespace nervana {
         class config;
     }
 
-    class label_map::params : public interface::params {
+    class label_map::params : public interface::params
+    {
     public:
         params() {}
     };
 
-    class label_map::config : public interface::config {
+    class label_map::config : public interface::config
+    {
     public:
         std::string                 type_string = "uint32_t";
         std::vector<std::string>    labels;
         int                         max_labels = 100;
 
         config(nlohmann::json js);
+        virtual ~config() {}
         int max_label_count() const { return max_labels; }
 
     private:
@@ -57,32 +60,34 @@ namespace nervana {
         config() {}
     };
 
-    class label_map::decoded : public interface::decoded_media {
-        friend class transformer;
-        friend class extractor;
+    class label_map::decoded : public interface::decoded_media
+    {
+        friend class label_map::extractor;
     public:
         decoded();
         virtual ~decoded() {}
 
-        const std::vector<int>& get_data() const { return _labels; }
+        const std::vector<int>& get_data() const { return labels; }
 
     private:
-        std::vector<int>    _labels;
+        std::vector<int>    labels;
     };
 
-    class label_map::extractor : public interface::extractor<label_map::decoded> {
+    class label_map::extractor : public interface::extractor<label_map::decoded>
+    {
     public:
         extractor(const label_map::config&);
         virtual ~extractor(){}
         virtual std::shared_ptr<label_map::decoded> extract(const char*, int) override;
 
-        std::unordered_map<std::string,int>  get_data() { return _dictionary; }
+        const std::unordered_map<std::string,int>& get_data() { return dictionary; }
 
     private:
-        std::unordered_map<std::string,int>  _dictionary;
+        std::unordered_map<std::string,int>  dictionary;
     };
 
-    class label_map::transformer : public interface::transformer<label_map::decoded, label_map::params> {
+    class label_map::transformer : public interface::transformer<label_map::decoded, label_map::params>
+    {
     public:
         transformer();
         virtual ~transformer(){}
@@ -92,7 +97,8 @@ namespace nervana {
     private:
     };
 
-    class label_map::loader : public interface::loader<label_map::decoded> {
+    class label_map::loader : public interface::loader<label_map::decoded>
+    {
     public:
         loader(const label_map::config&);
         virtual ~loader(){}

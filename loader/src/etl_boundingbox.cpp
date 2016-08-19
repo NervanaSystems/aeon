@@ -21,7 +21,8 @@ using namespace std;
 using namespace nervana;
 using namespace nlohmann;   // json stuff
 
-ostream& operator<<(ostream& out, const nervana::boundingbox::box& b) {
+ostream& operator<<(ostream& out, const nervana::boundingbox::box& b)
+{
     out << (nervana::box)b << " label=" << b.label;
     return out;
 }
@@ -61,24 +62,24 @@ nervana::boundingbox::extractor::extractor(const std::unordered_map<std::string,
 void nervana::boundingbox::extractor::extract(const char* data, int size, std::shared_ptr<boundingbox::decoded>& rc) {
     string buffer( data, size );
     json j = json::parse(buffer);
-    if( j["object"].is_null() ) { rc = nullptr; return; }
-    if( j["size"].is_null() ) { rc = nullptr; return; }
+    if( j["object"].is_null() ) { throw invalid_argument("'object' missing from metadata"); }
+    if( j["size"].is_null() ) { throw invalid_argument("'size' missing from metadata"); }
     auto object_list = j["object"];
     auto image_size = j["size"];
-    if( image_size["width"].is_null() ) { rc = nullptr; return; }
-    if( image_size["height"].is_null() ) { rc = nullptr; return; }
-    if( image_size["depth"].is_null() ) { rc = nullptr; return; }
+    if( image_size["width"].is_null() ) { throw invalid_argument("'width' missing from metadata"); }
+    if( image_size["height"].is_null() ) { throw invalid_argument("'height' missing from metadata"); }
+    if( image_size["depth"].is_null() ) { throw invalid_argument("'depth' missing from metadata"); }
     rc->_height = image_size["height"];
     rc->_width = image_size["width"];
     rc->_depth = image_size["depth"];
     for( auto object : object_list ) {
         auto bndbox = object["bndbox"];
         box b;
-        if( bndbox["xmax"].is_null() ) { rc = nullptr; return; }
-        if( bndbox["xmin"].is_null() ) { rc = nullptr; return; }
-        if( bndbox["ymax"].is_null() ) { rc = nullptr; return; }
-        if( bndbox["ymin"].is_null() ) { rc = nullptr; return; }
-        if( object["name"].is_null() ) { rc = nullptr; return; }
+        if( bndbox["xmax"].is_null() ) { throw invalid_argument("'xmax' missing from metadata"); }
+        if( bndbox["xmin"].is_null() ) { throw invalid_argument("'xmin' missing from metadata"); }
+        if( bndbox["ymax"].is_null() ) { throw invalid_argument("'ymax' missing from metadata"); }
+        if( bndbox["ymin"].is_null() ) { throw invalid_argument("'ymin' missing from metadata"); }
+        if( object["name"].is_null() ) { throw invalid_argument("'name' missing from metadata"); }
         b.xmax = bndbox["xmax"];
         b.xmin = bndbox["xmin"];
         b.ymax = bndbox["ymax"];
@@ -89,9 +90,9 @@ void nervana::boundingbox::extractor::extract(const char* data, int size, std::s
         auto found = label_map.find(name);
         if( found == label_map.end() ) {
             // did not find the label in the ctor supplied label list
-            rc = nullptr;
-            ERR << "label '" << name << "' not found in label list";
-            break;
+            stringstream ss;
+            ss << "label '" << name << "' not found in metadata label list";
+            throw invalid_argument(ss.str());
         } else {
             b.label = found->second;
         }
@@ -143,7 +144,6 @@ shared_ptr<boundingbox::decoded> nervana::boundingbox::transformer::transform(sh
 
             rc->_boxes.push_back( b );
         }
-        // cout << b.rect << ", " << b.label << endl;
     }
     return rc;
 }

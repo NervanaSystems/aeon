@@ -69,14 +69,14 @@ void noise_clips::addNoise(cv::Mat& wav_mat,
     }
 
     // Assume a single channel with 16 bit samples for now.
-    assert(wav_mat.cols == 1);
-    assert(wav_mat.type() == CV_16SC1);
+    affirm(wav_mat.cols == 1, "wav samples more than one column");
+    affirm(wav_mat.type() == CV_16SC1, "wav not 16 bit signed");
 
     // Collect enough noise data to cover the entire input clip.
     cv::Mat noise_dst = cv::Mat::zeros(wav_mat.size(), wav_mat.type());
     const cv::Mat& noise_src = _noise_data[ noise_index % _noise_data.size() ]->get_data();
 
-    assert(noise_src.type() == wav_mat.type());
+    affirm(noise_src.type() == wav_mat.type(), "noise type does not match wav type");
 
     uint32_t src_offset = noise_src.rows * noise_offset_fraction;
     uint32_t src_left   = noise_src.rows - src_offset;
@@ -104,7 +104,8 @@ void noise_clips::addNoise(cv::Mat& wav_mat,
 
 }
 
-void noise_clips::load_data() {
+void noise_clips::load_data()
+{
     for(auto nfile: _noise_files) {
         int len = 0;
         read_noise(nfile, &len);
@@ -112,7 +113,8 @@ void noise_clips::load_data() {
     }
 }
 
-void noise_clips::read_noise(std::string& noise_file, int* dataLen) {
+void noise_clips::read_noise(std::string& noise_file, int* dataLen)
+{
 
     struct stat stats;
     int result = stat(noise_file.c_str(), &stats);

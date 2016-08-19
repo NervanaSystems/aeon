@@ -13,7 +13,6 @@
  limitations under the License.
 */
 
-#include <assert.h>
 #include <random>
 #include <algorithm>
 #include <vector>

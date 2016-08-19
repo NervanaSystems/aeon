@@ -77,17 +77,17 @@ public:
     void write(std::ostream& ofs, uint32_t fileSize, const char* fileName);
 
 public:
-    uint16_t                    _magic;
-    uint16_t                    _dev;
-    uint16_t                    _ino;
-    uint16_t                    _mode;
-    uint16_t                    _uid;
-    uint16_t                    _gid;
-    uint16_t                    _nlink;
-    uint16_t                    _rdev;
-    uint16_t                    _mtime[2];
-    uint16_t                    _namesize;
-    uint16_t                    _filesize[2];
+    uint16_t        _magic;
+    uint16_t        _dev;
+    uint16_t        _ino;
+    uint16_t        _mode;
+    uint16_t        _uid;
+    uint16_t        _gid;
+    uint16_t        _nlink;
+    uint16_t        _rdev;
+    uint16_t        _mtime[2];
+    uint16_t        _namesize;
+    uint16_t        _filesize[2];
 };
 
 class nervana::cpio::header {
@@ -100,12 +100,12 @@ public:
 
 private:
 #pragma pack(1)
-    char                        _magic[4];
-    uint32_t                    _formatVersion;
-    uint32_t                    _writerVersion;
-    char                        _dataType[8];
-    uint32_t                    _itemCount;
-    uint8_t                     _unused[40];
+    char            _magic[4];
+    uint32_t        _formatVersion;
+    uint32_t        _writerVersion;
+    char            _dataType[8];
+    uint32_t        _itemCount;
+    uint8_t         _unused[40];
 #pragma pack()
 };
 
@@ -116,7 +116,7 @@ public:
     void read(std::istream& ifs);
 
 private:
-    uint32_t                    _unused[4];
+    uint32_t        _unused[4];
 };
 
 class nervana::cpio::reader {
@@ -131,11 +131,11 @@ public:
 protected:
     void readHeader();
 
-    std::istream*               _is;
+    std::istream*   _is;
 
-    header                  _header;
-    trailer                 _trailer;
-    record_header                _recordHeader;
+    header          _header;
+    trailer         _trailer;
+    record_header   _recordHeader;
 };
 
 /*
@@ -152,7 +152,7 @@ public:
     void close();
 
 private:
-    std::ifstream               _ifs;
+    std::ifstream   _ifs;
 };
 
 class nervana::cpio::file_writer {
@@ -168,11 +168,11 @@ public:
     void increment_record_count() { _header._itemCount++;}
 
 private:
-    std::ofstream               _ofs;
-    header                  _header;
-    trailer                 _trailer;
-    record_header                _recordHeader;
-    int                         _fileHeaderOffset;
-    std::string                 _fileName;
-    std::string                 _tempName;
+    std::ofstream   _ofs;
+    header          _header;
+    trailer         _trailer;
+    record_header   _recordHeader;
+    int             _fileHeaderOffset;
+    std::string     _fileName;
+    std::string     _tempName;
 };

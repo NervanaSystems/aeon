@@ -49,11 +49,6 @@ void audio_transcriber::provide(int idx, buffer_in_array& in_buf, buffer_out_arr
     char* length_out = out_buf[2]->get_item(idx);
     char* valid_out  = out_buf[3]->get_item(idx);
 
-    if (datum_in.size() == 0) {
-        cout << "no data " << idx << endl;
-        return;
-    }
-
     // Process audio data
     auto audio_dec = audio_extractor.extract(datum_in.data(), datum_in.size());
     auto audio_params = audio_factory.make_params(audio_dec);

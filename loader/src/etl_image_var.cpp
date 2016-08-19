@@ -34,8 +34,8 @@ image_var::extractor::extractor(const image_var::config& cfg)
         ss << "Unsupported number of channels in image: " << cfg.channels;
         throw std::runtime_error(ss.str());
     } else {
-        _pixel_type = cfg.channels == 1 ? CV_8UC1 : CV_8UC3;
-        _color_mode = cfg.channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR;
+        pixel_type = cfg.channels == 1 ? CV_8UC1 : CV_8UC3;
+        color_mode = cfg.channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR;
     }
 }
 
@@ -45,8 +45,8 @@ shared_ptr<image_var::decoded> image_var::extractor::extract(const char* inbuf, 
 
     // It is bad to cast away const, but opencv does not support a const Mat
     // The Mat is only used for imdecode on the next line so it is OK here
-    cv::Mat input_img(1, insize, _pixel_type, const_cast<char*>(inbuf));
-    cv::imdecode(input_img, _color_mode, &output_img);
+    cv::Mat input_img(1, insize, pixel_type, const_cast<char*>(inbuf));
+    cv::imdecode(input_img, color_mode, &output_img);
 
     return make_shared<image_var::decoded>(output_img);
 }
@@ -62,10 +62,10 @@ shared_ptr<image_var::decoded> image_var::extractor::extract(const char* inbuf, 
 
 */
 
-image_var::transformer::transformer(const image_var::config& cfg)
+image_var::transformer::transformer(const image_var::config& cfg) :
+    min_size{cfg.min_size},
+    max_size{cfg.max_size}
 {
-    min_size = cfg.min_size;
-    max_size = cfg.max_size;
 }
 
 shared_ptr<image_var::decoded> image_var::transformer::transform(
@@ -98,16 +98,15 @@ image_var::param_factory::make_params(shared_ptr<const decoded> input)
     // make_shared is not friend :(
     auto imgstgs = shared_ptr<image_var::params>(new image_var::params());
 
-    imgstgs->flip  = _cfg.flip_distribution(generator);
+    imgstgs->flip  = settings.flip_distribution(generator);
 
     return imgstgs;
 }
 
 image_var::loader::loader(const image_var::config& cfg) :
+    channel_major{cfg.channel_major},
     stype{cfg.get_shape_type()}
 {
-    _channel_major = cfg.channel_major;
-    _load_size     = 1;
 }
 
 void image_var::loader::load(const vector<void*>& outlist, shared_ptr<image_var::decoded> input)
@@ -119,7 +118,7 @@ void image_var::loader::load(const vector<void*>& outlist, shared_ptr<image_var:
     for(int i=0; i<output_buffer_size; i++) outbuf[i] = 0;
     cv::Mat input_image = input->get_image();
 
-    if (_channel_major) {
+    if (channel_major) {
         // Split into separate channels
         int width  = shape[1];
         int height = shape[2];
@@ -137,25 +136,5 @@ void image_var::loader::load(const vector<void*>& outlist, shared_ptr<image_var:
         cv::Mat output(shape[0], shape[1], CV_8UC(shape[2]), outbuf);
         cv::Mat target_roi = output(cv::Rect(0, 0, input_image.cols, input_image.rows));
         input_image.copyTo(target_roi);
-    }
-}
-
-void image_var::loader::split(cv::Mat& img, char* buf)
-{
-    // split `img` into individual channels
-    int pix_per_channel = img.total();
-    int num_channels = img.channels();
-
-    if (num_channels == 1) {
-        memcpy(buf, img.data, pix_per_channel);
-    } else {
-        // Split into separate channels
-        cv::Size2i size = img.size();
-        cv::Mat b(size, CV_8U, buf);
-        cv::Mat g(size, CV_8U, buf + pix_per_channel);
-        cv::Mat r(size, CV_8U, buf + 2 * pix_per_channel);
-
-        cv::Mat channels[3] = {b, g, r};
-        cv::split(img, channels);
     }
 }
