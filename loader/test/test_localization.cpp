@@ -694,6 +694,16 @@ TEST(localization, loader) {
     gt_classes.resize(shapes[7].get_element_count());
     im_scale.resize(shapes[8].get_element_count());
 
+    memset(bbtargets.data(), 0xFF, bbtargets.size()*sizeof(float));
+    memset(bbtargets_mask.data(), 0xFF, bbtargets_mask.size()*sizeof(float));
+    memset(labels_flat.data(), 0xFF, labels_flat.size()*sizeof(int32_t));
+    memset(labels_mask.data(), 0xFF, labels_mask.size()*sizeof(int32_t));
+    memset(im_shape.data(), 0xFF, im_shape.size()*sizeof(int32_t));
+    memset(gt_boxes.data(), 0xFF, gt_boxes.size()*sizeof(float));
+    memset(num_gt_boxes.data(), 0xFF, num_gt_boxes.size()*sizeof(int32_t));
+    memset(gt_classes.data(), 0xFF, gt_classes.size()*sizeof(int32_t));
+    memset(im_scale.data(), 0xFF, im_scale.size()*sizeof(float));
+
     buf_list.push_back(bbtargets.data());
     buf_list.push_back(bbtargets_mask.data());
     buf_list.push_back(labels_flat.data());

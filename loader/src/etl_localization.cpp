@@ -324,9 +324,10 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
     int32_t* gt_classes         = (int32_t*)buf_list[7];
     float*   im_scale           = (float*  )buf_list[8];
 
+    for(int i = 0; i<total_anchors * 4; i++) bbtargets[i] = 0.;
+    for(int i = 0; i<total_anchors * 4; i++) bbtargets_mask[i] = 0.;
     for(int i = 0; i<total_anchors; i++) labels_flat[i] = 0;
     for(int i = 0; i<total_anchors * 2; i++) labels_mask[i] = 0;
-    for(int i = 0; i<total_anchors * 4; i++) bbtargets_mask[i] = 0.;
     for(int index : mp->anchor_index) {
         if(mp->labels[index] == 1) {
             labels_flat[index] = 1;
