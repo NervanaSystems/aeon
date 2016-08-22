@@ -16,21 +16,7 @@
 #pragma once
 
 #include "etl_image.hpp"
-
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-extern "C" {
-    #include <libavformat/avformat.h>
-    #include <libavutil/imgutils.h>
-    #include <libswscale/swscale.h>
-}
-
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55, 28, 1)
-#define av_frame_alloc  avcodec_alloc_frame
-#define av_frame_free avcodec_free_frame
-#endif
+#include "cap_mjpeg_decoder.hpp"
 
 namespace nervana {
     namespace video {
@@ -72,21 +58,12 @@ namespace nervana {
 
     class video::extractor : public interface::extractor<image::decoded> {
     public:
-        extractor(const video::config&);
-        virtual ~extractor();
+        extractor(const video::config&) {}
+        virtual ~extractor() {}
 
         virtual std::shared_ptr<image::decoded> extract(const char* item, int itemSize) override;
 
     protected:
-        void decode_video_frame(AVCodecContext* codecCtx, AVPacket& packet);
-        int findVideoStream(AVCodecContext* &codecCtx, AVFormatContext* formatCtx);
-        void convertFrameFormat(AVCodecContext* codecCtx, AVPixelFormat pFormat, AVFrame* &pFrame);
-
-        std::shared_ptr<image::decoded> _out;
-        AVPixelFormat _pFormat;
-        AVFrame* _pFrameRGB;
-        AVFrame* _pFrame;
-
     private:
         extractor() = delete;
     };
@@ -113,6 +90,5 @@ namespace nervana {
 
     private:
         loader() = delete;
-        void split(cv::Mat&, char*);
     };
 }

@@ -20,7 +20,7 @@ namespace nervana {
     class MotionJpegCapture;
 }
 
-class nervana::MotionJpegCapture//: public IVideoCapture
+class nervana::MotionJpegCapture
 {
 public:
     MotionJpegCapture(const std::string&);
@@ -31,7 +31,9 @@ public:
     virtual bool grabFrame();
     virtual bool retrieveFrame(int, cv::Mat&);
     virtual bool isOpened() const;
-    virtual int getCaptureDomain() { return CV_CAP_ANY; } // Return the type of the capture object: CAP_VFW, etc...
+
+    // Return the type of the capture object: CAP_VFW, etc...
+    virtual int getCaptureDomain() { return CV_CAP_ANY; }
 
     bool open();
     void close();

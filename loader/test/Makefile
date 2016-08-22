@@ -25,7 +25,6 @@ TEST_SRCS := \
     csv_manifest_maker.cpp \
     csv_manifest_test.cpp \
     gen_image.cpp \
-    gen_video.cpp \
     helpers.cpp \
     main.cpp \
     test_audio.cpp \

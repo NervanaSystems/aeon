@@ -16,24 +16,13 @@
 #include <iostream>
 #include <chrono>
 
-extern "C" {
-    #include <libavformat/avformat.h>
-    #include <libavutil/imgutils.h>
-    #include <libswscale/swscale.h>
-    #include <libavcodec/avcodec.h>
-    #include <libavutil/common.h>
-    #include <libavutil/opt.h>
-}
-
 #include "gtest/gtest.h"
 
 #include "gen_image.hpp"
-#include "gen_video.hpp"
 
 using namespace std;
 
 gen_image image_dataset;
-gen_video video_dataset;
 
 static void CreateImageDataset() {
 //    std::chrono::high_resolution_clock timer;
@@ -49,27 +38,12 @@ static void CreateImageDataset() {
 //    cout << "image dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
-static void CreateVideoDataset() {
-//    _video_dataset.encode("video.mpg",5000);
-//    std::chrono::high_resolution_clock timer;
-//    auto start = timer.now();
-    video_dataset.Directory("video_data")
-            .Prefix("archive-")
-            .MacrobatchMaxItems(50)
-            .DatasetSize(5)
-            .Create();
-//    auto end = timer.now();
-//    cout << "video dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
-}
-
 static void DeleteDataset() {
     image_dataset.Delete();
-    video_dataset.Delete();
 }
 
 extern "C" int main( int argc, char** argv ) {
     CreateImageDataset();
-    CreateVideoDataset();
 
     ::testing::InitGoogleTest(&argc, argv);
     int rc = RUN_ALL_TESTS();

@@ -65,17 +65,9 @@ if [[ $? == 0 ]]; then
 	export IMGLIBS="$(pkg-config --libs-only-l opencv)"
 fi
 
-pkg-config --exists libavutil libavformat libavcodec libswscale
-if [[ $? == 0 ]]; then
-	export VIDFLAG="-DHAS_VIDLIB"
-	export AUDFLAG="-DHAS_AUDLIB"
-    export VIDLDIR="$(pkg-config --libs-only-L libavutil libavformat libavcodec libswscale)"
-    export VIDLIBS="-lavutil -lavformat -lavcodec -lswscale"
-fi
-
-export MEDIAFLAGS="${IMGFLAG} ${VIDFLAG} ${AUDFLAG}"
-export LDIR="${IMGLDIR} ${VIDLDIR}"
-export LIBS="-lcurl ${IMGLIBS} ${VIDLIBS}"
+export MEDIAFLAGS="${IMGFLAG}"
+export LDIR="${IMGLDIR}"
+export LIBS="-lcurl ${IMGLIBS}"
 
 export INC="-I$(python -c 'from distutils.sysconfig import get_python_inc; print get_python_inc()') ${INC}"
 export INC="-I$(python -c 'import numpy; print numpy.get_include()') ${INC}"

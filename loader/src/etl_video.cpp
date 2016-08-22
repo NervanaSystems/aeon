@@ -13,131 +13,28 @@
  limitations under the License.
 */
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
 #include "etl_video.hpp"
+#include "log.hpp"
 
 using namespace std;
 using namespace nervana;
 
-
-video::extractor::extractor(const video::config&)
- : _pFormat(AV_PIX_FMT_BGR24)
-{
-    // AV_PIX_FMT_BGR24 in ffmpeg corresponds to CV_8UC3 in opencv
-    _pFrameRGB = av_frame_alloc();
-    _pFrame = av_frame_alloc();
-
-    // TODO: pull necessary config from here
-    // it looks like the only config we may want here (from image) is
-    // color vs black and white.  This will involve changing _pFormat
-    // https://ffmpeg.org/doxygen/2.1/pixfmt_8h.html#a9a8e335cf3be472042bc9f0cf80cd4c5
-}
-
-video::extractor::~extractor()
-{
-    av_frame_free(&_pFrameRGB);
-    av_frame_free(&_pFrame);
-}
-
 std::shared_ptr<image::decoded> video::extractor::extract(const char* item, int itemSize)
 {
-    // copy-pasted from video.cpp
-    _out = make_shared<image::decoded>();
+    // Very bad -- need to circle back and make an imemstream so we don't have to strip
+    // constness from item
+    char *bare_item = (char *) item;
+    shared_ptr<MotionJpegCapture> mjdecoder = make_shared<MotionJpegCapture>(bare_item, itemSize);
 
-    // copy item for some unknown reason
-    AVFormatContext* formatCtx = avformat_alloc_context();
-    uchar* itemCopy = (unsigned char *) malloc(itemSize);
-    memcpy(itemCopy, item, itemSize);
-    formatCtx->pb = avio_alloc_context(itemCopy, itemSize, 0, itemCopy,
-                                       NULL, NULL, NULL);
-
-    // set up av boilerplate
-    avformat_open_input(&formatCtx , "", NULL, NULL);
-    avformat_find_stream_info(formatCtx, NULL);
-
-    AVCodecContext* codecCtx = NULL;
-    int videoStream = findVideoStream(codecCtx, formatCtx);
-
-    AVCodec* pCodec = avcodec_find_decoder(codecCtx->codec_id);
-    avcodec_open2(codecCtx, pCodec, NULL);
-
-    int numBytes = avpicture_get_size(_pFormat, codecCtx->width, codecCtx->height);
-    uint8_t* buffer = (uint8_t *) av_malloc(numBytes * sizeof(uint8_t));
-    avpicture_fill((AVPicture*) _pFrameRGB, buffer, _pFormat,
-                   codecCtx->width, codecCtx->height);
-
-    // parse data stream
-    AVPacket packet;
-    while (av_read_frame(formatCtx, &packet) >= 0) {
-        if (packet.stream_index == videoStream) {
-            decode_video_frame(codecCtx, packet);
-        }
-        av_free_packet(&packet);
+    if (!mjdecoder->isOpened()) {
+        return nullptr;
     }
-
-    // some codecs, such as MPEG, transmit the I and P frame with a
-    // latency of one frame. You must do the following to have a
-    // chance to get the last frame of the video
-    packet.data = NULL;
-    packet.size = 0;
-    decode_video_frame(codecCtx, packet);
-
-    // cleanup
-    av_free(buffer);
-    avcodec_close(codecCtx);
-    av_free(formatCtx->pb->buffer);
-    av_free(formatCtx->pb);
-    avformat_close_input(&formatCtx);
-
-    return _out;
-}
-
-void video::extractor::decode_video_frame(AVCodecContext* codecCtx, AVPacket& packet)
-{
-    int frameFinished;
-
-    avcodec_decode_video2(codecCtx, _pFrame, &frameFinished, &packet);
-    if (frameFinished) {
-        convertFrameFormat(codecCtx, _pFormat, _pFrame);
-
-        cv::Mat frame(_pFrame->height, _pFrame->width, CV_8UC3, _pFrameRGB->data[0]);
-
-        _out->add(frame);
+    auto out_img = make_shared<image::decoded>();
+    cv::Mat image;
+    while(mjdecoder->grabFrame() && mjdecoder->retrieveFrame(0,image)) {
+        out_img->add(image.clone());
     }
-}
-
-int video::extractor::findVideoStream(AVCodecContext* &codecCtx, AVFormatContext* formatCtx)
-{
-    for (int streamIdx = 0; streamIdx < (int) formatCtx->nb_streams; streamIdx++) {
-        codecCtx = formatCtx->streams[streamIdx]->codec;
-        if (codecCtx->coder_type == AVMEDIA_TYPE_VIDEO) {
-            return streamIdx;
-        }
-    }
-    return -1;
-}
-
-void video::extractor::convertFrameFormat(AVCodecContext* codecCtx, AVPixelFormat pFormat,
-                                          AVFrame* &pFrame)
-{
-    // supposedly, some codecs allow the raw parameters like the frame size
-    // to be changed at any frame, so we cant reuse this imgConvertCtx
-
-    struct SwsContext* imgConvertCtx = sws_getContext(
-        codecCtx->width, codecCtx->height, codecCtx->pix_fmt,
-        codecCtx->width, codecCtx->height, pFormat,
-        SWS_BICUBIC, NULL, NULL, NULL
-    );
-
-    sws_scale(
-        imgConvertCtx, pFrame->data, pFrame->linesize, 0,
-        codecCtx->height, _pFrameRGB->data, _pFrameRGB->linesize
-    );
-
-    sws_freeContext(imgConvertCtx);
+    return out_img;
 }
 
 video::transformer::transformer(const video::config& config)
@@ -149,7 +46,14 @@ std::shared_ptr<image::decoded> video::transformer::transform(
     std::shared_ptr<image::params> img_xform,
     std::shared_ptr<image::decoded> img)
 {
-    auto out_img = frame_transformer.transform(img_xform, img);
+    auto tx_img = frame_transformer.transform(img_xform, img);
+    auto out_img = make_shared<image::decoded>();
+
+    uint32_t nframes = std::min<int>(max_frame_count, tx_img->get_image_count());
+
+    for (uint i=0; i<nframes; ++i) {
+        out_img->add(tx_img->get_image(i));
+    }
 
     // Now pad out if necessary
     cv::Mat pad_frame = cv::Mat::zeros(img_xform->output_size, img->get_image(0).type());
@@ -166,7 +70,6 @@ void video::loader::load(const vector<void*>& buflist, shared_ptr<image::decoded
 {
     char* outbuf = (char*)buflist[0];
     // loads in channel x depth(frame) x height x width
-
     int num_channels = input->get_image_channels();
     int channel_size = input->get_image_count() * input->get_image_size().area();
     cv::Size2i image_size = input->get_image_size();

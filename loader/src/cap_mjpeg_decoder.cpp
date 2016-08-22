@@ -41,6 +41,7 @@
 
 #include "cap_mjpeg_decoder.hpp"
 #include "avi.hpp"
+#include "log.hpp"
 
 using namespace std;
 using namespace cv;
@@ -189,6 +190,7 @@ bool nervana::MotionJpegCapture::open()
 
     if(!parseRiff(*m_file_stream))
     {
+        ERR << "Not a valid AVI file type" << endl;
         close();
     }
 

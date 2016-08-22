@@ -16,46 +16,72 @@
 #include "gtest/gtest.h"
 
 #include "etl_video.hpp"
-#include "gen_video.hpp"
+#include "log.hpp"
 
 using namespace std;
 using namespace nervana;
 
 TEST(video,extract_transform) {
-    int width = 352;
-    int height = 288;
+    int width      = 352;
+    int height     = 288;
+    int nseconds   = 1;
+    int frame_rate = 25;
+    string test_file = "output.avi";
 
-    // 1 second video at 25 FPS
-    vector<unsigned char> vid = gen_video().encode(1000);
+    stringstream vidgen_command;
+    vidgen_command << "ffmpeg -loglevel quiet -hide_banner ";
+    vidgen_command << "-f lavfi -i testsrc=duration=" << nseconds;
+    vidgen_command << ":size=" << width << "x" << height;
+    vidgen_command << ":rate=" << frame_rate << " ";
+    vidgen_command << "-c:v mjpeg -q:v 3 -y ";
+    vidgen_command << test_file;
 
-    // extract
-    nlohmann::json js = {{"max_frame_count", 5},
-                         {"frame", {
-                            {"height",height},
-                            {"width",width}}}};
+    auto a = system(vidgen_command.str().c_str());
 
-    video::config config(js);
+    if (a == 0)
+    {
+        basic_ifstream<char> ifs(test_file, ios::binary);
+        // read the data:
+        vector<char> buf((istreambuf_iterator<char>(ifs)), istreambuf_iterator<char>());
 
-    video::extractor extractor{config};
-    auto decoded_vid = extractor.extract((char*)vid.data(), vid.size());
+        // extract
+        nlohmann::json js = {{"max_frame_count", 5},
+                             {"frame", {
+                                {"height",height},
+                                {"width",width}}}};
 
-    ASSERT_EQ(decoded_vid->get_image_count(), 25);
-    ASSERT_EQ(decoded_vid->get_image_size(), cv::Size2i(width, height));
+        video::config config(js);
 
-    // transform
-    video::transformer transformer = video::transformer(config);
+        video::extractor extractor{config};
+        auto decoded_vid = extractor.extract((const char*)buf.data(), buf.size());
 
-    image::param_factory factory(config.frame);
-    auto params = factory.make_params(decoded_vid);
+        ASSERT_EQ(decoded_vid->get_image_count(), 25);
+        ASSERT_EQ(decoded_vid->get_image_size(), cv::Size2i(width, height));
 
-    params->output_size = cv::Size2i(width/2, height/2);
-    auto transformed_vid = transformer.transform(params, decoded_vid);
-    ASSERT_NE(nullptr, transformed_vid);
+        // transform
+        video::transformer transformer = video::transformer(config);
 
-    // make sure we still have the same number of images and that the
-    // size has been reduced
-    ASSERT_EQ(transformed_vid->get_image_count(), 25);
-    ASSERT_EQ(transformed_vid->get_image_size(), cv::Size2i(width/2, height/2));
+        image::param_factory factory(config.frame);
+        auto params = factory.make_params(decoded_vid);
+
+        params->output_size = cv::Size2i(width/2, height/2);
+        auto transformed_vid = transformer.transform(params, decoded_vid);
+        ASSERT_NE(nullptr, transformed_vid);
+
+        // make sure we've clipped the number of frames down according to max_frame_count
+        // and that size has been reduced
+        ASSERT_EQ(transformed_vid->get_image_count(), 5);
+        ASSERT_EQ(transformed_vid->get_image_size(), cv::Size2i(width/2, height/2));
+
+        INFO << "Extract test successful" << endl;
+        remove(test_file.c_str());
+    }
+    else
+    {
+        INFO << vidgen_command.str() << endl;
+        ERR << "Missing ffmpeg for video extraction test" << endl;
+    }
+
 }
 
 TEST(video,image_transform) {
