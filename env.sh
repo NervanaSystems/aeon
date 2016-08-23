@@ -26,6 +26,7 @@ SRCS="
     etl_localization.cpp
     etl_multicrop.cpp
     etl_pixel_mask.cpp
+    etl_depthmap.cpp
     etl_video.cpp
     image.cpp
     interface.cpp
@@ -43,6 +44,7 @@ SRCS="
     provider_image_localization.cpp
     provider_image_only.cpp
     provider_image_pixelmask.cpp
+    provider_image_stereo.cpp
     provider_video_classifier.cpp
     provider_video_only.cpp
     python_backend.cpp
