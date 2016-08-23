@@ -18,8 +18,6 @@
 #include <sstream>
 #include <string>
 
-#include "gtest/gtest_prod.h"
-
 #include "buffer_in.hpp"
 #include "cpio.hpp"
 #include "block_loader.hpp"
@@ -39,8 +37,6 @@ public:
     uint blockCount();
 
 private:
-    FRIEND_TEST(block_loader_nds, curl_stream);
-
     void loadMetadata();
 
     void get(const std::string url, std::stringstream& stream);
