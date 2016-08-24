@@ -47,6 +47,8 @@ class DataLoader(object):
     """
 
     def __init__(self, config, backend):
+        self._config = config
+
         self._buffer_id = 0
         self._item_index = 0
 
@@ -163,6 +165,13 @@ class DataLoader(object):
         Number of items in the dataset.
         """
         return self._itemCount()
+
+    @property
+    def config(self):
+        """
+        Dataloader configuration
+        """
+        return self._config
 
     def reset(self):
         """
