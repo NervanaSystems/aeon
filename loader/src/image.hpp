@@ -27,11 +27,11 @@ namespace nervana {
         void rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interpolate=true, const cv::Scalar& border=cv::Scalar());
         void convert_mix_channels(std::vector<cv::Mat>& source, std::vector<cv::Mat>& target, std::vector<int>& from_to);
 
-        std::tuple<float,cv::Size> calculate_scale_shape(cv::Size size, int min_size, int max_size);
+        float calculate_scale(const cv::Size& size, int min_size, int max_size);
 
         cv::Size2f cropbox_max_proportional(const cv::Size2f& in_size, const cv::Size2f& out_size);
         cv::Size2f cropbox_linear_scale(const cv::Size2f& in_size, float scale);
-        cv::Size2f cropbox_area_scale(const cv::Size2f& in_size, float scale);
+        cv::Size2f cropbox_area_scale(const cv::Size2f& in_size, const cv::Size2f& cropbox_size, float scale);
         cv::Point2f cropbox_shift(const cv::Size2f&, const cv::Size2f&, float, float);
 
         class photometric {

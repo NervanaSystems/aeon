@@ -180,17 +180,7 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
 
     cv::Size2f cropbox_size = cropbox_max_proportional(in_size, out_shape);
     if(_cfg.do_area_scale) {
-        float in_area = in_size.area();
-        float crop_area = cropbox_size.area();
-        float size_ratio = crop_area / in_area;
-        if(size_ratio > scale) {
-            float crop_aspect_ratio = cropbox_size.width / cropbox_size.height;
-            crop_area = in_area * scale;
-            float w2 = crop_area * crop_aspect_ratio;
-            float width = sqrt(w2);
-            float height = crop_area / width;
-            cropbox_size = cv::Size2f(width, height);
-        }
+        cropbox_size = cropbox_area_scale(in_size, cropbox_size, scale);
     } else {
         cropbox_size = cropbox_linear_scale(cropbox_size, scale);
     }

@@ -609,12 +609,13 @@ TEST(image,cropbox_max_proportional) {
     }
 }
 
-TEST(image,calculate_scale_shape) {
+TEST(image,calculate_scale) {
     int min_size = 600;
     int max_size = 1000;
     cv::Size size{500,375};
     float scale;
-    tie(scale,size) = image::calculate_scale_shape(size, min_size, max_size);
+    scale = image::calculate_scale(size, min_size, max_size);
+    size = cv::Size{int(unbiased_round(size.width*scale)), int(unbiased_round(size.height*scale))};
     EXPECT_FLOAT_EQ(1.6,scale);
     EXPECT_EQ(800,size.width);
     EXPECT_EQ(600,size.height);

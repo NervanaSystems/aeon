@@ -75,8 +75,8 @@ namespace nervana {
     class localization::config : public nervana::interface::config {
     public:
         size_t                      rois_per_image = 256;
-        size_t                      min_size;
-        size_t                      max_size;
+        size_t                      min_size;   // copied from image_var config
+        size_t                      max_size;   // copied from image_var config
         size_t                      base_size = 16;
         float                       scaling_factor = 1.0 / 16.;
         std::vector<float>          ratios = {0.5, 1, 2};
@@ -88,25 +88,14 @@ namespace nervana {
         size_t                      max_gt_boxes = 64;
         std::vector<std::string>    labels;
 
-        enum class buffer_index {
-            y_bbtargets = 1,        // bounding box target coordinates
-            y_bbtargets_mask,       // bounding box target masks (keep positive anchors only)
-            y_labels_flat,          // anchor labels of objectness
-            y_labels_mask,          // objectness mask (ignore neutral anchors)
-            im_shape,               // image shape
-            gt_boxes,               // gt_boxes, padded to 64
-            num_gt_boxes,           // number of gt_boxes
-            gt_classes,             // gt_classes, padded to 64
-            im_scale                // image scaling factor
-        };
-
         // Derived values
         size_t output_buffer_size;
         std::unordered_map<std::string,int> label_map;
 
         config(nlohmann::json js, const image_var::config& iconfig);
 
-        size_t total_anchors() const {
+        size_t total_anchors() const
+        {
             return ratios.size() * scales.size() * (int)pow(int(std::floor(max_size * scaling_factor)),2);
         }
 
@@ -117,9 +106,9 @@ namespace nervana {
             ADD_SCALAR(scaling_factor, mode::OPTIONAL),
             ADD_SCALAR(ratios, mode::OPTIONAL),
             ADD_SCALAR(scales, mode::OPTIONAL),
-            ADD_SCALAR(negative_overlap, mode::OPTIONAL),
-            ADD_SCALAR(positive_overlap, mode::OPTIONAL),
-            ADD_SCALAR(foreground_fraction, mode::OPTIONAL),
+            ADD_SCALAR(negative_overlap, mode::OPTIONAL, [](float v){ return v>=0.0 && v <=1.0; }),
+            ADD_SCALAR(positive_overlap, mode::OPTIONAL, [](float v){ return v>=0.0 && v <=1.0; }),
+            ADD_SCALAR(foreground_fraction, mode::OPTIONAL, [](float v){ return v>=0.0 && v <=1.0; }),
             ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
             ADD_SCALAR(max_gt_boxes, mode::OPTIONAL),
             ADD_SCALAR(labels, mode::REQUIRED)
@@ -135,12 +124,12 @@ namespace nervana {
         virtual ~decoded() override {}
 
         // from transformer
-        std::vector<int>    labels;
-        std::vector<target> bbox_targets;
-        std::vector<int>    anchor_index;
-        std::vector<box>    anchors;
-        float               image_scale;
-        cv::Size            output_image_size;
+        std::vector<int>                labels;
+        std::vector<target>             bbox_targets;
+        std::vector<int>                anchor_index;
+        float                           image_scale;
+        cv::Size                        output_image_size;
+        std::vector<boundingbox::box>   gt_boxes;
     };
 
     class localization::extractor : public nervana::interface::extractor<localization::decoded> {
@@ -173,7 +162,7 @@ namespace nervana {
                             std::shared_ptr<localization::decoded> mp) override;
     private:
         transformer() = delete;
-        cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<box>& query_boxes);
+        cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<boundingbox::box>& query_boxes);
         static std::vector<target> compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
         std::vector<int> sample_anchors(const std::vector<int>& labels, bool debug=false);
 

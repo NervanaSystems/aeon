@@ -80,6 +80,15 @@ cv::Mat draw( int width, int height, const vector<boundingbox::box>& blist, cv::
     return image;
 }
 
+shared_ptr<image::params> make_params(int width, int height)
+{
+    shared_ptr<image::params> iparam = make_shared<image::params>();
+    iparam->cropbox = cv::Rect(0, 0, width, height);
+    iparam->output_size = cv::Size(width, height);
+    return iparam;
+}
+
+
 TEST(boundingbox, extractor)
 {
     {
@@ -180,7 +189,7 @@ TEST(boundingbox, bbox)
     EXPECT_EQ(7,boxes[2].label);
 
     boundingbox::transformer transform(cfg);
-    shared_ptr<image::params> iparam = make_shared<image::params>();
+    shared_ptr<image::params> iparam = make_params(256, 256);
     auto tx = transform.transform( iparam, decoded );
 }
 
@@ -217,23 +226,23 @@ TEST(boundingbox, crop)
     ASSERT_EQ(8,boxes.size());
 
     boundingbox::transformer transform(cfg);
-    shared_ptr<image::params> iparam = make_shared<image::params>();
+    shared_ptr<image::params> iparam = make_params(256, 256);
     iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
 
     auto d = draw(256,256,decoded->boxes(),iparam->cropbox);
     cv::imwrite("bbox_crop.png",d);
 
-
+    float scale = 256./40.;
     iparam->output_size = cv::Size(256, 256);
     auto tx_decoded = transform.transform( iparam, decoded );
     vector<boundingbox::box> tx_boxes = tx_decoded->boxes();
     ASSERT_EQ(6,tx_boxes.size());
-    EXPECT_EQ(cv::Rect(35,35,5,5),tx_boxes[0].rect());
-    EXPECT_EQ(cv::Rect(50,50,10,10),tx_boxes[1].rect());
-    EXPECT_EQ(cv::Rect(70,35,5,5),tx_boxes[2].rect());
-    EXPECT_EQ(cv::Rect(35,70,5,5),tx_boxes[3].rect());
-    EXPECT_EQ(cv::Rect(70,70,5,5),tx_boxes[4].rect());
-    EXPECT_EQ(cv::Rect(35,35,40,40),tx_boxes[5].rect());
+    EXPECT_EQ(cv::Rect((35-35)*scale,(35-35)*scale, 5*scale, 5*scale),tx_boxes[0].rect());
+    EXPECT_EQ(cv::Rect((50-35)*scale,(50-35)*scale,10*scale,10*scale),tx_boxes[1].rect());
+    EXPECT_EQ(cv::Rect((70-35)*scale,(35-35)*scale, 5*scale, 5*scale),tx_boxes[2].rect());
+    EXPECT_EQ(cv::Rect((35-35)*scale,(70-35)*scale, 5*scale, 5*scale),tx_boxes[3].rect());
+    EXPECT_EQ(cv::Rect((70-35)*scale,(70-35)*scale, 5*scale, 5*scale),tx_boxes[4].rect());
+    EXPECT_EQ(cv::Rect((35-35)*scale,(35-35)*scale,40*scale,40*scale),tx_boxes[5].rect());
 }
 
 TEST(boundingbox, rescale)
@@ -268,18 +277,119 @@ TEST(boundingbox, rescale)
     ASSERT_EQ(8,boxes.size());
 
     boundingbox::transformer transform(cfg);
-    shared_ptr<image::params> iparam = make_shared<image::params>();
-    iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
+    shared_ptr<image::params> iparam = make_params(256, 256);
     iparam->output_size = cv::Size(512, 1024);
     auto tx_decoded = transform.transform( iparam, decoded );
     vector<boundingbox::box> tx_boxes = tx_decoded->boxes();
+    float xscale = 512./256.;
+    float yscale = 1024./256.;
+    ASSERT_EQ(8,tx_boxes.size());
+    EXPECT_EQ(cv::Rect( 10*xscale, 10*yscale, 10*xscale, 10*yscale ),tx_boxes[0].rect());
+    EXPECT_EQ(cv::Rect( 30*xscale, 30*yscale, 10*xscale, 10*yscale ),tx_boxes[1].rect());
+    EXPECT_EQ(cv::Rect( 50*xscale, 50*yscale, 10*xscale, 10*yscale ),tx_boxes[2].rect());
+    EXPECT_EQ(cv::Rect( 70*xscale, 30*yscale, 10*xscale, 10*yscale ),tx_boxes[3].rect());
+    EXPECT_EQ(cv::Rect( 90*xscale, 35*yscale, 10*xscale, 10*yscale ),tx_boxes[4].rect());
+    EXPECT_EQ(cv::Rect( 30*xscale, 70*yscale, 10*xscale, 10*yscale ),tx_boxes[5].rect());
+    EXPECT_EQ(cv::Rect( 70*xscale, 70*yscale, 10*xscale, 10*yscale ),tx_boxes[6].rect());
+    EXPECT_EQ(cv::Rect( 30*xscale, 30*yscale, 80*xscale, 80*yscale ),tx_boxes[7].rect());
+}
+
+TEST(boundingbox, flip)
+{
+    // Create test metadata
+    cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
+    cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
+    cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]
+    cv::Rect r3 = cv::Rect( 70, 30, 10, 10 );   // result[2]
+    cv::Rect r4 = cv::Rect( 90, 35, 10, 10 );   // outside
+    cv::Rect r5 = cv::Rect( 30, 70, 10, 10 );   // result[3]
+    cv::Rect r6 = cv::Rect( 70, 70, 10, 10 );   // result[4]
+    cv::Rect r7 = cv::Rect( 30, 30, 80, 80 );   // result[5]
+    auto list = {create_box( r0, "lion" ),
+                  create_box( r1, "tiger" ),
+                  create_box( r2, "eel" ),
+                  create_box( r3, "eel" ),
+                  create_box( r4, "eel" ),
+                  create_box( r5, "eel" ),
+                  create_box( r6, "eel" ),
+                  create_box( r7, "eel" )};
+    auto j = create_metadata(list,256,256);
+    // cout << std::setw(4) << j << endl;
+
+    string buffer = j.dump();
+
+    auto cfg = make_bbox_config(100);
+    boundingbox::extractor extractor{cfg.label_map};
+    auto decoded = extractor.extract( &buffer[0], buffer.size() );
+    vector<boundingbox::box> boxes = decoded->boxes();
+
+    ASSERT_EQ(8,boxes.size());
+
+    boundingbox::transformer transform(cfg);
+    shared_ptr<image::params> iparam = make_params(256, 256);
+    iparam->flip = 1;
+    auto tx_decoded = transform.transform( iparam, decoded );
+    vector<boundingbox::box> tx_boxes = tx_decoded->boxes();
+    ASSERT_EQ(8,tx_boxes.size());
+
+    EXPECT_EQ(cv::Rect( 256-10-10-1, 10, 10, 10 ),tx_boxes[0].rect());
+    EXPECT_EQ(cv::Rect( 256-10-30-1, 30, 10, 10 ),tx_boxes[1].rect());
+    EXPECT_EQ(cv::Rect( 256-10-50-1, 50, 10, 10 ),tx_boxes[2].rect());
+    EXPECT_EQ(cv::Rect( 256-10-70-1, 30, 10, 10 ),tx_boxes[3].rect());
+    EXPECT_EQ(cv::Rect( 256-10-90-1, 35, 10, 10 ),tx_boxes[4].rect());
+    EXPECT_EQ(cv::Rect( 256-10-30-1, 70, 10, 10 ),tx_boxes[5].rect());
+    EXPECT_EQ(cv::Rect( 256-10-70-1, 70, 10, 10 ),tx_boxes[6].rect());
+    EXPECT_EQ(cv::Rect( 256-80-30-1, 30, 80, 80 ),tx_boxes[7].rect());
+}
+
+TEST(boundingbox, crop_flip)
+{
+    // Create test metadata
+    cv::Rect r0 = cv::Rect( 10, 10, 10, 10 );   // outside
+    cv::Rect r1 = cv::Rect( 30, 30, 10, 10 );   // result[0]
+    cv::Rect r2 = cv::Rect( 50, 50, 10, 10 );   // result[1]
+    cv::Rect r3 = cv::Rect( 70, 30, 10, 10 );   // result[2]
+    cv::Rect r4 = cv::Rect( 90, 35, 10, 10 );   // outside
+    cv::Rect r5 = cv::Rect( 30, 70, 10, 10 );   // result[3]
+    cv::Rect r6 = cv::Rect( 70, 70, 10, 10 );   // result[4]
+    cv::Rect r7 = cv::Rect( 30, 30, 80, 80 );   // result[5]
+    auto list = {create_box( r0, "lion" ),
+                  create_box( r1, "tiger" ),
+                  create_box( r2, "eel" ),
+                  create_box( r3, "eel" ),
+                  create_box( r4, "eel" ),
+                  create_box( r5, "eel" ),
+                  create_box( r6, "eel" ),
+                  create_box( r7, "eel" )};
+    auto j = create_metadata(list,256,256);
+    // cout << std::setw(4) << j << endl;
+
+    string buffer = j.dump();
+
+    auto cfg = make_bbox_config(100);
+    boundingbox::extractor extractor{cfg.label_map};
+    auto decoded = extractor.extract( &buffer[0], buffer.size() );
+    vector<boundingbox::box> boxes = decoded->boxes();
+
+    ASSERT_EQ(8,boxes.size());
+
+    boundingbox::transformer transform(cfg);
+    shared_ptr<image::params> iparam = make_params(256, 256);
+    iparam->cropbox = cv::Rect( 35, 35, 40, 40 );
+    iparam->output_size = cv::Size(256, 256);
+    iparam->flip = 1;
+    auto tx_decoded = transform.transform( iparam, decoded );
+    vector<boundingbox::box> tx_boxes = tx_decoded->boxes();
     ASSERT_EQ(6,tx_boxes.size());
-    EXPECT_EQ(cv::Rect(35*2,35*4,5*2,5*4),tx_boxes[0].rect());
-    EXPECT_EQ(cv::Rect(50*2,50*4,10*2,10*4),tx_boxes[1].rect());
-    EXPECT_EQ(cv::Rect(70*2,35*4,5*2,5*4),tx_boxes[2].rect());
-    EXPECT_EQ(cv::Rect(35*2,70*4,5*2,5*4),tx_boxes[3].rect());
-    EXPECT_EQ(cv::Rect(70*2,70*4,5*2,5*4),tx_boxes[4].rect());
-    EXPECT_EQ(cv::Rect(35*2,35*4,40*2,40*4),tx_boxes[5].rect());
+
+    float xscale = 256./40.;
+    float yscale = 256./40.;
+    EXPECT_EQ(cv::Rect( (35-1)*xscale,  0*yscale,  5*xscale,  5*yscale ),tx_boxes[0].rect());
+    EXPECT_EQ(cv::Rect( (15-1)*xscale, 15*yscale, 10*xscale, 10*yscale ),tx_boxes[1].rect());
+    EXPECT_EQ(cv::Rect( ( 0-1)*xscale,  0*yscale,  5*xscale,  5*yscale ),tx_boxes[2].rect());
+    EXPECT_EQ(cv::Rect( (35-1)*xscale, 35*yscale,  5*xscale,  5*yscale ),tx_boxes[3].rect());
+    EXPECT_EQ(cv::Rect( ( 0-1)*xscale, 35*yscale,  5*xscale,  5*yscale ),tx_boxes[4].rect());
+    EXPECT_EQ(cv::Rect( ( 0-1)*xscale,  0*yscale, 40*xscale, 40*yscale ),tx_boxes[5].rect());
 }
 
 TEST(boundingbox, angle)
@@ -299,7 +409,7 @@ TEST(boundingbox, angle)
     ASSERT_EQ(1,boxes.size());
 
     boundingbox::transformer transform(cfg);
-    shared_ptr<image::params> iparam = make_shared<image::params>();
+    shared_ptr<image::params> iparam = make_params(256, 256);
     iparam->angle = 5;
     auto tx_decoded = transform.transform( iparam, decoded );
     EXPECT_EQ(nullptr,tx_decoded.get());

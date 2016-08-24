@@ -39,6 +39,15 @@ public:
     bool difficult = false;
     bool truncated = false;
     int label;
+
+    box operator*(float v) const {
+        box rc = *this;
+        rc.xmin *= v;
+        rc.ymin *= v;
+        rc.xmax *= v;
+        rc.ymax *= v;
+        return rc;
+    }
 };
 
 std::ostream& operator<<(std::ostream&,const nervana::boundingbox::box&);
@@ -109,6 +118,7 @@ public:
                                             std::shared_ptr<image::params>,
                                             std::shared_ptr<boundingbox::decoded>) override;
 
+    static std::vector<boundingbox::box> transform_box( const std::vector<boundingbox::box>& b, const cv::Rect& crop, bool flip, float x_scale, float y_scale);
 private:
 };
 

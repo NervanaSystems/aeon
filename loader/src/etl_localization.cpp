@@ -19,7 +19,7 @@
 using namespace std;
 using namespace nervana;
 
-nervana::localization::config::config(nlohmann::json js, const image_var::config& iconfig) :
+localization::config::config(nlohmann::json js, const image_var::config& iconfig) :
     min_size{iconfig.min_size},
     max_size{iconfig.max_size}
 {
@@ -67,14 +67,9 @@ nervana::localization::config::config(nlohmann::json js, const image_var::config
     validate();
 }
 
-void nervana::localization::config::validate()
+void ::localization::config::validate()
 {
     if(max_size < min_size) throw invalid_argument("max_size < min_size");
-    if(negative_overlap    < 0.0) throw invalid_argument("negative_overlap");
-    if(negative_overlap    > 1.0) throw invalid_argument("negative_overlap");
-    if(positive_overlap    < 0.0) throw invalid_argument("positive_overlap");
-    if(positive_overlap    > 1.0) throw invalid_argument("positive_overlap");
-    if(foreground_fraction > 1.0) throw invalid_argument("foreground_fraction");
 }
 
 localization::extractor::extractor(const localization::config& cfg) :
@@ -89,12 +84,15 @@ localization::transformer::transformer(const localization::config& _cfg) :
 }
 
 shared_ptr<localization::decoded> localization::transformer::transform(
-                    shared_ptr<image_var::params> txs,
+                    shared_ptr<image_var::params> settings,
                     shared_ptr<localization::decoded> mp)
 {
     cv::Size im_size{mp->width(), mp->height()};
+    auto crop = cv::Rect(0, 0, im_size.width, im_size.height);
+
     float im_scale;
-    tie(im_scale, im_size) = image::calculate_scale_shape(im_size, cfg.min_size, cfg.max_size);
+    im_scale = image::calculate_scale(im_size, cfg.min_size, cfg.max_size);
+    im_size = cv::Size{int(unbiased_round(im_size.width*im_scale)), int(unbiased_round(im_size.height*im_scale))};
     mp->image_scale = im_scale;
     mp->output_image_size = im_size;
 
@@ -103,12 +101,8 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     for(int i : idx_inside) anchors_inside.push_back(all_anchors[i]);
 
     // compute bbox overlaps
-    vector<box> scaled_bbox;
-    for(const boundingbox::box& b : mp->boxes()) {
-        box r = b*im_scale;
-        scaled_bbox.push_back(r);
-    }
-    cv::Mat overlaps = bbox_overlaps(anchors_inside, scaled_bbox);
+    mp->gt_boxes = boundingbox::transformer::transform_box(mp->boxes(), crop, settings->flip, im_scale, im_scale);
+    cv::Mat overlaps = bbox_overlaps(anchors_inside, mp->gt_boxes);
 
     vector<int> labels(overlaps.rows, -1.0);
 
@@ -161,8 +155,8 @@ shared_ptr<localization::decoded> localization::transformer::transform(
                 max = value;
             }
         }
-        if(index<scaled_bbox.size()) {
-            argmax.push_back(scaled_bbox[index]);
+        if(index < mp->gt_boxes.size()) {
+            argmax.push_back(mp->gt_boxes[index]);
         }
     }
 
@@ -181,8 +175,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
         bbox_targets = move(t_bbox_targets);
     }
 
-    mp->anchor_index = sample_anchors(labels,txs->debug_deterministic);
-    mp->anchors = all_anchors;
+    mp->anchor_index = sample_anchors(labels,settings->debug_deterministic);
     mp->labels = labels;
     mp->bbox_targets = bbox_targets;
 
@@ -250,7 +243,7 @@ vector<localization::target> localization::transformer::compute_targets(const ve
     return targets;
 }
 
-cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const vector<box>& bounding_boxes)
+cv::Mat localization::transformer::bbox_overlaps(const vector<box>& boxes, const vector<boundingbox::box>& bounding_boxes)
 {
     // Parameters
     // ----------
@@ -323,11 +316,13 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
     int32_t* gt_classes         = (int32_t*)buf_list[7];
     float*   im_scale           = (float*  )buf_list[8];
 
+    // Initialize all of the buffers
     for(int i = 0; i<total_anchors * 4; i++) bbtargets[i] = 0.;
     for(int i = 0; i<total_anchors * 4; i++) bbtargets_mask[i] = 0.;
-    for(int i = 0; i<total_anchors; i++) labels_flat[i] = 1;
-    for(int i = 0; i<total_anchors; i++) labels_flat[i + total_anchors] = 0;
+    for(int i = 0; i<total_anchors;     i++) labels_flat[i] = 1;
+    for(int i = 0; i<total_anchors;     i++) labels_flat[i + total_anchors] = 0;
     for(int i = 0; i<total_anchors * 2; i++) labels_mask[i] = 0;
+
     for(int index : mp->anchor_index) {
         if(mp->labels[index] == 1) {
             labels_flat[index + total_anchors * 0] = 0;
@@ -350,9 +345,9 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
     im_shape[0] = mp->output_image_size.width;
     im_shape[1] = mp->output_image_size.height;
 
-    *num_gt_boxes = min(max_gt_boxes, mp->boxes().size());
+    *num_gt_boxes = min(max_gt_boxes, mp->gt_boxes.size());
     for(int i=0; i<*num_gt_boxes; i++) {
-        const boundingbox::box& gt = mp->boxes()[i];
+        const boundingbox::box& gt = mp->gt_boxes[i];
         *gt_boxes++ = gt.xmin;
         *gt_boxes++ = gt.ymin;
         *gt_boxes++ = gt.xmax;

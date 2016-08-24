@@ -19,6 +19,43 @@
 using namespace std;
 using namespace nervana;
 
+image_var::config::config(nlohmann::json js)
+{
+    if(js.is_null()) {
+        throw std::runtime_error("missing image_var config in json config");
+    }
+
+    for(auto& info : config_list) {
+        info->parse(js);
+    }
+    verify_config("image_var", config_list, js);
+
+    // Now fill in derived
+    shape_t shape;
+    if (flip_enable) {
+        flip_distribution = bernoulli_distribution{0.5};
+    }
+
+    if (!center) {
+        crop_offset = uniform_real_distribution<float> {0.0f, 1.0f};
+    }
+
+    if (channel_major) {
+        shape = {channels, max_size, max_size};
+    } else{
+        shape = {max_size, max_size, channels};
+    }
+    add_shape_type(shape, type_string);
+
+    validate();
+}
+
+void image_var::config::validate() {
+    if(max_size < min_size) {
+        throw std::invalid_argument("max_size must be greater than or equal to min_size");
+    }
+}
+
 void image_var::params::dump(ostream & ostr)
 {
     ostr << "Flip: " << flip << "\n";
@@ -76,7 +113,8 @@ shared_ptr<image_var::decoded> image_var::transformer::transform(
     cv::Mat output;
     cv::Size im_size;
     float im_scale;
-    tie(im_scale, im_size) = image::calculate_scale_shape(image.size(), min_size, max_size);
+    im_scale = image::calculate_scale(image.size(), min_size, max_size);
+    im_size = cv::Size{int(unbiased_round(image.size().width*im_scale)), int(unbiased_round(image.size().height*im_scale))};
 
     nervana::image::resize(image, output, im_size);
 
@@ -96,11 +134,13 @@ image_var::param_factory::make_params(shared_ptr<const decoded> input)
     // Must use this method for creating a shared_ptr rather than make_shared
     // since the params default ctor is private and factory is friend
     // make_shared is not friend :(
-    auto imgstgs = shared_ptr<image_var::params>(new image_var::params());
+    auto params = shared_ptr<image_var::params>(new image_var::params());
 
-    imgstgs->flip  = settings.flip_distribution(generator);
+    params->flip  = config.flip_distribution(generator);
+    params->output_size = input->get_image_size();
+    params->cropbox = cv::Rect(cv::Point(0,0), input->get_image_size());
 
-    return imgstgs;
+    return params;
 }
 
 image_var::loader::loader(const image_var::config& cfg) :
