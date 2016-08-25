@@ -45,7 +45,7 @@ namespace nervana {
         typedef std::vector<std::string> FilenameList;
         typedef std::vector<FilenameList>::const_iterator iter;
 
-        std::string hash();
+        std::string cache_id();
         std::string version();
         size_t objectCount() const { return _filename_lists.size(); }
 

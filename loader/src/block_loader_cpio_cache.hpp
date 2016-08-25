@@ -24,9 +24,9 @@
  * caches loadBlock function in block_loader out to cpio files in
  * `cacheDir`.
  *
- * The hash is used to unquely identify a particular dataset and the version
+ * The cache_id is used to unquely identify a particular dataset and the version
  * is used to help invalidate old versions of the same dataset.  If a cache is
- * created with the same hash as an existing cache, but a different version,
+ * created with the same cache_id as an existing cache, but a different version,
  * old version is deleted.
  */
 
@@ -37,7 +37,7 @@ namespace nervana {
 class nervana::block_loader_cpio_cache : public block_loader {
 public:
     block_loader_cpio_cache(const std::string& rootCacheDir,
-                            const std::string& hash, const std::string& version,
+                            const std::string& cache_id, const std::string& version,
                             std::shared_ptr<block_loader> loader);
 
     void loadBlock(nervana::buffer_in_array& dest, uint block_num);
@@ -48,8 +48,8 @@ private:
     void writeBlockToCache(nervana::buffer_in_array& dest, uint block_num);
     std::string blockFilename(uint block_num);
 
-    void invalidateOldCache(const std::string& rootCacheDir, const std::string& hash, const std::string& version);
-    bool filenameHoldsInvalidCache(const std::string& filename, const std::string& hash, const std::string& version);
+    void invalidateOldCache(const std::string& rootCacheDir, const std::string& cache_id, const std::string& version);
+    bool filenameHoldsInvalidCache(const std::string& filename, const std::string& cache_id, const std::string& version);
     void removeDirectory(const std::string& dir);
     void makeDirectory(const std::string& dir);
     static int rm(const char *path, const struct stat *s, int flag, struct FTW *f);

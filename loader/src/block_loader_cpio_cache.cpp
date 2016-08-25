@@ -30,14 +30,14 @@ using namespace nervana;
 #define OPEN_MAX 128
 
 block_loader_cpio_cache::block_loader_cpio_cache(const string& rootCacheDir,
-                                                 const string& hash,
+                                                 const string& cache_id,
                                                  const string& version,
                                                  shared_ptr<block_loader> loader)
 : block_loader(loader->blockSize()), _loader(loader)
 {
-    invalidateOldCache(rootCacheDir, hash, version);
+    invalidateOldCache(rootCacheDir, cache_id, version);
 
-    _cacheDir = rootCacheDir + "/" + hash + "_" + version;
+    _cacheDir = rootCacheDir + "/" + cache_id + "_" + version;
 
     makeDirectory(_cacheDir);
 }
@@ -95,16 +95,16 @@ void block_loader_cpio_cache::writeBlockToCache(buffer_in_array& buff, uint bloc
 }
 
 void block_loader_cpio_cache::invalidateOldCache(const string& rootCacheDir,
-                                                 const string& hash,
+                                                 const string& cache_id,
                                                  const string& version)
 {
-    // remove cache directories that match rootCacheDir and hash but not version
+    // remove cache directories that match rootCacheDir and cache_id but not version
 
     DIR *dir;
     struct dirent *ent;
     if((dir = opendir(rootCacheDir.c_str())) != NULL) {
         while((ent = readdir(dir)) != NULL) {
-            if(filenameHoldsInvalidCache(ent->d_name, hash, version)) {
+            if(filenameHoldsInvalidCache(ent->d_name, cache_id, version)) {
                 removeDirectory(rootCacheDir + "/" + ent->d_name);
             }
         }
@@ -116,21 +116,21 @@ void block_loader_cpio_cache::invalidateOldCache(const string& rootCacheDir,
 }
 
 bool block_loader_cpio_cache::filenameHoldsInvalidCache(const string& filename,
-                                                        const string& hash,
+                                                        const string& cache_id,
                                                         const string& version)
 {
     // in order for `filename` to hold invalid cache, it must begin with
-    // `hash`, but not contain `version`
+    // `cache_id`, but not contain `version`
 
-    if(filename.find(hash) != 0) {
-        // filename doesn't start with hash, dont remove it
+    if(filename.find(cache_id) != 0) {
+        // filename doesn't start with cache_id, dont remove it
         return false;
     }
     if(filename.find(version) == string::npos) {
-        // filename does start with hash, but doesnt have version, invalidate
+        // filename does start with cache_id, but doesnt have version, invalidate
         return true;
     }
-    // filename does start with hash and does have version, keep, its valid
+    // filename does start with cache_id and does have version, keep, its valid
     return false;
 }
 

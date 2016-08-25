@@ -41,7 +41,7 @@ manifest_csv::manifest_csv(string filename, bool shuffle)
     parse_stream(infile);
 }
 
-string manifest_csv::hash()
+string manifest_csv::cache_id()
 {
     // returns a hash of the _filename
     std::size_t h = std::hash<std::string>()(_filename);

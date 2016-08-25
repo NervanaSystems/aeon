@@ -133,9 +133,7 @@ void decode_thread_pool::work(int id)
 
     // No locking required because threads write into non-overlapping regions.
     try {
-        if((*_inputBuf)[0]->get_item_count() == 0) {
-            throw std::runtime_error("input buffer to decoded_thread_pool is empty");
-        }
+        affirm((*_inputBuf)[0]->get_item_count() != 0, "input buffer to decoded_thread_pool is empty");
 
         for (int i = _startInds[id]; i < _endInds[id]; i++) {
             _providers[id]->provide(i, *_inputBuf, _out->get_for_write());
@@ -283,6 +281,8 @@ loader::loader(const char* cfg_string, PyObject *py_obj_backend)
     shared_ptr<nervana::manifest> base_manifest = nullptr;
 
     if(nervana::manifest_nds::is_likely_json(lcfg.manifest_filename)) {
+        affirm(lcfg.subset_fraction == 1, "subset_fraction must be 1.0 for nds");
+
         auto manifest = make_shared<nervana::manifest_nds>(lcfg.manifest_filename);
 
         // TODO: add shard_count/shard_index to cfg
@@ -309,8 +309,9 @@ loader::loader(const char* cfg_string, PyObject *py_obj_backend)
     }
 
     if(lcfg.cache_directory.length() > 0) {
+        string cache_id = base_manifest->cache_id() + to_string(_block_loader->objectCount());
         _block_loader = make_shared<block_loader_cpio_cache>(lcfg.cache_directory,
-                                                             base_manifest->hash(),
+                                                             cache_id,
                                                              base_manifest->version(),
                                                              _block_loader);
     }

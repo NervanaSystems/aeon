@@ -37,17 +37,17 @@ TEST(manifest, no_file) {
     ), std::runtime_error);
 }
 
-TEST(manifest, hash_eq) {
+TEST(manifest, id_eq) {
     string tmpname = tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest1(tmpname, false);
     nervana::manifest_csv manifest2(tmpname, false);
-    ASSERT_EQ(manifest1.hash(), manifest2.hash());
+    ASSERT_EQ(manifest1.cache_id(), manifest2.cache_id());
 }
 
-TEST(manifest, hash_ne) {
+TEST(manifest, id_ne) {
     nervana::manifest_csv manifest1(tmp_manifest_file(0, {0, 0}), false);
     nervana::manifest_csv manifest2(tmp_manifest_file(0, {0, 0}), false);
-    ASSERT_NE(manifest1.hash(), manifest2.hash());
+    ASSERT_NE(manifest1.cache_id(), manifest2.cache_id());
 }
 
 TEST(manifest, version_eq) {

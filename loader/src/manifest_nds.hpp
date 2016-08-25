@@ -25,7 +25,7 @@ namespace nervana {
         manifest_nds(const std::string filename);
         ~manifest_nds() {}
 
-        std::string hash();
+        std::string cache_id();
 
         // NDS manifests doesn't have versions since collections are immutable
         std::string version() { return ""; }

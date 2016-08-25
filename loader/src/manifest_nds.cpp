@@ -57,7 +57,7 @@ manifest_nds::manifest_nds(const std::string filename) {
     }
 }
 
-string manifest_nds::hash() {
+string manifest_nds::cache_id() {
     stringstream contents;
     contents << baseurl << collection_id;
     std::size_t h = std::hash<std::string>()(contents.str());

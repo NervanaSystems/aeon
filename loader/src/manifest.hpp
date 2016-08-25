@@ -21,7 +21,7 @@ namespace nervana {
 
     class manifest {
     public:
-        virtual std::string hash() = 0;
+        virtual std::string cache_id() = 0;
         virtual std::string version() = 0;
     };
 }
