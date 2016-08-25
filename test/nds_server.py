@@ -24,5 +24,25 @@ def test_pattern():
     return '0123456789abcdef' * 1024
 
 
-if __name__ == "__main__":
+def run_server():
     app.run()
+
+
+def run_server_with_timeout(seconds):
+    """ run server in a seperate process and terminate it after `seconds` """
+    import time
+    from multiprocessing import Process
+
+    server = Process(target=run_server)
+    server.start()
+
+    time.sleep(seconds)
+    print seconds, "seconds are over.  ending nds_server.py"
+
+    server.terminate()
+    server.join()
+
+
+if __name__ == "__main__":
+    # only run for 3 minutes, then die
+    run_server_with_timeout(3 * 60)
