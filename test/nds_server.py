@@ -44,5 +44,5 @@ def run_server_with_timeout(seconds):
 
 
 if __name__ == "__main__":
-    # only run for 3 minutes, then die
-    run_server_with_timeout(3 * 60)
+    # only run for 15 seconds, then die
+    run_server_with_timeout(15)
