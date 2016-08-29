@@ -790,10 +790,11 @@ TEST(localization, loader)
     vector<int32_t> num_gt_boxes;
     vector<int32_t> gt_classes;
     vector<float>   im_scale;
+    vector<int32_t> gt_difficult;
 
     vector<void*> buf_list;
     const vector<shape_type>& shapes = cfg.get_shape_type_list();
-    ASSERT_EQ(9, shapes.size());
+    ASSERT_EQ(10, shapes.size());
     size_t total_anchors = 34596;
 
     bbtargets.resize(shapes[0].get_element_count());
@@ -805,6 +806,7 @@ TEST(localization, loader)
     num_gt_boxes.resize(shapes[6].get_element_count());
     gt_classes.resize(shapes[7].get_element_count());
     im_scale.resize(shapes[8].get_element_count());
+    gt_difficult.resize(shapes[9].get_element_count());
 
     ASSERT_EQ(total_anchors * 4, bbtargets.size());
     ASSERT_EQ(total_anchors * 4, bbtargets_mask.size());
@@ -815,6 +817,7 @@ TEST(localization, loader)
     ASSERT_EQ(1, num_gt_boxes.size());
     ASSERT_EQ(64, gt_classes.size());
     ASSERT_EQ(1, im_scale.size());
+    ASSERT_EQ(64, gt_difficult.size());
 
     memset(bbtargets.data(), 0xFF, bbtargets.size()*sizeof(float));
     memset(bbtargets_mask.data(), 0xFF, bbtargets_mask.size()*sizeof(float));
@@ -825,6 +828,7 @@ TEST(localization, loader)
     memset(num_gt_boxes.data(), 0xFF, num_gt_boxes.size()*sizeof(int32_t));
     memset(gt_classes.data(), 0xFF, gt_classes.size()*sizeof(int32_t));
     memset(im_scale.data(), 0xFF, im_scale.size()*sizeof(float));
+    memset(gt_difficult.data(), 0xFF, gt_difficult.size()*sizeof(int32_t));
 
     buf_list.push_back(bbtargets.data());
     buf_list.push_back(bbtargets_mask.data());
@@ -835,6 +839,7 @@ TEST(localization, loader)
     buf_list.push_back(num_gt_boxes.data());
     buf_list.push_back(gt_classes.data());
     buf_list.push_back(im_scale.data());
+    buf_list.push_back(gt_difficult.data());
 
     loader.load(buf_list, transformed_data);
 
@@ -899,13 +904,14 @@ TEST(localization, loader)
     EXPECT_EQ(800, im_shape[0]) << "width";
     EXPECT_EQ(600, im_shape[1]) << "height";
     EXPECT_EQ(6, num_gt_boxes[0]);
-    for(int i=0; i<6; i++) {
+    for(int i=0; i<num_gt_boxes[0]; i++) {
         const boundingbox::box& box = transformed_data->boxes()[i];
         EXPECT_EQ(box.xmin * im_scale[0], gt_boxes[i*4+0]);
         EXPECT_EQ(box.ymin * im_scale[0], gt_boxes[i*4+1]);
         EXPECT_EQ(box.xmax * im_scale[0], gt_boxes[i*4+2]);
         EXPECT_EQ(box.ymax * im_scale[0], gt_boxes[i*4+3]);
         EXPECT_EQ(box.label, gt_classes[i]);
+        EXPECT_EQ(box.difficult, gt_difficult[i]);
     }
     EXPECT_FLOAT_EQ(1.6, im_scale[0]);
 }
@@ -980,7 +986,7 @@ TEST(localization,provider)
     shared_ptr<provider_interface> media = provider_factory::create(js);
     const vector<shape_type>& oshapes = media->get_oshapes();
     ASSERT_NE(nullptr,media);
-    ASSERT_EQ(10, oshapes.size());
+    ASSERT_EQ(11, oshapes.size());
 
     string target = read_file(CURDIR"/test_data/006637.json");
     vector<char> target_data;
@@ -1046,7 +1052,7 @@ TEST(localization,provider_channel_major)
     shared_ptr<provider_interface> media = provider_factory::create(js);
     const vector<shape_type>& oshapes = media->get_oshapes();
     ASSERT_NE(nullptr,media);
-    ASSERT_EQ(10, oshapes.size());
+    ASSERT_EQ(11, oshapes.size());
 
     string target = read_file(CURDIR"/test_data/006637.json");
     vector<char> target_data;

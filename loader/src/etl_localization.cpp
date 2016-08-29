@@ -59,6 +59,9 @@ localization::config::config(nlohmann::json js, const image_var::config& iconfig
     add_shape_type({64, 1}, "int32_t");
     add_shape_type({1, 1}, "float");
 
+    // 'difficult' tag for gt_boxes
+    add_shape_type({max_gt_boxes,1}, "int32_t");
+
     label_map.clear();
     for( int i=0; i<labels.size(); i++ ) {
         label_map.insert({labels[i],i});
@@ -315,6 +318,7 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
     int32_t* num_gt_boxes       = (int32_t*)buf_list[6];
     int32_t* gt_classes         = (int32_t*)buf_list[7];
     float*   im_scale           = (float*  )buf_list[8];
+    int32_t* gt_difficult       = (int32_t*)buf_list[9];
 
     // Initialize all of the buffers
     for(int i = 0; i<total_anchors * 4; i++) bbtargets[i] = 0.;
@@ -353,6 +357,7 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
         *gt_boxes++ = gt.xmax;
         *gt_boxes++ = gt.ymax;
         *gt_classes++ = gt.label;
+        *gt_difficult++ = gt.difficult;
     }
     for(int i=*num_gt_boxes; i<max_gt_boxes; i++) {
         *gt_boxes++ = 0;
@@ -360,6 +365,7 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
         *gt_boxes++ = 0;
         *gt_boxes++ = 0;
         *gt_classes++ = 0;
+        *gt_difficult++ = 0;
     }
 
     *im_scale = mp->image_scale;

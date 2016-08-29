@@ -49,6 +49,7 @@ void image_localization::provide(int idx, buffer_in_array& in_buf, buffer_out_ar
     char* num_gt_boxes_out      = out_buf[7]->get_item(idx);
     char* gt_classes_out        = out_buf[8]->get_item(idx);
     char* im_scale_out          = out_buf[9]->get_item(idx);
+    char* gt_difficult          = out_buf[10]->get_item(idx);
 
     vector<void*> target_list = {
         y_bbtargets_out,
@@ -59,7 +60,8 @@ void image_localization::provide(int idx, buffer_in_array& in_buf, buffer_out_ar
         gt_boxes_out,
         num_gt_boxes_out,
         gt_classes_out,
-        im_scale_out
+        im_scale_out,
+        gt_difficult
     };
 
     if (datum_in.size() == 0) {
