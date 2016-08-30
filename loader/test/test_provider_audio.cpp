@@ -165,7 +165,7 @@ TEST(provider,audio_transcript) {
 
     for (int i=0; i<batch_size; i++)
     {
-        ASSERT_FLOAT_EQ(unpack<float>(outBuf[3]->get_item(i)), float(100));
+        ASSERT_EQ(unpack<uint32_t>(outBuf[3]->get_item(i)), 100);
     }
 
     // Do the packing

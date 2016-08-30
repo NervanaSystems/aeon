@@ -63,9 +63,11 @@ namespace nervana {
 
     class shape_type {
     public:
-        shape_type(const std::vector<size_t>& shape, const output_type& otype) :
+        shape_type(const std::vector<size_t>& shape, const output_type& otype,
+                   const bool flatten=false) :
             _shape{shape},
-            _otype{otype}
+            _otype{otype},
+            _flatten_with_batch_size{flatten}
         {
             _byte_size = static_cast<size_t> (_otype.size * get_element_count());
         }
@@ -77,10 +79,13 @@ namespace nervana {
         const std::vector<size_t>& get_shape() const { return _shape; }
         const output_type& get_otype() const { return _otype; }
 
+        bool flatten_all_dims() const { return _flatten_with_batch_size; }
+
     private:
         std::vector<size_t>   _shape;
         output_type           _otype;
         size_t                _byte_size;
+        bool                  _flatten_with_batch_size;
     };
 }
 

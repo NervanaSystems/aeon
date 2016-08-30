@@ -143,11 +143,13 @@ public:
         }
     }
 
-    void add_shape_type(const std::vector<size_t>& sh, const std::string& type_string) {
-        shape_type_list.emplace_back(sh, nervana::output_type{type_string});
+    void add_shape_type(const std::vector<size_t>& sh, const std::string& type_string,
+                        const bool flatten_all_dims=false) {
+        shape_type_list.emplace_back(sh, nervana::output_type{type_string}, flatten_all_dims);
     }
-    void add_shape_type(const std::vector<size_t>& sh, const nervana::output_type& ot) {
-        shape_type_list.emplace_back(sh, ot);
+    void add_shape_type(const std::vector<size_t>& sh, const nervana::output_type& ot,
+                        const bool flatten_all_dims=false) {
+        shape_type_list.emplace_back(sh, ot, flatten_all_dims);
     }
 private:
     std::vector<nervana::shape_type> shape_type_list;

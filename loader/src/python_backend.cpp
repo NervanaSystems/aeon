@@ -192,6 +192,10 @@ void python_backend::wrap_buffer_pool(PyObject *list, buffer_out *buf, int bufId
                                    1, std::multiplies<uint32_t>());
     int nd = 2;
     npy_intp dims[2] = {_batchSize, all_dims};
+    if (st.flatten_all_dims()) {
+        dims[0] = _batchSize * all_dims;
+        dims[1] = 1;
+    }
 
     PyObject *p_array = PyArray_SimpleNewFromData(nd, dims, st.get_otype().np_type, buf->data());
 

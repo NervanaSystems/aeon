@@ -49,8 +49,9 @@ namespace nervana {
             }
             verify_config("char_map", config_list, js);
 
-            // Now fill in derived
-            add_shape_type({1, max_length}, type_string);
+            // Now fill in derived (pack_for_ctc passed as indicator whether to interpret
+            // output shape as flattened across batch size)
+            add_shape_type({1, max_length}, type_string, pack_for_ctc);
 
             uint8_t index = 0;
             for (auto c: alphabet)
