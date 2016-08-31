@@ -13,22 +13,17 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-Getting Started
-===============
+Audio
+=====
 
-Installation
-------------
+.. ------
+.. Each input modality should discuss the input format and mechanics, what each parameter actually does, the default settings, and some example config invocations. Supported formats (e.g. *.wav) and
+.. a section on ingestion/format conversion.
+.. -----
 
-First grab some prerequisites (at the very least)::
+Classification
+--------------
 
-  sudo apt-get install libcurl4-openssl-dev clang
 
-Then to install aeon::
-
-  git clone https://github.com/NervanaSystems/aeon.git
-  cd aeon
-  sudo python setup.py install
-
-Usage
------
-.. TODO: put a small, simpler example above this more complicated one.
+Transcription
+-------------
