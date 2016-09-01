@@ -22,6 +22,7 @@
 #include "wav_data.hpp"
 #include "specgram.hpp"
 #include "noise_clips.hpp"
+#include "util.hpp"
 
 class noise_clips;
 
@@ -65,7 +66,6 @@ namespace nervana {
 
 
         // Independent variables and optional
-        int32_t     seed             {0};          //  Default  is to seed deterministically
         uint32_t    num_cepstra      {40};
         uint32_t    num_filters      {64};
         std::string type_string      {"uint8_t"};
@@ -146,7 +146,6 @@ namespace nervana {
             ADD_SCALAR(max_duration, mode::REQUIRED),
             ADD_SCALAR(frame_stride, mode::REQUIRED),
             ADD_SCALAR(frame_length, mode::REQUIRED),
-            ADD_SCALAR(seed, mode::OPTIONAL),
             ADD_SCALAR(num_cepstra, mode::OPTIONAL),
             ADD_SCALAR(num_filters, mode::OPTIONAL),
             ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
@@ -190,12 +189,7 @@ namespace nervana {
     public:
         param_factory(audio::config& cfg) : _cfg{cfg}
         {
-            // A positive provided seed means to run deterministic with that seed
-            if (_cfg.seed >= 0) {
-                _dre.seed((uint32_t) _cfg.seed);
-            } else {
-                _dre.seed(std::chrono::system_clock::now().time_since_epoch().count());
-            }
+            _dre.seed(get_global_random_seed());
         }
         ~param_factory() {}
 

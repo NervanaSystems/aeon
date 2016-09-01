@@ -155,3 +155,14 @@ void nervana::affirm(bool cond, const std::string& msg)
         throw std::runtime_error(msg);
     }
 }
+
+void nervana::set_global_random_seed(uint32_t newval)
+{
+    nervana::global_random_seed = newval;
+}
+
+uint32_t nervana::get_global_random_seed()
+{
+    return nervana::global_random_seed;
+}
+

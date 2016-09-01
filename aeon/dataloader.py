@@ -56,6 +56,11 @@ class DataLoader(object):
 
         self.minibatch_size = config['minibatch_size']
 
+        # Use the backend's rng seed if it exists and no specified seed
+        # otherwise stick with what has been specified in the config
+        if getattr(backend, 'rng_seed') is not None and config.get('random_seed') is None:
+            config['random_seed'] = backend.rng_seed
+
         # Launch background threads
         self.loader = self._start(json.dumps(config), backend)
 

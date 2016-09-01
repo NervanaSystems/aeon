@@ -17,13 +17,15 @@
 #include <algorithm>
 #include <random>
 
+#include "util.hpp"
 #include "block_iterator_shuffled.hpp"
 
 using namespace std;
 using namespace nervana;
 
-block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader, uint32_t seed)
-: _rand(seed), _loader(loader), _seed(seed), _epoch(0)
+
+block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader)
+: _rand(get_global_random_seed()), _loader(loader), _epoch(0)
 {
     // fill indices with integers from  0 to _count.  indices can then be
     // shuffled and used to iterate randomly through the blocks.
@@ -49,7 +51,7 @@ void block_iterator_shuffled::read(nervana::buffer_in_array &dest)
     // are shuffled in the same order.
 
     for (auto d: dest) {
-        d->shuffle(_seed + _epoch);
+        d->shuffle(get_global_random_seed() + _epoch);
     }
 
     if(++_it == _indices.end()) {

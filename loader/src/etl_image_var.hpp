@@ -21,7 +21,7 @@
 #include <chrono>
 
 #include "interface.hpp"
-
+#include "util.hpp"
 
 namespace nervana {
     namespace image_var {
@@ -59,7 +59,6 @@ namespace nervana {
         size_t                                max_size;
         bool                                  channel_major = true;
         size_t                                channels = 3;
-        int32_t                               seed = 0; // Default is to seed deterministically
         std::string                           type_string{"uint8_t"};
         bool                                  do_area_scale = false;
 
@@ -89,7 +88,6 @@ namespace nervana {
         std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
             ADD_SCALAR(min_size, mode::REQUIRED),
             ADD_SCALAR(max_size, mode::REQUIRED),
-            ADD_SCALAR(seed, mode::OPTIONAL),
             ADD_DISTRIBUTION(scale, mode::OPTIONAL, [](const std::uniform_real_distribution<float>& v){
                 return v.a() >= 0 && v.a() <= 1 && v.b() >= 0 && v.b() <= 1 && v.a() <= v.b();
             }),
@@ -115,14 +113,8 @@ namespace nervana {
     public:
         param_factory(image_var::config& cfg) :
             config{cfg},
-            generator{0}
+            generator{get_global_random_seed()}
         {
-            // A positive provided seed means to run deterministic with that seed
-            if (config.seed >= 0) {
-                generator.seed((uint32_t) config.seed);
-            } else {
-                generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
-            }
         }
 
         virtual ~param_factory() {}

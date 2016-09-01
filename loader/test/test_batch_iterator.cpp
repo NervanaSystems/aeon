@@ -61,7 +61,7 @@ TEST(minibatch_iterator, shuffled) {
 
     // a little odd here that our block size is 3 and our minibatchsize is 13 ...
     auto mbl = make_shared<block_loader_alphabet>(3);
-    auto bis = make_shared<block_iterator_shuffled>(mbl, 0);
+    auto bis = make_shared<block_iterator_shuffled>(mbl);
     batch_iterator mi(bis, 13);
 
     // we know there are 3 * 26 objects in the dataset so we should get

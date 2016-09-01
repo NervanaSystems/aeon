@@ -107,4 +107,9 @@ namespace nervana {
     };
 
     void affirm(bool cond, const std::string& msg);
+
+    static uint32_t global_random_seed = 0;
+
+    void set_global_random_seed(uint32_t newval);
+    uint32_t get_global_random_seed();
 }

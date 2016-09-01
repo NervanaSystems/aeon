@@ -31,6 +31,7 @@
 #include "provider_factory.hpp"
 #include "buffer_pool_in.hpp"
 #include "buffer_pool_out.hpp"
+#include "util.hpp"
 
 namespace nervana {
     class decode_thread_pool;
@@ -121,6 +122,7 @@ public:
             macrobatch_size = minibatch_size;
         }
 
+        set_global_random_seed(random_seed);
         validate();
     }
 

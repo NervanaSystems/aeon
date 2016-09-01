@@ -39,7 +39,7 @@ public:
     void add_item(const std::vector<char>&);
     void add_exception(std::exception_ptr);
 
-    void shuffle(uint32_t seed);
+    void shuffle(uint32_t random_seed);
 
     int get_item_count();
 

@@ -318,7 +318,7 @@ loader::loader(const char* cfg_string, PyObject *py_obj_backend)
 
     shared_ptr<block_iterator> block_iter;
     if (lcfg.shuffle_every_epoch) {
-        block_iter = make_shared<block_iterator_shuffled>(_block_loader, lcfg.random_seed);
+        block_iter = make_shared<block_iterator_shuffled>(_block_loader);
     } else {
         block_iter = make_shared<block_iterator_sequential>(_block_loader);
     }

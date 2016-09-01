@@ -39,7 +39,7 @@ TEST(block_iterator_shuffled, sequential_block) {
 
 TEST(block_iterator_shuffled, shuffled_block) {
     auto mbl = make_shared<block_loader_alphabet>(5);
-    block_iterator_shuffled bis(mbl, 0);
+    block_iterator_shuffled bis(mbl);
     buffer_in_array bp(2);
 
     uint32_t num_records = mbl->objectCount();
