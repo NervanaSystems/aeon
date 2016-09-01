@@ -69,10 +69,11 @@ clean:
 	rm -rf source/generated
 
 doxygen:
+	mkdir -p $(BUILDDIR)/doxy
 	doxygen doxygen.conf
-	mkdir -p $(BUILDDIR)
 
 html: doxygen
+	mkdir -p $(BUILDDIR)
 	$(SPHINXENVCMD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
