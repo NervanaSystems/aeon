@@ -33,11 +33,11 @@ class nervana::block_loader_file : public block_loader {
 public:
     block_loader_file(std::shared_ptr<nervana::manifest_csv> manifest,
                       float subset_fraction,
-                      uint block_size);
+                      uint32_t block_size);
 
-    void loadBlock(nervana::buffer_in_array& dest, uint block_num);
+    void loadBlock(nervana::buffer_in_array& dest, uint32_t block_num);
     void loadFile(nervana::buffer_in* buff, const std::string& filename);
-    uint objectCount();
+    uint32_t objectCount();
 
 private:
     off_t getFileSize(const std::string& filename);

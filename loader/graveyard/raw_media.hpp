@@ -51,7 +51,7 @@ public:
     }
 
     void appendFrames(char** frames, int frameSize) {
-        for (uint i = 0; i < channels(); i++) {
+        for (uint32_t i = 0; i < channels(); i++) {
             _bufs[i].insert(_bufs[i].begin() + _dataSize, frames[i], frames[i] + frameSize);
         }
 

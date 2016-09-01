@@ -26,7 +26,7 @@ namespace nervana {
 // well as shuffling the data in the buffers.
 class nervana::block_iterator_shuffled : public block_iterator {
 public:
-    block_iterator_shuffled(std::shared_ptr<block_loader> loader, uint seed);
+    block_iterator_shuffled(std::shared_ptr<block_loader> loader, uint32_t seed);
     void read(nervana::buffer_in_array& dest);
     void reset();
 
@@ -36,8 +36,8 @@ protected:
 private:
     std::minstd_rand0 _rand;
     std::shared_ptr<block_loader> _loader;
-    std::vector<uint> _indices;
-    std::vector<uint>::iterator _it;
-    uint _seed;
-    uint _epoch;
+    std::vector<uint32_t> _indices;
+    std::vector<uint32_t>::iterator _it;
+    uint32_t _seed;
+    uint32_t _epoch;
 };

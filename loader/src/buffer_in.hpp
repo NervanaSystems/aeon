@@ -39,7 +39,7 @@ public:
     void add_item(const std::vector<char>&);
     void add_exception(std::exception_ptr);
 
-    void shuffle(uint seed);
+    void shuffle(uint32_t seed);
 
     int get_item_count();
 
@@ -55,7 +55,7 @@ class nervana::buffer_in_array {
 public:
     buffer_in_array(unsigned int nbuffers_in)
     {
-        for (uint i=0; i<nbuffers_in; ++i)
+        for (uint32_t i=0; i<nbuffers_in; ++i)
         {
             data.push_back(new buffer_in());
         }

@@ -78,7 +78,7 @@ TEST(minibatch_iterator, shuffled) {
     vector<string> words_a = buffer_to_vector_of_strings(*bp[0]);
     vector<string> words_b = buffer_to_vector_of_strings(*bp[1]);
 
-    for (uint i=0; i<words_a.size(); ++i)
+    for (uint32_t i=0; i<words_a.size(); ++i)
         ASSERT_EQ(words_a[i], words_b[i]);
 
     ASSERT_EQ(words_a.size(), mbl->objectCount());

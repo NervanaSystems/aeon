@@ -27,7 +27,7 @@ namespace nervana
         ifs.read(reinterpret_cast<char*>(data), sizeof(T));
     }
 
-    void readPadding(istream& ifs, uint length)
+    void readPadding(istream& ifs, uint32_t length)
     {
         // Read a byte if length is odd.
         if (length % 2 != 0) {
@@ -42,7 +42,7 @@ namespace nervana
         ofs.write(reinterpret_cast<char*>(data), sizeof(T));
     }
 
-    void writePadding(ostream& ofs, uint length)
+    void writePadding(ostream& ofs, uint32_t length)
     {
         // Write a byte if length is odd.
         if (length % 2 != 0) {
@@ -67,18 +67,18 @@ cpio::record_header::record_header() :
     memset((void*) _filesize, 0, 2 * sizeof(short));
 }
 
-void cpio::record_header::loadDoubleShort(uint* dst, ushort src[2])
+void cpio::record_header::loadDoubleShort(uint32_t* dst, ushort src[2])
 {
-    *dst =  ((uint) src[0]) << 16 | (uint) src[1];
+    *dst =  ((uint32_t) src[0]) << 16 | (uint32_t) src[1];
 }
 
-void cpio::record_header::saveDoubleShort(ushort* dst, uint src)
+void cpio::record_header::saveDoubleShort(ushort* dst, uint32_t src)
 {
     dst[0] = (ushort) (src >> 16);
     dst[1] = (ushort) src;
 }
 
-void cpio::record_header::read(istream& ifs, uint* fileSize)
+void cpio::record_header::read(istream& ifs, uint32_t* fileSize)
 {
     read_single_value(ifs, &_magic);
     affirm(_magic == 070707, "CPIO header magic incorrect");
@@ -89,7 +89,7 @@ void cpio::record_header::read(istream& ifs, uint* fileSize)
     read_single_value(ifs, &_gid);
     read_single_value(ifs, &_nlink);
     read_single_value(ifs, &_rdev);
-    uint mtime;
+    uint32_t mtime;
     read_single_value(ifs, &_mtime);
     loadDoubleShort(&mtime, _mtime);
     read_single_value(ifs, &_namesize);
@@ -100,7 +100,7 @@ void cpio::record_header::read(istream& ifs, uint* fileSize)
     readPadding(ifs, _namesize);
 }
 
-void cpio::record_header::write(ostream& ofs, uint fileSize, const char* fileName)
+void cpio::record_header::write(ostream& ofs, uint32_t fileSize, const char* fileName)
 {
     _namesize = strlen(fileName) + 1;
     write_single_value(ofs, &_magic);
@@ -185,7 +185,7 @@ cpio::reader::reader(istream* is) {
 }
 
 void cpio::reader::readHeader() {
-    uint fileSize;
+    uint32_t fileSize;
     _recordHeader.read(*_is, &fileSize);
     if(fileSize != sizeof(_header)) {
         stringstream ss;
@@ -198,7 +198,7 @@ void cpio::reader::readHeader() {
 }
 
 void cpio::reader::read(nervana::buffer_in& dest) {
-    uint datumSize;
+    uint32_t datumSize;
     _recordHeader.read(*_is, &datumSize);
     dest.read(*_is, datumSize);
     readPadding(*_is, datumSize);
@@ -288,7 +288,7 @@ void cpio::file_writer::write_all_records(nervana::buffer_in_array& buff)
 
 void cpio::file_writer::write_record(nervana::buffer_in_array& buff, int record_idx)
 {
-    uint element_idx = 0;
+    uint32_t element_idx = 0;
     for (auto b : buff)
     {
         const vector<char>& record_element = b->get_item(record_idx);
@@ -297,7 +297,7 @@ void cpio::file_writer::write_record(nervana::buffer_in_array& buff, int record_
     increment_record_count();
 }
 
-void cpio::file_writer::write_record_element(const char* elem, uint elem_size, uint element_idx)
+void cpio::file_writer::write_record_element(const char* elem, uint32_t elem_size, uint32_t element_idx)
 {
     char fileName[16];
     snprintf(fileName, sizeof(fileName), "rec_%07d.%02d", _header._itemCount, element_idx);

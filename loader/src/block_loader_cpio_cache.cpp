@@ -42,7 +42,7 @@ block_loader_cpio_cache::block_loader_cpio_cache(const string& rootCacheDir,
     makeDirectory(_cacheDir);
 }
 
-void block_loader_cpio_cache::loadBlock(buffer_in_array& dest, uint block_num)
+void block_loader_cpio_cache::loadBlock(buffer_in_array& dest, uint32_t block_num)
 {
     if(loadBlockFromCache(dest, block_num)) {
         return;
@@ -58,7 +58,7 @@ void block_loader_cpio_cache::loadBlock(buffer_in_array& dest, uint block_num)
     }
 }
 
-bool block_loader_cpio_cache::loadBlockFromCache(buffer_in_array& dest, uint block_num)
+bool block_loader_cpio_cache::loadBlockFromCache(buffer_in_array& dest, uint32_t block_num)
 {
     // load a block from cpio cache into dest.  If file doesn't exist, return false.
     //  If loading from cpio cache was successful return true.
@@ -86,7 +86,7 @@ bool block_loader_cpio_cache::loadBlockFromCache(buffer_in_array& dest, uint blo
     return true;
 }
 
-void block_loader_cpio_cache::writeBlockToCache(buffer_in_array& buff, uint block_num)
+void block_loader_cpio_cache::writeBlockToCache(buffer_in_array& buff, uint32_t block_num)
 {
     cpio::file_writer writer;
     writer.open(blockFilename(block_num));
@@ -176,12 +176,12 @@ void block_loader_cpio_cache::makeDirectory(const string& dir)
     }
 }
 
-string block_loader_cpio_cache::blockFilename(uint block_num)
+string block_loader_cpio_cache::blockFilename(uint32_t block_num)
 {
      return _cacheDir + "/" + to_string(block_num) + "-" + to_string(_block_size) + ".cpio";
 }
 
-uint block_loader_cpio_cache::objectCount()
+uint32_t block_loader_cpio_cache::objectCount()
 {
     return _loader->objectCount();
 }

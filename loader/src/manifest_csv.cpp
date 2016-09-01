@@ -66,7 +66,7 @@ string manifest_csv::version()
 void manifest_csv::parse_stream(istream& is)
 {
     // parse istream is and load the entire thing into _filename_lists
-    uint prev_num_fields = 0, lineno = 0;
+    uint32_t prev_num_fields = 0, lineno = 0;
     string line;
 
     // read in each line, then from that istringstream, break into

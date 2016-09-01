@@ -29,33 +29,33 @@ namespace nervana {
 
 class nervana::block_loader {
 public:
-    virtual void loadBlock(nervana::buffer_in_array& dest, uint block_num) = 0;
-    virtual uint objectCount() = 0;
+    virtual void loadBlock(nervana::buffer_in_array& dest, uint32_t block_num) = 0;
+    virtual uint32_t objectCount() = 0;
 
-    uint blockCount();
-    uint blockSize();
+    uint32_t blockCount();
+    uint32_t blockSize();
 
 protected:
-    block_loader(uint block_size);
-    uint _block_size;
+    block_loader(uint32_t block_size);
+    uint32_t _block_size;
 };
 
 
 // mock alphabet block loader for use in tests
 class nervana::block_loader_alphabet : public block_loader {
 public:
-    block_loader_alphabet(uint block_size);
-    void loadBlock(nervana::buffer_in_array &dest, uint block_num);
-    uint objectCount() { return 26 * _block_size; }
+    block_loader_alphabet(uint32_t block_size);
+    void loadBlock(nervana::buffer_in_array &dest, uint32_t block_num);
+    uint32_t objectCount() { return 26 * _block_size; }
 };
 
 
 // Random block loader used for tests
 class nervana::block_loader_random : public block_loader {
 public:
-    block_loader_random(uint block_size) : block_loader(block_size) {}
-    void loadBlock(nervana::buffer_in_array &dest, uint block_num);
-    uint objectCount() { return 10; } // Not really correct, but unused for tests
+    block_loader_random(uint32_t block_size) : block_loader(block_size) {}
+    void loadBlock(nervana::buffer_in_array &dest, uint32_t block_num);
+    uint32_t objectCount() { return 10; } // Not really correct, but unused for tests
 
     static std::string randomString();
 };

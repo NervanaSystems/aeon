@@ -40,13 +40,13 @@ public:
                             const std::string& cache_id, const std::string& version,
                             std::shared_ptr<block_loader> loader);
 
-    void loadBlock(nervana::buffer_in_array& dest, uint block_num);
-    uint objectCount();
+    void loadBlock(nervana::buffer_in_array& dest, uint32_t block_num);
+    uint32_t objectCount();
 
 private:
-    bool loadBlockFromCache(nervana::buffer_in_array& dest, uint block_num);
-    void writeBlockToCache(nervana::buffer_in_array& dest, uint block_num);
-    std::string blockFilename(uint block_num);
+    bool loadBlockFromCache(nervana::buffer_in_array& dest, uint32_t block_num);
+    void writeBlockToCache(nervana::buffer_in_array& dest, uint32_t block_num);
+    std::string blockFilename(uint32_t block_num);
 
     void invalidateOldCache(const std::string& rootCacheDir, const std::string& cache_id, const std::string& version);
     bool filenameHoldsInvalidCache(const std::string& filename, const std::string& cache_id, const std::string& version);

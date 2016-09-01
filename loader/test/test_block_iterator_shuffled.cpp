@@ -42,7 +42,7 @@ TEST(block_iterator_shuffled, shuffled_block) {
     block_iterator_shuffled bis(mbl, 0);
     buffer_in_array bp(2);
 
-    uint num_records = mbl->objectCount();
+    uint32_t num_records = mbl->objectCount();
 
     // ensure that loading successive blocks from shuffling iterator
     // result in unsorted strings
@@ -57,7 +57,7 @@ TEST(block_iterator_shuffled, shuffled_block) {
     ASSERT_EQ(words_b.size(), num_records);
 
     // ensure that there is correspondence between the elements of each record
-    for (uint i = 0; i<num_records; i++) {
+    for (uint32_t i = 0; i<num_records; i++) {
         ASSERT_EQ(words_a[i], words_b[i]);
     }
 

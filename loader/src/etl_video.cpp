@@ -51,7 +51,7 @@ std::shared_ptr<image::decoded> video::transformer::transform(
 
     uint32_t nframes = std::min<int>(max_frame_count, tx_img->get_image_count());
 
-    for (uint i=0; i<nframes; ++i) {
+    for (uint32_t i=0; i<nframes; ++i) {
         out_img->add(tx_img->get_image(i));
     }
 

@@ -164,7 +164,7 @@ public:
 
     void write_all_records(nervana::buffer_in_array& buff);
     void write_record(nervana::buffer_in_array& buff, int record_idx);
-    void write_record_element(const char* elem, uint elem_size, uint element_idx);
+    void write_record_element(const char* elem, uint32_t elem_size, uint32_t element_idx);
     void increment_record_count() { _header._itemCount++;}
 
 private:

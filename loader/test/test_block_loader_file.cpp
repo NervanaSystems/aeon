@@ -27,9 +27,9 @@ TEST(blocked_file_loader, constructor) {
 
 TEST(blocked_file_loader, loadBlock) {
     // load one block of size 2
-    uint block_size = 2;
-    uint object_size = 16;
-    uint target_size = 16;
+    uint32_t block_size = 2;
+    uint32_t object_size = 16;
+    uint32_t target_size = 16;
     float subset_fraction = 1.0;
 
     block_loader_file blf(
@@ -58,9 +58,9 @@ TEST(blocked_file_loader, subset_fraction) {
     // a 10 object manifest iterated through blocks sized 4 with
     // percentSubset 50 should result in an output block size of 2, 2
     // and then 1.
-    uint block_size = 4;
-    uint object_size = 16;
-    uint target_size = 16;
+    uint32_t block_size = 4;
+    uint32_t object_size = 16;
+    uint32_t target_size = 16;
     float subset_fraction = 0.5;
 
     block_loader_file blf(

@@ -50,13 +50,13 @@ string tmp_filename() {
     return tmpname;
 }
 
-string tmp_file_repeating(uint size, uint x) {
-    // create a temp file of `size` bytes filled with uint x
+string tmp_file_repeating(uint32_t size, uint32_t x) {
+    // create a temp file of `size` bytes filled with uint32_t x
     string tmpname = tmp_filename();
     ofstream f(tmpname, ios::binary);
 
-    uint repeats = size / sizeof(x);
-    for(uint i = 0; i < repeats; ++i) {
+    uint32_t repeats = size / sizeof(x);
+    for(uint32_t i = 0; i < repeats; ++i) {
         f.write(reinterpret_cast <const char*>(&x), sizeof(x));
     }
 
@@ -65,13 +65,13 @@ string tmp_file_repeating(uint size, uint x) {
     return tmpname;
 }
 
-string tmp_manifest_file(uint num_records, vector<uint> sizes) {
+string tmp_manifest_file(uint32_t num_records, vector<uint32_t> sizes) {
     string tmpname = tmp_filename();
     ofstream f(tmpname);
 
-    for(uint i = 0; i < num_records; ++i) {
-        // stick a unique uint into each file
-        for(uint j = 0; j < sizes.size(); ++j) {
+    for(uint32_t i = 0; i < num_records; ++i) {
+        // stick a unique uint32_t into each file
+        for(uint32_t j = 0; j < sizes.size(); ++j) {
             if(j != 0) {
                 f << ",";
             }
@@ -90,7 +90,7 @@ std::string tmp_manifest_file_with_invalid_filename() {
     string tmpname = tmp_filename();
     ofstream f(tmpname);
 
-    for(uint i = 0; i < 10; ++i) {
+    for(uint32_t i = 0; i < 10; ++i) {
         f << tmp_filename() + ".this_file_shouldnt_exist" << ',';
         f << tmp_filename() + ".this_file_shouldnt_exist" << endl;
     }
@@ -103,8 +103,8 @@ std::string tmp_manifest_file_with_ragged_fields() {
     string tmpname = tmp_filename();
     ofstream f(tmpname);
 
-    for(uint i = 0; i < 10; ++i) {
-        for(uint j = 0; j < i % 3 + 1; ++j) {
+    for(uint32_t i = 0; i < 10; ++i) {
+        for(uint32_t j = 0; j < i % 3 + 1; ++j) {
             f << (j != 0 ? "," : "") << tmp_filename();
         }
         f << endl;

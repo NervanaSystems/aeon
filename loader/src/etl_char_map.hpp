@@ -91,7 +91,7 @@ namespace nervana {
 
             std::sort(test_string.begin(), test_string.end());
 
-            for (uint i=1; i<test_string.size(); i++)
+            for (uint32_t i=1; i<test_string.size(); i++)
             {
                 if (test_string[i-1] == test_string[i])
                 {

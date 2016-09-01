@@ -28,20 +28,20 @@ namespace nervana {
 
 class nervana::block_loader_nds : public block_loader {
 public:
-    block_loader_nds(const std::string& baseurl, const std::string& token, int collection_id, uint block_size, int shard_count=1, int shard_index=0);
+    block_loader_nds(const std::string& baseurl, const std::string& token, int collection_id, uint32_t block_size, int shard_count=1, int shard_index=0);
     ~block_loader_nds();
 
-    void loadBlock(nervana::buffer_in_array& dest, uint block_num);
-    uint objectCount();
+    void loadBlock(nervana::buffer_in_array& dest, uint32_t block_num);
+    uint32_t objectCount();
 
-    uint blockCount();
+    uint32_t blockCount();
 
 private:
     void loadMetadata();
 
     void get(const std::string& url, std::stringstream& stream);
 
-    const std::string loadBlockURL(uint block_num);
+    const std::string loadBlockURL(uint32_t block_num);
     const std::string metadataURL();
 
     const std::string _baseurl;

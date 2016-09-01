@@ -42,7 +42,7 @@ python_backend::python_backend(PyObject* py_obj_backend,
     import_array();
     PyOS_setsig(SIGINT, sighandler);
 
-    for (uint i = 0; i < _oshape_types.size(); ++i)
+    for (uint32_t i = 0; i < _oshape_types.size(); ++i)
     {
         _host_lists.push_back(initPyList());
         _dev_lists.push_back(initPyList());
@@ -56,13 +56,13 @@ PyObject* python_backend::get_shapes()
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    uint num_shapes = _oshape_types.size();
+    uint32_t num_shapes = _oshape_types.size();
     PyObject* all_shapes = PyTuple_New(num_shapes);
-    for (uint idx = 0; idx < num_shapes; ++idx)
+    for (uint32_t idx = 0; idx < num_shapes; ++idx)
     {
         auto shapevec = _oshape_types[idx].get_shape();
         PyObject* this_shape = PyTuple_New(shapevec.size());
-        for (uint dim = 0; dim < shapevec.size(); dim++)
+        for (uint32_t dim = 0; dim < shapevec.size(); dim++)
         {
             PyTuple_SetItem(this_shape, dim, Py_BuildValue("i", shapevec[dim]));
         }
@@ -130,7 +130,7 @@ void python_backend::call_backend_transfer(buffer_out_array &outBuf, int bufIdx)
     affirm(_host_lists.size() == _oshape_types.size(), "host lists size does not match oshape size");
     affirm(_dev_lists.size() == _host_lists.size(), "dev list size does not match host lists size");
 
-    for (uint i=0; i<_host_lists.size(); i++) {
+    for (uint32_t i=0; i<_host_lists.size(); i++) {
         wrap_buffer_pool(_host_lists[i], outBuf[i], bufIdx, _oshape_types[i]);
         PyObject* pArgs  = Py_BuildValue("iOO", bufIdx, _host_lists[i], _dev_lists[i]);
 

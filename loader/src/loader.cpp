@@ -248,7 +248,7 @@ void read_thread_pool::work(int id)
             _out->wait_for_non_full(lock);
         }
 
-        uint tries = 0;
+        uint32_t tries = 0;
         while(tries < 3) {
             try {
                 tries += 1;

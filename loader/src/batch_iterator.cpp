@@ -81,7 +81,7 @@ void batch_iterator::pop_item_from_block(buffer_in_array& dst_buffer_array)
     // reorders the index, we can't just read a large contiguous block of
     // memory out of the _src_buffer_array_ptr.  We must copy out each element one at
     // a time
-    for (uint idx=0; idx < src_buffer_array.size(); ++idx) {
+    for (uint32_t idx=0; idx < src_buffer_array.size(); ++idx) {
         transfer_buffer_item(dst_buffer_array[idx], src_buffer_array[idx]);
     }
 

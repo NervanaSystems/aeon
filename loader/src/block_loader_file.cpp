@@ -26,7 +26,7 @@ using namespace nervana;
 
 block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst,
                                      float subset_fraction,
-                                     uint block_size)
+                                     uint32_t block_size)
 : block_loader(block_size),
   _manifest(mfst),
   _subset_fraction(subset_fraction)
@@ -35,7 +35,7 @@ block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst,
            "subset_fraction must be >= 0 and <= 1");
 }
 
-void block_loader_file::loadBlock(nervana::buffer_in_array& dest, uint block_num)
+void block_loader_file::loadBlock(nervana::buffer_in_array& dest, uint32_t block_num)
 {
     // NOTE: thread safe so long as you aren't modifying the manifest
     // NOTE: dest memory must already be allocated at the correct size
@@ -79,7 +79,7 @@ void block_loader_file::loadBlock(nervana::buffer_in_array& dest, uint block_num
         // threads to make loads faster.  multiple threads would only
         // slow down reads from a magnetic disk.
         auto file_list = *it;
-        for (uint i = 0; i < file_list.size(); i++) {
+        for (uint32_t i = 0; i < file_list.size(); i++) {
             try {
                 loadFile(dest[i], file_list[i]);
             } catch (std::exception& e) {
@@ -108,14 +108,14 @@ off_t block_loader_file::getFileSize(const string& filename)
     return stats.st_size;
 }
 
-uint block_loader_file::objectCount()
+uint32_t block_loader_file::objectCount()
 {
     if (_subset_fraction == 1.0) {
         return _manifest->objectCount();
     } else {
-        uint full_block_count = int(_manifest->objectCount() / _block_size);
-        uint subset_object_count = full_block_count * int(_block_size * _subset_fraction);
-        uint leftover_object_count = _manifest->objectCount() - full_block_count * _block_size;
+        uint32_t full_block_count = int(_manifest->objectCount() / _block_size);
+        uint32_t subset_object_count = full_block_count * int(_block_size * _subset_fraction);
+        uint32_t leftover_object_count = _manifest->objectCount() - full_block_count * _block_size;
         subset_object_count += (leftover_object_count * _subset_fraction);
         return subset_object_count;
     }

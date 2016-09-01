@@ -37,7 +37,7 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
     return size * nmemb;
 }
 
-block_loader_nds::block_loader_nds(const std::string& baseurl, const std::string& token, int collection_id, uint block_size, int shard_count, int shard_index)
+block_loader_nds::block_loader_nds(const std::string& baseurl, const std::string& token, int collection_id, uint32_t block_size, int shard_count, int shard_index)
     : block_loader(block_size), _baseurl(baseurl), _token(token), _collection_id(collection_id),
       _shard_count(shard_count), _shard_index(shard_index)
 {
@@ -50,7 +50,7 @@ block_loader_nds::~block_loader_nds()
 {
 }
 
-void block_loader_nds::loadBlock(nervana::buffer_in_array& dest, uint block_num)
+void block_loader_nds::loadBlock(nervana::buffer_in_array& dest, uint32_t block_num)
 {
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
@@ -104,7 +104,7 @@ void block_loader_nds::get(const string& url, stringstream &stream)
     curl_easy_cleanup(_curl);
 }
 
-const string block_loader_nds::loadBlockURL(uint block_num)
+const string block_loader_nds::loadBlockURL(uint32_t block_num)
 {
     stringstream ss;
     ss << _baseurl << "/macrobatch/?";
@@ -151,12 +151,12 @@ void block_loader_nds::loadMetadata()
     nervana::interface::config::parse_value(_blockCount, "macro_batch_per_shard", metadata, nervana::interface::config::mode::REQUIRED);
 }
 
-uint block_loader_nds::objectCount()
+uint32_t block_loader_nds::objectCount()
 {
     return _objectCount;
 }
 
-uint block_loader_nds::blockCount()
+uint32_t block_loader_nds::blockCount()
 {
     return _blockCount;
 }

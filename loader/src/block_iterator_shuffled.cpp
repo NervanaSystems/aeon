@@ -22,7 +22,7 @@
 using namespace std;
 using namespace nervana;
 
-block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader, uint seed)
+block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader, uint32_t seed)
 : _rand(seed), _loader(loader), _seed(seed), _epoch(0)
 {
     // fill indices with integers from  0 to _count.  indices can then be

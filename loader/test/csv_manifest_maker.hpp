@@ -19,7 +19,7 @@
 #include <vector>
 
 std::string tmp_filename();
-std::string tmp_zero_file(uint size);
-std::string tmp_manifest_file(uint num_records, std::vector<uint> sizes);
+std::string tmp_zero_file(uint32_t size);
+std::string tmp_manifest_file(uint32_t num_records, std::vector<uint32_t> sizes);
 std::string tmp_manifest_file_with_invalid_filename();
 std::string tmp_manifest_file_with_ragged_fields();

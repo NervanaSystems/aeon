@@ -30,7 +30,7 @@ void buffer_in::reset() {
     buffers.clear();
 }
 
-void buffer_in::shuffle(uint seed) {
+void buffer_in::shuffle(uint32_t seed) {
     std::minstd_rand0 rand_items(seed);
     std::shuffle(buffers.begin(), buffers.end(), rand_items);
 }
