@@ -45,7 +45,7 @@ namespace nervana {
 
             // channel major only
             add_shape_type({frame.channels, max_frame_count, frame.height, frame.width},
-                           frame.type_string);
+                           frame.output_type);
         }
 
     private:

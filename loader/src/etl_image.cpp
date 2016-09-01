@@ -44,7 +44,7 @@ image::config::config(nlohmann::json js)
     } else{
         shape = {height, width, channels};
     }
-    add_shape_type(shape, type_string);
+    add_shape_type(shape, output_type);
 
     validate();
 }

@@ -39,10 +39,10 @@ boundingbox::config::config(nlohmann::json js)
     verify_config("bbox", config_list, js);
 
     // Derived values
-    add_shape_type({max_bbox_count, 4*sizeof(float)}, type_string);
+    add_shape_type({max_bbox_count, 4*sizeof(float)}, output_type);
     label_map.clear();
-    for( int i=0; i<labels.size(); i++ ) {
-        label_map.insert({labels[i],i});
+    for( int i=0; i<class_names.size(); i++ ) {
+        label_map.insert({class_names[i],i});
     }
 
     validate();

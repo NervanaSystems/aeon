@@ -62,9 +62,9 @@ localization::config::config(nlohmann::json js, const image_var::config& iconfig
     // 'difficult' tag for gt_boxes
     add_shape_type({max_gt_boxes,1}, "int32_t");
 
-    label_map.clear();
-    for( int i=0; i<labels.size(); i++ ) {
-        label_map.insert({labels[i],i});
+    class_name_map.clear();
+    for( int i=0; i<class_names.size(); i++ ) {
+        class_name_map.insert({class_names[i],i});
     }
 
     validate();
@@ -76,7 +76,7 @@ void ::localization::config::validate()
 }
 
 localization::extractor::extractor(const localization::config& cfg) :
-    bbox_extractor{cfg.label_map}
+    bbox_extractor{cfg.class_name_map}
 {
 }
 

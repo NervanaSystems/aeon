@@ -37,7 +37,7 @@ namespace nervana {
         uint32_t        max_length;
         std::string     alphabet;
         bool            pack_for_ctc = false;
-        std::string     type_string{"uint8_t"};
+        std::string     output_type{"uint8_t"};
 
         config(nlohmann::json js) {
             if(js.is_null()) {
@@ -51,7 +51,7 @@ namespace nervana {
 
             // Now fill in derived (pack_for_ctc passed as indicator whether to interpret
             // output shape as flattened across batch size)
-            add_shape_type({1, max_length}, type_string, pack_for_ctc);
+            add_shape_type({1, max_length}, output_type, pack_for_ctc);
 
             uint8_t index = 0;
             for (auto c: alphabet)
@@ -68,14 +68,14 @@ namespace nervana {
             ADD_SCALAR(max_length, mode::REQUIRED),
             ADD_SCALAR(alphabet, mode::REQUIRED),
             ADD_SCALAR(pack_for_ctc, mode::OPTIONAL),
-            ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); })
+            ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); })
         };
         std::unordered_map<char, uint8_t> _cmap;
 
         config() {}
         void validate() {
-            if (type_string != "uint8_t") {
-                throw std::runtime_error("Invalid load type for char map " + type_string);
+            if (output_type != "uint8_t") {
+                throw std::runtime_error("Invalid load type for char map " + output_type);
             }
             if (!unique_chars(alphabet)) {
                 throw std::runtime_error("alphabet does not consist of unique chars " + alphabet);

@@ -55,7 +55,7 @@ static image_var::config make_image_var_config(int min_size=600, int max_size=10
 
 static localization::config make_localization_config(const image_var::config& icfg)
 {
-    nlohmann::json js = {{"labels",label_list},{"max_gt_boxes",64}};
+    nlohmann::json js = {{"class_names",label_list},{"max_gt_boxes",64}};
     return localization::config(js, icfg);
 }
 
@@ -228,7 +228,7 @@ void plot(const string& path)
 TEST(localization,config)
 {
     nlohmann::json ijs = {{"min_size",300},{"max_size",400},{"channels",3},{"flip_enable", false}};
-    nlohmann::json js = {{"labels",label_list},{"max_gt_boxes",100}};
+    nlohmann::json js = {{"class_names",label_list},{"max_gt_boxes",100}};
     image_var::config icfg{ijs};
 
     EXPECT_NO_THROW(localization::config cfg(js, icfg));
@@ -980,7 +980,7 @@ TEST(localization,provider)
                             {"flip_enable",true}}},
                          {"localization", {
                             {"max_gt_boxes", 64},
-                            {"labels", {"bicycle", "person"}}
+                            {"class_names", {"bicycle", "person"}}
                           }}};
 
     shared_ptr<provider_interface> media = provider_factory::create(js);
@@ -1046,7 +1046,7 @@ TEST(localization,provider_channel_major)
                             {"flip_enable",true}}},
                          {"localization", {
                             {"max_gt_boxes", 64},
-                            {"labels", {"bicycle", "person"}}
+                            {"class_names", {"bicycle", "person"}}
                           }}};
 
     shared_ptr<provider_interface> media = provider_factory::create(js);

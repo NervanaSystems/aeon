@@ -34,7 +34,7 @@ using namespace nervana;
 
 TEST(label_map, test) {
     {
-        nlohmann::json js = {{"labels",{"a","and","the","quick","fox","cow","dog","blue",
+        nlohmann::json js = {{"class_names",{"a","and","the","quick","fox","cow","dog","blue",
             "black","brown","happy","lazy","skip","jumped","run","under","over","around"}}};
         label_map::config cfg{js};
         label_map::extractor extractor{cfg};
@@ -91,7 +91,7 @@ TEST(label_map, test) {
         }
     }
     {
-        nlohmann::json js = {{"labels",{"a","and","the","quick","fox","cow","dog","blue",
+        nlohmann::json js = {{"class_names",{"a","and","the","quick","fox","cow","dog","blue",
             "black","brown","happy","lazy","skip","jumped","run","under","over","around"}}};
         label_map::config cfg{js};
         label_map::extractor extractor(cfg);

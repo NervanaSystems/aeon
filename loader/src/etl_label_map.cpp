@@ -32,11 +32,11 @@ config::config(nlohmann::json js)
     verify_config("label_map", config_list, js);
 
     // Derived types
-    auto otype = nervana::output_type(type_string);
+    auto otype = nervana::output_type(output_type);
     add_shape_type({otype.size}, otype);
 
-    if (type_string != "uint32_t") {
-        throw std::runtime_error("Invalid load type for label map " + type_string);
+    if (output_type != "uint32_t") {
+        throw std::runtime_error("Invalid load type for label map " + output_type);
     }
 }
 
@@ -47,7 +47,7 @@ decoded::decoded()
 extractor::extractor( const label_map::config& cfg)
 {
     int index = 0;
-    for( const string& label : cfg.labels ) {
+    for( const string& label : cfg.class_names ) {
         dictionary.insert({label,index++});
     }
 }

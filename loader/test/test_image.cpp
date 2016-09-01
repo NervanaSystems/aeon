@@ -309,7 +309,7 @@ TEST(image,noconvert_nosplit) {
         {"height",10},
         {"channels", 3},
         {"channel_major", false},
-        {"type_string", "uint8_t"}
+        {"output_type", "uint8_t"}
     };
     image::config cfg(js);
 
@@ -344,7 +344,7 @@ TEST(image,noconvert_split) {
         {"height",10},
         {"channels", 3},
         {"channel_major", true},
-        {"type_string", "uint8_t"}
+        {"output_type", "uint8_t"}
     };
     image::config cfg(js);
 
@@ -379,7 +379,7 @@ TEST(image,convert_nosplit) {
         {"height",10},
         {"channels", 3},
         {"channel_major", false},
-        {"type_string", "uint32_t"}
+        {"output_type", "uint32_t"}
     };
     image::config cfg(js);
 
@@ -414,7 +414,7 @@ TEST(image,convert_split) {
         {"height",10},
         {"channels", 3},
         {"channel_major", true},
-        {"type_string", "uint32_t"}
+        {"output_type", "uint32_t"}
     };
     image::config cfg(js);
 
@@ -465,7 +465,7 @@ TEST(image, multi_crop) {
                                 "height": 224,
                                 "flip_enable": true},
                 "crop_scales": [0.875],
-                "num_crops": 1
+                "crop_count": 1
             }
         )";
         auto js = nlohmann::json::parse(jsstring);

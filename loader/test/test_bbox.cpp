@@ -63,7 +63,7 @@ static nlohmann::json create_metadata( const vector<nlohmann::json>& boxes, int 
 static boundingbox::config make_bbox_config(int max_boxes)
 {
     nlohmann::json obj = {{"height",100},{"width",150},{"max_bbox_count",max_boxes}};
-    obj["labels"] = label_list;
+    obj["class_names"] = label_list;
     return boundingbox::config(obj);
 }
 
@@ -157,7 +157,7 @@ TEST(boundingbox, extractor_missing_label)
 {
     string data = read_file(CURDIR"/test_data/009952.json");
     nlohmann::json obj = {{"height",100},{"width",150},{"max_bbox_count",20}};
-    obj["labels"] = {"monkey", "tuna"};
+    obj["class_names"] = {"monkey", "tuna"};
     auto cfg = boundingbox::config(obj);
     boundingbox::extractor extractor{cfg.label_map};
     EXPECT_THROW(extractor.extract(&data[0],data.size()), std::invalid_argument);

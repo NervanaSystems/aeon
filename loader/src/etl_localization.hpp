@@ -84,13 +84,12 @@ namespace nervana {
         float                       negative_overlap = 0.3;  // negative anchors have < 0.3 overlap with any gt box
         float                       positive_overlap = 0.7;  // positive anchors have > 0.7 overlap with at least one gt box
         float                       foreground_fraction = 0.5;  // at most, positive anchors are 0.5 of the total rois
-        std::string                 type_string = "float";
         size_t                      max_gt_boxes = 64;
-        std::vector<std::string>    labels;
+        std::vector<std::string>    class_names;
 
         // Derived values
         size_t output_buffer_size;
-        std::unordered_map<std::string,int> label_map;
+        std::unordered_map<std::string,int> class_name_map;
 
         config(nlohmann::json js, const image_var::config& iconfig);
 
@@ -109,9 +108,8 @@ namespace nervana {
             ADD_SCALAR(negative_overlap, mode::OPTIONAL, [](float v){ return v>=0.0 && v <=1.0; }),
             ADD_SCALAR(positive_overlap, mode::OPTIONAL, [](float v){ return v>=0.0 && v <=1.0; }),
             ADD_SCALAR(foreground_fraction, mode::OPTIONAL, [](float v){ return v>=0.0 && v <=1.0; }),
-            ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
             ADD_SCALAR(max_gt_boxes, mode::OPTIONAL),
-            ADD_SCALAR(labels, mode::REQUIRED)
+            ADD_SCALAR(class_names, mode::REQUIRED)
         };
 
         config() {}

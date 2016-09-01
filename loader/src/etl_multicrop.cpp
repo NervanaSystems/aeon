@@ -43,16 +43,16 @@ multicrop::config::config(nlohmann::json js)
     // shape is going to be different from crop_config because of multiple images
     shape_t multicrop_shape = crop_config.get_shape_type().get_shape();
 
-    uint32_t num_views = num_crops * crop_scales.size() * (crop_config.flip_enable ? 2 : 1);
+    uint32_t num_views = crop_count * crop_scales.size() * (crop_config.flip_enable ? 2 : 1);
     multicrop_shape.insert(multicrop_shape.begin(), num_views);
-    add_shape_type(multicrop_shape, crop_config.type_string);
+    add_shape_type(multicrop_shape, crop_config.output_type);
 
     validate();
 }
 
 void multicrop::config::validate()
 {
-    if(num_crops != 5 && num_crops != 1) {
+    if(crop_count != 5 && crop_count != 1) {
         throw std::invalid_argument("num_crops must be 1 or 5");
     }
 
@@ -69,7 +69,7 @@ multicrop::transformer::transformer(const multicrop::config& cfg)
    _crop_scales(cfg.crop_scales),
    _orientations(cfg.orientations)
 {
-    if (cfg.num_crops == 5) {
+    if (cfg.crop_count == 5) {
         _offsets.emplace_back(0.0, 0.0);  // NW
         _offsets.emplace_back(0.0, 1.0);  // SW
         _offsets.emplace_back(1.0, 0.0);  // NE

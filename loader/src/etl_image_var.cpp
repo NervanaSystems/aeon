@@ -45,7 +45,7 @@ image_var::config::config(nlohmann::json js)
     } else{
         shape = {max_size, max_size, channels};
     }
-    add_shape_type(shape, type_string);
+    add_shape_type(shape, output_type);
 
     validate();
 }

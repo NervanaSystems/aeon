@@ -59,7 +59,7 @@ namespace nervana {
         size_t                                max_size;
         bool                                  channel_major = true;
         size_t                                channels = 3;
-        std::string                           type_string{"uint8_t"};
+        std::string                           output_type{"uint8_t"};
         bool                                  do_area_scale = false;
 
         /** Scale the image (width, height) */
@@ -96,7 +96,7 @@ namespace nervana {
             ADD_DISTRIBUTION(photometric, mode::OPTIONAL, [](decltype(photometric) v){ return v.a() <= v.b(); }),
             ADD_SCALAR(flip_enable, mode::OPTIONAL),
             ADD_SCALAR(center, mode::OPTIONAL),
-            ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
+            ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
             ADD_SCALAR(do_area_scale, mode::OPTIONAL),
             ADD_SCALAR(channel_major, mode::OPTIONAL),
             ADD_SCALAR(channels, mode::OPTIONAL, [](uint32_t v){ return v==1 || v==3; })

@@ -154,7 +154,7 @@ TEST(pixel_mask, load_int) {
     nlohmann::json js = {
         {"width", 256},
         {"height",256},
-        {"type_string", "int32_t"},
+        {"output_type", "int32_t"},
         {"channels", 1}
     };
     image::config cfg(js);

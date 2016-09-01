@@ -36,7 +36,7 @@ namespace nervana {
         nervana::image::config      crop_config;
 
         // Optional config variables
-        int                         num_crops = 5;
+        int                         crop_count = 5;
 
         // Derived variables
         std::vector<bool>           orientations{false};
@@ -51,7 +51,7 @@ namespace nervana {
             ADD_IGNORE(crop_config),
             // local params
             ADD_SCALAR(crop_scales, mode::REQUIRED),
-            ADD_SCALAR(num_crops, mode::OPTIONAL)
+            ADD_SCALAR(crop_count, mode::OPTIONAL)
         };
 
         void validate();

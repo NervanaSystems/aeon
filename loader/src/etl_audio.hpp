@@ -94,7 +94,7 @@ namespace nervana {
         /** Number of filters to use for mel-frequency transform (used in feature_type="mfsc") (Not used for mfcc?) */
         uint32_t    num_filters      {64};
         /** Input data type. Currently only "uint8_t" is supported. */
-        std::string type_string      {"uint8_t"};
+        std::string output_type      {"uint8_t"};
         /** Feature space to represent audio. Options are "specgram" - Short-time fourier transform, "mfsc" - Mel-Frequency spectrogram, "mfcc" - Mel-Frequency cepstral coefficients */
         std::string feature_type     {"specgram"};
         /** Window type for spectrogram generation */
@@ -153,11 +153,11 @@ namespace nervana {
                 throw std::runtime_error("Unknown feature type " + feature_type);
             }
 
-            if (type_string != "uint8_t") {
-                throw std::runtime_error("Invalid load type for audio " + type_string);
+            if (output_type != "uint8_t") {
+                throw std::runtime_error("Invalid load type for audio " + output_type);
             }
             add_noise = std::bernoulli_distribution{add_noise_probability};
-            add_shape_type({1, freq_steps, time_steps}, type_string);
+            add_shape_type({1, freq_steps, time_steps}, output_type);
             validate();
         }
 
@@ -184,7 +184,7 @@ namespace nervana {
             ADD_SCALAR(frame_length, mode::REQUIRED),
             ADD_SCALAR(num_cepstra, mode::OPTIONAL),
             ADD_SCALAR(num_filters, mode::OPTIONAL),
-            ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
+            ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
             ADD_SCALAR(feature_type, mode::OPTIONAL),
             ADD_SCALAR(window_type, mode::OPTIONAL),
             ADD_SCALAR(noise_index_file, mode::OPTIONAL),

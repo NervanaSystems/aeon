@@ -57,8 +57,8 @@ public:
     size_t                      height;
     size_t                      width;
     size_t                      max_bbox_count;
-    std::vector<std::string>    labels;
-    std::string                 type_string = "float";
+    std::vector<std::string>    class_names;
+    std::string                 output_type = "float";
 
     std::unordered_map<std::string,int> label_map;
 
@@ -69,8 +69,8 @@ private:
         ADD_SCALAR(height, mode::REQUIRED),
         ADD_SCALAR(width, mode::REQUIRED),
         ADD_SCALAR(max_bbox_count, mode::REQUIRED),
-        ADD_SCALAR(labels, mode::REQUIRED),
-        ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); })
+        ADD_SCALAR(class_names, mode::REQUIRED),
+        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); })
     };
 
     config() {}

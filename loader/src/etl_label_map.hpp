@@ -42,19 +42,19 @@ namespace nervana {
     class label_map::config : public interface::config
     {
     public:
-        std::string                 type_string = "uint32_t";
-        std::vector<std::string>    labels;
-        int                         max_labels = 100;
+        std::string                 output_type = "uint32_t";
+        std::vector<std::string>    class_names;
+        int                         max_classes = 100;
 
         config(nlohmann::json js);
         virtual ~config() {}
-        int max_label_count() const { return max_labels; }
+        int max_label_count() const { return max_classes; }
 
     private:
         std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
-            ADD_SCALAR(type_string, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
-            ADD_SCALAR(labels, mode::REQUIRED),
-            ADD_SCALAR(max_labels, mode::OPTIONAL)
+            ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
+            ADD_SCALAR(class_names, mode::REQUIRED),
+            ADD_SCALAR(max_classes, mode::OPTIONAL)
         };
 
         config() {}
