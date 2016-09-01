@@ -18,9 +18,9 @@ User Guide
 
 The aeon dataloader is designed to deal with large datasets from different modalities, including image, video, and audio, that may be too large to load directly into memory. We use a macrobatching approach, where the data is loaded in chunks (macrobatches) that are then split further into minibatches to feed the model.
 
-The dataloader was created to provide an easy interface to configure the loader for custom datasets, and also to load data from disk to neon with minimal latency. During operation, the dataloader reads the data from disk, performs any needed transformations on-the-fly, transfers the data to device memory (e.g. GPU, if needed), and provisions the data to the model. We use a multi-threaded library to hide the latency of these disk reads and operations in the device compute.
+The dataloader was created to provide an easy interface to configure the loader for custom datasets, and also to load data from disk to neon with minimal latency. During operation, the dataloader reads the data from disk, performs any needed transformations on-the-fly, transfers the data to device memory (e.g. GPU, if needed), and provisions the data to the model. We use a multi-threaded library to hide the latency of these disk reads and operations in the device computation.
 
-Optionally (but highly recommended), the first time a dataset is encountered, the dataloader can cache the data into cpio files, allowing for quick disk reads. This is useful for datasets with many small items (e.g. images). To skip this step, provide an empty ``cache_directory`` configuration (see below).
+Optionally (but highly recommended), the first time a dataset is encountered, the dataloader can cache the data into cpio files, allowing for quick subsequent reads. This is useful for datasets with many small items (e.g. images). To skip this step, provide an empty ``cache_directory`` configuration (see below).
 
 Data format
 -----------
@@ -32,7 +32,7 @@ Users interact with the dataloader by providing two items:
 Manifest file
 -------------
 
-The manifest file provides the dataloader with an input and target pair. The manifest file should contain a header line (that is ignored). Subsequent lines will have on record per line, formatted as:
+The manifest file provides the dataloader with an input and target pair. The manifest file should contain a header line (that is ignored). Subsequent lines will have a record per line, formatted as:
 
 .. code-block:: bash
 

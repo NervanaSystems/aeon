@@ -19,16 +19,31 @@ Getting Started
 Installation
 ------------
 
-First grab some prerequisites (at the very least)::
+First, if you haven't already, install neon_. Then grab aeon's dependencies:
 
-  sudo apt-get install libcurl4-openssl-dev clang
+Ubuntu::
 
-Then to install aeon::
+  sudo apt-get install -y libcurl4-openssl-dev clang libopencv-dev
+
+OSX::
+
+  brew tap homebrew/science
+  brew install opencv
+  
+CentOS/Fedora::
+
+  sudo dnf install opencv-devel clang
+
+Then install aeon under your neon virtualenv::
 
   git clone https://github.com/NervanaSystems/aeon.git
   cd aeon
-  sudo python setup.py install
+  python setup.py install
 
-Usage
------
-.. TODO: put a small, simpler example above this more complicated one.
+If your neon is installed system wide, you can instead install aeon system wide 
+as well using `sudo python setup.py install`.
+
+Now continue on to the :doc:`user_guide` to get started using aeon. Or to the 
+:doc:`developer_guide` to developing custom loaders/transformers.
+
+.. _neon: https://github.com/NervanaSystems/neon
