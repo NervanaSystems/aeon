@@ -213,7 +213,7 @@ public:
         return dump_default(default_value);
     }
 
-    void parse(nlohmann::json js) {
+    void parse(nlohmann::json js) override {
         parse_function(target_variable, var_name, js, parse_mode);
         if(!validate_function(target_variable))
         {

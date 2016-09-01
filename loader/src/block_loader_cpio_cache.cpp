@@ -27,7 +27,10 @@ using namespace std;
 using namespace nervana;
 
 // maximum number of files opened by nftw file enumeration function
+// For some platforms (older linux), OPEN_MAX needs to be defined
+#ifndef OPEN_MAX
 #define OPEN_MAX 128
+#endif
 
 block_loader_cpio_cache::block_loader_cpio_cache(const string& rootCacheDir,
                                                  const string& cache_id,

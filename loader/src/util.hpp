@@ -19,6 +19,7 @@
 #include <sstream>
 #include <vector>
 #include <stdexcept>
+#include <random>
 
 namespace nervana {
 

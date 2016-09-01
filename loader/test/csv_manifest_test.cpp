@@ -18,6 +18,7 @@
 #include "csv_manifest_maker.hpp"
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #include <iostream>
 #include <fstream>
@@ -64,11 +65,10 @@ void touch(const std::string& filename)
          filename.c_str(), O_WRONLY|O_CREAT|O_NOCTTY|O_NONBLOCK, 0666
     );
     assert(fd>=0);
+    close(fd);
 
     // update timestamp for filename
-    int rc = utimensat(
-        AT_FDCWD, filename.c_str(), nullptr, 0
-    );
+    int rc = utimes(filename.c_str(), nullptr);
     assert(!rc);
 }
 
