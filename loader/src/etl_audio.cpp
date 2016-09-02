@@ -31,6 +31,7 @@ shared_ptr<audio::params> audio::param_factory::make_params(std::shared_ptr<cons
     return audio_stgs;
 }
 
+/** \brief Extract audio data from a wav file using wav_data */
 std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int itemSize)
 {
     return make_shared<audio::decoded>(make_shared<wav_data>(item, (uint32_t) itemSize));
@@ -49,6 +50,17 @@ audio::transformer::~transformer()
 {
 }
 
+
+/** \brief Transform the raw sound waveform into the desired feature space,
+* possibly after adding noise.
+*
+* The transformation pipeline is as follows:
+* 1. Optionally add noise (controlled by add_noise parameter)
+* 2. Convert to spectrogram
+* 3. Optionally convert to MFSC (controlled by feature_type parameter)
+* 4. Optionally convert to MFCC (controlled by feature_type parameter)
+* 5. Optionally time-warp (controlled by time_scale_fraction)
+*/
 std::shared_ptr<audio::decoded> audio::transformer::transform(
                                       std::shared_ptr<audio::params> params,
                                       std::shared_ptr<audio::decoded> decoded)
@@ -109,4 +121,3 @@ void audio::loader::load(const vector<void*>& outbuf, shared_ptr<audio::decoded>
     cv::transpose(tmp, dst);
     cv::flip(dst, dst, 0);
 }
-

@@ -54,29 +54,61 @@ namespace nervana {
         params() {}
     };
 
+    /**
+    * \brief Configuration for audio ETL
+    *
+    * An instantiation of this class controls the ETL of audio data into the
+    * target memory buffers from the source CPIO archives.
+    *
+    * **Extract**
+    * - Audio files should be stored in mono, PCM-16 .wav format. If needed, you should create an ingestion script to convert to this format (commonly using sox or ffmpeg)
+    *
+    * **Transform**
+    * - Audio can be transformed into three different representations: spectrogram, mel-frequency spectral coefficients, or mel-frequency cepstral coefficients
+    *
+    * **Load**
+    * - Just a simple loading into a memory buffer.
+    */
     class audio::config : public interface::config {
     public:
         // We will use the following suffixes for units:
         // _tn for samples, _ms for milliseconds, _ss for seconds, _hz for freq in hz
 
         // Independent variables and required
+        /** \defgroup Required */
+
+        /** Maximum duration of any audio clip in units of "seconds" or
+        * "samples" (e.g. "4 seconds"). */
         std::string  max_duration;
+        /** Interval between consecutive frames in units of "seconds" or
+        * "samples" (e.g. .01 seconds). */
         std::string  frame_stride;
+        /** Duration of each frame in units of "seconds" or "samples" (e.g. .025 seconds). */
         std::string  frame_length;
 
 
         // Independent variables and optional
+
+        /** Number of cepstra to use (only for feature_type="mfcc") */
         uint32_t    num_cepstra      {40};
+        /** Number of filters to use for mel-frequency transform (used in feature_type="mfsc") (Not used for mfcc?) */
         uint32_t    num_filters      {64};
+        /** Input data type. Currently only "uint8_t" is supported. */
         std::string type_string      {"uint8_t"};
+        /** Feature space to represent audio. Options are "specgram" - Short-time fourier transform, "mfsc" - Mel-Frequency spectrogram, "mfcc" - Mel-Frequency cepstral coefficients */
         std::string feature_type     {"specgram"};
+        /** Window type for spectrogram generation */
         std::string window_type      {"hann"};
 
         std::string noise_index_file {};
 
+        /** Sample rate of input audio in hertz */
         uint32_t    sample_freq_hz   {16000};
 
+        /** Simple linear time-warping */
         std::uniform_real_distribution<float>    time_scale_fraction   {1.0f, 1.0f};
+
+        /** How much noise to add (a value of 1 would be 0 dB SNR) */
         std::uniform_real_distribution<float>    noise_level           {0.0f, 0.5f};
 
         // Dependent variables
@@ -85,11 +117,15 @@ namespace nervana {
         float       max_duration_ms, frame_length_ms, frame_stride_ms;
 
         // This derived distribution gets filled by parsing add_noise_probability
+        /** Probability of adding noise */
         std::bernoulli_distribution              add_noise             {0.0f};
+        /** Index into noise index file */
         std::uniform_int_distribution<uint32_t>  noise_index           {0,    UINT32_MAX};
+        /** Offset from start of noise file */
         std::uniform_real_distribution<float>    noise_offset_fraction {0.0f, 1.0f};
 
-
+        /** \brief Parses the configuration JSON
+        */
         config(nlohmann::json js) {
             if(js.is_null()) {
                 throw std::runtime_error("missing audio config in json config");

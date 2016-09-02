@@ -57,6 +57,10 @@ void noise_clips::load_index(const std::string& index_file)
 }
 
 // From Factory, get add_noise, offset (frac), noise index, noise level
+/** \brief Add noise to a sound waveform
+*
+* 
+*/
 void noise_clips::addNoise(cv::Mat& wav_mat,
                           bool add_noise,
                           uint32_t noise_index,
