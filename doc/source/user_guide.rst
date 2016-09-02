@@ -45,11 +45,11 @@ Operations such as generating training/testing splits, or balancing labels for i
 Manifest file
 -------------
 
-The manifest file provides the dataloader with paths to the input and target data. The manifest file should contain a header line (that is ignored). Subsequent lines will have a record per line, formatted as:
+The manifest file provides the dataloader with an input and target pair. The 
+manifest file should contain one record per line,
 
 .. code-block:: bash
 
-    filename, label
     <path_to_input_1>,<path_to_target_1>
     <path_to_input_2>,<path_to_target_2>
     ...
