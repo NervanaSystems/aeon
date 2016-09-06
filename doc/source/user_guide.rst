@@ -45,7 +45,7 @@ Operations such as generating training/testing splits, or balancing labels for i
 Manifest file
 -------------
 
-The manifest file provides the dataloader with an input and target pair. The 
+The manifest file provides the dataloader with an input and target pair. The
 manifest file should contain one record per line,
 
 .. code-block:: bash
@@ -84,7 +84,7 @@ For example formats of different modalities and problems, see the image, audio, 
 Configuration
 -------------
 
-The dataloader configuration consists of several loader configurations, then individual configs for the different modalities. These configs are captured by a python dictionary. For example,
+The dataloader configuration consists of a base loader config, then individual configs for the different modalities. These configs are captured by a python dictionary. For example,
 
 .. code-block:: python
 

@@ -16,7 +16,33 @@
 Audio
 =====
 
-For audio inputs, Aeon has providers for classification and transcription tasks. Currently, audio must first be converted to 16-bit, single channel, wav format. This is done through a process called "ingestion" and can usually be done very simply using the command line utility ``sox``. Once loaded, Aeon can transform the audio into three different feature spaces: spectrograms, mel-frequency spectral coefficients, or mel-frequency cepstral coefficients.
+For audio data, Aeon has providers for classification and transcription tasks (use ``audio,label`` and ``audio,transcription``, respectively). Currently, audio must first be converted to 16-bit, single channel, ``*.wav format``. This is done by the user before calling the dataloader. We would recommend using the command line utility sox_.
+
+The manifest file should specify paths to both the audio and label files. For transcription, we have:
+
+.. code-block:: bash
+
+    audio_sample_1.wav,audio_transcript_1.txt
+    audio_sample_2.wav,audio_transcript_2.txt
+    audio_sample_3.wav,audio_transcript_3.txt
+
+where each transcript file should contain ASCII characters for the target transcription.
+
+When the data is provisioned to the model, aeon supports transforming the wave file into three different feature spaces: spectrograms (``feature_type: specgram``), mel-frequency spectral coefficients (``mfsc``), or mel-frequency cepstral coefficients (``mfcc``).
+
+.. TODO: desribe specgrams, mfsc, and mfcc
+.. TODO: graphics of transforms
+
+Feature spaces
+--------------
+
+.. TODO: describe noise augmentation
+Noise augmentation
+------------------
+
+
+Configuration parameters
+------------------------
 
 .. csv-table::
    :header: "Name", "Default", "Description"
@@ -40,14 +66,20 @@ For audio inputs, Aeon has providers for classification and transcription tasks.
     type_string (string) | uint8_t | Input data type. Currently only "uint8_t" is supported.
     seed (int) | 0 | Random seed
 
-((Still need: Example config, graphics showing transforms, longer description of each feature space, ))
-
-.. a section on ingestion/format conversion. ((Needs: Example manifest, example sox script for ingest of a common dataset, any more details on required wav file format.))
-.. -----
+.. TODO: example config
 
 Classification
 --------------
 
+.. TODO: classification-specific config
 
 Transcription
 -------------
+
+.. TODO: transcription-specific config
+
+
+
+
+.. _sox: http://sox.sourceforge.net/
+.. _neon: https://github.com/NervanaSystems/neon
