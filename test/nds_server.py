@@ -1,8 +1,13 @@
 import json
 
-from flask import Flask, send_file
+from flask import Flask, send_file, request
 app = Flask(__name__)
 
+def shutdown_server():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
 
 @app.route("/object_count/")
 def object_count():
@@ -24,6 +29,11 @@ def test_pattern():
     return '0123456789abcdef' * 1024
 
 
+@app.route('/shutdown/')
+def shutdown():
+    shutdown_server()
+    return 'Server shutting down...'
+
 def run_server():
     app.run()
 
@@ -36,11 +46,17 @@ def run_server_with_timeout(seconds):
     server = Process(target=run_server)
     server.start()
 
-    time.sleep(seconds)
-    print seconds, "seconds are over.  ending nds_server.py"
+    server.join(seconds)
+#    time.sleep(seconds)
+#    print seconds, "seconds are over.  ending nds_server.py"
 
-    server.terminate()
-    server.join()
+    if server.is_alive():
+        print "nds_server still active, killing"
+        shutdown_server()
+        server.join(5)
+        print "nds_server gone"
+#        server.terminate()
+#        server.join()
 
 
 if __name__ == "__main__":
