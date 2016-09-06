@@ -48,7 +48,10 @@ public:
     ~NDSMockServer() {
         cout << "killing mock nds server ..." << endl;
         // kill the python process running the mock NDS
-        kill(_pid, 15);
+        stringstream stream;
+        block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+        client.get("http://127.0.0.1:5000/shutdown/", stream);
+//        kill(_pid, 15);
     }
 
 private:
