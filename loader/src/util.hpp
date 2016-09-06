@@ -60,7 +60,7 @@ namespace nervana {
 
     void dump(std::ostream& out, const void*, size_t);
 
-    std::string tolower(const std::string& s);
+    std::string to_lower(const std::string& s);
     std::vector<std::string> split(const std::string& s, char delimiter);
 
     size_t unbiased_round(float f);

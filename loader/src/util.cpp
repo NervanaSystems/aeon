@@ -57,7 +57,7 @@ void nervana::dump( ostream& out, const void* _data, size_t _size )
     }
 }
 
-std::string nervana::tolower(const std::string& s)
+std::string nervana::to_lower(const std::string& s)
 {
     std::string rc = s;
     std::transform(rc.begin(), rc.end(), rc.begin(), ::tolower);

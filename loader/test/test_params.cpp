@@ -12,7 +12,7 @@ enum class foo {
 };
 
 static void from_string(foo& v, const std::string& s) {
-    string tmp = nervana::tolower(s);
+    string tmp = nervana::to_lower(s);
          if(tmp == "test1") v = foo::TEST1;
     else if(tmp == "test2") v = foo::TEST2;
     else if(tmp == "test3") v = foo::TEST3;

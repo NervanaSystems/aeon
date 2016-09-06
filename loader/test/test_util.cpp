@@ -163,7 +163,7 @@ TEST(avi,video_file) {
 }
 
 TEST(avi,video_buffer) {
-    const string filename = "/home/users/alex/bb8.avi";
+    const string filename = CURDIR"/test_data/bb8.avi";
     ifstream in(filename, ios_base::binary);
     ASSERT_TRUE(in);
     in.seekg(0,in.end);
