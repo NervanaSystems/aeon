@@ -48,6 +48,7 @@ TEST_SRCS := \
     test_util.cpp \
     test_video.cpp \
     test_config.cpp \
+    test_cpio.cpp \
 
 OBJS             = $(subst .cpp,.o,$(TEST_SRCS))
 INC             := -I../src $(INC)

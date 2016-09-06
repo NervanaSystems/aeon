@@ -100,3 +100,22 @@ TEST(block_loader_nds, cpio) {
 
     ASSERT_EQ(dest[0]->get_item_count(), 2);
 }
+
+
+//TEST(block_loader_nds, lexi)
+//{
+//    // http://54.215.249.47/api/v1/data/macrobatch/?macro_batch_max_size=5000&macro_batch_index=0&collection_id=13&shard_count=1&shard_index=0&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnRfaWQiOjEwMiwidXNlcl9pZCI6MTAwMDQsImpvYl9pZCI6NjcsImNvbGxlY3Rpb25faWQiOjEzfQ.6tk9OAaaBuNSDflUJW8tYO0cbHANRdql14DfRXzFB_8
+
+////    start_server();
+//    block_loader_nds client("http://54.215.249.47/api/v1/data",
+//                            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnRfaWQiOjEwMiwidXNlcl9pZCI6MTAwMDQsImpvYl9pZCI6NjcsImNvbGxlY3Rpb25faWQiOjEzfQ.6tk9OAaaBuNSDflUJW8tYO0cbHANRdql14DfRXzFB_8",
+//                            13, 5000, 1, 0);
+
+//    buffer_in_array dest(2);
+//    ASSERT_EQ(dest.size(), 2);
+//    ASSERT_EQ(0, dest[0]->get_item_count());
+
+//    client.loadBlock(dest, 0);
+
+//    ASSERT_EQ(8, dest[0]->get_item_count());
+//}
