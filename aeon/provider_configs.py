@@ -41,7 +41,8 @@ def make_cstr_config(manifest_dir="/scratch/alex/audio/VCTK-Corpus/ingested",
                 frame_stride="128 samples",
                 window_type="hann")
 
-    tcfg = dict(alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ-_!? .,()", max_length=25)
+    tcfg = dict(alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ-_!? .,()",
+                max_length=25)
 
     cfg_dict = dict(type="audio,transcribe",
                     audio=dcfg,

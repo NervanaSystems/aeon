@@ -97,6 +97,7 @@ The dataloader configuration consists of a base loader config, then individual c
                   minibatch_size=128)
 
 Importantly, the ``type`` key indicates to the dataloader which input data type to expect, and the ``image`` and ``label`` keys correspond to additional configuration dictionaries. The dataloader currently supports:
+
 - image classification (``type="image,label"``),
 - image segmentation (``"image,pixelmask"``),
 - image localization (``"image,localization"``),
@@ -154,18 +155,3 @@ The above configuration will, for each image, take a random crop of 224x224 pixe
     train = DataLoader(config, backend)
 
 The backend argument above from neon tells the dataloader where to place the buffers to provision to the model.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

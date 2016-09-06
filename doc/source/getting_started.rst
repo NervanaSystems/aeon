@@ -29,7 +29,7 @@ OSX::
 
   brew tap homebrew/science
   brew install opencv
-  
+
 CentOS/Fedora::
 
   sudo dnf install opencv-devel clang
@@ -40,10 +40,10 @@ Then install aeon under your neon virtualenv::
   cd aeon
   python setup.py install
 
-If your neon is installed system wide, you can instead install aeon system wide 
-as well using `sudo python setup.py install`.
+If your neon is installed system wide, you can instead install aeon system wide
+as well using :code:`sudo python setup.py install`.
 
-Now continue on to the :doc:`user_guide` to get started using aeon. Or to the 
+Now continue on to the :doc:`user_guide` to get started using aeon. Or to the
 :doc:`developer_guide` to developing custom loaders/transformers.
 
 .. _neon: https://github.com/NervanaSystems/neon
