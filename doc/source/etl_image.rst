@@ -154,6 +154,7 @@ This provider creates a set of ten buffers that are consumed by the Faster-RCNN 
    :widths: 20, 10, 50
    :delim: |
 
+   image_canvas | max_size * max_size | The Image is placed in the upper left corner of the canvas
    bb_targets | (4 * A, 1) | Bounding box regressions for the region proposal network
    bb_targets_mask | (4 * A, 1) | Bounding box target masks. Only positive labels have non-zero elements.
    labels | (2 * A, 1) | Target positive/negative labels for the region proposal network.
