@@ -16,6 +16,8 @@ import ctypes as ct
 import os
 import atexit
 import json
+import sys
+import importlib.util
 
 
 class LoaderRuntimeError(RuntimeError):
@@ -70,8 +72,14 @@ class DataLoader(object):
         self._compute_nbatches()
 
     def _load_library(self):
-        path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        libpath = os.path.join(path, 'aeon_lib.so')
+        if (sys.version_info > (3, 0)):
+            # Python 3 builds extensions with names like
+            # aeon_lib.cpython-35m-x86_64-linux-gnu.so
+            # So we use this to do the name resolution
+            libpath = importlib.util.find_spec('aeon_lib').origin
+        else:
+            path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+            libpath = os.path.join(path, 'aeon_lib.so')
         self.loaderlib = ct.cdll.LoadLibrary(libpath)
         self.loaderlib.get_error_message.restype = ct.c_char_p
         self.loaderlib.start.restype = ct.c_void_p
@@ -243,7 +251,7 @@ class DataLoader(object):
                 yield self.next()
             except LoaderRuntimeError as e:
                 # TODO: log this somewhere instead of printing
-                print e
+                print(e)
             finally:
                 # keep track of where we are in the dataset so we know which epoch we are on
                 self._item_index += self.minibatch_size

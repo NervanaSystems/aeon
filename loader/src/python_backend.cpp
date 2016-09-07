@@ -39,7 +39,9 @@ python_backend::python_backend(PyObject* py_obj_backend,
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
     PyOS_sighandler_t sighandler = PyOS_getsig(SIGINT);
-    import_array();
+    if (_import_array() < 0) {
+        throw std::runtime_error("numpy.core.multiarray failed to import");
+    }
     PyOS_setsig(SIGINT, sighandler);
 
     for (uint32_t i = 0; i < _oshape_types.size(); ++i)

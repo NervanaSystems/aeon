@@ -69,9 +69,8 @@ export MEDIAFLAGS="${IMGFLAG}"
 export LDIR="${IMGLDIR}"
 export LIBS="-lcurl ${IMGLIBS}"
 
-export INC="-I$(python -c 'from distutils.sysconfig import get_python_inc; print get_python_inc()') ${INC}"
-export INC="-I$(python -c 'import numpy; print numpy.get_include()') ${INC}"
-export LIBS="-lpython2.7 ${LIBS}"
+export INC="-I$(python -c 'from distutils.sysconfig import get_python_inc; print(get_python_inc())') ${INC}"
+export INC="-I$(python -c 'import numpy; print(numpy.get_include())') ${INC}"
 
 if [ "${HAS_GPU}" = true ] ; then
     if [ -z "${CUDA_ROOT}" ] ; then

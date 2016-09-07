@@ -1,14 +1,15 @@
 import os
+import sys
 from distutils.core import setup, Extension
 import subprocess
 
-
-def shell_stdout(cmd):
-    return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].strip()
-
-for line in shell_stdout('bash -c "source env.sh; env"').split('\n'):
-    key, _, value = line.partition("=")
-    os.environ[key] = value
+for line in subprocess.check_output('bash -c "source env.sh; env"',
+        shell=True).strip().split(b'\n'):
+    key, _, value = line.partition(b"=")
+    if sys.version_info.major == 2:
+        os.environ[key] = value
+    else:
+        os.environ[key.decode('utf-8')] = value.decode('utf-8')
 
 include_dirs = os.environ['INC'].replace('-I', '').split()
 library_dirs = os.environ['LDIR'].replace('-L', '').split()
