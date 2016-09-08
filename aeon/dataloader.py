@@ -17,7 +17,6 @@ import os
 import atexit
 import json
 import sys
-import importlib.util
 
 
 class LoaderRuntimeError(RuntimeError):
@@ -76,6 +75,7 @@ class DataLoader(object):
             # Python 3 builds extensions with names like
             # aeon_lib.cpython-35m-x86_64-linux-gnu.so
             # So we use this to do the name resolution
+            import importlib.util
             libpath = importlib.util.find_spec('aeon_lib').origin
         else:
             path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
