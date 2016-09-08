@@ -16,12 +16,11 @@
 Video
 =====
 
-For training models using video data in neon, aeon requires the videos to be 
-MJPEG encoded and split into uniform length clips with equal frame dimensions.  
-A full example of how to perform this initial preprocessing is demonstrated in 
-the `neon C3D example`_ in the neon repository based off the C3D_ model 
-architecture trained using the UCF101_ dataset. The preprocessing in that 
-example is achieved in the following ffmpeg_ command::
+For training models using video data in neon, aeon requires the videos to be
+MJPEG encoded. A full example of how to perform this initial preprocessing is
+demonstrated in the `neon C3D example`_ in the neon repository based off the
+C3D_ model architecture trained using the UCF101_ dataset. The preprocessing in
+that example is achieved using the following ffmpeg_ command::
 
   ffmpeg -v quiet -i $VIDPATH \
          -an -vf scale=171:128 -framerate 25 \
@@ -30,6 +29,22 @@ example is achieved in the following ffmpeg_ command::
          -segment_list ${VIDPATH%.avi}.csv \
          -segment_list_entry_prefix `dirname $VIDPATH`/ \
          -y ${VIDPATH%.avi}_%02d.avi
+
+Breaking this command down: 
+
+  - ``-an`` disables the audio stream
+  - ``-vf scale=171:128`` scales the video frames to 171 by 128 pixels
+  - ``-framerate 25`` sets the output framerate to 25 frames per second
+  - ``c:v mjpeg`` sets the output video codec to MJPEG
+  - ``-q:v 3`` sets the output codec compression quality
+  - ``-f segment ...`` splits video into equal length segments. See the 
+    `ffmpeg documentation
+    <https://www.ffmpeg.org/ffmpeg-formats.html#segment_002c-stream_005fsegment_002c-ssegment>`_ for details
+  - ``-y`` overwritet output file without prompting
+
+Splitting the videos into equal length segments as we did here is not necessary
+in general for the aeon ``DataLoader``, but is helpful for training this
+particular model in neon.
 
 Once preprocessing is complete, a sample manifest CSV file must be created with 
 the absolute paths of the videos and the classification labels. For example::
