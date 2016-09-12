@@ -18,8 +18,8 @@
 #include <cmath>
 #include <cassert>
 #include <iomanip>
-
 #include "util.hpp"
+#include <sox.h>
 
 using namespace std;
 
@@ -166,3 +166,26 @@ uint32_t nervana::get_global_random_seed()
     return nervana::global_random_seed;
 }
 
+cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
+{
+    SOX_SAMPLE_LOCALS;
+    sox_format_t* in = sox_open_mem_read((void *) item, itemSize, NULL, NULL, NULL);
+    affirm(in->signal.channels == 1, "input audio must be single channel");
+    affirm(in->signal.precision == 16, "input audio must be signed short");
+
+    sox_sample_t* sample_buffer = new sox_sample_t[in->signal.length];
+    size_t number_read = sox_read(in, sample_buffer, in->signal.length);
+
+    size_t nclipped = 0;
+
+    cv::Mat samples_mat(in->signal.length, 1, CV_16SC1);
+
+    affirm(in->signal.length == number_read, "unable to read all samples of input audio");
+
+    for (uint i=0; i<in->signal.length; ++i) {
+        samples_mat.at<int16_t>(i, 0) = SOX_SAMPLE_TO_SIGNED_16BIT(sample_buffer[i], nclipped);
+    }
+    delete [] sample_buffer;
+
+    return samples_mat;
+}

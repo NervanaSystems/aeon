@@ -19,10 +19,10 @@
 #include <chrono>
 
 #include "interface.hpp"
-#include "wav_data.hpp"
 #include "specgram.hpp"
-#include "noise_clips.hpp"
 #include "util.hpp"
+
+#include "noise_clips.hpp"
 
 class noise_clips;
 
@@ -77,13 +77,14 @@ namespace nervana {
         // Independent variables and required
         /** \defgroup Required */
 
-        /** Maximum duration of any audio clip in units of "seconds" or
+        /** Maximum duration of any audio clip in units of "seconds", "milliseconds", or
         * "samples" (e.g. "4 seconds"). */
         std::string  max_duration;
-        /** Interval between consecutive frames in units of "seconds" or
+        /** Interval between consecutive frames in units of "seconds", "milliseconds", or
         * "samples" (e.g. .01 seconds). */
         std::string  frame_stride;
-        /** Duration of each frame in units of "seconds" or "samples" (e.g. .025 seconds). */
+        /** Duration of each frame in units of "seconds", "milliseconds", or "samples"
+        * (e.g. .025 seconds). */
         std::string  frame_length;
 
 
@@ -149,13 +150,22 @@ namespace nervana {
                 freq_steps = num_filters;
             } else if (feature_type == "mfcc") {
                 freq_steps = num_cepstra;
+            } else if (feature_type == "samples") {
+                freq_steps = 1;
             } else {
                 throw std::runtime_error("Unknown feature type " + feature_type);
             }
 
-            if (output_type != "uint8_t") {
-                throw std::runtime_error("Invalid load type for audio " + output_type);
+            if (feature_type == "samples") {
+                if (output_type != "int16_t" && output_type != "float") {
+                    throw std::runtime_error("Invalid pload type for audio " + output_type);
+                }
+            } else {
+                if (output_type != "uint8_t") {
+                    throw std::runtime_error("Invalid dload type for audio " + output_type);
+                }
             }
+
             add_noise = std::bernoulli_distribution{add_noise_probability};
             add_shape_type({1, freq_steps, time_steps}, output_type);
             validate();
@@ -164,6 +174,11 @@ namespace nervana {
         void validate() {
             if(frame_stride_ms <= 0) {
                 throw std::invalid_argument("frame_stride_ms <= 0");
+            }
+            if(feature_type == "samples") {
+                if (frame_length_tn != 1 || frame_stride_tn != 1) {
+                    throw std::invalid_argument("frame and stride must both be 1 sample to use raw sample feature_type");
+                }
             }
             if(time_steps != ((max_duration_tn - frame_length_tn) / frame_stride_tn) + 1) {
                 throw std::invalid_argument("time_steps != ((max_duration_tn - frame_length_tn) / frame_stride_tn) + 1");
@@ -239,15 +254,15 @@ namespace nervana {
 
     class audio::decoded : public interface::decoded_media {
     public:
-        decoded(std::shared_ptr<wav_data> raw) : time_rep(raw) {}
-        size_t size() { return time_rep->nsamples(); }
+        decoded(cv::Mat raw) : time_rep{raw} {}
+        size_t size() { return time_rep.rows; }
 
-        std::shared_ptr<wav_data> get_time_data() { return time_rep; }
+        cv::Mat& get_time_data() { return time_rep; }
         cv::Mat& get_freq_data() { return freq_rep; }
         uint32_t valid_frames {0};
     protected:
-        std::shared_ptr<wav_data> time_rep {nullptr};
-        cv::Mat                   freq_rep {};
+        cv::Mat time_rep {};
+        cv::Mat freq_rep {};
     };
 
 

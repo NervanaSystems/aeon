@@ -23,12 +23,13 @@ First, if you haven't already, install neon_. Then grab aeon's dependencies:
 
 Ubuntu::
 
-  sudo apt-get install libcurl4-openssl-dev clang libopencv-dev
+  sudo apt-get install libcurl4-openssl-dev clang libopencv-dev libsox-dev
 
 OSX (Assuming you folowed neon_'s Homebrew based install)::
 
   brew tap homebrew/science
   brew install opencv
+  brew install sox
 
 Fedora::
 

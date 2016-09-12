@@ -14,10 +14,10 @@
 */
 
 #include "noise_clips.hpp"
+#include "util.hpp"
 
 #include <sstream>
 #include <fstream>
-
 #include <sys/stat.h>
 
 using namespace std;
@@ -78,7 +78,7 @@ void noise_clips::addNoise(cv::Mat& wav_mat,
 
     // Collect enough noise data to cover the entire input clip.
     cv::Mat noise_dst = cv::Mat::zeros(wav_mat.size(), wav_mat.type());
-    const cv::Mat& noise_src = _noise_data[ noise_index % _noise_data.size() ]->get_data();
+    const cv::Mat& noise_src = _noise_data[ noise_index % _noise_data.size() ];
 
     affirm(noise_src.type() == wav_mat.type(), "noise type does not match wav type");
 
@@ -113,7 +113,7 @@ void noise_clips::load_data()
     for(auto nfile: _noise_files) {
         int len = 0;
         read_noise(nfile, &len);
-        _noise_data.push_back(make_shared<nervana::wav_data>(_buf, len));
+        _noise_data.push_back(read_audio_from_mem(_buf, len));
     }
 }
 

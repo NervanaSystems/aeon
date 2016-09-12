@@ -15,6 +15,7 @@
 
 #include <fstream>
 #include "gtest/gtest.h"
+#include <sox.h>
 
 #include "etl_audio.hpp"
 #include "wav_data.hpp"
@@ -37,16 +38,16 @@ TEST(wav,compare) {
     auto d_audio = extractor.extract(wav_buf, wav_bufsize);
 
     auto extracted_wav = d_audio->get_time_data();
-    ASSERT_EQ(extracted_wav->get_data().rows, wav.nsamples());
+    ASSERT_EQ(extracted_wav.rows, wav.nsamples());
 
     uint32_t num_samples = wav.nsamples();
     bool all_eq = true;
     for (int i=0; i<num_samples; i++)
     {
-        size_t offset = i * sizeof(uint16_t);
-        uint16_t*  waddr = (uint16_t *) (wav.get_raw_data()[0] + offset);
-        uint16_t*  daddr = (uint16_t *) (extracted_wav->get_raw_data()[0] + offset);
-        if (*waddr != *daddr)
+        size_t offset = i * sizeof(int16_t);
+        int16_t*  waddr = (int16_t *) (wav.get_raw_data()[0] + offset);
+        int16_t dval = extracted_wav.at<int16_t>(i, 0);
+        if (*waddr != dval)
         {
             all_eq = false; break;
         }
@@ -123,13 +124,13 @@ TEST(audio,transform) {
     audio::config config(js);
 
     audio::extractor extractor;
-    audio::transformer _imageTransformer(config);
+    audio::transformer _audioTransformer(config);
     audio::param_factory factory(config);
 
     auto decoded_audio = extractor.extract(databuf, bufsize);
     auto audioParams = factory.make_params(decoded_audio);
 
-    _imageTransformer.transform(audioParams, decoded_audio);
+    _audioTransformer.transform(audioParams, decoded_audio);
     auto shape = config.get_shape_type();
     ASSERT_EQ(shape.get_shape()[0], 1);
     ASSERT_EQ(shape.get_shape()[1], 40);
@@ -185,16 +186,101 @@ TEST(audio,transform2) {
     audio::config config(js);
 
     audio::extractor extractor;
-    audio::transformer _imageTransformer(config);
+    audio::transformer _audioTransformer(config);
     audio::param_factory factory(config);
 
     auto decoded_audio = extractor.extract(databuf, bufsize);
     auto audioParams = factory.make_params(decoded_audio);
 
-    _imageTransformer.transform(audioParams, decoded_audio);
+    _audioTransformer.transform(audioParams, decoded_audio);
     auto shape = config.get_shape_type();
     ASSERT_EQ(shape.get_shape()[0], 1);
     ASSERT_EQ(shape.get_shape()[1], 256/2 + 1);
     ASSERT_NE(decoded_audio->get_freq_data().rows, 0);
     delete[] databuf;
+}
+
+
+TEST(audio,samples_out) {
+
+    auto js = R"(
+        {
+            "feature_type": "samples",
+            "output_type": "int16_t",
+            "max_duration": "3 seconds",
+            "frame_length": "1 samples",
+            "frame_stride": "1 samples",
+            "sample_freq_hz": 16000
+        }
+    )"_json;
+
+    float sine_freq = 400;
+    int16_t sine_ampl = 500;
+    sinewave_generator sg{sine_freq, sine_ampl};
+    int wav_len_sec = 2, sample_freq = 16000;
+    int wav_samples = wav_len_sec * sample_freq;
+    bool stereo = false;
+
+    wav_data wav(sg, wav_len_sec, sample_freq, stereo);
+    uint32_t bufsize = wav_data::HEADER_SIZE + wav.nbytes();
+    char *databuf = new char[bufsize];
+
+    wav.write_to_buffer(databuf, bufsize);
+
+    audio::config config(js);
+
+    audio::extractor extractor;
+    audio::transformer _audioTransformer(config);
+    audio::loader _audioLoader(config);
+    audio::param_factory factory(config);
+    auto decoded_audio = extractor.extract(databuf, bufsize);
+    auto audioParams = factory.make_params(decoded_audio);
+
+
+    cv::Mat output_samples(1, config.max_duration_tn, CV_16SC1);
+    auto xformed_audio = _audioTransformer.transform(audioParams, decoded_audio);
+
+    auto shape = config.get_shape_type();
+    ASSERT_EQ(shape.get_shape()[0], 1);
+    ASSERT_EQ(shape.get_shape()[1], 1);
+    ASSERT_EQ(shape.get_shape()[2], config.max_duration_tn);
+    ASSERT_EQ(decoded_audio->get_freq_data().rows, wav_samples);
+
+    _audioLoader.load({output_samples.data}, xformed_audio);
+
+    bool all_eq = true;
+
+    for (int i=0; i<wav_samples; i++)
+    {
+        size_t offset = i * sizeof(int16_t);
+        int16_t*  waddr = (int16_t *) (wav.get_raw_data()[0] + offset);
+        if (*waddr != output_samples.at<int16_t>(0, i))
+        {
+            all_eq = false; break;
+        }
+    }
+
+    ASSERT_EQ(all_eq, true);
+
+
+    delete[] databuf;
+}
+
+
+TEST(etl, sox_use) {
+
+    sinewave_generator sg{400, 500};
+    wav_data wav(sg, 2, 16000, false);
+
+    uint32_t wav_bufsize = wav_data::HEADER_SIZE + wav.nbytes();
+    char *wav_buf = new char[wav_bufsize];
+
+    wav.write_to_buffer(wav_buf, wav_bufsize);
+
+    auto sox_mat = read_audio_from_mem(wav_buf, wav_bufsize);
+
+    for (uint i=0; i<60; ++i) {
+        ASSERT_EQ(sox_mat.at<int16_t>(i,0) , wav.get_data().at<int16_t>(i, 0));
+    }
+
 }

@@ -16,8 +16,7 @@
 #pragma once
 
 #include <opencv2/core/core.hpp>
-
-#include "wav_data.hpp"
+#include "util.hpp"
 
 namespace nervana {
     class noise_clips;
@@ -40,8 +39,8 @@ private:
     void read_noise(std::string& noise_file, int* dataLen);
 
 private:
-    std::vector<std::shared_ptr<nervana::wav_data>> _noise_data;
-    std::vector<std::string>                        _noise_files;
-    char*                                           _buf          = 0;
-    int                                             _bufLen       = 0;
+    std::vector<cv::Mat>      _noise_data;
+    std::vector<std::string>  _noise_files;
+    char*                     _buf          = 0;
+    int                       _bufLen       = 0;
 };

@@ -20,6 +20,8 @@
 #include <vector>
 #include <stdexcept>
 #include <random>
+#include <opencv2/core/core.hpp>
+#include <sox.h>
 
 namespace nervana {
 
@@ -114,4 +116,5 @@ namespace nervana {
 
     void set_global_random_seed(uint32_t newval);
     uint32_t get_global_random_seed();
+    cv::Mat read_audio_from_mem(const char* item, int itemSize);
 }

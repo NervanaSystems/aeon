@@ -54,7 +54,7 @@ INC             := -I../src $(INC)
 # hackery to fix bug in opencv. It exports gtest symbols in the
 # opencv_ts library so remove it from LIBS
 LIBS            := $(subst -lopencv_ts,,$(LIBS))
-LIBS            := $(LIBS) -lgtest -lpthread
+LIBS            := $(LIBS) -lsox -lgtest -lpthread
 GTEST_TEST      := /usr/local/lib/libgtest.a
 LOADER_LIB      := ../src/loader.a
 CFLAGS          := $(CFLAGS) -DCURDIR=\"$(CURDIR)\"
