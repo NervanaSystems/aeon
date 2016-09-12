@@ -88,14 +88,15 @@ void block_loader_nds::get(const string& url, stringstream &stream)
     CURLcode res = curl_easy_perform(_curl);
 
     // Check for errors
-    if (res != CURLE_OK) {
-        long http_code = 0;
-        curl_easy_getinfo (_curl, CURLINFO_RESPONSE_CODE, &http_code);
-
+    long http_code = 0;
+    curl_easy_getinfo (_curl, CURLINFO_RESPONSE_CODE, &http_code);
+    if (http_code != 200 || res != CURLE_OK) {
         stringstream ss;
-        ss << "HTTP GET on " << url << "failed. ";
-        ss << "status code: " << http_code << ". ";
-        ss << curl_easy_strerror(res);
+        ss << "HTTP GET on \n'" << url << "' failed. ";
+        ss << "status code: " << http_code;
+        if (res != CURLE_OK) {
+            ss << " curl return: " << curl_easy_strerror(res);
+        }
 
         curl_easy_cleanup(_curl);
         throw std::runtime_error(ss.str());

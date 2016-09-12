@@ -1,6 +1,6 @@
 import json
 
-from flask import Flask, send_file, request
+from flask import Flask, send_file, request, abort
 app = Flask(__name__)
 
 def shutdown_server():
@@ -34,6 +34,12 @@ def shutdown():
     shutdown_server()
     return 'Server shutting down...'
 
+
+@app.route('/error')
+def error():
+    abort(400)
+
+
 def run_server():
     app.run()
 
@@ -47,16 +53,12 @@ def run_server_with_timeout(seconds):
     server.start()
 
     server.join(seconds)
-#    time.sleep(seconds)
-#    print seconds, "seconds are over.  ending nds_server.py"
 
     if server.is_alive():
         print "nds_server still active, killing"
-        shutdown_server()
-        server.join(5)
+        server.terminate()
+        server.join()
         print "nds_server gone"
-#        server.terminate()
-#        server.join()
 
 
 if __name__ == "__main__":

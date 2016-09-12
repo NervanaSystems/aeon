@@ -81,6 +81,14 @@ TEST(block_loader_nds, curl_stream) {
     ASSERT_EQ(stream.str(), expected.str());
 }
 
+TEST(block_loader_nds, curl_stream_error) {
+    start_server();
+    block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+
+    stringstream stream;
+    EXPECT_THROW(client.get("http://127.0.0.1:5000/error", stream), std::runtime_error);
+}
+
 TEST(block_loader_nds, object_count) {
     start_server();
     block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
