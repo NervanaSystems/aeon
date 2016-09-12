@@ -30,23 +30,23 @@ that example is achieved using the following ffmpeg_ command::
          -segment_list_entry_prefix `dirname $VIDPATH`/ \
          -y ${VIDPATH%.avi}_%02d.avi
 
-Breaking this command down: 
+Breaking this command down:
 
   - ``-an`` disables the audio stream
   - ``-vf scale=171:128`` scales the video frames to 171 by 128 pixels
   - ``-framerate 25`` sets the output framerate to 25 frames per second
   - ``c:v mjpeg`` sets the output video codec to MJPEG
   - ``-q:v 3`` sets the output codec compression quality
-  - ``-f segment ...`` splits video into equal length segments. See the 
+  - ``-f segment ...`` splits video into equal length segments. See the
     `ffmpeg documentation
     <https://www.ffmpeg.org/ffmpeg-formats.html#segment_002c-stream_005fsegment_002c-ssegment>`_ for details
-  - ``-y`` overwritet output file without prompting
+  - ``-y`` overwrite output file without prompting
 
 Splitting the videos into equal length segments as we did here is not necessary
 in general for the aeon ``DataLoader``, but is helpful for training this
 particular model in neon.
 
-Once preprocessing is complete, a sample manifest CSV file must be created with 
+Once preprocessing is complete, a sample manifest CSV file must be created with
 the absolute paths of the videos and the classification labels. For example::
 
   /video_dir/video1_location.avi,/labels/target_1.txt
@@ -54,13 +54,13 @@ the absolute paths of the videos and the classification labels. For example::
   /video_dir/video3_location.avi,/labels/target_4.txt
   /video_dir/video4_location.avi,/labels/target_2.txt
 
-Where the first column contains absolute paths to the preprocessed MJPEG videos 
-and the second column contains absolute paths to label files. The label files 
-in this case contain a single ASCII number indicating the correct class label 
-of this training example. 
+Where the first column contains absolute paths to the preprocessed MJPEG videos
+and the second column contains absolute paths to label files. The label files
+in this case contain a single ASCII number indicating the correct class label
+of this training example.
 
-Next in our model training python script, we create a ``DataLoader`` config 
-dictionary as described in the :doc:`user guide <user_guide>` but with an 
+Next in our model training python script, we create a ``DataLoader`` config
+dictionary as described in the :doc:`user guide <user_guide>` but with an
 appropriate entry for video options:
 
 .. code-block:: python
@@ -85,7 +85,7 @@ The two current possible options for video configuration are:
    max_frame_count (uint) | *Required* | Maximum number of frames to extract from video. Shorter samples will be zero padded.
    frame (object) | *Required* | An :doc:`Image configuration <image_etl>` for each frame extracted from the video.
 
-The last step is to then create the Python ``DataLoader`` object specifying a 
+The last step is to then create the Python ``DataLoader`` object specifying a
 set of transforms to apply to the input data.
 
 .. code-block:: python
@@ -100,7 +100,7 @@ set of transforms to apply to the input data.
     # ...
     model.fit(dl, optimizer=opt, num_epochs=args.epochs, cost=cost, callbacks=callbacks)
 
-Again, for the full example consult the complete `neon C3D example`_ in the 
+Again, for the full example consult the complete `neon C3D example`_ in the
 neon repository.
 
 .. _neon C3D example: https://github.com/NervanaSystems/neon/tree/master/examples/video-c3d

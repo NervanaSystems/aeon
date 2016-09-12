@@ -25,17 +25,19 @@ For image inputs, the dataloader has providers for classification, segmentation,
 3. Resize the cropped image to the desired output shape, defined by the parameters ``height`` and ``width``.
 4. If required, apply any transformations (e.g. lighting, horizontal flip, photometric distortion)
 
+The complete table of configuration parameters is shown below:
+
 .. csv-table::
-   :header: "Name", "Default", "Description"
+   :header: "Parameter", "Default", "Description"
    :widths: 20, 10, 50
    :delim: |
    :escape: ~
 
    height (uint) | *Required* | Height of provisioned image (pixels)
    width (uint) | *Required* | Width of provisioned image (pixels)
+   channels (uint) | 3 | Number of channels in input image
    output_type (string)| ~"uint8_t~"| Output data type.
    channel_major (bool)| True | Channel order of input image.
-   channels (uint) | 3 | Number of channels in input image
    seed (int) | 0 | Random seed
    flip_enable (bool) | False | Apply horizontal flip with probability 0.5.
    scale (float, float) | (1, 1) | Fraction of image short-side length to take the crop.
@@ -46,8 +48,15 @@ For image inputs, the dataloader has providers for classification, segmentation,
    photometric (float, float) | (0, 0) | Apply randomly sampled contrast, brightness, saturation changes. Implements the colornoise perturbation as descrbed in Krizhevksy et al.
    center (bool) | False | Take the center crop of the image. If false, a randomly located crop will be taken.
 
+The buffers provisioned to the model are:
 
-The buffer provided to the model has shape ``(channels * height * width, bsz)``, where ``bsz`` is the batch size.
+.. csv-table::
+   :header: "ID", "Buffer", Shape", "Description"
+   :widths: 5, 20, 10, 45
+   :delim: |
+   :escape: ~
+
+   0 | Image | ``(C*H*W, N)`` | Transfomed image, where ``C = channels``, ``H = height``, ``W = width``, and ``N = bsz`` (the batch size).
 
 Classification
 --------------
@@ -79,10 +88,44 @@ The configuration for this provider accepts a few parameters:
    binary (bool) | True |
    output_type (string) | ~"int32_t~" | label data type
 
-Note that data provisioned to the model is a ``(1, bsz)`` buffer, and not in one-hot format.
+The buffers provisioned to the model are:
+
+.. csv-table::
+   :header: "ID", "Buffer", Shape", "Description"
+   :widths: 5, 20, 10, 45
+   :delim: |
+   :escape: ~
+
+   0 | Image | ``(C*H*W, N)`` | Transfomed image, where ``C = channels``, ``H = height``, ``W = width``, and ``N = bsz`` (the batch size).
+   1 | Labels | ``(1, N)`` | Class label for each example. Note that this buffer is not in one-hot format.
 
 Segmentation
 ------------
+
+For segmentation problems (``type=image,pixelmask``), the input is an image, and the target output is a same-sized image where each pixel is assigned to a category. In the image below using the KITTI dataset, each pixel is assigned to object categories (sidewalk, road, car, etc.):
+
+.. image:: segmentation_example.png
+
+The manifest file contains paths to the input image, as well as the target image:
+
+.. code-block:: bash
+
+    /image_dir/img1.jpg,/mask_dir/mask1.jpg
+    /image_dir/img2.jpg,/mask_dir/mask2.jpg
+    /image_dir/img3.jpg,/mask_dir/mask3.jpg
+
+Note that the target image should have a single channel only. If there are multiple channels, only the first channel from the target will be used. The image parameters are the same as above, and the pixelmask has zero configurations. Transformations such as photometric or lighting are applied to the input image only, and not applied to the pixel mask. The same cropping, flipping, and rotation settings are applied to both the image and the mask.
+
+The buffers provisioned to the model are:
+
+.. csv-table::
+   :header: "ID", "Buffer", Shape", "Description"
+   :widths: 5, 20, 10, 45
+   :delim: |
+   :escape: ~
+
+   0 | Image | ``(C*H*W, N)`` | Transfomed image, where ``C = channels``, ``H = height``, ``W = width``, and ``N = bsz`` (the batch size).
+   1 | Mask | ``(H*W, N)`` | Target pixel image.
 
 Localization
 ------------
@@ -147,24 +190,24 @@ The dataloader generates on-the-fly the anchor targets required for training neo
    output_type (string) | ~"float~" | Output data type.
    max_gt_boxes (long) | 64 | Maximum number of ground truth boxes in dataset. Used to buffer the ground truth boxes.
 
-This provider creates a set of ten buffers that are consumed by the Faster-RCNN model. Defining ``A`` as the number of anchor boxes that tile the final convolutional feature map, and ``N`` as the ``max_gt_boxes`` parameter, we have the provisioned buffers in this order:
+This provider creates a set of eleven buffers that are consumed by the Faster-RCNN model. Defining ``A`` as the number of anchor boxes that tile the final convolutional feature map, and ``N`` as the ``max_gt_boxes`` parameter, we have the provisioned buffers in this order:
 
 .. csv-table::
-   :header: "Buffer", "Shape", "Description"
-   :widths: 20, 10, 50
+   :header: "ID", "Buffer", Shape", "Description"
+   :widths: 5, 20, 10, 45
    :delim: |
 
-   image_canvas | max_size * max_size | The Image is placed in the upper left corner of the canvas
-   bb_targets | (4 * A, 1) | Bounding box regressions for the region proposal network
-   bb_targets_mask | (4 * A, 1) | Bounding box target masks. Only positive labels have non-zero elements.
-   labels | (2 * A, 1) | Target positive/negative labels for the region proposal network.
-   labels_mask | (2 * A, 1) | Mask for the labels buffer. Includes ``rois_per_image`` non-zero elements.
-   im_shape | (2, 1) | Shape of the input image.
-   gt_boxes | (N * 4, 1) | Ground truth bounding box coordinates, already scaled by ``im_scale``. Boxes are padded into a larger buffer.
-   num_gt_boxes | (1, 1) | Number of ground truth bounding boxes.
-   gt_classes | (N, 1) | Class label for each ground truth box.
-   im_scale | (1, 1) | Scaling factor that was applied to the image.
-   is_difficult | (N, 1) | Indicates if each ground truth box has the difficult property.
+   0 | image_canvas | max_size * max_size | The Image is placed in the upper left corner of the canvas
+   1 | bb_targets | (4 * A, 1) | Bounding box regressions for the region proposal network
+   2 | bb_targets_mask | (4 * A, 1) | Bounding box target masks. Only positive labels have non-zero elements.
+   3 | labels | (2 * A, 1) | Target positive/negative labels for the region proposal network.
+   4 | labels_mask | (2 * A, 1) | Mask for the labels buffer. Includes ``rois_per_image`` non-zero elements.
+   5 | im_shape | (2, 1) | Shape of the input image.
+   6 | gt_boxes | (N * 4, 1) | Ground truth bounding box coordinates, already scaled by ``im_scale``. Boxes are padded into a larger buffer.
+   7 | num_gt_boxes | (1, 1) | Number of ground truth bounding boxes.
+   8 | gt_classes | (N, 1) | Class label for each ground truth box.
+   9 | im_scale | (1, 1) | Scaling factor that was applied to the image.
+   10 | is_difficult | (N, 1) | Indicates if each ground truth box has the difficult property.
 
 For Faster-RCNN, we handle variable image sizes by padding an image into a fixed larger canvas of to pass to the network. The image configuration, instead of height and width as above, have two new required fields:
 
