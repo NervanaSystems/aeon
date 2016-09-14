@@ -55,10 +55,10 @@ def run_server_with_timeout(seconds):
     server.join(seconds)
 
     if server.is_alive():
-        print "nds_server still active, killing"
+        print("nds_server still active, killing")
         server.terminate()
         server.join()
-        print "nds_server gone"
+        print("nds_server gone")
 
 
 if __name__ == "__main__":
