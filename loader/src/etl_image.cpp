@@ -61,15 +61,17 @@ void image::config::validate() {
     }
 }
 
-void image::params::dump(ostream & ostr)
+void image::params::dump(ostream& ostr)
 {
-    ostr << "Angle: " << setw(3) << angle << " ";
-    ostr << "Flip: " << flip << " ";
-    ostr << "Lighting: ";
-    for_each (lighting.begin(), lighting.end(), [&ostr](float &l) {ostr << l << " ";});
-    ostr << "Photometric: ";
-    for_each (photometric.begin(), photometric.end(), [&ostr](float &p) {ostr << p << " ";});
-    ostr << "\n" << "Crop Box: " << cropbox << "\n";
+    ostr << "cropbox             " << cropbox                 << "\n";
+    ostr << "output_size         " << output_size             << "\n";
+    ostr << "angle               " << angle                   << "\n";
+    ostr << "flip                " << flip                    << "\n";
+    ostr << "lighting            " << join(lighting, ", ")    << "\n";
+    ostr << "color_noise_std     " << color_noise_std         << "\n";
+    ostr << "photometric         " << join(photometric, ", ") << "\n";
+    ostr << "debug_deterministic " << debug_deterministic     << "\n";
+    ostr << "image_scale         " << image_scale             << "\n";
 }
 
 
@@ -172,24 +174,41 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
     settings->angle = _cfg.angle(_dre);
     settings->flip  = _cfg.flip_distribution(_dre);
 
-    cv::Size2f in_size = input->get_image_size();
-
-    float scale = _cfg.scale(_dre);
-    float horizontal_distortion = _cfg.horizontal_distortion(_dre);
-    cv::Size2f out_shape(_cfg.width * horizontal_distortion, _cfg.height);
-
-    cv::Size2f cropbox_size = cropbox_max_proportional(in_size, out_shape);
-    if(_cfg.do_area_scale) {
-        cropbox_size = cropbox_area_scale(in_size, cropbox_size, scale);
-    } else {
-        cropbox_size = cropbox_linear_scale(cropbox_size, scale);
+    if(_cfg.crop_disable)
+    {
+        cv::Size2f size = input->get_image_size();
+        settings->cropbox = cv::Rect(cv::Point2f(0,0), size);
+        if(_cfg.fixed_scaling_factor > 0) {
+            settings->image_scale = _cfg.fixed_scaling_factor;
+        } else {
+            settings->image_scale = image::calculate_scale(size, _cfg.width, _cfg.height);
+        }
+        settings->output_size = size * settings->image_scale;
+        size = size * settings->image_scale;
+        settings->output_size.width  = nervana::unbiased_round(size.width);
+        settings->output_size.height = nervana::unbiased_round(size.height);
     }
+    else
+    {
+        cv::Size2f in_size = input->get_image_size();
 
-    float c_off_x = _cfg.crop_offset(_dre);
-    float c_off_y = _cfg.crop_offset(_dre);
+        float scale = _cfg.scale(_dre);
+        float horizontal_distortion = _cfg.horizontal_distortion(_dre);
+        cv::Size2f out_shape(_cfg.width * horizontal_distortion, _cfg.height);
 
-    cv::Point2f cropbox_origin = cropbox_shift(in_size, cropbox_size, c_off_x, c_off_y);
-    settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
+        cv::Size2f cropbox_size = image::cropbox_max_proportional(in_size, out_shape);
+        if(_cfg.do_area_scale) {
+            cropbox_size = image::cropbox_area_scale(in_size, cropbox_size, scale);
+        } else {
+            cropbox_size = image::cropbox_linear_scale(cropbox_size, scale);
+        }
+
+        float c_off_x = _cfg.crop_offset(_dre);
+        float c_off_y = _cfg.crop_offset(_dre);
+
+        cv::Point2f cropbox_origin = image::cropbox_shift(in_size, cropbox_size, c_off_x, c_off_y);
+        settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
+    }
 
     if (_cfg.lighting.stddev() != 0) {
         for( int i=0; i<3; i++ ) {
@@ -202,59 +221,91 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
             settings->photometric.push_back(_cfg.photometric(_dre));
         }
     }
+
     return settings;
+}
+
+image::loader::loader(const image::config& cfg) :
+    channel_major{cfg.channel_major},
+    fixed_aspect_ratio{cfg.fixed_aspect_ratio},
+    stype{cfg.get_shape_type()},
+    channels{cfg.channels}
+{
 }
 
 void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::decoded> input)
 {
     char* outbuf = (char*)outlist[0];
     // TODO: Generalize this to also handle multi_crop case
+    auto cv_type = stype.get_otype().cv_type;
+    auto element_size = stype.get_otype().size;
     auto img = input->get_image(0);
-    auto cv_type = _cfg.get_shape_type().get_otype().cv_type;
-    auto element_size = _cfg.get_shape_type().get_otype().size;
     int image_size = img.channels() * img.total() * element_size;
 
-    for (int i=0; i < input->get_image_count(); i++) {
+    for (int i=0; i < input->get_image_count(); i++)
+    {
         auto outbuf_i = outbuf + (i * image_size);
-        img = input->get_image(i);
+        auto input_image = input->get_image(i);
         vector<cv::Mat> source;
         vector<cv::Mat> target;
         vector<int>     from_to;
 
-        source.push_back(img);
-        if (_cfg.channel_major) {
-            for(int ch=0; ch<_cfg.channels; ch++) {
-                target.emplace_back(img.size(), cv_type, (char*)(outbuf_i + ch * img.total() * element_size));
-                from_to.push_back(ch);
-                from_to.push_back(ch);
+        if (fixed_aspect_ratio)
+        {
+            // zero out the output buffer as the image may not fill the canvas
+            for(int i=0; i<stype.get_byte_size(); i++) outbuf[i] = 0;
+
+            vector<size_t> shape = stype.get_shape();
+            // methods for image_var
+            if (channel_major)
+            {
+                // Split into separate channels
+                int width    = shape[1];
+                int height   = shape[2];
+                int pix_per_channel = width * height;
+                cv::Mat b(width, height, CV_8U, outbuf);
+                cv::Mat g(width, height, CV_8U, outbuf + pix_per_channel);
+                cv::Mat r(width, height, CV_8U, outbuf + 2 * pix_per_channel);
+                cv::Rect roi(0, 0, input_image.cols, input_image.rows);
+                cv::Mat b_roi = b(roi);
+                cv::Mat g_roi = g(roi);
+                cv::Mat r_roi = r(roi);
+                cv::Mat channels[3] = {b_roi, g_roi, r_roi};
+                cv::split(input_image, channels);
             }
-        } else {
-            target.emplace_back(img.size(), CV_MAKETYPE(cv_type, _cfg.channels), (char*)(outbuf_i));
-            for(int ch=0; ch<_cfg.channels; ch++) {
-                from_to.push_back(ch);
-                from_to.push_back(ch);
+            else
+            {
+                int channels = shape[2];
+                int width    = shape[1];
+                int height   = shape[0];
+                cv::Mat output(height, width, CV_8UC(channels), outbuf);
+                cv::Mat target_roi = output(cv::Rect(0, 0, input_image.cols, input_image.rows));
+                input_image.copyTo(target_roi);
             }
         }
-        image::convert_mix_channels(source, target, from_to);
-    }
-}
-
-void image::loader::split(cv::Mat& img, char* buf)
-{
-    // split `img` into individual channels so that buf is in c
-    int pix_per_channel = img.total();
-    int num_channels = img.channels();
-
-    if (num_channels == 1) {
-        memcpy(buf, img.data, pix_per_channel);
-    } else {
-        // Split into separate channels
-        cv::Size2i size = img.size();
-        cv::Mat b(size, CV_8U, buf);
-        cv::Mat g(size, CV_8U, buf + pix_per_channel);
-        cv::Mat r(size, CV_8U, buf + 2 * pix_per_channel);
-
-        cv::Mat channels[3] = {b, g, r};
-        cv::split(img, channels);
+        else
+        {
+            // methods for image
+            source.push_back(input_image);
+            if (channel_major)
+            {
+                for(int ch=0; ch<channels; ch++)
+                {
+                    target.emplace_back(img.size(), cv_type, (char*)(outbuf_i + ch * img.total() * element_size));
+                    from_to.push_back(ch);
+                    from_to.push_back(ch);
+                }
+            }
+            else
+            {
+                target.emplace_back(input_image.size(), CV_MAKETYPE(cv_type, channels), (char*)(outbuf_i));
+                for(int ch=0; ch<channels; ch++)
+                {
+                    from_to.push_back(ch);
+                    from_to.push_back(ch);
+                }
+            }
+            image::convert_mix_channels(source, target, from_to);
+        }
     }
 }

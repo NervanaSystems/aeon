@@ -80,15 +80,13 @@ void image::convert_mix_channels(vector<cv::Mat>& source, vector<cv::Mat>& targe
     }
 }
 
-float image::calculate_scale(const cv::Size& size, int min_size, int max_size) {
-    int im_size_min = std::min(size.width,size.height);
-    int im_size_max = max(size.width,size.height);
-    float im_scale = float(min_size) / float(im_size_min);
-    // Prevent the biggest axis from being more than FRCN_MAX_SIZE
-    if(round(im_scale * im_size_max) > max_size) {
-        im_scale = float(max_size) / float(im_size_max);
+float image::calculate_scale(const cv::Size& size, int output_width, int output_height) {
+    float im_scale = (float)output_width / (float)size.width;
+    cv::Size2f result = size;
+    result = result * im_scale;
+    if(result.height > output_height) {
+        im_scale =  (float)output_height / (float)size.height;
     }
-//    cv::Size im_shape{int(unbiased_round(size.width*im_scale)), int(unbiased_round(size.height*im_scale))};
     return im_scale;
 }
 

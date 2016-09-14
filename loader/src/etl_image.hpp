@@ -56,6 +56,8 @@ namespace nervana {
         std::vector<float>  lighting;  // pixelwise random values
         float               color_noise_std = 0;
         std::vector<float>  photometric;  // contrast, brightness, saturation
+        bool                debug_deterministic = false;
+        float               image_scale;
     private:
         params() {}
     };
@@ -76,7 +78,10 @@ namespace nervana {
 
         bool                                  do_area_scale = false;
         bool                                  channel_major = true;
+        bool                                  crop_disable = false;
+        bool                                  fixed_aspect_ratio = false;
         uint32_t                              channels = 3;
+        float                                 fixed_scaling_factor = -1;
 
         /** Scale the image (width, height) */
         std::uniform_real_distribution<float> scale{1.0f, 1.0f};
@@ -117,7 +122,10 @@ namespace nervana {
             ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
             ADD_SCALAR(do_area_scale, mode::OPTIONAL),
             ADD_SCALAR(channel_major, mode::OPTIONAL),
-            ADD_SCALAR(channels, mode::OPTIONAL, [](uint32_t v){ return v==1 || v==3; })
+            ADD_SCALAR(channels, mode::OPTIONAL, [](uint32_t v){ return v==1 || v==3; }),
+            ADD_SCALAR(crop_disable, mode::OPTIONAL),
+            ADD_SCALAR(fixed_aspect_ratio, mode::OPTIONAL),
+            ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL)
         };
 
         config() {}
@@ -205,18 +213,22 @@ namespace nervana {
 
         cv::Mat transform_single_image(std::shared_ptr<image::params>, cv::Mat&);
     private:
-        photometric photo;
+        image::photometric photo;
     };
 
 
     class image::loader : public interface::loader<image::decoded> {
     public:
-        loader(const image::config& cfg) : _cfg{cfg} {}
+        loader(const image::config& cfg);
         ~loader() {}
         virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) override;
 
     private:
-        const image::config& _cfg;
         void split(cv::Mat&, char*);
+
+        bool        channel_major;
+        bool        fixed_aspect_ratio;
+        shape_type  stype;
+        uint32_t    channels;
     };
 }

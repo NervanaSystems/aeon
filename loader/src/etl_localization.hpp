@@ -21,7 +21,7 @@
 
 #include "interface.hpp"
 #include "etl_boundingbox.hpp"
-#include "etl_image_var.hpp"
+#include "etl_image.hpp"
 #include "util.hpp"
 #include "box.hpp"
 
@@ -75,8 +75,8 @@ namespace nervana {
     class localization::config : public nervana::interface::config {
     public:
         size_t                      rois_per_image = 256;
-        size_t                      min_size;   // copied from image_var config
-        size_t                      max_size;   // copied from image_var config
+        size_t                      output_height;   // copied from image config
+        size_t                      output_width;   // copied from image config
         size_t                      base_size = 16;
         float                       scaling_factor = 1.0 / 16.;
         std::vector<float>          ratios = {0.5, 1, 2};
@@ -91,11 +91,11 @@ namespace nervana {
         size_t output_buffer_size;
         std::unordered_map<std::string,int> class_name_map;
 
-        config(nlohmann::json js, const image_var::config& iconfig);
+        config(nlohmann::json js, const image::config& iconfig);
 
         size_t total_anchors() const
         {
-            return ratios.size() * scales.size() * (int)pow(int(std::floor(max_size * scaling_factor)),2);
+            return ratios.size() * scales.size() * int(std::floor(output_height * scaling_factor)) * int(std::floor(output_width * scaling_factor));
         }
 
     private:
@@ -149,14 +149,14 @@ namespace nervana {
         boundingbox::extractor bbox_extractor;
     };
 
-    class localization::transformer : public interface::transformer<localization::decoded, image_var::params> {
+    class localization::transformer : public interface::transformer<localization::decoded, image::params> {
     public:
         transformer(const localization::config&);
 
         virtual ~transformer() {}
 
         std::shared_ptr<localization::decoded> transform(
-                            std::shared_ptr<image_var::params> txs,
+                            std::shared_ptr<image::params> txs,
                             std::shared_ptr<localization::decoded> mp) override;
     private:
         transformer() = delete;

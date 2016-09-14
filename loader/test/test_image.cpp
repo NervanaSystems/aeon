@@ -24,6 +24,8 @@
 
 #include "gtest/gtest.h"
 
+#define private public
+
 #include "etl_image.hpp"
 #include "etl_multicrop.hpp"
 #include "json.hpp"
@@ -33,7 +35,7 @@
 using namespace std;
 using namespace nervana;
 
-cv::Mat generate_indexed_image() {
+static cv::Mat generate_indexed_image() {
     cv::Mat color = cv::Mat( 256, 256, CV_8UC3 );
     unsigned char *input = (unsigned char*)(color.data);
     int index = 0;
@@ -47,7 +49,7 @@ cv::Mat generate_indexed_image() {
     return color;
 }
 
-void test_image(vector<unsigned char>& img, int channels) {
+static void test_image(vector<unsigned char>& img, int channels) {
     nlohmann::json js = {
         {"height",30},
         {"width",30},
@@ -610,11 +612,11 @@ TEST(image,cropbox_max_proportional) {
 }
 
 TEST(image,calculate_scale) {
-    int min_size = 600;
-    int max_size = 1000;
+    int width  = 800;
+    int height = 800;
     cv::Size size{500,375};
     float scale;
-    scale = image::calculate_scale(size, min_size, max_size);
+    scale = image::calculate_scale(size, width, height);
     size = cv::Size{int(unbiased_round(size.width*scale)), int(unbiased_round(size.height*scale))};
     EXPECT_FLOAT_EQ(1.6,scale);
     EXPECT_EQ(800,size.width);
@@ -797,4 +799,164 @@ TEST(image,area_scale)
             EXPECT_FLOAT_EQ(max_cropbox_ratio, cropbox_ratio);
         }
     }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+TEST(image, decoded_image) {
+    cv::Mat img1 = cv::Mat( 256, 256, CV_8UC3 );
+
+    image::decoded decoded(img1);
+}
+
+//TEST(image, image_config) {
+//    nlohmann::json js = {{"min_size",300},{"max_size",400},{"channels",3},{"flip_enable", false}};
+
+//    image::config config(js);
+//    EXPECT_EQ(300,config.min_size);
+//    EXPECT_EQ(400,config.max_size);
+//    EXPECT_TRUE(config.channel_major);
+//    EXPECT_EQ(3,config.channels);
+
+//    EXPECT_FLOAT_EQ(0.0,config.flip_distribution.p());
+//}
+
+TEST(image, var_resize) {
+    auto mat = cv::Mat(200,300,CV_8UC3);
+    vector<unsigned char> img;
+    cv::imencode( ".png", mat, img );
+
+    nlohmann::json jsConfig = {
+        {"width",400},
+        {"height",400},
+        {"channels",3},
+        {"fixed_aspect_ratio",true},
+        {"crop_disable",true}
+    };
+
+    image::config config_ptr{jsConfig};
+
+    image::extractor ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    {
+    cv::Mat image = decoded->get_image(0);
+    EXPECT_EQ(300,image.size().width);
+    EXPECT_EQ(200,image.size().height);
+    }
+
+    image::param_factory factory(config_ptr);
+    shared_ptr<image::params> params_ptr = factory.make_params(decoded);
+
+    image::transformer trans{config_ptr};
+    shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+    cv::Mat image = transformed->get_image(0);
+    EXPECT_EQ(400,image.size().width);
+    EXPECT_EQ(267,image.size().height);
+}
+
+TEST(image, var_resize_fixed_scale) {
+    auto mat = cv::Mat(200,300,CV_8UC3);
+    vector<unsigned char> img;
+    cv::imencode( ".png", mat, img );
+
+    nlohmann::json jsConfig = {
+        {"width",400},
+        {"height",400},
+        {"channels",3},
+        {"fixed_aspect_ratio",true},
+        {"crop_disable",true},
+        {"fixed_scaling_factor", 1.0}
+    };
+
+    image::config config_ptr{jsConfig};
+
+    image::extractor ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    {
+    cv::Mat image = decoded->get_image(0);
+    EXPECT_EQ(300,image.size().width);
+    EXPECT_EQ(200,image.size().height);
+    }
+
+    image::param_factory factory(config_ptr);
+    shared_ptr<image::params> params_ptr = factory.make_params(decoded);
+
+    image::transformer trans{config_ptr};
+    shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+    cv::Mat image = transformed->get_image(0);
+    EXPECT_EQ(300,image.size().width);
+    EXPECT_EQ(200,image.size().height);
+}
+
+TEST(image, var_transform_flip) {
+    auto indexed = generate_indexed_image();
+    vector<unsigned char> img;
+    cv::imencode( ".png", indexed, img );
+    nlohmann::json jsConfig = {
+        {"width",256},
+        {"height",256},
+        {"channels",3},
+        {"fixed_aspect_ratio",true},
+        {"crop_disable",true}
+    };
+
+    image::config config_ptr{jsConfig};
+
+    image::extractor ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    std::default_random_engine dre;
+    image::param_factory factory(config_ptr);
+
+    shared_ptr<image::params> params_ptr = factory.make_params(decoded);
+    params_ptr->flip = true;
+
+    image::transformer trans{config_ptr};
+    shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+    cv::Mat image = transformed->get_image(0);
+    EXPECT_EQ(256,image.size().width);
+    EXPECT_EQ(256,image.size().height);
+
+    EXPECT_TRUE(check_value(transformed,0,0,255,0));
+    EXPECT_TRUE(check_value(transformed,100,100,255-100,100));
+}
+
+TEST(image, var_fixed_scaling_factor)
+{
+    auto mat = cv::Mat(375,500,CV_8UC3);
+    vector<unsigned char> img;
+    cv::imencode(".png", mat, img);
+
+    nlohmann::json jsConfig = {
+        {"width",1000},
+        {"height",1000},
+        {"channels",3},
+        {"fixed_aspect_ratio",true},
+        {"fixed_scaling_factor",1.6},
+        {"crop_disable",true}
+    };
+
+    image::config config_ptr{jsConfig};
+    image::extractor ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    image::param_factory factory(config_ptr);
+    shared_ptr<image::params> params_ptr = factory.make_params(decoded);
+
+    EXPECT_FLOAT_EQ(1.6, params_ptr->image_scale);
 }

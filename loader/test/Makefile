@@ -36,7 +36,6 @@ TEST_SRCS := \
 	test_block_loader_nds.cpp \
     test_char_map.cpp \
     test_image.cpp \
-    test_image_var.cpp \
     test_label_map.cpp \
     test_localization.cpp \
     test_logging.cpp \

@@ -35,7 +35,6 @@
 #include "etl_boundingbox.hpp"
 #include "etl_char_map.hpp"
 #include "etl_image.hpp"
-#include "etl_image_var.hpp"
 #include "etl_label.hpp"
 #include "etl_label_map.hpp"
 #include "etl_localization.hpp"
@@ -305,7 +304,6 @@ TEST(util,param_dump) {
     DUMP_CONFIG(boundingbox);
     DUMP_CONFIG(char_map);
     DUMP_CONFIG(image);
-    DUMP_CONFIG(image_var);
     DUMP_CONFIG(label);
     DUMP_CONFIG(label_map);
     DUMP_CONFIG(localization);

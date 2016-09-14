@@ -19,9 +19,9 @@
 using namespace std;
 using namespace nervana;
 
-localization::config::config(nlohmann::json js, const image_var::config& iconfig) :
-    min_size{iconfig.min_size},
-    max_size{iconfig.max_size}
+localization::config::config(nlohmann::json js, const image::config& iconfig) :
+    output_height{iconfig.height},
+    output_width{iconfig.width}
 {
     if(js.is_null()) {
         throw std::runtime_error("missing localization config in json config");
@@ -72,7 +72,6 @@ localization::config::config(nlohmann::json js, const image_var::config& iconfig
 
 void ::localization::config::validate()
 {
-    if(max_size < min_size) throw invalid_argument("max_size < min_size");
 }
 
 localization::extractor::extractor(const localization::config& cfg) :
@@ -87,14 +86,14 @@ localization::transformer::transformer(const localization::config& _cfg) :
 }
 
 shared_ptr<localization::decoded> localization::transformer::transform(
-                    shared_ptr<image_var::params> settings,
+                    shared_ptr<image::params> settings,
                     shared_ptr<localization::decoded> mp)
 {
     cv::Size im_size{mp->width(), mp->height()};
     auto crop = cv::Rect(0, 0, im_size.width, im_size.height);
 
     float im_scale;
-    im_scale = image::calculate_scale(im_size, cfg.min_size, cfg.max_size);
+    im_scale = settings->image_scale;
     im_size = cv::Size{int(unbiased_round(im_size.width*im_scale)), int(unbiased_round(im_size.height*im_scale))};
     mp->image_scale = im_scale;
     mp->output_image_size = im_size;
@@ -373,7 +372,8 @@ void localization::loader::load(const vector<void*>& buf_list, std::shared_ptr<l
 
 vector<box> localization::anchor::generate(const localization::config& cfg)
 {
-    int conv_size = int(std::floor(cfg.max_size * cfg.scaling_factor));
+    int conv_size_x = int(std::floor(cfg.output_width  * cfg.scaling_factor));
+    int conv_size_y = int(std::floor(cfg.output_height * cfg.scaling_factor));
 
     vector<box> anchors = generate_anchors(cfg.base_size, cfg.ratios, cfg.scales);
     std::vector<box> all_anchors;
@@ -382,8 +382,10 @@ vector<box> localization::anchor::generate(const localization::config& cfg)
     // note: 1/SCALE is the feature stride
     vector<float> shift_x;
     vector<float> shift_y;
-    for(float i=0; i<conv_size; i++) {
+    for(float i=0; i<conv_size_x; i++) {
         shift_x.push_back(i * 1. / cfg.scaling_factor);
+    }
+    for(float i=0; i<conv_size_y; i++) {
         shift_y.push_back(i * 1. / cfg.scaling_factor);
     }
 

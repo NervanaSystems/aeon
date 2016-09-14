@@ -22,7 +22,6 @@ SRCS="
     etl_boundingbox.cpp
     etl_char_map.cpp
     etl_image.cpp
-    etl_image_var.cpp
     etl_label_map.cpp
     etl_localization.cpp
     etl_multicrop.cpp
