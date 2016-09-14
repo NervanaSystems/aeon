@@ -54,7 +54,7 @@ static image::config make_image_config(int width=1000, int height=1000)
         {"height",height},
         {"channels",3},
         {"flip_enable", false},
-        {"crop_disable",true},
+        {"crop_enable",false},
         {"fixed_aspect_ratio",true},
         {"fixed_scaling_factor", 1.6}
     };
@@ -262,6 +262,24 @@ TEST(localization,config)
     image::config icfg{ijs};
 
     EXPECT_NO_THROW(localization::config cfg(js, icfg));
+}
+
+TEST(localization,config_rotate)
+{
+    nlohmann::json ijs = {
+        {"height",300},
+        {"width",400},
+        {"channels",3},
+        {"flip_enable", false},
+        {"angle", {0, 90}}
+    };
+    nlohmann::json js = {
+        {"class_names",label_list},
+        {"max_gt_boxes",100}
+    };
+    image::config icfg{ijs};
+
+    EXPECT_THROW(localization::config cfg(js, icfg), std::invalid_argument);
 }
 
 TEST(localization, sample_anchors)
@@ -1020,7 +1038,7 @@ TEST(localization,provider)
                             {"width", 1000},
                             {"channel_major",false},
                             {"flip_enable",true},
-                            {"crop_disable",true},
+                            {"crop_enable",false},
                             {"fixed_aspect_ratio",true},
                             {"fixed_scaling_factor", 1.6}
                           }},
@@ -1090,7 +1108,7 @@ TEST(localization,provider_channel_major)
                             {"width", 1000},
                             {"channel_major",true},
                             {"flip_enable",true},
-                            {"crop_disable",true},
+                            {"crop_enable",false},
                             {"fixed_aspect_ratio",true},
                             {"fixed_scaling_factor", 1.6}
                           }},

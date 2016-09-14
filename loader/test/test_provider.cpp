@@ -36,7 +36,10 @@ TEST(provider,image) {
                             {"width",128},
                             {"channel_major",false},
                             {"flip_enable",true}}},
-                         {"label", {}}};
+                         {"label", {
+                              {"binary",true}
+                          }
+                         }};
 
     auto media = nervana::provider_factory::create(js);
     const vector<nervana::shape_type>& oshapes = media->get_oshapes();

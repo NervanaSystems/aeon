@@ -32,6 +32,10 @@ localization::config::config(nlohmann::json js, const image::config& iconfig) :
     }
     verify_config("localization", config_list, js);
 
+    if(iconfig.angle.a() != 0 || iconfig.angle.b() != 0) {
+        throw std::invalid_argument("localization does not support angle");
+    }
+
     // # For training, the RPN needs:
     // # 0. bounding box target coordinates
     // # 1. bounding box target masks (keep positive anchors only)

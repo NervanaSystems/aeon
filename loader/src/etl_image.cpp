@@ -174,7 +174,7 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
     settings->angle = _cfg.angle(_dre);
     settings->flip  = _cfg.flip_distribution(_dre);
 
-    if(_cfg.crop_disable)
+    if(!_cfg.crop_enable)
     {
         cv::Size2f size = input->get_image_size();
         settings->cropbox = cv::Rect(cv::Point2f(0,0), size);

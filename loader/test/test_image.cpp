@@ -841,7 +841,7 @@ TEST(image, var_resize) {
         {"height",400},
         {"channels",3},
         {"fixed_aspect_ratio",true},
-        {"crop_disable",true}
+        {"crop_enable",false}
     };
 
     image::config config_ptr{jsConfig};
@@ -876,7 +876,7 @@ TEST(image, var_resize_fixed_scale) {
         {"height",400},
         {"channels",3},
         {"fixed_aspect_ratio",true},
-        {"crop_disable",true},
+        {"crop_enable",false},
         {"fixed_scaling_factor", 1.0}
     };
 
@@ -911,7 +911,7 @@ TEST(image, var_transform_flip) {
         {"height",256},
         {"channels",3},
         {"fixed_aspect_ratio",true},
-        {"crop_disable",true}
+        {"crop_enable",false}
     };
 
     image::config config_ptr{jsConfig};
@@ -948,7 +948,7 @@ TEST(image, var_fixed_scaling_factor)
         {"channels",3},
         {"fixed_aspect_ratio",true},
         {"fixed_scaling_factor",1.6},
-        {"crop_disable",true}
+        {"crop_enable",false}
     };
 
     image::config config_ptr{jsConfig};

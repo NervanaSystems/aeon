@@ -78,7 +78,7 @@ namespace nervana {
 
         bool                                  do_area_scale = false;
         bool                                  channel_major = true;
-        bool                                  crop_disable = false;
+        bool                                  crop_enable = true;
         bool                                  fixed_aspect_ratio = false;
         uint32_t                              channels = 3;
         float                                 fixed_scaling_factor = -1;
@@ -123,7 +123,7 @@ namespace nervana {
             ADD_SCALAR(do_area_scale, mode::OPTIONAL),
             ADD_SCALAR(channel_major, mode::OPTIONAL),
             ADD_SCALAR(channels, mode::OPTIONAL, [](uint32_t v){ return v==1 || v==3; }),
-            ADD_SCALAR(crop_disable, mode::OPTIONAL),
+            ADD_SCALAR(crop_enable, mode::OPTIONAL),
             ADD_SCALAR(fixed_aspect_ratio, mode::OPTIONAL),
             ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL)
         };

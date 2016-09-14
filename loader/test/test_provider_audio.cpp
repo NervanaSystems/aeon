@@ -41,7 +41,7 @@ TEST(provider,audio_classify) {
                             {"frame_stride","256 samples"},
                             {"sample_freq_hz",44100},
                             {"feature_type","specgram"}}},
-                         {"label", {}}};
+                         {"label", {{"binary",true}}}};
     auto media = nervana::provider_factory::create(js);
     const vector<nervana::shape_type>& oshapes = media->get_oshapes();
 

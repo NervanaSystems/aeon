@@ -47,6 +47,8 @@ The complete table of configuration parameters is shown below:
    horizontal_distortion (float, float) | (1, 1) | Change the aspect ratio by scaling the image width by a random factor.
    photometric (float, float) | (0, 0) | Apply randomly sampled contrast, brightness, saturation changes. Implements the colornoise perturbation as descrbed in Krizhevksy et al.
    center (bool) | False | Take the center crop of the image. If false, a randomly located crop will be taken.
+   crop_enable (bool) | True | Crop the input image using ``center`` and ``scale``\``do_area_scale``
+   fixed_aspect_ratio (bool) | False | Maintain fixed aspect ratio when copying the image to the output buffer. This may result in padding of the output buffer.
 
 The buffers provisioned to the model are:
 
@@ -85,7 +87,7 @@ The configuration for this provider accepts a few parameters:
    :delim: |
    :escape: ~
 
-   binary (bool) | True |
+   binary (bool) | False |
    output_type (string) | ~"int32_t~" | label data type
 
 The buffers provisioned to the model are:
@@ -110,9 +112,10 @@ The manifest file contains paths to the input image, as well as the target image
 
 .. code-block:: bash
 
-    /image_dir/img1.jpg,/mask_dir/mask1.jpg
-    /image_dir/img2.jpg,/mask_dir/mask2.jpg
-    /image_dir/img3.jpg,/mask_dir/mask3.jpg
+    /image_dir/img1.jpg,/mask_dir/mask1.png
+    /image_dir/img2.jpg,/mask_dir/mask2.png
+    /image_dir/img3.jpg,/mask_dir/mask3.png
+    .
 
 Note that the target image should have a single channel only. If there are multiple channels, only the first channel from the target will be used. The image parameters are the same as above, and the pixelmask has zero configurations. Transformations such as photometric or lighting are applied to the input image only, and not applied to the pixel mask. The same cropping, flipping, and rotation settings are applied to both the image and the mask.
 
@@ -209,15 +212,6 @@ This provider creates a set of eleven buffers that are consumed by the Faster-RC
    9 | im_scale | (1, 1) | Scaling factor that was applied to the image.
    10 | is_difficult | (N, 1) | Indicates if each ground truth box has the difficult property.
 
-For Faster-RCNN, we handle variable image sizes by padding an image into a fixed larger canvas of to pass to the network. The image configuration, instead of height and width as above, have two new required fields:
+For Faster-RCNN, we handle variable image sizes by padding an image into a fixed canvas to pass to the network. The image configuration is used as above with the added flags ``crop_enable`` set to False and ```fixed_aspect_ratio``` set to True. These settings place the largest possible image in the output canvas in the upper left corner. Note that the ``angle`` transformation is not supported.
 
-.. csv-table::
-   :header: "Buffer", "Shape", "Description"
-   :widths: 20, 10, 50
-   :delim: |
-
-   min_size (long) | *Required* | Minimize length of the input image's short-side.
-   max_size (long) | *Required* | Maximum image length.
-
-The input image is first scaled such that the short-side has length ``min_size``, then scaled to make sure that the maximum length does not exceed ``max_size``. The image is then placed in the upper left corner of a canvas with shape ``(max_size, max_size)`` for provisioning to the model. Note that transformations that change the image dimensions (``scale``, ``center``, ``angle``) are not supported.
 

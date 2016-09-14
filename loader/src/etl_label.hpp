@@ -32,15 +32,11 @@ namespace nervana {
 
     class label::config : public interface::config {
     public:
-        bool        binary = true;
+        bool        binary = false;
         std::string output_type{"uint32_t"};
 
         config(nlohmann::json js)
         {
-//            if(js.is_null()) {
-//                throw std::runtime_error("missing label config in json config");
-//            }
-
             for(auto& info : config_list) {
                 info->parse(js);
             }
@@ -73,9 +69,9 @@ namespace nervana {
 
     class label::extractor : public interface::extractor<label::decoded> {
     public:
-        extractor(const label::config& cfg)
+        extractor(const label::config& cfg) :
+            _binary{cfg.binary}
         {
-            _binary = cfg.binary;
         }
 
         ~extractor() {}
@@ -98,7 +94,7 @@ namespace nervana {
         }
 
     private:
-        bool _binary = true;
+        bool _binary;
     };
 
     class label::loader : public interface::loader<label::decoded> {
