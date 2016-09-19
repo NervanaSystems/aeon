@@ -65,7 +65,7 @@ The buffers provisioned to the model are:
 Classification
 --------------
 
-For classification (``type=image,label``), the manifest file should provide a path to the file, as well as to a file containing the label. For example:
+For classification (``type="image,label"``), the manifest file should provide a path to the file, as well as to a file containing the label. For example:
 
 .. code-block:: bash
 
@@ -215,5 +215,3 @@ This provider creates a set of eleven buffers that are consumed by the Faster-RC
    10 | is_difficult | (N, 1) | Indicates if each ground truth box has the difficult property.
 
 For Faster-RCNN, we handle variable image sizes by padding an image into a fixed canvas to pass to the network. The image configuration is used as above with the added flags ``crop_enable`` set to False and ```fixed_aspect_ratio``` set to True. These settings place the largest possible image in the output canvas in the upper left corner. Note that the ``angle`` transformation is not supported.
-
-
