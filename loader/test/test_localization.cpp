@@ -403,58 +403,114 @@ TEST(localization, transform_flip)
     }
 }
 
+static boundingbox::box crop_single_box(boundingbox::box expected, cv::Rect cropbox, float scale)
+{
+    expected.xmin -= cropbox.x;
+    expected.xmax -= cropbox.x;
+    expected.ymin -= cropbox.y;
+    expected.ymax -= cropbox.y;
+
+    expected.xmin = max<float>(expected.xmin, 0);
+    expected.ymin = max<float>(expected.ymin, 0);
+    expected.xmax = max<float>(expected.xmax, 0);
+    expected.ymax = max<float>(expected.ymax, 0);
+
+    expected.xmin = min<float>(expected.xmin, cropbox.width);
+    expected.ymin = min<float>(expected.ymin, cropbox.height);
+    expected.xmax = min<float>(expected.xmax, cropbox.width);
+    expected.ymax = min<float>(expected.ymax, cropbox.height);
+
+    expected.xmin *= scale;
+    expected.ymin *= scale;
+    expected.xmax *= scale;
+    expected.ymax *= scale;
+
+    return expected;
+}
+
+bool is_box_valid(boundingbox::box b)
+{
+    return b.xmin != b.xmax && b.ymin != b.ymax;
+}
+
 TEST(localization, transform_crop)
 {
-    string data = read_file(CURDIR"/test_data/006637.json");
-    vector<uint8_t> test_image_data = make_image_from_metadata(data);
-
-    nlohmann::json ijs = {
-        {"width",600},
-        {"height",600},
-        {"flip_enable", false},
-        {"scale",{0.8, 0.8}}
-    };
-    auto image_config =  image::config{ijs};
-
-
-
-
-    auto cfg = make_localization_config(image_config);
-    image::param_factory factory{image_config};
-    image::extractor image_extractor{image_config};
-    shared_ptr<image::decoded> image_decoded = image_extractor.extract((const char*)test_image_data.data(), test_image_data.size());
-    shared_ptr<image::params> params = factory.make_params(image_decoded);
-
-    localization::extractor extractor{cfg};
-    localization::transformer transformer{cfg};
-    auto decoded_data = extractor.extract(&data[0],data.size());
-    auto gt_boxes = boundingbox::transformer::transform_box(decoded_data->boxes(), params->cropbox, false, 1, 1);
-    ASSERT_NE(nullptr,decoded_data);
-    shared_ptr<localization::decoded> transformed_data = transformer.transform(params, decoded_data);
-
-    EXPECT_EQ(6, transformed_data->boxes().size());
-    auto cropbox_xmax = params->cropbox.x + params->cropbox.width;
-    auto cropbox_ymax = params->cropbox.y + params->cropbox.height;
-    float scale = 2.0;
-    for(int i=0; i<transformed_data->boxes().size(); i++)
     {
-        boundingbox::box expected = decoded_data->boxes()[i];
-        boundingbox::box actual = transformed_data->gt_boxes[i];
-        expected.xmin -= params->cropbox.x;
-        expected.ymin -= params->cropbox.y;
-        expected.xmin = max<float>(expected.xmin, 0.0);
-        expected.ymin = max<float>(expected.ymin, 0.0);
-        expected.xmax = min<float>(cropbox_xmax, expected.xmax);
-        expected.ymax = min<float>(cropbox_ymax, expected.ymax);
-        expected.xmax -= params->cropbox.x;
-        expected.ymax -= params->cropbox.y;
-        expected.xmax = max<float>(expected.xmax, 0.0);
-        expected.ymax = max<float>(expected.ymax, 0.0);
-        expected.xmin *= scale;
-        expected.ymin *= scale;
-        expected.xmax *= scale;
-        expected.ymax *= scale;
-        EXPECT_EQ(expected, actual);
+        string data = read_file(CURDIR"/test_data/006637.json");
+        vector<uint8_t> test_image_data = make_image_from_metadata(data);
+
+        nlohmann::json ijs = {
+            {"width",600},
+            {"height",600},
+            {"flip_enable", false},
+            {"scale",{0.8, 0.8}}
+        };
+        auto image_config =  image::config{ijs};
+
+        auto cfg = make_localization_config(image_config);
+        image::param_factory factory{image_config};
+        image::extractor image_extractor{image_config};
+        shared_ptr<image::decoded> image_decoded = image_extractor.extract((const char*)test_image_data.data(), test_image_data.size());
+        shared_ptr<image::params> params = factory.make_params(image_decoded);
+
+        localization::extractor extractor{cfg};
+        localization::transformer transformer{cfg};
+        auto decoded_data = extractor.extract(&data[0],data.size());
+        ASSERT_NE(nullptr,decoded_data);
+        shared_ptr<localization::decoded> transformed_data = transformer.transform(params, decoded_data);
+
+        EXPECT_EQ(6, transformed_data->gt_boxes.size());
+        float scale = 2.0;
+        for(int i=0; i<transformed_data->gt_boxes.size(); i++)
+        {
+            boundingbox::box expected = decoded_data->boxes()[i];
+            boundingbox::box actual = transformed_data->gt_boxes[i];
+            expected = crop_single_box(expected, params->cropbox, scale);
+            EXPECT_EQ(expected, actual);
+        }
+    }
+    {
+        string data = read_file(CURDIR"/test_data/006637.json");
+        vector<uint8_t> test_image_data = make_image_from_metadata(data);
+
+        nlohmann::json ijs = {
+            {"width",600},
+            {"height",600},
+            {"flip_enable", false},
+            {"scale",{0.2, 0.2}}
+        };
+        auto image_config =  image::config{ijs};
+
+        auto cfg = make_localization_config(image_config);
+        image::param_factory factory{image_config};
+        image::extractor image_extractor{image_config};
+        shared_ptr<image::decoded> image_decoded = image_extractor.extract((const char*)test_image_data.data(), test_image_data.size());
+        shared_ptr<image::params> params = factory.make_params(image_decoded);
+
+        localization::extractor extractor{cfg};
+        localization::transformer transformer{cfg};
+        auto decoded_data = extractor.extract(&data[0],data.size());
+        ASSERT_NE(nullptr,decoded_data);
+        shared_ptr<localization::decoded> transformed_data = transformer.transform(params, decoded_data);
+
+        vector<boundingbox::box> valid_boxes;
+        float scale = 8.0;
+        for(auto b: decoded_data->boxes())
+        {
+            auto cropped = crop_single_box(b, params->cropbox, scale);
+            if(is_box_valid(cropped))
+            {
+                valid_boxes.push_back(cropped);
+            }
+        }
+
+        ASSERT_EQ(valid_boxes.size(), transformed_data->gt_boxes.size());
+        for(int i=0; i<transformed_data->gt_boxes.size(); i++)
+        {
+            boundingbox::box expected = valid_boxes[i];
+            boundingbox::box actual = transformed_data->gt_boxes[i];
+            EXPECT_EQ(expected, actual);
+        }
     }
 }
 

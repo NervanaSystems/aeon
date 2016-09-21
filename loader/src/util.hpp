@@ -31,6 +31,8 @@ namespace nervana {
 #define BYTEIDX(idx, width, endianess) \
     (endianess == endian::LITTLE ? idx : width - idx - 1)
 
+#define DUMP_VALUE(a) cout << __FILE__ << " " << __LINE__ << " "#a" " << a << endl;
+
     template<typename T> T unpack(const char* data, int offset=0, endian e=endian::LITTLE)
     {
         T value = 0;
