@@ -57,7 +57,6 @@ namespace nervana {
         float               color_noise_std = 0;
         std::vector<float>  photometric;  // contrast, brightness, saturation
         bool                debug_deterministic = false;
-        float               image_scale;
     private:
         params() {}
     };

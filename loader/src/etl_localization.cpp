@@ -21,7 +21,8 @@ using namespace nervana;
 
 localization::config::config(nlohmann::json js, const image::config& iconfig) :
     output_height{iconfig.height},
-    output_width{iconfig.width}
+    output_width{iconfig.width},
+    fixed_scaling_factor{iconfig.fixed_scaling_factor}
 {
     if(js.is_null()) {
         throw std::runtime_error("missing localization config in json config");
@@ -93,12 +94,24 @@ shared_ptr<localization::decoded> localization::transformer::transform(
                     shared_ptr<image::params> settings,
                     shared_ptr<localization::decoded> mp)
 {
-    cv::Size im_size{mp->width(), mp->height()};
-    auto crop = cv::Rect(0, 0, im_size.width, im_size.height);
-
+    cv::Size input_size = settings->cropbox.size();
     float im_scale;
-    im_scale = settings->image_scale;
-    im_size = cv::Size{int(unbiased_round(im_size.width*im_scale)), int(unbiased_round(im_size.height*im_scale))};
+    if(cfg.fixed_scaling_factor > 0) {
+        im_scale = cfg.fixed_scaling_factor;
+    } else {
+        cout << __FILE__ << " " << __LINE__ << " input_size " << input_size << endl;
+        cout << __FILE__ << " " << __LINE__ << " cfg.output_width " << cfg.output_width << endl;
+        cout << __FILE__ << " " << __LINE__ << " cfg.output_height " << cfg.output_height << endl;
+        im_scale = image::calculate_scale(input_size, cfg.output_width, cfg.output_height);
+    }
+
+    cv::Size im_size{mp->width(), mp->height()};
+    auto crop = settings->cropbox;
+
+    cout << "transform image_scale " << im_scale << endl;
+    im_size = cv::Size{int(unbiased_round(input_size.width*im_scale)), int(unbiased_round(input_size.height*im_scale))};
+    cout << __FILE__ << " " << __LINE__ << " im_size " << im_size << endl;
+    cout << __FILE__ << " " << __LINE__ << " im_scale " << im_scale << endl;
     mp->image_scale = im_scale;
     mp->output_image_size = im_size;
 

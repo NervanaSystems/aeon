@@ -71,7 +71,6 @@ void image::params::dump(ostream& ostr)
     ostr << "color_noise_std     " << color_noise_std         << "\n";
     ostr << "photometric         " << join(photometric, ", ") << "\n";
     ostr << "debug_deterministic " << debug_deterministic     << "\n";
-    ostr << "image_scale         " << image_scale             << "\n";
 }
 
 
@@ -178,13 +177,14 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
     {
         cv::Size2f size = input->get_image_size();
         settings->cropbox = cv::Rect(cv::Point2f(0,0), size);
+        float image_scale;
         if(_cfg.fixed_scaling_factor > 0) {
-            settings->image_scale = _cfg.fixed_scaling_factor;
+            image_scale = _cfg.fixed_scaling_factor;
         } else {
-            settings->image_scale = image::calculate_scale(size, _cfg.width, _cfg.height);
+            image_scale = image::calculate_scale(size, _cfg.width, _cfg.height);
         }
-        settings->output_size = size * settings->image_scale;
-        size = size * settings->image_scale;
+//        settings->output_size = size * image_scale;
+        size = size * image_scale;
         settings->output_size.width  = nervana::unbiased_round(size.width);
         settings->output_size.height = nervana::unbiased_round(size.height);
     }

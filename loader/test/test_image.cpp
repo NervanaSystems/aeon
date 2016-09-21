@@ -936,27 +936,27 @@ TEST(image, var_transform_flip) {
     EXPECT_TRUE(check_value(transformed,100,100,255-100,100));
 }
 
-TEST(image, var_fixed_scaling_factor)
-{
-    auto mat = cv::Mat(375,500,CV_8UC3);
-    vector<unsigned char> img;
-    cv::imencode(".png", mat, img);
+//TEST(image, var_fixed_scaling_factor)
+//{
+//    auto mat = cv::Mat(375,500,CV_8UC3);
+//    vector<unsigned char> img;
+//    cv::imencode(".png", mat, img);
 
-    nlohmann::json jsConfig = {
-        {"width",1000},
-        {"height",1000},
-        {"channels",3},
-        {"fixed_aspect_ratio",true},
-        {"fixed_scaling_factor",1.6},
-        {"crop_enable",false}
-    };
+//    nlohmann::json jsConfig = {
+//        {"width",1000},
+//        {"height",1000},
+//        {"channels",3},
+//        {"fixed_aspect_ratio",true},
+//        {"fixed_scaling_factor",1.6},
+//        {"crop_enable",false}
+//    };
 
-    image::config config_ptr{jsConfig};
-    image::extractor ext{config_ptr};
-    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+//    image::config config_ptr{jsConfig};
+//    image::extractor ext{config_ptr};
+//    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
-    image::param_factory factory(config_ptr);
-    shared_ptr<image::params> params_ptr = factory.make_params(decoded);
+//    image::param_factory factory(config_ptr);
+//    shared_ptr<image::params> params_ptr = factory.make_params(decoded);
 
-    EXPECT_FLOAT_EQ(1.6, params_ptr->image_scale);
-}
+//    EXPECT_FLOAT_EQ(1.6, params_ptr->image_scale);
+//}

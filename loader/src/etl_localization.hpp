@@ -86,6 +86,7 @@ namespace nervana {
         float                       foreground_fraction = 0.5;  // at most, positive anchors are 0.5 of the total rois
         size_t                      max_gt_boxes = 64;
         std::vector<std::string>    class_names;
+        float                       fixed_scaling_factor;
 
         // Derived values
         size_t output_buffer_size;
@@ -127,6 +128,7 @@ namespace nervana {
         std::vector<int>                anchor_index;
         float                           image_scale;
         cv::Size                        output_image_size;
+        cv::Size                        input_image_size;
         std::vector<boundingbox::box>   gt_boxes;
     };
 
