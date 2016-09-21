@@ -409,8 +409,8 @@ TEST(localization, transform_crop)
     vector<uint8_t> test_image_data = make_image_from_metadata(data);
 
     nlohmann::json ijs = {
-        {"width",300},
-        {"height",300},
+        {"width",600},
+        {"height",600},
         {"flip_enable", false},
         {"scale",{0.8, 0.8}}
     };
@@ -424,15 +424,10 @@ TEST(localization, transform_crop)
     image::extractor image_extractor{image_config};
     shared_ptr<image::decoded> image_decoded = image_extractor.extract((const char*)test_image_data.data(), test_image_data.size());
     shared_ptr<image::params> params = factory.make_params(image_decoded);
-    params->dump();
 
     localization::extractor extractor{cfg};
     localization::transformer transformer{cfg};
     auto decoded_data = extractor.extract(&data[0],data.size());
-    for(auto b : decoded_data->boxes())
-    {
-        cout << "gt decoded " << b << endl;
-    }
     auto gt_boxes = boundingbox::transformer::transform_box(decoded_data->boxes(), params->cropbox, false, 1, 1);
     ASSERT_NE(nullptr,decoded_data);
     shared_ptr<localization::decoded> transformed_data = transformer.transform(params, decoded_data);
@@ -440,6 +435,7 @@ TEST(localization, transform_crop)
     EXPECT_EQ(6, transformed_data->boxes().size());
     auto cropbox_xmax = params->cropbox.x + params->cropbox.width;
     auto cropbox_ymax = params->cropbox.y + params->cropbox.height;
+    float scale = 2.0;
     for(int i=0; i<transformed_data->boxes().size(); i++)
     {
         boundingbox::box expected = decoded_data->boxes()[i];
@@ -454,11 +450,11 @@ TEST(localization, transform_crop)
         expected.ymax -= params->cropbox.y;
         expected.xmax = max<float>(expected.xmax, 0.0);
         expected.ymax = max<float>(expected.ymax, 0.0);
+        expected.xmin *= scale;
+        expected.ymin *= scale;
+        expected.xmax *= scale;
+        expected.ymax *= scale;
         EXPECT_EQ(expected, actual);
-    }
-    for(auto b : gt_boxes)
-    {
-        cout << "gt tmp " << b << endl;
     }
 }
 
