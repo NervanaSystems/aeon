@@ -1052,6 +1052,108 @@ TEST(localization, loader)
     EXPECT_FLOAT_EQ(1.6, im_scale[0]);
 }
 
+TEST(localization, loader_zero_gt_boxes)
+{
+    string data = read_file(CURDIR"/test_data/006637.json");
+
+    nlohmann::json ijs = {
+        {"width",1000},
+        {"height",1000},
+        {"flip_enable", false},
+        {"scale",{0.1, 0.1}}
+    };
+    auto image_config =  image::config{ijs};
+
+    localization::config cfg = make_localization_config(image_config);
+    localization::extractor extractor{cfg};
+    localization::transformer transformer{cfg};
+    localization::loader loader{cfg};
+    auto extract_data = extractor.extract(&data[0],data.size());
+    ASSERT_NE(nullptr,extract_data);
+
+    vector<unsigned char> img = make_image_from_metadata(data);
+    image::extractor ext{image_config};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+    image::param_factory factory(image_config);
+    shared_ptr<image::params> params = factory.make_params(decoded);
+    params->debug_deterministic = true;
+    params->cropbox.x = 0;
+    params->cropbox.y = 0;
+
+    shared_ptr<localization::decoded> transformed_data = transformer.transform(params, extract_data);
+    ASSERT_EQ(0, transformed_data->gt_boxes.size());
+
+//    ASSERT_EQ(transformed_data->anchor_index.size(), fg_idx.size() + bg_idx.size());
+//    for(int i=0; i<fg_idx.size(); i++) {
+//        ASSERT_EQ(fg_idx[i], transformed_data->anchor_index[i]);
+//    }
+//    for(int i=0; i<bg_idx.size(); i++) {
+//        ASSERT_EQ(bg_idx[i], transformed_data->anchor_index[i+fg_idx.size()]);
+//    }
+
+    vector<float>   bbtargets;
+    vector<float>   bbtargets_mask;
+    vector<int32_t> labels_flat;
+    vector<int32_t> labels_mask;
+    vector<int32_t> im_shape;
+    vector<float>   gt_boxes;
+    vector<int32_t> num_gt_boxes;
+    vector<int32_t> gt_classes;
+    vector<float>   im_scale;
+    vector<int32_t> gt_difficult;
+
+    vector<void*> buf_list;
+    const vector<shape_type>& shapes = cfg.get_shape_type_list();
+    ASSERT_EQ(10, shapes.size());
+    size_t total_anchors = 34596;
+
+    bbtargets.resize(shapes[0].get_element_count());
+    bbtargets_mask.resize(shapes[1].get_element_count());
+    labels_flat.resize(shapes[2].get_element_count());
+    labels_mask.resize(shapes[3].get_element_count());
+    im_shape.resize(shapes[4].get_element_count());
+    gt_boxes.resize(shapes[5].get_element_count());
+    num_gt_boxes.resize(shapes[6].get_element_count());
+    gt_classes.resize(shapes[7].get_element_count());
+    im_scale.resize(shapes[8].get_element_count());
+    gt_difficult.resize(shapes[9].get_element_count());
+
+    ASSERT_EQ(total_anchors * 4, bbtargets.size());
+    ASSERT_EQ(total_anchors * 4, bbtargets_mask.size());
+    ASSERT_EQ(total_anchors * 2, labels_flat.size());
+    ASSERT_EQ(total_anchors * 2, labels_mask.size());
+    ASSERT_EQ(2, im_shape.size());
+    ASSERT_EQ(64 * 4, gt_boxes.size());
+    ASSERT_EQ(1, num_gt_boxes.size());
+    ASSERT_EQ(64, gt_classes.size());
+    ASSERT_EQ(1, im_scale.size());
+    ASSERT_EQ(64, gt_difficult.size());
+
+    memset(bbtargets.data(), 0xFF, bbtargets.size()*sizeof(float));
+    memset(bbtargets_mask.data(), 0xFF, bbtargets_mask.size()*sizeof(float));
+    memset(labels_flat.data(), 0xFF, labels_flat.size()*sizeof(int32_t));
+    memset(labels_mask.data(), 0xFF, labels_mask.size()*sizeof(int32_t));
+    memset(im_shape.data(), 0xFF, im_shape.size()*sizeof(int32_t));
+    memset(gt_boxes.data(), 0xFF, gt_boxes.size()*sizeof(float));
+    memset(num_gt_boxes.data(), 0xFF, num_gt_boxes.size()*sizeof(int32_t));
+    memset(gt_classes.data(), 0xFF, gt_classes.size()*sizeof(int32_t));
+    memset(im_scale.data(), 0xFF, im_scale.size()*sizeof(float));
+    memset(gt_difficult.data(), 0xFF, gt_difficult.size()*sizeof(int32_t));
+
+    buf_list.push_back(bbtargets.data());
+    buf_list.push_back(bbtargets_mask.data());
+    buf_list.push_back(labels_flat.data());
+    buf_list.push_back(labels_mask.data());
+    buf_list.push_back(im_shape.data());
+    buf_list.push_back(gt_boxes.data());
+    buf_list.push_back(num_gt_boxes.data());
+    buf_list.push_back(gt_classes.data());
+    buf_list.push_back(im_scale.data());
+    buf_list.push_back(gt_difficult.data());
+
+    loader.load(buf_list, transformed_data);
+}
+
 TEST(localization, compute_targets)
 {
     // expected values generated via python localization example

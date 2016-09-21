@@ -179,7 +179,7 @@ shared_ptr<localization::decoded> localization::transformer::transform(
     {
         vector<int> t_labels(all_anchors.size(), -1);
         vector<target> t_bbox_targets(all_anchors.size());
-        for(int i=0; i<idx_inside.size(); i++) {
+        for(int i=0; i<idx_inside.size() && i<bbox_targets.size(); i++) {
             int index = idx_inside[i];
             t_labels[index] = labels[i];
             t_bbox_targets[index] = bbox_targets[i];
