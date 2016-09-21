@@ -409,8 +409,8 @@ TEST(localization, transform_crop)
     vector<uint8_t> test_image_data = make_image_from_metadata(data);
 
     nlohmann::json ijs = {
-        {"width",600},
-        {"height",600},
+        {"width",300},
+        {"height",300},
         {"flip_enable", false},
         {"scale",{0.8, 0.8}}
     };
@@ -438,21 +438,23 @@ TEST(localization, transform_crop)
     shared_ptr<localization::decoded> transformed_data = transformer.transform(params, decoded_data);
 
     EXPECT_EQ(6, transformed_data->boxes().size());
+    auto cropbox_xmax = params->cropbox.x + params->cropbox.width;
+    auto cropbox_ymax = params->cropbox.y + params->cropbox.height;
     for(int i=0; i<transformed_data->boxes().size(); i++)
     {
+        boundingbox::box expected = decoded_data->boxes()[i];
         boundingbox::box actual = transformed_data->gt_boxes[i];
-        cout << "gt actual " << actual << endl;
-//        auto xmin = expected.xmin;
-//        expected.xmin = params->output_size.width - expected.xmax - 1;
-//        expected.xmax = params->output_size.width - xmin - 1;
-//        expected.xmin *= transformed_data->image_scale;
-//        expected.ymin *= transformed_data->image_scale;
-//        expected.xmax *= transformed_data->image_scale;
-//        expected.ymax *= transformed_data->image_scale;
-//        EXPECT_EQ(expected.xmin, actual.xmin);
-//        EXPECT_EQ(expected.xmax, actual.xmax);
-//        EXPECT_EQ(expected.ymin, actual.ymin);
-//        EXPECT_EQ(expected.ymax, actual.ymax);
+        expected.xmin -= params->cropbox.x;
+        expected.ymin -= params->cropbox.y;
+        expected.xmin = max<float>(expected.xmin, 0.0);
+        expected.ymin = max<float>(expected.ymin, 0.0);
+        expected.xmax = min<float>(cropbox_xmax, expected.xmax);
+        expected.ymax = min<float>(cropbox_ymax, expected.ymax);
+        expected.xmax -= params->cropbox.x;
+        expected.ymax -= params->cropbox.y;
+        expected.xmax = max<float>(expected.xmax, 0.0);
+        expected.ymax = max<float>(expected.ymax, 0.0);
+        EXPECT_EQ(expected, actual);
     }
     for(auto b : gt_boxes)
     {
