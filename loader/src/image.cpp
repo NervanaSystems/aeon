@@ -189,15 +189,15 @@ void image::photometric::cbsjitter(cv::Mat& inout, const vector<float>& photomet
         /****************************
         *  BRIGHTNESS & SATURATION  *
         *****************************/
-        cv::Mat satmtx = photometric[1] * (photometric[2] * cv::Mat::eye(3, 3, CV_32FC1) +
-                                (1 - photometric[2]) * cv::Mat::ones(3, 1, CV_32FC1) * GSCL.t());
-        cv::transform(inout, inout, satmtx);
+        cv::Mat hsv;
+        cv::cvtColor(inout, hsv, CV_BGR2HSV);
+        hsv = hsv.mul(cv::Scalar(1.0, photometric[2], photometric[1]));
+        cv::cvtColor(hsv, inout, CV_HSV2BGR);
 
         /*************
         *  CONTRAST  *
         **************/
-        cv::Mat gray_mean;
-        cv::cvtColor(cv::Mat(1, 1, CV_32FC3, cv::mean(inout)), gray_mean, CV_BGR2GRAY);
+        cv::Mat gray_mean{1, 1, CV_32FC3, cv::mean(inout)};
         inout = photometric[0] * inout + (1 - photometric[0]) * gray_mean.at<cv::Scalar_<float>>(0, 0);
     }
 }

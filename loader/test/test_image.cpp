@@ -32,6 +32,8 @@
 #include "helpers.hpp"
 #include "image.hpp"
 #include "log.hpp"
+#include "util.hpp"
+
 using namespace std;
 using namespace nervana;
 
@@ -936,27 +938,263 @@ TEST(image, var_transform_flip) {
     EXPECT_TRUE(check_value(transformed,100,100,255-100,100));
 }
 
-//TEST(image, var_fixed_scaling_factor)
-//{
-//    auto mat = cv::Mat(375,500,CV_8UC3);
-//    vector<unsigned char> img;
-//    cv::imencode(".png", mat, img);
+TEST(image, var_fixed_scaling_factor)
+{
+    auto mat = cv::Mat(375,500,CV_8UC3);
+    vector<unsigned char> img;
+    cv::imencode(".png", mat, img);
 
-//    nlohmann::json jsConfig = {
-//        {"width",1000},
-//        {"height",1000},
-//        {"channels",3},
-//        {"fixed_aspect_ratio",true},
-//        {"fixed_scaling_factor",1.6},
-//        {"crop_enable",false}
-//    };
+    nlohmann::json jsConfig = {
+        {"width",1000},
+        {"height",1000},
+        {"channels",3},
+        {"fixed_aspect_ratio",true},
+        {"fixed_scaling_factor",1.6},
+        {"crop_enable",false}
+    };
 
-//    image::config config_ptr{jsConfig};
-//    image::extractor ext{config_ptr};
-//    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+    image::config config_ptr{jsConfig};
+    image::extractor ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
-//    image::param_factory factory(config_ptr);
-//    shared_ptr<image::params> params_ptr = factory.make_params(decoded);
+    image::param_factory factory(config_ptr);
+    shared_ptr<image::params> params_ptr = factory.make_params(decoded);
 
-//    EXPECT_FLOAT_EQ(1.6, params_ptr->image_scale);
-//}
+    EXPECT_FLOAT_EQ(1.6, params_ptr->image_scale);
+}
+
+bool test_contrast_image(cv::Mat m, float v1, float v2, float v3)
+{
+    bool rc = true;
+    uint8_t* p = m.data;
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            rc &= *p++ == v1;
+            rc &= *p++ == v1;
+            rc &= *p++ == v1;
+        }
+    }
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            rc &= *p++ == v2;
+            rc &= *p++ == v2;
+            rc &= *p++ == v2;
+        }
+    }
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            rc &= *p++ == v3;
+            rc &= *p++ == v3;
+            rc &= *p++ == v3;
+        }
+    }
+    return rc;
+}
+
+TEST(photometric, contrast)
+{
+    cv::Mat source{384, 512, CV_8UC3};
+    uint8_t* p = source.data;
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            *p++ = 0;
+            *p++ = 0;
+            *p++ = 0;
+        }
+    }
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            *p++ = 127;
+            *p++ = 127;
+            *p++ = 127;
+        }
+    }
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            *p++ = 255;
+            *p++ = 255;
+            *p++ = 255;
+        }
+    }
+
+    {
+        image::photometric pm;
+        cv::Mat mat = source.clone();
+        pm.cbsjitter(mat, {1.0, 1.0, 1.0});
+        EXPECT_TRUE(test_contrast_image(mat, 0, 127, 255));
+    }
+
+    {
+        image::photometric pm;
+        float cscale = 0.5;
+        cv::Mat mat = source.clone();
+        pm.cbsjitter(mat, {cscale, 1.0, 1.0});
+        EXPECT_TRUE(test_contrast_image(mat, 64, 128, 192));
+    }
+
+    {
+        image::photometric pm;
+        float cscale = 0.1;
+        cv::Mat mat = source.clone();
+        pm.cbsjitter(mat, {cscale, 1.0, 1.0});
+        EXPECT_TRUE(test_contrast_image(mat, 115, 128, 141));
+    }
+}
+
+TEST(photometric, brightness)
+{
+    cv::Mat source{384, 512, CV_8UC3};
+    uint8_t* p = source.data;
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            *p++ = 0;
+            *p++ = 0;
+            *p++ = 0;
+        }
+    }
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            *p++ = 127;
+            *p++ = 127;
+            *p++ = 127;
+        }
+    }
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            *p++ = 255;
+            *p++ = 255;
+            *p++ = 255;
+        }
+    }
+
+    {
+        image::photometric pm;
+        cv::Mat mat = source.clone();
+        pm.cbsjitter(mat, {1.0, 1.0, 1.0});
+        EXPECT_TRUE(test_contrast_image(mat, 0, 127, 255));
+    }
+
+    {
+        image::photometric pm;
+        cv::Mat mat = source.clone();
+        pm.cbsjitter(mat, {1.0, 0.5, 1.0});
+        EXPECT_TRUE(test_contrast_image(mat, 0, 64, 128));
+    }
+
+    {
+        image::photometric pm;
+        cv::Mat mat = source.clone();
+        pm.cbsjitter(mat, {1.0, 0.1, 1.0});
+        EXPECT_TRUE(test_contrast_image(mat, 0, 13, 26));
+    }
+}
+
+bool test_saturation(cv::Mat m, vector<float> v1, vector<float> v2, vector<float> v3)
+{
+    bool rc = true;
+    uint8_t* p = m.data;
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            rc &= *p++ == v1[0];
+            rc &= *p++ == v1[1];
+            rc &= *p++ == v1[2];
+        }
+    }
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            rc &= *p++ == v2[0];
+            rc &= *p++ == v2[1];
+            rc &= *p++ == v2[2];
+        }
+    }
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            rc &= *p++ == v3[0];
+            rc &= *p++ == v3[1];
+            rc &= *p++ == v3[2];
+        }
+    }
+    return rc;
+}
+
+TEST(photometric, saturation)
+{
+    cv::Mat source{128*4, 512, CV_8UC3};
+    uint8_t* p = source.data;
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            *p++ = 128;
+            *p++ = 0;
+            *p++ = 0;
+        }
+    }
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            *p++ = 0;
+            *p++ = 128;
+            *p++ = 0;
+        }
+    }
+    for(int row=0; row<128; row++)
+    {
+        for(int col=0; col<512; col++)
+        {
+            *p++ = 0;
+            *p++ = 0;
+            *p++ = 128;
+        }
+    }
+
+    {
+        image::photometric pm;
+        cv::Mat mat = source.clone();
+        pm.cbsjitter(mat, {1.0, 1.0, 1.0});
+//        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(128*0, 0) << endl;
+//        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(128*1, 0) << endl;
+//        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(128*2, 0) << endl;
+//        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(128*3, 0) << endl;
+        EXPECT_TRUE(test_saturation(mat, {128,0,0}, {0,128,0}, {0,0,128}));
+    }
+
+    {
+        image::photometric pm;
+        cv::Mat mat = source.clone();
+        pm.cbsjitter(mat, {1.0, 1.0, 0.5});
+        EXPECT_TRUE(test_saturation(mat, {128, 64, 64}, {64, 128, 64}, {64, 64, 128}));
+    }
+
+    {
+        image::photometric pm;
+        cv::Mat mat = source.clone();
+        pm.cbsjitter(mat, {1.0, 1.0, 0.1});
+        EXPECT_TRUE(test_saturation(mat, {128, 115, 115}, {115, 128, 115}, {115, 115, 128}));
+    }
+}
