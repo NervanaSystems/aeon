@@ -997,6 +997,7 @@ bool test_contrast_image(cv::Mat m, float v1, float v2, float v3)
     return rc;
 }
 
+
 TEST(photometric, contrast)
 {
     cv::Mat source{384, 512, CV_8UC3};
@@ -1088,113 +1089,33 @@ TEST(photometric, brightness)
     {
         image::photometric pm;
         cv::Mat mat = source.clone();
+        cv::imwrite("brightness_1_0_pre.png", mat);
         pm.cbsjitter(mat, {1.0, 1.0, 1.0});
+        cv::imwrite("brightness_1_0_post.png", mat);
         EXPECT_TRUE(test_contrast_image(mat, 0, 127, 255));
     }
 
     {
         image::photometric pm;
         cv::Mat mat = source.clone();
+        cv::imwrite("brightness_0_5_pre.png", mat);
         pm.cbsjitter(mat, {1.0, 0.5, 1.0});
+        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(0, 0) << endl;
+        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(128, 0) << endl;
+        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(256, 0) << endl;
+        cv::imwrite("brightness_0_5_post.png", mat);
         EXPECT_TRUE(test_contrast_image(mat, 0, 64, 128));
     }
 
     {
         image::photometric pm;
         cv::Mat mat = source.clone();
+        cv::imwrite("brightness_0_1_pre.png", mat);
         pm.cbsjitter(mat, {1.0, 0.1, 1.0});
+        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(0, 0) << endl;
+        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(128, 0) << endl;
+        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(256, 0) << endl;
+        cv::imwrite("brightness_0_1_post.png", mat);
         EXPECT_TRUE(test_contrast_image(mat, 0, 13, 26));
-    }
-}
-
-bool test_saturation(cv::Mat m, vector<float> v1, vector<float> v2, vector<float> v3)
-{
-    bool rc = true;
-    uint8_t* p = m.data;
-    for(int row=0; row<128; row++)
-    {
-        for(int col=0; col<512; col++)
-        {
-            rc &= *p++ == v1[0];
-            rc &= *p++ == v1[1];
-            rc &= *p++ == v1[2];
-        }
-    }
-    for(int row=0; row<128; row++)
-    {
-        for(int col=0; col<512; col++)
-        {
-            rc &= *p++ == v2[0];
-            rc &= *p++ == v2[1];
-            rc &= *p++ == v2[2];
-        }
-    }
-    for(int row=0; row<128; row++)
-    {
-        for(int col=0; col<512; col++)
-        {
-            rc &= *p++ == v3[0];
-            rc &= *p++ == v3[1];
-            rc &= *p++ == v3[2];
-        }
-    }
-    return rc;
-}
-
-TEST(photometric, saturation)
-{
-    cv::Mat source{128*4, 512, CV_8UC3};
-    uint8_t* p = source.data;
-    for(int row=0; row<128; row++)
-    {
-        for(int col=0; col<512; col++)
-        {
-            *p++ = 128;
-            *p++ = 0;
-            *p++ = 0;
-        }
-    }
-    for(int row=0; row<128; row++)
-    {
-        for(int col=0; col<512; col++)
-        {
-            *p++ = 0;
-            *p++ = 128;
-            *p++ = 0;
-        }
-    }
-    for(int row=0; row<128; row++)
-    {
-        for(int col=0; col<512; col++)
-        {
-            *p++ = 0;
-            *p++ = 0;
-            *p++ = 128;
-        }
-    }
-
-    {
-        image::photometric pm;
-        cv::Mat mat = source.clone();
-        pm.cbsjitter(mat, {1.0, 1.0, 1.0});
-//        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(128*0, 0) << endl;
-//        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(128*1, 0) << endl;
-//        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(128*2, 0) << endl;
-//        cout << __FILE__ << " " << __LINE__ << " " << mat.at<cv::Vec3b>(128*3, 0) << endl;
-        EXPECT_TRUE(test_saturation(mat, {128,0,0}, {0,128,0}, {0,0,128}));
-    }
-
-    {
-        image::photometric pm;
-        cv::Mat mat = source.clone();
-        pm.cbsjitter(mat, {1.0, 1.0, 0.5});
-        EXPECT_TRUE(test_saturation(mat, {128, 64, 64}, {64, 128, 64}, {64, 64, 128}));
-    }
-
-    {
-        image::photometric pm;
-        cv::Mat mat = source.clone();
-        pm.cbsjitter(mat, {1.0, 1.0, 0.1});
-        EXPECT_TRUE(test_saturation(mat, {128, 115, 115}, {115, 128, 115}, {115, 115, 128}));
     }
 }

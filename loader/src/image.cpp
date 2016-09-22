@@ -197,7 +197,9 @@ void image::photometric::cbsjitter(cv::Mat& inout, const vector<float>& photomet
         /*************
         *  CONTRAST  *
         **************/
-        cv::Mat gray_mean{1, 1, CV_32FC3, cv::mean(inout)};
-        inout = photometric[0] * inout + (1 - photometric[0]) * gray_mean.at<cv::Scalar_<float>>(0, 0);
+        cv::Mat dst_img;
+        inout.convertTo(dst_img, CV_32FC3, photometric[0]);
+        dst_img += (1.0 - photometric[0]) * cv::mean(inout);
+        dst_img.convertTo(inout, CV_8UC3);
     }
 }
