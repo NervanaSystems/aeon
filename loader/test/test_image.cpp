@@ -1184,3 +1184,19 @@ TEST(photometric, saturation)
         EXPECT_TRUE(test_saturation(mat, {128, 115, 115}, {115, 128, 115}, {115, 115, 128}));
     }
 }
+
+TEST(DISABLED_photometric, hue)
+{
+    cv::Mat source = cv::imread(CURDIR"/test_data/flowers.jpg");
+    cout << __FILE__ << " " << __LINE__ << " " << source.size() << endl;
+
+    {
+        for(int i=0; i<=180; i+=10)
+        {
+            cv::Mat mat = source.clone();
+            image::photometric::cbsjitter(mat, 1.0, 1.0, 1.0, i);
+            string name = "hue_"+to_string(i)+".png";
+            cv::imwrite(name, mat);
+        }
+    }
+}

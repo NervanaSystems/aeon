@@ -58,6 +58,7 @@ namespace nervana {
         float               contrast = 1.0;
         float               brightness = 1.0;
         float               saturation = 1.0;
+        int                 hue = 0;
         bool                debug_deterministic = false;
     private:
         params() {}
@@ -84,7 +85,7 @@ namespace nervana {
         uint32_t                              channels = 3;
         float                                 fixed_scaling_factor = -1;
 
-        /** Scale the image (width, height) */
+        /** Scale the crop box (width, height) */
         std::uniform_real_distribution<float> scale{1.0f, 1.0f};
 
         /** Rotate the image (rho, phi) */
@@ -96,12 +97,19 @@ namespace nervana {
         /** Adjust aspect ratio */
         std::uniform_real_distribution<float> horizontal_distortion{1.0f, 1.0f};
 
-        /** Not sure what this guy does */
+        /** Adjust contrast */
         std::uniform_real_distribution<float> contrast{1.0f, 1.0f};
+
+        /** Adjust brightness */
         std::uniform_real_distribution<float> brightness{1.0f, 1.0f};
+
+        /** Adjust saturation */
         std::uniform_real_distribution<float> saturation{1.0f, 1.0f};
 
-        /** Not sure what this guy does */
+        /** Rotate hue in degrees. Valid values are [0-360] */
+        std::uniform_int_distribution<int>    hue{0, 0};
+
+        /** Offset from center for the crop */
         std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
 
         /** Flip the image left to right */
@@ -130,7 +138,8 @@ namespace nervana {
             ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL),
             ADD_DISTRIBUTION(contrast, mode::OPTIONAL, [](decltype(contrast) v){ return v.a() <= v.b(); }),
             ADD_DISTRIBUTION(brightness, mode::OPTIONAL, [](decltype(brightness) v){ return v.a() <= v.b(); }),
-            ADD_DISTRIBUTION(saturation, mode::OPTIONAL, [](decltype(saturation) v){ return v.a() <= v.b(); })
+            ADD_DISTRIBUTION(saturation, mode::OPTIONAL, [](decltype(saturation) v){ return v.a() <= v.b(); }),
+            ADD_DISTRIBUTION(hue, mode::OPTIONAL, [](decltype(hue) v){ return v.a() <= v.b(); })
         };
 
         config() {}

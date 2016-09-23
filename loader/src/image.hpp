@@ -38,7 +38,7 @@ namespace nervana {
         public:
             photometric();
             static void lighting(cv::Mat& inout, std::vector<float>, float color_noise_std);
-            static void cbsjitter(cv::Mat& inout, float contrast, float brightness, float saturation);
+            static void cbsjitter(cv::Mat& inout, float contrast, float brightness, float saturation, int hue=0);
 
             // These are the eigenvectors of the pixelwise covariance matrix
             static const float _CPCA[3][3];

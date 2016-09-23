@@ -182,16 +182,26 @@ photometric is filled with uniformly distributed values prior to calling this fu
 */
 // adjusts contrast, brightness, and saturation according
 // to values in photometric[0], photometric[1], photometric[2], respectively
-void image::photometric::cbsjitter(cv::Mat& inout, float contrast, float brightness, float saturation)
+void image::photometric::cbsjitter(cv::Mat& inout, float contrast, float brightness, float saturation, int hue)
 {
     // Skip transformations if given deterministic settings
-    if (brightness != 1.0 || saturation != 1.0) {
+    if (brightness != 1.0 || saturation != 1.0 || hue != 0) {
         /****************************
         *  BRIGHTNESS & SATURATION  *
         *****************************/
         cv::Mat hsv;
         cv::cvtColor(inout, hsv, CV_BGR2HSV);
-        hsv = hsv.mul(cv::Scalar(1.0, saturation, brightness));
+        if (brightness != 1.0 || saturation != 1.0) {
+            hsv = hsv.mul(cv::Scalar(1.0, saturation, brightness));
+        }
+        if (hue != 0) {
+            hue /= 2;   // hue is 0-360, but opencv used 0-180 to fit in a byte.
+            uint8_t* p = hsv.data;
+            for(int i=0; i<hsv.size().area(); i++) {
+                *p = (*p + hue) % 180;
+                p += 3;
+            }
+        }
         cv::cvtColor(hsv, inout, CV_HSV2BGR);
     }
 

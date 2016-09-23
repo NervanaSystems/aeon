@@ -72,6 +72,7 @@ void image::params::dump(ostream& ostr)
     ostr << "contrast            " << contrast                << "\n";
     ostr << "brightness          " << brightness              << "\n";
     ostr << "saturation          " << saturation              << "\n";
+    ostr << "hue                 " << hue                     << "\n";
     ostr << "debug_deterministic " << debug_deterministic     << "\n";
 }
 
@@ -150,7 +151,7 @@ cv::Mat image::transformer::transform_single_image(
 
     cv::Mat resizedImage;
     image::resize(croppedImage, resizedImage, img_xform->output_size);
-    photo.cbsjitter(resizedImage, img_xform->contrast, img_xform->brightness, img_xform->saturation);
+    photo.cbsjitter(resizedImage, img_xform->contrast, img_xform->brightness, img_xform->saturation, img_xform->hue);
     photo.lighting(resizedImage, img_xform->lighting, img_xform->color_noise_std);
 
     cv::Mat *finalImage = &resizedImage;
