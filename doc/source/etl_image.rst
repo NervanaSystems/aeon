@@ -37,15 +37,17 @@ The complete table of configuration parameters is shown below:
    width (uint) | *Required* | Width of provisioned image (pixels)
    channels (uint) | 3 | Number of channels in input image
    output_type (string)| ~"uint8_t~"| Output data type.
-   channel_major (bool)| True | Channel order of input image.
+   channel_major (bool)| True | Load the pixel buffer in channel major order (that is, all pixels from blue channel contiguous, followed by all pixels from green channel, followed by all pixels from the red channel).  The alternative is to have the color channels for each pixel located adjacent to each other (b1g1r1b2g2r2 rather than b1b2g1g2r1r2).
    seed (int) | 0 | Random seed
    flip_enable (bool) | False | Apply horizontal flip with probability 0.5.
    scale (float, float) | (1, 1) | Fraction of image short-side length to take the crop.
    do_area_scale (bool) | False | Determine the crop size as a fraction of total area instead of short-side length.
    angle (int, int) | (0, 0) | Rotate image by a random angle drawn from the provided ranges. Angle is in degrees.
-   lighting (float, float) | (0, 0) |
+   lighting (float, float) | (0.0, 0.0) |  Mean and Standard deviation for distribution of values used as input to colorspace perturbation as described in  Krizhevksy et al.  Default value of 0.0 std means that no colorspace perturbation is applied.  Otherwise, three random variables are drawn from the normal distribution and used to create a pixel color bias based on pre-trained principal components.
    horizontal_distortion (float, float) | (1, 1) | Change the aspect ratio by scaling the image width by a random factor.
-   photometric (float, float) | (0, 0) | Apply randomly sampled contrast, brightness, saturation changes. Implements the colornoise perturbation as descrbed in Krizhevksy et al.
+   contrast (float, float) | (1.0, 1.0) |  Boundaries of a uniform distribution from which to draw a contrast adjustment factor.  A contrast adjustment factor of 1.0 results in no change to the contrast of the image.  Values less than 1 decrease the contrast, while values greater than 1 increase the contrast.  Recommended boundaries for random contrast perturbation are (0.9 and 1.1).
+   brightness (float, float) | (1.0, 1.0) | Boundaries of a uniform distribution from which to draw a brightness adjustment factor.  A brightness adjustment factor of 1.0 results in no change to the brightness of the image.  Values less than 1 decrease the brightness, while values greater than 1 increase the brightness.  Recommended boundaries for random brightness perturbation are (0.9 and 1.1).
+   saturation (float, float) | (1.0, 1.0) | Boundaries of a uniform distribution from which to draw a saturation adjustment factor.  A saturation adjustment factor of 1.0 results in no change to the saturation of the image.  Values less than 1 decrease the saturation, while values greater than 1 increase the saturation.  Recommended boundaries for random saturation perturbation are (0.9 and 1.1).
    center (bool) | False | Take the center crop of the image. If false, a randomly located crop will be taken.
    crop_enable (bool) | True | Crop the input image using ``center`` and ``scale``\``do_area_scale``
    fixed_aspect_ratio (bool) | False | Maintain fixed aspect ratio when copying the image to the output buffer. This may result in padding of the output buffer.
