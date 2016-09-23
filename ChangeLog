@@ -1,0 +1,17 @@
+# ChangeLog
+
+## v0.2.0 (2016-09-23):
+
+* Improved documentation
+* Audio improvements
+    * Sox based extraction to handle more formats natively
+    * Time domain output
+    * Bug Fix: normalization for spectral outputs to ignore padded regions
+* Image improvements
+    * Unified image handling for variable sized images and fixed output sizes
+    * Bug fix: correct photometric augmentation
+* Additional provider types
+    * Localization provider for faster-rcnn style networks
+    * Stereo image provider
+* Bug fix: Better handling of subset percentage for caching loader
+
