@@ -55,7 +55,9 @@ namespace nervana {
         bool                flip = false;
         std::vector<float>  lighting;  // pixelwise random values
         float               color_noise_std = 0;
-        std::vector<float>  photometric;  // contrast, brightness, saturation
+        float               contrast = 1.0;
+        float               brightness = 1.0;
+        float               saturation = 1.0;
         bool                debug_deterministic = false;
     private:
         params() {}
@@ -95,7 +97,9 @@ namespace nervana {
         std::uniform_real_distribution<float> horizontal_distortion{1.0f, 1.0f};
 
         /** Not sure what this guy does */
-        std::uniform_real_distribution<float> photometric{0.0f, 0.0f};
+        std::uniform_real_distribution<float> contrast{1.0f, 1.0f};
+        std::uniform_real_distribution<float> brightness{1.0f, 1.0f};
+        std::uniform_real_distribution<float> saturation{1.0f, 1.0f};
 
         /** Not sure what this guy does */
         std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
@@ -115,7 +119,6 @@ namespace nervana {
             ADD_DISTRIBUTION(angle, mode::OPTIONAL, [](decltype(angle) v){ return v.a() <= v.b(); }),
             ADD_DISTRIBUTION(lighting, mode::OPTIONAL),
             ADD_DISTRIBUTION(horizontal_distortion, mode::OPTIONAL, [](decltype(horizontal_distortion) v){ return v.a() <= v.b(); }),
-            ADD_DISTRIBUTION(photometric, mode::OPTIONAL, [](decltype(photometric) v){ return v.a() <= v.b(); }),
             ADD_SCALAR(flip_enable, mode::OPTIONAL),
             ADD_SCALAR(center, mode::OPTIONAL),
             ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); }),
@@ -124,7 +127,10 @@ namespace nervana {
             ADD_SCALAR(channels, mode::OPTIONAL, [](uint32_t v){ return v==1 || v==3; }),
             ADD_SCALAR(crop_enable, mode::OPTIONAL),
             ADD_SCALAR(fixed_aspect_ratio, mode::OPTIONAL),
-            ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL)
+            ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL),
+            ADD_DISTRIBUTION(contrast, mode::OPTIONAL, [](decltype(contrast) v){ return v.a() <= v.b(); }),
+            ADD_DISTRIBUTION(brightness, mode::OPTIONAL, [](decltype(brightness) v){ return v.a() <= v.b(); }),
+            ADD_DISTRIBUTION(saturation, mode::OPTIONAL, [](decltype(saturation) v){ return v.a() <= v.b(); })
         };
 
         config() {}

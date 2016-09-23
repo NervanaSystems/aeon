@@ -37,18 +37,15 @@ namespace nervana {
         class photometric {
         public:
             photometric();
-            void lighting(cv::Mat& inout, std::vector<float>, float color_noise_std);
-            void cbsjitter(cv::Mat& inout, const std::vector<float>&);
+            static void lighting(cv::Mat& inout, std::vector<float>, float color_noise_std);
+            static void cbsjitter(cv::Mat& inout, float contrast, float brightness, float saturation);
 
             // These are the eigenvectors of the pixelwise covariance matrix
-            const float _CPCA[3][3];
-            const cv::Mat CPCA;
+            static const float _CPCA[3][3];
+            static const cv::Mat CPCA;
 
             // These are the square roots of the eigenvalues of the pixelwise covariance matrix
-            const cv::Mat CSTD;
-
-            // This is the set of coefficients for converting BGR to grayscale
-            const cv::Mat GSCL;
+            static const cv::Mat CSTD;
         };
     }
 }

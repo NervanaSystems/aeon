@@ -69,7 +69,9 @@ void image::params::dump(ostream& ostr)
     ostr << "flip                " << flip                    << "\n";
     ostr << "lighting            " << join(lighting, ", ")    << "\n";
     ostr << "color_noise_std     " << color_noise_std         << "\n";
-    ostr << "photometric         " << join(photometric, ", ") << "\n";
+    ostr << "contrast            " << contrast                << "\n";
+    ostr << "brightness          " << brightness              << "\n";
+    ostr << "saturation          " << saturation              << "\n";
     ostr << "debug_deterministic " << debug_deterministic     << "\n";
 }
 
@@ -148,7 +150,7 @@ cv::Mat image::transformer::transform_single_image(
 
     cv::Mat resizedImage;
     image::resize(croppedImage, resizedImage, img_xform->output_size);
-    photo.cbsjitter(resizedImage, img_xform->photometric);
+    photo.cbsjitter(resizedImage, img_xform->contrast, img_xform->brightness, img_xform->saturation);
     photo.lighting(resizedImage, img_xform->lighting, img_xform->color_noise_std);
 
     cv::Mat *finalImage = &resizedImage;
@@ -215,11 +217,6 @@ image::param_factory::make_params(shared_ptr<const decoded> input)
             settings->lighting.push_back(_cfg.lighting(_dre));
         }
         settings->color_noise_std = _cfg.lighting.stddev();
-    }
-    if (_cfg.photometric.a()!=_cfg.photometric.b()) {
-        for( int i=0; i<3; i++ ) {
-            settings->photometric.push_back(_cfg.photometric(_dre));
-        }
     }
 
     return settings;

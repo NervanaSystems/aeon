@@ -39,7 +39,9 @@ public:
     image_params_builder& flip( bool val ) { obj->flip = val; return *this; }
     image_params_builder& lighting( float f1, float f2, float f3 ) { obj->lighting = {f1,f2,f3}; return *this; }
     image_params_builder& color_noise_std(float f) { obj->color_noise_std = f; return *this; }
-    image_params_builder& photometric( float f1, float f2, float f3 ) { obj->photometric = {f1,f2,f3}; return *this; }
+    image_params_builder& contrast(float f) { obj->contrast = f; return *this; }
+    image_params_builder& brightness(float f) { obj->brightness = f; return *this; }
+    image_params_builder& saturation(float f) { obj->saturation = f; return *this; }
 
     operator std::shared_ptr<nervana::image::params>() const {
         return obj;
