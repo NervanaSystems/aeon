@@ -18,15 +18,15 @@
 using namespace nervana;
 using namespace std;
 
-image_stereo::image_stereo(nlohmann::json js) :
+image_stereo_blob::image_stereo_blob(nlohmann::json js) :
     image_config(js["image"]),
-    target_config(js["depthmap"]),
+    target_config(js["blob"]),
     image_extractor(image_config),
     image_transformer(image_config),
     image_loader(image_config),
     image_factory(image_config),
     target_extractor(target_config),
-    target_transformer(target_config),
+//    target_transformer(target_config),
     target_loader(target_config)
 {
     num_inputs = 3;
@@ -35,15 +35,15 @@ image_stereo::image_stereo(nlohmann::json js) :
     oshapes.push_back(target_config.get_shape_type());
 }
 
-void image_stereo::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
+void image_stereo_blob::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
     std::vector<char>& l_in      = in_buf[0]->get_item(idx);
     std::vector<char>& r_in      = in_buf[1]->get_item(idx);
     std::vector<char>& target_in = in_buf[2]->get_item(idx);
 
     char* l_out                  = out_buf[0]->get_item(idx);
-    char* r_out                  = out_buf[0]->get_item(idx);
-    char* target_out             = out_buf[1]->get_item(idx);
+    char* r_out                  = out_buf[1]->get_item(idx);
+    char* target_out             = out_buf[2]->get_item(idx);
 
     auto l_dec = image_extractor.extract(l_in.data(), l_in.size());
     auto r_dec = image_extractor.extract(r_in.data(), r_in.size());
@@ -55,6 +55,6 @@ void image_stereo::provide(int idx, buffer_in_array& in_buf, buffer_out_array& o
 
     // Process target data
     auto target_dec = target_extractor.extract(target_in.data(), target_in.size());
-    auto target_transformed = target_transformer.transform(image_params, target_dec);
-    target_loader.load({target_out}, target_transformed);
+//    auto target_transformed = target_transformer.transform(image_params, target_dec);
+    target_loader.load({target_out}, target_dec);
 }

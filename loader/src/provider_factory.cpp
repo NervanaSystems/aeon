@@ -24,6 +24,7 @@
 #include "provider_audio_transcriber.hpp"
 #include "provider_video_classifier.hpp"
 #include "provider_video_only.hpp"
+#include "provider_image_stereo.hpp"
 
 #include <sstream>
 
@@ -53,6 +54,8 @@ std::shared_ptr<nervana::provider_interface> nervana::provider_factory::create(n
         rc = make_shared<image_pixelmask>(configJs);
     } else if( mediaType == "image,boundingbox" ) {
         rc = make_shared<image_boundingbox>(configJs);
+    } else if( mediaType == "stereo_image,blob" ) {
+        rc = make_shared<image_stereo_blob>(configJs);
     } else if( mediaType == "video,label" ) {
         rc = make_shared<video_classifier>(configJs);
     } else if( mediaType == "video" ) {

@@ -17,25 +17,25 @@
 
 #include "provider_interface.hpp"
 #include "etl_image.hpp"
-#include "etl_depthmap.hpp"
+#include "etl_blob.hpp"
 
 namespace nervana {
-    class image_stereo : public provider_interface {
+    class image_stereo_blob : public provider_interface {
     public:
-        image_stereo(nlohmann::json js);
+        image_stereo_blob(nlohmann::json js);
 
         void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
 
     private:
         image::config               image_config;
-        image::config               target_config;
+        blob::config                target_config;
         image::extractor            image_extractor;
         image::transformer          image_transformer;
         image::loader               image_loader;
         image::param_factory        image_factory;
 
-        depthmap::extractor         target_extractor;
-        depthmap::transformer       target_transformer;
-        image::loader               target_loader;
+        blob::extractor             target_extractor;
+//        blob::transformer           target_transformer;
+        blob::loader                target_loader;
     };
 }
