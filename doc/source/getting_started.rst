@@ -33,7 +33,7 @@ OSX (Assuming you folowed neon_'s Homebrew based install)::
 
 Fedora::
 
-  sudo dnf install opencv-devel clang libcurl-devel
+  sudo dnf install opencv-devel clang libcurl-devel sox-devel
 
 For CentOS 7, the version of Clang available in the EPEL repository is too old 
 to understand the GCC flags that the Python extension build system imposes, so 
