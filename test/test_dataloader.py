@@ -66,6 +66,7 @@ def generic_config(manifest_name):
             'height': 2,
             'width': 2,
         },
+        'label': {'binary': True},
         'type': 'image,label',
     }
 

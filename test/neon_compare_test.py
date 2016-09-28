@@ -21,7 +21,7 @@ proceeds to fit and evaluate a model using two different ways of loading the
 data.
 
 run as follows:
-python compare.py -e1 -r0 -w <place where data lives>
+python neon_compare_test.py -e1 -r0 -w <place where data lives>
 
 """
 import numpy as np
@@ -35,9 +35,10 @@ from neon.optimizers import GradientDescentMomentum
 from neon.transforms import Misclassification, Rectlin, Softmax, CrossEntropyMulti
 from neon.callbacks.callbacks import Callbacks
 from neon.util.argparser import NeonArgparser
-from neon.util.persist import get_data_cache_dir, ensure_dirs_exist
-from neon.data import CIFAR10, AeonDataLoader
+from neon.util.persist import ensure_dirs_exist
+from neon.data import CIFAR10
 from neon.data.dataloader_transformers import OneHot, TypeCast, BGRMeanSubtract
+from aeon import DataLoader as AeonDataLoader
 from PIL import Image
 from tqdm import tqdm
 
@@ -155,7 +156,7 @@ def run(args, train, test):
 def test_iterator():
     print('Testing data iterator')
     NervanaObject.be.gen_rng(args.rng_seed)
-    image_dir = get_data_cache_dir(args.data_dir, subdir='extracted')
+    image_dir = os.path.join(args.data_dir, 'cifar-extracted')
     train_manifest, val_manifest = ingest_cifar10(out_dir=image_dir)
 
     (X_train, y_train), (X_test, y_test), nclass = load_cifar10_imgs(train_manifest, val_manifest)
@@ -167,7 +168,7 @@ def test_iterator():
 def test_loader():
     print('Testing data loader')
     NervanaObject.be.gen_rng(args.rng_seed)
-    image_dir = get_data_cache_dir(args.data_dir, subdir='extracted')
+    image_dir = os.path.join(args.data_dir, 'cifar-extracted')
     train_manifest, val_manifest = ingest_cifar10(out_dir=image_dir)
 
     train_config = make_aeon_config(train_manifest, args.batch_size)
