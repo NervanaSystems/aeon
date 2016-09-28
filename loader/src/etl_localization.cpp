@@ -61,7 +61,7 @@ localization::config::config(nlohmann::json js, const image::config& iconfig) :
     add_shape_type({2, 1}, "int32_t");
     add_shape_type({max_gt_boxes,4}, "float");
     add_shape_type({1, 1}, "int32_t");
-    add_shape_type({64, 1}, "int32_t");
+    add_shape_type({max_gt_boxes, 1}, "int32_t");
     add_shape_type({1, 1}, "float");
 
     // 'difficult' tag for gt_boxes
