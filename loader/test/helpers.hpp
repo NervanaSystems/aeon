@@ -50,3 +50,5 @@ public:
 private:
     std::shared_ptr<nervana::image::params> obj;
 };
+
+void iterate_files(const std::string& path, std::function<void(const std::string& file)> func);
