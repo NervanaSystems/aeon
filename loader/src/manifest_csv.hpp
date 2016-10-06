@@ -40,7 +40,7 @@ namespace nervana {
 
     class manifest_csv : public manifest {
     public:
-        manifest_csv(std::string filename, bool shuffle);
+        manifest_csv(const std::string& filename, bool shuffle, const std::string& root = "");
 
         typedef std::vector<std::string> FilenameList;
         typedef std::vector<FilenameList>::const_iterator iter;
@@ -59,6 +59,7 @@ namespace nervana {
 
     private:
         const std::string _filename;
+        const std::string _root;
         const bool _shuffle;
         std::vector<FilenameList> _filename_lists;
     };

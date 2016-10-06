@@ -22,10 +22,14 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <stdexcept>
 
+#include "util.hpp"
+
 using namespace std;
+using namespace nervana;
 
 TEST(manifest, constructor) {
     string tmpname = tmp_manifest_file(0, {0, 0});
@@ -149,4 +153,67 @@ TEST(manifest, uneven_records) {
             string(e.what()).substr(0, 51)
         );
     }
+}
+
+TEST(manifest, root_path)
+{
+    string manifest_file = "tmp_manifest.csv";
+    {
+        ofstream f(manifest_file);
+        for(int i=0; i<10; i++) {
+            f << "/t1/image" << i << ".png,/t1/target" << i << ".txt\n";
+        }
+        f.close();
+        nervana::manifest_csv manifest(manifest_file, false);
+        int i = 0;
+        for(const vector<string>& x : manifest) {
+            ASSERT_EQ(2, x.size());
+            stringstream ss;
+            ss << "/t1/image" << i << ".png";
+            EXPECT_STREQ(x[0].c_str(), ss.str().c_str());
+            ss.str("");
+            ss << "/t1/target" << i << ".txt";
+            EXPECT_STREQ(x[1].c_str(), ss.str().c_str());
+            i++;
+        }
+    }
+    {
+        ofstream f(manifest_file);
+        for(int i=0; i<10; i++) {
+            f << "/t1/image" << i << ".png,/t1/target" << i << ".txt\n";
+        }
+        f.close();
+        nervana::manifest_csv manifest(manifest_file, false, "/x1");
+        int i = 0;
+        for(const vector<string>& x : manifest) {
+            ASSERT_EQ(2, x.size());
+            stringstream ss;
+            ss << "/t1/image" << i << ".png";
+            EXPECT_STREQ(x[0].c_str(), ss.str().c_str());
+            ss.str("");
+            ss << "/t1/target" << i << ".txt";
+            EXPECT_STREQ(x[1].c_str(), ss.str().c_str());
+            i++;
+        }
+    }
+    {
+        ofstream f(manifest_file);
+        for(int i=0; i<10; i++) {
+            f << "t1/image" << i << ".png,t1/target" << i << ".txt\n";
+        }
+        f.close();
+        nervana::manifest_csv manifest(manifest_file, false, "/x1");
+        int i = 0;
+        for(const vector<string>& x : manifest) {
+            ASSERT_EQ(2, x.size());
+            stringstream ss;
+            ss << "/x1/t1/image" << i << ".png";
+            EXPECT_STREQ(x[0].c_str(), ss.str().c_str());
+            ss.str("");
+            ss << "/x1/t1/target" << i << ".txt";
+            EXPECT_STREQ(x[1].c_str(), ss.str().c_str());
+            i++;
+        }
+    }
+    remove(manifest_file.c_str());
 }

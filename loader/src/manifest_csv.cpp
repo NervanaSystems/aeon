@@ -27,8 +27,8 @@
 using namespace std;
 using namespace nervana;
 
-manifest_csv::manifest_csv(string filename, bool shuffle)
-: _filename(filename), _shuffle(shuffle)
+manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root)
+: _filename(filename), _root(root), _shuffle(shuffle)
 {
     // for now parse the entire manifest on creation
     ifstream infile(_filename);
@@ -78,7 +78,12 @@ void manifest_csv::parse_stream(istream& is)
             continue;
         }
 
-        auto field_list = split(line, ',');
+        vector<string> field_list = split(line, ',');
+        if(!_root.empty()) {
+            for(int i=0; i<field_list.size(); i++) {
+                field_list[i] = path_join(_root, field_list[i]);
+            }
+        }
 
         if (lineno == 0) {
             prev_num_fields = field_list.size();

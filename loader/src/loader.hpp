@@ -96,6 +96,7 @@ private:
 class nervana::loader_config : public nervana::interface::config {
 public:
     std::string manifest_filename;
+    std::string manifest_root;
     int         minibatch_size;
 
     std::string type;
@@ -130,6 +131,7 @@ private:
     std::vector<std::shared_ptr<nervana::interface::config_info_interface>> config_list = {
         ADD_SCALAR(type, mode::REQUIRED),
         ADD_SCALAR(manifest_filename, mode::REQUIRED),
+        ADD_SCALAR(manifest_root, mode::OPTIONAL),
         ADD_SCALAR(minibatch_size, mode::REQUIRED),
         ADD_SCALAR(cache_directory, mode::OPTIONAL),
         ADD_SCALAR(macrobatch_size, mode::OPTIONAL),

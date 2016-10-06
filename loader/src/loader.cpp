@@ -295,7 +295,7 @@ loader::loader(const char* cfg_string, PyObject *py_obj_backend)
     } else {
         // the manifest defines which data should be included in the dataset
         auto manifest = make_shared<nervana::manifest_csv>(lcfg.manifest_filename,
-                                                           lcfg.shuffle_manifest);
+                                                           lcfg.shuffle_manifest, lcfg.manifest_root);
 
         // TODO: make the constructor throw this error
         if(manifest->objectCount() == 0) {
