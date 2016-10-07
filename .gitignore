@@ -61,3 +61,5 @@ tmp/
 
 # Apple
 *.AppleDouble
+
+config_args.txt
