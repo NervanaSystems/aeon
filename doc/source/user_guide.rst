@@ -102,6 +102,7 @@ Importantly, the ``type`` key indicates to the dataloader which input data type 
 - image segmentation (``"image,pixelmask"``),
 - image localization (``"image,localization"``),
 - image bounding box (``"image,boundingbox"``),
+- stereo depthmap (``"stereo_image,blob"``),
 - video classification (``"video,label"``),
 - audio classification (``"audio,label"``), and
 - audio transcription (``"audio,transcription``").
