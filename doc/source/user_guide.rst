@@ -122,6 +122,7 @@ The possible base loader configurations are the following (configurations withou
    type (string)| *Required* | Provider type (e.g. "image, label").
    manifest_filename (string)| *Required* | Path to the manifest file.
    minibatch_size (int)| *Required* | Minibatch size. In neon, typically accesible via ``be.bsz``.
+   manifest_root (string) | ~"~" | If provided, ``manifest_root`` is prepended to all manifest items with relative paths, while manifest items with absolute paths are left untouched. 
    cache_directory (string)| ~"~" | If provided, the dataloader will cache the data into ``*.cpio`` files for fast disk reads.
    macrobatch_size (int)| 0 | Size of the macrobatch archive files.
    subset_fraction (float)| 1.0 | Fraction of the dataset to iterate over. Useful when testing code on smaller data samples.
