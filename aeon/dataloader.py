@@ -115,7 +115,7 @@ class DataLoader(object):
             raise TypeError('backend must have a callable consume attr')
 
         loader = self.loaderlib.start(
-            ct.c_char_p(config),
+            ct.c_char_p(config.encode(encoding='utf-8')),
             ct.py_object(backend)
         )
 

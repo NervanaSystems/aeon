@@ -271,8 +271,8 @@ void read_thread_pool::work(int id)
 
 
 loader::loader(const char* cfg_string, PyObject *py_obj_backend)
-: _py_obj_backend(py_obj_backend)
 {
+    _python_backend = make_shared<python_backend>(py_obj_backend);
     _lcfg_json = nlohmann::json::parse(cfg_string);
     loader_config lcfg(_lcfg_json);
 
@@ -359,7 +359,7 @@ int loader::start()
         }
 
         // Bind the python backend here
-        _python_backend = make_shared<python_backend>(_py_obj_backend, oshapes, _batchSize);
+        _python_backend->setup_buffers(oshapes, _batchSize);
         // These are fixed size output buffers (need batchSize for stride)
         _decode_buffers = make_shared<buffer_pool_out>(write_sizes,
                                                        (size_t)_batchSize,
@@ -400,7 +400,7 @@ void loader::stop()
     _read_thread_pool   = nullptr;
     _decode_buffers     = nullptr;
     _decode_thread_pool = nullptr;
-    _python_backend     = nullptr;
+    _python_backend->clear_buffers();
 }
 
 int loader::reset()

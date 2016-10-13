@@ -20,11 +20,12 @@
 using namespace nervana;
 using namespace std;
 
-python_backend::python_backend(PyObject* py_obj_backend,
-                                   const vector<nervana::shape_type>& oshape_types,
-                                   int batchSize)
-: _oshape_types(oshape_types), _batchSize(batchSize), _py_obj_backend(py_obj_backend)
+python_backend::python_backend(PyObject* py_obj_backend)
+: _py_obj_backend(py_obj_backend)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     if (_py_obj_backend == NULL) {
         throw std::runtime_error("Python Backend object does not exist");
     }
@@ -32,9 +33,21 @@ python_backend::python_backend(PyObject* py_obj_backend,
     Py_INCREF(_py_obj_backend);
     _f_consume = PyObject_GetAttrString(_py_obj_backend, "consume");
 
+    if (_f_consume == NULL) {
+        throw std::runtime_error("Backend has no 'consume' attribute");
+    }
+
     if (!PyCallable_Check(_f_consume)) {
         throw std::runtime_error("Backend 'consume' function does not exist or is not callable");
     }
+
+    PyGILState_Release(gstate);
+}
+
+void python_backend::setup_buffers(const vector<nervana::shape_type>& oshape_types, int batchSize)
+{
+    _oshape_types = oshape_types;
+    _batchSize = batchSize;
 
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -89,7 +102,7 @@ PyObject* python_backend::initPyList(int length)
     return pylist;
 }
 
-python_backend::~python_backend()
+void python_backend::clear_buffers()
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -99,7 +112,15 @@ python_backend::~python_backend()
     for (auto d: _dev_lists) {
         Py_XDECREF(d);
     }
+    _host_lists.clear();
+    _dev_lists.clear();
+    PyGILState_Release(gstate);
+}
 
+python_backend::~python_backend()
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
     Py_XDECREF(_f_consume);
     Py_XDECREF(_py_obj_backend);
     PyGILState_Release(gstate);

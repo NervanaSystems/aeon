@@ -1,10 +1,21 @@
-import pycuda.driver as drv
-from pycuda.gpuarray import GPUArray
 import numpy as np
+
+def gen_backend(backend_name='cpu'):
+    backend_name = backend_name.lower()
+    assert backend_name in ('cpu', 'gpu', 'mgpu'), backend_name + ' is invalid backend'
+    if backend_name == 'cpu':
+        return CpuBackend()
+    elif backend_name == 'gpu':
+        return GpuBackend()
+    elif backend_name == 'mgpu':
+        return MultiGpuBackend()
+    else:
+        raise TypeError('invalid backend type')
 
 class CpuBackend(object):
     def __init__(self):
         self.use_pinned_mem = False
+        self.rng_seed = 0
 
     def consume(self, buf_index, hostlist, devlist):
         assert 0 <= buf_index < 2, 'Can only double buffer'
@@ -18,11 +29,14 @@ class CpuBackend(object):
         return cpu_array
 
 class GpuBackend(object):
+    import pycuda.driver as drv
+    from pycuda.gpuarray import GPUArray
     '''
     Note that GpuBackend can actually just be instantiated as a special case of MultiGpuBackend
     '''
     def __init__(self, device_id=0):
         self.use_pinned_mem = True
+        self.rng_seed = 0
         self.device_id = device_id
         drv.init()
         self.ctx = drv.Device(device_id).make_context()
@@ -51,11 +65,14 @@ class GpuBackend(object):
 
 
 class MultiGpuBackend(object):
+    import pycuda.driver as drv
+    from pycuda.gpuarray import GPUArray
     '''
     Defines the stubs that are necessary for a backend object
     '''
     def __init__(self, num_dev=1):
         self.use_pinned_mem = True
+        self.rng_seed = 0
         drv.init()
         assert(num_dev <= drv.Device.count())
 

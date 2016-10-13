@@ -207,6 +207,5 @@ private:
 
     int                                         _batchSize;
     nlohmann::json                              _lcfg_json;
-    PyObject*                                   _py_obj_backend;
     std::shared_ptr<python_backend>             _python_backend;
 };

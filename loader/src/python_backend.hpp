@@ -29,14 +29,16 @@ namespace nervana {
 
 class nervana::python_backend {
 public:
-    python_backend(PyObject*, const std::vector<nervana::shape_type>&, int);
+    python_backend(PyObject*);
     ~python_backend();
+    void setup_buffers(const std::vector<nervana::shape_type>& oshape_types, int batchSize);
+    void clear_buffers();
 
     bool use_pinned_memory();
     void call_backend_transfer(nervana::buffer_out_array &outBuf, int bufIdx);
     PyObject* get_host_tuple(int bufIdx);
     PyObject* get_shapes();
-    const std::vector<nervana::shape_type>& _oshape_types;
+    std::vector<nervana::shape_type> _oshape_types;
     int                         _batchSize;
 private:
     python_backend() = delete;
