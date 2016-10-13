@@ -1,12 +1,22 @@
 # ChangeLog
 
+## v0.2.2 (2016-10-13)
+
+* Add manifest_root path option for cvs manifest files
+* Bug fixes for python 3 compatibility
+    * Retain reference count on python backend object
+* Refactor protobackends and tests
+
+
 ## v0.2.1 (2016-10-07)
+
 * Localization improvements
     * Bug fix: Handle >64 ground truth bounding boxes
 * Image improvements
     * Add 'hue' argument to image augmentation where 'hue' can be set from 0..360 degrees
 * Stereo provider improvements
     * stereo_image,blob provides direct passthrough of arbitrary binary blob
+
 
 ## v0.2.0 (2016-09-23):
 
