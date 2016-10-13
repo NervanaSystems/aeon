@@ -10,8 +10,8 @@ class CpuBackend(object):
         assert 0 <= buf_index < 2, 'Can only double buffer'
         if devlist[buf_index] is None:
             devlist[buf_index] = np.empty_like(hostlist[buf_index].T)
-        print(devlist[buf_index].shape, devlist[buf_index].dtype)
-        print(hostlist[buf_index].shape, hostlist[buf_index].dtype)
+        # print(devlist[buf_index].shape, devlist[buf_index].dtype)
+        # print(hostlist[buf_index].shape, hostlist[buf_index].dtype)
         devlist[buf_index][:] = hostlist[buf_index].T
 
     def get_ary(self, cpu_array):

@@ -49,6 +49,8 @@ output/
 *.cpio
 *.wav
 doc/source/generated
+.cache/
+nervana_aeon.egg-info/
 
 # vim
 *.swp
