@@ -82,6 +82,11 @@ void specgram::wav_to_specgram(const Mat& wav_col_mat,
 }
 
 
+/** \brief Create an array of frequency weights to convert from linear
+* frequencies to mel-frequencies.
+* For reference, see:
+* http://practicalcryptography.com/miscellaneous/machine-learning/guide-mel-frequency-cepstral-coefficients-mfccs/#computing-the-mel-filterbank
+*/
 void specgram::create_filterbanks(const int num_filters,
                                   const int fftsz,
                                   const int sample_freq_hz,
@@ -91,24 +96,27 @@ void specgram::create_filterbanks(const int num_filters,
     double max_mel_freq = hz_to_mel(sample_freq_hz / 2.0);
     double mel_freq_delta = (max_mel_freq - min_mel_freq) / (num_filters + 1);
 
+    // Determine the nearest freq index for each mel-frequency band
+    vector<int> bins;
+    double scale_by = (1 + fftsz) / (double) sample_freq_hz;
+    for (int j = 0; j <= 1; ++j) {
+      bins.push_back(floor(scale_by * mel_to_hz(min_mel_freq + j * mel_freq_delta)));
+    }
 
-    int   num_freqs = fftsz / 2 + 1;
-    float fft_freq_delta = (sample_freq_hz / 2) / (num_freqs);
-
+    int num_freqs = fftsz / 2 + 1;
     fbank.create(num_freqs, num_filters, CV_32F);
 
-    for (int mel_idx=0; mel_idx < num_filters; ++mel_idx) {
-        float m_l = min_mel_freq + mel_idx * mel_freq_delta;
-        float m_c = m_l + mel_freq_delta;
-        float m_r = m_c + mel_freq_delta;
-
-        for (int freq_idx=0; freq_idx < num_freqs; ++freq_idx) {
-            float mel = hz_to_mel(freq_idx * fft_freq_delta);
-            float wt = 0.0f;
-            if (mel > m_l && mel < m_r) {
-                wt = mel <= m_c ? (mel - m_l) / (m_c - m_l) : (m_r - mel) / (m_r - m_c);
-            }
-            fbank.at<float>(freq_idx, mel_idx) = wt;
+    // Create triangular windows from three neighboring bins
+    for (int j = 0; j < num_filters; ++j) {
+        bins.push_back(floor(scale_by * mel_to_hz(min_mel_freq + (j + 2) * mel_freq_delta)));
+        // Left side of triangle
+        // weights are ratio of distance from left edge to distance from center to left
+        for (int i = bins[j]; i < bins[j + 1]; ++i) {
+            fbank.at<float>(i, j) = (i - bins[j]) / (1.0 * (bins[j + 1] - bins[j]));
+        }
+        // Right side of triangle
+        for (int i = bins[j + 1]; i < bins[j + 2]; ++i) {
+            fbank.at<float>(i, j) = (bins[j + 2] - i) / (1.0 * (bins[j + 2] - bins[j + 1]));
         }
     }
     return;
@@ -118,7 +126,7 @@ void specgram::specgram_to_cepsgram(const Mat& specgram,
                                     const Mat& filter_bank,
                                     Mat& cepsgram)
 {
-    cepsgram = (specgram.mul(specgram) / specgram.cols) * filter_bank;
+    cepsgram = (specgram.mul(specgram) / (2 * (specgram.cols - 1))) * filter_bank;
     cv::log(cepsgram, cepsgram);
     return;
 }
@@ -163,4 +171,3 @@ void specgram::create_window(const std::string& window_type, const int n, Mat& w
         }
     }
 }
-
