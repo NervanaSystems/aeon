@@ -19,7 +19,7 @@ using namespace nervana;
 using namespace std;
 
 image_stereo_blob::image_stereo_blob(nlohmann::json js) :
-    image_config(js["image"]),
+    image_config(js["stereo_image"]),
     target_config(js["blob"]),
     image_extractor(image_config),
     image_transformer(image_config),

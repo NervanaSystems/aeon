@@ -127,7 +127,7 @@ TEST(provider, argtype)
 TEST(provider, blob)
 {
     nlohmann::json js = {{"type","stereo_image,blob"},
-                         {"image", {
+                         {"stereo_image", {
                             {"height",360},
                             {"width",480},
                             {"channel_major",false}
@@ -166,8 +166,8 @@ TEST(provider, blob)
     auto media = nervana::provider_factory::create(js);
     const vector<nervana::shape_type>& oshapes = media->get_oshapes();
 
-    ASSERT_EQ(360,     int(js["image"]["height"]));
-    ASSERT_EQ(480,     int(js["image"]["width"]));
+    ASSERT_EQ(360,     int(js["stereo_image"]["height"]));
+    ASSERT_EQ(480,     int(js["stereo_image"]["width"]));
     ASSERT_EQ(360*480, int(js["blob"]["output_count"]));
     ASSERT_EQ(3,oshapes.size());
 
