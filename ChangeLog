@@ -1,5 +1,10 @@
 # ChangeLog
 
+## v0.2.3 (2016-10-18)
+* Bug fix for filterbank shaping
+* Bug fix for stereo image provider creation
+
+
 ## v0.2.2 (2016-10-13)
 
 * Add manifest_root path option for cvs manifest files
