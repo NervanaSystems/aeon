@@ -284,3 +284,25 @@ TEST(etl, sox_use) {
     }
 
 }
+
+
+TEST(audio, filterbank) {
+
+    int sample_rate = 2000;
+    int fftsz = 20;
+    int num_filters = 1;
+
+    // Computed using python
+    float expected[11] = {0., 0.25, 0.5, 0.75, 1., 5. / 6, 2. / 3, 0.5, 1. / 3, 1. / 6, 0.};
+
+    cv::Mat fbank;
+    specgram::create_filterbanks(num_filters, fftsz, sample_rate, fbank);
+    ASSERT_EQ(11, fbank.rows);
+    ASSERT_EQ(1, fbank.cols);
+
+    for (int ii = 0; ii < 11; ++ii) {
+        ASSERT_NEAR(expected[ii], fbank.at<float>(ii, 0), 1e-6);
+    }
+
+}
+
