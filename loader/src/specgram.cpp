@@ -104,7 +104,7 @@ void specgram::create_filterbanks(const int num_filters,
     }
 
     int num_freqs = fftsz / 2 + 1;
-    fbank.create(num_freqs, num_filters, CV_32F);
+    fbank = cv::Mat::zeros(num_freqs, num_filters, CV_32F);
 
     // Create triangular windows from three neighboring bins
     for (int j = 0; j < num_filters; ++j) {
