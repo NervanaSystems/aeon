@@ -102,6 +102,7 @@ namespace nervana {
         std::string window_type      {"hann"};
 
         std::string noise_index_file {};
+        std::string noise_root {};
 
         /** Sample rate of input audio in hertz */
         uint32_t    sample_freq_hz   {16000};
@@ -203,6 +204,7 @@ namespace nervana {
             ADD_SCALAR(feature_type, mode::OPTIONAL),
             ADD_SCALAR(window_type, mode::OPTIONAL),
             ADD_SCALAR(noise_index_file, mode::OPTIONAL),
+            ADD_SCALAR(noise_root, mode::OPTIONAL),
             ADD_SCALAR(add_noise_probability, mode::OPTIONAL),
             ADD_SCALAR(sample_freq_hz, mode::OPTIONAL),
             ADD_DISTRIBUTION(time_scale_fraction, mode::OPTIONAL, [](decltype(time_scale_fraction) v){ return v.a() <= v.b(); }),

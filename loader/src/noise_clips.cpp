@@ -23,10 +23,10 @@
 using namespace std;
 using namespace nervana;
 
-noise_clips::noise_clips(const std::string noiseIndexFile)
+noise_clips::noise_clips(const std::string noiseIndexFile, const std::string noiseRoot)
 {
     if (!noiseIndexFile.empty()) {
-        load_index(noiseIndexFile);
+        load_index(noiseIndexFile, noiseRoot);
         load_data();
     }
 }
@@ -38,7 +38,7 @@ noise_clips::~noise_clips()
     }
 }
 
-void noise_clips::load_index(const std::string& index_file)
+void noise_clips::load_index(const std::string& index_file, const std::string& root_dir)
 {
     ifstream ifs(index_file);
 
@@ -48,6 +48,8 @@ void noise_clips::load_index(const std::string& index_file)
 
     string line;
     while(getline(ifs, line)) {
+        if(!root_dir.empty())
+            line = path_join(root_dir, line);
         _noise_files.push_back(line);
     }
 

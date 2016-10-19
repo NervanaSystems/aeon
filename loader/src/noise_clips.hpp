@@ -24,7 +24,7 @@ namespace nervana {
 
 class nervana::noise_clips {
 public:
-    noise_clips(const std::string noiseIndexFile);
+    noise_clips(const std::string noiseIndexFile, const std::string noiseRoot);
     virtual ~noise_clips();
     void addNoise(cv::Mat& wav_mat,
                   bool add_noise,
@@ -34,7 +34,7 @@ public:
 
 
 private:
-    void load_index(const std::string& index_file);
+    void load_index(const std::string& index_file, const std::string& root_dir);
     void load_data();
     void read_noise(std::string& noise_file, int* dataLen);
 

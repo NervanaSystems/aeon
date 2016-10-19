@@ -1,6 +1,7 @@
 # ChangeLog
 
 ## v0.2.3 (2016-10-18)
+* Add noise_root path option for relative noise index files
 * Bug fix for filterbank shaping
 * Bug fix for stereo image provider creation
 

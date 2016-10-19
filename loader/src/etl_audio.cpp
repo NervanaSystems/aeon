@@ -45,7 +45,7 @@ audio::transformer::transformer(const audio::config& config) :
         specgram::create_filterbanks(_cfg.num_filters, _cfg.frame_length_tn, _cfg.sample_freq_hz,
                                      _filterbank);
     }
-    _noisemaker = make_shared<noise_clips>(_cfg.noise_index_file);
+    _noisemaker = make_shared<noise_clips>(_cfg.noise_index_file, _cfg.noise_root);
 
 }
 
