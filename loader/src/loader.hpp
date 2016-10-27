@@ -135,7 +135,7 @@ private:
         ADD_SCALAR(minibatch_size, mode::REQUIRED),
         ADD_SCALAR(cache_directory, mode::OPTIONAL),
         ADD_SCALAR(macrobatch_size, mode::OPTIONAL),
-        ADD_SCALAR(subset_fraction, mode::OPTIONAL),
+        ADD_SCALAR(subset_fraction, mode::OPTIONAL, [](decltype(subset_fraction) v){ return v <= 1.0 && v >= 0.0; }),
         ADD_SCALAR(shuffle_every_epoch, mode::OPTIONAL),
         ADD_SCALAR(shuffle_manifest, mode::OPTIONAL),
         ADD_SCALAR(single_thread, mode::OPTIONAL),

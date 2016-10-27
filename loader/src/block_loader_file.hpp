@@ -41,7 +41,7 @@ public:
 
 private:
     off_t getFileSize(const std::string& filename);
+    void generate_subset(const std::shared_ptr<nervana::manifest_csv>& manifest, float subset_fraction);
 
     const std::shared_ptr<nervana::manifest_csv> _manifest;
-    float _subset_fraction;
 };

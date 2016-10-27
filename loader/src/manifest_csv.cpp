@@ -126,3 +126,28 @@ void manifest_csv::shuffle_filename_lists()
     // changing random seed, so don't use a changing random seed.
     std::shuffle(_filename_lists.begin(), _filename_lists.end(), std::mt19937(0));
 }
+
+void manifest_csv::generate_subset(float subset_fraction)
+{
+    if (subset_fraction < 1.0)
+    {
+        std::bernoulli_distribution distribution(subset_fraction);
+        std::default_random_engine generator(get_global_random_seed());
+        vector<FilenameList> tmp;
+        tmp.swap(_filename_lists);
+        size_t expected_count = tmp.size() * subset_fraction;
+        size_t needed = expected_count;
+
+        for (int i=0; i<tmp.size(); i++)
+        {
+            size_t remainder = tmp.size() - i;
+            if ((needed == remainder) || distribution(generator))
+            {
+                _filename_lists.push_back(tmp[i]);
+                needed--;
+                if (needed == 0) break;
+            }
+        }
+//        cout << __FILE__ << " " << __LINE__ << " expected=" << expected_count << ", actual=" << _filename_lists.size() << endl;
+    }
+}

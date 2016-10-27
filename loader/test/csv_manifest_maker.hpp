@@ -18,8 +18,24 @@
 #include <string>
 #include <vector>
 
-std::string tmp_filename();
-std::string tmp_zero_file(uint32_t size);
-std::string tmp_manifest_file(uint32_t num_records, std::vector<uint32_t> sizes);
-std::string tmp_manifest_file_with_invalid_filename();
-std::string tmp_manifest_file_with_ragged_fields();
+class manifest_maker
+{
+public:
+    manifest_maker(uint32_t num_records, std::vector<uint32_t> sizes);
+    manifest_maker();
+    ~manifest_maker();
+
+    std::string get_manifest_name();
+
+    std::string tmp_filename();
+    std::string tmp_zero_file(uint32_t size);
+    std::string tmp_manifest_file(uint32_t num_records, std::vector<uint32_t> sizes);
+    std::string tmp_manifest_file_with_invalid_filename();
+    std::string tmp_manifest_file_with_ragged_fields();
+    std::string tmp_file_repeating(uint32_t size, uint32_t x);
+    void remove_files();
+
+    std::string manifest_name;
+
+    std::vector<std::string> tmp_filenames;
+};

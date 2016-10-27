@@ -22,50 +22,51 @@
 #include <iostream>
 #include <vector>
 #include <cstdio>
+#include <unistd.h>
 
 using namespace std;
 
-vector<string> tmp_filenames;
+manifest_maker::manifest_maker(uint32_t num_records, std::vector<uint32_t> sizes)
+{
+    manifest_name = tmp_manifest_file(num_records, sizes);
+}
 
-void remove_files() {
-    for(auto it = tmp_filenames.begin(); it != tmp_filenames.end(); ++it) {
-        remove(it->c_str());
+manifest_maker::manifest_maker()
+{
+}
+
+manifest_maker::~manifest_maker()
+{
+    remove_files();
+}
+
+std::string manifest_maker::get_manifest_name()
+{
+    return manifest_name;
+}
+
+
+void manifest_maker::remove_files()
+{
+    for(auto it : tmp_filenames)
+    {
+        remove(it.c_str());
     }
 }
 
-void register_atexit() {
-    // register an atexit to clean up files, and only ever do it once
-    static bool registered = false;
-    if(!registered) {
-        atexit(remove_files);
-        registered = true;
-    }
-}
-
-string tmp_filename() {
+string manifest_maker::tmp_filename()
+{
     char *tmpname = strdup("/tmp/tmpfileXXXXXX");
-    mkstemp(tmpname);
+
+    // mkstemp opens the file with open() so we need to close it
+    close(mkstemp(tmpname));
+
     tmp_filenames.push_back(tmpname);
-    register_atexit();
     return tmpname;
 }
 
-string tmp_file_repeating(uint32_t size, uint32_t x) {
-    // create a temp file of `size` bytes filled with uint32_t x
-    string tmpname = tmp_filename();
-    ofstream f(tmpname, ios::binary);
-
-    uint32_t repeats = size / sizeof(x);
-    for(uint32_t i = 0; i < repeats; ++i) {
-        f.write(reinterpret_cast <const char*>(&x), sizeof(x));
-    }
-
-    f.close();
-
-    return tmpname;
-}
-
-string tmp_manifest_file(uint32_t num_records, vector<uint32_t> sizes) {
+string manifest_maker::tmp_manifest_file(uint32_t num_records, vector<uint32_t> sizes)
+{
     string tmpname = tmp_filename();
     ofstream f(tmpname);
 
@@ -86,7 +87,24 @@ string tmp_manifest_file(uint32_t num_records, vector<uint32_t> sizes) {
     return tmpname;
 }
 
-std::string tmp_manifest_file_with_invalid_filename() {
+string manifest_maker::tmp_file_repeating(uint32_t size, uint32_t x)
+{
+    // create a temp file of `size` bytes filled with uint32_t x
+    string tmpname = tmp_filename();
+    ofstream f(tmpname, ios::binary);
+
+    uint32_t repeats = size / sizeof(x);
+    for(uint32_t i = 0; i < repeats; ++i) {
+        f.write(reinterpret_cast <const char*>(&x), sizeof(x));
+    }
+
+    f.close();
+
+    return tmpname;
+}
+
+std::string manifest_maker::tmp_manifest_file_with_invalid_filename()
+{
     string tmpname = tmp_filename();
     ofstream f(tmpname);
 
@@ -99,7 +117,8 @@ std::string tmp_manifest_file_with_invalid_filename() {
     return tmpname;
 }
 
-std::string tmp_manifest_file_with_ragged_fields() {
+std::string manifest_maker::tmp_manifest_file_with_ragged_fields()
+{
     string tmpname = tmp_filename();
     ofstream f(tmpname);
 

@@ -53,6 +53,8 @@ namespace nervana {
         iter begin() const { return _filename_lists.begin(); }
         iter end() const { return _filename_lists.end(); }
 
+        void generate_subset(float subset_fraction);
+
     protected:
         void parse_stream(std::istream& is);
         void shuffle_filename_lists();

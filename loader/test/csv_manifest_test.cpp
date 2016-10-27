@@ -31,32 +31,41 @@
 using namespace std;
 using namespace nervana;
 
-TEST(manifest, constructor) {
-    string tmpname = tmp_manifest_file(0, {0, 0});
+TEST(manifest, constructor)
+{
+    manifest_maker mm;
+    string tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest0(tmpname, false);
 }
 
-TEST(manifest, no_file) {
+TEST(manifest, no_file)
+{
     ASSERT_THROW(nervana::manifest_csv manifest0(
         "/tmp/jsdkfjsjkfdjaskdfj_doesnt_exist", false
     ), std::runtime_error);
 }
 
-TEST(manifest, id_eq) {
-    string tmpname = tmp_manifest_file(0, {0, 0});
+TEST(manifest, id_eq)
+{
+    manifest_maker mm;
+    string tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest1(tmpname, false);
     nervana::manifest_csv manifest2(tmpname, false);
     ASSERT_EQ(manifest1.cache_id(), manifest2.cache_id());
 }
 
-TEST(manifest, id_ne) {
-    nervana::manifest_csv manifest1(tmp_manifest_file(0, {0, 0}), false);
-    nervana::manifest_csv manifest2(tmp_manifest_file(0, {0, 0}), false);
+TEST(manifest, id_ne)
+{
+    manifest_maker mm;
+    nervana::manifest_csv manifest1(mm.tmp_manifest_file(0, {0, 0}), false);
+    nervana::manifest_csv manifest2(mm.tmp_manifest_file(0, {0, 0}), false);
     ASSERT_NE(manifest1.cache_id(), manifest2.cache_id());
 }
 
-TEST(manifest, version_eq) {
-    string tmpname = tmp_manifest_file(0, {0, 0});
+TEST(manifest, version_eq)
+{
+    manifest_maker mm;
+    string tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest1(tmpname, false);
     nervana::manifest_csv manifest2(tmpname, false);
     ASSERT_EQ(manifest1.version(), manifest2.version());
@@ -76,8 +85,10 @@ void touch(const std::string& filename)
     assert(!rc);
 }
 
-TEST(manifest, version_ne) {
-    string tmpname = tmp_manifest_file(0, {0, 0});
+TEST(manifest, version_ne)
+{
+    manifest_maker mm;
+    string tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest0(tmpname, false);
     string v1 = manifest0.version();
 
@@ -89,22 +100,28 @@ TEST(manifest, version_ne) {
     ASSERT_NE(v1, v2);
 }
 
-TEST(manifest, parse_file_doesnt_exist) {
-    string tmpname = tmp_manifest_file(0, {0, 0});
+TEST(manifest, parse_file_doesnt_exist)
+{
+    manifest_maker mm;
+    string tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest0(tmpname, false);
 
     ASSERT_EQ(manifest0.objectCount(), 0);
 }
 
-TEST(manifest, parse_file) {
-    string tmpname = tmp_manifest_file(2, {0, 0});
+TEST(manifest, parse_file)
+{
+    manifest_maker mm;
+    string tmpname = mm.tmp_manifest_file(2, {0, 0});
 
     nervana::manifest_csv manifest0(tmpname, false);
     ASSERT_EQ(manifest0.objectCount(), 2);
 }
 
-TEST(manifest, no_shuffle) {
-    string filename = tmp_manifest_file(20, {4, 4});
+TEST(manifest, no_shuffle)
+{
+    manifest_maker mm;
+    string filename = mm.tmp_manifest_file(20, {4, 4});
     nervana::manifest_csv manifest1(filename, false);
     nervana::manifest_csv manifest2(filename, false);
 
@@ -114,8 +131,10 @@ TEST(manifest, no_shuffle) {
     }
 }
 
-TEST(manifest, shuffle) {
-    string filename = tmp_manifest_file(20, {4, 4});
+TEST(manifest, shuffle)
+{
+    manifest_maker mm;
+    string filename = mm.tmp_manifest_file(20, {4, 4});
     nervana::manifest_csv manifest1(filename, false);
     nervana::manifest_csv manifest2(filename, true);
 
@@ -129,21 +148,26 @@ TEST(manifest, shuffle) {
     ASSERT_EQ(different, true);
 }
 
-TEST(manifest, non_paired_manifests) {
+TEST(manifest, non_paired_manifests)
+{
     {
-        string filename = tmp_manifest_file(20, {4, 4, 4});
+        manifest_maker mm;
+        string filename = mm.tmp_manifest_file(20, {4, 4, 4});
         nervana::manifest_csv manifest1(filename, false);
         ASSERT_EQ(manifest1.objectCount(), 20);
     }
     {
-        string filename = tmp_manifest_file(20, {4});
+        manifest_maker mm;
+        string filename = mm.tmp_manifest_file(20, {4});
         nervana::manifest_csv manifest1(filename, false);
         ASSERT_EQ(manifest1.objectCount(), 20);
     }
 }
 
-TEST(manifest, uneven_records) {
-    string filename = tmp_manifest_file_with_ragged_fields();
+TEST(manifest, uneven_records)
+{
+    manifest_maker mm;
+    string filename = mm.tmp_manifest_file_with_ragged_fields();
     try {
         nervana::manifest_csv manifest1(filename, false);
         FAIL();

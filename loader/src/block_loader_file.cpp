@@ -28,11 +28,12 @@ block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst,
                                      float subset_fraction,
                                      uint32_t block_size)
 : block_loader(block_size),
-  _manifest(mfst),
-  _subset_fraction(subset_fraction)
+  _manifest(mfst)
 {
-    affirm(_subset_fraction > 0.0 && _subset_fraction <= 1.0,
+    affirm(subset_fraction > 0.0 && subset_fraction <= 1.0,
            "subset_fraction must be >= 0 and <= 1");
+
+    _manifest->generate_subset(subset_fraction);
 }
 
 void block_loader_file::loadBlock(nervana::buffer_in_array& dest, uint32_t block_num)
@@ -46,15 +47,6 @@ void block_loader_file::loadBlock(nervana::buffer_in_array& dest, uint32_t block
     // hold the requested block
     size_t begin_i = block_num * _block_size;
     size_t end_i = min((block_num + 1) * (size_t)_block_size, _manifest->objectCount());
-
-    if (_subset_fraction != 1.0) {
-        // adjust end_i in relation to begin_i.  We want to scale (end_i
-        // - begin_i) by _subset_fraction.  In the case of a smaller block
-        // than block_size (in the last block), we want _subset_fraction
-        // of them so we need to make sure we first shorten the end_i to
-        // the corrent smaller block size, and then scale that.
-        end_i = begin_i + (((end_i - begin_i) * _subset_fraction));
-    }
 
     // ensure we stay within bounds of manifest
     affirm(begin_i <= _manifest->objectCount(), "block_loader_file begin outside manifest bounds");
@@ -110,13 +102,5 @@ off_t block_loader_file::getFileSize(const string& filename)
 
 uint32_t block_loader_file::objectCount()
 {
-    if (_subset_fraction == 1.0) {
-        return _manifest->objectCount();
-    } else {
-        uint32_t full_block_count = int(_manifest->objectCount() / _block_size);
-        uint32_t subset_object_count = full_block_count * int(_block_size * _subset_fraction);
-        uint32_t leftover_object_count = _manifest->objectCount() - full_block_count * _block_size;
-        subset_object_count += (leftover_object_count * _subset_fraction);
-        return subset_object_count;
-    }
+    return _manifest->objectCount();
 }
