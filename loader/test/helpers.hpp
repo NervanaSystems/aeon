@@ -27,8 +27,6 @@ void dump_vector_of_strings(std::vector<std::string>& words);
 
 void assert_vector_unique(std::vector<std::string>& words);
 
-std::vector<char> read_file_contents(const std::string& path);
-
 class image_params_builder {
 public:
     image_params_builder(std::shared_ptr<nervana::image::params> _obj) { obj = _obj; }

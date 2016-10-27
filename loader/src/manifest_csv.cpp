@@ -21,14 +21,17 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <iomanip>
+
 #include "manifest_csv.hpp"
 #include "util.hpp"
+#include "file_util.hpp"
 
 using namespace std;
 using namespace nervana;
 
-manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root)
-: _filename(filename), _root(root), _shuffle(shuffle)
+manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root, float subset_fraction) :
+    _filename(filename)
 {
     // for now parse the entire manifest on creation
     ifstream infile(_filename);
@@ -38,7 +41,18 @@ manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& r
         throw std::runtime_error("Manifest file " + _filename + " doesn't exist.");
     }
 
-    parse_stream(infile);
+    parse_stream(infile, root);
+
+    // If we don't need to shuffle, there may be small performance
+    // benefits in some situations to stream the filename_lists instead
+    // of loading them all at once.  That said, in the event that there
+    // is no cache and we are resuming training at a specific epoch, we
+    // may need to be able to jump around and read random blocks of the
+    // file, so a purely stream based interface is not sufficient.
+    if(shuffle) {
+        shuffle_filename_lists();
+    }
+
 }
 
 string manifest_csv::cache_id()
@@ -46,24 +60,18 @@ string manifest_csv::cache_id()
     // returns a hash of the _filename
     std::size_t h = std::hash<std::string>()(_filename);
     stringstream ss;
-    ss << std::hex << h;
+    ss << setfill('0') << setw(16) << hex << h;
     return ss.str();
 }
 
 string manifest_csv::version()
 {
-    // return the manifest version (just the file timestamp in this case)
-    struct stat stats;
-
-    if (stat(_filename.c_str(), &stats) == -1)
-    {
-        throw std::runtime_error("Could not find manifest file " + _filename);
-    }
-
-    return to_string(stats.st_mtime);
+    stringstream ss;
+    ss << setfill('0') << setw(8) << hex << get_crc();
+    return ss.str();
 }
 
-void manifest_csv::parse_stream(istream& is)
+void manifest_csv::parse_stream(istream& is, const string& root)
 {
     // parse istream is and load the entire thing into _filename_lists
     uint32_t prev_num_fields = 0, lineno = 0;
@@ -79,9 +87,9 @@ void manifest_csv::parse_stream(istream& is)
         }
 
         vector<string> field_list = split(line, ',');
-        if(!_root.empty()) {
+        if(!root.empty()) {
             for(int i=0; i<field_list.size(); i++) {
-                field_list[i] = path_join(_root, field_list[i]);
+                field_list[i] = file_util::path_join(root, field_list[i]);
             }
         }
 
@@ -103,16 +111,6 @@ void manifest_csv::parse_stream(istream& is)
         _filename_lists.push_back(field_list);
         lineno++;
     }
-
-    // If we don't need to shuffle, there may be small performance
-    // benefits in some situations to stream the filename_lists instead
-    // of loading them all at once.  That said, in the event that there
-    // is no cache and we are resuming training at a specific epoch, we
-    // may need to be able to jump around and read random blocks of the
-    // file, so a purely stream based interface is not sufficient.
-    if(_shuffle) {
-        shuffle_filename_lists();
-    }
 }
 
 void manifest_csv::shuffle_filename_lists()
@@ -131,6 +129,7 @@ void manifest_csv::generate_subset(float subset_fraction)
 {
     if (subset_fraction < 1.0)
     {
+        crc_computed = false;
         std::bernoulli_distribution distribution(subset_fraction);
         std::default_random_engine generator(get_global_random_seed());
         vector<FilenameList> tmp;
@@ -150,4 +149,21 @@ void manifest_csv::generate_subset(float subset_fraction)
         }
 //        cout << __FILE__ << " " << __LINE__ << " expected=" << expected_count << ", actual=" << _filename_lists.size() << endl;
     }
+}
+
+uint32_t manifest_csv::get_crc()
+{
+    if (crc_computed == false)
+    {
+        for(const vector<string>& tmp : _filename_lists)
+        {
+            for(const string& s : tmp)
+            {
+                crc_engine.Update((const uint8_t*)s.data(), s.size());
+            }
+        }
+        crc_engine.TruncatedFinal((uint8_t*)&computed_crc, sizeof(computed_crc));
+        crc_computed = true;
+    }
+    return computed_crc;
 }

@@ -117,5 +117,4 @@ namespace nervana {
     void set_global_random_seed(uint32_t newval);
     uint32_t get_global_random_seed();
     cv::Mat read_audio_from_mem(const char* item, int itemSize);
-    std::string path_join(const std::string& s1, const std::string& s2);
 }

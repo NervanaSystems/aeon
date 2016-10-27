@@ -25,8 +25,8 @@ namespace nervana {
 class nervana::block_iterator_sequential : public block_iterator {
 public:
     block_iterator_sequential(std::shared_ptr<block_loader> loader);
-    void read(nervana::buffer_in_array& dest);
-    void reset();
+    void read(nervana::buffer_in_array& dest) override;
+    void reset() override;
 
 private:
     std::shared_ptr<block_loader> _loader;

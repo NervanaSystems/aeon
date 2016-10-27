@@ -1,0 +1,58 @@
+/*
+ Copyright 2016 Nervana Systems Inc.
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
+#pragma once
+
+#include <string>
+#include <vector>
+#include <functional>
+
+namespace nervana
+{
+    class file_util;
+}
+
+//class nervana::temp_file
+//{
+//public:
+//    temp_file();
+//    ~temp_file();
+
+//private:
+//    std::string     name;
+
+//};
+
+class nervana::file_util
+{
+public:
+    static std::string path_join(const std::string& s1, const std::string& s2);
+    static off_t get_file_size(const std::string& filename);
+    static void remove_directory(const std::string& dir);
+    static bool make_directory(const std::string& dir);
+    static std::string make_temp_directory(const std::string& path="");
+    static std::string get_temp_directory();
+    static void remove_file(const std::string& file);
+    static std::vector<char> read_file_contents(const std::string& path);
+    static void iterate_files(const std::string& path, std::function<void(const std::string& file)> func);
+    static std::string tmp_filename(const std::string& extension="");
+    static void touch(const std::string& filename);
+    static bool exists(const std::string& filename);
+    static int try_get_lock(const std::string& filename);
+    static void release_lock(int fd, const std::string& filename);
+
+private:
+    static int rm(const char *path, const struct stat *s, int flag, struct FTW *f);
+};

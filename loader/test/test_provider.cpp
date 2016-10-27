@@ -9,6 +9,7 @@
 #include "json.hpp"
 #include "cpio.hpp"
 #include "util.hpp"
+#include "file_util.hpp"
 #include "provider_factory.hpp"
 #include "loader.hpp"
 #include "helpers.hpp"
@@ -138,8 +139,8 @@ TEST(provider, blob)
                           }
                          }};
 
-    vector<char> input_left = read_file_contents(CURDIR"/test_data/img_2112_70.jpg");
-    vector<char> input_right = read_file_contents(CURDIR"/test_data/img_2112_70.jpg");
+    vector<char> input_left  = file_util::read_file_contents(CURDIR"/test_data/img_2112_70.jpg");
+    vector<char> input_right = file_util::read_file_contents(CURDIR"/test_data/img_2112_70.jpg");
 
     // flip input_left
     vector<uint8_t> tmp;

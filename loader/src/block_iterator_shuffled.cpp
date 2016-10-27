@@ -29,7 +29,7 @@ block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader
 {
     // fill indices with integers from  0 to _count.  indices can then be
     // shuffled and used to iterate randomly through the blocks.
-    _indices.resize(_loader->blockCount());
+    _indices.resize(_loader->block_count());
     iota(_indices.begin(), _indices.end(), 0);
     shuffle();
     _it = _indices.begin();
@@ -42,7 +42,7 @@ void block_iterator_shuffled::shuffle()
 
 void block_iterator_shuffled::read(nervana::buffer_in_array &dest)
 {
-    _loader->loadBlock(dest, *_it);
+    _loader->load_block(dest, *_it);
 
     // shuffle the objects in BufferPair dest
     // seed the shuffle with the seed passed in the constructor + the _epoch

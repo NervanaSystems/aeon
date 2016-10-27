@@ -186,7 +186,7 @@ public:
     PyObject* shapes();
     PyObject* next(int bufIdx);
 
-    int itemCount() { return _block_loader->objectCount(); }
+    int itemCount() { return _block_loader->object_count(); }
 
 private:
     void drain();

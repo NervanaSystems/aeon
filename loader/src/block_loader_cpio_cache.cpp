@@ -16,44 +16,57 @@
 #include <errno.h>
 #include <dirent.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <stdio.h>
-#include <ftw.h>
 
 #include "cpio.hpp"
 #include "block_loader_cpio_cache.hpp"
+#include "file_util.hpp"
 
 using namespace std;
 using namespace nervana;
 
-// maximum number of files opened by nftw file enumeration function
-// For some platforms (older linux), OPEN_MAX needs to be defined
-#ifndef OPEN_MAX
-#define OPEN_MAX 128
-#endif
-
 block_loader_cpio_cache::block_loader_cpio_cache(const string& rootCacheDir,
                                                  const string& cache_id,
                                                  const string& version,
-                                                 shared_ptr<block_loader> loader)
-: block_loader(loader->blockSize()), _loader(loader)
+                                                 shared_ptr<block_loader> loader) :
+    block_loader(loader->block_size()),
+    _loader(loader),
+    block_count{loader->block_count()},
+    cache_owner{false}
 {
-    invalidateOldCache(rootCacheDir, cache_id, version);
+    invalidate_old_cache(rootCacheDir, cache_id, version);
 
-    _cacheDir = rootCacheDir + "/" + cache_id + "_" + version;
+    _cacheDir = file_util::path_join(rootCacheDir, cache_id + "_" + version);
 
-    makeDirectory(_cacheDir);
+    if(file_util::make_directory(_cacheDir))
+    {
+        // If I successfully created the directory then it did not exist.
+        // Therefore I am the owner and must write the end-of-data file
+        cache_owner = true;
+    }
+
+    if(check_if_complete() == false) {
+        if(take_ownership() == false) {
+            throw std::runtime_error("dataloader cache incomplete, try again later");
+        }
+    }
 }
 
-void block_loader_cpio_cache::loadBlock(buffer_in_array& dest, uint32_t block_num)
+void block_loader_cpio_cache::load_block(buffer_in_array& dest, uint32_t block_num)
 {
-    if(loadBlockFromCache(dest, block_num)) {
+    if(load_block_from_cache(dest, block_num)) {
         return;
     } else {
-        _loader->loadBlock(dest, block_num);
+        _loader->load_block(dest, block_num);
 
         try {
-            writeBlockToCache(dest, block_num);
+            write_block_to_cache(dest, block_num);
+
+            if(block_num == block_count-1)
+            {
+                mark_cache_complete();
+                release_ownership();
+            }
         } catch (std::exception& e) {
             // failure to write block to cache doesn't stop execution, only print an error
             cerr << "ERROR writing block to cache: " << e.what() << endl;
@@ -61,13 +74,13 @@ void block_loader_cpio_cache::loadBlock(buffer_in_array& dest, uint32_t block_nu
     }
 }
 
-bool block_loader_cpio_cache::loadBlockFromCache(buffer_in_array& dest, uint32_t block_num)
+bool block_loader_cpio_cache::load_block_from_cache(buffer_in_array& dest, uint32_t block_num)
 {
     // load a block from cpio cache into dest.  If file doesn't exist, return false.
     //  If loading from cpio cache was successful return true.
     cpio::file_reader reader;
 
-    if(!reader.open(blockFilename(block_num))) {
+    if(!reader.open(block_filename(block_num))) {
         // couldn't load the file
         return false;
     }
@@ -89,15 +102,15 @@ bool block_loader_cpio_cache::loadBlockFromCache(buffer_in_array& dest, uint32_t
     return true;
 }
 
-void block_loader_cpio_cache::writeBlockToCache(buffer_in_array& buff, uint32_t block_num)
+void block_loader_cpio_cache::write_block_to_cache(buffer_in_array& buff, uint32_t block_num)
 {
     cpio::file_writer writer;
-    writer.open(blockFilename(block_num));
+    writer.open(block_filename(block_num));
     writer.write_all_records(buff);
     writer.close();
 }
 
-void block_loader_cpio_cache::invalidateOldCache(const string& rootCacheDir,
+void block_loader_cpio_cache::invalidate_old_cache(const string& rootCacheDir,
                                                  const string& cache_id,
                                                  const string& version)
 {
@@ -107,8 +120,8 @@ void block_loader_cpio_cache::invalidateOldCache(const string& rootCacheDir,
     struct dirent *ent;
     if((dir = opendir(rootCacheDir.c_str())) != NULL) {
         while((ent = readdir(dir)) != NULL) {
-            if(filenameHoldsInvalidCache(ent->d_name, cache_id, version)) {
-                removeDirectory(rootCacheDir + "/" + ent->d_name);
+            if(filename_holds_invalid_cache(ent->d_name, cache_id, version)) {
+                file_util::remove_directory(file_util::path_join(rootCacheDir, ent->d_name));
             }
         }
         closedir(dir);
@@ -118,7 +131,7 @@ void block_loader_cpio_cache::invalidateOldCache(const string& rootCacheDir,
     }
 }
 
-bool block_loader_cpio_cache::filenameHoldsInvalidCache(const string& filename,
+bool block_loader_cpio_cache::filename_holds_invalid_cache(const string& filename,
                                                         const string& cache_id,
                                                         const string& version)
 {
@@ -137,54 +150,39 @@ bool block_loader_cpio_cache::filenameHoldsInvalidCache(const string& filename,
     return false;
 }
 
-int block_loader_cpio_cache::rm(const char *path, const struct stat *s, int flag, struct FTW *f)
+string block_loader_cpio_cache::block_filename(uint32_t block_num)
 {
-    // see http://stackoverflow.com/a/1149837/2093984
-    // Call unlink or rmdir on the path, as appropriate.
-    int (*rm_func)(const char *);
-
-    switch(flag) {
-        default:     rm_func = unlink; break;
-        case FTW_DP: rm_func = rmdir;
-    }
-
-    int status = rm_func(path);
-    if(status != 0) {
-        stringstream message;
-        message << "error deleting file " << path;
-        throw std::runtime_error(message.str());
-    }
-
-    return status;
+    string file = to_string(block_num) + "-" + to_string(_block_size) + ".cpio";
+    string rc = file_util::path_join(_cacheDir, file);
+    return rc;
 }
 
-void block_loader_cpio_cache::removeDirectory(const string& dir)
+uint32_t block_loader_cpio_cache::object_count()
 {
-    // see http://stackoverflow.com/a/1149837/2093984
-    // FTW_DEPTH: handle directories after its contents
-    // FTW_PHYS: do not follow symbolic links
-    if(nftw(dir.c_str(), rm, OPEN_MAX, FTW_DEPTH | FTW_PHYS)) {
-        throw std::runtime_error("error deleting directory " + dir);
-    }
+    return _loader->object_count();
 }
 
-void block_loader_cpio_cache::makeDirectory(const string& dir)
+bool block_loader_cpio_cache::check_if_complete()
 {
-    if(mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) {
-        if(errno == EEXIST) {
-            // not really an error, the directory already exists
-            return;
-        }
-        throw std::runtime_error("error making directory " + dir + " " + strerror(errno));
-    }
+    string file = file_util::path_join(_cacheDir, cache_complete_filename);
+    return file_util::exists(file);
 }
 
-string block_loader_cpio_cache::blockFilename(uint32_t block_num)
+void block_loader_cpio_cache::mark_cache_complete()
 {
-     return _cacheDir + "/" + to_string(block_num) + "-" + to_string(_block_size) + ".cpio";
+    string file = file_util::path_join(_cacheDir, cache_complete_filename);
+    ofstream f{file};
 }
 
-uint32_t block_loader_cpio_cache::objectCount()
+bool block_loader_cpio_cache::take_ownership()
 {
-    return _loader->objectCount();
+    string file = file_util::path_join(_cacheDir, owner_lock_filename);
+    ownership_lock = file_util::try_get_lock(file);
+    return ownership_lock != -1;
+}
+
+void block_loader_cpio_cache::release_ownership()
+{
+    string file = file_util::path_join(_cacheDir, owner_lock_filename);
+    file_util::release_lock(ownership_lock, file);
 }

@@ -13,9 +13,6 @@
  limitations under the License.
 */
 
-#include "gtest/gtest.h"
-#include "manifest_csv.hpp"
-#include "csv_manifest_maker.hpp"
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/time.h>
@@ -25,8 +22,17 @@
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <memory>
 
+#include <chrono>
+
+#include "gtest/gtest.h"
+#include "manifest_csv.hpp"
+#include "csv_manifest_maker.hpp"
 #include "util.hpp"
+#include "file_util.hpp"
+#include "manifest_csv.hpp"
+#include "crc.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -69,35 +75,6 @@ TEST(manifest, version_eq)
     nervana::manifest_csv manifest1(tmpname, false);
     nervana::manifest_csv manifest2(tmpname, false);
     ASSERT_EQ(manifest1.version(), manifest2.version());
-}
-
-void touch(const std::string& filename)
-{
-    // inspired by http://chris-sharpe.blogspot.com/2013/05/better-than-systemtouch.html
-    int fd = open(
-         filename.c_str(), O_WRONLY|O_CREAT|O_NOCTTY|O_NONBLOCK, 0666
-    );
-    assert(fd>=0);
-    close(fd);
-
-    // update timestamp for filename
-    int rc = utimes(filename.c_str(), nullptr);
-    assert(!rc);
-}
-
-TEST(manifest, version_ne)
-{
-    manifest_maker mm;
-    string tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_csv manifest0(tmpname, false);
-    string v1 = manifest0.version();
-
-    sleep(1);
-    touch(tmpname);
-
-    string v2 = manifest0.version();
-
-    ASSERT_NE(v1, v2);
 }
 
 TEST(manifest, parse_file_doesnt_exist)
@@ -241,3 +218,61 @@ TEST(manifest, root_path)
     }
     remove(manifest_file.c_str());
 }
+
+TEST(manifest, crc)
+{
+    const string input = "123456789";
+    uint32_t expected = 0xe3069283;
+    uint32_t actual = 0;
+
+    CryptoPP::CRC32C crc;
+    crc.Update((const uint8_t*)input.data(), input.size());
+    crc.TruncatedFinal((uint8_t*)&actual, sizeof(actual));
+
+//    cout << "expected 0x" << setfill('0') << setw(2) << hex << expected << dec << endl;
+//    cout << "actual   0x" << setfill('0') << setw(2) << hex << actual << dec << endl;
+
+    EXPECT_EQ(expected, actual);
+}
+
+//TEST(manifest, performance)
+//{
+//    string manifest_filename = file_util::tmp_filename();
+//    string cache_root = "/this/is/supposed/to/be/long/so/we/make/it/so/";
+//    cout << "tmp manifest file " << manifest_filename << endl;
+
+//    chrono::high_resolution_clock timer;
+
+//    // Generate a manifest file
+//    {
+//        auto startTime = timer.now();
+//        ofstream mfile(manifest_filename);
+//        for(int i=0; i<10e6; i++)
+//        {
+//            mfile << cache_root << "image_" << i << ".jpg,";
+//            mfile << cache_root << "target_" << i << ".txt\n";
+//        }
+//        auto endTime = timer.now();
+//        cout << "create manifest " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" << endl;
+//    }
+
+//    // Parse the manifest file
+//    shared_ptr<manifest_csv> manifest;
+//    {
+//        auto startTime = timer.now();
+//        manifest = make_shared<manifest_csv>(manifest_filename, false);
+//        auto endTime = timer.now();
+//        cout << "load manifest " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" << endl;
+//    }
+
+//    // compute the CRC
+//    {
+//        auto startTime = timer.now();
+//        uint32_t crc = manifest->get_crc();
+//        auto endTime = timer.now();
+//        cout << "manifest crc 0x" << setfill('0') << setw(8) << hex << crc << dec << endl;
+//        cout << "crc time " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" << endl;
+//    }
+
+//    remove(manifest_filename.c_str());
+//}

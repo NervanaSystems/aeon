@@ -13,8 +13,6 @@
  limitations under the License.
 */
 
-#include "csv_manifest_maker.hpp"
-
 #include <string.h>
 #include <stdlib.h>
 #include <fstream>
@@ -24,7 +22,11 @@
 #include <cstdio>
 #include <unistd.h>
 
+#include "csv_manifest_maker.hpp"
+#include "file_util.hpp"
+
 using namespace std;
+using namespace nervana;
 
 manifest_maker::manifest_maker(uint32_t num_records, std::vector<uint32_t> sizes)
 {
@@ -56,11 +58,7 @@ void manifest_maker::remove_files()
 
 string manifest_maker::tmp_filename()
 {
-    char *tmpname = strdup("/tmp/tmpfileXXXXXX");
-
-    // mkstemp opens the file with open() so we need to close it
-    close(mkstemp(tmpname));
-
+    string tmpname = file_util::tmp_filename();
     tmp_filenames.push_back(tmpname);
     return tmpname;
 }

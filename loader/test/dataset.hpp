@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 
 #include "cpio.hpp"
+#include "file_util.hpp"
 
 template<typename T>
 class dataset
@@ -61,7 +62,7 @@ public:
             int remainder = _setSize;
             while(remainder > 0) {
                 int batchSize = std::min(remainder,_maxItems);
-                std::string fileName = _path + "/" + _prefix + std::to_string(fileNo++) + ".cpio";
+                std::string fileName = nervana::file_util::path_join(_path, _prefix + std::to_string(fileNo++) + ".cpio");
                 _fileList.push_back(fileName);
                 nervana::cpio::file_writer writer;
                 writer.open(fileName);

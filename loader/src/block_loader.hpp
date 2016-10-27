@@ -21,41 +21,21 @@
  * A block_loader is something which can load blocks of data into a buffer_in_array
  */
 
-namespace nervana {
+namespace nervana
+{
     class block_loader;
-    class block_loader_alphabet;
-    class block_loader_random;
 }
 
-class nervana::block_loader {
+class nervana::block_loader
+{
 public:
-    virtual void loadBlock(nervana::buffer_in_array& dest, uint32_t block_num) = 0;
-    virtual uint32_t objectCount() = 0;
+    virtual void load_block(nervana::buffer_in_array& dest, uint32_t block_num) = 0;
+    virtual uint32_t object_count() = 0;
 
-    uint32_t blockCount();
-    uint32_t blockSize();
+    uint32_t block_count();
+    uint32_t block_size();
 
 protected:
     block_loader(uint32_t block_size);
     uint32_t _block_size;
-};
-
-
-// mock alphabet block loader for use in tests
-class nervana::block_loader_alphabet : public block_loader {
-public:
-    block_loader_alphabet(uint32_t block_size);
-    void loadBlock(nervana::buffer_in_array &dest, uint32_t block_num);
-    uint32_t objectCount() { return 26 * _block_size; }
-};
-
-
-// Random block loader used for tests
-class nervana::block_loader_random : public block_loader {
-public:
-    block_loader_random(uint32_t block_size) : block_loader(block_size) {}
-    void loadBlock(nervana::buffer_in_array &dest, uint32_t block_num);
-    uint32_t objectCount() { return 10; } // Not really correct, but unused for tests
-
-    static std::string randomString();
 };

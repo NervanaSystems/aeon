@@ -18,6 +18,7 @@
 #include "helpers.hpp"
 #include "block_iterator_shuffled.hpp"
 #include "block_iterator_sequential.hpp"
+#include "block_loader_util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -28,9 +29,9 @@ TEST(block_iterator_shuffled, sequential_block) {
 
     // ensure that loading successive blocks from block_loader_sequential
     // result in sorted strings
-    bl.loadBlock(bp, 0);
-    bl.loadBlock(bp, 1);
-    bl.loadBlock(bp, 2);
+    bl.load_block(bp, 0);
+    bl.load_block(bp, 1);
+    bl.load_block(bp, 2);
 
     vector<string> words = buffer_to_vector_of_strings(*bp[0]);
 
@@ -42,11 +43,11 @@ TEST(block_iterator_shuffled, shuffled_block) {
     block_iterator_shuffled bis(mbl);
     buffer_in_array bp(2);
 
-    uint32_t num_records = mbl->objectCount();
+    uint32_t num_records = mbl->object_count();
 
     // ensure that loading successive blocks from shuffling iterator
     // result in unsorted strings
-    for(int i = 0; i < mbl->blockCount(); ++i) {
+    for(int i = 0; i < mbl->block_count(); ++i) {
         bis.read(bp);
     }
 

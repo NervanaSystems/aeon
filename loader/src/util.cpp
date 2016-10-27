@@ -197,24 +197,3 @@ cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
         return samples_mat;
     }
 }
-
-std::string nervana::path_join(const std::string& s1, const std::string& s2)
-{
-    string rc;
-    if(s2.size() > 0) {
-        if(s2[0] == '/') {
-            rc = s2;
-        } else if(s1.size() > 0) {
-            rc = s1;
-            if(rc[rc.size()-1] != '/') {
-                rc += "/";
-            }
-            rc += s2;
-        } else {
-            rc = s2;
-        }
-    } else {
-        rc = s1;
-    }
-    return rc;
-}

@@ -310,7 +310,7 @@ loader::loader(const char* cfg_string, PyObject *py_obj_backend)
     }
 
     if(lcfg.cache_directory.length() > 0) {
-        string cache_id = base_manifest->cache_id() + to_string(_block_loader->objectCount());
+        string cache_id = base_manifest->cache_id() + to_string(_block_loader->object_count());
         _block_loader = make_shared<block_loader_cpio_cache>(lcfg.cache_directory,
                                                              cache_id,
                                                              base_manifest->version(),

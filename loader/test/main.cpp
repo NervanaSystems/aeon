@@ -19,12 +19,15 @@
 #include "gtest/gtest.h"
 
 #include "gen_image.hpp"
+#include "file_util.hpp"
 
 using namespace std;
 
 gen_image image_dataset;
+string test_cache_directory;
 
-static void CreateImageDataset() {
+static void CreateImageDataset()
+{
 //    std::chrono::high_resolution_clock timer;
 //    auto start = timer.now();
     image_dataset.Directory("image_data")
@@ -42,12 +45,30 @@ static void DeleteDataset() {
     image_dataset.Delete();
 }
 
-extern "C" int main( int argc, char** argv ) {
+void exit_func(int s)
+{
+//    cout << __FILE__ << " " << __LINE__ << "exit function " << s << endl;
+//    exit(-1);
+}
+
+extern "C" int main( int argc, char** argv )
+{
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_handler = exit_func;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, NULL);
+
+
+
     CreateImageDataset();
+    test_cache_directory = nervana::file_util::make_temp_directory();
+    cout << "************** test cache directory " << test_cache_directory << endl;
 
     ::testing::InitGoogleTest(&argc, argv);
     int rc = RUN_ALL_TESTS();
 
+    nervana::file_util::remove_directory(test_cache_directory);
     DeleteDataset();
 
     return rc;

@@ -94,8 +94,8 @@ TEST(block_loader_nds, object_count) {
     block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 
     // 200 and 5 are hard coded in the mock nds server
-    ASSERT_EQ(client.objectCount(), 200);
-    ASSERT_EQ(client.blockCount(), 5);
+    ASSERT_EQ(client.object_count(), 200);
+    ASSERT_EQ(client.block_count(), 5);
 }
 
 
@@ -107,7 +107,7 @@ TEST(block_loader_nds, cpio) {
     ASSERT_EQ(dest.size(), 2);
     ASSERT_EQ(dest[0]->get_item_count(), 0);
 
-    client.loadBlock(dest, 0);
+    client.load_block(dest, 0);
 
     ASSERT_EQ(dest[0]->get_item_count(), 2);
 }

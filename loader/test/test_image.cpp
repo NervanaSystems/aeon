@@ -33,6 +33,7 @@
 #include "image.hpp"
 #include "log.hpp"
 #include "util.hpp"
+#include "file_util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -633,7 +634,7 @@ TEST(image,calculate_scale) {
 
 TEST(image,transform)
 {
-    vector<char> image_data = read_file_contents(CURDIR"/test_data/img_2112_70.jpg");
+    vector<char> image_data = file_util::read_file_contents(CURDIR"/test_data/img_2112_70.jpg");
 //        vector<char> image_data = read_file_contents(CURDIR"/test_data/test_image.jpg");
     {
         int height = 128;
@@ -748,7 +749,7 @@ TEST(image,config_bad_scale)
 
 TEST(image,area_scale)
 {
-    vector<char> image_data = read_file_contents(CURDIR"/test_data/img_2112_70.jpg");
+    vector<char> image_data = file_util::read_file_contents(CURDIR"/test_data/img_2112_70.jpg");
     float max_cropbox_area;
     float max_cropbox_ratio;
     float source_image_area;

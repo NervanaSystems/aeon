@@ -13,12 +13,12 @@
  limitations under the License.
 */
 
-#include "noise_clips.hpp"
-#include "util.hpp"
-
 #include <sstream>
 #include <fstream>
 #include <sys/stat.h>
+
+#include "noise_clips.hpp"
+#include "file_util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -49,7 +49,7 @@ void noise_clips::load_index(const std::string& index_file, const std::string& r
     string line;
     while(getline(ifs, line)) {
         if(!root_dir.empty())
-            line = path_join(root_dir, line);
+            line = file_util::path_join(root_dir, line);
         _noise_files.push_back(line);
     }
 
@@ -61,7 +61,7 @@ void noise_clips::load_index(const std::string& index_file, const std::string& r
 // From Factory, get add_noise, offset (frac), noise index, noise level
 /** \brief Add noise to a sound waveform
 *
-* 
+*
 */
 void noise_clips::addNoise(cv::Mat& wav_mat,
                           bool add_noise,
@@ -121,7 +121,6 @@ void noise_clips::load_data()
 
 void noise_clips::read_noise(std::string& noise_file, int* dataLen)
 {
-
     struct stat stats;
     int result = stat(noise_file.c_str(), &stats);
     if (result == -1) {

@@ -34,34 +34,3 @@ void assert_vector_unique(vector<string>& words) {
         ASSERT_NE(*word, *(word + 1));
     }
 }
-
-vector<char> read_file_contents(const string& path) {
-    ifstream file(path, ios::binary);
-    if(!file) cout << "error opening file " << path << endl;
-    vector<char> data((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-    return data;
-}
-
-void iterate_files(const string& _path, std::function<void(const string& file)> func)
-{
-    string path = _path;
-    if (path[path.size()-1] != '/') {
-        path = path + "/";
-    }
-    DIR *dir;
-    struct dirent *ent;
-    if((dir = opendir(path.c_str())) != NULL) {
-        while((ent = readdir(dir)) != NULL) {
-            string file = ent->d_name;
-            if (file != "." && file != "..") {
-                file = path + file;
-                func(file);
-            }
-        }
-        closedir(dir);
-    }
-    else {
-        throw std::runtime_error("error enumerating file " + path);
-    }
-}
-

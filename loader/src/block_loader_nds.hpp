@@ -31,18 +31,18 @@ public:
     block_loader_nds(const std::string& baseurl, const std::string& token, int collection_id, uint32_t block_size, int shard_count=1, int shard_index=0);
     ~block_loader_nds();
 
-    void loadBlock(nervana::buffer_in_array& dest, uint32_t block_num);
-    uint32_t objectCount();
+    void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
+    uint32_t object_count() override;
 
-    uint32_t blockCount();
+    uint32_t block_count();
 
 private:
-    void loadMetadata();
+    void load_metadata();
 
     void get(const std::string& url, std::stringstream& stream);
 
-    const std::string loadBlockURL(uint32_t block_num);
-    const std::string metadataURL();
+    const std::string load_block_url(uint32_t block_num);
+    const std::string metadata_url();
 
     const std::string _baseurl;
     const std::string _token;

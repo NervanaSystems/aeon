@@ -19,7 +19,7 @@ using namespace std;
 using namespace nervana;
 
 block_iterator_sequential::block_iterator_sequential(shared_ptr<block_loader> loader)
-: _loader(loader), _count(_loader->blockCount()), _i(0)
+: _loader(loader), _count(_loader->block_count()), _i(0)
 {
 }
 
@@ -34,7 +34,7 @@ void block_iterator_sequential::read(nervana::buffer_in_array& dest)
         reset();
     }
 
-    _loader->loadBlock(dest, i);
+    _loader->load_block(dest, i);
 }
 
 void block_iterator_sequential::reset()

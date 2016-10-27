@@ -43,21 +43,21 @@ block_loader_nds::block_loader_nds(const std::string& baseurl, const std::string
 {
     affirm(shard_index < shard_count, "shard index must be less then shard count");
 
-    loadMetadata();
+    load_metadata();
 }
 
 block_loader_nds::~block_loader_nds()
 {
 }
 
-void block_loader_nds::loadBlock(nervana::buffer_in_array& dest, uint32_t block_num)
+void block_loader_nds::load_block(nervana::buffer_in_array& dest, uint32_t block_num)
 {
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
 
     // get data from url and write it into cpio_stream
     stringstream cpio_stream;
-    get(loadBlockURL(block_num), cpio_stream);
+    get(load_block_url(block_num), cpio_stream);
 
     // parse cpio_stream into dest one record (consisting of multiple elements) at a time
     nervana::cpio::reader reader(&cpio_stream);
@@ -105,7 +105,7 @@ void block_loader_nds::get(const string& url, stringstream &stream)
     curl_easy_cleanup(_curl);
 }
 
-const string block_loader_nds::loadBlockURL(uint32_t block_num)
+const string block_loader_nds::load_block_url(uint32_t block_num)
 {
     stringstream ss;
     ss << _baseurl << "/macrobatch/?";
@@ -118,7 +118,7 @@ const string block_loader_nds::loadBlockURL(uint32_t block_num)
     return ss.str();
 }
 
-const string block_loader_nds::metadataURL()
+const string block_loader_nds::metadata_url()
 {
     stringstream ss;
     ss << _baseurl << "/object_count/?";
@@ -130,12 +130,12 @@ const string block_loader_nds::metadataURL()
     return ss.str();
 }
 
-void block_loader_nds::loadMetadata()
+void block_loader_nds::load_metadata()
 {
     // fetch metadata and store in local attributes
 
     stringstream json_stream;
-    get(metadataURL(), json_stream);
+    get(metadata_url(), json_stream);
     string json_str = json_stream.str();
     nlohmann::json metadata;
     try {
@@ -143,7 +143,7 @@ void block_loader_nds::loadMetadata()
     } catch (std::exception& ex) {
         stringstream ss;
         ss << "exception parsing metadata from nds ";
-        ss << metadataURL() << " " << ex.what() << " ";
+        ss << metadata_url() << " " << ex.what() << " ";
         ss << json_str;
         throw std::runtime_error(ss.str());
     }
@@ -152,12 +152,12 @@ void block_loader_nds::loadMetadata()
     nervana::interface::config::parse_value(_blockCount, "macro_batch_per_shard", metadata, nervana::interface::config::mode::REQUIRED);
 }
 
-uint32_t block_loader_nds::objectCount()
+uint32_t block_loader_nds::object_count()
 {
     return _objectCount;
 }
 
-uint32_t block_loader_nds::blockCount()
+uint32_t block_loader_nds::block_count()
 {
     return _blockCount;
 }

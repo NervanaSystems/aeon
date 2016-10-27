@@ -23,7 +23,8 @@
 using namespace std;
 using namespace nervana;
 
-manifest_nds::manifest_nds(const std::string filename) {
+manifest_nds::manifest_nds(const std::string& filename)
+{
     // parse json
     nlohmann::json j;
     try {
@@ -57,7 +58,8 @@ manifest_nds::manifest_nds(const std::string filename) {
     }
 }
 
-string manifest_nds::cache_id() {
+string manifest_nds::cache_id()
+{
     stringstream contents;
     contents << baseurl << collection_id;
     std::size_t h = std::hash<std::string>()(contents.str());
@@ -66,7 +68,8 @@ string manifest_nds::cache_id() {
     return ss.str();
 }
 
-bool manifest_nds::is_likely_json(const std::string filename) {
+bool manifest_nds::is_likely_json(const std::string filename)
+{
     // check the first character of the file to see if it is a json
     // object.  If so, we want to parse this as an NDS Manifest
     // instead of a CSV

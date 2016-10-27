@@ -13,13 +13,13 @@
  limitations under the License.
 */
 
-#include <sys/stat.h>
-
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 
 #include "block_loader_file.hpp"
 #include "util.hpp"
+#include "file_util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -36,7 +36,7 @@ block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst,
     _manifest->generate_subset(subset_fraction);
 }
 
-void block_loader_file::loadBlock(nervana::buffer_in_array& dest, uint32_t block_num)
+void block_loader_file::load_block(nervana::buffer_in_array& dest, uint32_t block_num)
 {
     // NOTE: thread safe so long as you aren't modifying the manifest
     // NOTE: dest memory must already be allocated at the correct size
@@ -73,7 +73,7 @@ void block_loader_file::loadBlock(nervana::buffer_in_array& dest, uint32_t block
         auto file_list = *it;
         for (uint32_t i = 0; i < file_list.size(); i++) {
             try {
-                loadFile(dest[i], file_list[i]);
+                load_file(dest[i], file_list[i]);
             } catch (std::exception& e) {
                 dest[i]->add_exception(std::current_exception());
             }
@@ -81,26 +81,14 @@ void block_loader_file::loadBlock(nervana::buffer_in_array& dest, uint32_t block
     }
 }
 
-void block_loader_file::loadFile(nervana::buffer_in* buff, const string& filename)
+void block_loader_file::load_file(nervana::buffer_in* buff, const string& filename)
 {
-    off_t size = getFileSize(filename);
+    off_t size = file_util::get_file_size(filename);
     ifstream fin(filename, ios::binary);
     buff->read(fin, size);
 }
 
-off_t block_loader_file::getFileSize(const string& filename)
-{
-    // ensure that filename exists and get its size
-
-    struct stat stats;
-    if (stat(filename.c_str(), &stats) == -1) {
-        throw std::runtime_error("Could not find file: \"" + filename + "\"");
-    }
-
-    return stats.st_size;
-}
-
-uint32_t block_loader_file::objectCount()
+uint32_t block_loader_file::object_count()
 {
     return _manifest->objectCount();
 }

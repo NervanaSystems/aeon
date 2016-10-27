@@ -35,12 +35,11 @@ public:
                       float subset_fraction,
                       uint32_t block_size);
 
-    void loadBlock(nervana::buffer_in_array& dest, uint32_t block_num);
-    void loadFile(nervana::buffer_in* buff, const std::string& filename);
-    uint32_t objectCount();
+    void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
+    void load_file(nervana::buffer_in* buff, const std::string& filename);
+    uint32_t object_count() override;
 
 private:
-    off_t getFileSize(const std::string& filename);
     void generate_subset(const std::shared_ptr<nervana::manifest_csv>& manifest, float subset_fraction);
 
     const std::shared_ptr<nervana::manifest_csv> _manifest;

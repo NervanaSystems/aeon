@@ -21,9 +21,9 @@ include ../Makefile.base
 # specific to TEST
 
 TEST_SRCS := \
-    buffer_test.cpp \
+    test_buffer.cpp \
     csv_manifest_maker.cpp \
-    csv_manifest_test.cpp \
+    test_manifest_csv.cpp \
     gen_image.cpp \
     helpers.cpp \
     main.cpp \
@@ -48,6 +48,9 @@ TEST_SRCS := \
     test_video.cpp \
     test_config.cpp \
     test_cpio.cpp \
+    test_cpio_cache.cpp \
+    test_file_util.cpp \
+    block_loader_util.cpp \
 
 OBJS             = $(subst .cpp,.o,$(TEST_SRCS))
 INC             := -I../src $(INC)

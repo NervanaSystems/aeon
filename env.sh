@@ -28,6 +28,7 @@ SRCS="
     etl_pixel_mask.cpp
     etl_depthmap.cpp
     etl_video.cpp
+    file_util.cpp
     image.cpp
     interface.cpp
     loader.cpp
@@ -51,6 +52,7 @@ SRCS="
     specgram.cpp
     util.cpp
     wav_data.cpp
+    crc.cpp
 "
 # remove newlines
 export SRCS="$(echo ${SRCS} | sed 's/\n//g')"

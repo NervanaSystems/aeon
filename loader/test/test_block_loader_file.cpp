@@ -44,7 +44,7 @@ TEST(blocked_file_loader, loadBlock)
 
     buffer_in_array bp(2);
 
-    blf.loadBlock(bp, 0);
+    blf.load_block(bp, 0);
 
     // the object_data and target_data should be full of repeating
     // uints.  the uints in target_data will be 1 bigger than the uints
@@ -78,15 +78,15 @@ TEST(blocked_file_loader, subset_fraction)
     buffer_in_array bp(2);
 
 
-    blf.loadBlock(bp, 0);
+    blf.load_block(bp, 0);
     ASSERT_EQ(bp[0]->get_item_count(), block_size);
     bp[0]->reset();
 
-    blf.loadBlock(bp, 1);
+    blf.load_block(bp, 1);
     ASSERT_EQ(bp[0]->get_item_count(), block_size);
     bp[0]->reset();
 
-    blf.loadBlock(bp, 2);
+    blf.load_block(bp, 2);
     ASSERT_EQ(bp[0]->get_item_count(), block_size);
     bp[0]->reset();
 }
@@ -105,7 +105,7 @@ TEST(blocked_file_loader, exception)
     buffer_in_array bp(2);
 
     // loadBlock doesn't actually raise the exception
-    blf.loadBlock(bp, 0);
+    blf.load_block(bp, 0);
 
     // Could not find file exception raised when we try to access the item
     try {

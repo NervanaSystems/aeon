@@ -40,20 +40,28 @@ public:
                             const std::string& cache_id, const std::string& version,
                             std::shared_ptr<block_loader> loader);
 
-    void loadBlock(nervana::buffer_in_array& dest, uint32_t block_num);
-    uint32_t objectCount();
+    void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
+    uint32_t object_count() override;
 
 private:
-    bool loadBlockFromCache(nervana::buffer_in_array& dest, uint32_t block_num);
-    void writeBlockToCache(nervana::buffer_in_array& dest, uint32_t block_num);
-    std::string blockFilename(uint32_t block_num);
+    bool load_block_from_cache(nervana::buffer_in_array& dest, uint32_t block_num);
+    void write_block_to_cache(nervana::buffer_in_array& dest, uint32_t block_num);
+    std::string block_filename(uint32_t block_num);
 
-    void invalidateOldCache(const std::string& rootCacheDir, const std::string& cache_id, const std::string& version);
-    bool filenameHoldsInvalidCache(const std::string& filename, const std::string& cache_id, const std::string& version);
-    void removeDirectory(const std::string& dir);
-    void makeDirectory(const std::string& dir);
-    static int rm(const char *path, const struct stat *s, int flag, struct FTW *f);
+    void invalidate_old_cache(const std::string& rootCacheDir, const std::string& cache_id, const std::string& version);
+    bool filename_holds_invalid_cache(const std::string& filename, const std::string& cache_id, const std::string& version);
 
-    std::string _cacheDir;
-    std::shared_ptr<block_loader> _loader;
+    bool check_if_complete();
+    void mark_cache_complete();
+    bool take_ownership();
+    void release_ownership();
+
+    const std::string owner_lock_filename = "caching_in_progress";
+    const std::string cache_complete_filename = "cache_complete";
+
+    std::string                     _cacheDir;
+    std::shared_ptr<block_loader>   _loader;
+    const size_t                    block_count;
+    bool                            cache_owner;
+    int                             ownership_lock;
 };
