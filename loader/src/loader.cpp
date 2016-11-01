@@ -19,6 +19,7 @@
 #include <chrono>
 #include <utility>
 #include <algorithm>
+#include <sox.h>
 
 #include "loader.hpp"
 #include "block_loader_cpio_cache.hpp"
@@ -275,10 +276,10 @@ loader::loader(const char* cfg_string, PyObject *py_obj_backend)
     _python_backend = make_shared<python_backend>(py_obj_backend);
     _lcfg_json = nlohmann::json::parse(cfg_string);
     loader_config lcfg(_lcfg_json);
-
     _batchSize = lcfg.minibatch_size;
     _single_thread_mode = lcfg.single_thread;
     shared_ptr<nervana::manifest> base_manifest = nullptr;
+    sox_format_init();
 
     if(nervana::manifest_nds::is_likely_json(lcfg.manifest_filename)) {
         affirm(lcfg.subset_fraction == 1, "subset_fraction must be 1.0 for nds");
@@ -325,6 +326,7 @@ loader::loader(const char* cfg_string, PyObject *py_obj_backend)
 
     _batch_iterator = make_shared<batch_iterator>(block_iter, lcfg.minibatch_size);
 }
+
 
 int loader::start()
 {
