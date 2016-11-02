@@ -1,6 +1,11 @@
 import json
 
 from flask import Flask, send_file, request, abort
+import logging
+
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
 app = Flask(__name__)
 
 def shutdown_server():

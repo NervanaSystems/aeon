@@ -53,17 +53,16 @@ void exit_func(int s)
 
 extern "C" int main( int argc, char** argv )
 {
-    struct sigaction sigIntHandler;
-    sigIntHandler.sa_handler = exit_func;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
-    sigaction(SIGINT, &sigIntHandler, NULL);
+//    struct sigaction sigIntHandler;
+//    sigIntHandler.sa_handler = exit_func;
+//    sigemptyset(&sigIntHandler.sa_mask);
+//    sigIntHandler.sa_flags = 0;
+//    sigaction(SIGINT, &sigIntHandler, NULL);
 
 
 
     CreateImageDataset();
     test_cache_directory = nervana::file_util::make_temp_directory();
-    cout << "************** test cache directory " << test_cache_directory << endl;
 
     ::testing::InitGoogleTest(&argc, argv);
     int rc = RUN_ALL_TESTS();

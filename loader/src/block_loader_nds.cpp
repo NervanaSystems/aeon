@@ -37,9 +37,20 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
     return size * nmemb;
 }
 
-block_loader_nds::block_loader_nds(const std::string& baseurl, const std::string& token, int collection_id, uint32_t block_size, int shard_count, int shard_index)
-    : block_loader(block_size), _baseurl(baseurl), _token(token), _collection_id(collection_id),
-      _shard_count(shard_count), _shard_index(shard_index)
+block_loader_nds::block_loader_nds(
+        const std::string& baseurl,
+        const std::string& token,
+        int collection_id,
+        uint32_t block_size,
+        int shard_count,
+        int shard_index
+        ):
+    block_loader(block_size),
+    _baseurl(baseurl),
+    _token(token),
+    _collection_id(collection_id),
+    _shard_count(shard_count),
+    _shard_index(shard_index)
 {
     affirm(shard_index < shard_count, "shard index must be less then shard count");
 
@@ -52,6 +63,31 @@ block_loader_nds::~block_loader_nds()
 
 void block_loader_nds::load_block(nervana::buffer_in_array& dest, uint32_t block_num)
 {
+    if(prefetch_pending) {
+//        if(async_handler.is_ready())
+//            cout << __FILE__ << " " << __LINE__ << " prefetch ready" << endl;
+//        else
+//            cout << __FILE__ << " " << __LINE__ << " prefetch busy" << endl;
+
+        async_handler.wait();
+    } else {
+        fetch_block(block_num);
+    }
+    auto it = prefetch_buffer.begin();
+    for(int i=0; i<block_size(); i++)
+    {
+        if(it != prefetch_buffer.end())
+        {
+            for(int j=0; j<dest.size(); j++)
+            {
+                dest[j]->add_item(move(*it++));
+            }
+        }
+    }
+}
+
+void block_loader_nds::fetch_block(uint32_t block_num)
+{
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
 
@@ -61,10 +97,10 @@ void block_loader_nds::load_block(nervana::buffer_in_array& dest, uint32_t block
 
     // parse cpio_stream into dest one record (consisting of multiple elements) at a time
     nervana::cpio::reader reader(&cpio_stream);
-    for(int i=0; i < reader.itemCount() / dest.size(); ++i) {
-        for (auto d: dest) {
-            reader.read(*d);
-        }
+    for(int i=0; i < reader.itemCount(); ++i) {
+        vector<char> buffer;
+        reader.read(buffer);
+        prefetch_buffer.push_back(move(buffer));
     }
 }
 
@@ -160,4 +196,17 @@ uint32_t block_loader_nds::object_count()
 uint32_t block_loader_nds::block_count()
 {
     return _blockCount;
+}
+
+void block_loader_nds::prefetch_block(uint32_t block_num)
+{
+    prefetch_pending = true;
+    prefetch_block_num = block_num;
+    std::function<void(void*)> f = std::bind(&block_loader_nds::prefetch_entry, this, &block_num);
+    async_handler.run(f);
+}
+
+void block_loader_nds::prefetch_entry(void* param)
+{
+    fetch_block(prefetch_block_num);
 }

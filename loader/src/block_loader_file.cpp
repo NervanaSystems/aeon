@@ -16,6 +16,7 @@
 #include <sstream>
 #include <fstream>
 #include <iomanip>
+#include <unistd.h>
 
 #include "block_loader_file.hpp"
 #include "util.hpp"
@@ -26,10 +27,12 @@ using namespace nervana;
 
 block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst,
                                      float subset_fraction,
-                                     uint32_t block_size)
-: block_loader(block_size),
-  _manifest(mfst)
+                                     uint32_t block_size) :
+    block_loader(block_size),
+    _manifest(mfst),
+    prefetch_pending(false)
 {
+    elements_per_record = _manifest->nelements();
     affirm(subset_fraction > 0.0 && subset_fraction <= 1.0,
            "subset_fraction must be >= 0 and <= 1");
 
@@ -38,6 +41,36 @@ block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst,
 
 void block_loader_file::load_block(nervana::buffer_in_array& dest, uint32_t block_num)
 {
+    if(prefetch_pending) {
+//        if(async_handler.is_ready())
+//            cout << __FILE__ << " " << __LINE__ << " prefetch ready" << endl;
+//        else
+//            cout << __FILE__ << " " << __LINE__ << " prefetch busy" << endl;
+        async_handler.wait();
+    } else {
+        fetch_block(block_num);
+    }
+    auto it = prefetch_buffer.begin();
+    for(int i=0; i<block_size(); i++)
+    {
+        if(it != prefetch_buffer.end())
+        {
+            for(int j=0; j<dest.size(); j++)
+            {
+                if(it->second == nullptr) {
+                    dest[j]->add_item(move(it->first));
+                } else {
+                    dest[j]->add_exception(it->second);
+                }
+                it++;
+            }
+        }
+    }
+}
+
+void block_loader_file::fetch_block(uint32_t block_num)
+{
+    prefetch_buffer.clear();
     // NOTE: thread safe so long as you aren't modifying the manifest
     // NOTE: dest memory must already be allocated at the correct size
     // NOTE: end_i - begin_i may not be a full block for the last
@@ -73,22 +106,39 @@ void block_loader_file::load_block(nervana::buffer_in_array& dest, uint32_t bloc
         auto file_list = *it;
         for (uint32_t i = 0; i < file_list.size(); i++) {
             try {
-                load_file(dest[i], file_list[i]);
+                vector<char> buffer;
+                load_file(buffer, file_list[i]);
+                prefetch_buffer.push_back({buffer,nullptr});
             } catch (std::exception& e) {
-                dest[i]->add_exception(std::current_exception());
+                prefetch_buffer.push_back({vector<char>(),current_exception()});
             }
         }
     }
 }
 
-void block_loader_file::load_file(nervana::buffer_in* buff, const string& filename)
+void block_loader_file::load_file(vector<char>& buffer, const string& filename)
 {
     off_t size = file_util::get_file_size(filename);
+    buffer.reserve(size);
+    buffer.resize(size);
     ifstream fin(filename, ios::binary);
-    buff->read(fin, size);
+    fin.read(buffer.data(), buffer.size());
 }
 
 uint32_t block_loader_file::object_count()
 {
     return _manifest->objectCount();
+}
+
+void block_loader_file::prefetch_block(uint32_t block_num)
+{
+    prefetch_pending = true;
+    prefetch_block_num = block_num;
+    std::function<void(void*)> f = std::bind(&block_loader_file::prefetch_entry, this, &block_num);
+    async_handler.run(f);
+}
+
+void block_loader_file::prefetch_entry(void* param)
+{
+    fetch_block(prefetch_block_num);
 }

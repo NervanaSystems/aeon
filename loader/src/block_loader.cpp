@@ -36,3 +36,7 @@ uint32_t block_loader::block_count()
 {
     return ceil((float)object_count() / (float)_block_size);
 }
+
+void block_loader::prefetch_block(uint32_t block_num)
+{
+}

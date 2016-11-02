@@ -16,18 +16,22 @@
 #include "gtest/gtest.h"
 #include "block_loader_file.hpp"
 #include "csv_manifest_maker.hpp"
+#include "file_util.hpp"
+#include "block_loader_util.hpp"
+#include "block_loader_cpio_cache.hpp"
+#include "block_iterator_shuffled.hpp"
 
 using namespace std;
 using namespace nervana;
 
-TEST(blocked_file_loader, constructor)
+TEST(block_loader_file, constructor)
 {
     manifest_maker mm;
     string tmpname = mm.tmp_manifest_file(0, {0, 0});
     block_loader_file blf(make_shared<nervana::manifest_csv>(tmpname, true), 1.0, 4);
 }
 
-TEST(blocked_file_loader, loadBlock)
+TEST(block_loader_file, load_block)
 {
     manifest_maker mm;
     // load one block of size 2
@@ -53,45 +57,48 @@ TEST(blocked_file_loader, loadBlock)
         uint* object_data = (uint*)bp[0]->get_item(block).data();
         uint* target_data = (uint*)bp[1]->get_item(block).data();
         for(int offset=0; offset<object_size / sizeof(uint); offset++) {
-            ASSERT_EQ(object_data[offset] + 1, target_data[offset]);
+            EXPECT_EQ(object_data[offset] + 1, target_data[offset]);
         }
     }
 }
 
-TEST(blocked_file_loader, subset_fraction)
+TEST(block_loader_file, subset_fraction)
 {
     // a 10 object manifest iterated through blocks sized 4 with
     // percentSubset 50 should result in an output block size of 2, 2
     // and then 1.
     manifest_maker mm;
     uint32_t block_size = 4;
-    uint32_t object_size = 16;
-    uint32_t target_size = 16;
+    uint32_t object_size = 4;
+    uint32_t target_size = 4;
     float subset_fraction = 0.01;
+    size_t total_records = 1000;
 
     block_loader_file blf(
-        make_shared<nervana::manifest_csv>(mm.tmp_manifest_file(10000, {object_size, target_size}), true),
+        make_shared<nervana::manifest_csv>(mm.tmp_manifest_file(total_records, {object_size, target_size}), true),
         subset_fraction,
         block_size
     );
+
+    EXPECT_EQ(blf.object_count(), size_t(total_records * subset_fraction));
 
     buffer_in_array bp(2);
 
 
     blf.load_block(bp, 0);
-    ASSERT_EQ(bp[0]->get_item_count(), block_size);
+    ASSERT_EQ(bp[0]->get_item_count(), 4);
     bp[0]->reset();
 
     blf.load_block(bp, 1);
-    ASSERT_EQ(bp[0]->get_item_count(), block_size);
+    ASSERT_EQ(bp[0]->get_item_count(), 4);
     bp[0]->reset();
 
     blf.load_block(bp, 2);
-    ASSERT_EQ(bp[0]->get_item_count(), block_size);
+    ASSERT_EQ(bp[0]->get_item_count(), 2);
     bp[0]->reset();
 }
 
-TEST(blocked_file_loader, exception)
+TEST(block_loader_file, exception)
 {
     manifest_maker mm;
     float subset_fraction = 1.0;
@@ -116,7 +123,7 @@ TEST(blocked_file_loader, exception)
     }
 }
 
-//TEST(blocked_file_loader, subset_object_count)
+//TEST(block_loader_file, subset_object_count)
 //{
 //    manifest_maker mm;
 //    float subset_fraction = 0.5;
@@ -128,3 +135,35 @@ TEST(blocked_file_loader, exception)
 
 //    ASSERT_EQ(blf.objectCount(), 2 + 2 + 1);
 //}
+
+TEST(block_loader_file, performance)
+{
+    manifest_maker mm;
+    uint32_t block_size = 50;
+    uint32_t object_size = 4;
+    uint32_t target_size = 4;
+    float subset_fraction = 1.0;
+    string cache_id = block_loader_random::randomString();
+    string version = "version123";
+
+    auto blf = make_shared<block_loader_file>(
+        make_shared<nervana::manifest_csv>(mm.tmp_manifest_file(1000, {object_size, target_size}), true),
+        subset_fraction,
+        block_size
+    );
+
+    string cache_dir = file_util::make_temp_directory();
+    chrono::high_resolution_clock timer;
+    auto cache = make_shared<block_loader_cpio_cache>(cache_dir, cache_id, version, blf);
+    block_iterator_shuffled iter(cache);
+
+    auto startTime = timer.now();
+    for(int i=0; i<30; i++)
+    {
+        buffer_in_array dest(2);
+        iter.read(dest);
+    }
+    auto endTime = timer.now();
+    cout << "time " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" << endl;
+    file_util::remove_directory(cache_dir);
+}

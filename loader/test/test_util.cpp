@@ -401,3 +401,50 @@ TEST(DISABLED_util,dump)
 
     dump(cout, text.data(), text.size());
 }
+
+static void test_function(void* p)
+{
+    int& param = *(int*)p;
+    param = 100;
+    usleep(100000);
+}
+
+TEST(util,async)
+{
+    int param = 42;
+    async a;
+    a.run(&test_function, &param);
+
+    EXPECT_FALSE(a.is_ready());
+    usleep(200000);
+    EXPECT_TRUE(a.is_ready());
+    a.wait();
+
+    EXPECT_EQ(100,param);
+}
+
+static void test_function_exception1(void*)
+{
+    throw runtime_error("this is to be expected");
+}
+
+static void test_function_exception2(void*)
+{
+    throw out_of_range("this is to be expected");
+}
+
+TEST(util,async_exception)
+{
+    {
+        async a;
+        a.run(&test_function_exception1);
+        a.wait();
+        EXPECT_THROW(a.rethrow_exception(), std::runtime_error);
+    }
+    {
+        async a;
+        a.run(&test_function_exception2);
+        a.wait();
+        EXPECT_THROW(a.rethrow_exception(), std::out_of_range);
+    }
+}

@@ -34,8 +34,10 @@
 #define MAGIC_STRING    "MACR"
 #define CPIO_FOOTER     "TRAILER!!!"
 
-namespace nervana {
-    namespace cpio {
+namespace nervana
+{
+    namespace cpio
+    {
         class record_header;
         class header;
         class trailer;
@@ -65,7 +67,8 @@ Each of these items comprises of a cpio header record followed by data.
 
 */
 
-class nervana::cpio::record_header {
+class nervana::cpio::record_header
+{
 public:
     record_header();
     void loadDoubleShort(uint32_t* dst, uint16_t src[2]);
@@ -90,7 +93,8 @@ public:
     uint16_t        _filesize[2];
 };
 
-class nervana::cpio::header {
+class nervana::cpio::header
+{
 friend class reader;
 friend class file_writer;
 public:
@@ -109,7 +113,8 @@ private:
 #pragma pack()
 };
 
-class nervana::cpio::trailer {
+class nervana::cpio::trailer
+{
 public:
     trailer() ;
     void write(std::ostream& ofs);
@@ -119,12 +124,14 @@ private:
     uint32_t        _unused[4];
 };
 
-class nervana::cpio::reader {
+class nervana::cpio::reader
+{
 public:
     reader();
     reader(std::istream* is);
 
     void read(nervana::buffer_in& dest);
+    void read(std::vector<char>& dest);
 
     int itemCount() ;
 
@@ -143,7 +150,8 @@ protected:
  * which only deals in istreams
  */
 
-class nervana::cpio::file_reader : public reader {
+class nervana::cpio::file_reader : public reader
+{
 public:
     file_reader();
     ~file_reader();
@@ -155,7 +163,8 @@ private:
     std::ifstream   _ifs;
 };
 
-class nervana::cpio::file_writer {
+class nervana::cpio::file_writer
+{
 public:
     ~file_writer();
 

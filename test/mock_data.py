@@ -5,7 +5,15 @@ from PIL import Image as PILImage
 import random
 import struct
 import pytest
+import os
+import atexit
 
+temp_files = []
+first_time = True
+
+def delete_temps():
+    for f in temp_files:
+        os.remove(f)
 
 def random_image(filename):
     """
@@ -34,6 +42,11 @@ def random_target(filename):
 
 
 def random_manifest(num_lines, invalid_image_index=None):
+    global first_time
+    if first_time is True:
+        first_time = False
+        atexit.register(delete_temps)
+
     manifest = tempfile.NamedTemporaryFile(mode='w')
 
     # generate a manifest of filenames with an invalid image on the 3rd line
@@ -44,8 +57,10 @@ def random_manifest(num_lines, invalid_image_index=None):
         else:
             random_image(img_filename)
 
-        target_filename = tempfile.mkstemp(suffix='.jpg')[1]
+        target_filename = tempfile.mkstemp(suffix='.txt')[1]
         random_target(target_filename)
+        temp_files.append(img_filename)
+        temp_files.append(target_filename)
 
         manifest.write("{},{}\n".format(img_filename, target_filename))
     manifest.flush()

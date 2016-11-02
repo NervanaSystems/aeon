@@ -176,15 +176,18 @@ void cpio::trailer::read(istream& ifs)
 
 
 
-cpio::reader::reader() {
+cpio::reader::reader()
+{
 }
 
-cpio::reader::reader(istream* is) {
+cpio::reader::reader(istream* is)
+{
     _is = is;
     readHeader();
 }
 
-void cpio::reader::readHeader() {
+void cpio::reader::readHeader()
+{
     uint32_t fileSize;
     _recordHeader.read(*_is, &fileSize);
     if(fileSize != sizeof(_header)) {
@@ -197,25 +200,40 @@ void cpio::reader::readHeader() {
     _header.read(*_is);
 }
 
-void cpio::reader::read(nervana::buffer_in& dest) {
-    uint32_t datumSize;
-    _recordHeader.read(*_is, &datumSize);
-    dest.read(*_is, datumSize);
-    readPadding(*_is, datumSize);
+void cpio::reader::read(nervana::buffer_in& dest)
+{
+    uint32_t element_size;
+    _recordHeader.read(*_is, &element_size);
+    dest.read(*_is, element_size);
+    readPadding(*_is, element_size);
 }
 
-int cpio::reader::itemCount() {
+void cpio::reader::read(vector<char>& dest)
+{
+    uint32_t element_size;
+    _recordHeader.read(*_is, &element_size);
+    dest.reserve(element_size);
+    dest.resize(element_size);
+    _is->read(dest.data(), dest.size());
+    readPadding(*_is, element_size);
+}
+
+int cpio::reader::itemCount()
+{
     return _header._itemCount;
 }
 
-cpio::file_reader::file_reader() {
+cpio::file_reader::file_reader()
+{
 }
 
-cpio::file_reader::~file_reader() {
+cpio::file_reader::~file_reader()
+{
     close();
 }
 
-bool cpio::file_reader::open(const string& fileName) {
+bool cpio::file_reader::open(const string& fileName)
+{
     // returns true if file was opened successfully.
     bool rc = false;
     _ifs.open(fileName, istream::binary);
@@ -228,7 +246,8 @@ bool cpio::file_reader::open(const string& fileName) {
     return rc;
 }
 
-void cpio::file_reader::close() {
+void cpio::file_reader::close()
+{
     if (_ifs.is_open() == true) {
         _ifs.close();
     }

@@ -18,6 +18,7 @@
 #include "manifest_csv.hpp"
 #include "buffer_in.hpp"
 #include "block_loader.hpp"
+#include "util.hpp"
 
 /* block_loader_file
  *
@@ -36,11 +37,19 @@ public:
                       uint32_t block_size);
 
     void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
-    void load_file(nervana::buffer_in* buff, const std::string& filename);
+    void load_file(std::vector<char>& buff, const std::string& filename);
+    void prefetch_block(uint32_t block_num) override;
     uint32_t object_count() override;
 
 private:
     void generate_subset(const std::shared_ptr<nervana::manifest_csv>& manifest, float subset_fraction);
+    void prefetch_entry(void* param);
+    void fetch_block(uint32_t block_num);
 
     const std::shared_ptr<nervana::manifest_csv> _manifest;
+    async                                        async_handler;
+    std::vector<std::pair<std::vector<char>,std::exception_ptr>> prefetch_buffer;
+    uint32_t                                     prefetch_block_num;
+    bool                                         prefetch_pending;
+    size_t                                       elements_per_record;
 };

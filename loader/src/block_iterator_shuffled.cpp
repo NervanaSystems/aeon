@@ -24,8 +24,10 @@ using namespace std;
 using namespace nervana;
 
 
-block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader)
-: _rand(get_global_random_seed()), _loader(loader), _epoch(0)
+block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader) :
+    _rand(get_global_random_seed()),
+    _loader(loader),
+    _epoch(0)
 {
     // fill indices with integers from  0 to _count.  indices can then be
     // shuffled and used to iterate randomly through the blocks.
@@ -33,6 +35,7 @@ block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader
     iota(_indices.begin(), _indices.end(), 0);
     shuffle();
     _it = _indices.begin();
+    _loader->prefetch_block(*_it);
 }
 
 void block_iterator_shuffled::shuffle()
@@ -57,6 +60,7 @@ void block_iterator_shuffled::read(nervana::buffer_in_array &dest)
     if(++_it == _indices.end()) {
         reset();
     }
+    _loader->prefetch_block(*_it);
 }
 
 void block_iterator_shuffled::reset()

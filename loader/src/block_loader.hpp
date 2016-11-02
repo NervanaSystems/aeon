@@ -30,6 +30,7 @@ class nervana::block_loader
 {
 public:
     virtual void load_block(nervana::buffer_in_array& dest, uint32_t block_num) = 0;
+    virtual void prefetch_block(uint32_t block_num);
     virtual uint32_t object_count() = 0;
 
     uint32_t block_count();

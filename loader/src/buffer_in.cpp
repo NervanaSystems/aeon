@@ -26,16 +26,19 @@
 using namespace std;
 using namespace nervana;
 
-void buffer_in::reset() {
+void buffer_in::reset()
+{
     buffers.clear();
 }
 
-void buffer_in::shuffle(uint32_t random_seed) {
+void buffer_in::shuffle(uint32_t random_seed)
+{
     std::minstd_rand0 rand_items(random_seed);
     std::shuffle(buffers.begin(), buffers.end(), rand_items);
 }
 
-vector<char>& buffer_in::get_item(int index) {
+vector<char>& buffer_in::get_item(int index)
+{
     if (index >= (int) buffers.size()) {
         throw invalid_argument("index out-of-range");
     }
@@ -48,11 +51,18 @@ vector<char>& buffer_in::get_item(int index) {
     return buffers[index];
 }
 
-void buffer_in::add_item(const std::vector<char>& buf) {
+void buffer_in::add_item(const std::vector<char>& buf)
+{
     buffers.push_back(buf);
 }
 
-void buffer_in::add_exception(std::exception_ptr e) {
+void buffer_in::add_item(std::vector<char>&& buf)
+{
+    buffers.push_back(move(buf));
+}
+
+void buffer_in::add_exception(std::exception_ptr e)
+{
     // add an axception to exceptions
     exceptions[buffers.size()] = e;
 
@@ -65,7 +75,8 @@ int buffer_in::get_item_count() {
     return buffers.size();
 }
 
-void buffer_in::read(istream& is, int size) {
+void buffer_in::read(istream& is, int size)
+{
     // read `size` bytes out of `ifs` and push into buffer
     vector<char> b(size);
     is.read(b.data(), size);

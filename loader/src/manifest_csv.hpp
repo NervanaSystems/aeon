@@ -53,6 +53,7 @@ public:
     std::string cache_id() override;
     std::string version() override;
     size_t objectCount() const { return _filename_lists.size(); }
+    int nelements();
 
     // begin and end provide iterators over the FilenameLists
     iter begin() const { return _filename_lists.begin(); }

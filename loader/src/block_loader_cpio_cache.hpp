@@ -41,6 +41,7 @@ public:
                             std::shared_ptr<block_loader> loader);
 
     void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
+    void prefetch_block(uint32_t block_num) override;
     uint32_t object_count() override;
 
 private:

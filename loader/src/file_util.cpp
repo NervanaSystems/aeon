@@ -27,6 +27,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/file.h>
+#include <iostream>
 
 #include "file_util.hpp"
 
@@ -67,7 +68,7 @@ string nervana::file_util::path_join(const string& s1, const string& s2)
     return rc;
 }
 
-off_t nervana::file_util::get_file_size(const string& filename)
+size_t nervana::file_util::get_file_size(const string& filename)
 {
     // ensure that filename exists and get its size
 
@@ -79,34 +80,14 @@ off_t nervana::file_util::get_file_size(const string& filename)
     return stats.st_size;
 }
 
-int nervana::file_util::rm(const char *path, const struct stat *s, int flag, struct FTW *f)
-{
-    // see http://stackoverflow.com/a/1149837/2093984
-    // Call unlink or rmdir on the path, as appropriate.
-    int status;
-
-    switch(flag) {
-        default:     status = unlink(path); break;
-        case FTW_DP: status = rmdir (path);
-    }
-
-    if(status != 0) {
-        stringstream message;
-        message << "error deleting file " << path;
-        throw std::runtime_error(message.str());
-    }
-
-    return status;
-}
-
 void nervana::file_util::remove_directory(const string& dir)
 {
-    // see http://stackoverflow.com/a/1149837/2093984
-    // FTW_DEPTH: handle directories after its contents
-    // FTW_PHYS: do not follow symbolic links
-    if(nftw(dir.c_str(), rm, OPEN_MAX, FTW_DEPTH | FTW_PHYS)) {
-        throw std::runtime_error("error deleting directory " + dir);
-    }
+    file_util::iterate_files(dir, [](const string& file, bool is_dir)
+    {
+        if(is_dir)  rmdir(file.c_str());
+        else        remove(file.c_str());
+    }, true );
+    rmdir(dir.c_str());
 }
 
 void nervana::file_util::remove_file(const string& file)
@@ -164,16 +145,44 @@ vector<char> nervana::file_util::read_file_contents(const string& path)
     return data;
 }
 
-void nervana::file_util::iterate_files(const string& path, std::function<void(const string& file)> func)
+void nervana::file_util::iterate_files(const string& path, std::function<void(const string& file, bool is_dir)> func, bool recurse)
+{
+    vector<string> files;
+    vector<string> dirs;
+    file_util::iterate_files_worker(path, [&files, &dirs](const string& file, bool is_dir)
+    {
+        if(is_dir) dirs.push_back(file);
+        else       files.push_back(file);
+    }, true );
+
+    for(auto f : files) func(f, false);
+    for(auto f : dirs)  func(f, true);
+}
+
+void nervana::file_util::iterate_files_worker(const string& path, std::function<void(const string& file, bool is_dir)> func, bool recurse)
 {
     DIR* dir;
     struct dirent* ent;
-    if((dir = opendir(path.c_str())) != NULL) {
-        while((ent = readdir(dir)) != NULL) {
-            string file = ent->d_name;
-            if (file != "." && file != "..") {
-                file = file_util::path_join(path, file);
-                func(file);
+    if((dir = opendir(path.c_str())) != nullptr) {
+        while((ent = readdir(dir)) != nullptr) {
+            string name = ent->d_name;
+            switch(ent->d_type)
+            {
+            case DT_DIR:
+                if (recurse && name != "." && name != "..") {
+                    string dir = file_util::path_join(path, name);
+                    iterate_files(dir, func, recurse);
+                    func(dir, true);
+                }
+                break;
+            case DT_LNK:
+                break;
+            case DT_REG:
+                name = file_util::path_join(path, name);
+                func(name, false);
+                break;
+            default:
+                break;
             }
         }
         closedir(dir);
@@ -185,7 +194,7 @@ void nervana::file_util::iterate_files(const string& path, std::function<void(co
 
 string nervana::file_util::tmp_filename(const string& extension)
 {
-    string tmp_template = file_util::path_join(file_util::get_temp_directory(), "tmpfileXXXXXX"+extension);
+    string tmp_template = file_util::path_join(file_util::get_temp_directory(), "aeonXXXXXX"+extension);
     char* tmpname = strdup(tmp_template.c_str());
 
     // mkstemp opens the file with open() so we need to close it

@@ -167,3 +167,8 @@ uint32_t manifest_csv::get_crc()
     }
     return computed_crc;
 }
+
+int manifest_csv::nelements()
+{
+    return _filename_lists.size() > 0 ? _filename_lists[0].size() : 0;
+}

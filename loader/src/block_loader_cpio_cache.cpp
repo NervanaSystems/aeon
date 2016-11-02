@@ -186,3 +186,12 @@ void block_loader_cpio_cache::release_ownership()
     string file = file_util::path_join(_cacheDir, owner_lock_filename);
     file_util::release_lock(ownership_lock, file);
 }
+
+void block_loader_cpio_cache::prefetch_block(uint32_t block_num)
+{
+    string file = block_filename(block_num);
+    if(file_util::exists(file) == false)
+    {
+        _loader->prefetch_block(block_num);
+    }
+}

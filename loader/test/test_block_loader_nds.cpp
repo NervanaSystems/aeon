@@ -15,12 +15,17 @@
 
 #include <unistd.h>
 #include <signal.h>
+#include <sys/param.h>
 
 #include "gtest/gtest.h"
 
 // cringe
 #define private public
 #include "block_loader_nds.hpp"
+#include "block_iterator_shuffled.hpp"
+#include "block_loader_cpio_cache.hpp"
+#include "block_loader_util.hpp"
+#include "file_util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -33,7 +38,7 @@ public:
         cout << "starting mock nds server ..." << endl;
         pid_t pid = fork();
         if(pid == 0) {
-            int i = execl("../test/start_nds_server", (char*)0);
+            int i = system("../test/start_nds_server");
             if(i) {
                 cout << "error starting nds_server: " << strerror(i) << endl;
             }
@@ -112,21 +117,46 @@ TEST(block_loader_nds, cpio) {
     ASSERT_EQ(dest[0]->get_item_count(), 2);
 }
 
+string generate_large_cpio_file()
+{
+    char name[8192];
+    realpath("test_big.cpio", name);
+    string cpio_file(name);
 
-//TEST(block_loader_nds, lexi)
-//{
-//    // http://54.215.249.47/api/v1/data/macrobatch/?macro_batch_max_size=5000&macro_batch_index=0&collection_id=13&shard_count=1&shard_index=0&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnRfaWQiOjEwMiwidXNlcl9pZCI6MTAwMDQsImpvYl9pZCI6NjcsImNvbGxlY3Rpb25faWQiOjEzfQ.6tk9OAaaBuNSDflUJW8tYO0cbHANRdql14DfRXzFB_8
+    cpio::file_writer writer;
+    writer.open(cpio_file);
+    buffer_in_array buf(2);
+    vector<char> image_data(8000, 42);
+    vector<char> target_data(4, 0);
+    buf[0]->add_item(image_data);
+    buf[1]->add_item(target_data);
+    for(int i=0; i<5000; i++)
+    {
+        writer.write_all_records(buf);
+    }
+    writer.close();
+    return cpio_file;
+}
 
-////    start_server();
-//    block_loader_nds client("http://54.215.249.47/api/v1/data",
-//                            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnRfaWQiOjEwMiwidXNlcl9pZCI6MTAwMDQsImpvYl9pZCI6NjcsImNvbGxlY3Rpb25faWQiOjEzfQ.6tk9OAaaBuNSDflUJW8tYO0cbHANRdql14DfRXzFB_8",
-//                            13, 5000, 1, 0);
+TEST(block_loader_nds, performance)
+{
+//    generate_large_cpio_file();
+    string cache_dir = file_util::make_temp_directory();
+    chrono::high_resolution_clock timer;
+    start_server();
+    auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    string cache_id = block_loader_random::randomString();
+    string version = "version123";
+    auto cache = make_shared<block_loader_cpio_cache>(cache_dir, cache_id, version, client);
+    block_iterator_shuffled iter(cache);
 
-//    buffer_in_array dest(2);
-//    ASSERT_EQ(dest.size(), 2);
-//    ASSERT_EQ(0, dest[0]->get_item_count());
-
-//    client.loadBlock(dest, 0);
-
-//    ASSERT_EQ(8, dest[0]->get_item_count());
-//}
+    auto startTime = timer.now();
+    for(int i=0; i<300; i++)
+    {
+        buffer_in_array dest(2);
+        iter.read(dest);
+    }
+    auto endTime = timer.now();
+    cout << "time " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" << endl;
+    file_util::remove_directory(cache_dir);
+}

@@ -21,17 +21,29 @@
 #include "buffer_in.hpp"
 #include "cpio.hpp"
 #include "block_loader.hpp"
+#include "util.hpp"
 
-namespace nervana {
+namespace nervana
+{
     class block_loader_nds;
 }
 
-class nervana::block_loader_nds : public block_loader {
+class nervana::block_loader_nds : public block_loader
+{
 public:
-    block_loader_nds(const std::string& baseurl, const std::string& token, int collection_id, uint32_t block_size, int shard_count=1, int shard_index=0);
+    block_loader_nds(
+            const std::string& baseurl,
+            const std::string& token,
+            int collection_id,
+            uint32_t block_size,
+            int shard_count=1,
+            int shard_index=0
+            );
+
     ~block_loader_nds();
 
     void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
+    void prefetch_block(uint32_t block_num) override;
     uint32_t object_count() override;
 
     uint32_t block_count();
@@ -43,6 +55,8 @@ private:
 
     const std::string load_block_url(uint32_t block_num);
     const std::string metadata_url();
+    void prefetch_entry(void* param);
+    void fetch_block(uint32_t block_num);
 
     const std::string _baseurl;
     const std::string _token;
@@ -54,4 +68,9 @@ private:
 
     // reuse connection across requests
     void* _curl;
+
+    async                                        async_handler;
+    std::vector<std::vector<char>> prefetch_buffer;
+    uint32_t                                     prefetch_block_num;
+    bool                                         prefetch_pending = false;
 };
