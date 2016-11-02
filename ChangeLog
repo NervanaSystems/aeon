@@ -1,5 +1,16 @@
 # ChangeLog
 
+## v0.2.4 (2016-11-02)
+* Bug fix for subset sampling of manifest files when block size is small
+   * In general, more robust handling of subset sampling is now done over entire manifest
+   * Associated unit tests
+* Bug fix for format handling in sox when running in
+* Prevent multiple processes from writing to same cache at the same time
+    * Use crc to compute cache hash based on manifest content instead of modification time
+    * Associated unit tests
+* Add configurable unkown value for character mapping ETL pipeline
+    * Associated unit tests
+
 ## v0.2.3 (2016-10-18)
 * Add noise_root path option for relative noise index files
 * Bug fix for filterbank shaping
