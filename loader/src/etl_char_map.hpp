@@ -34,9 +34,17 @@ namespace nervana {
     class char_map::config : public interface::config {
         friend class extractor;
     public:
+        /** Maximum length of each transcript. Samples with longer transcripts
+        * will be truncated */
         uint32_t        max_length;
+        /** Character map alphabet */
         std::string     alphabet;
+        /** Integer value to give to unknown characters. 0 causes them to be
+        * discarded.*/
+        uint8_t         unknown_value = 0;
+        /** Pack the output buffer for use in CTC. This places them end to end */
         bool            pack_for_ctc = false;
+        /** Output data type. Currently only uint8_t is supported */
         std::string     output_type{"uint8_t"};
 
         config(nlohmann::json js) {
@@ -67,6 +75,7 @@ namespace nervana {
         std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
             ADD_SCALAR(max_length, mode::REQUIRED),
             ADD_SCALAR(alphabet, mode::REQUIRED),
+            ADD_SCALAR(unknown_value, mode::OPTIONAL),
             ADD_SCALAR(pack_for_ctc, mode::OPTIONAL),
             ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); })
         };
@@ -79,6 +88,9 @@ namespace nervana {
             }
             if (!unique_chars(alphabet)) {
                 throw std::runtime_error("alphabet does not consist of unique chars " + alphabet);
+            }
+            if (unknown_value > 0 && unknown_value < alphabet.size()) {
+                throw std::runtime_error("unknown_value should be >= alphabet length and <= 255");
             }
         }
 
@@ -121,13 +133,14 @@ namespace nervana {
     class char_map::extractor : public interface::extractor<char_map::decoded> {
     public:
         extractor( const char_map::config& cfg)
-        : _cmap{cfg.get_cmap()}, _max_length{cfg.max_length}
+        : _cmap{cfg.get_cmap()}, _max_length{cfg.max_length}, _unknown_value{cfg.unknown_value}
         {}
         virtual ~extractor(){}
         virtual std::shared_ptr<char_map::decoded> extract(const char*, int) override;
     private:
         const std::unordered_map<char, uint8_t>& _cmap;  // This comes from config
         uint32_t  _max_length;
+        const uint8_t _unknown_value;
     };
 
     class char_map::loader : public interface::loader<char_map::decoded> {

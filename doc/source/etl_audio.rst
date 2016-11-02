@@ -88,7 +88,7 @@ You can configure the audio processing pipeline from python using a dictionary l
 
 .. code-block:: python
 
-    audio_config = dict(sampling_freq=16000,
+    audio_config = dict(sample_freq_hz=16000,
                         max_duration="3 seconds",
                         frame_length="256 samples",
                         frame_stride="128 samples",
@@ -164,7 +164,8 @@ Transcription provisioning can be configured using the following parameters:
    :escape: ~
 
    alphabet (string)| *Required* | A string of symbols to be included in the target output
-   max_length (uint_32t) | *Required* | Maximum number of symbols in a target
+   max_length (uint32_t) | *Required* | Maximum number of symbols in a target
+   unknown_value (uint8_t) | 0 | Integer value to give to unknown characters. 0 causes them to be discarded. Value should be between ``len(alphabet)`` and 255.
    pack_for_ctc (bool) | False | Packs the output buffer to be passed to the `warp CTC`_ objective function
    output_type (string) | ~"uint8_t~" | transcript data type
 
