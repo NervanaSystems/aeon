@@ -25,7 +25,7 @@ Ubuntu::
 
   sudo apt-get install libcurl4-openssl-dev clang libopencv-dev libsox-dev
 
-OSX (Assuming you folowed neon_'s Homebrew based install)::
+OSX (Assuming you followed neon_'s Homebrew based install)::
 
   brew tap homebrew/science
   brew install opencv

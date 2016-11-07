@@ -1,5 +1,11 @@
 import numpy as np
 
+try:
+    import pycuda.driver as drv
+    from pycuda.gpuarray import GPUArray
+except ImportError:
+    pass
+
 def gen_backend(backend_name='cpu'):
     backend_name = backend_name.lower()
     assert backend_name in ('cpu', 'gpu', 'mgpu'), backend_name + ' is invalid backend'
@@ -29,8 +35,6 @@ class CpuBackend(object):
         return cpu_array
 
 class GpuBackend(object):
-    import pycuda.driver as drv
-    from pycuda.gpuarray import GPUArray
     '''
     Note that GpuBackend can actually just be instantiated as a special case of MultiGpuBackend
     '''
@@ -65,8 +69,6 @@ class GpuBackend(object):
 
 
 class MultiGpuBackend(object):
-    import pycuda.driver as drv
-    from pycuda.gpuarray import GPUArray
     '''
     Defines the stubs that are necessary for a backend object
     '''
