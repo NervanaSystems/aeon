@@ -58,5 +58,5 @@ high and low level build systems)::
 If your neon is installed system wide, you can instead install aeon system wide
 as well using `sudo python setup.py install`.
 
-Now continue on to the [user guide](https://github.com/NervanaSystems/aeon/doc/source/user_guide.rst) to get started using aeon. Or to the
-[developer guide](https://github.com/NervanaSystems/aeon/doc/source/developer_guide.rst) to developing custom loaders/transformers.
+Now continue on to the [user guide](doc/source/user_guide.rst) to get started using aeon. Or to the
+[developer guide](doc/source/developer_guide.rst) to developing custom loaders/transformers.
