@@ -19,8 +19,8 @@
 #include <stdexcept>
 #include <deque>
 
-namespace nervana {
-
+namespace nervana
+{
 class conststring
 {
 public:
@@ -31,11 +31,13 @@ public:
     {
     }
 
-    constexpr char operator[](size_t i) const {
+    constexpr char operator[](size_t i) const
+    {
         return i < _size ? _string[i] : throw std::out_of_range("");
     }
 
-    constexpr const char* get_ptr(size_t offset) const {
+    constexpr const char* get_ptr(size_t offset) const
+    {
         return &_string[ offset ];
     }
 
@@ -46,26 +48,31 @@ private:
     size_t      _size;
 };
 
-constexpr const char* find_last(conststring s, size_t offset, char ch) {
+constexpr const char* find_last(conststring s, size_t offset, char ch)
+{
     return offset == 0 ? s.get_ptr(0) : (s[offset] == ch ? s.get_ptr(offset+1) : find_last(s, offset-1, ch));
 }
 
-constexpr const char* find_last(conststring s, char ch) {
+constexpr const char* find_last(conststring s, char ch)
+{
     return find_last(s, s.size()-1, ch);
 }
 
-constexpr const char* get_file_name(conststring s) {
+constexpr const char* get_file_name(conststring s)
+{
     return find_last(s, '/');
 }
 
 
-enum class LOG_TYPE {
+enum class LOG_TYPE
+{
     _LOG_TYPE_ERROR,
     _LOG_TYPE_WARNING,
     _LOG_TYPE_INFO,
 };
 
-class log_helper {
+class log_helper
+{
 public:
     log_helper(LOG_TYPE, const char* file, int line, const char* func);
     ~log_helper();
@@ -76,7 +83,8 @@ private:
     std::stringstream _stream;
 };
 
-class logger {
+class logger
+{
     friend class log_helper;
 public:
     static void set_log_path(const std::string& path);

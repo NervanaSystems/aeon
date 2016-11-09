@@ -21,7 +21,8 @@
 
 #include "dataset.hpp"
 
-class gen_image : public dataset<gen_image> {
+class gen_image : public dataset<gen_image>
+{
 public:
     gen_image();
     ~gen_image();

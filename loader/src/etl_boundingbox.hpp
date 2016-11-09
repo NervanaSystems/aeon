@@ -23,8 +23,10 @@
 #include "json.hpp"
 #include "box.hpp"
 
-namespace nervana {
-    namespace boundingbox {
+namespace nervana
+{
+    namespace boundingbox
+    {
         class decoded;
         class config;
         class extractor;
@@ -34,7 +36,8 @@ namespace nervana {
     }
 }
 
-class nervana::boundingbox::box : public nervana::box {
+class nervana::boundingbox::box : public nervana::box
+{
 public:
     bool difficult = false;
     bool truncated = false;
@@ -52,7 +55,8 @@ public:
 
 std::ostream& operator<<(std::ostream&,const nervana::boundingbox::box&);
 
-class nervana::boundingbox::config : public nervana::interface::config {
+class nervana::boundingbox::config : public nervana::interface::config
+{
 public:
     size_t                      height;
     size_t                      width;
@@ -77,7 +81,8 @@ private:
     void validate();
 };
 
-class nervana::boundingbox::decoded : public interface::decoded_media {
+class nervana::boundingbox::decoded : public interface::decoded_media
+{
     friend class transformer;
     friend class extractor;
 public:
@@ -98,7 +103,8 @@ private:
 };
 
 
-class nervana::boundingbox::extractor : public nervana::interface::extractor<nervana::boundingbox::decoded> {
+class nervana::boundingbox::extractor : public nervana::interface::extractor<nervana::boundingbox::decoded>
+{
 public:
     extractor(const std::unordered_map<std::string,int>&);
     virtual ~extractor(){}
@@ -110,7 +116,8 @@ private:
     std::unordered_map<std::string,int> label_map;
 };
 
-class nervana::boundingbox::transformer : public nervana::interface::transformer<nervana::boundingbox::decoded, nervana::image::params> {
+class nervana::boundingbox::transformer : public nervana::interface::transformer<nervana::boundingbox::decoded, nervana::image::params>
+{
 public:
     transformer(const boundingbox::config&);
     virtual ~transformer(){}
@@ -122,7 +129,8 @@ public:
 private:
 };
 
-class nervana::boundingbox::loader : public nervana::interface::loader<nervana::boundingbox::decoded> {
+class nervana::boundingbox::loader : public nervana::interface::loader<nervana::boundingbox::decoded>
+{
 public:
     loader(const boundingbox::config&);
     virtual ~loader(){}

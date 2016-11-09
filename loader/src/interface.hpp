@@ -32,8 +32,10 @@
 
 static int IGNORE_VALUE;
 
-namespace nervana {
-    namespace interface {
+namespace nervana
+{
+    namespace interface
+    {
         class config_info_interface;
         template<typename> class config_info;
         class config;
@@ -59,7 +61,8 @@ namespace nervana {
     std::string dump_default(const std::bernoulli_distribution& v);
 }
 
-class nervana::interface::config_info_interface {
+class nervana::interface::config_info_interface
+{
 public:
     virtual const std::string& name() const = 0;
     virtual void parse(nlohmann::json js) = 0;
@@ -68,7 +71,8 @@ public:
     virtual std::string get_default_value() const = 0;
 };
 
-class nervana::interface::config {
+class nervana::interface::config
+{
 public:
     config() {}
 
@@ -186,7 +190,8 @@ type_name()
 }
 
 template<typename T>
-class nervana::interface::config_info : public nervana::interface::config_info_interface {
+class nervana::interface::config_info : public nervana::interface::config_info_interface
+{
 public:
     config_info(T& var, const std::string& name, nervana::interface::config::mode m,
                 std::function<void(T&,const std::string&, const nlohmann::json&, nervana::interface::config::mode)> parse,
@@ -234,25 +239,29 @@ private:
 };
 
 
-template<typename T, typename S> class nervana::interface::param_factory {
+template<typename T, typename S> class nervana::interface::param_factory
+{
 public:
     virtual ~param_factory() {}
     virtual std::shared_ptr<S> make_params(std::shared_ptr<const T>) = 0;
 };
 
-template<typename T> class nervana::interface::extractor {
+template<typename T> class nervana::interface::extractor
+{
 public:
     virtual ~extractor() {}
     virtual std::shared_ptr<T> extract(const char*, int) = 0;
 };
 
-template<typename T, typename S> class nervana::interface::transformer {
+template<typename T, typename S> class nervana::interface::transformer
+{
 public:
     virtual ~transformer() {}
     virtual std::shared_ptr<T> transform(std::shared_ptr<S>, std::shared_ptr<T>) = 0;
 };
 
-template<typename T> class nervana::interface::loader {
+template<typename T> class nervana::interface::loader
+{
 public:
     virtual ~loader() {}
     virtual void load(const std::vector<void*>&, std::shared_ptr<T>) = 0;
@@ -260,13 +269,15 @@ public:
 
 
 /*  ABSTRACT INTERFACES */
-class nervana::interface::decoded_media {
+class nervana::interface::decoded_media
+{
 public:
     virtual ~decoded_media() {}
 };
 
 /*  ABSTRACT INTERFACES */
-class nervana::interface::params {
+class nervana::interface::params
+{
 public:
     virtual ~params() {}
 };

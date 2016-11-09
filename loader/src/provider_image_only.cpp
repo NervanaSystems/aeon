@@ -29,7 +29,8 @@ image_only::image_only(nlohmann::json js) :
     oshapes.push_back(image_config.get_shape_type());
 }
 
-void image_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
+void image_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
+{
     std::vector<char>& datum_in  = in_buf[0]->get_item(idx);
     char* datum_out  = out_buf[0]->get_item(idx);
 

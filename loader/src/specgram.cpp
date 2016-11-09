@@ -81,7 +81,6 @@ void specgram::wav_to_specgram(const Mat& wav_col_mat,
     return;
 }
 
-
 /** \brief Create an array of frequency weights to convert from linear
 * frequencies to mel-frequencies.
 * For reference, see:

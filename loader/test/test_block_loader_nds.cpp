@@ -32,9 +32,11 @@ using namespace nervana;
 
 // NDSMockServer starts a python process in the constructor and kills the
 // process in the destructor
-class NDSMockServer {
+class NDSMockServer
+{
 public:
-    NDSMockServer() {
+    NDSMockServer()
+    {
         cout << "starting mock nds server ..." << endl;
         pid_t pid = fork();
         if(pid == 0) {
@@ -50,7 +52,8 @@ public:
         _pid = pid;
     }
 
-    ~NDSMockServer() {
+    ~NDSMockServer()
+    {
         cout << "killing mock nds server ..." << endl;
         // kill the python process running the mock NDS
         stringstream stream;
@@ -72,7 +75,8 @@ static void start_server()
     }
 }
 
-TEST(block_loader_nds, curl_stream) {
+TEST(block_loader_nds, curl_stream)
+{
     start_server();
     block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 
@@ -86,7 +90,8 @@ TEST(block_loader_nds, curl_stream) {
     ASSERT_EQ(stream.str(), expected.str());
 }
 
-TEST(block_loader_nds, curl_stream_error) {
+TEST(block_loader_nds, curl_stream_error)
+{
     start_server();
     block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 
@@ -94,7 +99,8 @@ TEST(block_loader_nds, curl_stream_error) {
     EXPECT_THROW(client.get("http://127.0.0.1:5000/error", stream), std::runtime_error);
 }
 
-TEST(block_loader_nds, object_count) {
+TEST(block_loader_nds, object_count)
+{
     start_server();
     block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 
@@ -104,7 +110,8 @@ TEST(block_loader_nds, object_count) {
 }
 
 
-TEST(block_loader_nds, cpio) {
+TEST(block_loader_nds, cpio)
+{
     start_server();
     block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 

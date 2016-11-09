@@ -71,8 +71,8 @@ shared_ptr<decoded> extractor::extract(const char* data, int size)
     return rc;
 }
 
-transformer::transformer() {
-
+transformer::transformer()
+{
 }
 
 shared_ptr<decoded> transformer::transform(shared_ptr<params> pptr, shared_ptr<decoded> media)

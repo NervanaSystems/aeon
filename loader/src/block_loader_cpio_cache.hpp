@@ -30,11 +30,13 @@
  * old version is deleted.
  */
 
-namespace nervana {
+namespace nervana
+{
     class block_loader_cpio_cache;
 }
 
-class nervana::block_loader_cpio_cache : public block_loader {
+class nervana::block_loader_cpio_cache : public block_loader
+{
 public:
     block_loader_cpio_cache(const std::string& rootCacheDir,
                             const std::string& cache_id, const std::string& version,

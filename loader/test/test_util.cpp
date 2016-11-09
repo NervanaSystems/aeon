@@ -46,7 +46,8 @@
 using namespace std;
 using namespace nervana;
 
-TEST(util, unpack_le) {
+TEST(util, unpack_le)
+{
     {
         char data[] = {1,0,0,0};
         int actual = unpack<int>(data);
@@ -88,7 +89,8 @@ TEST(util, unpack_le) {
     }
 }
 
-TEST(util, unpack_be) {
+TEST(util, unpack_be)
+{
     {
         char data[] = {0,0,0,1};
         int actual = unpack<int>(data, 0, endian::BIG);
@@ -111,8 +113,8 @@ TEST(util, unpack_be) {
     }
 }
 
-
-TEST(util, pack_le) {
+TEST(util, pack_le)
+{
     {
         char actual[] = {0,0,0,0};
         char expected[] = {1,0,0,0};
@@ -146,7 +148,8 @@ TEST(util, pack_le) {
 //    }
 }
 
-TEST(avi,video_file) {
+TEST(avi,video_file)
+{
     const string filename = CURDIR"/test_data/bb8.avi";
     shared_ptr<MotionJpegCapture> mjdecoder = make_shared<MotionJpegCapture>(filename);
     ASSERT_TRUE(mjdecoder->isOpened());
@@ -161,7 +164,8 @@ TEST(avi,video_file) {
     EXPECT_EQ(6,image_number);
 }
 
-TEST(avi,video_buffer) {
+TEST(avi,video_buffer)
+{
     const string filename = CURDIR"/test_data/bb8.avi";
     ifstream in(filename, ios_base::binary);
     ASSERT_TRUE(in);
@@ -184,7 +188,8 @@ TEST(avi,video_buffer) {
     EXPECT_EQ(6,image_number);
 }
 
-TEST(util,memstream) {
+TEST(util,memstream)
+{
     string data = "abcdefghijklmnopqrstuvwxyz";
     memstream<char> ms((char*)data.data(),data.size());
     istream is(&ms);
@@ -215,7 +220,8 @@ TEST(util,memstream) {
     // test stream reset
 }
 
-TEST(util,mixchannels) {
+TEST(util,mixchannels)
+{
     int rows = 10;
     int cols = 10;
     {
@@ -277,7 +283,8 @@ TEST(util,mixchannels) {
     }
 }
 
-TEST(util,distance) {
+TEST(util,distance)
+{
     std::string s1 = "aspect_ratio";
     std::string s2 = "crops_per_scale";
 
@@ -298,7 +305,8 @@ void dump_config_info( ostream& f, shared_ptr<nervana::interface::config_info_in
     for(auto x: cfg.config_list) dump_config_info(f, x); \
 }
 
-TEST(util,param_dump) {
+TEST(util,param_dump)
+{
     ofstream f("config_args.txt",ios::trunc);
     DUMP_CONFIG(audio);
     DUMP_CONFIG(boundingbox);
@@ -319,7 +327,8 @@ TEST(util,param_dump) {
     }
 }
 
-TEST(util,split) {
+TEST(util,split)
+{
     {
         string s1 = "this,is,a,test";
         auto r1 = split(s1,',');

@@ -23,8 +23,8 @@
 #include <opencv2/core/core.hpp>
 #include "util.hpp"
 
-namespace nervana {
-
+namespace nervana
+{
 #pragma pack(1)
     struct RiffMainHeader
     {
@@ -55,22 +55,23 @@ namespace nervana {
         return (a |  (b << 8) | (c << 16) | (d << 24));
     }
 
-
-
-    class wavefile_exception: public std::runtime_error {
+    class wavefile_exception : public std::runtime_error
+    {
     public:
         wavefile_exception (const std::string& msg) :
         runtime_error(msg.c_str())
         {}
     };
 
-    class signal_generator {
+    class signal_generator
+    {
     public:
         virtual ~signal_generator() {}
         virtual int16_t operator() (float t) const = 0;
     };
 
-    class sinewave_generator : public signal_generator {
+    class sinewave_generator : public signal_generator
+    {
     public:
         sinewave_generator(float frequency, int16_t amplitude=INT16_MAX) :
         frequency(frequency), amplitude(amplitude)
@@ -86,7 +87,8 @@ namespace nervana {
         int16_t amplitude;
     };
 
-    class wav_data {
+    class wav_data
+    {
     public:
         wav_data(const signal_generator& sigptr,
                  int duration_ss, int rate, bool is_stereo) :

@@ -26,7 +26,8 @@
 using namespace std;
 using namespace nervana;
 
-TEST(typemap, numpy) {
+TEST(typemap, numpy)
+{
     {
         // auto opt = all_outputs.find("int8_t");
         // ASSERT_NE(opt, all_outputs.end());

@@ -169,13 +169,6 @@ void cpio::trailer::read(istream& ifs)
     read_single_value(ifs, &_unused);
 }
 
-
-
-
-
-
-
-
 cpio::reader::reader()
 {
 }

@@ -24,9 +24,10 @@
 #include <sox.h>
 #include <thread>
 
-namespace nervana {
-
-    enum class endian {
+namespace nervana
+{
+    enum class endian
+    {
         LITTLE,
         BIG
     };
@@ -54,7 +55,8 @@ namespace nervana {
         }
     }
 
-    template<typename T> std::string join(const T& v, const std::string& sep) {
+    template<typename T> std::string join(const T& v, const std::string& sep)
+    {
         std::ostringstream ss;
         for(const auto& x : v) {
             if(&x != &v[0]) ss << sep;
@@ -72,7 +74,8 @@ namespace nervana {
     int LevenshteinDistance(const std::string& s1, const std::string& s2);
 
     template<typename CharT, typename TraitsT = std::char_traits<CharT> >
-    class memstream : public std::basic_streambuf<CharT, TraitsT> {
+    class memstream : public std::basic_streambuf<CharT, TraitsT>
+    {
     public:
         memstream(CharT* data, size_t size) {
             this->setg(data, data, data+size);
@@ -100,7 +103,8 @@ namespace nervana {
         }
     };
 
-    class memory_stream : public std::istream {
+    class memory_stream : public std::istream
+    {
     public:
         memory_stream(char* data, size_t size) :
             std::istream{&wrapper},
@@ -120,43 +124,44 @@ namespace nervana {
     cv::Mat read_audio_from_mem(const char* item, int itemSize);
 
     class async
+    {
+    public:
+        async() :
+            ready{false}
         {
-        public:
-            async() :
-                ready{false}
-            {
+        }
+
+        void run(std::function<void(void*)> f, void* param=nullptr)
+        {
+            func = f;
+            ready = false;
+            thread = std::make_shared<std::thread>(&async::entry, this, param);
+        }
+
+        void wait() { thread->join(); }
+        bool is_ready() { return ready; }
+        bool is_busy() { return thread != nullptr; }
+        void rethrow_exception()
+        {
+            std::rethrow_exception(stored_exception);
+        }
+
+    private:
+        async(const async&) = delete;
+
+        void entry(void* param)
+        {
+            try {
+                func(param);
+            } catch(std::exception e) {
+                stored_exception = std::current_exception();
             }
+            ready = true;
+        }
 
-            void run(std::function<void(void*)> f, void* param=nullptr)
-            {
-                func = f;
-                ready = false;
-                thread = std::make_shared<std::thread>(&async::entry, this, param);
-            }
-
-            void wait() { thread->join(); }
-            bool is_ready() { return ready; }
-            bool is_busy() { return thread != nullptr; }
-            void rethrow_exception()
-            {
-                std::rethrow_exception(stored_exception);
-            }
-
-        private:
-            async(const async&) = delete;
-
-            void entry(void* param)
-            {
-                try {
-                    func(param);
-                } catch(std::exception e) {
-                    stored_exception = std::current_exception();
-                }
-                ready = true;
-            }
-
-            std::function<void(void*)>      func;
-            std::shared_ptr<std::thread>    thread;
-            bool                            ready;
-            std::exception_ptr              stored_exception;
-        };}
+        std::function<void(void*)>      func;
+        std::shared_ptr<std::thread>    thread;
+        bool                            ready;
+        std::exception_ptr              stored_exception;
+    };
+}

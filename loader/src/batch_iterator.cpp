@@ -18,10 +18,10 @@
 using namespace nervana;
 
 batch_iterator::batch_iterator(std::shared_ptr<block_iterator> src_block_iterator,
-                               int batch_size)
-    : _src_block_iterator(src_block_iterator),
-      _batch_size(batch_size),
-      _i(0)
+                               int batch_size) :
+    _src_block_iterator(src_block_iterator),
+    _batch_size(batch_size),
+    _i(0)
 {
     // Note that we don't know how many buffer_ins in we will be writing to until this.read()
     // is called.  So we leave our _macrobatch buffer_in_array pointer to null until we get that

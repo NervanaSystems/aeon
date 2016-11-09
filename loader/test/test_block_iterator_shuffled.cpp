@@ -23,7 +23,8 @@
 using namespace std;
 using namespace nervana;
 
-TEST(block_iterator_shuffled, sequential_block) {
+TEST(block_iterator_shuffled, sequential_block)
+{
     block_loader_alphabet bl(8);
     buffer_in_array bp(2);
 
@@ -38,7 +39,8 @@ TEST(block_iterator_shuffled, sequential_block) {
     ASSERT_EQ(sorted(words), true);
 }
 
-TEST(block_iterator_shuffled, shuffled_block) {
+TEST(block_iterator_shuffled, shuffled_block)
+{
     auto mbl = make_shared<block_loader_alphabet>(5);
     block_iterator_shuffled bis(mbl);
     buffer_in_array bp(2);

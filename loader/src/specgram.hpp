@@ -25,11 +25,13 @@
 
 static_assert(sizeof(short) == 2, "Unsupported platform");
 
-namespace nervana {
+namespace nervana
+{
     class specgram;
 }
 
-class nervana::specgram {
+class nervana::specgram
+{
 public:
     specgram() {}
     virtual ~specgram() {}

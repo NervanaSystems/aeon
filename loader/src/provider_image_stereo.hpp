@@ -19,23 +19,27 @@
 #include "etl_image.hpp"
 #include "etl_blob.hpp"
 
-namespace nervana {
-    class image_stereo_blob : public provider_interface {
-    public:
-        image_stereo_blob(nlohmann::json js);
-
-        void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
-
-    private:
-        image::config               image_config;
-        blob::config                target_config;
-        image::extractor            image_extractor;
-        image::transformer          image_transformer;
-        image::loader               image_loader;
-        image::param_factory        image_factory;
-
-        blob::extractor             target_extractor;
-//        blob::transformer           target_transformer;
-        blob::loader                target_loader;
-    };
+namespace nervana
+{
+    class image_stereo_blob;
 }
+
+class nervana::image_stereo_blob : public provider_interface
+{
+public:
+    image_stereo_blob(nlohmann::json js);
+
+    void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
+
+private:
+    image::config               image_config;
+    blob::config                target_config;
+    image::extractor            image_extractor;
+    image::transformer          image_transformer;
+    image::loader               image_loader;
+    image::param_factory        image_factory;
+
+    blob::extractor             target_extractor;
+//        blob::transformer           target_transformer;
+    blob::loader                target_loader;
+};

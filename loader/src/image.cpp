@@ -80,7 +80,8 @@ void image::convert_mix_channels(vector<cv::Mat>& source, vector<cv::Mat>& targe
     }
 }
 
-float image::calculate_scale(const cv::Size& size, int output_width, int output_height) {
+float image::calculate_scale(const cv::Size& size, int output_width, int output_height)
+{
     float im_scale = (float)output_width / (float)size.width;
     cv::Size2f result = size;
     result = result * im_scale;
@@ -90,7 +91,8 @@ float image::calculate_scale(const cv::Size& size, int output_width, int output_
     return im_scale;
 }
 
-cv::Size2f image::cropbox_max_proportional(const cv::Size2f& in_size, const cv::Size2f& out_size) {
+cv::Size2f image::cropbox_max_proportional(const cv::Size2f& in_size, const cv::Size2f& out_size)
+{
     cv::Size2f result = out_size;
     float scale = in_size.width / result.width;
     result = result * scale;

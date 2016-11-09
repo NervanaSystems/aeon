@@ -48,10 +48,12 @@ boundingbox::config::config(nlohmann::json js)
     validate();
 }
 
-void boundingbox::config::validate() {
+void boundingbox::config::validate()
+{
 }
 
-boundingbox::decoded::decoded() {
+boundingbox::decoded::decoded()
+{
 }
 
 boundingbox::extractor::extractor(const std::unordered_map<std::string,int>& map) :
@@ -59,7 +61,8 @@ boundingbox::extractor::extractor(const std::unordered_map<std::string,int>& map
 {
 }
 
-void boundingbox::extractor::extract(const char* data, int size, std::shared_ptr<boundingbox::decoded>& rc) {
+void boundingbox::extractor::extract(const char* data, int size, std::shared_ptr<boundingbox::decoded>& rc)
+{
     string buffer( data, size );
     json j = json::parse(buffer);
     if( j["object"].is_null() ) { throw invalid_argument("'object' missing from metadata"); }
@@ -100,7 +103,8 @@ void boundingbox::extractor::extract(const char* data, int size, std::shared_ptr
     }
 }
 
-shared_ptr<boundingbox::decoded> boundingbox::extractor::extract(const char* data, int size) {
+shared_ptr<boundingbox::decoded> boundingbox::extractor::extract(const char* data, int size)
+{
     shared_ptr<decoded> rc = make_shared<decoded>();
     extract(data, size, rc);
     return rc;
@@ -108,7 +112,6 @@ shared_ptr<boundingbox::decoded> boundingbox::extractor::extract(const char* dat
 
 boundingbox::transformer::transformer(const boundingbox::config&)
 {
-
 }
 
 vector<boundingbox::box> boundingbox::transformer::transform_box(
@@ -169,7 +172,8 @@ vector<boundingbox::box> boundingbox::transformer::transform_box(
     return rc;
 }
 
-shared_ptr<boundingbox::decoded> boundingbox::transformer::transform(shared_ptr<image::params> pptr, shared_ptr<boundingbox::decoded> boxes) {
+shared_ptr<boundingbox::decoded> boundingbox::transformer::transform(shared_ptr<image::params> pptr, shared_ptr<boundingbox::decoded> boxes)
+{
     if( pptr->angle != 0 ) {
         return shared_ptr<boundingbox::decoded>();
     }
@@ -189,7 +193,8 @@ boundingbox::loader::loader(const boundingbox::config& cfg) :
 
 }
 
-void boundingbox::loader::load(const vector<void*>& outlist, shared_ptr<boundingbox::decoded> boxes) {
+void boundingbox::loader::load(const vector<void*>& outlist, shared_ptr<boundingbox::decoded> boxes)
+{
     float* data = (float*)outlist[0];
     size_t output_count = min(max_bbox, boxes->boxes().size());
     int i=0;

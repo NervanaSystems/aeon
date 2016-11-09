@@ -19,23 +19,27 @@
 #include "etl_image.hpp"
 #include "etl_localization.hpp"
 
-namespace nervana {
-    class image_localization : public provider_interface {
-    public:
-        image_localization(nlohmann::json js);
-        void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
-
-    private:
-        image::config               image_config;
-        localization::config        localization_config;
-
-        image::extractor            image_extractor;
-        image::transformer          image_transformer;
-        image::loader               image_loader;
-        image::param_factory        image_factory;
-
-        localization::extractor     localization_extractor;
-        localization::transformer   localization_transformer;
-        localization::loader        localization_loader;
-    };
+namespace nervana
+{
+    class image_localization;
 }
+
+class nervana::image_localization : public provider_interface
+{
+public:
+    image_localization(nlohmann::json js);
+    void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
+
+private:
+    image::config               image_config;
+    localization::config        localization_config;
+
+    image::extractor            image_extractor;
+    image::transformer          image_transformer;
+    image::loader               image_loader;
+    image::param_factory        image_factory;
+
+    localization::extractor     localization_extractor;
+    localization::transformer   localization_transformer;
+    localization::loader        localization_loader;
+};

@@ -37,10 +37,11 @@ std::shared_ptr<image::decoded> video::extractor::extract(const char* item, int 
     return out_img;
 }
 
-video::transformer::transformer(const video::config& config)
- : frame_transformer(config.frame),
-   max_frame_count(config.max_frame_count)
-{}
+video::transformer::transformer(const video::config& config) :
+    frame_transformer(config.frame),
+    max_frame_count(config.max_frame_count)
+{
+}
 
 std::shared_ptr<image::decoded> video::transformer::transform(
     std::shared_ptr<image::params> img_xform,

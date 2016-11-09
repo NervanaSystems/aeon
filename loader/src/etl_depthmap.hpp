@@ -19,52 +19,55 @@
 #include "etl_image.hpp"
 #include "util.hpp"
 
-namespace nervana {
+namespace nervana
+{
 
-    namespace depthmap {
+    namespace depthmap
+    {
         class extractor;
         class transformer;
         class loader;
     }
+}
 
-    //-------------------------------------------------------------------------
-    // Extract
-    //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+// Extract
+//-------------------------------------------------------------------------
 
-    class depthmap::extractor : public interface::extractor<image::decoded>
-    {
-    public:
-        extractor(const image::config&);
-        virtual ~extractor();
-        virtual std::shared_ptr<image::decoded> extract(const char*, int) override;
-    private:
-    };
+class nervana::depthmap::extractor : public interface::extractor<image::decoded>
+{
+public:
+    extractor(const image::config&);
+    virtual ~extractor();
+    virtual std::shared_ptr<image::decoded> extract(const char*, int) override;
+private:
+};
 
-    //-------------------------------------------------------------------------
-    // Transform
-    //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+// Transform
+//-------------------------------------------------------------------------
 
-    class depthmap::transformer : public interface::transformer<image::decoded, image::params>
-    {
-    public:
-        transformer(const image::config&);
-        ~transformer();
-        std::shared_ptr<image::decoded> transform(
-                            std::shared_ptr<image::params> txs,
-                            std::shared_ptr<image::decoded> mp) override;
-    };
+class nervana::depthmap::transformer : public interface::transformer<image::decoded, image::params>
+{
+public:
+    transformer(const image::config&);
+    ~transformer();
+    std::shared_ptr<image::decoded> transform(
+                        std::shared_ptr<image::params> txs,
+                        std::shared_ptr<image::decoded> mp) override;
+};
 
-    //-------------------------------------------------------------------------
-    // Load
-    //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+// Load
+//-------------------------------------------------------------------------
 
-    class depthmap::loader : public interface::loader<image::decoded> {
-    public:
-        loader(const image::config& cfg) : _cfg{cfg} {}
-        ~loader() {}
-        virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) override;
+class nervana::depthmap::loader : public interface::loader<image::decoded> {
+public:
+    loader(const image::config& cfg) : _cfg{cfg} {}
+    ~loader() {}
+    virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) override;
 
-    private:
-        const image::config& _cfg;
-        void split(cv::Mat&, char*);
-    };}
+private:
+    const image::config& _cfg;
+    void split(cv::Mat&, char*);
+};

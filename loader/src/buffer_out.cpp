@@ -40,11 +40,13 @@ buffer_out::buffer_out(size_t element_size, size_t minibatch_size, bool pinned) 
     _data = alloc();
 }
 
-buffer_out::~buffer_out() {
+buffer_out::~buffer_out()
+{
     dealloc(_data);
 }
 
-char* buffer_out::get_item(size_t index) {
+char* buffer_out::get_item(size_t index)
+{
     size_t offset = index * _stride;
     if (index >= (int)_batch_size) {
         // TODO: why not raise exception here?  Is anyone actually
@@ -55,15 +57,18 @@ char* buffer_out::get_item(size_t index) {
     return &_data[offset];
 }
 
-size_t buffer_out::get_item_count() {
+size_t buffer_out::get_item_count()
+{
     return _size / _item_size;
 }
 
-size_t buffer_out::size() {
+size_t buffer_out::size()
+{
     return _size;
 }
 
-char* buffer_out::alloc() {
+char* buffer_out::alloc()
+{
     char*      data;
     if (_pinned == true) {
 #if HAS_GPU
@@ -80,7 +85,8 @@ char* buffer_out::alloc() {
     return data;
 }
 
-void buffer_out::dealloc(char* data) {
+void buffer_out::dealloc(char* data)
+{
     if (_pinned == true) {
 #if HAS_GPU
         cuMemFreeHost(data);

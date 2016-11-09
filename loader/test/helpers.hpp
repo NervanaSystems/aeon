@@ -1,5 +1,5 @@
 /*
- Copyright 2015 Nervana Systems Inc.
+ Copyright 2016 Nervana Systems Inc.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -27,7 +27,8 @@ void dump_vector_of_strings(std::vector<std::string>& words);
 
 void assert_vector_unique(std::vector<std::string>& words);
 
-class image_params_builder {
+class image_params_builder
+{
 public:
     image_params_builder(std::shared_ptr<nervana::image::params> _obj) { obj = _obj; }
 

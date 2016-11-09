@@ -23,12 +23,14 @@
 #include "buffer_pool.hpp"
 #include "buffer_out.hpp"
 
-namespace nervana {
+namespace nervana
+{
     class buffer_pool_out;
 }
 
 // buffer_pool_out acts as our double buffer to hold data before copying to device
-class nervana::buffer_pool_out : public nervana::buffer_pool {
+class nervana::buffer_pool_out : public nervana::buffer_pool
+{
 public:
     buffer_pool_out(const std::vector<size_t>& writeSizes, size_t batchSize, bool pinned = false);
     virtual ~buffer_pool_out();

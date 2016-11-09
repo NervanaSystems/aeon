@@ -18,13 +18,17 @@
 #include <memory>
 #include "provider_interface.hpp"
 
-namespace nervana {
+namespace nervana
+{
     class provider_factory;
 }
 
-class nervana::provider_factory {
+class nervana::provider_factory
+{
 public:
-    virtual ~provider_factory() {}
+    virtual ~provider_factory()
+    {
+    }
 
 public:
     static std::shared_ptr<nervana::provider_interface> create(nlohmann::json configJs);

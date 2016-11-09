@@ -38,7 +38,8 @@
 using namespace std;
 using namespace nervana;
 
-static cv::Mat generate_indexed_image() {
+static cv::Mat generate_indexed_image()
+{
     cv::Mat color = cv::Mat( 256, 256, CV_8UC3 );
     unsigned char *input = (unsigned char*)(color.data);
     int index = 0;
@@ -52,7 +53,8 @@ static cv::Mat generate_indexed_image() {
     return color;
 }
 
-static void test_image(vector<unsigned char>& img, int channels) {
+static void test_image(vector<unsigned char>& img, int channels)
+{
     nlohmann::json js = {
         {"height",30},
         {"width",30},
@@ -93,7 +95,8 @@ static void test_image(vector<unsigned char>& img, int channels) {
     // }
 }
 
-TEST(image,passthrough) {
+TEST(image,passthrough)
+{
     cv::Mat test_image = cv::Mat( 256, 512, CV_8UC3 );
     unsigned char *input = (unsigned char*)(test_image.data);
     int index = 0;
@@ -142,7 +145,8 @@ TEST(image,passthrough) {
 
 }
 
-TEST(image, decoded) {
+TEST(image, decoded)
+{
     cv::Mat img1 = cv::Mat( 256, 256, CV_8UC3 );
     cv::Mat img2 = cv::Mat( 256, 256, CV_8UC3 );
     cv::Mat img3 = cv::Mat( 256, 256, CV_8UC3 );
@@ -160,7 +164,8 @@ TEST(image, decoded) {
     EXPECT_FALSE(decoded.add(v2));
 }
 
-TEST(image, missing_config_arg) {
+TEST(image, missing_config_arg)
+{
     nlohmann::json js = {
         {"width",30},
         {"channels", 1},
@@ -174,7 +179,8 @@ TEST(image, missing_config_arg) {
     EXPECT_THROW(image::config itpj(js), std::invalid_argument);
 }
 
-TEST(image, config) {
+TEST(image, config)
+{
     nlohmann::json js = {
         {"height",30},
         {"width",30},
@@ -220,7 +226,8 @@ TEST(image, config) {
     EXPECT_FLOAT_EQ(0.0,config.flip_distribution.p());
 }
 
-TEST(image, extract1) {
+TEST(image, extract1)
+{
     auto indexed = generate_indexed_image();
     vector<unsigned char> png;
     cv::imencode( ".png", indexed, png );
@@ -228,7 +235,8 @@ TEST(image, extract1) {
     test_image( png, 3 );
 }
 
-TEST(image,extract2) {
+TEST(image,extract2)
+{
     auto indexed = generate_indexed_image();
     vector<unsigned char> png;
     cv::imencode( ".png", indexed, png );
@@ -236,7 +244,8 @@ TEST(image,extract2) {
     test_image( png, 1 );
 }
 
-TEST(image,extract3) {
+TEST(image,extract3)
+{
     cv::Mat img = cv::Mat( 256, 256, CV_8UC1, 0.0 );
     vector<unsigned char> png;
     cv::imencode( ".png", img, png );
@@ -244,7 +253,8 @@ TEST(image,extract3) {
     test_image( png, 3 );
 }
 
-TEST(image,extract4) {
+TEST(image,extract4)
+{
     cv::Mat img = cv::Mat( 256, 256, CV_8UC1, 0.0 );
     vector<unsigned char> png;
     cv::imencode( ".png", img, png );
@@ -252,13 +262,15 @@ TEST(image,extract4) {
     test_image( png, 1 );
 }
 
-bool check_value(shared_ptr<image::decoded> transformed, int x0, int y0, int x1, int y1, int ii=0) {
+bool check_value(shared_ptr<image::decoded> transformed, int x0, int y0, int x1, int y1, int ii=0)
+{
     cv::Mat image = transformed->get_image(ii);
     cv::Vec3b value = image.at<cv::Vec3b>(y0,x0); // row,col
     return x1 == (int)value[0] && y1 == (int)value[1];
 }
 
-TEST(image,transform_crop) {
+TEST(image,transform_crop)
+{
     auto indexed = generate_indexed_image();
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
@@ -286,7 +298,8 @@ TEST(image,transform_crop) {
     EXPECT_TRUE(check_value(transformed,0,29,100,179));
 }
 
-TEST(image,transform_flip) {
+TEST(image,transform_flip)
+{
     auto indexed = generate_indexed_image();
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
@@ -314,7 +327,8 @@ TEST(image,transform_flip) {
     EXPECT_TRUE(check_value(transformed,0,19,119,169));
 }
 
-TEST(image,noconvert_nosplit) {
+TEST(image,noconvert_nosplit)
+{
     nlohmann::json js = {
         {"width", 10},
         {"height",10},
@@ -349,7 +363,8 @@ TEST(image,noconvert_nosplit) {
     }
 }
 
-TEST(image,noconvert_split) {
+TEST(image,noconvert_split)
+{
     nlohmann::json js = {
         {"width", 10},
         {"height",10},
@@ -384,7 +399,8 @@ TEST(image,noconvert_split) {
     }
 }
 
-TEST(image,convert_nosplit) {
+TEST(image,convert_nosplit)
+{
     nlohmann::json js = {
         {"width", 10},
         {"height",10},
@@ -419,7 +435,8 @@ TEST(image,convert_nosplit) {
     }
 }
 
-TEST(image,convert_split) {
+TEST(image,convert_split)
+{
     nlohmann::json js = {
         {"width", 10},
         {"height",10},
@@ -454,7 +471,8 @@ TEST(image,convert_split) {
     }
 }
 
-TEST(image, multi_crop) {
+TEST(image, multi_crop)
+{
     auto indexed = generate_indexed_image();  // 256 x 256
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
@@ -578,7 +596,8 @@ TEST(image, multi_crop) {
     }
 }
 
-TEST(image,cropbox_max_proportional) {
+TEST(image,cropbox_max_proportional)
+{
     {
         cv::Size2f in(100,50);
         cv::Size2f out(200,100);
@@ -620,7 +639,8 @@ TEST(image,cropbox_max_proportional) {
     }
 }
 
-TEST(image,calculate_scale) {
+TEST(image,calculate_scale)
+{
     int width  = 800;
     int height = 800;
     cv::Size size{500,375};
@@ -810,25 +830,15 @@ TEST(image,area_scale)
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-TEST(image, decoded_image) {
+TEST(image, decoded_image)
+{
     cv::Mat img1 = cv::Mat( 256, 256, CV_8UC3 );
 
     image::decoded decoded(img1);
 }
 
-//TEST(image, image_config) {
+//TEST(image, image_config)
+//{
 //    nlohmann::json js = {{"min_size",300},{"max_size",400},{"channels",3},{"flip_enable", false}};
 
 //    image::config config(js);
@@ -840,7 +850,8 @@ TEST(image, decoded_image) {
 //    EXPECT_FLOAT_EQ(0.0,config.flip_distribution.p());
 //}
 
-TEST(image, var_resize) {
+TEST(image, var_resize)
+{
     auto mat = cv::Mat(200,300,CV_8UC3);
     vector<unsigned char> img;
     cv::imencode( ".png", mat, img );
@@ -875,7 +886,8 @@ TEST(image, var_resize) {
     EXPECT_EQ(267,image.size().height);
 }
 
-TEST(image, var_resize_fixed_scale) {
+TEST(image, var_resize_fixed_scale)
+{
     auto mat = cv::Mat(200,300,CV_8UC3);
     vector<unsigned char> img;
     cv::imencode( ".png", mat, img );
@@ -911,7 +923,8 @@ TEST(image, var_resize_fixed_scale) {
     EXPECT_EQ(200,image.size().height);
 }
 
-TEST(image, var_transform_flip) {
+TEST(image, var_transform_flip)
+{
     auto indexed = generate_indexed_image();
     vector<unsigned char> img;
     cv::imencode( ".png", indexed, img );
@@ -944,7 +957,6 @@ TEST(image, var_transform_flip) {
     EXPECT_TRUE(check_value(transformed,0,0,255,0));
     EXPECT_TRUE(check_value(transformed,100,100,255-100,100));
 }
-
 
 bool test_contrast_image(cv::Mat m, float v1, float v2, float v3)
 {
@@ -979,7 +991,6 @@ bool test_contrast_image(cv::Mat m, float v1, float v2, float v3)
     }
     return rc;
 }
-
 
 TEST(photometric, contrast)
 {

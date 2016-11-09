@@ -39,14 +39,6 @@ using namespace std;
 #define OPEN_MAX 128
 #endif
 
-//nervana::temp_file::temp_file()
-//{
-//}
-
-//nervana::temp_file::~temp_file()
-//{
-//}
-
 string nervana::file_util::path_join(const string& s1, const string& s2)
 {
     string rc;

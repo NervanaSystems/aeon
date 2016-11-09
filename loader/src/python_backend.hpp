@@ -23,11 +23,13 @@
 #include "util.hpp"
 #include "buffer_out.hpp"
 
-namespace nervana {
+namespace nervana
+{
     class python_backend;
 }
 
-class nervana::python_backend {
+class nervana::python_backend
+{
 public:
     python_backend(PyObject*);
     ~python_backend();

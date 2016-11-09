@@ -36,17 +36,21 @@ namespace nervana {
  * N threads simultaneously.
  *
  */
-class nervana::thread_pool {
+class nervana::thread_pool
+{
 public:
-    explicit thread_pool(int count)
-    : _count(count), _done(false) {
+    explicit thread_pool(int count) :
+        _count(count),
+        _done(false)
+    {
         _stopped = new bool[count];
         for (int i = 0; i < count; i++) {
             _stopped[i] = false;
         }
     }
 
-    virtual ~thread_pool() {
+    virtual ~thread_pool()
+    {
         for (auto t : _threads) {
             t->join();
             delete t;
@@ -54,17 +58,20 @@ public:
         delete[] _stopped;
     }
 
-    virtual void start() {
+    virtual void start()
+    {
         for (int i = 0; i < _count; i++) {
             _threads.push_back(new std::thread(&thread_pool::run, this, i));
         }
     }
 
-    virtual void stop() {
+    virtual void stop()
+    {
         _done = true;
     }
 
-    bool stopped() {
+    bool stopped()
+    {
         for (int i = 0; i < _count; i++) {
             if (_stopped[i] == false) {
                 return false;
@@ -73,7 +80,8 @@ public:
         return true;
     }
 
-    void join() {
+    void join()
+    {
         for (auto t : _threads) {
             t->join();
         }
@@ -82,7 +90,8 @@ public:
 protected:
     virtual void work(int id) = 0;
 
-    virtual void run(int id) {
+    virtual void run(int id)
+    {
         while (_done == false) {
             work(id);
         }

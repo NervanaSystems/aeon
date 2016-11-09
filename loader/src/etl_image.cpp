@@ -49,7 +49,8 @@ image::config::config(nlohmann::json js)
     validate();
 }
 
-void image::config::validate() {
+void image::config::validate()
+{
     if(crop_offset.param().a() > crop_offset.param().b()) {
         throw std::invalid_argument("invalid crop_offset");
     }

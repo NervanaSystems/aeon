@@ -20,8 +20,10 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-namespace nervana {
-    namespace image {
+namespace nervana
+{
+    namespace image
+    {
         // These functions may be common across different transformers
         void resize(const cv::Mat&, cv::Mat&, const cv::Size2i&, bool interpolate=true);
         void rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interpolate=true, const cv::Scalar& border=cv::Scalar());
@@ -34,7 +36,8 @@ namespace nervana {
         cv::Size2f cropbox_area_scale(const cv::Size2f& in_size, const cv::Size2f& cropbox_size, float scale);
         cv::Point2f cropbox_shift(const cv::Size2f&, const cv::Size2f&, float, float);
 
-        class photometric {
+        class photometric
+        {
         public:
             photometric();
             static void lighting(cv::Mat& inout, std::vector<float>, float color_noise_std);

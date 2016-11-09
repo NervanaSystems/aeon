@@ -24,7 +24,8 @@
 using namespace std;
 using namespace nervana;
 
-TEST(minibatch_iterator, simple) {
+TEST(minibatch_iterator, simple)
+{
     // give a batch_iterator a block-level block_iterator and make sure
     // that reading through the batch_iterator results in reading
     // all of the records in the block-level block_iterator.
@@ -55,7 +56,8 @@ TEST(minibatch_iterator, simple) {
     assert_vector_unique(words);
 }
 
-TEST(minibatch_iterator, shuffled) {
+TEST(minibatch_iterator, shuffled)
+{
     // give a batch_iterator a block-level block_iterator and make sure
     // that reading through the batch_iterator results in reading
     // all of the records in the block-level block_iterator.

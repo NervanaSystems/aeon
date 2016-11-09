@@ -17,7 +17,8 @@
 
 #include "buffer_in.hpp"
 
-namespace nervana {
+namespace nervana
+{
     class block_iterator;
 }
 

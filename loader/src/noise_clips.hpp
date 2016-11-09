@@ -18,11 +18,13 @@
 #include <opencv2/core/core.hpp>
 #include "util.hpp"
 
-namespace nervana {
+namespace nervana
+{
     class noise_clips;
 }
 
-class nervana::noise_clips {
+class nervana::noise_clips
+{
 public:
     noise_clips(const std::string noiseIndexFile, const std::string noiseRoot);
     virtual ~noise_clips();
@@ -31,7 +33,6 @@ public:
                   uint32_t noise_index,
                   float noise_offset_fraction,
                   float noise_level);
-
 
 private:
     void load_index(const std::string& index_file, const std::string& root_dir);

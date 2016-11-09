@@ -1,5 +1,19 @@
-#ifndef DATASET_H
-#define DATASET_H
+/*
+ Copyright 2016 Nervana Systems Inc.
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
+#pragma once
 
 #include <sys/stat.h>
 #include <string>
@@ -25,35 +39,41 @@ public:
 
     }
 
-    T& Directory( const std::string& dir ) {
+    T& Directory( const std::string& dir )
+    {
         _path = dir;
         return *(T*)this;
     }
 
-    T& Prefix( const std::string& prefix ) {
+    T& Prefix( const std::string& prefix )
+    {
         _prefix = prefix;
         return *(T*)this;
     }
 
-    T& MacrobatchMaxItems( int max ) {
+    T& MacrobatchMaxItems( int max )
+    {
         assert(max>0);
         _maxItems = max;
         return *(T*)this;
     }
 
-    T& MacrobatchMaxSize( int max ) {
+    T& MacrobatchMaxSize( int max )
+    {
         assert(max>0);
         _maxSize = max;
         return *(T*)this;
     }
 
-    T& DatasetSize( int size ) {
+    T& DatasetSize( int size )
+    {
         assert(size>0);
         _setSize = size;
         return *(T*)this;
     }
 
-    int Create() {
+    int Create()
+    {
         int rc = -1;
         int fileNo = 0;
         _pathExisted = exists(_path);
@@ -85,7 +105,8 @@ public:
         return rc;
     }
 
-    void Delete() {
+    void Delete()
+    {
         for( const std::string& f : _fileList ) {
             remove(f.c_str());
         }
@@ -95,11 +116,13 @@ public:
         }
     }
 
-    std::string GetDatasetPath() {
+    std::string GetDatasetPath()
+    {
         return _path;
     }
 
-    std::vector<std::string> GetFiles() {
+    std::vector<std::string> GetFiles()
+    {
         return _fileList;
     }
 
@@ -109,7 +132,8 @@ protected:
     virtual std::vector<unsigned char> render_datum( int datumNumber ) = 0;
 
 private:
-    bool exists(const std::string& fileName) {
+    bool exists(const std::string& fileName)
+    {
         struct stat stats;
         return stat(fileName.c_str(), &stats) == 0;
     }
@@ -123,5 +147,3 @@ private:
 
     std::vector<std::string> _fileList;
 };
-
-#endif // DATASET_H

@@ -35,7 +35,8 @@ image_localization::image_localization(nlohmann::json js) :
     oshapes.insert(oshapes.end(), os.begin(), os.end());
 }
 
-void image_localization::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) {
+void image_localization::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
+{
     vector<char>& datum_in  = in_buf[0]->get_item(idx);
     vector<char>& target_in = in_buf[1]->get_item(idx);
 

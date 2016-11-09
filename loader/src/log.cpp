@@ -25,7 +25,8 @@
 
 using namespace std;
 
-namespace nervana {
+namespace nervana
+{
     class thread_starter;
 }
 
@@ -36,7 +37,8 @@ condition_variable          queue_condition;
 static unique_ptr<thread>   queue_thread;
 static bool                 active = false;
 
-class nervana::thread_starter {
+class nervana::thread_starter
+{
 public:
     thread_starter() {
         nervana::logger::start();
@@ -48,16 +50,19 @@ public:
 
 static nervana::thread_starter _starter;
 
-void nervana::logger::set_log_path(const string& path) {
+void nervana::logger::set_log_path(const string& path)
+{
     log_path = path;
 }
 
-void nervana::logger::start() {
+void nervana::logger::start()
+{
     active = true;
     queue_thread = unique_ptr<thread>(new thread(&thread_entry, nullptr));
 }
 
-void nervana::logger::stop() {
+void nervana::logger::stop()
+{
     {
         unique_lock<std::mutex> lk(queue_mutex);
         active = false;
@@ -66,11 +71,13 @@ void nervana::logger::stop() {
     queue_thread->join();
 }
 
-void nervana::logger::process_event(const string& s) {
+void nervana::logger::process_event(const string& s)
+{
     cout << s << "\n";
 }
 
-void nervana::logger::thread_entry(void* param) {
+void nervana::logger::thread_entry(void* param)
+{
     unique_lock<std::mutex> lk(queue_mutex);
     while(active) {
         queue_condition.wait(lk);
@@ -81,13 +88,15 @@ void nervana::logger::thread_entry(void* param) {
     }
 }
 
-void nervana::logger::log_item(const string& s) {
+void nervana::logger::log_item(const string& s)
+{
     unique_lock<std::mutex> lk(queue_mutex);
     queue.push_back(s);
     queue_condition.notify_one();
 }
 
-nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const char* func) {
+nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const char* func)
+{
     switch(type){
     case LOG_TYPE::_LOG_TYPE_ERROR:
         _stream << "[ERR ] ";
@@ -114,6 +123,7 @@ nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const
     _stream << "\t";
 }
 
-nervana::log_helper::~log_helper() {
+nervana::log_helper::~log_helper()
+{
     logger::log_item(_stream.str());
 }

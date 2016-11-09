@@ -34,7 +34,8 @@
 using namespace std;
 using namespace nervana;
 
-static cv::Mat generate_test_image() {
+static cv::Mat generate_test_image()
+{
     cv::Mat color = cv::Mat( 256, 256, CV_8UC3 );
     unsigned char *input = (unsigned char*)(color.data);
     int index = 0;
@@ -50,7 +51,8 @@ static cv::Mat generate_test_image() {
 }
 
 // pixels must be either black or white
-static bool verify_image(cv::Mat img) {
+static bool verify_image(cv::Mat img)
+{
     unsigned char *data = (unsigned char*)(img.data);
     int index = 0;
     for(int row = 0; row < img.rows; row++) {
@@ -64,7 +66,8 @@ static bool verify_image(cv::Mat img) {
     return true;
 }
 
-TEST(pixel_mask, scale_up) {
+TEST(pixel_mask, scale_up)
+{
     auto test_image = generate_test_image();
     vector<uint8_t> test_data;
     cv::imencode(".png", test_image, test_data);
@@ -87,7 +90,8 @@ TEST(pixel_mask, scale_up) {
     EXPECT_TRUE(verify_image(tximg));
 }
 
-TEST(pixel_mask, scale_down) {
+TEST(pixel_mask, scale_down)
+{
     auto test_image = generate_test_image();
     vector<uint8_t> test_data;
     cv::imencode(".png", test_image, test_data);
@@ -110,7 +114,8 @@ TEST(pixel_mask, scale_down) {
     EXPECT_TRUE(verify_image(tximg));
 }
 
-TEST(pixel_mask, rotate) {
+TEST(pixel_mask, rotate)
+{
     auto test_image = generate_test_image();
     vector<uint8_t> test_data;
     cv::imencode(".png", test_image, test_data);
@@ -133,7 +138,8 @@ TEST(pixel_mask, rotate) {
     EXPECT_TRUE(verify_image(tximg));
 }
 
-TEST(pixel_mask, load_int) {
+TEST(pixel_mask, load_int)
+{
     cv::Mat test_image(256, 256, CV_8UC3);
     uint8_t* input = (uint8_t*)(test_image.data);
     int index = 0;
@@ -145,8 +151,6 @@ TEST(pixel_mask, load_int) {
             input[index++] = value;       // r
         }
     }
-
-
 
     vector<uint8_t> test_data;
     cv::imencode(".png", test_image, test_data);
@@ -185,7 +189,8 @@ TEST(pixel_mask, load_int) {
     }
 }
 
-//TEST(pixel_mask, provider) {
+//TEST(pixel_mask, provider)
+//{
 //    string image_path = CURDIR"/test_data/segnet/image/0001TP_006690.png";
 //    string annot_path = CURDIR"/test_data/segnet/annot/0001TP_006690.png";
 

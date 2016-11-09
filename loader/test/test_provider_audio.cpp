@@ -33,7 +33,8 @@ using namespace std;
 using namespace nervana;
 
 
-TEST(provider,audio_classify) {
+TEST(provider,audio_classify)
+{
     nlohmann::json js = {{"type","audio,label"},
                          {"audio", {
                             {"max_duration","2000 milliseconds"},
@@ -80,7 +81,8 @@ TEST(provider,audio_classify) {
 }
 
 
-TEST(provider,audio_transcript) {
+TEST(provider,audio_transcript)
+{
     nlohmann::json js = {{"type","audio,transcription"},
                          {"audio", {
                             {"max_duration","2000 milliseconds"},
@@ -185,5 +187,4 @@ TEST(provider,audio_transcript) {
     {
         ASSERT_EQ(0, *(target_ptr++));
     }
-
 }

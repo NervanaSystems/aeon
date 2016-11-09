@@ -24,17 +24,6 @@ namespace nervana
     class file_util;
 }
 
-//class nervana::temp_file
-//{
-//public:
-//    temp_file();
-//    ~temp_file();
-
-//private:
-//    std::string     name;
-
-//};
-
 class nervana::file_util
 {
 public:

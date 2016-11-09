@@ -32,8 +32,8 @@ using namespace std;
 using namespace nervana;
 
 buffer_pool_out::buffer_pool_out(const std::vector<size_t>& writeSizes,
-                                 size_t batchSize, bool pinned)
-: buffer_pool()
+                                 size_t batchSize, bool pinned) :
+    buffer_pool()
 {
     for (int i = 0; i < _count; i++) {
         _bufs.push_back(make_shared<buffer_out_array>(writeSizes, batchSize, pinned));

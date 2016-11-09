@@ -16,7 +16,8 @@
 #include "util.hpp"
 #include "avi.hpp"
 
-namespace nervana {
+namespace nervana
+{
     class MotionJpegCapture;
 }
 

@@ -25,7 +25,8 @@ using namespace nervana;
 
 // This test is for comparing that a generated wav_data structure can write its data out to
 // 16-bit PCM that can be read via extractor (just via buffer rather than actually touching disk)
-TEST(wav,compare) {
+TEST(wav,compare)
+{
     sinewave_generator sg{400, 500};
     wav_data wav(sg, 2, 16000, false);
 
@@ -56,7 +57,8 @@ TEST(wav,compare) {
     ASSERT_EQ(all_eq, true);
 }
 
-TEST(audio, specgram) {
+TEST(audio, specgram)
+{
     // This test generates a 1kHz signal and ensures that the spectrogram creates the correct
     // line image
     float signal_freq = 1000;
@@ -95,9 +97,8 @@ TEST(audio, specgram) {
     ASSERT_EQ(cv::countNonZero(diff), 0);
 }
 
-
-TEST(audio,transform) {
-
+TEST(audio,transform)
+{
     auto js = R"(
         {
             "max_duration": "2000 milliseconds",
@@ -138,7 +139,8 @@ TEST(audio,transform) {
     delete[] databuf;
 }
 
-TEST(wav,read) {
+TEST(wav,read)
+{
     // requires sox : `apt-get install sox` on ubuntu
     auto a = system("sox -r 16000 -b 16 -e s -n output.wav synth 3 sine 400 vol 0.5");
     string test_file = "output.wav";
@@ -159,9 +161,8 @@ TEST(wav,read) {
     }
 }
 
-
-TEST(audio,transform2) {
-
+TEST(audio,transform2)
+{
     auto js = R"(
         {
             "max_duration": "3 seconds",
@@ -200,9 +201,8 @@ TEST(audio,transform2) {
     delete[] databuf;
 }
 
-
-TEST(audio,samples_out) {
-
+TEST(audio,samples_out)
+{
     auto js = R"(
         {
             "feature_type": "samples",
@@ -262,13 +262,11 @@ TEST(audio,samples_out) {
 
     ASSERT_EQ(all_eq, true);
 
-
     delete[] databuf;
 }
 
-
-TEST(etl, sox_use) {
-
+TEST(etl, sox_use)
+{
     sinewave_generator sg{400, 500};
     wav_data wav(sg, 2, 16000, false);
 
@@ -282,12 +280,10 @@ TEST(etl, sox_use) {
     for (uint i=0; i<60; ++i) {
         ASSERT_EQ(sox_mat.at<int16_t>(i,0) , wav.get_data().at<int16_t>(i, 0));
     }
-
 }
 
-
-TEST(audio, filterbank) {
-
+TEST(audio, filterbank)
+{
     int sample_rate = 2000;
     int fftsz = 20;
     int num_filters = 1;
@@ -303,6 +299,5 @@ TEST(audio, filterbank) {
     for (int ii = 0; ii < 11; ++ii) {
         ASSERT_NEAR(expected[ii], fbank.at<float>(ii, 0), 1e-6);
     }
-
 }
 

@@ -17,13 +17,15 @@
 
 #include <vector>
 
-namespace nervana {
+namespace nervana
+{
     class buffer_pool;
 }
 
 /* Base class buffer_pool only deals in exception handling for now */
 
-class nervana::buffer_pool {
+class nervana::buffer_pool
+{
 protected:
     buffer_pool();
 public:

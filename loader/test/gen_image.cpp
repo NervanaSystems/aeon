@@ -30,10 +30,12 @@ gen_image::gen_image() :
 {
 }
 
-gen_image::~gen_image() {
+gen_image::~gen_image()
+{
 }
 
-gen_image& gen_image::ImageSize( int rows, int cols ) {
+gen_image& gen_image::ImageSize( int rows, int cols )
+{
     assert(rows>0);
     assert(cols>0);
     _imageRows = rows;
@@ -41,7 +43,8 @@ gen_image& gen_image::ImageSize( int rows, int cols ) {
     return *this;
 }
 
-vector<unsigned char> gen_image::render_datum( int number ) {
+vector<unsigned char> gen_image::render_datum( int number )
+{
     cv::Mat image = cv::Mat( _imageRows, _imageCols, CV_8UC3 );
     image = cv::Scalar(255,255,255);
     auto fontFace = cv::FONT_HERSHEY_PLAIN;
@@ -60,7 +63,8 @@ vector<unsigned char> gen_image::render_datum( int number ) {
     return result;
 }
 
-vector<unsigned char> gen_image::render_target( int number ) {
+vector<unsigned char> gen_image::render_target( int number )
+{
     int target = number + 42;
     vector<unsigned char> rc(4);
     nervana::pack<int>((char*)&rc[0],target);

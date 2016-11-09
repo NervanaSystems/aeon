@@ -18,13 +18,15 @@
 #include "block_loader.hpp"
 #include "block_iterator.hpp"
 
-namespace nervana {
+namespace nervana
+{
     class block_iterator_shuffled;
 }
 
 // This batch iterator shuffles the order that macro blocks are used as
 // well as shuffling the data in the buffers.
-class nervana::block_iterator_shuffled : public block_iterator {
+class nervana::block_iterator_shuffled : public block_iterator
+{
 public:
     block_iterator_shuffled(std::shared_ptr<block_loader> loader);
     void read(nervana::buffer_in_array& dest) override;

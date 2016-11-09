@@ -21,12 +21,14 @@
 using namespace std;
 using namespace nervana;
 
-void read(buffer_in& b, const char* str) {
+void read(buffer_in& b, const char* str)
+{
     istringstream is(str);
     b.read(is, strlen(str));
 }
 
-TEST(buffer, shuffle) {
+TEST(buffer, shuffle)
+{
     // create a buffer with lots of words in sorted order.  assert
     // that they are sorted, then shuffle, then assert that they are
     // not sorted
@@ -49,7 +51,8 @@ TEST(buffer, shuffle) {
     ASSERT_EQ(sorted(buffer_to_vector_of_strings(b)), false);
 }
 
-void setup_buffer_exception(buffer_in& b) {
+void setup_buffer_exception(buffer_in& b)
+{
     // setup b with length 4, one value is an exception
     read(b, "a");
 
@@ -63,13 +66,15 @@ void setup_buffer_exception(buffer_in& b) {
     read(b, "d");
 }
 
-TEST(buffer, write_exception) {
+TEST(buffer, write_exception)
+{
     buffer_in b;
 
     setup_buffer_exception(b);
 }
 
-TEST(buffer, read_exception) {
+TEST(buffer, read_exception)
+{
     buffer_in b;
 
     setup_buffer_exception(b);

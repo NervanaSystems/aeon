@@ -33,7 +33,8 @@
 #include "buffer_pool_out.hpp"
 #include "util.hpp"
 
-namespace nervana {
+namespace nervana
+{
     class decode_thread_pool;
     class loader_config;
     class read_thread_pool;
@@ -48,7 +49,8 @@ namespace nervana {
  * then copied to the `device`.
  *
  */
-class nervana::decode_thread_pool : public nervana::thread_pool {
+class nervana::decode_thread_pool : public nervana::thread_pool
+{
 public:
     decode_thread_pool(int count,
                        const std::shared_ptr<nervana::buffer_pool_in>& in,
@@ -93,7 +95,8 @@ private:
     std::vector<int>            _endInds;
 };
 
-class nervana::loader_config : public nervana::interface::config {
+class nervana::loader_config : public nervana::interface::config
+{
 public:
     std::string manifest_filename;
     std::string manifest_root;
@@ -152,7 +155,8 @@ private:
  *
  */
 
-class nervana::read_thread_pool: public thread_pool {
+class nervana::read_thread_pool: public thread_pool
+{
 public:
     read_thread_pool(const std::shared_ptr<nervana::buffer_pool_in>& out,
                      const std::shared_ptr<nervana::batch_iterator>& batch_iterator);
@@ -175,7 +179,8 @@ private:
  * loading the data into device memory
 */
 
-class nervana::loader {
+class nervana::loader
+{
 public:
     loader(const char*, PyObject *);
 

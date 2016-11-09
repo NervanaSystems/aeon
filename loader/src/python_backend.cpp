@@ -20,8 +20,8 @@
 using namespace nervana;
 using namespace std;
 
-python_backend::python_backend(PyObject* py_obj_backend)
-: _py_obj_backend(py_obj_backend)
+python_backend::python_backend(PyObject* py_obj_backend) :
+    _py_obj_backend(py_obj_backend)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();

@@ -46,13 +46,11 @@ audio::transformer::transformer(const audio::config& config) :
                                      _filterbank);
     }
     _noisemaker = make_shared<noise_clips>(_cfg.noise_index_file, _cfg.noise_root);
-
 }
 
 audio::transformer::~transformer()
 {
 }
-
 
 /** \brief Transform the raw sound waveform into the desired feature space,
 * possibly after adding noise.

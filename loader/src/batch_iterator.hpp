@@ -20,11 +20,13 @@
 #include "buffer_in.hpp"
 #include "block_iterator.hpp"
 
-namespace nervana {
+namespace nervana
+{
     class batch_iterator;
 }
 
-class nervana::batch_iterator {
+class nervana::batch_iterator
+{
 public:
     batch_iterator(std::shared_ptr<block_iterator> src_block_iterator, int batch_size);
 

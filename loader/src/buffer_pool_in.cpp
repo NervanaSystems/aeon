@@ -31,8 +31,8 @@
 using namespace std;
 using namespace nervana;
 
-buffer_pool_in::buffer_pool_in(unsigned int nbuffers_in)
-: buffer_pool()
+buffer_pool_in::buffer_pool_in(unsigned int nbuffers_in) :
+    buffer_pool()
 {
     for (int i = 0; i < _count; i++) {
         _bufs.push_back(make_shared<buffer_in_array>(nbuffers_in));

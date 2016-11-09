@@ -21,7 +21,8 @@
 using namespace std;
 using namespace nervana;
 
-TEST(video,extract_transform) {
+TEST(video,extract_transform)
+{
     int width      = 352;
     int height     = 288;
     int nseconds   = 1;
@@ -81,10 +82,10 @@ TEST(video,extract_transform) {
         INFO << vidgen_command.str() << endl;
         ERR << "Missing ffmpeg for video extraction test" << endl;
     }
-
 }
 
-TEST(video,image_transform) {
+TEST(video,image_transform)
+{
     int width = 352;
     int height = 288;
 
@@ -104,14 +105,16 @@ TEST(video,image_transform) {
     _imageTransformer.transform(imageParams, decoded_image);
 }
 
-unsigned char expected_value(int d, int h, int w, int c) {
+unsigned char expected_value(int d, int h, int w, int c)
+{
     // set up expected_value in final outbuf so that viewed in
     // order in memory you see 0, 1, 2, 3, ...
     // the expected value of outbuf at index expected_value is expected_value
     return (((((c * 5) + d) * 4) + h) * 2) + w;
 }
 
-TEST(video,loader) {
+TEST(video,loader)
+{
     // set up video::decoded with specific values
     // the color of any pixel channel should
     // = channel

@@ -23,11 +23,13 @@
 #include "buffer_pool.hpp"
 #include "buffer_in.hpp"
 
-namespace nervana {
+namespace nervana
+{
     class buffer_pool_in;
 }
 
-class nervana::buffer_pool_in : public nervana::buffer_pool {
+class nervana::buffer_pool_in : public nervana::buffer_pool
+{
 public:
     buffer_pool_in(unsigned int nbuffers_in);
     virtual ~buffer_pool_in();

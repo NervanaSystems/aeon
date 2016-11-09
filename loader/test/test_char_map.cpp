@@ -27,14 +27,15 @@
 using namespace std;
 using namespace nervana;
 
-TEST(char_map, bad) {
+TEST(char_map, bad)
+{
     nlohmann::json js = {{"alphabet", "abcccc "},
                          {"max_length", 15}};
     EXPECT_THROW(char_map::config cfg{js}, std::runtime_error);
-
 }
 
-TEST(char_map, test) {
+TEST(char_map, test)
+{
     {
         string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()";
         string transcript = "The quick brown fox jumps over the lazy dog";
@@ -112,6 +113,5 @@ TEST(char_map, test) {
                 ASSERT_EQ(outbuf[i], 0);
             }
         }
-
     }
 }
