@@ -31,6 +31,9 @@ OSX (Assuming you followed neon_'s Homebrew based install)::
   brew install opencv
   brew install sox
 
+Note: Fedora and CentOS 7 are unsupported platforms for aeon, but we've found the following
+instructions to be useful.
+
 Fedora::
 
   sudo dnf install opencv-devel clang libcurl-devel sox-devel
@@ -40,6 +43,9 @@ to understand the GCC flags that the Python extension build system imposes, so
 we build the latest version of Clang from source (after first installing it's 
 high and low level build systems)::
 
+    yum -y install libcurl-devel gcc gcc-c++ make pkgconfig opencv-devel git \
+        python-virtualenv libyaml-devel epel-release hdf5-devel python-pip \
+        sox-devel
     sudo -i
     # Build CMake
     cd $BUILDROOT

@@ -68,6 +68,13 @@ if [[ $? == 0 ]]; then
 	export IMGLIBS="$(pkg-config --libs-only-l opencv)"
 fi
 
+pkg-config --exists sox
+if [[ $? == 0 ]]; then
+	export INC="$(pkg-config --cflags sox)"
+	export IMGLDIR="$IMGLDIR $(pkg-config --libs-only-L sox)"
+	export IMGLIBS="$IMGLIBS $(pkg-config --libs-only-l sox)"
+fi
+
 export MEDIAFLAGS="${IMGFLAG}"
 export LDIR="${IMGLDIR}"
 export LIBS="-lsox -lcurl ${IMGLIBS}"
