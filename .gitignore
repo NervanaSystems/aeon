@@ -66,3 +66,5 @@ tmp/
 *.AppleDouble
 
 config_args.txt
+.nfs*
+venv/
