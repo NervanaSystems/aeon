@@ -23,8 +23,7 @@ using namespace std;
 python_backend::python_backend(PyObject* py_obj_backend) :
     _py_obj_backend(py_obj_backend)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    gil_state state;
 
     if (_py_obj_backend == NULL) {
         throw std::runtime_error("Python Backend object does not exist");
@@ -40,8 +39,6 @@ python_backend::python_backend(PyObject* py_obj_backend) :
     if (!PyCallable_Check(_f_consume)) {
         throw std::runtime_error("Backend 'consume' function does not exist or is not callable");
     }
-
-    PyGILState_Release(gstate);
 }
 
 void python_backend::setup_buffers(const vector<nervana::shape_type>& oshape_types, int batchSize)
@@ -49,8 +46,7 @@ void python_backend::setup_buffers(const vector<nervana::shape_type>& oshape_typ
     _oshape_types = oshape_types;
     _batchSize = batchSize;
 
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    gil_state state;
     PyOS_sighandler_t sighandler = PyOS_getsig(SIGINT);
     if (_import_array() < 0) {
         throw std::runtime_error("numpy.core.multiarray failed to import");
@@ -62,14 +58,11 @@ void python_backend::setup_buffers(const vector<nervana::shape_type>& oshape_typ
         _host_lists.push_back(initPyList());
         _dev_lists.push_back(initPyList());
     }
-
-    PyGILState_Release(gstate);
 }
 
 PyObject* python_backend::get_shapes()
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    gil_state state;
 
     uint32_t num_shapes = _oshape_types.size();
     PyObject* all_shapes = PyTuple_New(num_shapes);
@@ -83,9 +76,6 @@ PyObject* python_backend::get_shapes()
         }
         PyTuple_SetItem(all_shapes, idx, this_shape);
     }
-
-
-    PyGILState_Release(gstate);
 
     return all_shapes;
 }
@@ -104,8 +94,7 @@ PyObject* python_backend::initPyList(int length)
 
 void python_backend::clear_buffers()
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    gil_state state;
     for (auto h: _host_lists) {
         Py_XDECREF(h);
     }
@@ -114,23 +103,19 @@ void python_backend::clear_buffers()
     }
     _host_lists.clear();
     _dev_lists.clear();
-    PyGILState_Release(gstate);
 }
 
 python_backend::~python_backend()
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    gil_state state;
     Py_XDECREF(_f_consume);
     Py_XDECREF(_py_obj_backend);
-    PyGILState_Release(gstate);
 
 }
 
 bool python_backend::use_pinned_memory()
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    gil_state state;
 
     bool result = false;
     PyObject *pinned_mem = PyObject_GetAttrString(_py_obj_backend, "use_pinned_mem");
@@ -140,15 +125,13 @@ bool python_backend::use_pinned_memory()
         }
         Py_DECREF(pinned_mem);
     }
-    PyGILState_Release(gstate);
     return result;
 }
 
 // Copy to device.
 void python_backend::call_backend_transfer(buffer_out_array &outBuf, int bufIdx)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    gil_state state;
 
     affirm(_host_lists.size() == _oshape_types.size(), "host lists size does not match oshape size");
     affirm(_dev_lists.size() == _host_lists.size(), "dev list size does not match host lists size");
@@ -167,14 +150,11 @@ void python_backend::call_backend_transfer(buffer_out_array &outBuf, int bufIdx)
         Py_XDECREF(pArgs);
         Py_XDECREF(pRes);
     }
-    PyGILState_Release(gstate);
 }
 
 PyObject* python_backend::get_host_tuple(int bufIdx)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-
+    gil_state state;
 
     int provider_count = _dev_lists.size();
     PyObject *result = PyTuple_New(provider_count);
@@ -193,7 +173,6 @@ PyObject* python_backend::get_host_tuple(int bufIdx)
         PyTuple_SetItem(result, pidx, value);
     }
 
-    PyGILState_Release(gstate);
     return result;
 }
 

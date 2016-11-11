@@ -26,7 +26,17 @@
 namespace nervana
 {
     class python_backend;
+    class gil_state;
 }
+
+class nervana::gil_state
+{
+public:
+    gil_state() : gstate{PyGILState_Ensure()} {}
+    ~gil_state() { PyGILState_Release(gstate); }
+private:
+    PyGILState_STATE gstate;
+};
 
 class nervana::python_backend
 {
