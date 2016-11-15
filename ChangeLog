@@ -1,5 +1,11 @@
 # ChangeLog
 
+## v0.2.5 (2016-11-15)
+* General code cleanup
+* Add prefetch to double-buffer reads for NDS and file block reading
+* Add class to manage python gil state
+* Fix compilation on centos 7
+
 ## v0.2.4 (2016-11-02)
 * Bug fix for subset sampling of manifest files when block size is small
    * In general, more robust handling of subset sampling is now done over entire manifest
