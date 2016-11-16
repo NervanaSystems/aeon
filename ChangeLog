@@ -1,5 +1,8 @@
 # ChangeLog
 
+## v0.2.6 (2016-11-16)
+* Bug fix for clean termination
+
 ## v0.2.5 (2016-11-15)
 * General code cleanup
 * Add prefetch to double-buffer reads for NDS and file block reading

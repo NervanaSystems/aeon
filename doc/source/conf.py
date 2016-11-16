@@ -72,8 +72,8 @@ copyright = u'2016, Nervana Systems Inc'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-# The short X.Y version.
-version = '0.2.5'
+# The X.Y.Z version.
+version = '0.2.6'
 # The full version, including alpha/beta/rc tags.
 release = version
 
