@@ -127,20 +127,47 @@ namespace nervana
     {
     public:
         async() :
+            thread{nullptr},
             ready{false}
         {
+        }
+
+        ~async()
+        {
+            if(thread) {
+                thread->detach();
+                delete thread;
+            }
+            thread = nullptr;
         }
 
         void run(std::function<void(void*)> f, void* param=nullptr)
         {
             func = f;
             ready = false;
-            thread = std::make_shared<std::thread>(&async::entry, this, param);
+            if(thread) {
+                thread->detach();
+                delete thread;
+            }
+            thread = new std::thread(&async::entry, this, param);
         }
 
-        void wait() { thread->join(); }
-        bool is_ready() { return ready; }
-        bool is_busy() { return thread != nullptr; }
+        void wait()
+        {
+            if(thread) {
+                thread->join();
+                delete thread;
+                thread = nullptr;
+            }
+        }
+        bool is_ready()
+        {
+            return ready;
+        }
+        bool is_busy()
+        {
+            return thread != nullptr;
+        }
         void rethrow_exception()
         {
             std::rethrow_exception(stored_exception);
@@ -160,7 +187,7 @@ namespace nervana
         }
 
         std::function<void(void*)>      func;
-        std::shared_ptr<std::thread>    thread;
+        std::thread*                    thread;
         bool                            ready;
         std::exception_ptr              stored_exception;
     };
