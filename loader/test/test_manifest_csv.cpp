@@ -83,7 +83,7 @@ TEST(manifest, parse_file_doesnt_exist)
     string tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest0(tmpname, false);
 
-    ASSERT_EQ(manifest0.objectCount(), 0);
+    ASSERT_EQ(manifest0.object_count(), 0);
 }
 
 TEST(manifest, parse_file)
@@ -92,7 +92,7 @@ TEST(manifest, parse_file)
     string tmpname = mm.tmp_manifest_file(2, {0, 0});
 
     nervana::manifest_csv manifest0(tmpname, false);
-    ASSERT_EQ(manifest0.objectCount(), 2);
+    ASSERT_EQ(manifest0.object_count(), 2);
 }
 
 TEST(manifest, no_shuffle)
@@ -131,13 +131,13 @@ TEST(manifest, non_paired_manifests)
         manifest_maker mm;
         string filename = mm.tmp_manifest_file(20, {4, 4, 4});
         nervana::manifest_csv manifest1(filename, false);
-        ASSERT_EQ(manifest1.objectCount(), 20);
+        ASSERT_EQ(manifest1.object_count(), 20);
     }
     {
         manifest_maker mm;
         string filename = mm.tmp_manifest_file(20, {4});
         nervana::manifest_csv manifest1(filename, false);
-        ASSERT_EQ(manifest1.objectCount(), 20);
+        ASSERT_EQ(manifest1.object_count(), 20);
     }
 }
 

@@ -29,31 +29,27 @@ block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst,
                                      float subset_fraction,
                                      uint32_t block_size) :
     block_loader(block_size),
-    _manifest(mfst),
-    prefetch_pending(false)
+    m_manifest(mfst),
+    m_prefetch_pending(false)
 {
-    elements_per_record = _manifest->nelements();
+    m_elements_per_record = m_manifest->nelements();
     affirm(subset_fraction > 0.0 && subset_fraction <= 1.0,
            "subset_fraction must be >= 0 and <= 1");
 
-    _manifest->generate_subset(subset_fraction);
+    m_manifest->generate_subset(subset_fraction);
 }
 
 void block_loader_file::load_block(nervana::buffer_in_array& dest, uint32_t block_num)
 {
-    if(prefetch_pending) {
-//        if(async_handler.is_ready())
-//            cout << __FILE__ << " " << __LINE__ << " prefetch ready" << endl;
-//        else
-//            cout << __FILE__ << " " << __LINE__ << " prefetch busy" << endl;
-        async_handler.wait();
+    if(m_prefetch_pending) {
+        m_async_handler.wait();
     } else {
         fetch_block(block_num);
     }
-    auto it = prefetch_buffer.begin();
+    auto it = m_prefetch_buffer.begin();
     for(int i=0; i<block_size(); i++)
     {
-        if(it != prefetch_buffer.end())
+        if(it != m_prefetch_buffer.end())
         {
             for(int j=0; j<dest.size(); j++)
             {
@@ -70,7 +66,7 @@ void block_loader_file::load_block(nervana::buffer_in_array& dest, uint32_t bloc
 
 void block_loader_file::fetch_block(uint32_t block_num)
 {
-    prefetch_buffer.clear();
+    m_prefetch_buffer.clear();
     // NOTE: thread safe so long as you aren't modifying the manifest
     // NOTE: dest memory must already be allocated at the correct size
     // NOTE: end_i - begin_i may not be a full block for the last
@@ -78,12 +74,12 @@ void block_loader_file::fetch_block(uint32_t block_num)
 
     // begin_i and end_i contain the indexes into the manifest file which
     // hold the requested block
-    size_t begin_i = block_num * _block_size;
-    size_t end_i = min((block_num + 1) * (size_t)_block_size, _manifest->objectCount());
+    size_t begin_i = block_num * m_block_size;
+    size_t end_i = min((block_num + 1) * (size_t)m_block_size, m_manifest->object_count());
 
     // ensure we stay within bounds of manifest
-    affirm(begin_i <= _manifest->objectCount(), "block_loader_file begin outside manifest bounds");
-    affirm(end_i <= _manifest->objectCount(), "block_loader_file end outside manifest bounds");
+    affirm(begin_i <= m_manifest->object_count(), "block_loader_file begin outside manifest bounds");
+    affirm(end_i <= m_manifest->object_count(), "block_loader_file end outside manifest bounds");
 
     // TODO: move index offset logic and bounds asserts into Manifest
     // interface to more easily support things like offset/limit queries.
@@ -93,8 +89,8 @@ void block_loader_file::fetch_block(uint32_t block_num)
     //  - it should expose an at(index) method instead of begin()/end()
     //  - it should expose a getCursor(index_begin, index_end) which more
     //    closely mirrors most database query patterns (limit/offset)
-    auto begin_it = _manifest->begin() + begin_i;
-    auto end_it = _manifest->begin() + end_i;
+    auto begin_it = m_manifest->begin() + begin_i;
+    auto end_it = m_manifest->begin() + end_i;
 
     for(auto it = begin_it; it != end_it; ++it) {
         // load both object and target files into respective buffers
@@ -108,9 +104,9 @@ void block_loader_file::fetch_block(uint32_t block_num)
             try {
                 vector<char> buffer;
                 load_file(buffer, file_list[i]);
-                prefetch_buffer.push_back({buffer,nullptr});
+                m_prefetch_buffer.push_back({buffer,nullptr});
             } catch (std::exception& e) {
-                prefetch_buffer.push_back({vector<char>(),current_exception()});
+                m_prefetch_buffer.push_back({vector<char>(),current_exception()});
             }
         }
     }
@@ -127,18 +123,18 @@ void block_loader_file::load_file(vector<char>& buffer, const string& filename)
 
 uint32_t block_loader_file::object_count()
 {
-    return _manifest->objectCount();
+    return m_manifest->object_count();
 }
 
 void block_loader_file::prefetch_block(uint32_t block_num)
 {
-    prefetch_pending = true;
-    prefetch_block_num = block_num;
+    m_prefetch_pending = true;
+    m_prefetch_block_num = block_num;
     std::function<void(void*)> f = std::bind(&block_loader_file::prefetch_entry, this, &block_num);
-    async_handler.run(f);
+    m_async_handler.run(f);
 }
 
 void block_loader_file::prefetch_entry(void* param)
 {
-    fetch_block(prefetch_block_num);
+    fetch_block(m_prefetch_block_num);
 }

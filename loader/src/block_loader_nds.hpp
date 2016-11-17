@@ -58,19 +58,19 @@ private:
     void prefetch_entry(void* param);
     void fetch_block(uint32_t block_num);
 
-    const std::string _baseurl;
-    const std::string _token;
-    const int _collection_id;
-    const int _shard_count;
-    const int _shard_index;
-    unsigned int _objectCount;
-    unsigned int _blockCount;
+    const std::string m_baseurl;
+    const std::string m_token;
+    const int         m_collection_id;
+    const int         m_shard_count;
+    const int         m_shard_index;
+    unsigned int      m_object_count;
+    unsigned int      m_block_count;
 
     // reuse connection across requests
-    void* _curl;
+    void*             m_curl;
 
-    async                                        async_handler;
-    std::vector<std::vector<char>> prefetch_buffer;
-    uint32_t                                     prefetch_block_num;
-    bool                                         prefetch_pending = false;
+    async                          m_async_handler;
+    std::vector<std::vector<char>> m_prefetch_buffer;
+    uint32_t                       m_prefetch_block_num;
+    bool                           m_prefetch_pending = false;
 };

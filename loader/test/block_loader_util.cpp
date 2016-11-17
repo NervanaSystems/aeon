@@ -35,7 +35,7 @@ void block_loader_alphabet::load_block(buffer_in_array &dest, uint32_t block_num
     // ...
     affirm(block_num < 26, "block_num must be < 26");
 
-    for(uint32_t i = 0; i < _block_size; ++i) {
+    for(uint32_t i = 0; i < m_block_size; ++i) {
         stringstream ss;
         ss << (char)('A' + block_num);
         ss << (char)('a' + i);

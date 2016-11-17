@@ -30,19 +30,19 @@ block_loader_cpio_cache::block_loader_cpio_cache(const string& rootCacheDir,
                                                  const string& version,
                                                  shared_ptr<block_loader> loader) :
     block_loader(loader->block_size()),
-    _loader(loader),
-    block_count{loader->block_count()},
-    cache_owner{false}
+    m_loader(loader),
+    m_block_count{loader->block_count()},
+    m_cache_owner{false}
 {
     invalidate_old_cache(rootCacheDir, cache_id, version);
 
-    _cacheDir = file_util::path_join(rootCacheDir, cache_id + "_" + version);
+    m_cache_dir = file_util::path_join(rootCacheDir, cache_id + "_" + version);
 
-    if(file_util::make_directory(_cacheDir))
+    if(file_util::make_directory(m_cache_dir))
     {
         // If I successfully created the directory then it did not exist.
         // Therefore I am the owner and must write the end-of-data file
-        cache_owner = true;
+        m_cache_owner = true;
     }
 
     if(check_if_complete() == false) {
@@ -57,12 +57,12 @@ void block_loader_cpio_cache::load_block(buffer_in_array& dest, uint32_t block_n
     if(load_block_from_cache(dest, block_num)) {
         return;
     } else {
-        _loader->load_block(dest, block_num);
+        m_loader->load_block(dest, block_num);
 
         try {
             write_block_to_cache(dest, block_num);
 
-            if(block_num == block_count-1)
+            if(block_num == m_block_count-1)
             {
                 mark_cache_complete();
                 release_ownership();
@@ -152,39 +152,39 @@ bool block_loader_cpio_cache::filename_holds_invalid_cache(const string& filenam
 
 string block_loader_cpio_cache::block_filename(uint32_t block_num)
 {
-    string file = to_string(block_num) + "-" + to_string(_block_size) + ".cpio";
-    string rc = file_util::path_join(_cacheDir, file);
+    string file = to_string(block_num) + "-" + to_string(m_block_size) + ".cpio";
+    string rc = file_util::path_join(m_cache_dir, file);
     return rc;
 }
 
 uint32_t block_loader_cpio_cache::object_count()
 {
-    return _loader->object_count();
+    return m_loader->object_count();
 }
 
 bool block_loader_cpio_cache::check_if_complete()
 {
-    string file = file_util::path_join(_cacheDir, cache_complete_filename);
+    string file = file_util::path_join(m_cache_dir, m_cache_complete_filename);
     return file_util::exists(file);
 }
 
 void block_loader_cpio_cache::mark_cache_complete()
 {
-    string file = file_util::path_join(_cacheDir, cache_complete_filename);
+    string file = file_util::path_join(m_cache_dir, m_cache_complete_filename);
     ofstream f{file};
 }
 
 bool block_loader_cpio_cache::take_ownership()
 {
-    string file = file_util::path_join(_cacheDir, owner_lock_filename);
-    ownership_lock = file_util::try_get_lock(file);
-    return ownership_lock != -1;
+    string file = file_util::path_join(m_cache_dir, m_owner_lock_filename);
+    m_ownership_lock = file_util::try_get_lock(file);
+    return m_ownership_lock != -1;
 }
 
 void block_loader_cpio_cache::release_ownership()
 {
-    string file = file_util::path_join(_cacheDir, owner_lock_filename);
-    file_util::release_lock(ownership_lock, file);
+    string file = file_util::path_join(m_cache_dir, m_owner_lock_filename);
+    file_util::release_lock(m_ownership_lock, file);
 }
 
 void block_loader_cpio_cache::prefetch_block(uint32_t block_num)
@@ -192,6 +192,6 @@ void block_loader_cpio_cache::prefetch_block(uint32_t block_num)
     string file = block_filename(block_num);
     if(file_util::exists(file) == false)
     {
-        _loader->prefetch_block(block_num);
+        m_loader->prefetch_block(block_num);
     }
 }

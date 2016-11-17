@@ -47,8 +47,8 @@ public:
     int get_item_count();
 
 private:
-    std::vector<std::vector<char>> buffers;
-    std::map<int, std::exception_ptr> exceptions;
+    std::vector<std::vector<char>> m_buffers;
+    std::map<int, std::exception_ptr> m_exceptions;
 };
 
 // buffer_in_array holds a vector of buffer_in*.  Each buffer_in* holds one component
@@ -61,25 +61,25 @@ public:
     {
         for (uint32_t i=0; i<nbuffers_in; ++i)
         {
-            data.push_back(new buffer_in());
+            m_data.push_back(new buffer_in());
         }
     }
 
     ~buffer_in_array()
     {
-        for (auto buf : data)
+        for (auto buf : m_data)
         {
             delete buf;
         }
     }
 
-    buffer_in* operator[](int i) { return data[i]; }
-    const buffer_in* operator[](int i) const { return data[i]; }
-    size_t size() const { return data.size(); }
+    buffer_in* operator[](int i) { return m_data[i]; }
+    const buffer_in* operator[](int i) const { return m_data[i]; }
+    size_t size() const { return m_data.size(); }
 
-    std::vector<buffer_in*>::iterator begin() { return data.begin(); }
-    std::vector<buffer_in*>::iterator end() { return data.end(); }
+    std::vector<buffer_in*>::iterator begin() { return m_data.begin(); }
+    std::vector<buffer_in*>::iterator end() { return m_data.end(); }
 
 private:
-    std::vector<buffer_in*>    data;
+    std::vector<buffer_in*>    m_data;
 };

@@ -50,10 +50,10 @@ protected:
     void advance(int& index);
 
 protected:
-    static constexpr int        _count = 2;
-    int                         _used = 0;
-    std::vector<std::shared_ptr<buffer_in_array>> _bufs;
-    std::mutex                  _mutex;
-    std::condition_variable     _nonFull;
-    std::condition_variable     _nonEmpty;
+    static constexpr int        m_count = 2;
+    int                         m_used = 0;
+    std::vector<std::shared_ptr<buffer_in_array>> m_bufs;
+    std::mutex                  m_mutex;
+    std::condition_variable     m_non_full;
+    std::condition_variable     m_non_empty;
 };

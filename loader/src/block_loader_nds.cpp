@@ -46,11 +46,11 @@ block_loader_nds::block_loader_nds(
         int shard_index
         ):
     block_loader(block_size),
-    _baseurl(baseurl),
-    _token(token),
-    _collection_id(collection_id),
-    _shard_count(shard_count),
-    _shard_index(shard_index)
+    m_baseurl(baseurl),
+    m_token(token),
+    m_collection_id(collection_id),
+    m_shard_count(shard_count),
+    m_shard_index(shard_index)
 {
     affirm(shard_index < shard_count, "shard index must be less then shard count");
 
@@ -63,20 +63,20 @@ block_loader_nds::~block_loader_nds()
 
 void block_loader_nds::load_block(nervana::buffer_in_array& dest, uint32_t block_num)
 {
-    if(prefetch_pending) {
-//        if(async_handler.is_ready())
-//            cout << __FILE__ << " " << __LINE__ << " prefetch ready" << endl;
+    if(m_prefetch_pending) {
+//        if(m_async_handler.is_ready())
+//            cout <<__FILE__ << " " <<__LINE__ << " prefetch ready" << endl;
 //        else
-//            cout << __FILE__ << " " << __LINE__ << " prefetch busy" << endl;
+//            cout <<__FILE__ << " " <<__LINE__ << " prefetch busy" << endl;
 
-        async_handler.wait();
+        m_async_handler.wait();
     } else {
         fetch_block(block_num);
     }
-    auto it = prefetch_buffer.begin();
+    auto it = m_prefetch_buffer.begin();
     for(int i=0; i<block_size(); i++)
     {
-        if(it != prefetch_buffer.end())
+        if(it != m_prefetch_buffer.end())
         {
             for(int j=0; j<dest.size(); j++)
             {
@@ -100,32 +100,32 @@ void block_loader_nds::fetch_block(uint32_t block_num)
     for(int i=0; i < reader.itemCount(); ++i) {
         vector<char> buffer;
         reader.read(buffer);
-        prefetch_buffer.push_back(move(buffer));
+        m_prefetch_buffer.push_back(move(buffer));
     }
 }
 
 void block_loader_nds::get(const string& url, stringstream &stream)
 {
     // reuse curl connection across requests
-    _curl = curl_easy_init();
+    m_curl = curl_easy_init();
 
     // given a url, make an HTTP GET request and fill stream with
     // the body of the response
 
-    curl_easy_setopt(_curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(_curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
     // Prevent "longjmp causes uninitialized stack frame" bug
-    curl_easy_setopt(_curl, CURLOPT_NOSIGNAL, 1);
-    curl_easy_setopt(_curl, CURLOPT_ACCEPT_ENCODING, "deflate");
-    curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(_curl, CURLOPT_WRITEDATA, &stream);
+    curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1);
+    curl_easy_setopt(m_curl, CURLOPT_ACCEPT_ENCODING, "deflate");
+    curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_data);
+    curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
 
     // Perform the request, res will get the return code
-    CURLcode res = curl_easy_perform(_curl);
+    CURLcode res = curl_easy_perform(m_curl);
 
     // Check for errors
     long http_code = 0;
-    curl_easy_getinfo (_curl, CURLINFO_RESPONSE_CODE, &http_code);
+    curl_easy_getinfo (m_curl, CURLINFO_RESPONSE_CODE, &http_code);
     if (http_code != 200 || res != CURLE_OK) {
         stringstream ss;
         ss << "HTTP GET on \n'" << url << "' failed. ";
@@ -134,35 +134,35 @@ void block_loader_nds::get(const string& url, stringstream &stream)
             ss << " curl return: " << curl_easy_strerror(res);
         }
 
-        curl_easy_cleanup(_curl);
+        curl_easy_cleanup(m_curl);
         throw std::runtime_error(ss.str());
     }
 
-    curl_easy_cleanup(_curl);
+    curl_easy_cleanup(m_curl);
 }
 
 const string block_loader_nds::load_block_url(uint32_t block_num)
 {
     stringstream ss;
-    ss << _baseurl << "/macrobatch/?";
+    ss << m_baseurl << "/macrobatch/?";
     ss << "macro_batch_index=" << block_num;
-    ss << "&macro_batch_max_size=" << _block_size;
-    ss << "&collection_id=" << _collection_id;
-    ss << "&shard_count=" << _shard_count;
-    ss << "&shard_index=" << _shard_index;
-    ss << "&token=" << _token;
+    ss << "&macro_batch_max_size=" << m_block_size;
+    ss << "&collection_id=" <<m_collection_id;
+    ss << "&shard_count=" <<m_shard_count;
+    ss << "&shard_index=" <<m_shard_index;
+    ss << "&token=" <<m_token;
     return ss.str();
 }
 
 const string block_loader_nds::metadata_url()
 {
     stringstream ss;
-    ss << _baseurl << "/object_count/?";
-    ss << "macro_batch_max_size=" << _block_size;
-    ss << "&collection_id=" << _collection_id;
-    ss << "&shard_count=" << _shard_count;
-    ss << "&shard_index=" << _shard_index;
-    ss << "&token=" << _token;
+    ss << m_baseurl << "/object_count/?";
+    ss << "macro_batch_max_size=" << m_block_size;
+    ss << "&collection_id=" << m_collection_id;
+    ss << "&shard_count=" << m_shard_count;
+    ss << "&shard_index=" << m_shard_index;
+    ss << "&token=" << m_token;
     return ss.str();
 }
 
@@ -184,29 +184,29 @@ void block_loader_nds::load_metadata()
         throw std::runtime_error(ss.str());
     }
 
-    nervana::interface::config::parse_value(_objectCount, "record_count", metadata, nervana::interface::config::mode::REQUIRED);
-    nervana::interface::config::parse_value(_blockCount, "macro_batch_per_shard", metadata, nervana::interface::config::mode::REQUIRED);
+    nervana::interface::config::parse_value(m_object_count, "record_count", metadata, nervana::interface::config::mode::REQUIRED);
+    nervana::interface::config::parse_value(m_block_count, "macro_batch_per_shard", metadata, nervana::interface::config::mode::REQUIRED);
 }
 
 uint32_t block_loader_nds::object_count()
 {
-    return _objectCount;
+    return m_object_count;
 }
 
 uint32_t block_loader_nds::block_count()
 {
-    return _blockCount;
+    return m_block_count;
 }
 
 void block_loader_nds::prefetch_block(uint32_t block_num)
 {
-    prefetch_pending = true;
-    prefetch_block_num = block_num;
+    m_prefetch_pending = true;
+    m_prefetch_block_num = block_num;
     std::function<void(void*)> f = std::bind(&block_loader_nds::prefetch_entry, this, &block_num);
-    async_handler.run(f);
+    m_async_handler.run(f);
 }
 
 void block_loader_nds::prefetch_entry(void* param)
 {
-    fetch_block(prefetch_block_num);
+    fetch_block(m_prefetch_block_num);
 }

@@ -48,10 +48,11 @@ private:
     void prefetch_entry(void* param);
     void fetch_block(uint32_t block_num);
 
-    const std::shared_ptr<nervana::manifest_csv> _manifest;
-    async                                        async_handler;
-    std::vector<std::pair<std::vector<char>,std::exception_ptr>> prefetch_buffer;
-    uint32_t                                     prefetch_block_num;
-    bool                                         prefetch_pending;
-    size_t                                       elements_per_record;
+    std::vector<std::pair<std::vector<char>,std::exception_ptr>> m_prefetch_buffer;
+    const std::shared_ptr<nervana::manifest_csv> m_manifest;
+    async                                        m_async_handler;
+
+    uint32_t                                     m_prefetch_block_num;
+    bool                                         m_prefetch_pending;
+    size_t                                       m_elements_per_record;
 };

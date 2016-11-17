@@ -133,7 +133,7 @@ TEST(block_loader_file, exception)
 //        5
 //    );
 
-//    ASSERT_EQ(blf.objectCount(), 2 + 2 + 1);
+//    ASSERT_EQ(blf.object_count(), 2 + 2 + 1);
 //}
 
 TEST(block_loader_file, performance)

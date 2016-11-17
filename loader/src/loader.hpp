@@ -23,7 +23,8 @@
 #include <algorithm>
 
 #include "python_backend.hpp"
-#include "thread_pool.hpp"
+#include "thread_pool_read.hpp"
+#include "thread_pool_decode.hpp"
 #include "block_loader.hpp"
 #include "block_iterator.hpp"
 #include "batch_iterator.hpp"
@@ -35,9 +36,7 @@
 
 namespace nervana
 {
-    class decode_thread_pool;
     class loader_config;
-    class read_thread_pool;
     class loader;
 }
 
@@ -49,51 +48,6 @@ namespace nervana
  * then copied to the `device`.
  *
  */
-class nervana::decode_thread_pool : public nervana::thread_pool
-{
-public:
-    decode_thread_pool(int count,
-                       const std::shared_ptr<nervana::buffer_pool_in>& in,
-                       const std::shared_ptr<nervana::buffer_pool_out>& out,
-                       const std::shared_ptr<python_backend>& pbe);
-
-    virtual ~decode_thread_pool();
-    virtual void start() override;
-    virtual void stop() override;
-    void add_provider(std::shared_ptr<nervana::provider_interface> prov);
-
-protected:
-    virtual void run(int id) override;
-    virtual void work(int id) override;
-    void produce();
-    void consume();
-    void manage();
-
-private:
-    decode_thread_pool();
-    decode_thread_pool(const decode_thread_pool&);
-
-    int                         _itemsPerThread;
-    std::shared_ptr<nervana::buffer_pool_in> _in;
-    std::shared_ptr<nervana::buffer_pool_out> _out;
-    std::shared_ptr<python_backend> _python_backend;
-    std::mutex                  _mutex;
-    std::condition_variable     _started;
-    std::condition_variable     _ended;
-    int                         _batchSize;
-    int                         _endSignaled    = 0;
-    std::thread*                _manager        = 0;
-    bool                        _stopManager    = false;
-    bool                        _managerStopped = false;
-    nervana::buffer_in_array*   _inputBuf       = 0;
-    int                         _bufferIndex    = 0;
-
-    std::vector<std::shared_ptr<nervana::provider_interface>> _providers;
-
-    std::vector<int>            _startSignaled;
-    std::vector<int>            _startInds;
-    std::vector<int>            _endInds;
-};
 
 class nervana::loader_config : public nervana::interface::config
 {
@@ -149,29 +103,6 @@ private:
     bool validate() { return true; }
 };
 
-/*
- * The read_thread_pool wraps BatchIterator in a thread an coordinates work
- * with other threads via locks on the output BufferPool `out`
- *
- */
-
-class nervana::read_thread_pool: public thread_pool
-{
-public:
-    read_thread_pool(const std::shared_ptr<nervana::buffer_pool_in>& out,
-                     const std::shared_ptr<nervana::batch_iterator>& batch_iterator);
-
-protected:
-    virtual void work(int id) override;
-
-private:
-    read_thread_pool();
-    read_thread_pool(const read_thread_pool&);
-    std::shared_ptr<nervana::buffer_pool_in> _out;
-    std::shared_ptr<nervana::batch_iterator> _batch_iterator;
-};
-
-
 /* loader
  *
  * The loader instantiates and then coordinates the effort of loading ingested data, caching
@@ -191,7 +122,7 @@ public:
     PyObject* shapes();
     PyObject* next(int bufIdx);
 
-    int itemCount() { return _block_loader->object_count(); }
+    int itemCount() { return m_block_loader->object_count(); }
 
 private:
     void drain();
@@ -200,17 +131,17 @@ private:
     loader();
     loader(const loader&);
 
-    bool                                        _first = true;
-    bool                                        _single_thread_mode = false;
+    bool                                        m_first = true;
+    bool                                        m_single_thread_mode = false;
 
-    std::shared_ptr<nervana::buffer_pool_in>    _read_buffers = nullptr;
-    std::shared_ptr<nervana::buffer_pool_out>   _decode_buffers = nullptr;
-    std::unique_ptr<nervana::read_thread_pool>  _read_thread_pool = nullptr;
-    std::unique_ptr<decode_thread_pool>         _decode_thread_pool = nullptr;
-    std::shared_ptr<nervana::block_loader>      _block_loader = nullptr;
-    std::shared_ptr<nervana::batch_iterator>    _batch_iterator = nullptr;
+    std::shared_ptr<nervana::buffer_pool_in>    m_read_buffers = nullptr;
+    std::shared_ptr<nervana::buffer_pool_out>   m_decode_buffers = nullptr;
+    std::unique_ptr<nervana::read_thread_pool>  m_read_thread_pool = nullptr;
+    std::unique_ptr<decode_thread_pool>         m_decode_thread_pool = nullptr;
+    std::shared_ptr<nervana::block_loader>      m_block_loader = nullptr;
+    std::shared_ptr<nervana::batch_iterator>    m_batch_iterator = nullptr;
 
-    int                                         _batchSize;
-    nlohmann::json                              _lcfg_json;
-    std::shared_ptr<python_backend>             _python_backend;
+    int                                         m_batch_size;
+    nlohmann::json                              m_lcfg_json;
+    std::shared_ptr<python_backend>             m_python_backend;
 };

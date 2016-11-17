@@ -23,18 +23,18 @@ using namespace std;
 using namespace nervana;
 
 block_loader::block_loader(uint32_t block_size) :
-    _block_size(block_size)
+    m_block_size(block_size)
 {
 }
 
 uint32_t block_loader::block_size()
 {
-    return _block_size;
+    return m_block_size;
 }
 
 uint32_t block_loader::block_count()
 {
-    return ceil((float)object_count() / (float)_block_size);
+    return ceil((float)object_count() / (float)m_block_size);
 }
 
 void block_loader::prefetch_block(uint32_t block_num)

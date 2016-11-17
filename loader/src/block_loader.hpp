@@ -38,5 +38,5 @@ public:
 
 protected:
     block_loader(uint32_t block_size);
-    uint32_t _block_size;
+    uint32_t m_block_size;
 };

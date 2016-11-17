@@ -35,8 +35,8 @@ buffer_pool_out::buffer_pool_out(const std::vector<size_t>& writeSizes,
                                  size_t batchSize, bool pinned) :
     buffer_pool()
 {
-    for (int i = 0; i < _count; i++) {
-        _bufs.push_back(make_shared<buffer_out_array>(writeSizes, batchSize, pinned));
+    for (int i = 0; i < m_count; i++) {
+        m_bufs.push_back(make_shared<buffer_out_array>(writeSizes, batchSize, pinned));
     }
 
 }
@@ -48,68 +48,68 @@ buffer_pool_out::~buffer_pool_out()
 
 buffer_out_array& buffer_pool_out::get_for_write()
 {
-    return *_bufs[_writePos];
+    return *m_bufs[m_write_pos];
 }
 
 buffer_out_array& buffer_pool_out::get_for_read()
 {
-    return *_bufs[_readPos];
+    return *m_bufs[m_read_pos];
 }
 
 void buffer_pool_out::advance_read_pos()
 {
-    _used--;
-    advance(_readPos);
+    m_used--;
+    advance(m_read_pos);
 }
 
 void buffer_pool_out::advance_write_pos()
 {
-    _used++;
-    advance(_writePos);
+    m_used++;
+    advance(m_write_pos);
     clear_exception();
 }
 
 bool buffer_pool_out::empty()
 {
-    affirm(_used >= 0, "buffer_pool_out used < 0");
-    return (_used == 0);
+    affirm(m_used >= 0, "buffer_pool_out used < 0");
+    return (m_used == 0);
 }
 
 bool buffer_pool_out::full()
 {
-    affirm(_used <= _count, "buffer_pool_out used > count");
-    return (_used == _count);
+    affirm(m_used <= m_count, "buffer_pool_out used > count");
+    return (m_used == m_count);
 }
 
 std::mutex& buffer_pool_out::get_mutex()
 {
-    return _mutex;
+    return m_mutex;
 }
 
 void buffer_pool_out::wait_for_not_empty(std::unique_lock<std::mutex>& lock)
 {
-    _nonEmpty.wait(lock);
+    m_non_empty.wait(lock);
 }
 
 void buffer_pool_out::wait_for_non_full(std::unique_lock<std::mutex>& lock)
 {
-    _nonFull.wait(lock);
+    m_non_full.wait(lock);
 }
 
 void buffer_pool_out::signal_not_empty()
 {
-    _nonEmpty.notify_all();
+    m_non_empty.notify_all();
 }
 
 void buffer_pool_out::signal_not_full()
 {
-    _nonFull.notify_all();
+    m_non_full.notify_all();
 }
 
 void buffer_pool_out::advance(int& index)
 {
-    // increment index and reset to 0 when index hits `_count`
-    if (++index == _count) {
+    // increment index and reset to 0 when index hits `m_count`
+    if (++index == m_count) {
         index = 0;
     }
 }

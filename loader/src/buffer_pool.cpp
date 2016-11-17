@@ -19,23 +19,23 @@ using namespace nervana;
 
 buffer_pool::buffer_pool()
 {
-    _exceptions.push_back(nullptr);
-    _exceptions.push_back(nullptr);
+    m_exceptions.push_back(nullptr);
+    m_exceptions.push_back(nullptr);
 }
 
 void buffer_pool::write_exception(std::exception_ptr exception_ptr)
 {
-    _exceptions[_writePos] = exception_ptr;
+    m_exceptions[m_write_pos] = exception_ptr;
 }
 
 void buffer_pool::clear_exception()
 {
-    _exceptions[_writePos] = nullptr;
+    m_exceptions[m_write_pos] = nullptr;
 }
 
 void buffer_pool::reraise_exception()
 {
-    if(auto e = _exceptions[_readPos]) {
+    if(auto e = m_exceptions[m_read_pos]) {
         clear_exception();
         std::rethrow_exception(e);
     }

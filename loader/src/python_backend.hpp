@@ -32,10 +32,10 @@ namespace nervana
 class nervana::gil_state
 {
 public:
-    gil_state() : gstate{PyGILState_Ensure()} {}
-    ~gil_state() { PyGILState_Release(gstate); }
+    gil_state() : m_gstate{PyGILState_Ensure()} {}
+    ~gil_state() { PyGILState_Release(m_gstate); }
 private:
-    PyGILState_STATE gstate;
+    PyGILState_STATE m_gstate;
 };
 
 class nervana::python_backend
@@ -50,18 +50,18 @@ public:
     void call_backend_transfer(nervana::buffer_out_array &outBuf, int bufIdx);
     PyObject* get_host_tuple(int bufIdx);
     PyObject* get_shapes();
-    std::vector<nervana::shape_type> _oshape_types;
-    int                         _batchSize;
+    std::vector<nervana::shape_type> m_oshape_types;
+    int                         m_batch_size;
 private:
     python_backend() = delete;
     PyObject* initPyList(int length=2);
     void wrap_buffer_pool(PyObject *list, nervana::buffer_out *buf, int bufIdx,
                           const nervana::shape_type& shape_type);
 
-    PyObject*                   _py_obj_backend;
+    PyObject*                   m_py_obj_backend;
 
-    std::vector<PyObject*>      _host_lists;
-    std::vector<PyObject*>      _dev_lists;
+    std::vector<PyObject*>      m_host_lists;
+    std::vector<PyObject*>      m_dev_lists;
 
-    PyObject*                   _f_consume = NULL;
+    PyObject*                   m_f_consume = NULL;
 };

@@ -40,40 +40,40 @@ class nervana::thread_pool
 {
 public:
     explicit thread_pool(int count) :
-        _count(count),
-        _done(false)
+        m_count(count),
+        m_done(false)
     {
-        _stopped = new bool[count];
+        m_stopped = new bool[count];
         for (int i = 0; i < count; i++) {
-            _stopped[i] = false;
+            m_stopped[i] = false;
         }
     }
 
     virtual ~thread_pool()
     {
-        for (auto t : _threads) {
+        for (auto t : m_threads) {
             t->join();
             delete t;
         }
-        delete[] _stopped;
+        delete[] m_stopped;
     }
 
     virtual void start()
     {
-        for (int i = 0; i < _count; i++) {
-            _threads.push_back(new std::thread(&thread_pool::run, this, i));
+        for (int i = 0; i < m_count; i++) {
+            m_threads.push_back(new std::thread(&thread_pool::run, this, i));
         }
     }
 
     virtual void stop()
     {
-        _done = true;
+        m_done = true;
     }
 
     bool stopped()
     {
-        for (int i = 0; i < _count; i++) {
-            if (_stopped[i] == false) {
+        for (int i = 0; i < m_count; i++) {
+            if (m_stopped[i] == false) {
                 return false;
             }
         }
@@ -82,7 +82,7 @@ public:
 
     void join()
     {
-        for (auto t : _threads) {
+        for (auto t : m_threads) {
             t->join();
         }
     }
@@ -92,15 +92,15 @@ protected:
 
     virtual void run(int id)
     {
-        while (_done == false) {
+        while (m_done == false) {
             work(id);
         }
-        _stopped[id] = true;
+        m_stopped[id] = true;
     }
 
 protected:
-    int                         _count;
-    std::vector<std::thread*>   _threads;
-    bool                        _done;
-    bool*                       _stopped;
+    int                         m_count;
+    std::vector<std::thread*>   m_threads;
+    bool                        m_done;
+    bool*                       m_stopped;
 };

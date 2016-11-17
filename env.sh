@@ -50,6 +50,8 @@ SRCS="
     provider_video_only.cpp
     python_backend.cpp
     specgram.cpp
+    thread_pool_read.cpp
+    thread_pool_decode.cpp
     util.cpp
     wav_data.cpp
     crc.cpp

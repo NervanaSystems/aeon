@@ -21,30 +21,30 @@ using namespace nervana;
 using namespace std;
 
 python_backend::python_backend(PyObject* py_obj_backend) :
-    _py_obj_backend(py_obj_backend)
+    m_py_obj_backend(py_obj_backend)
 {
     gil_state state;
 
-    if (_py_obj_backend == NULL) {
+    if (m_py_obj_backend == NULL) {
         throw std::runtime_error("Python Backend object does not exist");
     }
 
-    Py_INCREF(_py_obj_backend);
-    _f_consume = PyObject_GetAttrString(_py_obj_backend, "consume");
+    Py_INCREF(m_py_obj_backend);
+    m_f_consume = PyObject_GetAttrString(m_py_obj_backend, "consume");
 
-    if (_f_consume == NULL) {
+    if (m_f_consume == NULL) {
         throw std::runtime_error("Backend has no 'consume' attribute");
     }
 
-    if (!PyCallable_Check(_f_consume)) {
+    if (!PyCallable_Check(m_f_consume)) {
         throw std::runtime_error("Backend 'consume' function does not exist or is not callable");
     }
 }
 
 void python_backend::setup_buffers(const vector<nervana::shape_type>& oshape_types, int batchSize)
 {
-    _oshape_types = oshape_types;
-    _batchSize = batchSize;
+    m_oshape_types = oshape_types;
+    m_batch_size = batchSize;
 
     gil_state state;
     PyOS_sighandler_t sighandler = PyOS_getsig(SIGINT);
@@ -53,10 +53,10 @@ void python_backend::setup_buffers(const vector<nervana::shape_type>& oshape_typ
     }
     PyOS_setsig(SIGINT, sighandler);
 
-    for (uint32_t i = 0; i < _oshape_types.size(); ++i)
+    for (uint32_t i = 0; i < m_oshape_types.size(); ++i)
     {
-        _host_lists.push_back(initPyList());
-        _dev_lists.push_back(initPyList());
+        m_host_lists.push_back(initPyList());
+        m_dev_lists.push_back(initPyList());
     }
 }
 
@@ -64,11 +64,11 @@ PyObject* python_backend::get_shapes()
 {
     gil_state state;
 
-    uint32_t num_shapes = _oshape_types.size();
+    uint32_t num_shapes = m_oshape_types.size();
     PyObject* all_shapes = PyTuple_New(num_shapes);
     for (uint32_t idx = 0; idx < num_shapes; ++idx)
     {
-        auto shapevec = _oshape_types[idx].get_shape();
+        auto shapevec = m_oshape_types[idx].get_shape();
         PyObject* this_shape = PyTuple_New(shapevec.size());
         for (uint32_t dim = 0; dim < shapevec.size(); dim++)
         {
@@ -95,21 +95,21 @@ PyObject* python_backend::initPyList(int length)
 void python_backend::clear_buffers()
 {
     gil_state state;
-    for (auto h: _host_lists) {
+    for (auto h: m_host_lists) {
         Py_XDECREF(h);
     }
-    for (auto d: _dev_lists) {
+    for (auto d: m_dev_lists) {
         Py_XDECREF(d);
     }
-    _host_lists.clear();
-    _dev_lists.clear();
+    m_host_lists.clear();
+    m_dev_lists.clear();
 }
 
 python_backend::~python_backend()
 {
     gil_state state;
-    Py_XDECREF(_f_consume);
-    Py_XDECREF(_py_obj_backend);
+    Py_XDECREF(m_f_consume);
+    Py_XDECREF(m_py_obj_backend);
 
 }
 
@@ -118,7 +118,7 @@ bool python_backend::use_pinned_memory()
     gil_state state;
 
     bool result = false;
-    PyObject *pinned_mem = PyObject_GetAttrString(_py_obj_backend, "use_pinned_mem");
+    PyObject *pinned_mem = PyObject_GetAttrString(m_py_obj_backend, "use_pinned_mem");
     if (pinned_mem != NULL) {
         if (PyObject_IsTrue(pinned_mem)) {
             result = true;
@@ -133,17 +133,17 @@ void python_backend::call_backend_transfer(buffer_out_array &outBuf, int bufIdx)
 {
     gil_state state;
 
-    affirm(_host_lists.size() == _oshape_types.size(), "host lists size does not match oshape size");
-    affirm(_dev_lists.size() == _host_lists.size(), "dev list size does not match host lists size");
+    affirm(m_host_lists.size() == m_oshape_types.size(), "host lists size does not match oshape size");
+    affirm(m_dev_lists.size() == m_host_lists.size(), "dev list size does not match host lists size");
 
-    for (uint32_t i=0; i<_host_lists.size(); i++) {
-        wrap_buffer_pool(_host_lists[i], outBuf[i], bufIdx, _oshape_types[i]);
-        PyObject* pArgs  = Py_BuildValue("iOO", bufIdx, _host_lists[i], _dev_lists[i]);
+    for (uint32_t i=0; i<m_host_lists.size(); i++) {
+        wrap_buffer_pool(m_host_lists[i], outBuf[i], bufIdx, m_oshape_types[i]);
+        PyObject* pArgs  = Py_BuildValue("iOO", bufIdx, m_host_lists[i], m_dev_lists[i]);
 
         if (pArgs == NULL) {
             throw std::runtime_error("Unable to build args");
         }
-        PyObject* pRes = PyObject_CallObject(_f_consume, pArgs);
+        PyObject* pRes = PyObject_CallObject(m_f_consume, pArgs);
         if (!pRes) {
             PyErr_Print();
         }
@@ -156,7 +156,7 @@ PyObject* python_backend::get_host_tuple(int bufIdx)
 {
     gil_state state;
 
-    int provider_count = _dev_lists.size();
+    int provider_count = m_dev_lists.size();
     PyObject *result = PyTuple_New(provider_count);
     if (result == NULL)
     {
@@ -164,7 +164,7 @@ PyObject* python_backend::get_host_tuple(int bufIdx)
     }
 
     for (int pidx = 0; pidx < provider_count; pidx++) {
-        PyObject* value = PyList_GetItem(_dev_lists[pidx], bufIdx);
+        PyObject* value = PyList_GetItem(m_dev_lists[pidx], bufIdx);
 
         if (value == NULL) {
             throw std::runtime_error("Bad Index");
@@ -193,9 +193,9 @@ void python_backend::wrap_buffer_pool(PyObject *list, buffer_out *buf, int bufId
                                    st.get_shape().end(),
                                    1, std::multiplies<uint32_t>());
     int nd = 2;
-    npy_intp dims[2] = {_batchSize, all_dims};
+    npy_intp dims[2] = {m_batch_size, all_dims};
     if (st.flatten_all_dims()) {
-        dims[0] = _batchSize * all_dims;
+        dims[0] = m_batch_size * all_dims;
         dims[1] = 1;
     }
 

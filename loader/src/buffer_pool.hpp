@@ -35,7 +35,7 @@ public:
 protected:
     void clear_exception();
 
-    std::vector<std::exception_ptr> _exceptions;
-    int                             _readPos = 0;
-    int                             _writePos = 0;
+    std::vector<std::exception_ptr> m_exceptions;
+    int                             m_read_pos = 0;
+    int                             m_write_pos = 0;
 };
