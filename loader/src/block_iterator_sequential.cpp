@@ -19,30 +19,30 @@ using namespace std;
 using namespace nervana;
 
 block_iterator_sequential::block_iterator_sequential(shared_ptr<block_loader> loader)
-    : _loader(loader)
-    , _count(_loader->block_count())
-    , _i(0)
+    : m_loader(loader)
+    , m_count(m_loader->block_count())
+    , m_i(0)
 {
-    _loader->prefetch_block(_i);
+    m_loader->prefetch_block(m_i);
 }
 
 void block_iterator_sequential::read(nervana::buffer_in_array& dest)
 {
     // increment i before calling loadBlock so that if loadBlock throws an
-    // exception, we've still incremented _i and the next call will request
+    // exception, we've still incremented m_i and the next call will request
     // the next i.  The policy here therefor is to skip blocks which throw
     // exceptions, there is no retry logic.
-    auto i = _i;
-    if (++_i == _count)
+    auto i = m_i;
+    if (++m_i == m_count)
     {
         reset();
     }
 
-    _loader->load_block(dest, i);
-    _loader->prefetch_block(_i);
+    m_loader->load_block(dest, i);
+    m_loader->prefetch_block(m_i);
 }
 
 void block_iterator_sequential::reset()
 {
-    _i = 0;
+    m_i = 0;
 }

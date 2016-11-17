@@ -36,7 +36,7 @@ public:
     virtual ~buffer_out();
 
     char* get_item(size_t index);
-    char*  data() { return _data; }
+    char*  data() { return m_data; }
     size_t get_item_count();
     size_t size();
 
@@ -45,13 +45,12 @@ private:
     char* alloc();
     void dealloc(char* data);
 
-    char*  _data;
-    size_t _size;
-    size_t _batch_size;
-
-    bool   _pinned;
-    size_t _stride;
-    size_t _item_size;
+    char*  m_data;
+    size_t m_size;
+    size_t m_batch_size;
+    bool   m_pinned;
+    size_t m_stride;
+    size_t m_item_size;
 };
 
 // in cases with (object, target) pairs, buffer_out is length 2
@@ -62,20 +61,20 @@ public:
     {
         for (auto sz : write_sizes)
         {
-            data.push_back(new buffer_out(sz, batch_size, pinned));
+            m_data.push_back(new buffer_out(sz, batch_size, pinned));
         }
     }
 
     ~buffer_out_array()
     {
-        for (auto buf : data)
+        for (auto buf : m_data)
         {
             delete buf;
         }
     }
 
-    buffer_out* operator[](size_t i) { return data[i]; }
-    size_t                        size() const { return data.size(); }
+    buffer_out* operator[](size_t i) { return m_data[i]; }
+    size_t                        size() const { return m_data.size(); }
 private:
-    std::vector<buffer_out*> data;
+    std::vector<buffer_out*> m_data;
 };

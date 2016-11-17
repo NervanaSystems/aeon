@@ -108,7 +108,7 @@ void audio::loader::load(const vector<void*>& outbuf, shared_ptr<audio::decoded>
 {
     auto nframes = input->valid_frames;
     auto frames  = input->get_freq_data();
-    int  cv_type = _cfg.get_shape_type().get_otype().cv_type;
+    int  cv_type = _cfg.get_shape_type().get_otype().get_cv_type();
 
     if (_cfg.feature_type != "samples")
     {

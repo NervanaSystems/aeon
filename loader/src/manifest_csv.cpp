@@ -31,14 +31,14 @@ using namespace std;
 using namespace nervana;
 
 manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root, float subset_fraction)
-    : _filename(filename)
+    : m_filename(filename)
 {
     // for now parse the entire manifest on creation
-    ifstream infile(_filename);
+    ifstream infile(m_filename);
 
     if (!infile.is_open())
     {
-        throw std::runtime_error("Manifest file " + _filename + " doesn't exist.");
+        throw std::runtime_error("Manifest file " + m_filename + " doesn't exist.");
     }
 
     parse_stream(infile, root);
@@ -57,8 +57,8 @@ manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& r
 
 string manifest_csv::cache_id()
 {
-    // returns a hash of the _filename
-    std::size_t  h = std::hash<std::string>()(_filename);
+    // returns a hash of the m_filename
+    std::size_t  h = std::hash<std::string>()(m_filename);
     stringstream ss;
     ss << setfill('0') << setw(16) << hex << h;
     return ss.str();
@@ -73,7 +73,7 @@ string manifest_csv::version()
 
 void manifest_csv::parse_stream(istream& is, const string& root)
 {
-    // parse istream is and load the entire thing into _filename_lists
+    // parse istream is and load the entire thing into m_filename_lists
     uint32_t prev_num_fields = 0, lineno = 0;
     string   line;
 
@@ -111,32 +111,32 @@ void manifest_csv::parse_stream(istream& is, const string& root)
             throw std::runtime_error(ss.str());
         }
         prev_num_fields = field_list.size();
-        _filename_lists.push_back(field_list);
+        m_filename_lists.push_back(field_list);
         lineno++;
     }
 }
 
 void manifest_csv::shuffle_filename_lists()
 {
-    // shuffles _filename_lists.  It is possible that the order of the
+    // shuffles m_filename_lists.  It is possible that the order of the
     // filenames in the manifest file were in some sorted order and we
     // don't want our blocks to be biased by that order.
 
     // hardcode random seed to 0 since this step can be cached into a
     // CPIO file.  We don't want to cache anything that is based on a
     // changing random seed, so don't use a changing random seed.
-    std::shuffle(_filename_lists.begin(), _filename_lists.end(), std::mt19937(0));
+    std::shuffle(m_filename_lists.begin(), m_filename_lists.end(), std::mt19937(0));
 }
 
 void manifest_csv::generate_subset(float subset_fraction)
 {
     if (subset_fraction < 1.0)
     {
-        crc_computed = false;
+        m_crc_computed = false;
         std::bernoulli_distribution distribution(subset_fraction);
         std::default_random_engine  generator(get_global_random_seed());
         vector<FilenameList>        tmp;
-        tmp.swap(_filename_lists);
+        tmp.swap(m_filename_lists);
         size_t expected_count = tmp.size() * subset_fraction;
         size_t needed         = expected_count;
 
@@ -145,35 +145,35 @@ void manifest_csv::generate_subset(float subset_fraction)
             size_t remainder = tmp.size() - i;
             if ((needed == remainder) || distribution(generator))
             {
-                _filename_lists.push_back(tmp[i]);
+                m_filename_lists.push_back(tmp[i]);
                 needed--;
                 if (needed == 0)
                     break;
             }
         }
-        //        cout << __FILE__ << " " << __LINE__ << " expected=" << expected_count << ", actual=" << _filename_lists.size() <<
+        //        cout << __FILE__ << " " << __LINE__ << " expected=" << expected_count << ", actual=" << m_filename_lists.size() <<
         //        endl;
     }
 }
 
 uint32_t manifest_csv::get_crc()
 {
-    if (crc_computed == false)
+    if (m_crc_computed == false)
     {
-        for (const vector<string>& tmp : _filename_lists)
+        for (const vector<string>& tmp : m_filename_lists)
         {
             for (const string& s : tmp)
             {
-                crc_engine.Update((const uint8_t*)s.data(), s.size());
+                m_crc_engine.Update((const uint8_t*)s.data(), s.size());
             }
         }
-        crc_engine.TruncatedFinal((uint8_t*)&computed_crc, sizeof(computed_crc));
-        crc_computed = true;
+        m_crc_engine.TruncatedFinal((uint8_t*)&m_computed_crc, sizeof(m_computed_crc));
+        m_crc_computed = true;
     }
-    return computed_crc;
+    return m_computed_crc;
 }
 
 int manifest_csv::nelements()
 {
-    return _filename_lists.size() > 0 ? _filename_lists[0].size() : 0;
+    return m_filename_lists.size() > 0 ? m_filename_lists[0].size() : 0;
 }

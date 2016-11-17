@@ -116,7 +116,7 @@ public:
     {
         char* buf   = (char*)buflist[0];
         int   index = mp->get_index();
-        memcpy(buf, &index, _cfg.get_shape_type().get_otype().size);
+        memcpy(buf, &index, _cfg.get_shape_type().get_otype().get_size());
     }
 
 private:

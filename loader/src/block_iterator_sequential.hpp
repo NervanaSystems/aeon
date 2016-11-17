@@ -31,7 +31,7 @@ public:
     void reset() override;
 
 private:
-    std::shared_ptr<block_loader> _loader;
-    uint32_t                      _count;
-    uint32_t                      _i;
+    std::shared_ptr<block_loader> m_loader;
+    uint32_t                      m_count;
+    uint32_t                      m_i;
 };

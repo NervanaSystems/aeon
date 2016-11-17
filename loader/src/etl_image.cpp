@@ -252,8 +252,8 @@ void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::de
 {
     char* outbuf = (char*)outlist[0];
     // TODO: Generalize this to also handle multi_crop case
-    auto cv_type      = stype.get_otype().cv_type;
-    auto element_size = stype.get_otype().size;
+    auto cv_type      = stype.get_otype().get_cv_type();
+    auto element_size = stype.get_otype().get_size();
     auto img          = input->get_image(0);
     int  image_size   = img.channels() * img.total() * element_size;
 

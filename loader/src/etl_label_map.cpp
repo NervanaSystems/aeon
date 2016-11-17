@@ -35,7 +35,7 @@ config::config(nlohmann::json js)
 
     // Derived types
     auto otype = nervana::output_type(output_type);
-    add_shape_type({otype.size}, otype);
+    add_shape_type({otype.get_size()}, otype);
 
     if (output_type != "uint32_t")
     {

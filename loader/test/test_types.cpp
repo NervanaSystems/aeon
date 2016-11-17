@@ -32,6 +32,6 @@ TEST(typemap, numpy)
         // auto opt = all_outputs.find("int8_t");
         // ASSERT_NE(opt, all_outputs.end());
         output_type opt{"int8_t"};
-        EXPECT_EQ(CV_8S, opt.cv_type);
+        EXPECT_EQ(CV_8S, opt.get_cv_type());
     }
 }

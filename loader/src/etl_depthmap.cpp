@@ -88,8 +88,8 @@ void depthmap::loader::load(const std::vector<void*>& outlist, shared_ptr<image:
     char* outbuf = (char*)outlist[0];
     // TODO: Generalize this to also handle multi_crop case
     auto img          = input->get_image(0);
-    auto cv_type      = _cfg.get_shape_type().get_otype().cv_type;
-    auto element_size = _cfg.get_shape_type().get_otype().size;
+    auto cv_type      = _cfg.get_shape_type().get_otype().get_cv_type();
+    auto element_size = _cfg.get_shape_type().get_otype().get_size();
     int  image_size   = img.channels() * img.total() * element_size;
 
     for (int i = 0; i < input->get_image_count(); i++)

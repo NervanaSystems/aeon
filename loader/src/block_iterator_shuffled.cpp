@@ -24,27 +24,27 @@ using namespace std;
 using namespace nervana;
 
 block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader)
-    : _rand(get_global_random_seed())
-    , _loader(loader)
-    , _epoch(0)
+    : m_rand(get_global_random_seed())
+    , m_loader(loader)
+    , m_epoch(0)
 {
     // fill indices with integers from  0 to _count.  indices can then be
     // shuffled and used to iterate randomly through the blocks.
-    _indices.resize(_loader->block_count());
-    iota(_indices.begin(), _indices.end(), 0);
+    m_indices.resize(m_loader->block_count());
+    iota(m_indices.begin(), m_indices.end(), 0);
     shuffle();
-    _it = _indices.begin();
-    _loader->prefetch_block(*_it);
+    m_it = m_indices.begin();
+    m_loader->prefetch_block(*m_it);
 }
 
 void block_iterator_shuffled::shuffle()
 {
-    std::shuffle(_indices.begin(), _indices.end(), _rand);
+    std::shuffle(m_indices.begin(), m_indices.end(), m_rand);
 }
 
 void block_iterator_shuffled::read(nervana::buffer_in_array& dest)
 {
-    _loader->load_block(dest, *_it);
+    m_loader->load_block(dest, *m_it);
 
     // shuffle the objects in BufferPair dest
     // seed the shuffle with the seed passed in the constructor + the _epoch
@@ -54,19 +54,19 @@ void block_iterator_shuffled::read(nervana::buffer_in_array& dest)
 
     for (auto d : dest)
     {
-        d->shuffle(get_global_random_seed() + _epoch);
+        d->shuffle(get_global_random_seed() + m_epoch);
     }
 
-    if (++_it == _indices.end())
+    if (++m_it == m_indices.end())
     {
         reset();
     }
-    _loader->prefetch_block(*_it);
+    m_loader->prefetch_block(*m_it);
 }
 
 void block_iterator_shuffled::reset()
 {
     shuffle();
-    _it = _indices.begin();
-    ++_epoch;
+    m_it = m_indices.begin();
+    ++m_epoch;
 }

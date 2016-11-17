@@ -52,12 +52,12 @@ public:
 
     std::string cache_id() override;
     std::string version() override;
-    size_t      object_count() const { return _filename_lists.size(); }
+    size_t      object_count() const { return m_filename_lists.size(); }
     int         nelements();
 
     // begin and end provide iterators over the FilenameLists
-    iter begin() const { return _filename_lists.begin(); }
-    iter end() const { return _filename_lists.end(); }
+    iter begin() const { return m_filename_lists.begin(); }
+    iter end() const { return m_filename_lists.end(); }
     void generate_subset(float subset_fraction);
     uint32_t get_crc();
 
@@ -66,9 +66,9 @@ protected:
     void shuffle_filename_lists();
 
 private:
-    const std::string         _filename;
-    std::vector<FilenameList> _filename_lists;
-    CryptoPP::CRC32C          crc_engine;
-    bool                      crc_computed = false;
-    uint32_t                  computed_crc;
+    const std::string         m_filename;
+    std::vector<FilenameList> m_filename_lists;
+    CryptoPP::CRC32C          m_crc_engine;
+    bool                      m_crc_computed = false;
+    uint32_t                  m_computed_crc;
 };

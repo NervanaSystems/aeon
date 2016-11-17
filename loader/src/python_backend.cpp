@@ -213,7 +213,7 @@ void python_backend::wrap_buffer_pool(PyObject* list, buffer_out* buf, int bufId
         dims[1] = 1;
     }
 
-    PyObject* p_array = PyArray_SimpleNewFromData(nd, dims, st.get_otype().np_type, buf->data());
+    PyObject* p_array = PyArray_SimpleNewFromData(nd, dims, st.get_otype().get_np_type(), buf->data());
 
     if (p_array == NULL)
     {
