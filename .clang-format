@@ -4,7 +4,15 @@ UseTab: Never
 Language: Cpp
 Standard: Cpp11
 
+<<<<<<< HEAD
 AlignConsecutiveDeclarations: true
+=======
+AccessModifierOffset: -4
+
+AlignConsecutiveDeclarations: true
+AlignConsecutiveAssignments: true
+AlignTrailingComments: true
+>>>>>>> d0b325a... add clang format
 AllowShortBlocksOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Inline
@@ -16,12 +24,22 @@ BinPackParameters: true
 
 BreakBeforeBraces: Allman
 
+<<<<<<< HEAD
 ColumnLimit: 0
 
 IndentCaseLabels: false
 
 KeepEmptyLinesAtTheStartOfBlocks: false
 NamespaceIndentation: Inner
+=======
+ColumnLimit: 132
+
+IndentCaseLabels: false
+IndentWrappedFunctionNames: true
+
+KeepEmptyLinesAtTheStartOfBlocks: false
+NamespaceIndentation: All
+>>>>>>> d0b325a... add clang format
 
 PointerAlignment: Left
 SpaceAfterCStyleCast: false
@@ -31,5 +49,12 @@ SpaceInEmptyParentheses: false
 SpacesInAngles: false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
+<<<<<<< HEAD
 SpacesInSquareBrackets: true
 
+=======
+SpacesInSquareBrackets: false
+
+SortIncludes: false
+ReflowComments: true
+>>>>>>> d0b325a... add clang format
