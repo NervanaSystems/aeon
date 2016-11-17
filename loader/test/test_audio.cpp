@@ -25,32 +25,33 @@ using namespace nervana;
 
 // This test is for comparing that a generated wav_data structure can write its data out to
 // 16-bit PCM that can be read via extractor (just via buffer rather than actually touching disk)
-TEST(wav,compare)
+TEST(wav, compare)
 {
     sinewave_generator sg{400, 500};
-    wav_data wav(sg, 2, 16000, false);
+    wav_data           wav(sg, 2, 16000, false);
 
     uint32_t wav_bufsize = wav_data::HEADER_SIZE + wav.nbytes();
-    char *wav_buf = new char[wav_bufsize];
+    char*    wav_buf     = new char[wav_bufsize];
 
     wav.write_to_buffer(wav_buf, wav_bufsize);
 
     audio::extractor extractor;
-    auto d_audio = extractor.extract(wav_buf, wav_bufsize);
+    auto             d_audio = extractor.extract(wav_buf, wav_bufsize);
 
     auto extracted_wav = d_audio->get_time_data();
     ASSERT_EQ(extracted_wav.rows, wav.nsamples());
 
     uint32_t num_samples = wav.nsamples();
-    bool all_eq = true;
-    for (int i=0; i<num_samples; i++)
+    bool     all_eq      = true;
+    for (int i = 0; i < num_samples; i++)
     {
-        size_t offset = i * sizeof(int16_t);
-        int16_t*  waddr = (int16_t *) (wav.get_raw_data()[0] + offset);
-        int16_t dval = extracted_wav.at<int16_t>(i, 0);
+        size_t   offset = i * sizeof(int16_t);
+        int16_t* waddr  = (int16_t*)(wav.get_raw_data()[0] + offset);
+        int16_t  dval   = extracted_wav.at<int16_t>(i, 0);
         if (*waddr != dval)
         {
-            all_eq = false; break;
+            all_eq = false;
+            break;
         }
     }
 
@@ -61,14 +62,13 @@ TEST(audio, specgram)
 {
     // This test generates a 1kHz signal and ensures that the spectrogram creates the correct
     // line image
-    float signal_freq = 1000;
+    float              signal_freq = 1000;
     sinewave_generator sg{signal_freq};
-    int wav_len_sec = 4, sample_freq = 16000;
-    bool stereo = false;
-    wav_data wav(sg, wav_len_sec, sample_freq, stereo);
+    int                wav_len_sec = 4, sample_freq = 16000;
+    bool               stereo = false;
+    wav_data           wav(sg, wav_len_sec, sample_freq, stereo);
 
-
-    int time_steps = 100;  // This is how wide we want our image to be (number of strides)
+    int time_steps      = 100; // This is how wide we want our image to be (number of strides)
     int frame_length_tn = 256; //  16 cycles per frame
     int frame_stride_tn = 16;  //  Shift over 1 period each time
     // int nsamples = (time_steps - 1) * frame_stride_tn + frame_length_tn;
@@ -97,7 +97,7 @@ TEST(audio, specgram)
     ASSERT_EQ(cv::countNonZero(diff), 0);
 }
 
-TEST(audio,transform)
+TEST(audio, transform)
 {
     auto js = R"(
         {
@@ -110,26 +110,26 @@ TEST(audio,transform)
         }
     )"_json;
 
-    float sine_freq = 400;
-    int16_t sine_ampl = 500;
+    float              sine_freq = 400;
+    int16_t            sine_ampl = 500;
     sinewave_generator sg{sine_freq, sine_ampl};
-    int wav_len_sec = 4, sample_freq = 44100;
-    bool stereo = false;
+    int                wav_len_sec = 4, sample_freq = 44100;
+    bool               stereo = false;
 
     wav_data wav(sg, wav_len_sec, sample_freq, stereo);
     uint32_t bufsize = wav_data::HEADER_SIZE + wav.nbytes();
-    char *databuf = new char[bufsize];
+    char*    databuf = new char[bufsize];
 
     wav.write_to_buffer(databuf, bufsize);
 
     audio::config config(js);
 
-    audio::extractor extractor;
-    audio::transformer _audioTransformer(config);
+    audio::extractor     extractor;
+    audio::transformer   _audioTransformer(config);
     audio::param_factory factory(config);
 
     auto decoded_audio = extractor.extract(databuf, bufsize);
-    auto audioParams = factory.make_params(decoded_audio);
+    auto audioParams   = factory.make_params(decoded_audio);
 
     _audioTransformer.transform(audioParams, decoded_audio);
     auto shape = config.get_shape_type();
@@ -139,10 +139,10 @@ TEST(audio,transform)
     delete[] databuf;
 }
 
-TEST(wav,read)
+TEST(wav, read)
 {
     // requires sox : `apt-get install sox` on ubuntu
-    auto a = system("sox -r 16000 -b 16 -e s -n output.wav synth 3 sine 400 vol 0.5");
+    auto   a         = system("sox -r 16000 -b 16 -e s -n output.wav synth 3 sine 400 vol 0.5");
     string test_file = "output.wav";
     if (a == 0)
     {
@@ -161,7 +161,7 @@ TEST(wav,read)
     }
 }
 
-TEST(audio,transform2)
+TEST(audio, transform2)
 {
     auto js = R"(
         {
@@ -172,36 +172,36 @@ TEST(audio,transform2)
         }
     )"_json;
 
-    float sine_freq = 400;
-    int16_t sine_ampl = 500;
+    float              sine_freq = 400;
+    int16_t            sine_ampl = 500;
     sinewave_generator sg{sine_freq, sine_ampl};
-    int wav_len_sec = 2, sample_freq = 16000;
-    bool stereo = false;
+    int                wav_len_sec = 2, sample_freq = 16000;
+    bool               stereo = false;
 
     wav_data wav(sg, wav_len_sec, sample_freq, stereo);
     uint32_t bufsize = wav_data::HEADER_SIZE + wav.nbytes();
-    char *databuf = new char[bufsize];
+    char*    databuf = new char[bufsize];
 
     wav.write_to_buffer(databuf, bufsize);
 
     audio::config config(js);
 
-    audio::extractor extractor;
-    audio::transformer _audioTransformer(config);
+    audio::extractor     extractor;
+    audio::transformer   _audioTransformer(config);
     audio::param_factory factory(config);
 
     auto decoded_audio = extractor.extract(databuf, bufsize);
-    auto audioParams = factory.make_params(decoded_audio);
+    auto audioParams   = factory.make_params(decoded_audio);
 
     _audioTransformer.transform(audioParams, decoded_audio);
     auto shape = config.get_shape_type();
     ASSERT_EQ(shape.get_shape()[0], 1);
-    ASSERT_EQ(shape.get_shape()[1], 256/2 + 1);
+    ASSERT_EQ(shape.get_shape()[1], 256 / 2 + 1);
     ASSERT_NE(decoded_audio->get_freq_data().rows, 0);
     delete[] databuf;
 }
 
-TEST(audio,samples_out)
+TEST(audio, samples_out)
 {
     auto js = R"(
         {
@@ -214,31 +214,30 @@ TEST(audio,samples_out)
         }
     )"_json;
 
-    float sine_freq = 400;
-    int16_t sine_ampl = 500;
+    float              sine_freq = 400;
+    int16_t            sine_ampl = 500;
     sinewave_generator sg{sine_freq, sine_ampl};
-    int wav_len_sec = 2, sample_freq = 16000;
-    int wav_samples = wav_len_sec * sample_freq;
-    bool stereo = false;
+    int                wav_len_sec = 2, sample_freq = 16000;
+    int                wav_samples = wav_len_sec * sample_freq;
+    bool               stereo      = false;
 
     wav_data wav(sg, wav_len_sec, sample_freq, stereo);
     uint32_t bufsize = wav_data::HEADER_SIZE + wav.nbytes();
-    char *databuf = new char[bufsize];
+    char*    databuf = new char[bufsize];
 
     wav.write_to_buffer(databuf, bufsize);
 
     audio::config config(js);
 
-    audio::extractor extractor;
-    audio::transformer _audioTransformer(config);
-    audio::loader _audioLoader(config);
+    audio::extractor     extractor;
+    audio::transformer   _audioTransformer(config);
+    audio::loader        _audioLoader(config);
     audio::param_factory factory(config);
-    auto decoded_audio = extractor.extract(databuf, bufsize);
-    auto audioParams = factory.make_params(decoded_audio);
-
+    auto                 decoded_audio = extractor.extract(databuf, bufsize);
+    auto                 audioParams   = factory.make_params(decoded_audio);
 
     cv::Mat output_samples(1, config.max_duration_tn, CV_16SC1);
-    auto xformed_audio = _audioTransformer.transform(audioParams, decoded_audio);
+    auto    xformed_audio = _audioTransformer.transform(audioParams, decoded_audio);
 
     auto shape = config.get_shape_type();
     ASSERT_EQ(shape.get_shape()[0], 1);
@@ -250,13 +249,14 @@ TEST(audio,samples_out)
 
     bool all_eq = true;
 
-    for (int i=0; i<wav_samples; i++)
+    for (int i = 0; i < wav_samples; i++)
     {
-        size_t offset = i * sizeof(int16_t);
-        int16_t*  waddr = (int16_t *) (wav.get_raw_data()[0] + offset);
+        size_t   offset = i * sizeof(int16_t);
+        int16_t* waddr  = (int16_t*)(wav.get_raw_data()[0] + offset);
         if (*waddr != output_samples.at<int16_t>(0, i))
         {
-            all_eq = false; break;
+            all_eq = false;
+            break;
         }
     }
 
@@ -268,24 +268,25 @@ TEST(audio,samples_out)
 TEST(etl, sox_use)
 {
     sinewave_generator sg{400, 500};
-    wav_data wav(sg, 2, 16000, false);
+    wav_data           wav(sg, 2, 16000, false);
 
     uint32_t wav_bufsize = wav_data::HEADER_SIZE + wav.nbytes();
-    char *wav_buf = new char[wav_bufsize];
+    char*    wav_buf     = new char[wav_bufsize];
 
     wav.write_to_buffer(wav_buf, wav_bufsize);
 
     auto sox_mat = read_audio_from_mem(wav_buf, wav_bufsize);
 
-    for (uint i=0; i<60; ++i) {
-        ASSERT_EQ(sox_mat.at<int16_t>(i,0) , wav.get_data().at<int16_t>(i, 0));
+    for (uint i = 0; i < 60; ++i)
+    {
+        ASSERT_EQ(sox_mat.at<int16_t>(i, 0), wav.get_data().at<int16_t>(i, 0));
     }
 }
 
 TEST(audio, filterbank)
 {
     int sample_rate = 2000;
-    int fftsz = 20;
+    int fftsz       = 20;
     int num_filters = 1;
 
     // Computed using python
@@ -296,8 +297,8 @@ TEST(audio, filterbank)
     ASSERT_EQ(11, fbank.rows);
     ASSERT_EQ(1, fbank.cols);
 
-    for (int ii = 0; ii < 11; ++ii) {
+    for (int ii = 0; ii < 11; ++ii)
+    {
         ASSERT_NEAR(expected[ii], fbank.at<float>(ii, 0), 1e-6);
     }
 }
-

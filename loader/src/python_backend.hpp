@@ -32,7 +32,10 @@ namespace nervana
 class nervana::gil_state
 {
 public:
-    gil_state() : m_gstate{PyGILState_Ensure()} {}
+    gil_state()
+        : m_gstate{PyGILState_Ensure()}
+    {
+    }
     ~gil_state() { PyGILState_Release(m_gstate); }
 private:
     PyGILState_STATE m_gstate;
@@ -47,21 +50,21 @@ public:
     void clear_buffers();
 
     bool use_pinned_memory();
-    void call_backend_transfer(nervana::buffer_out_array &outBuf, int bufIdx);
+    void call_backend_transfer(nervana::buffer_out_array& outBuf, int bufIdx);
     PyObject* get_host_tuple(int bufIdx);
-    PyObject* get_shapes();
+    PyObject*                        get_shapes();
     std::vector<nervana::shape_type> m_oshape_types;
-    int                         m_batch_size;
+    int                              m_batch_size;
+
 private:
     python_backend() = delete;
-    PyObject* initPyList(int length=2);
-    void wrap_buffer_pool(PyObject *list, nervana::buffer_out *buf, int bufIdx,
-                          const nervana::shape_type& shape_type);
+    PyObject* initPyList(int length = 2);
+    void wrap_buffer_pool(PyObject* list, nervana::buffer_out* buf, int bufIdx, const nervana::shape_type& shape_type);
 
-    PyObject*                   m_py_obj_backend;
+    PyObject* m_py_obj_backend;
 
-    std::vector<PyObject*>      m_host_lists;
-    std::vector<PyObject*>      m_dev_lists;
+    std::vector<PyObject*> m_host_lists;
+    std::vector<PyObject*> m_dev_lists;
 
-    PyObject*                   m_f_consume = NULL;
+    PyObject* m_f_consume = NULL;
 };

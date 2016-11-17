@@ -36,9 +36,9 @@ protected:
     void shuffle();
 
 private:
-    std::minstd_rand0 _rand;
-    std::shared_ptr<block_loader> _loader;
-    std::vector<uint32_t> _indices;
+    std::minstd_rand0               _rand;
+    std::shared_ptr<block_loader>   _loader;
+    std::vector<uint32_t>           _indices;
     std::vector<uint32_t>::iterator _it;
-    uint32_t _epoch;
+    uint32_t                        _epoch;
 };

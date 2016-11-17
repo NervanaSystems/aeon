@@ -47,10 +47,9 @@ std::string manifest_maker::get_manifest_name()
     return manifest_name;
 }
 
-
 void manifest_maker::remove_files()
 {
-    for(auto it : tmp_filenames)
+    for (auto it : tmp_filenames)
     {
         remove(it.c_str());
     }
@@ -65,13 +64,16 @@ string manifest_maker::tmp_filename()
 
 string manifest_maker::tmp_manifest_file(uint32_t num_records, vector<uint32_t> sizes)
 {
-    string tmpname = tmp_filename();
+    string   tmpname = tmp_filename();
     ofstream f(tmpname);
 
-    for(uint32_t i = 0; i < num_records; ++i) {
+    for (uint32_t i = 0; i < num_records; ++i)
+    {
         // stick a unique uint32_t into each file
-        for(uint32_t j = 0; j < sizes.size(); ++j) {
-            if(j != 0) {
+        for (uint32_t j = 0; j < sizes.size(); ++j)
+        {
+            if (j != 0)
+            {
                 f << ",";
             }
 
@@ -88,12 +90,13 @@ string manifest_maker::tmp_manifest_file(uint32_t num_records, vector<uint32_t> 
 string manifest_maker::tmp_file_repeating(uint32_t size, uint32_t x)
 {
     // create a temp file of `size` bytes filled with uint32_t x
-    string tmpname = tmp_filename();
+    string   tmpname = tmp_filename();
     ofstream f(tmpname, ios::binary);
 
     uint32_t repeats = size / sizeof(x);
-    for(uint32_t i = 0; i < repeats; ++i) {
-        f.write(reinterpret_cast <const char*>(&x), sizeof(x));
+    for (uint32_t i = 0; i < repeats; ++i)
+    {
+        f.write(reinterpret_cast<const char*>(&x), sizeof(x));
     }
 
     f.close();
@@ -103,10 +106,11 @@ string manifest_maker::tmp_file_repeating(uint32_t size, uint32_t x)
 
 std::string manifest_maker::tmp_manifest_file_with_invalid_filename()
 {
-    string tmpname = tmp_filename();
+    string   tmpname = tmp_filename();
     ofstream f(tmpname);
 
-    for(uint32_t i = 0; i < 10; ++i) {
+    for (uint32_t i = 0; i < 10; ++i)
+    {
         f << tmp_filename() + ".this_file_shouldnt_exist" << ',';
         f << tmp_filename() + ".this_file_shouldnt_exist" << endl;
     }
@@ -117,11 +121,13 @@ std::string manifest_maker::tmp_manifest_file_with_invalid_filename()
 
 std::string manifest_maker::tmp_manifest_file_with_ragged_fields()
 {
-    string tmpname = tmp_filename();
+    string   tmpname = tmp_filename();
     ofstream f(tmpname);
 
-    for(uint32_t i = 0; i < 10; ++i) {
-        for(uint32_t j = 0; j < i % 3 + 1; ++j) {
+    for (uint32_t i = 0; i < 10; ++i)
+    {
+        for (uint32_t j = 0; j < i % 3 + 1; ++j)
+        {
             f << (j != 0 ? "," : "") << tmp_filename();
         }
         f << endl;

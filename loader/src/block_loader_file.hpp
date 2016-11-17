@@ -34,9 +34,7 @@ namespace nervana
 class nervana::block_loader_file : public block_loader
 {
 public:
-    block_loader_file(std::shared_ptr<nervana::manifest_csv> manifest,
-                      float subset_fraction,
-                      uint32_t block_size);
+    block_loader_file(std::shared_ptr<nervana::manifest_csv> manifest, float subset_fraction, uint32_t block_size);
 
     void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
     void load_file(std::vector<char>& buff, const std::string& filename);
@@ -48,11 +46,11 @@ private:
     void prefetch_entry(void* param);
     void fetch_block(uint32_t block_num);
 
-    std::vector<std::pair<std::vector<char>,std::exception_ptr>> m_prefetch_buffer;
+    std::vector<std::pair<std::vector<char>, std::exception_ptr>> m_prefetch_buffer;
     const std::shared_ptr<nervana::manifest_csv> m_manifest;
     async                                        m_async_handler;
 
-    uint32_t                                     m_prefetch_block_num;
-    bool                                         m_prefetch_pending;
-    size_t                                       m_elements_per_record;
+    uint32_t m_prefetch_block_num;
+    bool     m_prefetch_pending;
+    size_t   m_elements_per_record;
 };

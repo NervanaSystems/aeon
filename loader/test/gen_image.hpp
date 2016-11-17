@@ -27,14 +27,14 @@ public:
     gen_image();
     ~gen_image();
 
-    gen_image& ImageSize( int rows, int cols );
+    gen_image& ImageSize(int rows, int cols);
 
 private:
-    int         _imageRows;
-    int         _imageCols;
+    int _imageRows;
+    int _imageCols;
 
-    std::vector<unsigned char> render_target( int datumNumber ) override;
-    std::vector<unsigned char> render_datum( int datumNumber ) override;
+    std::vector<unsigned char> render_target(int datumNumber) override;
+    std::vector<unsigned char> render_datum(int datumNumber) override;
 
-    std::vector<unsigned char> RenderImage( int number, int label );
+    std::vector<unsigned char> RenderImage(int number, int label);
 };

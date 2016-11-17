@@ -25,8 +25,9 @@ namespace nervana
     namespace image
     {
         // These functions may be common across different transformers
-        void resize(const cv::Mat&, cv::Mat&, const cv::Size2i&, bool interpolate=true);
-        void rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interpolate=true, const cv::Scalar& border=cv::Scalar());
+        void resize(const cv::Mat&, cv::Mat&, const cv::Size2i&, bool interpolate = true);
+        void rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interpolate = true,
+                    const cv::Scalar& border = cv::Scalar());
         void convert_mix_channels(std::vector<cv::Mat>& source, std::vector<cv::Mat>& target, std::vector<int>& from_to);
 
         float calculate_scale(const cv::Size& size, int output_width, int output_height);
@@ -41,10 +42,10 @@ namespace nervana
         public:
             photometric();
             static void lighting(cv::Mat& inout, std::vector<float>, float color_noise_std);
-            static void cbsjitter(cv::Mat& inout, float contrast, float brightness, float saturation, int hue=0);
+            static void cbsjitter(cv::Mat& inout, float contrast, float brightness, float saturation, int hue = 0);
 
             // These are the eigenvectors of the pixelwise covariance matrix
-            static const float _CPCA[3][3];
+            static const float   _CPCA[3][3];
             static const cv::Mat CPCA;
 
             // These are the square roots of the eigenvalues of the pixelwise covariance matrix

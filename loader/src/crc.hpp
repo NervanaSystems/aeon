@@ -14,26 +14,26 @@
 
 namespace CryptoPP
 {
-typedef uint32_t word32;
-typedef uint8_t byte;
+    typedef uint32_t word32;
+    typedef uint8_t  byte;
 #define CRYPTOPP_CONSTEXPR constexpr
 #define CRYPTOPP_CONSTANT(a) const int a;
 
-
 #define IS_LITTLE_ENDIAN
 
-template<typename T> bool IsAligned(const byte* v)
-{
-    return size_t(v) % sizeof(T) == 0;
-}
+    template <typename T>
+    bool IsAligned(const byte* v)
+    {
+        return size_t(v) % sizeof(T) == 0;
+    }
 
-class HashTransformation
-{
-};
+    class HashTransformation
+    {
+    };
 
-void ThrowIfInvalidTruncatedSize(size_t size);
+    void ThrowIfInvalidTruncatedSize(size_t size);
 
-const word32 CRC32_NEGL = 0xffffffffL;
+    const word32 CRC32_NEGL = 0xffffffffL;
 
 #ifdef IS_LITTLE_ENDIAN
 #define CRC32_INDEX(c) (c & 0xff)
@@ -43,55 +43,48 @@ const word32 CRC32_NEGL = 0xffffffffL;
 #define CRC32_SHIFTED(c) (c << 8)
 #endif
 
-//! \brief CRC-32 Checksum Calculation
-//! \details Uses CRC polynomial 0xEDB88320
-class CRC32 : public HashTransformation
-{
-public:
-	CRYPTOPP_CONSTANT(DIGESTSIZE = 4)
-	CRC32();
-	void Update(const byte *input, size_t length);
-	void TruncatedFinal(byte *hash, size_t size);
-	unsigned int DigestSize() const {return DIGESTSIZE;}
-    CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "CRC32";}
-    std::string AlgorithmName() const {return StaticAlgorithmName();}
+    //! \brief CRC-32 Checksum Calculation
+    //! \details Uses CRC polynomial 0xEDB88320
+    class CRC32 : public HashTransformation
+    {
+    public:
+        CRYPTOPP_CONSTANT(DIGESTSIZE = 4)
+        CRC32();
+        void Update(const byte* input, size_t length);
+        void TruncatedFinal(byte* hash, size_t size);
+        unsigned int                          DigestSize() const { return DIGESTSIZE; }
+        CRYPTOPP_CONSTEXPR static const char* StaticAlgorithmName() { return "CRC32"; }
+        std::string                           AlgorithmName() const { return StaticAlgorithmName(); }
+        void UpdateByte(byte b) { m_crc = m_tab[CRC32_INDEX(m_crc) ^ b] ^ CRC32_SHIFTED(m_crc); }
+        byte GetCrcByte(size_t i) const { return ((byte*)&(m_crc))[i]; }
+    protected:
+        void Reset() { m_crc = CRC32_NEGL; }
+    private:
+        static const word32 m_tab[256];
+        word32              m_crc;
+    };
 
-	void UpdateByte(byte b) {m_crc = m_tab[CRC32_INDEX(m_crc) ^ b] ^ CRC32_SHIFTED(m_crc);}
-	byte GetCrcByte(size_t i) const {return ((byte *)&(m_crc))[i];}
-
-protected:
-	void Reset() {m_crc = CRC32_NEGL;}
-
-private:
-	static const word32 m_tab[256];
-	word32 m_crc;
-};
-
-//! \brief CRC-32C Checksum Calculation
-//! \details Uses CRC polynomial 0x82F63B78
-//! \since Crypto++ 5.6.4
-class CRC32C : public HashTransformation
-{
-public:
-	CRYPTOPP_CONSTANT(DIGESTSIZE = 4)
-	CRC32C();
-	void Update(const byte *input, size_t length);
-	void TruncatedFinal(byte *hash, size_t size);
-	unsigned int DigestSize() const {return DIGESTSIZE;}
-    CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "CRC32C";}
-    std::string AlgorithmName() const {return StaticAlgorithmName();}
-
-	void UpdateByte(byte b) {m_crc = m_tab[CRC32_INDEX(m_crc) ^ b] ^ CRC32_SHIFTED(m_crc);}
-	byte GetCrcByte(size_t i) const {return ((byte *)&(m_crc))[i];}
-
-protected:
-	void Reset() {m_crc = CRC32_NEGL;}
-
-private:
-	static const word32 m_tab[256];
-	word32 m_crc;
-};
-
+    //! \brief CRC-32C Checksum Calculation
+    //! \details Uses CRC polynomial 0x82F63B78
+    //! \since Crypto++ 5.6.4
+    class CRC32C : public HashTransformation
+    {
+    public:
+        CRYPTOPP_CONSTANT(DIGESTSIZE = 4)
+        CRC32C();
+        void Update(const byte* input, size_t length);
+        void TruncatedFinal(byte* hash, size_t size);
+        unsigned int                          DigestSize() const { return DIGESTSIZE; }
+        CRYPTOPP_CONSTEXPR static const char* StaticAlgorithmName() { return "CRC32C"; }
+        std::string                           AlgorithmName() const { return StaticAlgorithmName(); }
+        void UpdateByte(byte b) { m_crc = m_tab[CRC32_INDEX(m_crc) ^ b] ^ CRC32_SHIFTED(m_crc); }
+        byte GetCrcByte(size_t i) const { return ((byte*)&(m_crc))[i]; }
+    protected:
+        void Reset() { m_crc = CRC32_NEGL; }
+    private:
+        static const word32 m_tab[256];
+        word32              m_crc;
+    };
 }
 
 #endif

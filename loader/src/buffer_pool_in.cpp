@@ -31,21 +31,24 @@
 using namespace std;
 using namespace nervana;
 
-buffer_pool_in::buffer_pool_in(unsigned int nbuffers_in) :
-    buffer_pool()
+buffer_pool_in::buffer_pool_in(unsigned int nbuffers_in)
+    : buffer_pool()
 {
-    for (int i = 0; i < m_count; i++) {
+    for (int i = 0; i < m_count; i++)
+    {
         m_bufs.push_back(make_shared<buffer_in_array>(nbuffers_in));
     }
-
 }
 
-buffer_pool_in::~buffer_pool_in() {}
+buffer_pool_in::~buffer_pool_in()
+{
+}
 
 buffer_in_array& buffer_pool_in::get_for_write()
 {
     buffer_in_array& buf_ary = *m_bufs[m_write_pos];
-    for (auto &b : buf_ary) {
+    for (auto& b : buf_ary)
+    {
         b->reset();
     }
     return buf_ary;
@@ -110,8 +113,8 @@ void buffer_pool_in::signal_not_full()
 void buffer_pool_in::advance(int& index)
 {
     // increment index and reset to 0 when index hits `m_count`
-    if (++index == m_count) {
+    if (++index == m_count)
+    {
         index = 0;
     }
 }
-

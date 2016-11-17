@@ -32,6 +32,6 @@ public:
 
 private:
     std::shared_ptr<block_loader> _loader;
-    uint32_t _count;
-    uint32_t _i;
+    uint32_t                      _count;
+    uint32_t                      _i;
 };

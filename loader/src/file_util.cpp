@@ -42,19 +42,28 @@ using namespace std;
 string nervana::file_util::path_join(const string& s1, const string& s2)
 {
     string rc;
-    if(s2.size() > 0) {
-        if(s2[0] == '/') {
+    if (s2.size() > 0)
+    {
+        if (s2[0] == '/')
+        {
             rc = s2;
-        } else if(s1.size() > 0) {
+        }
+        else if (s1.size() > 0)
+        {
             rc = s1;
-            if(rc[rc.size()-1] != '/') {
+            if (rc[rc.size() - 1] != '/')
+            {
                 rc += "/";
             }
             rc += s2;
-        } else {
+        }
+        else
+        {
             rc = s2;
         }
-    } else {
+    }
+    else
+    {
         rc = s1;
     }
     return rc;
@@ -65,7 +74,8 @@ size_t nervana::file_util::get_file_size(const string& filename)
     // ensure that filename exists and get its size
 
     struct stat stats;
-    if (stat(filename.c_str(), &stats) == -1) {
+    if (stat(filename.c_str(), &stats) == -1)
+    {
         throw std::runtime_error("Could not find file: \"" + filename + "\"");
     }
 
@@ -74,11 +84,14 @@ size_t nervana::file_util::get_file_size(const string& filename)
 
 void nervana::file_util::remove_directory(const string& dir)
 {
-    file_util::iterate_files(dir, [](const string& file, bool is_dir)
-    {
-        if(is_dir)  rmdir(file.c_str());
-        else        remove(file.c_str());
-    }, true );
+    file_util::iterate_files(dir,
+                             [](const string& file, bool is_dir) {
+                                 if (is_dir)
+                                     rmdir(file.c_str());
+                                 else
+                                     remove(file.c_str());
+                             },
+                             true);
     rmdir(dir.c_str());
 }
 
@@ -89,8 +102,10 @@ void nervana::file_util::remove_file(const string& file)
 
 bool nervana::file_util::make_directory(const string& dir)
 {
-    if(mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) {
-        if(errno == EEXIST) {
+    if (mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
+    {
+        if (errno == EEXIST)
+        {
             // not really an error, the directory already exists
             return false;
         }
@@ -101,9 +116,9 @@ bool nervana::file_util::make_directory(const string& dir)
 
 string nervana::file_util::make_temp_directory(const string& path)
 {
-    string fname = path.empty() ? file_util::get_temp_directory() : path;
+    string fname        = path.empty() ? file_util::get_temp_directory() : path;
     string tmp_template = file_util::path_join(fname, "aeonXXXXXX");
-    char* tmpname = strdup(tmp_template.c_str());
+    char*  tmpname      = strdup(tmp_template.c_str());
 
     mkdtemp(tmpname);
 
@@ -117,12 +132,14 @@ std::string nervana::file_util::get_temp_directory()
     const vector<string> potential_tmps = {"TMPDIR", "TMP", "TEMP", "TEMPDIR"};
 
     const char* path;
-    for(const string& var : potential_tmps)
+    for (const string& var : potential_tmps)
     {
         path = getenv(var.c_str());
-        if (path != 0) break;
+        if (path != 0)
+            break;
     }
-    if (path == 0) path = "/tmp";
+    if (path == 0)
+        path = "/tmp";
 
     return path;
 }
@@ -130,7 +147,8 @@ std::string nervana::file_util::get_temp_directory()
 vector<char> nervana::file_util::read_file_contents(const string& path)
 {
     ifstream file(path, ios::binary);
-    if(!file) {
+    if (!file)
+    {
         throw std::runtime_error("error opening file '" + path + "'");
     }
     vector<char> data((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
@@ -141,56 +159,64 @@ void nervana::file_util::iterate_files(const string& path, std::function<void(co
 {
     vector<string> files;
     vector<string> dirs;
-    file_util::iterate_files_worker(path, [&files, &dirs](const string& file, bool is_dir)
-    {
-        if(is_dir) dirs.push_back(file);
-        else       files.push_back(file);
-    }, true );
+    file_util::iterate_files_worker(path,
+                                    [&files, &dirs](const string& file, bool is_dir) {
+                                        if (is_dir)
+                                            dirs.push_back(file);
+                                        else
+                                            files.push_back(file);
+                                    },
+                                    true);
 
-    for(auto f : files) func(f, false);
-    for(auto f : dirs)  func(f, true);
+    for (auto f : files)
+        func(f, false);
+    for (auto f : dirs)
+        func(f, true);
 }
 
-void nervana::file_util::iterate_files_worker(const string& path, std::function<void(const string& file, bool is_dir)> func, bool recurse)
+void nervana::file_util::iterate_files_worker(const string& path, std::function<void(const string& file, bool is_dir)> func,
+                                              bool recurse)
 {
-    DIR* dir;
+    DIR*           dir;
     struct dirent* ent;
-    if((dir = opendir(path.c_str())) != nullptr) {
-        while((ent = readdir(dir)) != nullptr) {
+    if ((dir = opendir(path.c_str())) != nullptr)
+    {
+        while ((ent = readdir(dir)) != nullptr)
+        {
             string name = ent->d_name;
-            switch(ent->d_type)
+            switch (ent->d_type)
             {
             case DT_DIR:
-                if (recurse && name != "." && name != "..") {
+                if (recurse && name != "." && name != "..")
+                {
                     string dir = file_util::path_join(path, name);
                     iterate_files(dir, func, recurse);
                     func(dir, true);
                 }
                 break;
-            case DT_LNK:
-                break;
+            case DT_LNK: break;
             case DT_REG:
                 name = file_util::path_join(path, name);
                 func(name, false);
                 break;
-            default:
-                break;
+            default: break;
             }
         }
         closedir(dir);
     }
-    else {
+    else
+    {
         throw std::runtime_error("error enumerating file " + path);
     }
 }
 
 string nervana::file_util::tmp_filename(const string& extension)
 {
-    string tmp_template = file_util::path_join(file_util::get_temp_directory(), "aeonXXXXXX"+extension);
-    char* tmpname = strdup(tmp_template.c_str());
+    string tmp_template = file_util::path_join(file_util::get_temp_directory(), "aeonXXXXXX" + extension);
+    char*  tmpname      = strdup(tmp_template.c_str());
 
     // mkstemp opens the file with open() so we need to close it
-    close(mkstemps(tmpname,extension.size()));
+    close(mkstemps(tmpname, extension.size()));
 
     string rc = tmpname;
     free(tmpname);
@@ -200,10 +226,8 @@ string nervana::file_util::tmp_filename(const string& extension)
 void nervana::file_util::touch(const std::string& filename)
 {
     // inspired by http://chris-sharpe.blogspot.com/2013/05/better-than-systemtouch.html
-    int fd = open(
-         filename.c_str(), O_WRONLY|O_CREAT|O_NOCTTY|O_NONBLOCK, 0666
-    );
-    assert(fd>=0);
+    int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_NOCTTY | O_NONBLOCK, 0666);
+    assert(fd >= 0);
     close(fd);
 
     // update timestamp for filename
@@ -214,15 +238,15 @@ void nervana::file_util::touch(const std::string& filename)
 bool nervana::file_util::exists(const std::string& filename)
 {
     struct stat buffer;
-    return (stat (filename.c_str(), &buffer) == 0);
+    return (stat(filename.c_str(), &buffer) == 0);
 }
 
 int nervana::file_util::try_get_lock(const std::string& filename)
 {
-    mode_t m = umask(0);
-    int fd = open(filename.c_str(), O_RDWR|O_CREAT, 0666);
+    mode_t m  = umask(0);
+    int    fd = open(filename.c_str(), O_RDWR | O_CREAT, 0666);
     umask(m);
-    if(fd >= 0 && flock(fd, LOCK_EX | LOCK_NB) < 0)
+    if (fd >= 0 && flock(fd, LOCK_EX | LOCK_NB) < 0)
     {
         close(fd);
         fd = -1;
@@ -232,7 +256,8 @@ int nervana::file_util::try_get_lock(const std::string& filename)
 
 void nervana::file_util::release_lock(int fd, const std::string& filename)
 {
-    if(fd >= 0) {
+    if (fd >= 0)
+    {
         remove_file(filename);
         close(fd);
     }

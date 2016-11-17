@@ -30,12 +30,12 @@
 using namespace std;
 using namespace nervana;
 
-buffer_out::buffer_out(size_t element_size, size_t minibatch_size, bool pinned) :
-    _size(element_size * minibatch_size),
-    _batch_size(minibatch_size),
-    _pinned(pinned),
-    _stride(element_size),
-    _item_size(element_size)
+buffer_out::buffer_out(size_t element_size, size_t minibatch_size, bool pinned)
+    : _size(element_size * minibatch_size)
+    , _batch_size(minibatch_size)
+    , _pinned(pinned)
+    , _stride(element_size)
+    , _item_size(element_size)
 {
     _data = alloc();
 }
@@ -48,7 +48,8 @@ buffer_out::~buffer_out()
 char* buffer_out::get_item(size_t index)
 {
     size_t offset = index * _stride;
-    if (index >= (int)_batch_size) {
+    if (index >= (int)_batch_size)
+    {
         // TODO: why not raise exception here?  Is anyone actually
         // checking the return value of get_item to make sure it is
         // non-0?
@@ -69,17 +70,21 @@ size_t buffer_out::size()
 
 char* buffer_out::alloc()
 {
-    char*      data;
-    if (_pinned == true) {
+    char* data;
+    if (_pinned == true)
+    {
 #if HAS_GPU
         CUresult status = cuMemAllocHost((void**)&data, _size);
-        if (status != CUDA_SUCCESS) {
+        if (status != CUDA_SUCCESS)
+        {
             throw std::bad_alloc();
         }
 #else
         data = new char[_size];
 #endif
-    } else {
+    }
+    else
+    {
         data = new char[_size];
     }
     return data;
@@ -87,13 +92,16 @@ char* buffer_out::alloc()
 
 void buffer_out::dealloc(char* data)
 {
-    if (_pinned == true) {
+    if (_pinned == true)
+    {
 #if HAS_GPU
         cuMemFreeHost(data);
 #else
         delete[] data;
 #endif
-    } else {
+    }
+    else
+    {
         delete[] data;
     }
 }

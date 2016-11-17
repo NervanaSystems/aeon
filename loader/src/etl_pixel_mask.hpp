@@ -39,6 +39,7 @@ public:
     extractor(const image::config&);
     virtual ~extractor();
     virtual std::shared_ptr<image::decoded> extract(const char*, int) override;
+
 private:
 };
 
@@ -51,9 +52,7 @@ class nervana::pixel_mask::transformer : public interface::transformer<image::de
 public:
     transformer(const image::config&);
     ~transformer();
-    std::shared_ptr<image::decoded> transform(
-                        std::shared_ptr<image::params> txs,
-                        std::shared_ptr<image::decoded> mp) override;
+    std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params> txs, std::shared_ptr<image::decoded> mp) override;
 };
 
 //-------------------------------------------------------------------------

@@ -23,11 +23,10 @@
 using namespace std;
 using namespace nervana;
 
-
-block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader) :
-    _rand(get_global_random_seed()),
-    _loader(loader),
-    _epoch(0)
+block_iterator_shuffled::block_iterator_shuffled(shared_ptr<block_loader> loader)
+    : _rand(get_global_random_seed())
+    , _loader(loader)
+    , _epoch(0)
 {
     // fill indices with integers from  0 to _count.  indices can then be
     // shuffled and used to iterate randomly through the blocks.
@@ -43,7 +42,7 @@ void block_iterator_shuffled::shuffle()
     std::shuffle(_indices.begin(), _indices.end(), _rand);
 }
 
-void block_iterator_shuffled::read(nervana::buffer_in_array &dest)
+void block_iterator_shuffled::read(nervana::buffer_in_array& dest)
 {
     _loader->load_block(dest, *_it);
 
@@ -53,11 +52,13 @@ void block_iterator_shuffled::read(nervana::buffer_in_array &dest)
     // HACK: pass the same seed to both shuffles to ensure that both buffers
     // are shuffled in the same order.
 
-    for (auto d: dest) {
+    for (auto d : dest)
+    {
         d->shuffle(get_global_random_seed() + _epoch);
     }
 
-    if(++_it == _indices.end()) {
+    if (++_it == _indices.end())
+    {
         reset();
     }
     _loader->prefetch_block(*_it);

@@ -26,7 +26,8 @@ using namespace nervana;
 vector<string> buffer_to_vector_of_strings(buffer_in& b)
 {
     vector<string> words;
-    for(auto i = 0; i != b.get_item_count(); ++i) {
+    for (auto i = 0; i != b.get_item_count(); ++i)
+    {
         vector<char>& s = b.get_item(i);
         words.push_back(string(s.data(), s.size()));
     }
@@ -41,7 +42,8 @@ bool sorted(vector<string> words)
 
 void dump_vector_of_strings(vector<string>& words)
 {
-    for(auto word = words.begin(); word != words.end(); ++word) {
+    for (auto word = words.begin(); word != words.end(); ++word)
+    {
         cout << *word << endl;
     }
 }
@@ -49,7 +51,8 @@ void dump_vector_of_strings(vector<string>& words)
 void assert_vector_unique(vector<string>& words)
 {
     sort(words.begin(), words.end());
-    for(auto word = words.begin(); word != words.end() - 1; ++word) {
+    for (auto word = words.begin(); word != words.end() - 1; ++word)
+    {
         ASSERT_NE(*word, *(word + 1));
     }
 }

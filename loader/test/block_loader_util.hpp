@@ -22,18 +22,19 @@ class block_loader_alphabet : public nervana::block_loader
 {
 public:
     block_loader_alphabet(uint32_t block_size);
-    void load_block(nervana::buffer_in_array &dest, uint32_t block_num) override;
+    void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
     uint32_t object_count() override { return 26 * m_block_size; }
 };
-
 
 // Random block loader used for tests
 class block_loader_random : public nervana::block_loader
 {
 public:
-    block_loader_random(uint32_t block_size) : block_loader(block_size) {}
-    void load_block(nervana::buffer_in_array &dest, uint32_t block_num) override;
-    uint32_t object_count() override { return 10; } // Not really correct, but unused for tests
-
+    block_loader_random(uint32_t block_size)
+        : block_loader(block_size)
+    {
+    }
+    void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
+    uint32_t           object_count() override { return 10; } // Not really correct, but unused for tests
     static std::string randomString();
 };

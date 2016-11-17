@@ -56,9 +56,12 @@ void setup_buffer_exception(buffer_in& b)
     // setup b with length 4, one value is an exception
     read(b, "a");
 
-    try {
+    try
+    {
         throw std::runtime_error("expect me");
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         b.add_exception(std::current_exception());
     }
 
@@ -85,10 +88,13 @@ TEST(buffer, read_exception)
     ASSERT_EQ(b.get_item(3)[0], 'd');
 
     // assert that exception is raised
-    try {
+    try
+    {
         b.get_item(1);
         FAIL();
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         ASSERT_STREQ("expect me", e.what());
     }
 }

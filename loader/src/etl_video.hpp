@@ -32,32 +32,31 @@ namespace nervana
 class nervana::video::config : public interface::config
 {
 public:
-    uint32_t                              max_frame_count;
-    nervana::image::config                frame;
+    uint32_t               max_frame_count;
+    nervana::image::config frame;
 
-    config(nlohmann::json js) :
-    frame(js["frame"])
+    config(nlohmann::json js)
+        : frame(js["frame"])
     {
-        if(js.is_null()) {
+        if (js.is_null())
+        {
             throw std::runtime_error("missing video config in json config");
         }
 
-        for(auto& info : config_list) {
+        for (auto& info : config_list)
+        {
             info->parse(js);
         }
         verify_config("video", config_list, js);
 
         // channel major only
-        add_shape_type({frame.channels, max_frame_count, frame.height, frame.width},
-                       frame.output_type);
+        add_shape_type({frame.channels, max_frame_count, frame.height, frame.width}, frame.output_type);
     }
 
 private:
     config() {}
-    std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
-        ADD_SCALAR(max_frame_count, mode::REQUIRED),
-        ADD_IGNORE(frame)
-    };
+    std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {ADD_SCALAR(max_frame_count, mode::REQUIRED),
+                                                                                  ADD_IGNORE(frame)};
 };
 
 class nervana::video::extractor : public interface::extractor<image::decoded>
@@ -65,7 +64,6 @@ class nervana::video::extractor : public interface::extractor<image::decoded>
 public:
     extractor(const video::config&) {}
     virtual ~extractor() {}
-
     virtual std::shared_ptr<image::decoded> extract(const char* item, int itemSize) override;
 
 protected:
@@ -79,13 +77,12 @@ class nervana::video::transformer : public interface::transformer<image::decoded
 public:
     transformer(const video::config&);
     virtual ~transformer() {}
-    virtual std::shared_ptr<image::decoded> transform(
-                                            std::shared_ptr<image::params>,
-                                            std::shared_ptr<image::decoded>) override;
+    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params>, std::shared_ptr<image::decoded>) override;
+
 protected:
     transformer() = delete;
     image::transformer frame_transformer;
-    uint32_t max_frame_count;
+    uint32_t           max_frame_count;
 };
 
 class nervana::video::loader : public interface::loader<image::decoded>

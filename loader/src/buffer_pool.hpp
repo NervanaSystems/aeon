@@ -28,6 +28,7 @@ class nervana::buffer_pool
 {
 protected:
     buffer_pool();
+
 public:
     void write_exception(std::exception_ptr exception_ptr);
     void reraise_exception();
@@ -36,6 +37,6 @@ protected:
     void clear_exception();
 
     std::vector<std::exception_ptr> m_exceptions;
-    int                             m_read_pos = 0;
+    int                             m_read_pos  = 0;
     int                             m_write_pos = 0;
 };

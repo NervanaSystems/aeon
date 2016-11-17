@@ -36,12 +36,12 @@ shared_ptr<image::decoded> pixel_mask::extractor::extract(const char* inbuf, int
     cv::imdecode(input_img, CV_LOAD_IMAGE_ANYDEPTH, &image);
 
     // convert input image to single channel if needed
-    if(image.channels()>1)
+    if (image.channels() > 1)
     {
         // copy channel 0 from source image to channel 0 of target image where
         // target is a single channel image
         cv::Mat target(image.rows, image.cols, CV_8UC1);
-        int from_to[] = {0,0};
+        int     from_to[] = {0, 0};
         cv::mixChannels(&image, 1, &target, 1, from_to, 1);
         image = target;
     }
@@ -57,14 +57,14 @@ pixel_mask::transformer::~transformer()
 {
 }
 
-std::shared_ptr<image::decoded> pixel_mask::transformer::transform(
-                    std::shared_ptr<image::params> img_xform,
-                    std::shared_ptr<image::decoded> image_list)
+std::shared_ptr<image::decoded> pixel_mask::transformer::transform(std::shared_ptr<image::params>  img_xform,
+                                                                   std::shared_ptr<image::decoded> image_list)
 {
-    if(image_list->get_image_count() != 1) throw invalid_argument("pixel_mask transform only supports a single image");
+    if (image_list->get_image_count() != 1)
+        throw invalid_argument("pixel_mask transform only supports a single image");
 
-    cv::Mat rotatedImage;
-    cv::Scalar border{0,0,0};
+    cv::Mat    rotatedImage;
+    cv::Scalar border{0, 0, 0};
     image::rotate(image_list->get_image(0), rotatedImage, img_xform->angle, false, border);
 
     cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
@@ -72,9 +72,10 @@ std::shared_ptr<image::decoded> pixel_mask::transformer::transform(
     cv::Mat resizedImage;
     image::resize(croppedImage, resizedImage, img_xform->output_size, false);
 
-    cv::Mat *finalImage = &resizedImage;
-    cv::Mat flippedImage;
-    if (img_xform->flip) {
+    cv::Mat* finalImage = &resizedImage;
+    cv::Mat  flippedImage;
+    if (img_xform->flip)
+    {
         cv::flip(resizedImage, flippedImage, 1);
         finalImage = &flippedImage;
     }

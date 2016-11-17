@@ -26,7 +26,7 @@ using namespace nervana;
 TEST(block_iterator_shuffled, sequential_block)
 {
     block_loader_alphabet bl(8);
-    buffer_in_array bp(2);
+    buffer_in_array       bp(2);
 
     // ensure that loading successive blocks from block_loader_sequential
     // result in sorted strings
@@ -41,15 +41,16 @@ TEST(block_iterator_shuffled, sequential_block)
 
 TEST(block_iterator_shuffled, shuffled_block)
 {
-    auto mbl = make_shared<block_loader_alphabet>(5);
+    auto                    mbl = make_shared<block_loader_alphabet>(5);
     block_iterator_shuffled bis(mbl);
-    buffer_in_array bp(2);
+    buffer_in_array         bp(2);
 
     uint32_t num_records = mbl->object_count();
 
     // ensure that loading successive blocks from shuffling iterator
     // result in unsorted strings
-    for(int i = 0; i < mbl->block_count(); ++i) {
+    for (int i = 0; i < mbl->block_count(); ++i)
+    {
         bis.read(bp);
     }
 
@@ -60,7 +61,8 @@ TEST(block_iterator_shuffled, shuffled_block)
     ASSERT_EQ(words_b.size(), num_records);
 
     // ensure that there is correspondence between the elements of each record
-    for (uint32_t i = 0; i<num_records; i++) {
+    for (uint32_t i = 0; i < num_records; i++)
+    {
         ASSERT_EQ(words_a[i], words_b[i]);
     }
 

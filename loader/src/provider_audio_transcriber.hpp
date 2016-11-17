@@ -30,19 +30,15 @@ public:
     audio_transcriber(nlohmann::json js);
     void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override;
     void post_process(buffer_out_array& out_buf) override;
-    const std::unordered_map<char, uint8_t>& get_cmap() const
-    {
-        return trans_config.get_cmap();
-    }
-
+    const std::unordered_map<char, uint8_t>& get_cmap() const { return trans_config.get_cmap(); }
 private:
-    audio::config               audio_config;
-    char_map::config            trans_config;
-    audio::extractor            audio_extractor;
-    audio::transformer          audio_transformer;
-    audio::loader               audio_loader;
-    audio::param_factory        audio_factory;
+    audio::config        audio_config;
+    char_map::config     trans_config;
+    audio::extractor     audio_extractor;
+    audio::transformer   audio_transformer;
+    audio::loader        audio_loader;
+    audio::param_factory audio_factory;
 
-    char_map::extractor         trans_extractor;
-    char_map::loader            trans_loader;
+    char_map::extractor trans_extractor;
+    char_map::loader    trans_loader;
 };

@@ -35,84 +35,91 @@ using namespace nervana;
 TEST(label_map, test)
 {
     {
-        nlohmann::json js = {{"class_names",{"a","and","the","quick","fox","cow","dog","blue",
-            "black","brown","happy","lazy","skip","jumped","run","under","over","around"}}};
-        label_map::config cfg{js};
-        label_map::extractor extractor{cfg};
-        label_map::transformer transformer;
-        label_map::loader loader{cfg};
+        nlohmann::json js = {{"class_names",
+                              {"a", "and", "the", "quick", "fox", "cow", "dog", "blue", "black", "brown", "happy", "lazy", "skip",
+                               "jumped", "run", "under", "over", "around"}}};
+        label_map::config             cfg{js};
+        label_map::extractor          extractor{cfg};
+        label_map::transformer        transformer;
+        label_map::loader             loader{cfg};
         shared_ptr<label_map::params> params = make_shared<label_map::params>();
 
         auto data = extractor.get_data();
-        EXPECT_EQ(2,data["the"]);
+        EXPECT_EQ(2, data["the"]);
 
         {
             // the word 'jump' is not in the vocab
-            string t1 = "the quick brown fox jump over the lazy dog";
-            auto extracted = extractor.extract(&t1[0], t1.size());
+            string t1        = "the quick brown fox jump over the lazy dog";
+            auto   extracted = extractor.extract(&t1[0], t1.size());
             EXPECT_EQ(nullptr, extracted);
         }
         {
-            string t1 = "the quick brown fox jumped over the lazy dog";
+            string      t1       = "the quick brown fox jumped over the lazy dog";
             vector<int> expected = {2, 3, 9, 4, 13, 16, 2, 11, 6};
-            auto decoded = extractor.extract(&t1[0], t1.size());
+            auto        decoded  = extractor.extract(&t1[0], t1.size());
             ASSERT_NE(nullptr, decoded);
-            ASSERT_EQ(expected.size(),decoded->get_data().size());
-            for( int i=0; i<expected.size(); i++ ) {
+            ASSERT_EQ(expected.size(), decoded->get_data().size());
+            for (int i = 0; i < expected.size(); i++)
+            {
                 EXPECT_EQ(expected[i], decoded->get_data()[i]) << "at index " << i;
             }
 
             // transform should do nothing
             decoded = transformer.transform(params, decoded);
-            for( int i=0; i<expected.size(); i++ ) {
+            for (int i = 0; i < expected.size(); i++)
+            {
                 EXPECT_EQ(expected[i], decoded->get_data()[i]) << "at index " << i;
             }
 
             // loader
-            const int pad_size = 100;
-            const int data_size = cfg.max_label_count() * sizeof(uint32_t);
-            const int buffer_size = data_size + pad_size;
+            const int    pad_size    = 100;
+            const int    data_size   = cfg.max_label_count() * sizeof(uint32_t);
+            const int    buffer_size = data_size + pad_size;
             vector<char> buffer(buffer_size);
             fill_n(buffer.begin(), buffer.size(), 0xFF);
             loader.load({buffer.data()}, decoded);
 
             int* data_p = (int*)buffer.data();
-            int i = 0;
-            for(; i<expected.size(); i++) {
+            int  i      = 0;
+            for (; i < expected.size(); i++)
+            {
                 EXPECT_EQ(expected[i], data_p[i]);
             }
-            for(; i<cfg.max_label_count(); i++) {
+            for (; i < cfg.max_label_count(); i++)
+            {
                 EXPECT_EQ(0, data_p[i]);
             }
             // check for overrun
-            for(i*=4; i<buffer_size; i++) {
+            for (i *= 4; i < buffer_size; i++)
+            {
                 EXPECT_EQ(buffer.data()[i], (char)0xFF);
             }
-
         }
     }
     {
-        nlohmann::json js = {{"class_names",{"a","and","the","quick","fox","cow","dog","blue",
-            "black","brown","happy","lazy","skip","jumped","run","under","over","around"}}};
-        label_map::config cfg{js};
+        nlohmann::json js = {{"class_names",
+                              {"a", "and", "the", "quick", "fox", "cow", "dog", "blue", "black", "brown", "happy", "lazy", "skip",
+                               "jumped", "run", "under", "over", "around"}}};
+        label_map::config    cfg{js};
         label_map::extractor extractor(cfg);
-        auto data = extractor.get_data();
-        EXPECT_EQ(2,data["the"]);
+        auto                 data = extractor.get_data();
+        EXPECT_EQ(2, data["the"]);
 
         {
             // the word 'jump' is not in the vocab
-            string t1 = "the quick brown fox jump over the lazy dog";
-            auto extracted = extractor.extract(&t1[0], t1.size());
+            string t1        = "the quick brown fox jump over the lazy dog";
+            auto   extracted = extractor.extract(&t1[0], t1.size());
             EXPECT_EQ(nullptr, extracted);
         }
         {
-            string t1 = "the quick brown fox jumped over the lazy dog";
-            vector<int> expected = {2, 3, 9, 4, 13, 16, 2, 11, 6};
-            auto extracted = extractor.extract(&t1[0], t1.size());
+            string      t1        = "the quick brown fox jumped over the lazy dog";
+            vector<int> expected  = {2, 3, 9, 4, 13, 16, 2, 11, 6};
+            auto        extracted = extractor.extract(&t1[0], t1.size());
             ASSERT_NE(nullptr, extracted);
             shared_ptr<label_map::decoded> decoded = static_pointer_cast<label_map::decoded>(extracted);
-            ASSERT_EQ(expected.size(),decoded->get_data().size());
-            for( int i=0; i<expected.size(); i++ ) {
+            ASSERT_EQ(expected.size(), decoded->get_data().size());
+            for (int i = 0; i < expected.size(); i++)
+            {
                 EXPECT_EQ(expected[i], decoded->get_data()[i]) << "at index " << i;
             }
         }

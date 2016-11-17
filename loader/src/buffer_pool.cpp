@@ -35,7 +35,8 @@ void buffer_pool::clear_exception()
 
 void buffer_pool::reraise_exception()
 {
-    if(auto e = m_exceptions[m_read_pos]) {
+    if (auto e = m_exceptions[m_read_pos])
+    {
         clear_exception();
         std::rethrow_exception(e);
     }

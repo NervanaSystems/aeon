@@ -25,7 +25,8 @@
 #include <utility>
 #include <algorithm>
 
-namespace nervana {
+namespace nervana
+{
     class thread_pool;
 }
 
@@ -39,19 +40,21 @@ namespace nervana {
 class nervana::thread_pool
 {
 public:
-    explicit thread_pool(int count) :
-        m_count(count),
-        m_done(false)
+    explicit thread_pool(int count)
+        : m_count(count)
+        , m_done(false)
     {
         m_stopped = new bool[count];
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++)
+        {
             m_stopped[i] = false;
         }
     }
 
     virtual ~thread_pool()
     {
-        for (auto t : m_threads) {
+        for (auto t : m_threads)
+        {
             t->join();
             delete t;
         }
@@ -60,20 +63,19 @@ public:
 
     virtual void start()
     {
-        for (int i = 0; i < m_count; i++) {
+        for (int i = 0; i < m_count; i++)
+        {
             m_threads.push_back(new std::thread(&thread_pool::run, this, i));
         }
     }
 
-    virtual void stop()
+    virtual void stop() { m_done = true; }
+    bool         stopped()
     {
-        m_done = true;
-    }
-
-    bool stopped()
-    {
-        for (int i = 0; i < m_count; i++) {
-            if (m_stopped[i] == false) {
+        for (int i = 0; i < m_count; i++)
+        {
+            if (m_stopped[i] == false)
+            {
                 return false;
             }
         }
@@ -82,7 +84,8 @@ public:
 
     void join()
     {
-        for (auto t : m_threads) {
+        for (auto t : m_threads)
+        {
             t->join();
         }
     }
@@ -92,15 +95,16 @@ protected:
 
     virtual void run(int id)
     {
-        while (m_done == false) {
+        while (m_done == false)
+        {
             work(id);
         }
         m_stopped[id] = true;
     }
 
 protected:
-    int                         m_count;
-    std::vector<std::thread*>   m_threads;
-    bool                        m_done;
-    bool*                       m_stopped;
+    int                       m_count;
+    std::vector<std::thread*> m_threads;
+    bool                      m_done;
+    bool*                     m_stopped;
 };

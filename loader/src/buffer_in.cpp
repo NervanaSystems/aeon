@@ -39,12 +39,14 @@ void buffer_in::shuffle(uint32_t random_seed)
 
 vector<char>& buffer_in::get_item(int index)
 {
-    if (index >= (int) m_buffers.size()) {
+    if (index >= (int)m_buffers.size())
+    {
         throw invalid_argument("index out-of-range");
     }
 
     auto it = m_exceptions.find(index);
-    if (it != m_exceptions.end()) {
+    if (it != m_exceptions.end())
+    {
         std::rethrow_exception(it->second);
     }
 
@@ -71,7 +73,8 @@ void buffer_in::add_exception(std::exception_ptr e)
     m_buffers.push_back(empty);
 }
 
-int buffer_in::get_item_count() {
+int buffer_in::get_item_count()
+{
     return m_buffers.size();
 }
 

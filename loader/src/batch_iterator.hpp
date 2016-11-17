@@ -32,12 +32,13 @@ public:
 
     void read(nervana::buffer_in_array& dst_buffer_array);
     void reset();
+
 protected:
     void pop_item_from_block(nervana::buffer_in_array& dst_buffer_array);
     void transfer_buffer_item(nervana::buffer_in* dst, nervana::buffer_in* src);
 
     std::shared_ptr<block_iterator> m_src_block_iterator;
-    int m_batch_size;
+    int                             m_batch_size;
 
     std::shared_ptr<nervana::buffer_in_array> m_src_buffer_array_ptr;
     // the index into the m_macrobatch to read next

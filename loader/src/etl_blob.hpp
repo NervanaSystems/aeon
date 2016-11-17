@@ -22,7 +22,6 @@
 
 namespace nervana
 {
-
     namespace blob
     {
         class config;
@@ -41,7 +40,8 @@ public:
 
     config(nlohmann::json js)
     {
-        for(auto& info : config_list) {
+        for (auto& info : config_list)
+        {
             info->parse(js);
         }
         verify_config("blob", config_list, js);
@@ -50,46 +50,34 @@ public:
     }
 
 private:
-    config()
-    {
-    }
+    config() {}
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_SCALAR(output_count, mode::REQUIRED),
-        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v){ return output_type::is_valid_type(v); })
-    };
+        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) { return output_type::is_valid_type(v); })};
 };
 
 class nervana::blob::decoded : public interface::decoded_media
 {
     friend class loader;
+
 public:
-    decoded(const char* buf, int bufSize) :
-        data{buf},
-        data_size{bufSize}
+    decoded(const char* buf, int bufSize)
+        : data{buf}
+        , data_size{bufSize}
     {
     }
 
-    virtual ~decoded() override
-    {
-    }
-
+    virtual ~decoded() override {}
 private:
     const char* data;
     int         data_size;
 };
 
-
 class nervana::blob::extractor : public interface::extractor<blob::decoded>
 {
 public:
-    extractor(const blob::config& cfg)
-    {
-    }
-
-    ~extractor()
-    {
-    }
-
+    extractor(const blob::config& cfg) {}
+    ~extractor() {}
     std::shared_ptr<blob::decoded> extract(const char* buf, int bufSize) override
     {
         return std::make_shared<blob::decoded>(buf, bufSize);
@@ -101,14 +89,8 @@ private:
 class nervana::blob::loader : public interface::loader<blob::decoded>
 {
 public:
-    loader(const blob::config& cfg)
-    {
-    }
-
-    ~loader()
-    {
-    }
-
+    loader(const blob::config& cfg) {}
+    ~loader() {}
     void load(const std::vector<void*>& buflist, std::shared_ptr<blob::decoded> mp) override
     {
         char* buf = (char*)buflist[0];

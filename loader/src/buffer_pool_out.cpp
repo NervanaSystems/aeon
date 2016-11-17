@@ -31,19 +31,17 @@
 using namespace std;
 using namespace nervana;
 
-buffer_pool_out::buffer_pool_out(const std::vector<size_t>& writeSizes,
-                                 size_t batchSize, bool pinned) :
-    buffer_pool()
+buffer_pool_out::buffer_pool_out(const std::vector<size_t>& writeSizes, size_t batchSize, bool pinned)
+    : buffer_pool()
 {
-    for (int i = 0; i < m_count; i++) {
+    for (int i = 0; i < m_count; i++)
+    {
         m_bufs.push_back(make_shared<buffer_out_array>(writeSizes, batchSize, pinned));
     }
-
 }
 
 buffer_pool_out::~buffer_pool_out()
 {
-
 }
 
 buffer_out_array& buffer_pool_out::get_for_write()
@@ -109,8 +107,8 @@ void buffer_pool_out::signal_not_full()
 void buffer_pool_out::advance(int& index)
 {
     // increment index and reset to 0 when index hits `m_count`
-    if (++index == m_count) {
+    if (++index == m_count)
+    {
         index = 0;
     }
 }
-

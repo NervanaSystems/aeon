@@ -30,9 +30,9 @@ public:
     void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
 
 private:
-    video::config               video_config;
-    video::extractor            video_extractor;
-    video::transformer          video_transformer;
-    video::loader               video_loader;
-    image::param_factory        frame_factory;
+    video::config        video_config;
+    video::extractor     video_extractor;
+    video::transformer   video_transformer;
+    video::loader        video_loader;
+    image::param_factory frame_factory;
 };

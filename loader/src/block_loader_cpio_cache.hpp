@@ -38,8 +38,7 @@ namespace nervana
 class nervana::block_loader_cpio_cache : public block_loader
 {
 public:
-    block_loader_cpio_cache(const std::string& rootCacheDir,
-                            const std::string& cache_id, const std::string& version,
+    block_loader_cpio_cache(const std::string& rootCacheDir, const std::string& cache_id, const std::string& version,
                             std::shared_ptr<block_loader> loader);
 
     void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
@@ -59,12 +58,12 @@ private:
     bool take_ownership();
     void release_ownership();
 
-    const std::string               m_owner_lock_filename = "caching_in_progress";
-    const std::string               m_cache_complete_filename = "cache_complete";
+    const std::string m_owner_lock_filename     = "caching_in_progress";
+    const std::string m_cache_complete_filename = "cache_complete";
 
-    std::string                     m_cache_dir;
-    std::shared_ptr<block_loader>   m_loader;
-    const size_t                    m_block_count;
-    bool                            m_cache_owner;
-    int                             m_ownership_lock;
+    std::string                   m_cache_dir;
+    std::shared_ptr<block_loader> m_loader;
+    const size_t                  m_block_count;
+    bool                          m_cache_owner;
+    int                           m_ownership_lock;
 };

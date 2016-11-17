@@ -31,13 +31,13 @@ public:
     void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
 
 private:
-    image::config               image_config;
-    label::config               label_config;
-    image::extractor            image_extractor;
-    image::transformer          image_transformer;
-    image::loader               image_loader;
-    image::param_factory        image_factory;
+    image::config        image_config;
+    label::config        label_config;
+    image::extractor     image_extractor;
+    image::transformer   image_transformer;
+    image::loader        image_loader;
+    image::param_factory image_factory;
 
-    label::extractor            label_extractor;
-    label::loader               label_loader;
+    label::extractor label_extractor;
+    label::loader    label_loader;
 };

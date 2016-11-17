@@ -31,7 +31,7 @@ TEST(cpio, read_nds)
 {
     cpio::file_reader reader;
 
-    reader.open(CURDIR"/test_data/test.cpio");
+    reader.open(CURDIR "/test_data/test.cpio");
     EXPECT_EQ(1, reader.itemCount());
 
     nervana::buffer_in buffer;

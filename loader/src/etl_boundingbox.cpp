@@ -19,7 +19,7 @@
 
 using namespace std;
 using namespace nervana;
-using namespace nlohmann;   // json stuff
+using namespace nlohmann; // json stuff
 
 ostream& operator<<(ostream& out, const boundingbox::box& b)
 {
@@ -29,20 +29,23 @@ ostream& operator<<(ostream& out, const boundingbox::box& b)
 
 boundingbox::config::config(nlohmann::json js)
 {
-    if(js.is_null()) {
+    if (js.is_null())
+    {
         throw std::runtime_error("missing bbox config in json config");
     }
 
-    for(auto& info : config_list) {
+    for (auto& info : config_list)
+    {
         info->parse(js);
     }
     verify_config("bbox", config_list, js);
 
     // Derived values
-    add_shape_type({max_bbox_count, 4*sizeof(float)}, output_type);
+    add_shape_type({max_bbox_count, 4 * sizeof(float)}, output_type);
     label_map.clear();
-    for( int i=0; i<class_names.size(); i++ ) {
-        label_map.insert({class_names[i],i});
+    for (int i = 0; i < class_names.size(); i++)
+    {
+        label_map.insert({class_names[i], i});
     }
 
     validate();
@@ -56,47 +59,83 @@ boundingbox::decoded::decoded()
 {
 }
 
-boundingbox::extractor::extractor(const std::unordered_map<std::string,int>& map) :
-    label_map{map}
+boundingbox::extractor::extractor(const std::unordered_map<std::string, int>& map)
+    : label_map{map}
 {
 }
 
 void boundingbox::extractor::extract(const char* data, int size, std::shared_ptr<boundingbox::decoded>& rc)
 {
-    string buffer( data, size );
-    json j = json::parse(buffer);
-    if( j["object"].is_null() ) { throw invalid_argument("'object' missing from metadata"); }
-    if( j["size"].is_null() ) { throw invalid_argument("'size' missing from metadata"); }
+    string buffer(data, size);
+    json   j = json::parse(buffer);
+    if (j["object"].is_null())
+    {
+        throw invalid_argument("'object' missing from metadata");
+    }
+    if (j["size"].is_null())
+    {
+        throw invalid_argument("'size' missing from metadata");
+    }
     auto object_list = j["object"];
-    auto image_size = j["size"];
-    if( image_size["width"].is_null() ) { throw invalid_argument("'width' missing from metadata"); }
-    if( image_size["height"].is_null() ) { throw invalid_argument("'height' missing from metadata"); }
-    if( image_size["depth"].is_null() ) { throw invalid_argument("'depth' missing from metadata"); }
+    auto image_size  = j["size"];
+    if (image_size["width"].is_null())
+    {
+        throw invalid_argument("'width' missing from metadata");
+    }
+    if (image_size["height"].is_null())
+    {
+        throw invalid_argument("'height' missing from metadata");
+    }
+    if (image_size["depth"].is_null())
+    {
+        throw invalid_argument("'depth' missing from metadata");
+    }
     rc->_height = image_size["height"];
-    rc->_width = image_size["width"];
-    rc->_depth = image_size["depth"];
-    for( auto object : object_list ) {
+    rc->_width  = image_size["width"];
+    rc->_depth  = image_size["depth"];
+    for (auto object : object_list)
+    {
         auto bndbox = object["bndbox"];
-        box b;
-        if( bndbox["xmax"].is_null() ) { throw invalid_argument("'xmax' missing from metadata"); }
-        if( bndbox["xmin"].is_null() ) { throw invalid_argument("'xmin' missing from metadata"); }
-        if( bndbox["ymax"].is_null() ) { throw invalid_argument("'ymax' missing from metadata"); }
-        if( bndbox["ymin"].is_null() ) { throw invalid_argument("'ymin' missing from metadata"); }
-        if( object["name"].is_null() ) { throw invalid_argument("'name' missing from metadata"); }
+        box  b;
+        if (bndbox["xmax"].is_null())
+        {
+            throw invalid_argument("'xmax' missing from metadata");
+        }
+        if (bndbox["xmin"].is_null())
+        {
+            throw invalid_argument("'xmin' missing from metadata");
+        }
+        if (bndbox["ymax"].is_null())
+        {
+            throw invalid_argument("'ymax' missing from metadata");
+        }
+        if (bndbox["ymin"].is_null())
+        {
+            throw invalid_argument("'ymin' missing from metadata");
+        }
+        if (object["name"].is_null())
+        {
+            throw invalid_argument("'name' missing from metadata");
+        }
         b.xmax = bndbox["xmax"];
         b.xmin = bndbox["xmin"];
         b.ymax = bndbox["ymax"];
         b.ymin = bndbox["ymin"];
-        if( !object["difficult"].is_null() ) b.difficult = object["difficult"];
-        if( !object["truncated"].is_null() ) b.truncated = object["truncated"];
-        string name = object["name"];
-        auto found = label_map.find(name);
-        if( found == label_map.end() ) {
+        if (!object["difficult"].is_null())
+            b.difficult = object["difficult"];
+        if (!object["truncated"].is_null())
+            b.truncated = object["truncated"];
+        string name     = object["name"];
+        auto   found    = label_map.find(name);
+        if (found == label_map.end())
+        {
             // did not find the label in the ctor supplied label list
             stringstream ss;
             ss << "label '" << name << "' not found in metadata label list";
             throw invalid_argument(ss.str());
-        } else {
+        }
+        else
+        {
             b.label = found->second;
         }
         rc->_boxes.push_back(b);
@@ -114,12 +153,8 @@ boundingbox::transformer::transformer(const boundingbox::config&)
 {
 }
 
-vector<boundingbox::box> boundingbox::transformer::transform_box(
-        const std::vector<boundingbox::box>& boxes,
-        const cv::Rect& crop,
-        bool flip,
-        float x_scale,
-        float y_scale)
+vector<boundingbox::box> boundingbox::transformer::transform_box(const std::vector<boundingbox::box>& boxes, const cv::Rect& crop,
+                                                                 bool flip, float x_scale, float y_scale)
 {
     // 1) rotate
     // 2) crop
@@ -127,37 +162,60 @@ vector<boundingbox::box> boundingbox::transformer::transform_box(
     // 4) flip
 
     vector<boundingbox::box> rc;
-    for(boundingbox::box b : boxes) {
-        if( b.xmax <= crop.x ) {                      // outside left
-        } else if( b.xmin >= crop.x + crop.width ) {  // outside right
-        } else if( b.ymax <= crop.y ) {               // outside above
-        } else if( b.ymin >= crop.y + crop.height ) { // outside below
-        } else {
-            if( b.xmin < crop.x ) {
+    for (boundingbox::box b : boxes)
+    {
+        if (b.xmax <= crop.x)
+        { // outside left
+        }
+        else if (b.xmin >= crop.x + crop.width)
+        { // outside right
+        }
+        else if (b.ymax <= crop.y)
+        { // outside above
+        }
+        else if (b.ymin >= crop.y + crop.height)
+        { // outside below
+        }
+        else
+        {
+            if (b.xmin < crop.x)
+            {
                 b.xmin = 0;
-            } else {
+            }
+            else
+            {
                 b.xmin -= crop.x;
             }
-            if( b.ymin < crop.y ) {
+            if (b.ymin < crop.y)
+            {
                 b.ymin = 0;
-            } else {
+            }
+            else
+            {
                 b.ymin -= crop.y;
             }
-            if( b.xmax > crop.x + crop.width ) {
+            if (b.xmax > crop.x + crop.width)
+            {
                 b.xmax = crop.width;
-            } else {
+            }
+            else
+            {
                 b.xmax -= crop.x;
             }
-            if( b.ymax > crop.y + crop.height ) {
+            if (b.ymax > crop.y + crop.height)
+            {
                 b.ymax = crop.height;
-            } else {
+            }
+            else
+            {
                 b.ymax -= crop.y;
             }
 
-            if(flip) {
+            if (flip)
+            {
                 auto xmax = b.xmax;
-                b.xmax = crop.width - b.xmin - 1;
-                b.xmin = crop.width - xmax - 1;
+                b.xmax    = crop.width - b.xmin - 1;
+                b.xmin    = crop.width - xmax - 1;
             }
 
             // now rescale box
@@ -172,40 +230,43 @@ vector<boundingbox::box> boundingbox::transformer::transform_box(
     return rc;
 }
 
-shared_ptr<boundingbox::decoded> boundingbox::transformer::transform(shared_ptr<image::params> pptr, shared_ptr<boundingbox::decoded> boxes)
+shared_ptr<boundingbox::decoded> boundingbox::transformer::transform(shared_ptr<image::params>        pptr,
+                                                                     shared_ptr<boundingbox::decoded> boxes)
 {
-    if( pptr->angle != 0 ) {
+    if (pptr->angle != 0)
+    {
         return shared_ptr<boundingbox::decoded>();
     }
-    shared_ptr<boundingbox::decoded> rc = make_shared<boundingbox::decoded>();
-    cv::Rect crop = pptr->cropbox;
-    float x_scale = (float)(pptr->output_size.width)  / (float)(crop.width);
-    float y_scale = (float)(pptr->output_size.height) / (float)(crop.height);
+    shared_ptr<boundingbox::decoded> rc      = make_shared<boundingbox::decoded>();
+    cv::Rect                         crop    = pptr->cropbox;
+    float                            x_scale = (float)(pptr->output_size.width) / (float)(crop.width);
+    float                            y_scale = (float)(pptr->output_size.height) / (float)(crop.height);
 
     rc->_boxes = transform_box(boxes->boxes(), crop, pptr->flip, x_scale, y_scale);
 
     return rc;
 }
 
-boundingbox::loader::loader(const boundingbox::config& cfg) :
-    max_bbox{cfg.max_bbox_count}
+boundingbox::loader::loader(const boundingbox::config& cfg)
+    : max_bbox{cfg.max_bbox_count}
 {
-
 }
 
 void boundingbox::loader::load(const vector<void*>& outlist, shared_ptr<boundingbox::decoded> boxes)
 {
-    float* data = (float*)outlist[0];
+    float* data         = (float*)outlist[0];
     size_t output_count = min(max_bbox, boxes->boxes().size());
-    int i=0;
-    for(; i<output_count; i++) {
+    int    i            = 0;
+    for (; i < output_count; i++)
+    {
         data[0] = boxes->boxes()[i].xmin;
         data[1] = boxes->boxes()[i].ymin;
         data[2] = boxes->boxes()[i].xmax;
         data[3] = boxes->boxes()[i].ymax;
         data += 4;
     }
-    for(; i<max_bbox; i++) {
+    for (; i < max_bbox; i++)
+    {
         data[0] = 0;
         data[1] = 0;
         data[2] = 0;
@@ -213,4 +274,3 @@ void boundingbox::loader::load(const vector<void*>& outlist, shared_ptr<bounding
         data += 4;
     }
 }
-

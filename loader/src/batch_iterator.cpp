@@ -17,34 +17,35 @@
 
 using namespace nervana;
 
-batch_iterator::batch_iterator(std::shared_ptr<block_iterator> src_block_iterator,
-                               int batch_size) :
-    m_src_block_iterator(src_block_iterator),
-    m_batch_size(batch_size),
-    m_i(0)
+batch_iterator::batch_iterator(std::shared_ptr<block_iterator> src_block_iterator, int batch_size)
+    : m_src_block_iterator(src_block_iterator)
+    , m_batch_size(batch_size)
+    , m_i(0)
 {
     // Note that we don't know how many buffer_ins in we will be writing to until this.read()
     // is called.  So we leave our m_macrobatch buffer_in_array pointer to null until we get that
     // information
 
     m_src_block_iterator->reset();
-
 }
 
 void batch_iterator::read(buffer_in_array& dst_buffer_array)
 {
-    if (m_src_buffer_array_ptr == nullptr) {
+    if (m_src_buffer_array_ptr == nullptr)
+    {
         m_src_buffer_array_ptr = std::make_shared<buffer_in_array>(dst_buffer_array.size());
     }
     // read `_batch_size` items from m_src_buffer_array_ptr into `dst_buffer_array`
-    for(auto i = 0; i < m_batch_size; ++i) {
+    for (auto i = 0; i < m_batch_size; ++i)
+    {
         pop_item_from_block(dst_buffer_array);
     }
 }
 
 void batch_iterator::reset()
 {
-    for (auto m: *m_src_buffer_array_ptr) {
+    for (auto m : *m_src_buffer_array_ptr)
+    {
         m->reset();
     }
 
@@ -55,9 +56,12 @@ void batch_iterator::reset()
 
 void batch_iterator::transfer_buffer_item(buffer_in* dst, buffer_in* src)
 {
-    try {
+    try
+    {
         dst->add_item(src->get_item(m_i));
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         dst->add_exception(std::current_exception());
     }
 }
@@ -65,10 +69,12 @@ void batch_iterator::transfer_buffer_item(buffer_in* dst, buffer_in* src)
 void batch_iterator::pop_item_from_block(buffer_in_array& dst_buffer_array)
 {
     // load a new macrobatch if we've already iterated through the previous one
-    buffer_in_array &src_buffer_array = *m_src_buffer_array_ptr;
+    buffer_in_array& src_buffer_array = *m_src_buffer_array_ptr;
 
-    if(m_i >= src_buffer_array[0]->get_item_count()) {
-        for (auto m: src_buffer_array) {
+    if (m_i >= src_buffer_array[0]->get_item_count())
+    {
+        for (auto m : src_buffer_array)
+        {
             m->reset();
         }
 
@@ -81,7 +87,8 @@ void batch_iterator::pop_item_from_block(buffer_in_array& dst_buffer_array)
     // reorders the index, we can't just read a large contiguous block of
     // memory out of the m_src_buffer_array_ptr.  We must copy out each element one at
     // a time
-    for (uint32_t idx=0; idx < src_buffer_array.size(); ++idx) {
+    for (uint32_t idx = 0; idx < src_buffer_array.size(); ++idx)
+    {
         transfer_buffer_item(dst_buffer_array[idx], src_buffer_array[idx]);
     }
 

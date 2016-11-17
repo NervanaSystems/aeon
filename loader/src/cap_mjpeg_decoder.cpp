@@ -48,10 +48,10 @@ using namespace cv;
 
 uint64_t nervana::MotionJpegCapture::getFramePos() const
 {
-    if(m_is_first_frame)
+    if (m_is_first_frame)
         return 0;
 
-    if(m_frame_iterator == m_mjpeg_frames.end())
+    if (m_frame_iterator == m_mjpeg_frames.end())
         return m_mjpeg_frames.size();
 
     return m_frame_iterator - m_mjpeg_frames.begin() + 1;
@@ -59,15 +59,15 @@ uint64_t nervana::MotionJpegCapture::getFramePos() const
 
 bool nervana::MotionJpegCapture::setProperty(int property, double value)
 {
-    if(property == CV_CAP_PROP_POS_FRAMES)
+    if (property == CV_CAP_PROP_POS_FRAMES)
     {
-        if(int(value) == 0)
+        if (int(value) == 0)
         {
             m_is_first_frame = true;
             m_frame_iterator = m_mjpeg_frames.end();
             return true;
         }
-        else if(m_mjpeg_frames.size() > value)
+        else if (m_mjpeg_frames.size() > value)
         {
             m_frame_iterator = m_mjpeg_frames.begin() + int(value - 1);
             m_is_first_frame = false;
@@ -80,26 +80,17 @@ bool nervana::MotionJpegCapture::setProperty(int property, double value)
 
 double nervana::MotionJpegCapture::getProperty(int property) const
 {
-    switch(property)
+    switch (property)
     {
-    case CV_CAP_PROP_POS_FRAMES:
-        return (double)getFramePos();
-    case CV_CAP_PROP_POS_AVI_RATIO:
-        return double(getFramePos())/m_mjpeg_frames.size();
-    case CV_CAP_PROP_FRAME_WIDTH:
-        return (double)m_frame_width;
-    case CV_CAP_PROP_FRAME_HEIGHT:
-        return (double)m_frame_height;
-    case CV_CAP_PROP_FPS:
-        return m_fps;
-    case CV_CAP_PROP_FOURCC:
-        return (double)MJPG_CC;
-    case CV_CAP_PROP_FRAME_COUNT:
-        return (double)m_mjpeg_frames.size();
-    case CV_CAP_PROP_FORMAT:
-        return 0;
-    default:
-        return 0;
+    case CV_CAP_PROP_POS_FRAMES: return (double)getFramePos();
+    case CV_CAP_PROP_POS_AVI_RATIO: return double(getFramePos()) / m_mjpeg_frames.size();
+    case CV_CAP_PROP_FRAME_WIDTH: return (double)m_frame_width;
+    case CV_CAP_PROP_FRAME_HEIGHT: return (double)m_frame_height;
+    case CV_CAP_PROP_FPS: return m_fps;
+    case CV_CAP_PROP_FOURCC: return (double)MJPG_CC;
+    case CV_CAP_PROP_FRAME_COUNT: return (double)m_mjpeg_frames.size();
+    case CV_CAP_PROP_FORMAT: return 0;
+    default: return 0;
     }
 }
 
@@ -122,9 +113,9 @@ std::vector<char> nervana::MotionJpegCapture::readFrame(frame_iterator it)
 
 bool nervana::MotionJpegCapture::grabFrame()
 {
-    if(isOpened())
+    if (isOpened())
     {
-        if(m_is_first_frame)
+        if (m_is_first_frame)
         {
             m_is_first_frame = false;
             m_frame_iterator = m_mjpeg_frames.begin();
@@ -140,11 +131,11 @@ bool nervana::MotionJpegCapture::grabFrame()
 
 bool nervana::MotionJpegCapture::retrieveFrame(int, cv::Mat& output_frame)
 {
-    if(m_frame_iterator != m_mjpeg_frames.end())
+    if (m_frame_iterator != m_mjpeg_frames.end())
     {
         std::vector<char> data = readFrame(m_frame_iterator);
 
-        if(data.size())
+        if (data.size())
         {
             output_frame = imdecode(data, CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_COLOR);
         }
@@ -172,7 +163,6 @@ nervana::MotionJpegCapture::MotionJpegCapture(char* buffer, size_t size)
     open();
 }
 
-
 bool nervana::MotionJpegCapture::isOpened() const
 {
     return m_mjpeg_frames.size() > 0;
@@ -188,7 +178,7 @@ bool nervana::MotionJpegCapture::open()
     m_frame_iterator = m_mjpeg_frames.end();
     m_is_first_frame = true;
 
-    if(!parseRiff(*m_file_stream))
+    if (!parseRiff(*m_file_stream))
     {
         ERR << "Not a valid AVI file type" << endl;
         close();
@@ -197,32 +187,31 @@ bool nervana::MotionJpegCapture::open()
     return isOpened();
 }
 
-
 bool nervana::MotionJpegCapture::parseRiff(istream& in_str)
 {
     bool result = false;
-    while(in_str)
+    while (in_str)
     {
         RiffList riff_list;
 
         in_str >> riff_list;
 
-        if( in_str && riff_list.m_riff_or_list_cc == RIFF_CC &&
-            ((riff_list.m_list_type_cc == AVI_CC) | (riff_list.m_list_type_cc == AVIX_CC)) )
+        if (in_str && riff_list.m_riff_or_list_cc == RIFF_CC &&
+            ((riff_list.m_list_type_cc == AVI_CC) | (riff_list.m_list_type_cc == AVIX_CC)))
         {
             uint64_t next_riff = in_str.tellg();
-            //RiffList::m_size includes fourCC field which we have already read
+            // RiffList::m_size includes fourCC field which we have already read
             next_riff += (riff_list.m_size - 4);
 
             AviMjpegStream mjpeg_video_stream;
-            bool is_parsed = mjpeg_video_stream.parseAvi(in_str, m_mjpeg_frames);
-            result = result || is_parsed;
+            bool           is_parsed = mjpeg_video_stream.parseAvi(in_str, m_mjpeg_frames);
+            result                   = result || is_parsed;
 
-            if(is_parsed)
+            if (is_parsed)
             {
-                m_frame_width = mjpeg_video_stream.getWidth();
+                m_frame_width  = mjpeg_video_stream.getWidth();
                 m_frame_height = mjpeg_video_stream.getHeight();
-                m_fps = mjpeg_video_stream.getFps();
+                m_fps          = mjpeg_video_stream.getFps();
             }
 
             in_str.seekg(next_riff);

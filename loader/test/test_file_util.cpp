@@ -26,7 +26,7 @@
 using namespace std;
 using namespace nervana;
 
-TEST(file_util,path_join)
+TEST(file_util, path_join)
 {
     {
         string s1 = "";
@@ -52,7 +52,6 @@ TEST(file_util,path_join)
 
         EXPECT_STREQ("test1/test2", file_util::path_join(s1, s2).c_str());
     }
-
 
     {
         string s1 = "/x1/x2";
@@ -95,5 +94,5 @@ TEST(file_util,path_join)
 TEST(file_util, get_temp_directory)
 {
     string tmp = file_util::get_temp_directory();
-    EXPECT_NE(0,tmp.size());
+    EXPECT_NE(0, tmp.size());
 }

@@ -24,74 +24,76 @@
 #include "cpio.hpp"
 #include "file_util.hpp"
 
-template<typename T>
+template <typename T>
 class dataset
 {
 public:
-    dataset() :
-        _path(),
-        _prefix("archive-"),
-        _maxItems(4000),
-        _maxSize(-1),
-        _setSize(100000),
-        _pathExisted(false)
+    dataset()
+        : _path()
+        , _prefix("archive-")
+        , _maxItems(4000)
+        , _maxSize(-1)
+        , _setSize(100000)
+        , _pathExisted(false)
     {
-
     }
 
-    T& Directory( const std::string& dir )
+    T& Directory(const std::string& dir)
     {
         _path = dir;
         return *(T*)this;
     }
 
-    T& Prefix( const std::string& prefix )
+    T& Prefix(const std::string& prefix)
     {
         _prefix = prefix;
         return *(T*)this;
     }
 
-    T& MacrobatchMaxItems( int max )
+    T& MacrobatchMaxItems(int max)
     {
-        assert(max>0);
+        assert(max > 0);
         _maxItems = max;
         return *(T*)this;
     }
 
-    T& MacrobatchMaxSize( int max )
+    T& MacrobatchMaxSize(int max)
     {
-        assert(max>0);
+        assert(max > 0);
         _maxSize = max;
         return *(T*)this;
     }
 
-    T& DatasetSize( int size )
+    T& DatasetSize(int size)
     {
-        assert(size>0);
+        assert(size > 0);
         _setSize = size;
         return *(T*)this;
     }
 
     int Create()
     {
-        int rc = -1;
-        int fileNo = 0;
-        _pathExisted = exists(_path);
+        int rc          = -1;
+        int fileNo      = 0;
+        _pathExisted    = exists(_path);
         int datumNumber = 0;
-        if( _pathExisted || mkdir(_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0 ) {
+        if (_pathExisted || mkdir(_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
+        {
             int remainder = _setSize;
-            while(remainder > 0) {
-                int batchSize = std::min(remainder,_maxItems);
-                std::string fileName = nervana::file_util::path_join(_path, _prefix + std::to_string(fileNo++) + ".cpio");
+            while (remainder > 0)
+            {
+                int         batchSize = std::min(remainder, _maxItems);
+                std::string fileName  = nervana::file_util::path_join(_path, _prefix + std::to_string(fileNo++) + ".cpio");
                 _fileList.push_back(fileName);
                 nervana::cpio::file_writer writer;
                 writer.open(fileName);
-                for(int i=0; i<batchSize; i++) {
-                    const std::vector<unsigned char> datum = render_datum( datumNumber );
-                    writer.write_record_element((char *) datum.data(), datum.size(), 0);
+                for (int i = 0; i < batchSize; i++)
+                {
+                    const std::vector<unsigned char> datum = render_datum(datumNumber);
+                    writer.write_record_element((char*)datum.data(), datum.size(), 0);
 
-                    const std::vector<unsigned char> target = render_target( datumNumber );
-                    writer.write_record_element((char *) target.data(), target.size(), 1);
+                    const std::vector<unsigned char> target = render_target(datumNumber);
+                    writer.write_record_element((char*)target.data(), target.size(), 1);
 
                     writer.increment_record_count();
                     datumNumber++;
@@ -99,7 +101,9 @@ public:
                 writer.close();
                 remainder -= batchSize;
             }
-        } else {
+        }
+        else
+        {
             std::cout << "failed to create path " << _path << std::endl;
         }
         return rc;
@@ -107,29 +111,22 @@ public:
 
     void Delete()
     {
-        for( const std::string& f : _fileList ) {
+        for (const std::string& f : _fileList)
+        {
             remove(f.c_str());
         }
-        if(!_pathExisted) {
+        if (!_pathExisted)
+        {
             // delete directory
             remove(_path.c_str());
         }
     }
 
-    std::string GetDatasetPath()
-    {
-        return _path;
-    }
-
-    std::vector<std::string> GetFiles()
-    {
-        return _fileList;
-    }
-
-
+    std::string              GetDatasetPath() { return _path; }
+    std::vector<std::string> GetFiles() { return _fileList; }
 protected:
-    virtual std::vector<unsigned char> render_target( int datumNumber ) = 0;
-    virtual std::vector<unsigned char> render_datum( int datumNumber ) = 0;
+    virtual std::vector<unsigned char> render_target(int datumNumber) = 0;
+    virtual std::vector<unsigned char> render_datum(int datumNumber)  = 0;
 
 private:
     bool exists(const std::string& fileName)

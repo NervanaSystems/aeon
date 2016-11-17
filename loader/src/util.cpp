@@ -24,32 +24,41 @@
 
 using namespace std;
 
-void nervana::dump( ostream& out, const void* _data, size_t _size )
+void nervana::dump(ostream& out, const void* _data, size_t _size)
 {
-    const uint8_t* data = reinterpret_cast<const uint8_t*>(_data);
-    int len = _size;
-    int index = 0;
+    const uint8_t* data  = reinterpret_cast<const uint8_t*>(_data);
+    int            len   = _size;
+    int            index = 0;
     while (index < len)
     {
         out << std::hex << std::setw(8) << std::setfill('0') << index;
-        for (int i = 0; i < 8; i++) {
-            if (index+i<len) {
+        for (int i = 0; i < 8; i++)
+        {
+            if (index + i < len)
+            {
                 out << " " << std::hex << std::setw(2) << std::setfill('0') << (uint32_t)data[i];
-            } else {
+            }
+            else
+            {
                 out << "   ";
             }
         }
         cout << "  ";
-        for (int i = 8; i < 16; i++) {
-            if (index+i<len) {
+        for (int i = 8; i < 16; i++)
+        {
+            if (index + i < len)
+            {
                 out << " " << std::hex << std::setw(2) << std::setfill('0') << (uint32_t)data[i];
-            } else {
+            }
+            else
+            {
                 out << "   ";
             }
         }
         cout << "  ";
-        for (int i = 0; i < 16; i++) {
-            char ch = (index+i<len ? data[i] : ' ');
+        for (int i = 0; i < 16; i++)
+        {
+            char ch = (index + i < len ? data[i] : ' ');
             cout << ((ch < 32) ? '.' : ch);
         }
         cout << "\n";
@@ -67,16 +76,18 @@ std::string nervana::to_lower(const std::string& s)
 
 vector<string> nervana::split(const string& src, char delimiter)
 {
-    size_t pos;
-    string token;
-    size_t start = 0;
+    size_t         pos;
+    string         token;
+    size_t         start = 0;
     vector<string> rc;
-    while ((pos = src.find(delimiter, start)) != std::string::npos) {
-        token = src.substr(start, pos-start);
+    while ((pos = src.find(delimiter, start)) != std::string::npos)
+    {
+        token = src.substr(start, pos - start);
         start = pos + 1;
         rc.push_back(token);
     }
-    if(start <= src.size()) {
+    if (start <= src.size())
+    {
         token = src.substr(start);
         rc.push_back(token);
     }
@@ -86,9 +97,12 @@ vector<string> nervana::split(const string& src, char delimiter)
 int nervana::LevenshteinDistance(const string& s, const string& t)
 {
     // degenerate cases
-    if (s == t) return 0;
-    if (s.size() == 0) return t.size();
-    if (t.size() == 0) return s.size();
+    if (s == t)
+        return 0;
+    if (s.size() == 0)
+        return t.size();
+    if (t.size() == 0)
+        return s.size();
 
     // create two work vectors of integer distances
     vector<int> v0(t.size() + 1);
@@ -98,7 +112,7 @@ int nervana::LevenshteinDistance(const string& s, const string& t)
     // this row is A[0][i]: edit distance for an empty s
     // the distance is just the number of characters to delete from t
     for (int i = 0; i < v0.size(); i++)
-        v0[i] = i;
+        v0[i]  = i;
 
     for (int i = 0; i < s.size(); i++)
     {
@@ -117,7 +131,7 @@ int nervana::LevenshteinDistance(const string& s, const string& t)
 
         // copy v1 (current row) to v0 (previous row) for next iteration
         for (int j = 0; j < v0.size(); j++)
-            v0[j] = v1[j];
+            v0[j]  = v1[j];
     }
 
     return v1[t.size()];
@@ -127,24 +141,27 @@ size_t nervana::unbiased_round(float x)
 {
     float i;
     float fracpart = std::modf(x, &i);
-    int intpart = int(i);
-    int rc;
+    int   intpart  = int(i);
+    int   rc;
 
-    if (std::fabs(fracpart) == 0.5) {
-        if(intpart % 2 == 0) {
+    if (std::fabs(fracpart) == 0.5)
+    {
+        if (intpart % 2 == 0)
+        {
             rc = intpart;
-        } else {
-
+        }
+        else
+        {
             // return nearest even integer
             rc = std::fabs(x) + 0.5;
             rc = x < 0.0 ? -rc : rc;
         }
-    } else {
-
+    }
+    else
+    {
         // round to closest
         rc = std::floor(std::fabs(x) + 0.5);
         rc = x < 0.0 ? -rc : rc;
-
     }
     return rc;
 }
@@ -170,14 +187,15 @@ uint32_t nervana::get_global_random_seed()
 cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
 {
     SOX_SAMPLE_LOCALS;
-    sox_format_t* in = sox_open_mem_read((void *) item, itemSize, NULL, NULL, NULL);
+    sox_format_t* in = sox_open_mem_read((void*)item, itemSize, NULL, NULL, NULL);
 
-    if (in != NULL) {
+    if (in != NULL)
+    {
         affirm(in->signal.channels == 1, "input audio must be single channel");
         affirm(in->signal.precision == 16, "input audio must be signed short");
 
         sox_sample_t* sample_buffer = new sox_sample_t[in->signal.length];
-        size_t number_read = sox_read(in, sample_buffer, in->signal.length);
+        size_t        number_read   = sox_read(in, sample_buffer, in->signal.length);
 
         size_t nclipped = 0;
 
@@ -185,13 +203,16 @@ cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
 
         affirm(in->signal.length == number_read, "unable to read all samples of input audio");
 
-        for (uint i=0; i<in->signal.length; ++i) {
+        for (uint i = 0; i < in->signal.length; ++i)
+        {
             samples_mat.at<int16_t>(i, 0) = SOX_SAMPLE_TO_SIGNED_16BIT(sample_buffer[i], nclipped);
         }
-        delete [] sample_buffer;
+        delete[] sample_buffer;
 
         return samples_mat;
-    } else {
+    }
+    else
+    {
         std::cout << "Unable to read";
         cv::Mat samples_mat(1, 1, CV_16SC1);
         return samples_mat;

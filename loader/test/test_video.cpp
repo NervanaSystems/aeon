@@ -21,13 +21,13 @@
 using namespace std;
 using namespace nervana;
 
-TEST(video,extract_transform)
+TEST(video, extract_transform)
 {
-    int width      = 352;
-    int height     = 288;
-    int nseconds   = 1;
-    int frame_rate = 25;
-    string test_file = "output.avi";
+    int    width      = 352;
+    int    height     = 288;
+    int    nseconds   = 1;
+    int    frame_rate = 25;
+    string test_file  = "output.avi";
 
     stringstream vidgen_command;
     vidgen_command << "ffmpeg -loglevel quiet -hide_banner ";
@@ -46,15 +46,12 @@ TEST(video,extract_transform)
         vector<char> buf((istreambuf_iterator<char>(ifs)), istreambuf_iterator<char>());
 
         // extract
-        nlohmann::json js = {{"max_frame_count", 5},
-                             {"frame", {
-                                {"height",height},
-                                {"width",width}}}};
+        nlohmann::json js = {{"max_frame_count", 5}, {"frame", {{"height", height}, {"width", width}}}};
 
         video::config config(js);
 
         video::extractor extractor{config};
-        auto decoded_vid = extractor.extract((const char*)buf.data(), buf.size());
+        auto             decoded_vid = extractor.extract((const char*)buf.data(), buf.size());
 
         ASSERT_EQ(decoded_vid->get_image_count(), 25);
         ASSERT_EQ(decoded_vid->get_image_size(), cv::Size2i(width, height));
@@ -63,16 +60,16 @@ TEST(video,extract_transform)
         video::transformer transformer = video::transformer(config);
 
         image::param_factory factory(config.frame);
-        auto params = factory.make_params(decoded_vid);
+        auto                 params = factory.make_params(decoded_vid);
 
-        params->output_size = cv::Size2i(width/2, height/2);
+        params->output_size  = cv::Size2i(width / 2, height / 2);
         auto transformed_vid = transformer.transform(params, decoded_vid);
         ASSERT_NE(nullptr, transformed_vid);
 
         // make sure we've clipped the number of frames down according to max_frame_count
         // and that size has been reduced
         ASSERT_EQ(transformed_vid->get_image_count(), 5);
-        ASSERT_EQ(transformed_vid->get_image_size(), cv::Size2i(width/2, height/2));
+        ASSERT_EQ(transformed_vid->get_image_size(), cv::Size2i(width / 2, height / 2));
 
         INFO << "Extract test successful" << endl;
         remove(test_file.c_str());
@@ -84,23 +81,23 @@ TEST(video,extract_transform)
     }
 }
 
-TEST(video,image_transform)
+TEST(video, image_transform)
 {
-    int width = 352;
+    int width  = 352;
     int height = 288;
 
-    auto decoded_image = make_shared<image::decoded>();
+    auto    decoded_image = make_shared<image::decoded>();
     cv::Mat mat_image(height, width, CV_8UC3, 0.0);
     decoded_image->add(mat_image);
 
-    nlohmann::json js = {{"width", width},{"height",height}};
-    image::config config(js);
+    nlohmann::json js = {{"width", width}, {"height", height}};
+    image::config  config(js);
 
     image::transformer _imageTransformer(config);
 
     image::param_factory factory(config);
-    auto imageParams = factory.make_params(decoded_image);
-    imageParams->output_size = cv::Size2i(width/2, height/2);
+    auto                 imageParams = factory.make_params(decoded_image);
+    imageParams->output_size         = cv::Size2i(width / 2, height / 2);
 
     _imageTransformer.transform(imageParams, decoded_image);
 }
@@ -113,7 +110,7 @@ unsigned char expected_value(int d, int h, int w, int c)
     return (((((c * 5) + d) * 4) + h) * 2) + w;
 }
 
-TEST(video,loader)
+TEST(video, loader)
 {
     // set up video::decoded with specific values
     // the color of any pixel channel should
@@ -124,26 +121,24 @@ TEST(video,loader)
     // each dimension is unique to help debug and detect incorrect
     // dimension ordering
     // extract
-    nlohmann::json js = {{"max_frame_count", 5},
-                         {"frame", {
-                            {"channels",3},
-                            {"height",4},
-                            {"width",2}}}};
-    video::config vconfig{js};
+    nlohmann::json js = {{"max_frame_count", 5}, {"frame", {{"channels", 3}, {"height", 4}, {"width", 2}}}};
+    video::config  vconfig{js};
 
     int channels, height, width, depth;
-    tie(channels, height, width, depth) = make_tuple(vconfig.frame.channels,
-                                                     vconfig.frame.height,
-                                                     vconfig.frame.width,
-                                                     vconfig.max_frame_count);
+    tie(channels, height, width, depth) =
+        make_tuple(vconfig.frame.channels, vconfig.frame.height, vconfig.frame.width, vconfig.max_frame_count);
 
     auto decoded_vid = make_shared<image::decoded>();
 
-    for(int d = 0; d < depth; ++d) {
+    for (int d = 0; d < depth; ++d)
+    {
         cv::Mat image(height, width, CV_8UC3, 0.0);
-        for(int w = 0; w < width; ++w) {
-            for(int h = 0; h < height; ++h) {
-                for(int c = 0; c < channels; ++c) {
+        for (int w = 0; w < width; ++w)
+        {
+            for (int h = 0; h < height; ++h)
+            {
+                for (int c = 0; c < channels; ++c)
+                {
                     image.at<cv::Vec3b>(h, w).val[c] = expected_value(d, h, w, c);
                 }
             }
@@ -161,10 +156,14 @@ TEST(video,loader)
     loader.load({outbuf.data()}, decoded_vid);
 
     // make sure outbuf has data in it like we expect
-    for(int c = 0; c < channels; ++c) {
-        for(int d = 0; d < depth; ++d) {
-            for(int h = 0; h < height; ++h) {
-                for(int w = 0; w < width; ++w) {
+    for (int c = 0; c < channels; ++c)
+    {
+        for (int d = 0; d < depth; ++d)
+        {
+            for (int h = 0; h < height; ++h)
+            {
+                for (int w = 0; w < width; ++w)
+                {
                     unsigned char v = expected_value(d, h, w, c);
                     ASSERT_EQ(outbuf[v], v);
                 }

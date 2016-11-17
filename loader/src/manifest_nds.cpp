@@ -27,10 +27,13 @@ manifest_nds::manifest_nds(const std::string& filename)
 {
     // parse json
     nlohmann::json j;
-    try {
+    try
+    {
         ifstream ifs(filename);
         ifs >> j;
-    } catch (std::exception& ex) {
+    }
+    catch (std::exception& ex)
+    {
         stringstream ss;
         ss << "Error while parsing manifest json: " << filename << " : ";
         ss << ex.what();
@@ -38,19 +41,24 @@ manifest_nds::manifest_nds(const std::string& filename)
     }
 
     // extract manifest params from parsed json
-    try {
-
+    try
+    {
         interface::config::parse_value(baseurl, "url", j, interface::config::mode::REQUIRED);
 
         auto val = j.find("params");
-        if(val != j.end()) {
+        if (val != j.end())
+        {
             nlohmann::json params = *val;
             interface::config::parse_value(token, "token", params, interface::config::mode::REQUIRED);
             interface::config::parse_value(collection_id, "collection_id", params, interface::config::mode::REQUIRED);
-        } else {
+        }
+        else
+        {
             throw std::runtime_error("couldn't find key 'params' in nds manifest file.");
         }
-    } catch (std::exception& ex) {
+    }
+    catch (std::exception& ex)
+    {
         stringstream ss;
         ss << "Error while pulling config out of manifest json: " << filename << " : ";
         ss << ex.what();
@@ -62,7 +70,7 @@ string manifest_nds::cache_id()
 {
     stringstream contents;
     contents << baseurl << collection_id;
-    std::size_t h = std::hash<std::string>()(contents.str());
+    std::size_t  h = std::hash<std::string>()(contents.str());
     stringstream ss;
     ss << std::hex << h;
     return ss.str();
@@ -74,7 +82,7 @@ bool manifest_nds::is_likely_json(const std::string filename)
     // object.  If so, we want to parse this as an NDS Manifest
     // instead of a CSV
     ifstream f(filename);
-    char first_char;
+    char     first_char;
 
     f.get(first_char);
 

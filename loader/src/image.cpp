@@ -23,15 +23,21 @@ using namespace std;
 
 void image::rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interpolate, const cv::Scalar& border)
 {
-    if (angle == 0) {
+    if (angle == 0)
+    {
         output = input;
-    } else {
+    }
+    else
+    {
         cv::Point2i pt(input.cols / 2, input.rows / 2);
-        cv::Mat rot = cv::getRotationMatrix2D(pt, angle, 1.0);
-        int flags;
-        if(interpolate) {
+        cv::Mat     rot = cv::getRotationMatrix2D(pt, angle, 1.0);
+        int         flags;
+        if (interpolate)
+        {
             flags = cv::INTER_LINEAR;
-        } else {
+        }
+        else
+        {
             flags = cv::INTER_NEAREST;
         }
         cv::warpAffine(input, output, rot, input.size(), flags, cv::BORDER_CONSTANT, border);
@@ -40,13 +46,19 @@ void image::rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interp
 
 void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size, bool interpolate)
 {
-    if (size == input.size()) {
+    if (size == input.size())
+    {
         output = input;
-    } else {
+    }
+    else
+    {
         int inter;
-        if(interpolate) {
+        if (interpolate)
+        {
             inter = input.size().area() < size.area() ? CV_INTER_CUBIC : CV_INTER_AREA;
-        } else {
+        }
+        else
+        {
             inter = CV_INTER_NN;
         }
         cv::resize(input, output, size, 0, 0, inter);
@@ -55,15 +67,20 @@ void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size
 
 void image::convert_mix_channels(vector<cv::Mat>& source, vector<cv::Mat>& target, vector<int>& from_to)
 {
-    if(source.size() == 0) throw invalid_argument("convertMixChannels source size must be > 0");
-    if(target.size() == 0) throw invalid_argument("convertMixChannels target size must be > 0");
-    if(from_to.size() == 0) throw invalid_argument("convertMixChannels from_to size must be > 0");
+    if (source.size() == 0)
+        throw invalid_argument("convertMixChannels source size must be > 0");
+    if (target.size() == 0)
+        throw invalid_argument("convertMixChannels target size must be > 0");
+    if (from_to.size() == 0)
+        throw invalid_argument("convertMixChannels from_to size must be > 0");
 
     const vector<cv::Mat>* prepared_source = &source;
-    vector<cv::Mat>  tmp_source;
-    if(source[0].depth() != target[0].depth()) {
+    vector<cv::Mat>        tmp_source;
+    if (source[0].depth() != target[0].depth())
+    {
         // Conversion required
-        for(cv::Mat mat : source) {
+        for (cv::Mat mat : source)
+        {
             cv::Mat tmp;
             mat.convertTo(tmp, target[0].type());
             tmp_source.push_back(tmp);
@@ -71,22 +88,25 @@ void image::convert_mix_channels(vector<cv::Mat>& source, vector<cv::Mat>& targe
         prepared_source = &tmp_source;
     }
 
-    if(prepared_source->size() == 1 && target.size() == 1) {
+    if (prepared_source->size() == 1 && target.size() == 1)
+    {
         size_t size = target[0].total() * target[0].elemSize();
         memcpy(target[0].data, (*prepared_source)[0].data, size);
     }
-    else {
+    else
+    {
         cv::mixChannels(*prepared_source, target, from_to);
     }
 }
 
 float image::calculate_scale(const cv::Size& size, int output_width, int output_height)
 {
-    float im_scale = (float)output_width / (float)size.width;
-    cv::Size2f result = size;
-    result = result * im_scale;
-    if(result.height > output_height) {
-        im_scale =  (float)output_height / (float)size.height;
+    float      im_scale = (float)output_width / (float)size.width;
+    cv::Size2f result   = size;
+    result              = result * im_scale;
+    if (result.height > output_height)
+    {
+        im_scale = (float)output_height / (float)size.height;
     }
     return im_scale;
 }
@@ -94,10 +114,11 @@ float image::calculate_scale(const cv::Size& size, int output_width, int output_
 cv::Size2f image::cropbox_max_proportional(const cv::Size2f& in_size, const cv::Size2f& out_size)
 {
     cv::Size2f result = out_size;
-    float scale = in_size.width / result.width;
-    result = result * scale;
-    if(result.height > in_size.height) {
-        scale = in_size.height / result.height;
+    float      scale  = in_size.width / result.width;
+    result            = result * scale;
+    if (result.height > in_size.height)
+    {
+        scale  = in_size.height / result.height;
         result = result * scale;
     }
     return result;
@@ -110,17 +131,18 @@ cv::Size2f image::cropbox_linear_scale(const cv::Size2f& in_size, float scale)
 
 cv::Size2f image::cropbox_area_scale(const cv::Size2f& in_size, const cv::Size2f& cropbox_size, float scale)
 {
-    cv::Size2f result = cropbox_size;
-    float in_area = in_size.area();
-    float crop_area = cropbox_size.area();
-    float size_ratio = crop_area / in_area;
-    if(size_ratio > scale) {
+    cv::Size2f result     = cropbox_size;
+    float      in_area    = in_size.area();
+    float      crop_area  = cropbox_size.area();
+    float      size_ratio = crop_area / in_area;
+    if (size_ratio > scale)
+    {
         float crop_aspect_ratio = cropbox_size.width / cropbox_size.height;
-        crop_area = in_area * scale;
-        float w2 = crop_area * crop_aspect_ratio;
-        float width = sqrt(w2);
-        float height = crop_area / width;
-        result = cv::Size2f(width, height);
+        crop_area               = in_area * scale;
+        float w2                = crop_area * crop_aspect_ratio;
+        float width             = sqrt(w2);
+        float height            = crop_area / width;
+        result                  = cv::Size2f(width, height);
     }
     return result;
 }
@@ -148,9 +170,8 @@ cv::Point2f image::cropbox_shift(const cv::Size2f& in_size, const cv::Size2f& cr
 
 */
 
-const float image::photometric::_CPCA[3][3]{{ 0.39731118,  0.70119634, -0.59200296},
-                                            {-0.81698062, -0.02354167, -0.57618440},
-                                            { 0.41795513, -0.71257945, -0.56351045}};
+const float image::photometric::_CPCA[3][3]{
+    {0.39731118, 0.70119634, -0.59200296}, {-0.81698062, -0.02354167, -0.57618440}, {0.41795513, -0.71257945, -0.56351045}};
 const cv::Mat image::photometric::CPCA(3, 3, CV_32FC1, (float*)_CPCA);
 const cv::Mat image::photometric::CSTD(3, 1, CV_32FC1, {19.72083305, 37.09388853, 121.78006099});
 
@@ -167,11 +188,12 @@ lighting is filled with normally distributed values prior to calling this functi
 void image::photometric::lighting(cv::Mat& inout, vector<float> lighting, float color_noise_std)
 {
     // Skip transformations if given deterministic settings
-    if (lighting.size() > 0) {
+    if (lighting.size() > 0)
+    {
         cv::Mat alphas(3, 1, CV_32FC1, lighting.data());
-        alphas = (CPCA * CSTD.mul(alphas));  // this is the random coloring pixel
+        alphas     = (CPCA * CSTD.mul(alphas)); // this is the random coloring pixel
         auto pixel = alphas.reshape(3, 1).at<cv::Scalar_<float>>(0, 0);
-        inout = (inout + pixel) / (1.0 + color_noise_std);
+        inout      = (inout + pixel) / (1.0 + color_noise_std);
     }
 }
 
@@ -187,19 +209,23 @@ photometric is filled with uniformly distributed values prior to calling this fu
 void image::photometric::cbsjitter(cv::Mat& inout, float contrast, float brightness, float saturation, int hue)
 {
     // Skip transformations if given deterministic settings
-    if (brightness != 1.0 || saturation != 1.0 || hue != 0) {
+    if (brightness != 1.0 || saturation != 1.0 || hue != 0)
+    {
         /****************************
         *  BRIGHTNESS & SATURATION  *
         *****************************/
         cv::Mat hsv;
         cv::cvtColor(inout, hsv, CV_BGR2HSV);
-        if (brightness != 1.0 || saturation != 1.0) {
+        if (brightness != 1.0 || saturation != 1.0)
+        {
             hsv = hsv.mul(cv::Scalar(1.0, saturation, brightness));
         }
-        if (hue != 0) {
-            hue /= 2;   // hue is 0-360, but opencv used 0-180 to fit in a byte.
+        if (hue != 0)
+        {
+            hue /= 2; // hue is 0-360, but opencv used 0-180 to fit in a byte.
             uint8_t* p = hsv.data;
-            for(int i=0; i<hsv.size().area(); i++) {
+            for (int i = 0; i < hsv.size().area(); i++)
+            {
                 *p = (*p + hue) % 180;
                 p += 3;
             }
@@ -207,7 +233,8 @@ void image::photometric::cbsjitter(cv::Mat& inout, float contrast, float brightn
         cv::cvtColor(hsv, inout, CV_HSV2BGR);
     }
 
-    if (contrast != 1.0) {
+    if (contrast != 1.0)
+    {
         /*************
         *  CONTRAST  *
         **************/

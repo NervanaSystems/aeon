@@ -26,5 +26,5 @@ class nervana::block_iterator
 {
 public:
     virtual void read(nervana::buffer_in_array& dest) = 0;
-    virtual void reset() = 0;
+    virtual void reset()                              = 0;
 };

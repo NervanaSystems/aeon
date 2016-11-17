@@ -33,34 +33,58 @@ using namespace std;
 std::shared_ptr<nervana::provider_interface> nervana::provider_factory::create(nlohmann::json configJs)
 {
     std::shared_ptr<nervana::provider_interface> rc;
-    if(!configJs["type"].is_string()) {
+    if (!configJs["type"].is_string())
+    {
         throw std::invalid_argument("must have a property 'type' with type string.");
     }
     std::string mediaType = configJs["type"];
 
-    if( mediaType == "image,label" ) {
+    if (mediaType == "image,label")
+    {
         rc = make_shared<image_classifier>(configJs);
-    } else if( mediaType == "image" ) {
+    }
+    else if (mediaType == "image")
+    {
         rc = make_shared<image_only>(configJs);
-    } else if( mediaType == "audio,transcription" ) {
+    }
+    else if (mediaType == "audio,transcription")
+    {
         rc = make_shared<audio_transcriber>(configJs);
-    } else if( mediaType == "audio,label" ) {
+    }
+    else if (mediaType == "audio,label")
+    {
         rc = make_shared<audio_classifier>(configJs);
-    } else if( mediaType == "audio" ) {
+    }
+    else if (mediaType == "audio")
+    {
         rc = make_shared<audio_only>(configJs);
-    } else if( mediaType == "image,localization" ) {
+    }
+    else if (mediaType == "image,localization")
+    {
         rc = make_shared<image_localization>(configJs);
-    } else if( mediaType == "image,pixelmask" ) {
+    }
+    else if (mediaType == "image,pixelmask")
+    {
         rc = make_shared<image_pixelmask>(configJs);
-    } else if( mediaType == "image,boundingbox" ) {
+    }
+    else if (mediaType == "image,boundingbox")
+    {
         rc = make_shared<image_boundingbox>(configJs);
-    } else if( mediaType == "stereo_image,blob" ) {
+    }
+    else if (mediaType == "stereo_image,blob")
+    {
         rc = make_shared<image_stereo_blob>(configJs);
-    } else if( mediaType == "video,label" ) {
+    }
+    else if (mediaType == "video,label")
+    {
         rc = make_shared<video_classifier>(configJs);
-    } else if( mediaType == "video" ) {
+    }
+    else if (mediaType == "video")
+    {
         rc = make_shared<video_only>(configJs);
-    } else {
+    }
+    else
+    {
         rc = nullptr;
         stringstream ss;
         ss << "provider type '" << mediaType << "' is not supported.";

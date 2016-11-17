@@ -37,10 +37,10 @@ public:
     buffer_out_array& get_for_write();
     buffer_out_array& get_for_read();
 
-    void advance_read_pos();
-    void advance_write_pos();
-    bool empty();
-    bool full();
+    void        advance_read_pos();
+    void        advance_write_pos();
+    bool        empty();
+    bool        full();
     std::mutex& get_mutex();
     void wait_for_not_empty(std::unique_lock<std::mutex>& lock);
     void wait_for_non_full(std::unique_lock<std::mutex>& lock);
@@ -51,10 +51,10 @@ protected:
     void advance(int& index);
 
 protected:
-    static constexpr int        m_count = 2;
-    int                         m_used = 0;
+    static constexpr int                           m_count = 2;
+    int                                            m_used  = 0;
     std::vector<std::shared_ptr<buffer_out_array>> m_bufs;
-    std::mutex                  m_mutex;
-    std::condition_variable     m_non_full;
-    std::condition_variable     m_non_empty;
+    std::mutex                                     m_mutex;
+    std::condition_variable                        m_non_full;
+    std::condition_variable                        m_non_empty;
 };

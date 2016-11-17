@@ -67,16 +67,19 @@ public:
 
     loader_config(nlohmann::json js)
     {
-        if(js.is_null()) {
+        if (js.is_null())
+        {
             throw std::runtime_error("missing loader config in json config");
         }
 
-        for(auto& info : config_list) {
+        for (auto& info : config_list)
+        {
             info->parse(js);
         }
         verify_config("loader", config_list, js);
 
-        if(macrobatch_size == 0) {
+        if (macrobatch_size == 0)
+        {
             macrobatch_size = minibatch_size;
         }
 
@@ -92,7 +95,7 @@ private:
         ADD_SCALAR(minibatch_size, mode::REQUIRED),
         ADD_SCALAR(cache_directory, mode::OPTIONAL),
         ADD_SCALAR(macrobatch_size, mode::OPTIONAL),
-        ADD_SCALAR(subset_fraction, mode::OPTIONAL, [](decltype(subset_fraction) v){ return v <= 1.0 && v >= 0.0; }),
+        ADD_SCALAR(subset_fraction, mode::OPTIONAL, [](decltype(subset_fraction) v) { return v <= 1.0 && v >= 0.0; }),
         ADD_SCALAR(shuffle_every_epoch, mode::OPTIONAL),
         ADD_SCALAR(shuffle_manifest, mode::OPTIONAL),
         ADD_SCALAR(single_thread, mode::OPTIONAL),
@@ -113,17 +116,16 @@ private:
 class nervana::loader
 {
 public:
-    loader(const char*, PyObject *);
+    loader(const char*, PyObject*);
 
     virtual ~loader() {}
-    int start();
-    void stop();
-    int reset();
+    int       start();
+    void      stop();
+    int       reset();
     PyObject* shapes();
     PyObject* next(int bufIdx);
 
     int itemCount() { return m_block_loader->object_count(); }
-
 private:
     void drain();
 
@@ -131,17 +133,17 @@ private:
     loader();
     loader(const loader&);
 
-    bool                                        m_first = true;
-    bool                                        m_single_thread_mode = false;
+    bool m_first              = true;
+    bool m_single_thread_mode = false;
 
-    std::shared_ptr<nervana::buffer_pool_in>    m_read_buffers = nullptr;
-    std::shared_ptr<nervana::buffer_pool_out>   m_decode_buffers = nullptr;
-    std::unique_ptr<nervana::read_thread_pool>  m_read_thread_pool = nullptr;
-    std::unique_ptr<decode_thread_pool>         m_decode_thread_pool = nullptr;
-    std::shared_ptr<nervana::block_loader>      m_block_loader = nullptr;
-    std::shared_ptr<nervana::batch_iterator>    m_batch_iterator = nullptr;
+    std::shared_ptr<nervana::buffer_pool_in>   m_read_buffers       = nullptr;
+    std::shared_ptr<nervana::buffer_pool_out>  m_decode_buffers     = nullptr;
+    std::unique_ptr<nervana::read_thread_pool> m_read_thread_pool   = nullptr;
+    std::unique_ptr<decode_thread_pool>        m_decode_thread_pool = nullptr;
+    std::shared_ptr<nervana::block_loader>     m_block_loader       = nullptr;
+    std::shared_ptr<nervana::batch_iterator>   m_batch_iterator     = nullptr;
 
-    int                                         m_batch_size;
-    nlohmann::json                              m_lcfg_json;
-    std::shared_ptr<python_backend>             m_python_backend;
+    int                             m_batch_size;
+    nlohmann::json                  m_lcfg_json;
+    std::shared_ptr<python_backend> m_python_backend;
 };

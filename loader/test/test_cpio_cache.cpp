@@ -38,13 +38,15 @@ extern string test_cache_directory;
 
 cv::Mat generate_test_image(int rows, int cols, int embedded_id)
 {
-    cv::Mat image{rows, cols, CV_8UC3};
+    cv::Mat  image{rows, cols, CV_8UC3};
     uint8_t* p = image.data;
-    for(int row=0; row<rows; row++) {
-        for(int col=0; col<cols; col++) {
+    for (int row = 0; row < rows; row++)
+    {
+        for (int col = 0; col < cols; col++)
+        {
             *p++ = uint8_t(embedded_id >> 16);
-            *p++ = uint8_t(embedded_id >>  8);
-            *p++ = uint8_t(embedded_id >>  0);
+            *p++ = uint8_t(embedded_id >> 8);
+            *p++ = uint8_t(embedded_id >> 0);
         }
     }
     return image;
@@ -53,10 +55,10 @@ cv::Mat generate_test_image(int rows, int cols, int embedded_id)
 int read_embedded_id(const cv::Mat& image)
 {
     uint8_t* p = image.data;
-    int id;
-    id  = int(*p++ << 16);
-    id |= int(*p++ <<  8);
-    id |= int(*p++ <<  0);
+    int      id;
+    id = int(*p++ << 16);
+    id |= int(*p++ << 8);
+    id |= int(*p++ << 0);
     return id;
 }
 
@@ -65,18 +67,18 @@ class manifest_manager
 public:
     manifest_manager(const string& source_dir, size_t count, int rows, int cols)
     {
-        test_root = source_dir;
-        source_directory = file_util::make_temp_directory(source_dir);
+        test_root         = source_dir;
+        source_directory  = file_util::make_temp_directory(source_dir);
         manifest_filename = file_util::path_join(source_directory, "manifest.csv");
         file_list.push_back(manifest_filename);
         ofstream mfile(manifest_filename);
-        for(size_t i=0; i<count; i++)
+        for (size_t i = 0; i < count; i++)
         {
-            cv::Mat image = generate_test_image(rows, cols, i);
-            string number = to_string(i);
-            string image_filename = file_util::path_join(source_directory, "image"+number+".png");
-            string target_filename = file_util::path_join(source_directory, "target"+number+".txt");
-//            cout << image_filename << ", " << target_filename << endl;
+            cv::Mat image           = generate_test_image(rows, cols, i);
+            string  number          = to_string(i);
+            string  image_filename  = file_util::path_join(source_directory, "image" + number + ".png");
+            string  target_filename = file_util::path_join(source_directory, "target" + number + ".txt");
+            //            cout << image_filename << ", " << target_filename << endl;
             file_list.push_back(image_filename);
             file_list.push_back(target_filename);
             cv::imwrite(image_filename, image);
@@ -88,22 +90,17 @@ public:
     }
 
     const string& manifest_file() const { return manifest_filename; }
-
-    ~manifest_manager()
-    {
-        file_util::remove_directory(test_root);
-    }
-
+    ~manifest_manager() { file_util::remove_directory(test_root); }
 private:
-    string          test_root;
-    string          manifest_filename;
-    string          source_directory;
-    vector<string>  file_list;
+    string         test_root;
+    string         manifest_filename;
+    string         source_directory;
+    vector<string> file_list;
 };
 
 TEST(cpio_cache, manifest_shuffle)
 {
-    string source_dir = file_util::make_temp_directory(test_cache_directory);
+    string           source_dir = file_util::make_temp_directory(test_cache_directory);
     manifest_manager manifest_builder{source_dir, 10, 25, 25};
 
     string manifest_root;
@@ -116,7 +113,7 @@ TEST(cpio_cache, manifest_shuffle)
 
 TEST(cpio_cache, manifest_shuffle_repeatable)
 {
-    string source_dir = file_util::make_temp_directory(test_cache_directory);
+    string           source_dir = file_util::make_temp_directory(test_cache_directory);
     manifest_manager manifest_builder{source_dir, 10, 25, 25};
 
     string manifest_root;
@@ -131,40 +128,34 @@ TEST(cpio_cache, manifest_shuffle_repeatable)
 
 TEST(cpio_cache, subset_fraction)
 {
-    string source_dir = file_util::make_temp_directory(test_cache_directory);
+    string           source_dir = file_util::make_temp_directory(test_cache_directory);
     manifest_manager manifest_builder{source_dir, 1000, 25, 25};
 
     uint32_t manifest1_crc;
     uint32_t manifest2_crc;
 
-    float subset_fraction = 0.01;
-    int macrobatch_size = 4;
-    bool shuffle_manifest = true;
+    float  subset_fraction  = 0.01;
+    int    macrobatch_size  = 4;
+    bool   shuffle_manifest = true;
     string manifest_root;
 
     {
-        auto manifest = make_shared<nervana::manifest_csv>(manifest_builder.manifest_file(),
-                                                           shuffle_manifest, manifest_root);
+        auto manifest = make_shared<nervana::manifest_csv>(manifest_builder.manifest_file(), shuffle_manifest, manifest_root);
 
         ASSERT_NE(nullptr, manifest);
 
-        auto block_loader = make_shared<block_loader_file>(manifest,
-                                                       subset_fraction,
-                                                       macrobatch_size);
+        auto block_loader = make_shared<block_loader_file>(manifest, subset_fraction, macrobatch_size);
         ASSERT_NE(nullptr, block_loader);
 
         manifest1_crc = manifest->get_crc();
     }
 
     {
-        auto manifest = make_shared<nervana::manifest_csv>(manifest_builder.manifest_file(),
-                                                           shuffle_manifest, manifest_root);
+        auto manifest = make_shared<nervana::manifest_csv>(manifest_builder.manifest_file(), shuffle_manifest, manifest_root);
 
         ASSERT_NE(nullptr, manifest);
 
-        auto block_loader = make_shared<block_loader_file>(manifest,
-                                                       subset_fraction,
-                                                       macrobatch_size);
+        auto block_loader = make_shared<block_loader_file>(manifest, subset_fraction, macrobatch_size);
         ASSERT_NE(nullptr, block_loader);
 
         manifest2_crc = manifest->get_crc();

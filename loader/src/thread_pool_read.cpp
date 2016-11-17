@@ -19,11 +19,10 @@
 using namespace nervana;
 using namespace std;
 
-read_thread_pool::read_thread_pool(const shared_ptr<buffer_pool_in>& out,
-                       const shared_ptr<batch_iterator>& b_it) :
-    thread_pool(1),
-    m_out(out),
-    m_batch_iterator(b_it)
+read_thread_pool::read_thread_pool(const shared_ptr<buffer_pool_in>& out, const shared_ptr<batch_iterator>& b_it)
+    : thread_pool(1)
+    , m_out(out)
+    , m_batch_iterator(b_it)
 {
     affirm(m_count == 1, "thread pool count > 1");
 }
@@ -33,22 +32,28 @@ void read_thread_pool::work(int id)
     // Fill input buffers.
     {
         unique_lock<mutex> lock(m_out->get_mutex());
-        while (m_out->full() == true) {
+        while (m_out->full() == true)
+        {
             m_out->wait_for_non_full(lock);
         }
 
         uint32_t tries = 0;
-        while(tries < 3) {
-            try {
+        while (tries < 3)
+        {
+            try
+            {
                 tries += 1;
                 m_batch_iterator->read(m_out->get_for_write());
                 break;
-            } catch(std::exception& e) {
+            }
+            catch (std::exception& e)
+            {
                 cout << "read_thread_pool exception:" << e.what() << endl;
                 m_out->write_exception(std::current_exception());
             }
         }
-        if(tries == 3) {
+        if (tries == 3)
+        {
             cout << "tried reading 3 times and failed.  Giving up";
             throw std::runtime_error("tried 3 times to read from batch_iterator and failed each time.");
         }

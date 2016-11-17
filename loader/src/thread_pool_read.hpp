@@ -32,7 +32,7 @@ namespace nervana
  *
  */
 
-class nervana::read_thread_pool: public thread_pool
+class nervana::read_thread_pool : public thread_pool
 {
 public:
     read_thread_pool(const std::shared_ptr<nervana::buffer_pool_in>& out,
@@ -47,4 +47,3 @@ private:
     std::shared_ptr<nervana::buffer_pool_in> m_out;
     std::shared_ptr<nervana::batch_iterator> m_batch_iterator;
 };
-

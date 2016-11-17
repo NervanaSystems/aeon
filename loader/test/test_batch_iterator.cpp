@@ -31,8 +31,8 @@ TEST(minibatch_iterator, simple)
     // all of the records in the block-level block_iterator.
 
     // a little odd here that our block size is 3 and our minibatchsize is 13 ...
-    auto mbl = make_shared<block_loader_alphabet>(3);
-    auto bis = make_shared<block_iterator_sequential>(mbl);
+    auto           mbl = make_shared<block_loader_alphabet>(3);
+    auto           bis = make_shared<block_iterator_sequential>(mbl);
     batch_iterator mi(bis, 13);
 
     // we know there are 3 * 26 objects in the dataset so we should get
@@ -42,7 +42,8 @@ TEST(minibatch_iterator, simple)
     buffer_in_array bp(2);
 
     // read 6 minibatches
-    for(int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 6; ++i)
+    {
         mi.read(bp);
     }
 
@@ -63,8 +64,8 @@ TEST(minibatch_iterator, shuffled)
     // all of the records in the block-level block_iterator.
 
     // a little odd here that our block size is 3 and our minibatchsize is 13 ...
-    auto mbl = make_shared<block_loader_alphabet>(3);
-    auto bis = make_shared<block_iterator_shuffled>(mbl);
+    auto           mbl = make_shared<block_loader_alphabet>(3);
+    auto           bis = make_shared<block_iterator_shuffled>(mbl);
     batch_iterator mi(bis, 13);
 
     // we know there are 3 * 26 objects in the dataset so we should get
@@ -74,19 +75,19 @@ TEST(minibatch_iterator, shuffled)
     buffer_in_array bp(2);
 
     // read 6 minibatches
-    for(int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 6; ++i)
+    {
         mi.read(bp);
     }
 
     vector<string> words_a = buffer_to_vector_of_strings(*bp[0]);
     vector<string> words_b = buffer_to_vector_of_strings(*bp[1]);
 
-    for (uint32_t i=0; i<words_a.size(); ++i)
+    for (uint32_t i = 0; i < words_a.size(); ++i)
         ASSERT_EQ(words_a[i], words_b[i]);
 
     ASSERT_EQ(words_a.size(), mbl->object_count());
     ASSERT_EQ(sorted(words_a), false);
 
     assert_vector_unique(words_a);
-
 }

@@ -30,13 +30,13 @@
 using namespace std;
 using namespace nervana;
 
-manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root, float subset_fraction) :
-    _filename(filename)
+manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root, float subset_fraction)
+    : _filename(filename)
 {
     // for now parse the entire manifest on creation
     ifstream infile(_filename);
 
-    if(!infile.is_open())
+    if (!infile.is_open())
     {
         throw std::runtime_error("Manifest file " + _filename + " doesn't exist.");
     }
@@ -49,16 +49,16 @@ manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& r
     // is no cache and we are resuming training at a specific epoch, we
     // may need to be able to jump around and read random blocks of the
     // file, so a purely stream based interface is not sufficient.
-    if(shuffle) {
+    if (shuffle)
+    {
         shuffle_filename_lists();
     }
-
 }
 
 string manifest_csv::cache_id()
 {
     // returns a hash of the _filename
-    std::size_t h = std::hash<std::string>()(_filename);
+    std::size_t  h = std::hash<std::string>()(_filename);
     stringstream ss;
     ss << setfill('0') << setw(16) << hex << h;
     return ss.str();
@@ -75,36 +75,39 @@ void manifest_csv::parse_stream(istream& is, const string& root)
 {
     // parse istream is and load the entire thing into _filename_lists
     uint32_t prev_num_fields = 0, lineno = 0;
-    string line;
+    string   line;
 
     // read in each line, then from that istringstream, break into
     // comma-separated fields.
-    while(std::getline(is, line)) {
-
-        if (line.empty() || line[0] == '#')  //Skip comments and empty lines
+    while (std::getline(is, line))
+    {
+        if (line.empty() || line[0] == '#') // Skip comments and empty lines
         {
             continue;
         }
 
         vector<string> field_list = split(line, ',');
-        if(!root.empty()) {
-            for(int i=0; i<field_list.size(); i++) {
+        if (!root.empty())
+        {
+            for (int i = 0; i < field_list.size(); i++)
+            {
                 field_list[i] = file_util::path_join(root, field_list[i]);
             }
         }
 
-        if (lineno == 0) {
+        if (lineno == 0)
+        {
             prev_num_fields = field_list.size();
         }
 
-        if(field_list.size() != prev_num_fields) {
+        if (field_list.size() != prev_num_fields)
+        {
             ostringstream ss;
             ss << "at line: " << lineno;
             ss << ", manifest file has a line with differing number of files (";
             ss << field_list.size() << ") vs (" << prev_num_fields << "): ";
 
-            std::copy(field_list.begin(), field_list.end(),
-                      ostream_iterator<std::string>(ss, " "));
+            std::copy(field_list.begin(), field_list.end(), ostream_iterator<std::string>(ss, " "));
             throw std::runtime_error(ss.str());
         }
         prev_num_fields = field_list.size();
@@ -131,23 +134,25 @@ void manifest_csv::generate_subset(float subset_fraction)
     {
         crc_computed = false;
         std::bernoulli_distribution distribution(subset_fraction);
-        std::default_random_engine generator(get_global_random_seed());
-        vector<FilenameList> tmp;
+        std::default_random_engine  generator(get_global_random_seed());
+        vector<FilenameList>        tmp;
         tmp.swap(_filename_lists);
         size_t expected_count = tmp.size() * subset_fraction;
-        size_t needed = expected_count;
+        size_t needed         = expected_count;
 
-        for (int i=0; i<tmp.size(); i++)
+        for (int i = 0; i < tmp.size(); i++)
         {
             size_t remainder = tmp.size() - i;
             if ((needed == remainder) || distribution(generator))
             {
                 _filename_lists.push_back(tmp[i]);
                 needed--;
-                if (needed == 0) break;
+                if (needed == 0)
+                    break;
             }
         }
-//        cout << __FILE__ << " " << __LINE__ << " expected=" << expected_count << ", actual=" << _filename_lists.size() << endl;
+        //        cout << __FILE__ << " " << __LINE__ << " expected=" << expected_count << ", actual=" << _filename_lists.size() <<
+        //        endl;
     }
 }
 
@@ -155,9 +160,9 @@ uint32_t manifest_csv::get_crc()
 {
     if (crc_computed == false)
     {
-        for(const vector<string>& tmp : _filename_lists)
+        for (const vector<string>& tmp : _filename_lists)
         {
-            for(const string& s : tmp)
+            for (const string& s : tmp)
             {
                 crc_engine.Update((const uint8_t*)s.data(), s.size());
             }

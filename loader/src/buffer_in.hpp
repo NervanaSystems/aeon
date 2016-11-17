@@ -34,9 +34,8 @@ class nervana::buffer_in
 public:
     buffer_in() {}
     virtual ~buffer_in() {}
-
     void read(std::istream& is, int size);
-    void reset();
+    void               reset();
     std::vector<char>& get_item(int index);
     void add_item(const std::vector<char>&);
     void add_item(std::vector<char>&&);
@@ -59,7 +58,7 @@ class nervana::buffer_in_array
 public:
     buffer_in_array(unsigned int nbuffers_in)
     {
-        for (uint32_t i=0; i<nbuffers_in; ++i)
+        for (uint32_t i = 0; i < nbuffers_in; ++i)
         {
             m_data.push_back(new buffer_in());
         }
@@ -74,12 +73,10 @@ public:
     }
 
     buffer_in* operator[](int i) { return m_data[i]; }
-    const buffer_in* operator[](int i) const { return m_data[i]; }
-    size_t size() const { return m_data.size(); }
-
+    const buffer_in* operator[](int   i) const { return m_data[i]; }
+    size_t                            size() const { return m_data.size(); }
     std::vector<buffer_in*>::iterator begin() { return m_data.begin(); }
     std::vector<buffer_in*>::iterator end() { return m_data.end(); }
-
 private:
-    std::vector<buffer_in*>    m_data;
+    std::vector<buffer_in*> m_data;
 };

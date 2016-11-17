@@ -22,11 +22,13 @@ using namespace nervana::label_map;
 
 config::config(nlohmann::json js)
 {
-    if(js.is_null()) {
+    if (js.is_null())
+    {
         throw std::runtime_error("missing label_map config in json config");
     }
 
-    for(auto& info : config_list) {
+    for (auto& info : config_list)
+    {
         info->parse(js);
     }
     verify_config("label_map", config_list, js);
@@ -35,7 +37,8 @@ config::config(nlohmann::json js)
     auto otype = nervana::output_type(output_type);
     add_shape_type({otype.size}, otype);
 
-    if (output_type != "uint32_t") {
+    if (output_type != "uint32_t")
+    {
         throw std::runtime_error("Invalid load type for label map " + output_type);
     }
 }
@@ -44,25 +47,30 @@ decoded::decoded()
 {
 }
 
-extractor::extractor( const label_map::config& cfg)
+extractor::extractor(const label_map::config& cfg)
 {
     int index = 0;
-    for( const string& label : cfg.class_names ) {
-        dictionary.insert({label,index++});
+    for (const string& label : cfg.class_names)
+    {
+        dictionary.insert({label, index++});
     }
 }
 
 shared_ptr<decoded> extractor::extract(const char* data, int size)
 {
-    auto rc = make_shared<decoded>();
-    stringstream ss( string(data, size) );
-    string label;
-    while( ss >> label ) {
+    auto         rc = make_shared<decoded>();
+    stringstream ss(string(data, size));
+    string       label;
+    while (ss >> label)
+    {
         auto l = dictionary.find(label);
-        if( l != dictionary.end() ) {
+        if (l != dictionary.end())
+        {
             // found label
             rc->labels.push_back(l->second);
-        } else {
+        }
+        else
+        {
             // label not found in dictionary
             rc = nullptr;
             break;
@@ -80,20 +88,21 @@ shared_ptr<decoded> transformer::transform(shared_ptr<params> pptr, shared_ptr<d
     return media;
 }
 
-loader::loader(const nervana::label_map::config& cfg) :
-    max_label_count{cfg.max_label_count()}
+loader::loader(const nervana::label_map::config& cfg)
+    : max_label_count{cfg.max_label_count()}
 {
 }
 
 void loader::load(const vector<void*>& data, shared_ptr<decoded> media)
 {
-    int i=0;
+    int       i      = 0;
     uint32_t* data_p = (uint32_t*)data[0];
-    for(; i<media->get_data().size() && i<max_label_count; i++ ) {
+    for (; i < media->get_data().size() && i < max_label_count; i++)
+    {
         data_p[i] = media->get_data()[i];
     }
-    for(; i<max_label_count; i++ ) {
+    for (; i < max_label_count; i++)
+    {
         data_p[i] = 0;
     }
 }
-

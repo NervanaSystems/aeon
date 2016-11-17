@@ -24,42 +24,41 @@
 using namespace std;
 
 gen_image image_dataset;
-string test_cache_directory;
+string    test_cache_directory;
 
 static void CreateImageDataset()
 {
-//    std::chrono::high_resolution_clock timer;
-//    auto start = timer.now();
+    //    std::chrono::high_resolution_clock timer;
+    //    auto start = timer.now();
     image_dataset.Directory("image_data")
-            .Prefix("archive-")
-            .MacrobatchMaxItems(500)
-            // SetSize must be a multiple of (minibatchCount*batchSize) which is 8320 currently
-            .DatasetSize(1500)
-            .ImageSize(128,128)
-            .Create();
-//    auto end = timer.now();
-//    cout << "image dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
+        .Prefix("archive-")
+        .MacrobatchMaxItems(500)
+        // SetSize must be a multiple of (minibatchCount*batchSize) which is 8320 currently
+        .DatasetSize(1500)
+        .ImageSize(128, 128)
+        .Create();
+    //    auto end = timer.now();
+    //    cout << "image dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
-static void DeleteDataset() {
+static void DeleteDataset()
+{
     image_dataset.Delete();
 }
 
 void exit_func(int s)
 {
-//    cout << __FILE__ << " " << __LINE__ << "exit function " << s << endl;
-//    exit(-1);
+    //    cout << __FILE__ << " " << __LINE__ << "exit function " << s << endl;
+    //    exit(-1);
 }
 
-extern "C" int main( int argc, char** argv )
+extern "C" int main(int argc, char** argv)
 {
-//    struct sigaction sigIntHandler;
-//    sigIntHandler.sa_handler = exit_func;
-//    sigemptyset(&sigIntHandler.sa_mask);
-//    sigIntHandler.sa_flags = 0;
-//    sigaction(SIGINT, &sigIntHandler, NULL);
-
-
+    //    struct sigaction sigIntHandler;
+    //    sigIntHandler.sa_handler = exit_func;
+    //    sigemptyset(&sigIntHandler.sa_mask);
+    //    sigIntHandler.sa_flags = 0;
+    //    sigaction(SIGINT, &sigIntHandler, NULL);
 
     CreateImageDataset();
     test_cache_directory = nervana::file_util::make_temp_directory();

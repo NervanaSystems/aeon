@@ -28,11 +28,7 @@ class nervana::noise_clips
 public:
     noise_clips(const std::string noiseIndexFile, const std::string noiseRoot);
     virtual ~noise_clips();
-    void addNoise(cv::Mat& wav_mat,
-                  bool add_noise,
-                  uint32_t noise_index,
-                  float noise_offset_fraction,
-                  float noise_level);
+    void addNoise(cv::Mat& wav_mat, bool add_noise, uint32_t noise_index, float noise_offset_fraction, float noise_level);
 
 private:
     void load_index(const std::string& index_file, const std::string& root_dir);
@@ -40,8 +36,8 @@ private:
     void read_noise(std::string& noise_file, int* dataLen);
 
 private:
-    std::vector<cv::Mat>      _noise_data;
-    std::vector<std::string>  _noise_files;
-    char*                     _buf          = 0;
-    int                       _bufLen       = 0;
+    std::vector<cv::Mat>     _noise_data;
+    std::vector<std::string> _noise_files;
+    char*                    _buf    = 0;
+    int                      _bufLen = 0;
 };

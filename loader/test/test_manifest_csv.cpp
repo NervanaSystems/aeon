@@ -39,22 +39,20 @@ using namespace nervana;
 
 TEST(manifest, constructor)
 {
-    manifest_maker mm;
-    string tmpname = mm.tmp_manifest_file(0, {0, 0});
+    manifest_maker        mm;
+    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest0(tmpname, false);
 }
 
 TEST(manifest, no_file)
 {
-    ASSERT_THROW(nervana::manifest_csv manifest0(
-        "/tmp/jsdkfjsjkfdjaskdfj_doesnt_exist", false
-    ), std::runtime_error);
+    ASSERT_THROW(nervana::manifest_csv manifest0("/tmp/jsdkfjsjkfdjaskdfj_doesnt_exist", false), std::runtime_error);
 }
 
 TEST(manifest, id_eq)
 {
-    manifest_maker mm;
-    string tmpname = mm.tmp_manifest_file(0, {0, 0});
+    manifest_maker        mm;
+    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest1(tmpname, false);
     nervana::manifest_csv manifest2(tmpname, false);
     ASSERT_EQ(manifest1.cache_id(), manifest2.cache_id());
@@ -62,7 +60,7 @@ TEST(manifest, id_eq)
 
 TEST(manifest, id_ne)
 {
-    manifest_maker mm;
+    manifest_maker        mm;
     nervana::manifest_csv manifest1(mm.tmp_manifest_file(0, {0, 0}), false);
     nervana::manifest_csv manifest2(mm.tmp_manifest_file(0, {0, 0}), false);
     ASSERT_NE(manifest1.cache_id(), manifest2.cache_id());
@@ -70,8 +68,8 @@ TEST(manifest, id_ne)
 
 TEST(manifest, version_eq)
 {
-    manifest_maker mm;
-    string tmpname = mm.tmp_manifest_file(0, {0, 0});
+    manifest_maker        mm;
+    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest1(tmpname, false);
     nervana::manifest_csv manifest2(tmpname, false);
     ASSERT_EQ(manifest1.version(), manifest2.version());
@@ -79,8 +77,8 @@ TEST(manifest, version_eq)
 
 TEST(manifest, parse_file_doesnt_exist)
 {
-    manifest_maker mm;
-    string tmpname = mm.tmp_manifest_file(0, {0, 0});
+    manifest_maker        mm;
+    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest0(tmpname, false);
 
     ASSERT_EQ(manifest0.object_count(), 0);
@@ -89,7 +87,7 @@ TEST(manifest, parse_file_doesnt_exist)
 TEST(manifest, parse_file)
 {
     manifest_maker mm;
-    string tmpname = mm.tmp_manifest_file(2, {0, 0});
+    string         tmpname = mm.tmp_manifest_file(2, {0, 0});
 
     nervana::manifest_csv manifest0(tmpname, false);
     ASSERT_EQ(manifest0.object_count(), 2);
@@ -97,12 +95,13 @@ TEST(manifest, parse_file)
 
 TEST(manifest, no_shuffle)
 {
-    manifest_maker mm;
-    string filename = mm.tmp_manifest_file(20, {4, 4});
+    manifest_maker        mm;
+    string                filename = mm.tmp_manifest_file(20, {4, 4});
     nervana::manifest_csv manifest1(filename, false);
     nervana::manifest_csv manifest2(filename, false);
 
-    for(auto it1 = manifest1.begin(), it2 = manifest2.begin(); it1 != manifest1.end(); ++it1, ++it2) {
+    for (auto it1 = manifest1.begin(), it2 = manifest2.begin(); it1 != manifest1.end(); ++it1, ++it2)
+    {
         ASSERT_EQ((*it1)[0], (*it2)[0]);
         ASSERT_EQ((*it1)[1], (*it2)[1]);
     }
@@ -110,15 +109,17 @@ TEST(manifest, no_shuffle)
 
 TEST(manifest, shuffle)
 {
-    manifest_maker mm;
-    string filename = mm.tmp_manifest_file(20, {4, 4});
+    manifest_maker        mm;
+    string                filename = mm.tmp_manifest_file(20, {4, 4});
     nervana::manifest_csv manifest1(filename, false);
     nervana::manifest_csv manifest2(filename, true);
 
     bool different = false;
 
-    for(auto it1 = manifest1.begin(), it2 = manifest2.begin(); it1 != manifest1.end(); ++it1, ++it2) {
-        if((*it1)[0] != (*it2)[0]) {
+    for (auto it1 = manifest1.begin(), it2 = manifest2.begin(); it1 != manifest1.end(); ++it1, ++it2)
+    {
+        if ((*it1)[0] != (*it2)[0])
+        {
             different = true;
         }
     }
@@ -128,14 +129,14 @@ TEST(manifest, shuffle)
 TEST(manifest, non_paired_manifests)
 {
     {
-        manifest_maker mm;
-        string filename = mm.tmp_manifest_file(20, {4, 4, 4});
+        manifest_maker        mm;
+        string                filename = mm.tmp_manifest_file(20, {4, 4, 4});
         nervana::manifest_csv manifest1(filename, false);
         ASSERT_EQ(manifest1.object_count(), 20);
     }
     {
-        manifest_maker mm;
-        string filename = mm.tmp_manifest_file(20, {4});
+        manifest_maker        mm;
+        string                filename = mm.tmp_manifest_file(20, {4});
         nervana::manifest_csv manifest1(filename, false);
         ASSERT_EQ(manifest1.object_count(), 20);
     }
@@ -144,15 +145,15 @@ TEST(manifest, non_paired_manifests)
 TEST(manifest, uneven_records)
 {
     manifest_maker mm;
-    string filename = mm.tmp_manifest_file_with_ragged_fields();
-    try {
+    string         filename = mm.tmp_manifest_file_with_ragged_fields();
+    try
+    {
         nervana::manifest_csv manifest1(filename, false);
         FAIL();
-    } catch (std::exception& e) {
-        ASSERT_EQ(
-            string("at line: 1, manifest file has a line with differing"),
-            string(e.what()).substr(0, 51)
-        );
+    }
+    catch (std::exception& e)
+    {
+        ASSERT_EQ(string("at line: 1, manifest file has a line with differing"), string(e.what()).substr(0, 51));
     }
 }
 
@@ -161,13 +162,15 @@ TEST(manifest, root_path)
     string manifest_file = "tmp_manifest.csv";
     {
         ofstream f(manifest_file);
-        for(int i=0; i<10; i++) {
+        for (int i = 0; i < 10; i++)
+        {
             f << "/t1/image" << i << ".png,/t1/target" << i << ".txt\n";
         }
         f.close();
         nervana::manifest_csv manifest(manifest_file, false);
-        int i = 0;
-        for(const vector<string>& x : manifest) {
+        int                   i = 0;
+        for (const vector<string>& x : manifest)
+        {
             ASSERT_EQ(2, x.size());
             stringstream ss;
             ss << "/t1/image" << i << ".png";
@@ -180,13 +183,15 @@ TEST(manifest, root_path)
     }
     {
         ofstream f(manifest_file);
-        for(int i=0; i<10; i++) {
+        for (int i = 0; i < 10; i++)
+        {
             f << "/t1/image" << i << ".png,/t1/target" << i << ".txt\n";
         }
         f.close();
         nervana::manifest_csv manifest(manifest_file, false, "/x1");
-        int i = 0;
-        for(const vector<string>& x : manifest) {
+        int                   i = 0;
+        for (const vector<string>& x : manifest)
+        {
             ASSERT_EQ(2, x.size());
             stringstream ss;
             ss << "/t1/image" << i << ".png";
@@ -199,13 +204,15 @@ TEST(manifest, root_path)
     }
     {
         ofstream f(manifest_file);
-        for(int i=0; i<10; i++) {
+        for (int i = 0; i < 10; i++)
+        {
             f << "t1/image" << i << ".png,t1/target" << i << ".txt\n";
         }
         f.close();
         nervana::manifest_csv manifest(manifest_file, false, "/x1");
-        int i = 0;
-        for(const vector<string>& x : manifest) {
+        int                   i = 0;
+        for (const vector<string>& x : manifest)
+        {
             ASSERT_EQ(2, x.size());
             stringstream ss;
             ss << "/x1/t1/image" << i << ".png";
@@ -221,21 +228,21 @@ TEST(manifest, root_path)
 
 TEST(manifest, crc)
 {
-    const string input = "123456789";
-    uint32_t expected = 0xe3069283;
-    uint32_t actual = 0;
+    const string input    = "123456789";
+    uint32_t     expected = 0xe3069283;
+    uint32_t     actual   = 0;
 
     CryptoPP::CRC32C crc;
     crc.Update((const uint8_t*)input.data(), input.size());
     crc.TruncatedFinal((uint8_t*)&actual, sizeof(actual));
 
-//    cout << "expected 0x" << setfill('0') << setw(2) << hex << expected << dec << endl;
-//    cout << "actual   0x" << setfill('0') << setw(2) << hex << actual << dec << endl;
+    //    cout << "expected 0x" << setfill('0') << setw(2) << hex << expected << dec << endl;
+    //    cout << "actual   0x" << setfill('0') << setw(2) << hex << actual << dec << endl;
 
     EXPECT_EQ(expected, actual);
 }
 
-//TEST(manifest, performance)
+// TEST(manifest, performance)
 //{
 //    string manifest_filename = file_util::tmp_filename();
 //    string cache_root = "/this/is/supposed/to/be/long/so/we/make/it/so/";
@@ -253,7 +260,8 @@ TEST(manifest, crc)
 //            mfile << cache_root << "target_" << i << ".txt\n";
 //        }
 //        auto endTime = timer.now();
-//        cout << "create manifest " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" << endl;
+//        cout << "create manifest " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" <<
+//        endl;
 //    }
 
 //    // Parse the manifest file

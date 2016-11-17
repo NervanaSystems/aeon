@@ -22,8 +22,8 @@
 using namespace std;
 using namespace nervana;
 
-block_loader::block_loader(uint32_t block_size) :
-    m_block_size(block_size)
+block_loader::block_loader(uint32_t block_size)
+    : m_block_size(block_size)
 {
 }
 

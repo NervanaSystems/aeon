@@ -27,12 +27,13 @@ extern const char* get_error_message()
 extern void* start(const char* loaderConfigString, PyObject* pbackend)
 {
     static_assert(sizeof(int) == 4, "int is not 4 bytes");
-    try {
-
+    try
+    {
         loader* data_loader = new loader(loaderConfigString, pbackend);
 
         int result = data_loader->start();
-        if (result != 0) {
+        if (result != 0)
+        {
             std::stringstream ss;
             ss << "Could not start data loader. Error " << result;
             last_error_message = ss.str();
@@ -41,7 +42,9 @@ extern void* start(const char* loaderConfigString, PyObject* pbackend)
             return 0;
         }
         return reinterpret_cast<void*>(data_loader);
-    } catch(std::exception& ex) {
+    }
+    catch (std::exception& ex)
+    {
         last_error_message = ex.what();
 
         return 0;
@@ -50,9 +53,12 @@ extern void* start(const char* loaderConfigString, PyObject* pbackend)
 
 extern int error()
 {
-    try {
+    try
+    {
         throw std::runtime_error("abc error");
-    } catch(std::exception& ex) {
+    }
+    catch (std::exception& ex)
+    {
         last_error_message = ex.what();
         return -1;
     }
@@ -60,9 +66,12 @@ extern int error()
 
 extern PyObject* next(loader* data_loader, int bufIdx)
 {
-    try {
+    try
+    {
         return data_loader->next(bufIdx);
-    } catch(std::exception& ex) {
+    }
+    catch (std::exception& ex)
+    {
         last_error_message = ex.what();
 
         Py_INCREF(Py_None);
@@ -72,9 +81,12 @@ extern PyObject* next(loader* data_loader, int bufIdx)
 
 extern PyObject* shapes(loader* data_loader)
 {
-    try {
+    try
+    {
         return data_loader->shapes();
-    } catch(std::exception& ex) {
+    }
+    catch (std::exception& ex)
+    {
         last_error_message = ex.what();
 
         Py_INCREF(Py_None);
@@ -84,9 +96,12 @@ extern PyObject* shapes(loader* data_loader)
 
 extern int itemCount(loader* data_loader)
 {
-    try {
+    try
+    {
         return data_loader->itemCount();
-    } catch(std::exception& ex) {
+    }
+    catch (std::exception& ex)
+    {
         last_error_message = ex.what();
         return -1;
     }
@@ -94,9 +109,12 @@ extern int itemCount(loader* data_loader)
 
 extern int reset(loader* data_loader)
 {
-    try {
+    try
+    {
         return data_loader->reset();
-    } catch(std::exception& ex) {
+    }
+    catch (std::exception& ex)
+    {
         last_error_message = ex.what();
         return -1;
     }
@@ -104,14 +122,16 @@ extern int reset(loader* data_loader)
 
 extern int stop(loader* data_loader)
 {
-    try {
+    try
+    {
         data_loader->stop();
         delete data_loader;
         return 0;
-    } catch(std::exception& ex) {
+    }
+    catch (std::exception& ex)
+    {
         last_error_message = ex.what();
         return -1;
     }
 }
-
 }

@@ -47,18 +47,17 @@ class nervana::manifest_csv : public manifest
 public:
     manifest_csv(const std::string& filename, bool shuffle, const std::string& root = "", float subset_fraction = 1.0);
 
-    typedef std::vector<std::string> FilenameList;
+    typedef std::vector<std::string>                  FilenameList;
     typedef std::vector<FilenameList>::const_iterator iter;
 
     std::string cache_id() override;
     std::string version() override;
-    size_t object_count() const { return _filename_lists.size(); }
-    int nelements();
+    size_t      object_count() const { return _filename_lists.size(); }
+    int         nelements();
 
     // begin and end provide iterators over the FilenameLists
     iter begin() const { return _filename_lists.begin(); }
     iter end() const { return _filename_lists.end(); }
-
     void generate_subset(float subset_fraction);
     uint32_t get_crc();
 
@@ -67,9 +66,9 @@ protected:
     void shuffle_filename_lists();
 
 private:
-    const std::string           _filename;
-    std::vector<FilenameList>   _filename_lists;
-    CryptoPP::CRC32C            crc_engine;
-    bool                        crc_computed = false;
-    uint32_t                    computed_crc;
+    const std::string         _filename;
+    std::vector<FilenameList> _filename_lists;
+    CryptoPP::CRC32C          crc_engine;
+    bool                      crc_computed = false;
+    uint32_t                  computed_crc;
 };

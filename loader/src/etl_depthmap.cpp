@@ -36,12 +36,12 @@ shared_ptr<image::decoded> depthmap::extractor::extract(const char* inbuf, int i
     cv::imdecode(input_img, CV_LOAD_IMAGE_ANYDEPTH, &image);
 
     // convert input image to single channel if needed
-    if(image.channels()>1)
+    if (image.channels() > 1)
     {
         // copy channel 0 from source image to channel 0 of target image where
         // target is a single channel image
         cv::Mat target(image.rows, image.cols, CV_8UC1);
-        int from_to[] = {0,0};
+        int     from_to[] = {0, 0};
         cv::mixChannels(&image, 1, &target, 1, from_to, 1);
         image = target;
     }
@@ -57,14 +57,14 @@ depthmap::transformer::~transformer()
 {
 }
 
-std::shared_ptr<image::decoded> depthmap::transformer::transform(
-                    std::shared_ptr<image::params> img_xform,
-                    std::shared_ptr<image::decoded> image_list)
+std::shared_ptr<image::decoded> depthmap::transformer::transform(std::shared_ptr<image::params>  img_xform,
+                                                                 std::shared_ptr<image::decoded> image_list)
 {
-    if(image_list->get_image_count() != 1) throw invalid_argument("depthmap transform only supports a single image");
+    if (image_list->get_image_count() != 1)
+        throw invalid_argument("depthmap transform only supports a single image");
 
-    cv::Mat rotatedImage;
-    cv::Scalar border{0,0,0};
+    cv::Mat    rotatedImage;
+    cv::Scalar border{0, 0, 0};
     image::rotate(image_list->get_image(0), rotatedImage, img_xform->angle, false, border);
 
     cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
@@ -72,9 +72,10 @@ std::shared_ptr<image::decoded> depthmap::transformer::transform(
     cv::Mat resizedImage;
     image::resize(croppedImage, resizedImage, img_xform->output_size, false);
 
-    cv::Mat *finalImage = &resizedImage;
-    cv::Mat flippedImage;
-    if (img_xform->flip) {
+    cv::Mat* finalImage = &resizedImage;
+    cv::Mat  flippedImage;
+    if (img_xform->flip)
+    {
         cv::flip(resizedImage, flippedImage, 1);
         finalImage = &flippedImage;
     }
@@ -86,28 +87,34 @@ void depthmap::loader::load(const std::vector<void*>& outlist, shared_ptr<image:
 {
     char* outbuf = (char*)outlist[0];
     // TODO: Generalize this to also handle multi_crop case
-    auto img = input->get_image(0);
-    auto cv_type = _cfg.get_shape_type().get_otype().cv_type;
+    auto img          = input->get_image(0);
+    auto cv_type      = _cfg.get_shape_type().get_otype().cv_type;
     auto element_size = _cfg.get_shape_type().get_otype().size;
-    int image_size = img.channels() * img.total() * element_size;
+    int  image_size   = img.channels() * img.total() * element_size;
 
-    for (int i=0; i < input->get_image_count(); i++) {
+    for (int i = 0; i < input->get_image_count(); i++)
+    {
         auto outbuf_i = outbuf + (i * image_size);
-        img = input->get_image(i);
+        img           = input->get_image(i);
         vector<cv::Mat> source;
         vector<cv::Mat> target;
         vector<int>     from_to;
 
         source.push_back(img);
-        if (_cfg.channel_major) {
-            for(int ch=0; ch<_cfg.channels; ch++) {
+        if (_cfg.channel_major)
+        {
+            for (int ch = 0; ch < _cfg.channels; ch++)
+            {
                 target.emplace_back(img.size(), cv_type, (char*)(outbuf_i + ch * img.total() * element_size));
                 from_to.push_back(ch);
                 from_to.push_back(ch);
             }
-        } else {
+        }
+        else
+        {
             target.emplace_back(img.size(), CV_MAKETYPE(cv_type, _cfg.channels), (char*)(outbuf_i));
-            for(int ch=0; ch<_cfg.channels; ch++) {
+            for (int ch = 0; ch < _cfg.channels; ch++)
+            {
                 from_to.push_back(ch);
                 from_to.push_back(ch);
             }

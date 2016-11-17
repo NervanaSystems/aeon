@@ -18,16 +18,13 @@
 using namespace std;
 using namespace nervana;
 
-
-decode_thread_pool::decode_thread_pool(int count,
-                                       const shared_ptr<buffer_pool_in>& in,
-                                       const shared_ptr<buffer_pool_out>& out,
-                                       const shared_ptr<python_backend>& pbe) :
-    thread_pool(count),
-    m_in(in),
-    m_out(out),
-    m_python_backend(pbe),
-    m_batch_size(m_python_backend->m_batch_size)
+decode_thread_pool::decode_thread_pool(int count, const shared_ptr<buffer_pool_in>& in, const shared_ptr<buffer_pool_out>& out,
+                                       const shared_ptr<python_backend>& pbe)
+    : thread_pool(count)
+    , m_in(in)
+    , m_out(out)
+    , m_python_backend(pbe)
+    , m_batch_size(m_python_backend->m_batch_size)
 {
     m_items_per_thread = (m_batch_size - 1) / m_count + 1;
     affirm(m_items_per_thread * count >= m_batch_size, "m_items_per_thread * count >= m_batch_size");
@@ -45,7 +42,8 @@ void decode_thread_pool::add_provider(std::shared_ptr<nervana::provider_interfac
 
 decode_thread_pool::~decode_thread_pool()
 {
-    if (m_manager != 0) {
+    if (m_manager != 0)
+    {
         m_manager->join();
         delete m_manager;
     }
@@ -54,7 +52,8 @@ decode_thread_pool::~decode_thread_pool()
 
 void decode_thread_pool::start()
 {
-    for (int i = 0; i < m_count; i++) {
+    for (int i = 0; i < m_count; i++)
+    {
         m_threads.push_back(new thread(&decode_thread_pool::run, this, i));
     }
     m_manager = new thread(&decode_thread_pool::manage, this);
@@ -63,14 +62,16 @@ void decode_thread_pool::start()
 void decode_thread_pool::stop()
 {
     thread_pool::stop();
-    while (stopped() == false) {
+    while (stopped() == false)
+    {
         std::this_thread::yield();
         m_in->advance_write_pos();
         m_in->signal_not_empty();
     }
 
     m_stop_manager = true;
-    while (m_manager_stopped == false) {
+    while (m_manager_stopped == false)
+    {
         std::this_thread::yield();
         m_in->advance_write_pos();
         m_in->signal_not_empty();
@@ -83,22 +84,27 @@ void decode_thread_pool::run(int id)
 {
     // Initialize worker threads by computing memory offsets for the
     // data this thread should work on
-    try {
+    try
+    {
         affirm(id < m_count, "id < m_count");
         m_start_inds[id] = id * m_items_per_thread;
-        int itemCount = m_items_per_thread;
-        if (id == m_count - 1) {
+        int itemCount    = m_items_per_thread;
+        if (id == m_count - 1)
+        {
             itemCount = m_batch_size - id * m_items_per_thread;
         }
 
         m_end_inds[id] = m_start_inds[id] + itemCount;
 
-        while (m_done == false) {
+        while (m_done == false)
+        {
             work(id);
         }
 
         m_stopped[id] = true;
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         cerr << "fatal exception in decode_thread_pool::run: " << e.what() << endl;
         // TODO: fail gracefully, not seg fault
     }
@@ -109,9 +115,11 @@ void decode_thread_pool::work(int id)
     // Thread function.
     {
         unique_lock<mutex> lock(m_mutex);
-        while (m_start_signaled[id] == 0) {
+        while (m_start_signaled[id] == 0)
+        {
             m_started.wait(lock);
-            if (m_done == true) {
+            if (m_done == true)
+            {
                 return;
             }
         }
@@ -120,13 +128,17 @@ void decode_thread_pool::work(int id)
     }
 
     // No locking required because threads write into non-overlapping regions.
-    try {
+    try
+    {
         affirm((*m_input_buf)[0]->get_item_count() != 0, "input buffer to decoded_thread_pool is empty");
 
-        for (int i = m_start_inds[id]; i < m_end_inds[id]; i++) {
+        for (int i = m_start_inds[id]; i < m_end_inds[id]; i++)
+        {
             m_providers[id]->provide(i, *m_input_buf, m_out->get_for_write());
         }
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         cout << "decode_thread_pool exception: " << e.what() << endl;
         m_out->write_exception(std::current_exception());
     }
@@ -144,25 +156,29 @@ void decode_thread_pool::produce()
     // lock on output buffers and copy to device
     {
         unique_lock<mutex> lock(m_out->get_mutex());
-        while (m_out->full() == true) {
+        while (m_out->full() == true)
+        {
             m_out->wait_for_non_full(lock);
         }
         {
             lock_guard<mutex> lock(m_mutex);
-            for (unsigned int i = 0; i < m_start_signaled.size(); i++) {
+            for (unsigned int i = 0; i < m_start_signaled.size(); i++)
+            {
                 m_start_signaled[i] = 1;
             }
         }
         m_started.notify_all();
         {
             unique_lock<mutex> lock(m_mutex);
-            while (m_end_signaled < m_count) {
+            while (m_end_signaled < m_count)
+            {
                 m_ended.wait(lock);
             }
             m_end_signaled = 0;
         }
 
-        try {
+        try
+        {
             // At this point, we have decoded data for the whole minibatch.
             buffer_out_array& outBuf = m_out->get_for_write();
 
@@ -171,7 +187,9 @@ void decode_thread_pool::produce()
 
             // Copy to device.
             m_python_backend->call_backend_transfer(outBuf, m_buffer_index);
-        } catch (std::exception& e) {
+        }
+        catch (std::exception& e)
+        {
             cout << "exception in provider post_process/call to backend transfer: " << e.what();
         }
 
@@ -186,9 +204,11 @@ void decode_thread_pool::consume()
     // lock on input buffers and call produce
     {
         unique_lock<mutex> lock(m_in->get_mutex());
-        while (m_in->empty() == true) {
+        while (m_in->empty() == true)
+        {
             m_in->wait_for_not_empty(lock);
-            if (m_stop_manager == true) {
+            if (m_stop_manager == true)
+            {
                 return;
             }
         }
@@ -201,17 +221,22 @@ void decode_thread_pool::consume()
 
 void decode_thread_pool::manage()
 {
-    try {
+    try
+    {
         // Thread function.
         int result = 0;
-        if (result != 0) {
+        if (result != 0)
+        {
             m_stop_manager = true;
         }
-        while (m_stop_manager == false) {
+        while (m_stop_manager == false)
+        {
             consume();
         }
         m_manager_stopped = true;
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         cerr << "exception in decode_thread_pool::manage: " << e.what() << endl;
         // TODO: fail gracefully, not seg fault
     }

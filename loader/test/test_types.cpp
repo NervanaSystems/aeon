@@ -34,5 +34,4 @@ TEST(typemap, numpy)
         output_type opt{"int8_t"};
         EXPECT_EQ(CV_8S, opt.cv_type);
     }
-
 }

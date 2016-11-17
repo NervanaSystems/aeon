@@ -29,15 +29,13 @@ class nervana::manifest_nds : public nervana::manifest
 public:
     manifest_nds(const std::string& filename);
     ~manifest_nds() {}
-
     std::string cache_id() override;
 
     // NDS manifests doesn't have versions since collections are immutable
     std::string version() override { return ""; }
-
     static bool is_likely_json(const std::string filename);
 
     std::string baseurl;
     std::string token;
-    int collection_id;
+    int         collection_id;
 };
