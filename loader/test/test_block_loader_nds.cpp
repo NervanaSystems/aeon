@@ -146,11 +146,31 @@ string generate_large_cpio_file()
     return cpio_file;
 }
 
-TEST(block_loader_nds, multiblock)
+TEST(block_loader_nds, multiblock_sequential)
 {
     start_server();
     auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
     block_iterator_sequential iter(client);
+
+    for(int i=0; i<5; i++)
+    {
+        buffer_in_array dest(2);
+        iter.read(dest);
+        buffer_in* image_array = dest[0];
+
+        for (int i=0; i<image_array->get_item_count(); i++)
+        {
+            const vector<char>& image_data = image_array->get_item(i);
+            ASSERT_NE(0, image_data.size());
+        }
+    }
+}
+
+TEST(block_loader_nds, multiblock_shuffled)
+{
+    start_server();
+    auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    block_iterator_shuffled iter(client);
 
     for(int i=0; i<5; i++)
     {

@@ -23,7 +23,7 @@ block_iterator_sequential::block_iterator_sequential(shared_ptr<block_loader> lo
     _count(_loader->block_count()),
     _i(0)
 {
-    _loader->prefetch_block(_i);
+    //_loader->prefetch_block(_i);
 }
 
 void block_iterator_sequential::read(nervana::buffer_in_array& dest)
@@ -38,7 +38,7 @@ void block_iterator_sequential::read(nervana::buffer_in_array& dest)
     }
 
     _loader->load_block(dest, i);
-    _loader->prefetch_block(_i);
+    //_loader->prefetch_block(_i);
 }
 
 void block_iterator_sequential::reset()
