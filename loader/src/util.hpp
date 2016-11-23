@@ -135,7 +135,7 @@ namespace nervana
         ~async()
         {
             if(thread) {
-                thread->detach();
+                thread->join();
                 delete thread;
             }
             thread = nullptr;
@@ -146,7 +146,7 @@ namespace nervana
             func = f;
             ready = false;
             if(thread) {
-                thread->detach();
+                thread->join();
                 delete thread;
             }
             thread = new std::thread(&async::entry, this, param);
