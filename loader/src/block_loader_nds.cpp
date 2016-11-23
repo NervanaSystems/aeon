@@ -64,11 +64,6 @@ block_loader_nds::~block_loader_nds()
 void block_loader_nds::load_block(nervana::buffer_in_array& dest, uint32_t block_num)
 {
     if(prefetch_pending) {
-//        if(async_handler.is_ready())
-//            cout << __FILE__ << " " << __LINE__ << " prefetch ready" << endl;
-//        else
-//            cout << __FILE__ << " " << __LINE__ << " prefetch busy" << endl;
-
         async_handler.wait();
     } else {
         fetch_block(block_num);
@@ -84,6 +79,7 @@ void block_loader_nds::load_block(nervana::buffer_in_array& dest, uint32_t block
             }
         }
     }
+    prefetch_buffer.clear();
 }
 
 void block_loader_nds::fetch_block(uint32_t block_num)

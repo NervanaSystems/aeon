@@ -23,6 +23,7 @@
 #define private public
 #include "block_loader_nds.hpp"
 #include "block_iterator_shuffled.hpp"
+#include "block_iterator_sequential.hpp"
 #include "block_loader_cpio_cache.hpp"
 #include "block_loader_util.hpp"
 #include "file_util.hpp"
@@ -145,25 +146,53 @@ string generate_large_cpio_file()
     return cpio_file;
 }
 
-TEST(block_loader_nds, performance)
+TEST(block_loader_nds, multiblock)
 {
-//    generate_large_cpio_file();
-    string cache_dir = file_util::make_temp_directory();
-    chrono::high_resolution_clock timer;
     start_server();
     auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
-    string cache_id = block_loader_random::randomString();
-    string version = "version123";
-    auto cache = make_shared<block_loader_cpio_cache>(cache_dir, cache_id, version, client);
-    block_iterator_shuffled iter(cache);
+    block_iterator_sequential iter(client);
 
-    auto startTime = timer.now();
-    for(int i=0; i<300; i++)
+    for(int i=0; i<5; i++)
     {
         buffer_in_array dest(2);
         iter.read(dest);
+        buffer_in* image_array = dest[0];
+
+        for (int i=0; i<image_array->get_item_count(); i++)
+        {
+            const vector<char>& image_data = image_array->get_item(i);
+            ASSERT_NE(0, image_data.size());
+        }
     }
-    auto endTime = timer.now();
-    cout << "time " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" << endl;
-    file_util::remove_directory(cache_dir);
 }
+
+//TEST(block_loader_nds, test)
+//{
+//    string host = "52.52.37.167:8090/api/v1/data";
+//    string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnRfaWQiOjEwMSwidXNlcl9pZCI6MTAwMDEsImpvYl9pZCI6MTkwNDgsImNvbGxlY3Rpb25faWQiOjU2OH0.g1gjpdiPfowEtsCidgRZvCEYL0n-3HK8EZry0tjqeNs";
+//    int collection_id = 568;
+//    int shard_count = 1;
+//    int shard_index = 0;
+//    int macrobatch_max_size = 5000;
+
+//    auto client = make_shared<block_loader_nds>(host, token, collection_id, macrobatch_max_size, shard_count, shard_index);
+//    block_iterator_sequential iter(client);
+//    size_t block_number = 0;
+//    for(int i=0; i<5; i++)
+//    {
+//        buffer_in_array dest(2);
+//        iter.read(dest);
+//        buffer_in* image_array = dest[0];
+
+//        for (int i=0; i<image_array->get_item_count(); i++)
+//        {
+//            const vector<char>& image_data = image_array->get_item(i);
+//            if (image_data.size() == 0)
+//            {
+//                cout << __FILE__ << " " << __LINE__ << " image data size " << image_data.size() << " at " << block_number << ", " << i << endl;
+//                break;
+//            }
+//        }
+//        block_number++;
+//    }
+//}
