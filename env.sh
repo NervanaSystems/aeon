@@ -55,6 +55,8 @@ SRCS="
     util.cpp
     wav_data.cpp
     crc.cpp
+    web_app.cpp
+    web_server.cpp
 "
 # remove newlines
 export SRCS="$(echo ${SRCS} | sed 's/\n//g')"
@@ -65,16 +67,16 @@ export CC="clang++"
 pkg-config --exists opencv
 if [[ $? == 0 ]]; then
     export IMGFLAG="-DHAS_IMGLIB"
-	export INC="$(pkg-config --cflags opencv)"
-	export IMGLDIR="$(pkg-config --libs-only-L opencv)"
-	export IMGLIBS="$(pkg-config --libs-only-l opencv)"
+        export INC="$(pkg-config --cflags opencv)"
+        export IMGLDIR="$(pkg-config --libs-only-L opencv)"
+        export IMGLIBS="$(pkg-config --libs-only-l opencv)"
 fi
 
 pkg-config --exists sox
 if [[ $? == 0 ]]; then
-	export INC="$(pkg-config --cflags sox)"
-	export IMGLDIR="$IMGLDIR $(pkg-config --libs-only-L sox)"
-	export IMGLIBS="$IMGLIBS $(pkg-config --libs-only-l sox)"
+        export INC="$(pkg-config --cflags sox)"
+        export IMGLDIR="$IMGLDIR $(pkg-config --libs-only-L sox)"
+        export IMGLIBS="$IMGLIBS $(pkg-config --libs-only-l sox)"
 fi
 
 export MEDIAFLAGS="${IMGFLAG}"
@@ -89,14 +91,14 @@ if [ "${HAS_GPU}" = true ] ; then
         export CUDA_ROOT="${which nvcc | sed 's|/bin/nvcc||g'}"
     fi
 
-	export GPUFLAG="-DHAS_GPU"
-	export INC="-I${CUDA_ROOT}/include ${INC}"
-	if [ "$(uname -s)" = "Darwin" ] ; then
-		export LDIR="-L${CUDA_ROOT}/lib ${LDIR}"
-	else
-		export LDIR="-L${CUDA_ROOT}/lib64 ${LDIR}"
+        export GPUFLAG="-DHAS_GPU"
+        export INC="-I${CUDA_ROOT}/include ${INC}"
+        if [ "$(uname -s)" = "Darwin" ] ; then
+                export LDIR="-L${CUDA_ROOT}/lib ${LDIR}"
+        else
+                export LDIR="-L${CUDA_ROOT}/lib64 ${LDIR}"
     fi
-	export LIBS="-lcuda -lcudart ${LIBS}"
+        export LIBS="-lcuda -lcudart ${LIBS}"
 fi
 
 export CFLAGS="${CFLAGS} ${GPUFLAG} ${MEDIAFLAGS}"

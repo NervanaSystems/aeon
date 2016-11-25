@@ -55,23 +55,17 @@ void exit_func(int s)
 
 void page_handler(web::page& page, const std::string& url)
 {
-    using std::chrono::system_clock;
-    system_clock::time_point today = system_clock::now();
-    time_t tt = system_clock::to_time_t ( today );
-
-    page.page_ok();
-    page.output_stream() << "<html>Now is " << ctime(&tt) << "</html>";
+    page.PageOK();
+    page.SendString("<html>Hello World</html>");
 }
 
 void web_server()
 {
     web::server ws;
-    ws.register_page_handler(page_handler);
-    ws.start(8086);
-    cout << __FILE__ << " " << __LINE__ << " web server running " << endl;
+    ws.RegisterPageHandler(page_handler);
+    ws.Start(8086);
     sleep(10);
-    ws.stop();
-    cout << __FILE__ << " " << __LINE__ << " web server stopped" << endl;
+    ws.Stop();
 }
 
 extern "C" int main( int argc, char** argv )
@@ -82,17 +76,19 @@ extern "C" int main( int argc, char** argv )
 //    sigIntHandler.sa_flags = 0;
 //    sigaction(SIGINT, &sigIntHandler, NULL);
 
-//    web_server();
-//    return 0;
 
-    CreateImageDataset();
-    test_cache_directory = nervana::file_util::make_temp_directory();
+//    web_app app;
 
-    ::testing::InitGoogleTest(&argc, argv);
-    int rc = RUN_ALL_TESTS();
+    web_server();
 
-    nervana::file_util::remove_directory(test_cache_directory);
-    DeleteDataset();
+//    CreateImageDataset();
+//    test_cache_directory = nervana::file_util::make_temp_directory();
 
-    return rc;
+//    ::testing::InitGoogleTest(&argc, argv);
+//    int rc = RUN_ALL_TESTS();
+
+//    nervana::file_util::remove_directory(test_cache_directory);
+//    DeleteDataset();
+
+//    return rc;
 }

@@ -59,11 +59,6 @@ void block_loader_nds::load_block(nervana::buffer_in_array& dest, uint32_t block
 {
     if (m_prefetch_pending)
     {
-        //        if(m_async_handler.is_ready())
-        //            cout <<__FILE__ << " " <<__LINE__ << " prefetch ready" << endl;
-        //        else
-        //            cout <<__FILE__ << " " <<__LINE__ << " prefetch busy" << endl;
-
         m_async_handler.wait();
     }
     else
@@ -71,16 +66,14 @@ void block_loader_nds::load_block(nervana::buffer_in_array& dest, uint32_t block
         fetch_block(block_num);
     }
     auto it = m_prefetch_buffer.begin();
-    for (int i = 0; i < block_size(); i++)
+    for (int i = 0; i < block_size() && it != m_prefetch_buffer.end(); i++)
     {
-        if (it != m_prefetch_buffer.end())
+        for (int j = 0; j < dest.size(); j++)
         {
-            for (int j = 0; j < dest.size(); j++)
-            {
-                dest[j]->add_item(move(*it++));
-            }
+            dest[j]->add_item(move(*it++));
         }
     }
+    m_prefetch_buffer.clear();
 }
 
 void block_loader_nds::fetch_block(uint32_t block_num)
@@ -93,6 +86,10 @@ void block_loader_nds::fetch_block(uint32_t block_num)
     get(load_block_url(block_num), cpio_stream);
 
     // parse cpio_stream into dest one record (consisting of multiple elements) at a time
+    cpio_stream.seekg(0, cpio_stream.end);
+    int size = cpio_stream.tellg();
+    cpio_stream.seekg(0, cpio_stream.beg);
+
     nervana::cpio::reader reader(&cpio_stream);
     for (int i = 0; i < reader.itemCount(); ++i)
     {
