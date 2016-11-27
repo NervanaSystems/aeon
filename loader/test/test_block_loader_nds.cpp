@@ -122,7 +122,7 @@ TEST(block_loader_nds, cpio)
 
     client.load_block(dest, 0);
 
-    ASSERT_EQ(dest[0]->get_item_count(), 2);
+    ASSERT_EQ(dest[0]->get_item_count(), 4);
 }
 
 string generate_large_cpio_file()
@@ -149,7 +149,8 @@ string generate_large_cpio_file()
 TEST(block_loader_nds, multiblock_sequential)
 {
     start_server();
-    auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    int block_size = 4;
+    auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, block_size, 1, 0);
     block_iterator_sequential iter(client);
 
     for(int i=0; i<5; i++)
@@ -157,6 +158,9 @@ TEST(block_loader_nds, multiblock_sequential)
         buffer_in_array dest(2);
         iter.read(dest);
         buffer_in* image_array = dest[0];
+        buffer_in* label_array = dest[0];
+        ASSERT_EQ(block_size, image_array->get_item_count());
+        ASSERT_EQ(block_size, label_array->get_item_count());
 
         for (int i=0; i<image_array->get_item_count(); i++)
         {
@@ -169,7 +173,8 @@ TEST(block_loader_nds, multiblock_sequential)
 TEST(block_loader_nds, multiblock_shuffled)
 {
     start_server();
-    auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    int block_size = 4;
+    auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, block_size, 1, 0);
     block_iterator_shuffled iter(client);
 
     for(int i=0; i<5; i++)
@@ -177,6 +182,9 @@ TEST(block_loader_nds, multiblock_shuffled)
         buffer_in_array dest(2);
         iter.read(dest);
         buffer_in* image_array = dest[0];
+        buffer_in* label_array = dest[0];
+        ASSERT_EQ(block_size, image_array->get_item_count());
+        ASSERT_EQ(block_size, label_array->get_item_count());
 
         for (int i=0; i<image_array->get_item_count(); i++)
         {

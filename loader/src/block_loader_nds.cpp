@@ -23,6 +23,7 @@
 #include "json.hpp"
 #include "block_loader_nds.hpp"
 #include "interface.hpp"
+#include "util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -50,7 +51,8 @@ block_loader_nds::block_loader_nds(
     _token(token),
     _collection_id(collection_id),
     _shard_count(shard_count),
-    _shard_index(shard_index)
+    _shard_index(shard_index),
+    m_elements_per_record(0)
 {
     affirm(shard_index < shard_count, "shard index must be less then shard count");
 
@@ -59,10 +61,14 @@ block_loader_nds::block_loader_nds(
 
 block_loader_nds::~block_loader_nds()
 {
+    if(prefetch_pending) {
+        async_handler.wait();
+    }
 }
 
 void block_loader_nds::load_block(nervana::buffer_in_array& dest, uint32_t block_num)
 {
+    m_elements_per_record = dest.size();
     if(prefetch_pending) {
         async_handler.wait();
     } else {
@@ -93,7 +99,7 @@ void block_loader_nds::fetch_block(uint32_t block_num)
 
     // parse cpio_stream into dest one record (consisting of multiple elements) at a time
     nervana::cpio::reader reader(&cpio_stream);
-    for(int i=0; i < reader.itemCount(); ++i) {
+    for(int i=0; i < reader.itemCount() * m_elements_per_record; ++i) {
         vector<char> buffer;
         reader.read(buffer);
         prefetch_buffer.push_back(move(buffer));
@@ -196,10 +202,13 @@ uint32_t block_loader_nds::block_count()
 
 void block_loader_nds::prefetch_block(uint32_t block_num)
 {
-    prefetch_pending = true;
-    prefetch_block_num = block_num;
-    std::function<void(void*)> f = std::bind(&block_loader_nds::prefetch_entry, this, &block_num);
-    async_handler.run(f);
+    if (m_elements_per_record > 0)
+    {
+        prefetch_pending = true;
+        prefetch_block_num = block_num;
+        std::function<void(void*)> f = std::bind(&block_loader_nds::prefetch_entry, this, &block_num);
+        async_handler.run(f);
+    }
 }
 
 void block_loader_nds::prefetch_entry(void* param)

@@ -73,4 +73,5 @@ private:
     std::vector<std::vector<char>> prefetch_buffer;
     uint32_t                                     prefetch_block_num;
     bool                                         prefetch_pending = false;
+    int                                          m_elements_per_record;
 };
