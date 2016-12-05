@@ -30,7 +30,9 @@ public:
     audio_transcriber(nlohmann::json js);
     void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override;
     void post_process(buffer_out_array& out_buf) override;
+    size_t get_input_count() const override;
     const std::unordered_map<char, uint8_t>& get_cmap() const { return trans_config.get_cmap(); }
+
 private:
     audio::config        audio_config;
     char_map::config     trans_config;

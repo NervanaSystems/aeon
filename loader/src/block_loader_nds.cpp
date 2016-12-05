@@ -29,11 +29,11 @@ using namespace nervana;
 
 size_t write_data(void* ptr, size_t size, size_t nmemb, void* stream)
 {
+    stringstream& ss = *(stringstream*)stream;
     // callback used by curl.  writes data from ptr into the
     // stringstream passed in to `stream`.
 
-    string data((const char*)ptr, (size_t)size * nmemb);
-    *((stringstream*)stream) << data;
+    ss.write((const char*)ptr, size * nmemb);
     return size * nmemb;
 }
 
@@ -48,72 +48,78 @@ block_loader_nds::block_loader_nds(const std::string& baseurl, const std::string
 {
     affirm(shard_index < shard_count, "shard index must be less then shard count");
 
+    curl_global_init(CURL_GLOBAL_ALL);
+
     load_metadata();
 }
 
 block_loader_nds::~block_loader_nds()
 {
+    if (m_future.valid())
+    {
+        m_future.wait();
+    }
+    curl_global_cleanup();
 }
 
 void block_loader_nds::load_block(nervana::buffer_in_array& dest, uint32_t block_num)
 {
-    if (m_prefetch_pending)
+    buffer_t buffer;
+    if (m_future.valid())
     {
-        m_async_handler.wait();
+        buffer = m_future.get();
     }
     else
     {
-        fetch_block(block_num);
+        buffer = fetch_block(block_num);
     }
-    auto it = m_prefetch_buffer.begin();
-    for (int i = 0; i < block_size() && it != m_prefetch_buffer.end(); i++)
+    auto it = buffer.begin();
+    for (int i = 0; i < block_size() && it != buffer.end(); i++)
     {
         for (int j = 0; j < dest.size(); j++)
         {
             dest[j]->add_item(move(*it++));
         }
     }
-    m_prefetch_buffer.clear();
 }
 
-void block_loader_nds::fetch_block(uint32_t block_num)
+block_loader_nds::buffer_t block_loader_nds::fetch_block(uint32_t block_num)
 {
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
+    buffer_t rc;
 
     // get data from url and write it into cpio_stream
-    stringstream cpio_stream;
-    get(load_block_url(block_num), cpio_stream);
+    stringstream stream;
+    get(load_block_url(block_num), stream);
 
     // parse cpio_stream into dest one record (consisting of multiple elements) at a time
-    cpio_stream.seekg(0, cpio_stream.end);
-    int size = cpio_stream.tellg();
-    cpio_stream.seekg(0, cpio_stream.beg);
-
-    nervana::cpio::reader reader(&cpio_stream);
-    for (int i = 0; i < reader.itemCount(); ++i)
+    nervana::cpio::reader reader(stream);
+    while (stream)
     {
         vector<char> buffer;
-        reader.read(buffer);
-        m_prefetch_buffer.push_back(move(buffer));
+        string filename = reader.read(buffer);
+        if (filename == cpio::CPIO_TRAILER || filename == cpio::AEON_TRAILER)
+        {
+            break;
+        }
+        rc.push_back(move(buffer));
     }
+    return rc;
 }
 
 void block_loader_nds::get(const string& url, stringstream& stream)
 {
     // reuse curl connection across requests
-    m_curl = curl_easy_init();
+    void* m_curl = curl_easy_init();
 
     // given a url, make an HTTP GET request and fill stream with
     // the body of the response
 
     curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
-    // Prevent "longjmp causes uninitialized stack frame" bug
-    curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1);
-    curl_easy_setopt(m_curl, CURLOPT_ACCEPT_ENCODING, "deflate");
     curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_data);
     curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
+    // curl_easy_setopt(m_curl, CURLOPT_VERBOSE, 1L);
 
     // Perform the request, res will get the return code
     CURLcode res = curl_easy_perform(m_curl);
@@ -201,13 +207,5 @@ uint32_t block_loader_nds::block_count()
 
 void block_loader_nds::prefetch_block(uint32_t block_num)
 {
-    m_prefetch_pending           = true;
-    m_prefetch_block_num         = block_num;
-    std::function<void(void*)> f = std::bind(&block_loader_nds::prefetch_entry, this, &block_num);
-    m_async_handler.run(f);
-}
-
-void block_loader_nds::prefetch_entry(void* param)
-{
-    fetch_block(m_prefetch_block_num);
+    m_future = async(&block_loader_nds::fetch_block, this, block_num);
 }

@@ -19,6 +19,10 @@
 #include <vector>
 #include <memory>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include "dataset.hpp"
 
 class gen_image : public dataset<gen_image>
@@ -37,4 +41,11 @@ private:
     std::vector<unsigned char> render_datum(int datumNumber) override;
 
     std::vector<unsigned char> RenderImage(int number, int label);
+};
+
+class embedded_id_image
+{
+public:
+    static cv::Mat generate_image(int rows, int cols, int embedded_id);
+    static int read_embedded_id(const cv::Mat& image);
 };

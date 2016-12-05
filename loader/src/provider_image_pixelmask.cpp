@@ -29,17 +29,16 @@ image_pixelmask::image_pixelmask(nlohmann::json js)
     , target_transformer(target_config)
     , target_loader(target_config)
 {
-    num_inputs = 2;
-    oshapes.push_back(image_config.get_shape_type());
-    oshapes.push_back(target_config.get_shape_type());
+    m_output_shapes.insert({"image",image_config.get_shape_type()});
+    m_output_shapes.insert({"pixelmask",target_config.get_shape_type()});
 }
 
 void image_pixelmask::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
     std::vector<char>& datum_in   = in_buf[0]->get_item(idx);
     std::vector<char>& target_in  = in_buf[1]->get_item(idx);
-    char*              datum_out  = out_buf[0]->get_item(idx);
-    char*              target_out = out_buf[1]->get_item(idx);
+    char*              datum_out  = out_buf["image"]->get_item(idx);
+    char*              target_out = out_buf["pixelmask"]->get_item(idx);
 
     if (datum_in.size() == 0)
     {
@@ -57,4 +56,9 @@ void image_pixelmask::provide(int idx, buffer_in_array& in_buf, buffer_out_array
     auto target_dec         = target_extractor.extract(target_in.data(), target_in.size());
     auto target_transformed = target_transformer.transform(image_params, target_dec);
     target_loader.load({target_out}, target_transformed);
+}
+
+size_t image_pixelmask::get_input_count() const
+{
+    return 2;
 }

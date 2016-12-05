@@ -15,9 +15,6 @@
 
 #include <iostream>
 #include <sys/stat.h>
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
 
 #include "gen_image.hpp"
 #include "util.hpp"
@@ -69,4 +66,30 @@ vector<unsigned char> gen_image::render_target(int number)
     vector<unsigned char> rc(4);
     nervana::pack<int>((char*)&rc[0], target);
     return rc;
+}
+
+cv::Mat embedded_id_image::generate_image(int rows, int cols, int embedded_id)
+{
+    cv::Mat  image{rows, cols, CV_8UC3};
+    uint8_t* p = image.data;
+    for (int row = 0; row < rows; row++)
+    {
+        for (int col = 0; col < cols; col++)
+        {
+            *p++ = uint8_t(embedded_id >> 16);
+            *p++ = uint8_t(embedded_id >> 8);
+            *p++ = uint8_t(embedded_id >> 0);
+        }
+    }
+    return image;
+}
+
+int embedded_id_image::read_embedded_id(const cv::Mat& image)
+{
+    uint8_t* p = image.data;
+    int      id;
+    id = int(*p++ << 16);
+    id |= int(*p++ << 8);
+    id |= int(*p++ << 0);
+    return id;
 }

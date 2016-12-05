@@ -28,7 +28,6 @@ using namespace nervana;
 block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst, float subset_fraction, uint32_t block_size)
     : block_loader(block_size)
     , m_manifest(mfst)
-    , m_prefetch_pending(false)
 {
     m_elements_per_record = m_manifest->nelements();
     affirm(subset_fraction > 0.0 && subset_fraction <= 1.0, "subset_fraction must be >= 0 and <= 1");
@@ -38,42 +37,40 @@ block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst, flo
 
 void block_loader_file::load_block(nervana::buffer_in_array& dest, uint32_t block_num)
 {
-    if (m_prefetch_pending)
+    buffer_t buffer;
+    if (m_future.valid())
     {
-        m_async_handler.wait();
+        buffer = m_future.get();
     }
     else
     {
-        fetch_block(block_num);
+        buffer = fetch_block(block_num);
     }
-    auto it = m_prefetch_buffer.begin();
-    for (int i = 0; i < block_size(); i++)
+    auto it = buffer.begin();
+    for (int i = 0; i < block_size() && it != buffer.end(); i++)
     {
-        if (it != m_prefetch_buffer.end())
+        for (int j = 0; j < dest.size(); j++)
         {
-            for (int j = 0; j < dest.size(); j++)
+            if (it->second == nullptr)
             {
-                if (it->second == nullptr)
-                {
-                    dest[j]->add_item(move(it->first));
-                }
-                else
-                {
-                    dest[j]->add_exception(it->second);
-                }
-                it++;
+                dest[j]->add_item(move(it->first));
             }
+            else
+            {
+                dest[j]->add_exception(it->second);
+            }
+            it++;
         }
     }
 }
 
-void block_loader_file::fetch_block(uint32_t block_num)
+block_loader_file::buffer_t block_loader_file::fetch_block(uint32_t block_num)
 {
-    m_prefetch_buffer.clear();
     // NOTE: thread safe so long as you aren't modifying the manifest
     // NOTE: dest memory must already be allocated at the correct size
     // NOTE: end_i - begin_i may not be a full block for the last
     // block_num
+    buffer_t rc;
 
     // begin_i and end_i contain the indexes into the manifest file which
     // hold the requested block
@@ -110,14 +107,15 @@ void block_loader_file::fetch_block(uint32_t block_num)
             {
                 vector<char> buffer;
                 load_file(buffer, file_list[i]);
-                m_prefetch_buffer.push_back({buffer, nullptr});
+                rc.push_back({buffer, nullptr});
             }
             catch (std::exception& e)
             {
-                m_prefetch_buffer.push_back({vector<char>(), current_exception()});
+                rc.push_back({vector<char>(), current_exception()});
             }
         }
     }
+    return rc;
 }
 
 void block_loader_file::load_file(vector<char>& buffer, const string& filename)
@@ -136,13 +134,5 @@ uint32_t block_loader_file::object_count()
 
 void block_loader_file::prefetch_block(uint32_t block_num)
 {
-    m_prefetch_pending           = true;
-    m_prefetch_block_num         = block_num;
-    std::function<void(void*)> f = std::bind(&block_loader_file::prefetch_entry, this, &block_num);
-    m_async_handler.run(f);
-}
-
-void block_loader_file::prefetch_entry(void* param)
-{
-    fetch_block(m_prefetch_block_num);
+    m_future = async(&block_loader_file::fetch_block, this, block_num);
 }

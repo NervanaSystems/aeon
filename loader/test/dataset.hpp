@@ -20,6 +20,7 @@
 #include <vector>
 #include <cassert>
 #include <sys/stat.h>
+#include <fstream>
 
 #include "cpio.hpp"
 #include "file_util.hpp"
@@ -85,21 +86,23 @@ public:
                 int         batchSize = std::min(remainder, _maxItems);
                 std::string fileName  = nervana::file_util::path_join(_path, _prefix + std::to_string(fileNo++) + ".cpio");
                 _fileList.push_back(fileName);
-                nervana::cpio::file_writer writer;
-                writer.open(fileName);
-                for (int i = 0; i < batchSize; i++)
+                std::ofstream f(fileName, std::ostream::binary);
+                if (f)
                 {
-                    const std::vector<unsigned char> datum = render_datum(datumNumber);
-                    writer.write_record_element((char*)datum.data(), datum.size(), 0);
+                    nervana::cpio::writer writer{f};
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        const std::vector<unsigned char> datum = render_datum(datumNumber);
+                        writer.write_record_element((char*)datum.data(), datum.size(), 0);
 
-                    const std::vector<unsigned char> target = render_target(datumNumber);
-                    writer.write_record_element((char*)target.data(), target.size(), 1);
+                        const std::vector<unsigned char> target = render_target(datumNumber);
+                        writer.write_record_element((char*)target.data(), target.size(), 1);
 
-                    writer.increment_record_count();
-                    datumNumber++;
+                        writer.increment_record_count();
+                        datumNumber++;
+                    }
+                    remainder -= batchSize;
                 }
-                writer.close();
-                remainder -= batchSize;
             }
         }
         else

@@ -50,29 +50,27 @@ TEST(provider, image)
                          {"label", {{"binary", true}}}};
 
     auto                               media   = nervana::provider_factory::create(js);
-    const vector<nervana::shape_type>& oshapes = media->get_oshapes();
-
-    size_t dsize = oshapes[0].get_byte_size();
-    size_t tsize = 4;
+    auto oshapes = media->get_output_shapes();
 
     size_t batch_size = 128;
 
-    buffer_out_array outBuf({dsize, tsize}, batch_size);
+    buffer_out_array outBuf(oshapes, batch_size);
 
     auto files = image_dataset.GetFiles();
     ASSERT_NE(0, files.size());
 
-    cpio::file_reader reader;
-    EXPECT_EQ(reader.open(files[0]), true);
+    ifstream f(files[0], istream::binary);
+    ASSERT_TRUE(f);
+    cpio::reader reader(f);
     buffer_in_array bp(2);
     buffer_in&      data_p   = *bp[0];
     buffer_in&      target_p = *bp[1];
-    for (int i = 0; i < reader.itemCount() / 2; i++)
+    for (int i = 0; i < reader.record_count() / 2; i++)
     {
         reader.read(data_p);
         reader.read(target_p);
     }
-    EXPECT_GT(data_p.get_item_count(), batch_size);
+    EXPECT_GT(data_p.record_count(), batch_size);
     for (int i = 0; i < batch_size; i++)
     {
         media->provide(i, bp, outBuf);
@@ -83,7 +81,7 @@ TEST(provider, image)
     }
     for (int i = 0; i < batch_size; i++)
     {
-        int target_value = unpack<int>(outBuf[1]->get_item(i));
+        int target_value = unpack<int>(outBuf["label"]->get_item(i));
         EXPECT_EQ(42 + i, target_value);
     }
 }
@@ -160,24 +158,24 @@ TEST(provider, blob)
     }
 
     // setup input and output buffers
-    auto                               media   = nervana::provider_factory::create(js);
-    const vector<nervana::shape_type>& oshapes = media->get_oshapes();
+    auto media   = nervana::provider_factory::create(js);
+    auto oshapes = media->get_output_shapes();
 
     ASSERT_EQ(360, int(js["stereo_image"]["height"]));
     ASSERT_EQ(480, int(js["stereo_image"]["width"]));
     ASSERT_EQ(360 * 480, int(js["blob"]["output_count"]));
     ASSERT_EQ(3, oshapes.size());
 
-    size_t left_size  = oshapes[0].get_byte_size();
-    size_t right_size = oshapes[1].get_byte_size();
-    size_t blob_size  = oshapes[2].get_byte_size();
+    size_t left_size  = media->get_output_shape("image_left").get_byte_size();
+    size_t right_size = media->get_output_shape("image_right").get_byte_size();
+    size_t blob_size  = media->get_output_shape("depthmap").get_byte_size();
     ASSERT_EQ(image_size.area() * 3, left_size);
     ASSERT_EQ(image_size.area() * 3, right_size);
     ASSERT_EQ(480 * 360 * sizeof(float), blob_size);
 
     size_t batch_size = 1;
 
-    buffer_out_array out_buf({left_size, right_size, blob_size}, batch_size);
+    buffer_out_array out_buf(oshapes, batch_size);
     buffer_in_array  in_buf(3);
     in_buf[0]->add_item(input_left);
     in_buf[1]->add_item(input_right);
@@ -186,15 +184,15 @@ TEST(provider, blob)
     // call the provider
     media->provide(0, in_buf, out_buf);
 
-    cv::Mat output_left{image_size, CV_8UC3, out_buf[0]->data()};
+    cv::Mat output_left{image_size, CV_8UC3, out_buf["image_left"]->data()};
     cv::imwrite("output_left.jpg", output_left);
     EXPECT_EQ(image_size, output_left.size());
 
-    cv::Mat output_right{image_size, CV_8UC3, out_buf[1]->data()};
+    cv::Mat output_right{image_size, CV_8UC3, out_buf["image_right"]->data()};
     cv::imwrite("output_right.jpg", output_right);
     EXPECT_EQ(image_size, output_right.size());
 
-    float* fp = (float*)out_buf[2]->data();
+    float* fp = (float*)out_buf["depthmap"]->data();
     for (int i = 0; i < target_data.size(); i++)
     {
         ASSERT_FLOAT_EQ(target_data[i], fp[i]);

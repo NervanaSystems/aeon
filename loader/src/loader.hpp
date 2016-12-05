@@ -21,6 +21,8 @@
 #include <chrono>
 #include <utility>
 #include <algorithm>
+#include <map>
+#include <future>
 
 #include "python_backend.hpp"
 #include "thread_pool_read.hpp"
@@ -38,6 +40,7 @@ namespace nervana
 {
     class loader_config;
     class loader;
+    class dataset_builder;
 }
 
 /* decode_thread_pool
@@ -116,34 +119,88 @@ private:
 class nervana::loader
 {
 public:
-    loader(const char*, PyObject*);
+    enum class BatchMode
+    {
+        INFINITE,
+        ONCE,
+        COUNT
+    };
 
-    virtual ~loader() {}
-    int       start();
-    void      stop();
-    int       reset();
-    PyObject* shapes();
-    PyObject* next(int bufIdx);
+    loader(const std::string&);
+
+    const std::vector<std::string>& get_buffer_names() const;
+    const shape_t& get_shape(const std::string& name) const;
+
+    void set_iterator_count(BatchMode count);
+    void set_iterator_count(size_t count);
 
     int itemCount() { return m_block_loader->object_count(); }
-private:
-    void drain();
+
+    // member typedefs provided through inheriting from std::iterator
+    class iterator : public std::iterator<std::input_iterator_tag, // iterator_category
+                                          buffer_out_array         // value_type
+                                          // long,                    // difference_type
+                                          // const buffer_out*,       // pointer
+                                          // buffer_out               // reference
+                                          >
+    {
+        //        long num = FROM;
+        friend class loader;
+
+    public:
+        explicit iterator(loader& ld, bool m_is_end, size_t num_inputs);
+        ~iterator();
+        iterator& operator++(); // {num = TO >= FROM ? num + 1: num - 1; return *this;}
+        iterator& operator++(int);
+        bool operator==(const iterator& other) const; // {return num == other.num;}
+        bool operator!=(const iterator& other) const; // {return !(*this == other);}
+        const buffer_out_array& operator*() const;    // {return num;}
+    private:
+        iterator() = delete;
+        iterator(const iterator&);
+        void read_input();
+        void fill_buffer();
+
+        loader&                          m_current_loader;
+        const bool                       m_is_end;
+        size_t                           m_num_inputs;
+        std::future<void>                m_async_result;
+        buffer_out_array                 m_output_buffer;
+        size_t                           m_object_count;
+        size_t                           m_position;
+        buffer_in_array                  m_pending_block;
+        BatchMode                        m_batch_mode;
+    };
+
+    iterator begin();
+    iterator end();
 
 private:
-    loader();
-    loader(const loader&);
+    loader() = delete;
 
-    bool m_first              = true;
-    bool m_single_thread_mode = false;
+    friend class nervana::loader::iterator;
 
-    std::shared_ptr<nervana::buffer_pool_in>   m_read_buffers       = nullptr;
-    std::shared_ptr<nervana::buffer_pool_out>  m_decode_buffers     = nullptr;
-    std::unique_ptr<nervana::read_thread_pool> m_read_thread_pool   = nullptr;
-    std::unique_ptr<decode_thread_pool>        m_decode_thread_pool = nullptr;
-    std::shared_ptr<nervana::block_loader>     m_block_loader       = nullptr;
-    std::shared_ptr<nervana::batch_iterator>   m_batch_iterator     = nullptr;
+    bool                                m_single_thread_mode = false;
+    std::shared_ptr<block_loader>       m_block_loader;
+    std::shared_ptr<batch_iterator>     m_batch_iterator;
+    std::shared_ptr<provider_interface> m_provider;
+    int                                 m_batch_size;
+    std::map<std::string, size_t>       m_out_sizes;
+    BatchMode                           m_batch_mode;
+    size_t                              m_batch_count_value;
+};
 
-    int                             m_batch_size;
-    nlohmann::json                  m_lcfg_json;
-    std::shared_ptr<python_backend> m_python_backend;
+class nervana::dataset_builder
+{
+public:
+    dataset_builder& config(const std::string&);
+    dataset_builder& batch_size(size_t);
+    dataset_builder& batch_count(loader::BatchMode);
+    dataset_builder& batch_count(size_t);
+    loader create();
+private:
+    loader::BatchMode      m_batch_mode;
+    size_t          m_batch_count_value;
+    size_t          m_batch_size;
+    std::string     m_config;
 };

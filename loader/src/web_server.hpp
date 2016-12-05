@@ -23,6 +23,7 @@
 #include <memory.h>
 #include <streambuf>
 #include <iostream>
+#include <map>
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -69,11 +70,13 @@ private:
 
     connection();
 
-    int     m_socket;
-    std::ostream    m_ostream;
-    std::istream    m_istream;
+    int               m_socket;
+    std::ostream      m_ostream;
+    std::istream      m_istream;
     const std::size_t m_put_back;
     std::vector<char> m_char_buffer;
+    bool              m_is_server;
+    uint16_t          m_listening_port;
 };
 
 class web::server
@@ -106,6 +109,7 @@ private:
     page_request_handler                  m_page_handler;
     error_message_handler                 m_error_handler;
     bool                                  m_active;
+    bool                                  m_single_thread = true;
 };
 
 class web::page
@@ -129,23 +133,22 @@ public:
     void send_ascii_string(const std::string& string);
     void dump_data(const char* buffer, size_t length);
     bool send_file(const std::string& filename);
+    bool send_as_file(const char* buffer, size_t length);
 
     void page_ok(const char* mimeType = "text/html");
     void page_not_found();
     void page_no_content();
     void page_unauthorized();
 
-    void parse_arg(const std::string& arg, std::string& name, std::string& value);
-
     void master_page_file(const std::string& path, const std::string& marker, marker_content);
     void master_page_string(const std::string& path, const std::string& marker, marker_content);
 
     void flush();
 
-    const std::vector<std::string>& args() const;
-    const std::string& content_type() const;
-    const size_t content_length() const;
-    tcp::connection& connection();
+    const std::map<std::string,std::string>& args() const;
+    const std::string&              content_type() const;
+    const size_t                    content_length() const;
+    tcp::connection&                connection();
 
     page();
 
@@ -161,9 +164,9 @@ private:
     std::string                           m_url;
     std::string                           m_content_type;
     int                                   m_content_length;
-    std::vector<std::string>              m_args;
+    std::map<std::string,std::string>     m_args;
     std::shared_ptr<web::tcp::connection> m_connection;
-    std::thread m_thread;
-    server*     m_server;
-    bool        m_http_header_sent;
+    std::thread                           m_thread;
+    server*                               m_server;
+    bool                                  m_http_header_sent;
 };

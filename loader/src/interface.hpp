@@ -80,11 +80,11 @@ class nervana::interface::config
 {
 public:
     config() {}
-    const nervana::shape_type& get_shape_type() const
+    const nervana::shape_type& get_shape_type(size_t index = 0) const
     {
-        if (shape_type_list.empty())
-            throw std::runtime_error("config missing output shape");
-        return shape_type_list[0];
+        if (index >= shape_type_list.size())
+            throw std::out_of_range("config output shape index out of range");
+        return shape_type_list[index];
     }
     const std::vector<nervana::shape_type>& get_shape_type_list() const { return shape_type_list; }
     void verify_config(const std::string& location, const std::vector<std::shared_ptr<interface::config_info_interface>>& config,

@@ -13,6 +13,8 @@
  limitations under the License.
 */
 
+// https://people.freebsd.org/~kientzle/libarchive/man/cpio.5.txt
+
 #include "cpio.hpp"
 #include "util.hpp"
 
@@ -69,12 +71,12 @@ cpio::record_header::record_header()
     memset((void*)m_filesize, 0, 2 * sizeof(short));
 }
 
-void cpio::record_header::loadDoubleShort(uint32_t* dst, ushort src[2])
+void cpio::record_header::load_double_short(uint32_t* dst, ushort src[2])
 {
     *dst = ((uint32_t)src[0]) << 16 | (uint32_t)src[1];
 }
 
-void cpio::record_header::saveDoubleShort(ushort* dst, uint32_t src)
+void cpio::record_header::save_double_short(ushort* dst, uint32_t src)
 {
     dst[0] = (ushort)(src >> 16);
     dst[1] = (ushort)src;
@@ -93,12 +95,16 @@ void cpio::record_header::read(istream& ifs, uint32_t* fileSize)
     read_single_value(ifs, &m_rdev);
     uint32_t mtime;
     read_single_value(ifs, &m_mtime);
-    loadDoubleShort(&mtime, m_mtime);
+    load_double_short(&mtime, m_mtime);
     read_single_value(ifs, &m_namesize);
     read_single_value(ifs, &m_filesize);
-    loadDoubleShort(fileSize, m_filesize);
-    // Skip over filename.
-    ifs.seekg(m_namesize, ifs.cur);
+    load_double_short(fileSize, m_filesize);
+
+    auto buffer = new char[m_namesize];
+    ifs.read(buffer, m_namesize);
+    m_filename = string(buffer, m_namesize-1);
+    delete[] buffer;
+
     readPadding(ifs, m_namesize);
 }
 
@@ -115,78 +121,82 @@ void cpio::record_header::write(ostream& ofs, uint32_t fileSize, const char* fil
     write_single_value(ofs, &m_rdev);
     time_t mtime;
     time(&mtime);
-    saveDoubleShort(m_mtime, mtime);
+    save_double_short(m_mtime, mtime);
     write_single_value(ofs, &m_mtime);
     write_single_value(ofs, &m_namesize);
-    saveDoubleShort(m_filesize, fileSize);
+    save_double_short(m_filesize, fileSize);
     write_single_value(ofs, &m_filesize);
     // Write filename.
     ofs.write((char*)fileName, m_namesize);
     writePadding(ofs, m_namesize);
 }
 
-cpio::header::header()
-    : m_formatVersion(FORMAT_VERSION)
-    , m_writerVersion(WRITER_VERSION)
-    , m_itemCount(0)
+cpio::file_header::file_header()
+    : m_format_version(FORMAT_VERSION)
+    , m_writer_version(WRITER_VERSION)
+    , m_record_count(0)
+    , m_elements_per_record(0)
 {
-    memset(m_dataType, 0, sizeof(m_dataType));
+    memset(m_data_type, 0, sizeof(m_data_type));
     memset(m_unused, 0, sizeof(m_unused));
 }
 
-void cpio::header::read(istream& ifs)
+void cpio::file_header::read(istream& ifs)
 {
     read_single_value(ifs, &m_magic);
     if (strncmp(m_magic, MAGIC_STRING, 4) != 0)
     {
         throw std::runtime_error("Unrecognized format\n");
     }
-    read_single_value(ifs, &m_formatVersion);
-    read_single_value(ifs, &m_writerVersion);
-    read_single_value(ifs, &m_dataType);
-    read_single_value(ifs, &m_itemCount);
+    read_single_value(ifs, &m_format_version);
+    read_single_value(ifs, &m_writer_version);
+    read_single_value(ifs, &m_data_type);
+    read_single_value(ifs, &m_record_count);
+    read_single_value(ifs, &m_elements_per_record);
     read_single_value(ifs, &m_unused);
 }
 
-void cpio::header::write(ostream& ofs)
+void cpio::file_header::write(ostream& ofs)
 {
-    ofs.write((char*)MAGIC_STRING, strlen(MAGIC_STRING));
-    write_single_value(ofs, &m_formatVersion);
-    write_single_value(ofs, &m_writerVersion);
-    write_single_value(ofs, &m_dataType);
-    write_single_value(ofs, &m_itemCount);
+    ofs.write(MAGIC_STRING, strlen(MAGIC_STRING));
+    write_single_value(ofs, &m_format_version);
+    write_single_value(ofs, &m_writer_version);
+    write_single_value(ofs, &m_data_type);
+    write_single_value(ofs, &m_record_count);
+    write_single_value(ofs, &m_elements_per_record);
     write_single_value(ofs, &m_unused);
 }
 
-cpio::trailer::trailer()
+cpio::file_trailer::file_trailer()
 {
     memset(m_unused, 0, sizeof(m_unused));
 }
 
-void cpio::trailer::write(ostream& ofs)
+void cpio::file_trailer::write(ostream& ofs)
 {
     write_single_value(ofs, &m_unused);
 }
 
-void cpio::trailer::read(istream& ifs)
+void cpio::file_trailer::read(istream& ifs)
 {
     read_single_value(ifs, &m_unused);
 }
 
-cpio::reader::reader()
+cpio::reader::reader(istream& is)
+    : m_is{is}
 {
+    read_header();
 }
 
-cpio::reader::reader(istream* is)
+cpio::reader::~reader()
 {
-    m_is = is;
-    readHeader();
+    close();
 }
 
-void cpio::reader::readHeader()
+void cpio::reader::read_header()
 {
     uint32_t fileSize;
-    m_recordHeader.read(*m_is, &fileSize);
+    m_record_header.read(m_is, &fileSize);
     if (fileSize != sizeof(m_header))
     {
         stringstream ss;
@@ -195,117 +205,79 @@ void cpio::reader::readHeader()
         throw std::runtime_error(ss.str());
     }
 
-    m_header.read(*m_is);
+    m_header.read(m_is);
 }
 
 void cpio::reader::read(nervana::buffer_in& dest)
 {
     uint32_t element_size;
-    m_recordHeader.read(*m_is, &element_size);
-    dest.read(*m_is, element_size);
-    readPadding(*m_is, element_size);
+    m_record_header.read(m_is, &element_size);
+    dest.read(m_is, element_size);
+    readPadding(m_is, element_size);
 }
 
-void cpio::reader::read(vector<char>& dest)
+string cpio::reader::read(vector<char>& dest)
 {
     uint32_t element_size;
-    m_recordHeader.read(*m_is, &element_size);
+    m_record_header.read(m_is, &element_size);
     dest.reserve(element_size);
     dest.resize(element_size);
-    m_is->read(dest.data(), dest.size());
-    readPadding(*m_is, element_size);
+    m_is.read(dest.data(), dest.size());
+    readPadding(m_is, element_size);
+    return m_record_header.m_filename;
 }
 
-int cpio::reader::itemCount()
+int cpio::reader::record_count()
 {
-    return m_header.m_itemCount;
+    return m_header.m_record_count;
 }
 
-cpio::file_reader::file_reader()
+void cpio::reader::close()
 {
 }
 
-cpio::file_reader::~file_reader()
+cpio::writer::writer(ostream& stream)
+    : m_ofs{stream}
 {
-    close();
-}
-
-bool cpio::file_reader::open(const string& fileName)
-{
-    // returns true if file was opened successfully.
-    bool rc = false;
-    m_ifs.open(fileName, istream::binary);
-    if (m_ifs)
-    {
-        m_is = &m_ifs;
-        readHeader();
-        rc = true;
-    }
-
-    return rc;
-}
-
-void cpio::file_reader::close()
-{
-    if (m_ifs.is_open() == true)
-    {
-        m_ifs.close();
-    }
-}
-
-cpio::file_writer::~file_writer()
-{
-    close();
-}
-
-void cpio::file_writer::open(const std::string& fileName, const std::string& dataType)
-{
+    string dataType = "";
     static_assert(sizeof(m_header) == 64, "file header is not 64 bytes");
-    m_fileName = fileName;
-    m_tempName = fileName + ".tmp";
-    m_ofs.open(m_tempName, ostream::binary);
-    m_recordHeader.write(m_ofs, 64, "cpiohdr");
+    m_recordHeader.write(m_ofs, 64, AEON_HEADER);
     m_fileHeaderOffset = m_ofs.tellp();
-    memset(m_header.m_dataType, ' ', sizeof(m_header.m_dataType));
-    memcpy(m_header.m_dataType, dataType.c_str(), std::min(8, (int)dataType.length()));
+    memset(m_header.m_data_type, ' ', sizeof(m_header.m_data_type));
+    memcpy(m_header.m_data_type, dataType.c_str(), std::min(8, (int)dataType.length()));
     // This will be incomplete until the write on close()
     m_header.write(m_ofs);
 }
 
-void cpio::file_writer::close()
+cpio::writer::~writer()
 {
-    if (m_ofs.is_open() == true)
+    if (m_ofs)
     {
         // Write the trailer.
         static_assert(sizeof(m_trailer) == 16, "file trailer is not 16 bytes");
-        m_recordHeader.write(m_ofs, 16, "cpiotlr");
+        m_recordHeader.write(m_ofs, 16, AEON_TRAILER);
         m_trailer.write(m_ofs);
-        m_recordHeader.write(m_ofs, 0, CPIO_FOOTER);
+        m_recordHeader.write(m_ofs, 0, CPIO_TRAILER);
         // Need to write back the max size values before cleaning up
         m_ofs.seekp(m_fileHeaderOffset, m_ofs.beg);
         m_header.write(m_ofs);
-        m_ofs.close();
-        int result = rename(m_tempName.c_str(), m_fileName.c_str());
-        if (result != 0)
-        {
-            stringstream ss;
-            ss << "Could not create " << m_fileName;
-            ss << ": " << strerror(result);
-            throw std::runtime_error(ss.str());
-        }
     }
 }
 
-void cpio::file_writer::write_all_records(nervana::buffer_in_array& buff)
+void cpio::writer::write_all_records(nervana::buffer_in_array& buff)
 {
-    int num_records = buff[0]->get_item_count();
-    for (int i = 0; i < num_records; ++i)
+    int record_count = buff[0]->record_count();
+    if (m_header.m_elements_per_record == 0)
+    {
+        m_header.m_elements_per_record = record_count;
+    }
+    for (int i = 0; i < record_count; ++i)
     {
         write_record(buff, i);
     }
 }
 
-void cpio::file_writer::write_record(nervana::buffer_in_array& buff, int record_idx)
+void cpio::writer::write_record(nervana::buffer_in_array& buff, int record_idx)
 {
     uint32_t element_idx = 0;
     for (auto b : buff)
@@ -316,10 +288,10 @@ void cpio::file_writer::write_record(nervana::buffer_in_array& buff, int record_
     increment_record_count();
 }
 
-void cpio::file_writer::write_record_element(const char* elem, uint32_t elem_size, uint32_t element_idx)
+void cpio::writer::write_record_element(const char* elem, uint32_t elem_size, uint32_t element_idx)
 {
     char fileName[16];
-    snprintf(fileName, sizeof(fileName), "rec_%07d.%02d", m_header.m_itemCount, element_idx);
+    snprintf(fileName, sizeof(fileName), "rec_%07d.%02d", m_header.m_record_count, element_idx);
     m_recordHeader.write(m_ofs, elem_size, fileName);
     m_ofs.write(elem, elem_size);
     writePadding(m_ofs, elem_size);

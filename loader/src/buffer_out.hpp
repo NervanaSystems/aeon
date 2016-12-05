@@ -18,6 +18,10 @@
 #include <vector>
 #include <cstring>
 #include <initializer_list>
+#include <iostream>
+
+#include "util.hpp"
+#include "typemap.hpp"
 
 #if HAS_GPU
 #include <cuda.h>
@@ -32,13 +36,14 @@ namespace nervana
 class nervana::buffer_out
 {
 public:
-    explicit buffer_out(size_t element_size, size_t batch_size, bool pinned = false);
+    explicit buffer_out(const std::string& name, size_t element_size, size_t batch_size, bool pinned = false);
     virtual ~buffer_out();
 
+    const char* get_item(size_t index) const;
     char* get_item(size_t index);
     char*  data() { return m_data; }
-    size_t get_item_count();
-    size_t size();
+    size_t record_count() const;
+    size_t size() const;
 
 private:
     buffer_out() = delete;
@@ -57,11 +62,19 @@ private:
 class nervana::buffer_out_array
 {
 public:
-    buffer_out_array(const std::vector<size_t>& write_sizes, size_t batch_size, bool pinned = false)
+    buffer_out_array(const std::map<std::string, size_t>& write_sizes, size_t batch_size, bool pinned = false)
     {
         for (auto sz : write_sizes)
         {
-            m_data.push_back(new buffer_out(sz, batch_size, pinned));
+            m_data.insert({sz.first, new buffer_out(sz.first, sz.second, batch_size, pinned)});
+        }
+    }
+
+    buffer_out_array(const std::map<std::string, shape_type>& write_sizes, size_t batch_size, bool pinned = false)
+    {
+        for (auto sz : write_sizes)
+        {
+            m_data.insert({sz.first, new buffer_out(sz.first, sz.second.get_byte_size(), batch_size, pinned)});
         }
     }
 
@@ -69,12 +82,30 @@ public:
     {
         for (auto buf : m_data)
         {
-            delete buf;
+            delete buf.second;
         }
     }
 
-    buffer_out* operator[](size_t i) { return m_data[i]; }
-    size_t                        size() const { return m_data.size(); }
+    const buffer_out* operator[](const std::string& name) const
+    {
+        auto it = m_data.find(name);
+        return (it == m_data.end() ? nullptr : it->second);
+    }
+
+    buffer_out* operator[](const std::string& name)
+    {
+        auto it = m_data.find(name);
+        return (it == m_data.end() ? nullptr : it->second);
+    }
+
+    size_t size() const
+    {
+        return m_data.size();
+    }
 private:
-    std::vector<buffer_out*> m_data;
+    // these must be defined because buffer_out_array[0] is resolved to call the string method
+    const buffer_out* operator[](int) const = delete;
+    buffer_out* operator[](int) = delete;
+
+    std::map<std::string, buffer_out*> m_data;
 };

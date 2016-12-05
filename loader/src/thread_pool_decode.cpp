@@ -130,7 +130,7 @@ void decode_thread_pool::work(int id)
     // No locking required because threads write into non-overlapping regions.
     try
     {
-        affirm((*m_input_buf)[0]->get_item_count() != 0, "input buffer to decoded_thread_pool is empty");
+        affirm((*m_input_buf)[0]->record_count() != 0, "input buffer to decoded_thread_pool is empty");
 
         for (int i = m_start_inds[id]; i < m_end_inds[id]; i++)
         {

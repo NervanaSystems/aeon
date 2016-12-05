@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 #include "cpio.hpp"
 #include "buffer_in.hpp"
+#include "util.hpp"
 
 #define private public
 
@@ -29,13 +30,34 @@ using namespace nervana;
 
 TEST(cpio, read_nds)
 {
-    cpio::file_reader reader;
 
-    reader.open(CURDIR "/test_data/test.cpio");
-    EXPECT_EQ(1, reader.itemCount());
+    ifstream f(CURDIR "/test_data/test.cpio", istream::binary);
+    ASSERT_TRUE(f);
+    cpio::reader reader(f);
+    EXPECT_EQ(1, reader.record_count());
 
     nervana::buffer_in buffer;
-    EXPECT_EQ(0, buffer.get_item_count());
+    EXPECT_EQ(0, buffer.record_count());
     reader.read(buffer);
-    EXPECT_EQ(1, buffer.get_item_count());
+    EXPECT_EQ(1, buffer.record_count());
+}
+
+TEST(cpio,write_string)
+{
+    int record_count = 10;
+    stringstream ss;
+    {
+        vector<char> image_data(32);
+        vector<char> label_data(4);
+        cpio::writer writer(ss);
+        for (int i=0; i<record_count; i++)
+        {
+            buffer_in_array bin{2};
+            bin[0]->add_item(image_data);
+            bin[1]->add_item(label_data);
+            writer.write_all_records(bin);
+        }
+    }
+    cpio::reader reader(ss);
+    EXPECT_EQ(record_count, reader.record_count());
 }

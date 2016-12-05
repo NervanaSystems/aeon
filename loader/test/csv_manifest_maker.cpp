@@ -22,8 +22,13 @@
 #include <cstdio>
 #include <unistd.h>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include "csv_manifest_maker.hpp"
 #include "file_util.hpp"
+#include "gen_image.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -31,6 +36,11 @@ using namespace nervana;
 manifest_maker::manifest_maker(uint32_t num_records, std::vector<uint32_t> sizes)
 {
     manifest_name = tmp_manifest_file(num_records, sizes);
+}
+
+manifest_maker::manifest_maker(uint32_t record_count, int height, int width)
+{
+    manifest_name = image_manifest(record_count, height, width);
 }
 
 manifest_maker::manifest_maker()
@@ -55,19 +65,45 @@ void manifest_maker::remove_files()
     }
 }
 
-string manifest_maker::tmp_filename()
+string manifest_maker::tmp_filename(const string& extension)
 {
-    string tmpname = file_util::tmp_filename();
+    string tmpname = file_util::tmp_filename(extension);
     tmp_filenames.push_back(tmpname);
     return tmpname;
 }
 
-string manifest_maker::tmp_manifest_file(uint32_t num_records, vector<uint32_t> sizes)
+string manifest_maker::image_manifest(uint32_t record_count, int height, int width)
+{
+    string   tmpname = tmp_filename();
+    ofstream f_manifest(tmpname);
+
+    for (uint32_t i = 0; i < record_count; ++i)
+    {
+        cv::Mat mat = embedded_id_image::generate_image(height, width, i);
+//        cv::Mat mat{height, width, CV_8UC3};
+//        mat = cv::Scalar(0,0,0);
+        string image_path = tmp_filename(".png");
+        string target_path = tmp_filename();
+        f_manifest << image_path << ',' << target_path << '\n';
+        cv::imwrite(image_path, mat);
+        {
+            ofstream f(target_path);
+            int value = 0;
+            f.write((const char*)&value, sizeof(value));
+        }
+    }
+
+    f_manifest.close();
+
+    return tmpname;
+}
+
+string manifest_maker::tmp_manifest_file(uint32_t record_count, vector<uint32_t> sizes)
 {
     string   tmpname = tmp_filename();
     ofstream f(tmpname);
 
-    for (uint32_t i = 0; i < num_records; ++i)
+    for (uint32_t i = 0; i < record_count; ++i)
     {
         // stick a unique uint32_t into each file
         for (uint32_t j = 0; j < sizes.size(); ++j)
@@ -79,7 +115,7 @@ string manifest_maker::tmp_manifest_file(uint32_t num_records, vector<uint32_t> 
 
             f << tmp_file_repeating(sizes[j], (i * sizes.size()) + j);
         }
-        f << endl;
+        f << '\n';
     }
 
     f.close();

@@ -17,6 +17,7 @@
 
 #include <sstream>
 #include <string>
+#include <future>
 
 #include "buffer_in.hpp"
 #include "cpio.hpp"
@@ -43,14 +44,15 @@ public:
     uint32_t block_count();
 
 private:
+    typedef std::vector<std::vector<char>> buffer_t;
+
     void load_metadata();
 
     void get(const std::string& url, std::stringstream& stream);
 
     const std::string load_block_url(uint32_t block_num);
     const std::string metadata_url();
-    void prefetch_entry(void* param);
-    void fetch_block(uint32_t block_num);
+    buffer_t fetch_block(uint32_t block_num);
 
     const std::string m_baseurl;
     const std::string m_token;
@@ -59,12 +61,5 @@ private:
     const int         m_shard_index;
     unsigned int      m_object_count;
     unsigned int      m_block_count;
-
-    // reuse connection across requests
-    void* m_curl;
-
-    async                          m_async_handler;
-    std::vector<std::vector<char>> m_prefetch_buffer;
-    uint32_t                       m_prefetch_block_num;
-    bool                           m_prefetch_pending = false;
+    std::future<buffer_t>  m_future;
 };

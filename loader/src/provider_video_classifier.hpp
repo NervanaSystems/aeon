@@ -29,6 +29,7 @@ class nervana::video_classifier : public provider_interface
 public:
     video_classifier(nlohmann::json js);
     void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf);
+    size_t get_input_count() const override;
 
 private:
     video::config        video_config;

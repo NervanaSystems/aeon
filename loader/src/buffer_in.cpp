@@ -73,7 +73,7 @@ void buffer_in::add_exception(std::exception_ptr e)
     m_buffers.push_back(empty);
 }
 
-int buffer_in::get_item_count()
+int buffer_in::record_count()
 {
     return m_buffers.size();
 }

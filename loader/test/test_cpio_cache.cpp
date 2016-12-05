@@ -28,6 +28,7 @@
 #include "file_util.hpp"
 #include "block_loader_file.hpp"
 #include "block_loader_cpio_cache.hpp"
+#include "gen_image.hpp"
 
 #define private public
 
@@ -35,32 +36,6 @@ using namespace std;
 using namespace nervana;
 
 extern string test_cache_directory;
-
-cv::Mat generate_test_image(int rows, int cols, int embedded_id)
-{
-    cv::Mat  image{rows, cols, CV_8UC3};
-    uint8_t* p = image.data;
-    for (int row = 0; row < rows; row++)
-    {
-        for (int col = 0; col < cols; col++)
-        {
-            *p++ = uint8_t(embedded_id >> 16);
-            *p++ = uint8_t(embedded_id >> 8);
-            *p++ = uint8_t(embedded_id >> 0);
-        }
-    }
-    return image;
-}
-
-int read_embedded_id(const cv::Mat& image)
-{
-    uint8_t* p = image.data;
-    int      id;
-    id = int(*p++ << 16);
-    id |= int(*p++ << 8);
-    id |= int(*p++ << 0);
-    return id;
-}
 
 class manifest_manager
 {
@@ -74,7 +49,7 @@ public:
         ofstream mfile(manifest_filename);
         for (size_t i = 0; i < count; i++)
         {
-            cv::Mat image           = generate_test_image(rows, cols, i);
+            cv::Mat image           = embedded_id_image::generate_image(rows, cols, i);
             string  number          = to_string(i);
             string  image_filename  = file_util::path_join(source_directory, "image" + number + ".png");
             string  target_filename = file_util::path_join(source_directory, "target" + number + ".txt");

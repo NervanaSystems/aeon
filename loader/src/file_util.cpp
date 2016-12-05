@@ -129,7 +129,7 @@ string nervana::file_util::make_temp_directory(const string& path)
 
 std::string nervana::file_util::get_temp_directory()
 {
-    const vector<string> potential_tmps = {"TMPDIR", "TMP", "TEMP", "TEMPDIR"};
+    const vector<string> potential_tmps = {"NERVANA_AEON_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
 
     const char* path;
     for (const string& var : potential_tmps)

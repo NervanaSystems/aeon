@@ -14,18 +14,3 @@
 */
 
 #pragma once
-#include "cpio.hpp"
-#include "loader.hpp"
-
-extern "C" {
-static std::string last_error_message;
-
-extern const char* get_error_message();
-extern int         error();
-extern void* start(const char* loaderConfigString, PyObject* pbackend);
-extern PyObject* next(nervana::loader* data_loader, int bufIdx);
-extern int reset(nervana::loader* data_loader);
-extern int stop(nervana::loader* data_loader);
-extern int itemCount(nervana::loader* data_loader);
-extern PyObject* shapes(nervana::loader* data_loader);
-}

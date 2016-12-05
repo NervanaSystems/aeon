@@ -145,23 +145,24 @@ void python_backend::call_backend_transfer(buffer_out_array& outBuf, int bufIdx)
     affirm(m_host_lists.size() == m_oshape_types.size(), "host lists size does not match oshape size");
     affirm(m_dev_lists.size() == m_host_lists.size(), "dev list size does not match host lists size");
 
-    for (uint32_t i = 0; i < m_host_lists.size(); i++)
-    {
-        wrap_buffer_pool(m_host_lists[i], outBuf[i], bufIdx, m_oshape_types[i]);
-        PyObject* pArgs = Py_BuildValue("iOO", bufIdx, m_host_lists[i], m_dev_lists[i]);
+#warning FIX THIS OR GET RID OF PYTHON_BACKEND
+//    for (uint32_t i = 0; i < m_host_lists.size(); i++)
+//    {
+//        wrap_buffer_pool(m_host_lists[i], outBuf[i], bufIdx, m_oshape_types[i]);
+//        PyObject* pArgs = Py_BuildValue("iOO", bufIdx, m_host_lists[i], m_dev_lists[i]);
 
-        if (pArgs == NULL)
-        {
-            throw std::runtime_error("Unable to build args");
-        }
-        PyObject* pRes = PyObject_CallObject(m_f_consume, pArgs);
-        if (!pRes)
-        {
-            PyErr_Print();
-        }
-        Py_XDECREF(pArgs);
-        Py_XDECREF(pRes);
-    }
+//        if (pArgs == NULL)
+//        {
+//            throw std::runtime_error("Unable to build args");
+//        }
+//        PyObject* pRes = PyObject_CallObject(m_f_consume, pArgs);
+//        if (!pRes)
+//        {
+//            PyErr_Print();
+//        }
+//        Py_XDECREF(pArgs);
+//        Py_XDECREF(pRes);
+//    }
 }
 
 PyObject* python_backend::get_host_tuple(int bufIdx)

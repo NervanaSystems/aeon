@@ -28,15 +28,14 @@ audio_transcriber::audio_transcriber(nlohmann::json js)
     , trans_extractor(trans_config)
     , trans_loader(trans_config)
 {
-    num_inputs = 2;
-    oshapes.push_back(audio_config.get_shape_type());
-    oshapes.push_back(trans_config.get_shape_type());
+    m_output_shapes.insert({"audio",audio_config.get_shape_type()});
+    m_output_shapes.insert({"transcription",trans_config.get_shape_type()});
 
     shape_type trans_length({1, 1}, output_type("uint32_t"));
-    oshapes.push_back(trans_length);
+    m_output_shapes.insert({"trans_length", trans_length});
 
     shape_type valid_pct({1, 1}, output_type("uint32_t"));
-    oshapes.push_back(valid_pct);
+    m_output_shapes.insert({"valid_pct", valid_pct});
 }
 
 void audio_transcriber::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
@@ -44,10 +43,10 @@ void audio_transcriber::provide(int idx, buffer_in_array& in_buf, buffer_out_arr
     vector<char>& datum_in  = in_buf[0]->get_item(idx);
     vector<char>& target_in = in_buf[1]->get_item(idx);
 
-    char* datum_out  = out_buf[0]->get_item(idx);
-    char* target_out = out_buf[1]->get_item(idx);
-    char* length_out = out_buf[2]->get_item(idx);
-    char* valid_out  = out_buf[3]->get_item(idx);
+    char* datum_out  = out_buf["audio"]->get_item(idx);
+    char* target_out = out_buf["transcription"]->get_item(idx);
+    char* length_out = out_buf["trans_length"]->get_item(idx);
+    char* valid_out  = out_buf["valid_pct"]->get_item(idx);
 
     // Process audio data
     auto audio_dec    = audio_extractor.extract(datum_in.data(), datum_in.size());
@@ -69,20 +68,27 @@ void audio_transcriber::provide(int idx, buffer_in_array& in_buf, buffer_out_arr
     pack(valid_out, valid_pct);
 }
 
+size_t audio_transcriber::get_input_count() const
+{
+    return 2;
+}
+
 void audio_transcriber::post_process(buffer_out_array& out_buf)
 {
+    auto transcription = out_buf["transcription"];
+    auto trans_length = out_buf["trans_length"];
     if (trans_config.pack_for_ctc)
     {
-        auto     num_items  = out_buf[1]->get_item_count();
-        char*    dptr       = out_buf[1]->data();
+        auto     num_items  = transcription->record_count();
+        char*    dptr       = transcription->data();
         uint32_t packed_len = 0;
 
         for (int i = 0; i < num_items; i++)
         {
-            uint32_t len = unpack<uint32_t>(out_buf[2]->get_item(i));
-            memmove(dptr + packed_len, out_buf[1]->get_item(i), len);
+            uint32_t len = unpack<uint32_t>(trans_length->get_item(i));
+            memmove(dptr + packed_len, transcription->get_item(i), len);
             packed_len += len;
         }
-        memset(dptr + packed_len, 0, out_buf[1]->size() - packed_len);
+        memset(dptr + packed_len, 0, transcription->size() - packed_len);
     }
 }

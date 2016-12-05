@@ -232,14 +232,14 @@ TEST(pixel_mask, load_int)
 //        target_p.add_item(annot_data);
 //    }
 
-//    EXPECT_EQ(data_p.get_item_count(), batch_size);
-//    EXPECT_EQ(target_p.get_item_count(), batch_size);
+//    EXPECT_EQ(data_p.record_count(), batch_size);
+//    EXPECT_EQ(target_p.record_count(), batch_size);
 
-//    ASSERT_EQ(2, media->get_oshapes().size());
+//    ASSERT_EQ(2, media->get_output_shapes().size());
 
 //    // Generate output buffers using shapes from the provider
-//    buffer_out_array outBuf({media->get_oshapes()[0].get_byte_size(),
-//                             media->get_oshapes()[1].get_byte_size()},
+//    buffer_out_array outBuf({media->get_output_shapes()[0].get_byte_size(),
+//                             media->get_output_shapes()[1].get_byte_size()},
 //                            batch_size);
 
 //    // Call the provider

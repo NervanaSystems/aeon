@@ -29,10 +29,19 @@ image_localization::image_localization(nlohmann::json js)
     , localization_transformer(localization_config)
     , localization_loader(localization_config)
 {
-    num_inputs = 2;
-    oshapes.push_back(image_config.get_shape_type());
+    m_output_shapes.insert({"image",image_config.get_shape_type()});
+
     auto os = localization_config.get_shape_type_list();
-    oshapes.insert(oshapes.end(), os.begin(), os.end());
+    m_output_shapes.insert({"bbtargets",      os[0]});
+    m_output_shapes.insert({"bbtargets_mask", os[1]});
+    m_output_shapes.insert({"labels_flat",    os[2]});
+    m_output_shapes.insert({"labels_mask",    os[3]});
+    m_output_shapes.insert({"image_shape",    os[4]});
+    m_output_shapes.insert({"gt_boxes",       os[5]});
+    m_output_shapes.insert({"gt_box_count",   os[6]});
+    m_output_shapes.insert({"gt_class_count", os[7]});
+    m_output_shapes.insert({"image_scale",    os[8]});
+    m_output_shapes.insert({"difficult_flag", os[9]});
 }
 
 void image_localization::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
@@ -40,20 +49,20 @@ void image_localization::provide(int idx, buffer_in_array& in_buf, buffer_out_ar
     vector<char>& datum_in  = in_buf[0]->get_item(idx);
     vector<char>& target_in = in_buf[1]->get_item(idx);
 
-    char* datum_out            = out_buf[0]->get_item(idx);
-    char* y_bbtargets_out      = out_buf[1]->get_item(idx);
-    char* y_bbtargets_mask_out = out_buf[2]->get_item(idx);
-    char* y_labels_flat_out    = out_buf[3]->get_item(idx);
-    char* y_labels_mask_out    = out_buf[4]->get_item(idx);
-    char* im_shape_out         = out_buf[5]->get_item(idx);
-    char* gt_boxes_out         = out_buf[6]->get_item(idx);
-    char* num_gt_boxes_out     = out_buf[7]->get_item(idx);
-    char* gt_classes_out       = out_buf[8]->get_item(idx);
-    char* im_scale_out         = out_buf[9]->get_item(idx);
-    char* gt_difficult         = out_buf[10]->get_item(idx);
+    char* datum_out          = out_buf["image"]->get_item(idx);
+    char* bbtargets_out      = out_buf["bbtargets"]->get_item(idx);
+    char* bbtargets_mask_out = out_buf["bbtargets_mask"]->get_item(idx);
+    char* labels_flat_out    = out_buf["labels_flat"]->get_item(idx);
+    char* labels_mask_out    = out_buf["labels_mask"]->get_item(idx);
+    char* image_shape_out    = out_buf["image_shape"]->get_item(idx);
+    char* gt_boxes_out       = out_buf["gt_boxes"]->get_item(idx);
+    char* num_gt_boxes_out   = out_buf["gt_box_count"]->get_item(idx);
+    char* gt_classes_out     = out_buf["gt_class_count"]->get_item(idx);
+    char* image_scale_out    = out_buf["image_scale"]->get_item(idx);
+    char* gt_difficult       = out_buf["difficult_flag"]->get_item(idx);
 
-    vector<void*> target_list = {y_bbtargets_out, y_bbtargets_mask_out, y_labels_flat_out, y_labels_mask_out, im_shape_out,
-                                 gt_boxes_out,    num_gt_boxes_out,     gt_classes_out,    im_scale_out,      gt_difficult};
+    vector<void*> target_list = {bbtargets_out, bbtargets_mask_out, labels_flat_out, labels_mask_out, image_shape_out,
+                                 gt_boxes_out,    num_gt_boxes_out,     gt_classes_out,    image_scale_out,      gt_difficult};
 
     if (datum_in.size() == 0)
     {
@@ -75,4 +84,9 @@ void image_localization::provide(int idx, buffer_in_array& in_buf, buffer_out_ar
             localization_loader.load(target_list, localization_transformer.transform(image_params, target_dec));
         }
     }
+}
+
+size_t image_localization::get_input_count() const
+{
+    return 2;
 }

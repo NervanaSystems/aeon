@@ -68,10 +68,8 @@ void web_server()
     web::server ws;
     ws.register_page_handler(page_handler);
     ws.start(8086);
-    cout << __FILE__ << " " << __LINE__ << " web server running " << endl;
     sleep(10);
     ws.stop();
-    cout << __FILE__ << " " << __LINE__ << " web server stopped" << endl;
 }
 
 extern "C" int main( int argc, char** argv )

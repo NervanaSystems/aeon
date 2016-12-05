@@ -23,6 +23,13 @@
 #include <sstream>
 #include <fstream>
 #include <cstring>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/ioctl.h>
 
 using namespace std;
 
@@ -90,7 +97,10 @@ void web::server::stop()
 {
     m_active = false;
     m_listen_connection->close();
-    m_thread.join();
+    if (m_thread.joinable())
+    {
+        m_thread.join();
+    }
 }
 
 void web::server::register_page_handler(page_request_handler handler)
@@ -110,7 +120,7 @@ void web::server::page_request(web::page& current_page)
     string                                line;
     vector<string>                        lines;
     std::shared_ptr<web::tcp::connection> connection = current_page.m_connection;
-    istream& input = connection->get_input_stream();
+    istream&                              input      = connection->get_input_stream();
 
     current_page.m_http_header_sent = false;
 
@@ -118,75 +128,86 @@ void web::server::page_request(web::page& current_page)
     {
         line = trim(line);
 
-        if (line.empty()) break;
+        if (line.empty())
+            break;
         lines.push_back(line);
     }
 
-    line = lines[0];
-
-    vector<string> tokens = split(line, ' ');
-
-    path = tokens[1];
-
-    for (int i = 1; i < lines.size(); i++) // skip first line
+    if (lines.size() > 0)
     {
-        line        = lines[i];
-        auto offset = line.find_first_of(':');
-        if (offset == string::npos)
-        {
-            continue;
-        }
-        string tag   = to_lower(line.substr(0, offset));
-        string value = line.substr(offset + 1);
+        line = lines[0];
+        vector<string> tokens = split(line, ' ');
 
-        if (tag == "authorization")
+        if (tokens.size() > 1)
         {
-        }
-        else if (tag == "content-type")
-        {
-            current_page.m_content_type = value;
-        }
-        else if (tag == "content-length")
-        {
-            current_page.m_content_length = stol(value);
-        }
-    }
+            path = tokens[1];
 
-    if (path.empty() == false)
-    {
-        vector<string> tok = split(path, '?');
-        url                = tok[0];
-        if (tok.size() > 1)
-        {
-            auto           query = tok[1];
-            vector<string> qlist = split(query, '&');
-            for (string q : qlist)
+            for (int i = 1; i < lines.size(); i++) // skip first line
             {
-                current_page.m_args.push_back(q);
+                line        = lines[i];
+                auto offset = line.find_first_of(':');
+                if (offset == string::npos)
+                {
+                    continue;
+                }
+                string tag   = to_lower(line.substr(0, offset));
+                string value = line.substr(offset + 1);
+
+                if (tag == "authorization")
+                {
+                }
+                else if (tag == "content-type")
+                {
+                    current_page.m_content_type = value;
+                }
+                else if (tag == "content-length")
+                {
+                    current_page.m_content_length = stol(value);
+                }
+            }
+
+            if (path.empty() == false)
+            {
+                vector<string> tok = split(path, '?');
+                url                = tok[0];
+                if (tok.size() > 1)
+                {
+                    auto           query = tok[1];
+                    vector<string> qlist = split(query, '&');
+                    for (const string& arg : qlist)
+                    {
+                        auto result = split(arg, '=');
+                        if (result.size() == 1)
+                        {
+                            result.push_back("");
+                        }
+                        current_page.m_args.insert({result[0], result[1]});
+                    }
+                }
+
+                // Page.Initialize( connection );
+                if (m_page_handler)
+                {
+                    try
+                    {
+                        m_page_handler(current_page, url);
+                    }
+                    catch (exception)
+                    {
+                    }
+                }
+
+                connection->flush();
+                connection->close();
             }
         }
-
-        // Page.Initialize( connection );
-        if (m_page_handler)
-        {
-            try
-            {
-                m_page_handler(current_page, url);
-            }
-            catch (exception)
-            {
-            }
-        }
-
-        connection->flush();
-        connection->close();
     }
 }
 
 void web::server::connection_handler_entry(std::shared_ptr<page> page)
 {
     page->m_server->page_request(*page);
-    page->m_thread.detach();
+//    page->m_thread.detach();
 }
 
 void web::server::process_loop()
@@ -211,12 +232,19 @@ void web::server::process_loop()
         {
             current_page->initialize(connection);
             current_page->m_server = this;
-            auto fn                = std::bind(&web::server::connection_handler_entry, current_page);
-            current_page->m_thread = std::thread(fn);
+            if (m_single_thread)
+            {
+                current_page->m_server->page_request(*current_page);
+            }
+            else
+            {
+                auto fn = std::bind(&web::server::connection_handler_entry, current_page);
+                current_page->m_thread = std::thread(fn);
+            }
         }
         else
         {
-            printf("Error: Out of pages\n");
+            cout << "Error: Out of pages\n";
         }
     }
 }
@@ -227,6 +255,10 @@ web::page::page()
 
 web::page::~page()
 {
+    if (m_thread.joinable())
+    {
+        m_thread.join();
+    }
 }
 
 std::ostream& web::page::output_stream()
@@ -249,14 +281,14 @@ string web::page::html_encode(const string& s)
     stringstream ss;
     for (char ch : s)
     {
-        switch(ch)
+        switch (ch)
         {
-        case '&':  ss << "&amp;";  break;
-        case '<':  ss << "&lt;";   break;
-        case '>':  ss << "&gt;";   break;
-        case '"':  ss << "&quot;"; break;
+        case '&': ss << "&amp;"; break;
+        case '<': ss << "&lt;"; break;
+        case '>': ss << "&gt;"; break;
+        case '"': ss << "&quot;"; break;
         case '\'': ss << "&apos;"; break;
-        default:   ss << ch;       break;
+        default: ss << ch; break;
         }
     }
     return ss.str();
@@ -390,7 +422,7 @@ void web::page::page_unauthorized()
 
 bool web::page::send_file(const string& filename)
 {
-    bool          rc = false;
+    bool rc = false;
 
     ifstream f(filename, ios::in | ios::binary);
     if (f)
@@ -399,16 +431,10 @@ bool web::page::send_file(const string& filename)
         size_t size = f.tellg();
         f.seekg(0, f.beg);
 
-        stringstream ss;
-        ss << "HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\n";
-        ss << "Content-Length: " << size << "\r\n\r\n";
-        m_http_header_sent = true;
-        send_string(ss.str());
-
         char* buffer = new char[size];
         f.read(buffer, size);
         f.close();
-        raw_send(buffer, size);
+        send_as_file(buffer, size);
         delete[] buffer;
 
         rc = true;
@@ -417,12 +443,25 @@ bool web::page::send_file(const string& filename)
     return rc;
 }
 
+bool web::page::send_as_file(const char* buffer, size_t size)
+{
+    stringstream ss;
+    ss << "HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\n";
+    ss << "Content-Length: " << size << "\r\n\r\n";
+    m_http_header_sent = true;
+    send_string(ss.str());
+
+    raw_send(buffer, size);
+
+    return true;
+}
+
 void web::page::flush()
 {
     m_connection->flush();
 }
 
-const std::vector<std::string>& web::page::args() const
+const std::map<std::string,std::string>& web::page::args() const
 {
     return m_args;
 }
@@ -440,23 +479,6 @@ const size_t web::page::content_length() const
 web::tcp::connection& web::page::connection()
 {
     return *m_connection;
-}
-
-void web::page::parse_arg(const string& arg, string& name, string& value)
-{
-    auto result = split(arg, '=');
-    switch (result.size())
-    {
-    case 1:
-        name  = result[0];
-        value = "";
-        break;
-    case 2:
-        name  = result[0];
-        value = result[1];
-        break;
-    default: break;
-    }
 }
 
 void web::page::master_page_file(const string& path, const string& marker, marker_content content)
@@ -507,19 +529,23 @@ void web::page::master_page_string(const string& source, const string& marker, m
 
 web::tcp::connection::connection()
     : m_ostream{this}
-    , m_istream{this},
-      m_put_back(5),
-      m_char_buffer(100+m_put_back)
+    , m_istream{this}
+    , m_put_back(5)
+    , m_char_buffer(100 + m_put_back)
+    , m_is_server{false}
+    , m_listening_port{0}
 {
 }
 
 web::tcp::connection::connection(uint16_t port)
     : m_ostream{this}
-    , m_istream{this},
-      m_put_back(5),
-      m_char_buffer(100+m_put_back)
+    , m_istream{this}
+    , m_put_back(5)
+    , m_char_buffer(100 + m_put_back)
+    , m_is_server{true}
+    , m_listening_port{port}
 {
-    char *end = &m_char_buffer.front() + m_char_buffer.size();
+    char* end = &m_char_buffer.front() + m_char_buffer.size();
     setg(end, end, end);
 
     struct sockaddr_in serv_addr;
@@ -582,8 +608,8 @@ std::streambuf::int_type web::tcp::connection::underflow()
     }
     else
     {
-        char *base = &m_char_buffer.front();
-        char *start = base;
+        char* base  = &m_char_buffer.front();
+        char* start = base;
 
         if (eback() == base) // true when this isn't the first fill
         {
@@ -612,8 +638,52 @@ std::streambuf::int_type web::tcp::connection::underflow()
 
 void web::tcp::connection::close()
 {
-    shutdown(m_socket, SHUT_RDWR);
-    ::close(m_socket);
+    if (m_is_server)
+    {
+        int sock=socket(AF_INET, SOCK_STREAM, 0);
+        struct sockaddr_in remote;
+        remote.sin_family=AF_INET;
+        inet_pton(AF_INET, "127.0.0.1", &remote.sin_addr);
+        remote.sin_port = ntohs(m_listening_port);
+        if(connect(sock, (struct sockaddr*)&remote, sizeof(remote)) < 0) {
+            cout << __FILE__ << " " << __LINE__ << " error connecting to self" << endl;
+        }
+        ::close(sock);
+        ::close(m_socket);
+    }
+    else
+    {
+        struct linger ling;
+        ling.l_onoff=1;
+        ling.l_linger=30;
+        setsockopt(m_socket, SOL_SOCKET, SO_LINGER, &ling, sizeof(ling));
+
+        shutdown(m_socket, SHUT_WR);
+
+        while(!m_is_server)
+        {
+    //        int flags = fcntl(m_socket, F_GETFL, 0);
+    //        fcntl(m_socket, F_SETFL, flags | O_NONBLOCK);
+
+    //        int pending_data;
+    //        fcntl(m_socket, TIOCOUTQ, &pending_data);
+    //        cout << __FILE__ << " " << __LINE__ << " pending_data " << pending_data << endl;
+
+
+            char buffer[32];
+            size_t rc = read(m_socket, buffer, sizeof(buffer));
+            if (rc == 0)
+            {
+                break;
+            }
+            else if (rc == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
+            {
+                break;
+            }
+        }
+
+        ::close(m_socket);
+    }
 }
 
 std::shared_ptr<web::tcp::connection> web::tcp::connection::listen()
@@ -636,14 +706,16 @@ void web::tcp::connection::write(const char* data, size_t size)
 {
     string s{data, size};
     int    count = 0;
+    int    flags = 0;
     while (count != size)
     {
-        count = ::write(m_socket, data, size);
+        count = ::send(m_socket, data, size, flags);
         if (count == size)
-            break;
-        if (count < 0)
         {
-            cout << __FILE__ << " " << __LINE__ << " error " << count << endl;
+            break;
+        }
+        else if (count < 0)
+        {
             break;
         }
         data += count;

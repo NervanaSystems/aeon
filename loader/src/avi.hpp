@@ -108,7 +108,9 @@ std::istream& operator>>(std::istream& is, nervana::AviIndex& idx1);
 
 namespace nervana
 {
+#ifndef CV_FOURCC_MACRO
 #define CV_FOURCC_MACRO(c1, c2, c3, c4) (((c1)&255) + (((c2)&255) << 8) + (((c3)&255) << 16) + (((c4)&255) << 24))
+#endif
 
     int CV_FOURCC(char c1, char c2, char c3, char c4);
 

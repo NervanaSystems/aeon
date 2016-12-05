@@ -32,7 +32,7 @@ namespace nervana
 class nervana::buffer_pool_out : public nervana::buffer_pool
 {
 public:
-    buffer_pool_out(const std::vector<size_t>& writeSizes, size_t batchSize, bool pinned = false);
+    buffer_pool_out(const std::map<std::string, size_t>& writeSizes, size_t batchSize, bool pinned = false);
     virtual ~buffer_pool_out();
     buffer_out_array& get_for_write();
     buffer_out_array& get_for_read();

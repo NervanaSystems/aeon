@@ -29,21 +29,22 @@
 
 #include "buffer_in.hpp"
 
-#define FORMAT_VERSION 1
-#define WRITER_VERSION 1
-#define MAGIC_STRING "MACR"
-#define CPIO_FOOTER "TRAILER!!!"
-
 namespace nervana
 {
     namespace cpio
     {
+        static const uint32_t FORMAT_VERSION = 1;
+        static const uint32_t WRITER_VERSION = 1;
+        static const char*    MAGIC_STRING   = "MACR";
+        static const char*    CPIO_TRAILER   = "TRAILER!!!";
+        static const char*    AEON_HEADER = "cpiohdr";
+        static const char*    AEON_TRAILER = "cpiotlr";
+
         class record_header;
-        class header;
-        class trailer;
+        class file_header;
+        class file_trailer;
         class reader;
-        class file_reader;
-        class file_writer;
+        class writer;
     }
 }
 
@@ -71,9 +72,9 @@ class nervana::cpio::record_header
 {
 public:
     record_header();
-    void loadDoubleShort(uint32_t* dst, uint16_t src[2]);
+    void load_double_short(uint32_t* dst, uint16_t src[2]);
 
-    void saveDoubleShort(uint16_t* dst, uint32_t src);
+    void save_double_short(uint16_t* dst, uint32_t src);
 
     void read(std::istream& ifs, uint32_t* fileSize);
 
@@ -91,33 +92,35 @@ public:
     uint16_t m_mtime[2];
     uint16_t m_namesize;
     uint16_t m_filesize[2];
+    std::string m_filename;
 };
 
-class nervana::cpio::header
+class nervana::cpio::file_header
 {
     friend class reader;
-    friend class file_writer;
+    friend class writer;
 
 public:
-    header();
+    file_header();
     void read(std::istream& ifs);
     void write(std::ostream& ofs);
 
 private:
 #pragma pack(1)
     char     m_magic[4];
-    uint32_t m_formatVersion;
-    uint32_t m_writerVersion;
-    char     m_dataType[8];
-    uint32_t m_itemCount;
-    uint8_t  m_unused[40];
+    uint32_t m_format_version;
+    uint32_t m_writer_version;
+    char     m_data_type[8];
+    uint32_t m_record_count;
+    uint32_t m_elements_per_record;
+    uint8_t  m_unused[36];
 #pragma pack()
 };
 
-class nervana::cpio::trailer
+class nervana::cpio::file_trailer
 {
 public:
-    trailer();
+    file_trailer();
     void write(std::ostream& ofs);
     void read(std::istream& ifs);
 
@@ -128,58 +131,40 @@ private:
 class nervana::cpio::reader
 {
 public:
-    reader();
-    reader(std::istream* is);
+    reader(std::istream& is);
+    virtual ~reader();
 
+    void close();
     void read(nervana::buffer_in& dest);
-    void read(std::vector<char>& dest);
+    std::string read(std::vector<char>& dest);
 
-    int itemCount();
+    int record_count();
 
 protected:
-    void readHeader();
+    void read_header();
 
-    std::istream* m_is;
+    std::istream& m_is;
 
-    header        m_header;
-    trailer       m_trailer;
-    record_header m_recordHeader;
+    file_header   m_header;
+    file_trailer  m_trailer;
+    record_header m_record_header;
 };
 
-/*
- * CPIOFileReader wraps file opening around the more generic CPIOReader
- * which only deals in istreams
- */
-
-class nervana::cpio::file_reader : public reader
+class nervana::cpio::writer
 {
 public:
-    file_reader();
-    ~file_reader();
-
-    bool open(const std::string& fileName);
-    void close();
-
-private:
-    std::ifstream m_ifs;
-};
-
-class nervana::cpio::file_writer
-{
-public:
-    ~file_writer();
-
-    void open(const std::string& fileName, const std::string& dataType = "");
-    void close();
+    writer(std::ostream& stream);
+    virtual ~writer();
 
     void write_all_records(nervana::buffer_in_array& buff);
     void write_record(nervana::buffer_in_array& buff, int record_idx);
     void write_record_element(const char* elem, uint32_t elem_size, uint32_t element_idx);
-    void increment_record_count() { m_header.m_itemCount++; }
+    void increment_record_count() { m_header.m_record_count++; }
 private:
-    std::ofstream m_ofs;
-    header        m_header;
-    trailer       m_trailer;
+    std::ostream& m_ofs;
+
+    file_header   m_header;
+    file_trailer  m_trailer;
     record_header m_recordHeader;
     int           m_fileHeaderOffset;
     std::string   m_fileName;

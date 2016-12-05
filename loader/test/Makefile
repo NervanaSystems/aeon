@@ -33,7 +33,7 @@ TEST_SRCS := \
     test_block_iterator_shuffled.cpp \
     test_block_loader_cpio_cache.cpp \
     test_block_loader_file.cpp \
-	test_block_loader_nds.cpp \
+    test_block_loader_nds.cpp \
     test_char_map.cpp \
     test_image.cpp \
     test_label_map.cpp \
@@ -51,6 +51,7 @@ TEST_SRCS := \
     test_cpio_cache.cpp \
     test_file_util.cpp \
     block_loader_util.cpp \
+    test_loader.cpp \
 
 OBJS             = $(subst .cpp,.o,$(TEST_SRCS))
 INC             := -I../src $(INC)

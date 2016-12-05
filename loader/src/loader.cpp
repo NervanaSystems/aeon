@@ -20,6 +20,7 @@
 #include <utility>
 #include <algorithm>
 #include <sox.h>
+#include <memory>
 
 #include "loader.hpp"
 #include "block_loader_cpio_cache.hpp"
@@ -32,21 +33,22 @@
 using namespace std;
 using namespace nervana;
 
-loader::loader(const char* cfg_string, PyObject* py_obj_backend)
+loader::loader(const std::string& config_string)
 {
-    m_python_backend = make_shared<python_backend>(py_obj_backend);
-    m_lcfg_json      = nlohmann::json::parse(cfg_string);
-    loader_config lcfg(m_lcfg_json);
-    m_batch_size                                = lcfg.minibatch_size;
-    m_single_thread_mode                        = lcfg.single_thread;
-    shared_ptr<nervana::manifest> base_manifest = nullptr;
+    auto config_json = nlohmann::json::parse(config_string);
+    std::cout << __FILE__ << " " << __LINE__ << " " << config_json.dump(4) << std::endl;
+
+    loader_config lcfg(config_json);
+    m_batch_size                       = lcfg.minibatch_size;
+    m_single_thread_mode               = lcfg.single_thread;
+    shared_ptr<manifest> base_manifest;
     sox_format_init();
 
-    if (nervana::manifest_nds::is_likely_json(lcfg.manifest_filename))
+    if (manifest_nds::is_likely_json(lcfg.manifest_filename))
     {
         affirm(lcfg.subset_fraction == 1, "subset_fraction must be 1.0 for nds");
 
-        auto manifest = make_shared<nervana::manifest_nds>(lcfg.manifest_filename);
+        auto manifest = make_shared<manifest_nds>(lcfg.manifest_filename);
 
         // TODO: add shard_count/shard_index to cfg
         m_block_loader =
@@ -57,7 +59,7 @@ loader::loader(const char* cfg_string, PyObject* py_obj_backend)
     else
     {
         // the manifest defines which data should be included in the dataset
-        auto manifest = make_shared<nervana::manifest_csv>(lcfg.manifest_filename, lcfg.shuffle_manifest, lcfg.manifest_root);
+        auto manifest = make_shared<manifest_csv>(lcfg.manifest_filename, lcfg.shuffle_manifest, lcfg.manifest_root);
 
         // TODO: make the constructor throw this error
         if (manifest->object_count() == 0)
@@ -87,128 +89,197 @@ loader::loader(const char* cfg_string, PyObject* py_obj_backend)
     }
 
     m_batch_iterator = make_shared<batch_iterator>(block_iter, lcfg.minibatch_size);
+
+    auto                      media   = provider_factory::create(config_json);
+
+    for (auto shape : media->get_output_shapes())
+    {
+        m_out_sizes.insert({shape.first, shape.second.get_byte_size()});
+    }
+
+    m_provider = provider_factory::create(config_json);
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
 }
 
-int loader::start()
+const vector<string>& loader::get_buffer_names() const
 {
-    m_first = true;
-    try
-    {
-        int ncores         = thread::hardware_concurrency();
-        int itemsPerThread = (m_batch_size - 1) / ncores + 1;
-        int nthreads       = (m_batch_size - 1) / itemsPerThread + 1;
-        nthreads           = m_single_thread_mode ? 1 : std::min(nthreads, m_batch_size);
-
-        if (nthreads <= 0)
-        {
-            throw std::invalid_argument("Number of threads must be > 0");
-        }
-
-        vector<shared_ptr<nervana::provider_interface>> providers;
-        for (int i = 0; i < nthreads; i++)
-        {
-            providers.push_back(nervana::provider_factory::create(m_lcfg_json));
-        }
-
-        // variable size buffers for reading encoded data (start off zero and grow as needed)
-        m_read_buffers     = make_shared<buffer_pool_in>(providers[0]->num_inputs);
-        m_read_thread_pool = unique_ptr<read_thread_pool>(new read_thread_pool(m_read_buffers, m_batch_iterator));
-
-        // fixed size buffers for writing out decoded data
-        const vector<nervana::shape_type>& oshapes = providers[0]->get_oshapes();
-        vector<size_t>                     write_sizes;
-        for (auto& o : oshapes)
-        {
-            write_sizes.push_back(o.get_byte_size());
-        }
-
-        // Bind the python backend here
-        m_python_backend->setup_buffers(oshapes, m_batch_size);
-        // These are fixed size output buffers (need batchSize for stride)
-        m_decode_buffers = make_shared<buffer_pool_out>(write_sizes, (size_t)m_batch_size, m_python_backend->use_pinned_memory());
-
-        m_decode_thread_pool =
-            unique_ptr<decode_thread_pool>(new decode_thread_pool(nthreads, m_read_buffers, m_decode_buffers, m_python_backend));
-
-        for (auto& p : providers)
-        {
-            m_decode_thread_pool->add_provider(p);
-        }
-    }
-    catch (std::bad_alloc&)
-    {
-        return -1;
-    }
-    m_decode_thread_pool->start();
-    m_read_thread_pool->start();
-
-    return 0;
+    return m_provider->get_buffer_names();
 }
 
-void loader::stop()
+const shape_t& loader::get_shape(const string& name) const
 {
-    m_read_thread_pool->stop();
-    while (m_read_thread_pool->stopped() == false)
-    {
-        std::this_thread::yield();
-        drain();
-    }
-    while ((m_decode_buffers->empty() == false) || (m_read_buffers->empty() == false))
-    {
-        drain();
-    }
-    m_decode_thread_pool->stop();
-
-    m_read_thread_pool   = nullptr;
-    m_decode_buffers     = nullptr;
-    m_decode_thread_pool = nullptr;
-    m_python_backend->clear_buffers();
+    return m_provider->get_output_shape(name).get_shape();
 }
 
-int loader::reset()
+void loader::set_iterator_count(BatchMode count)
 {
-    stop();
-    m_batch_iterator->reset();
-    return start();
+    m_batch_mode = count;
+    m_batch_count_value = 0;
 }
 
-PyObject* loader::next(int bufIdx)
+void loader::set_iterator_count(size_t count)
 {
-    unique_lock<mutex> lock(m_decode_buffers->get_mutex());
-    if (m_first == true)
+    m_batch_mode = BatchMode::COUNT;
+    m_batch_count_value = count;
+}
+
+loader::iterator::iterator(loader& ld, bool is_end, size_t num_inputs)
+    : m_current_loader(ld)
+    , m_is_end{is_end}
+    , m_num_inputs{num_inputs}
+    , m_output_buffer{ld.m_out_sizes, (size_t)ld.m_batch_size}
+    , m_object_count{ld.m_block_loader->object_count()}
+    , m_pending_block{(uint32_t)m_num_inputs}
+    , m_batch_mode{ld.m_batch_mode}
+{
+    if (m_is_end)
     {
-        m_first = false;
+        if (m_batch_mode == loader::BatchMode::COUNT)
+        {
+            m_position = ld.m_batch_count_value;
+        }
+        else
+        {
+            m_position = m_object_count;
+        }
     }
     else
     {
-        // Unlock the buffer used for the previous minibatch.
-        m_decode_buffers->advance_read_pos();
-        m_decode_buffers->signal_not_full();
+        m_position = 0;
     }
 
-    while (m_decode_buffers->empty())
+    // variable size buffers for reading encoded data (start off zero and grow as needed)
+    if (!m_is_end)
     {
-        m_decode_buffers->wait_for_not_empty(lock);
+        m_async_result = async(&loader::iterator::read_input, this);
+        fill_buffer();
     }
-
-    m_decode_buffers->reraise_exception();
-    return m_python_backend->get_host_tuple(bufIdx);
 }
 
-PyObject* loader::shapes()
+loader::iterator::iterator(const iterator& other)
+    : m_current_loader{other.m_current_loader}
+    , m_is_end{other.m_is_end}
+    , m_num_inputs{other.m_num_inputs}
+    , m_output_buffer{other.m_output_buffer}
+    , m_object_count{other.m_object_count}
+    , m_position{other.m_position}
+    , m_pending_block{(uint32_t)m_num_inputs}
+    , m_batch_mode{other.m_batch_mode}
 {
-    return m_python_backend->get_shapes();
+    cout << __FILE__ << " " << __LINE__ << " iterator copy ctor" << endl;
 }
 
-void loader::drain()
+loader::iterator::~iterator()
 {
+}
+
+void loader::iterator::read_input()
+{
+    m_pending_block.clear();
+    m_current_loader.m_batch_iterator->read(m_pending_block);
+}
+
+void loader::iterator::fill_buffer()
+{
+    if (!m_is_end)
     {
-        unique_lock<mutex> lock(m_decode_buffers->get_mutex());
-        if (m_decode_buffers->empty() == true)
+        m_async_result.get();
+        buffer_in_array& input_buffer = m_pending_block;
+
+        if (m_current_loader.m_provider)
         {
-            return;
+            for (int i = 0; i < m_current_loader.m_batch_size; i++)
+            {
+                m_current_loader.m_provider->provide(i, input_buffer, m_output_buffer);
+            }
         }
-        m_decode_buffers->advance_read_pos();
+        m_async_result = async(&loader::iterator::read_input, this);
     }
-    m_decode_buffers->signal_not_full();
+}
+
+loader::iterator& loader::iterator::operator++()
+{
+    fill_buffer();
+    m_position++;
+    if (m_batch_mode == BatchMode::INFINITE && m_position == m_object_count)
+    {
+        m_position = 0;
+    }
+    return *this;
+}
+
+loader::iterator& loader::iterator::operator++(int)
+{
+    iterator& rc = *this;
+    ++rc;
+    return rc;
+}
+
+bool loader::iterator::operator==(const iterator& other) const
+{
+    return &m_current_loader == &other.m_current_loader && m_position == other.m_position;
+}
+
+bool loader::iterator::operator!=(const iterator& other) const
+{
+    return !(*this == other);
+}
+
+const buffer_out_array& loader::iterator::operator*() const
+{
+    return m_output_buffer;
+}
+
+loader::iterator loader::begin()
+{
+    iterator rc{*this, false, m_provider->get_input_count()};
+    return rc;
+}
+
+loader::iterator loader::end()
+{
+    iterator rc{*this, true, m_provider->get_input_count()};
+    return rc;
+}
+
+nervana::dataset_builder& dataset_builder::config(const std::string& config)
+{
+    m_config = config;
+    return *this;
+}
+
+nervana::dataset_builder& dataset_builder::batch_size(size_t size)
+{
+    m_batch_size = size;
+    return *this;
+}
+
+nervana::dataset_builder& dataset_builder::batch_count(loader::BatchMode type)
+{
+    m_batch_mode = type;
+    return *this;
+}
+
+nervana::dataset_builder& dataset_builder::batch_count(size_t count)
+{
+    m_batch_mode = loader::BatchMode::COUNT;
+    m_batch_count_value = count;
+    return *this;
+}
+
+nervana::loader dataset_builder::create()
+{
+    nlohmann::json js = nlohmann::json::parse(m_config);
+    js["minibatch_size"] = m_batch_size;
+
+    loader rc(js.dump());
+    if (m_batch_mode == loader::BatchMode::COUNT)
+    {
+        rc.set_iterator_count(m_batch_count_value);
+    }
+    else
+    {
+        rc.set_iterator_count(m_batch_mode);
+    }
+    return rc;
 }

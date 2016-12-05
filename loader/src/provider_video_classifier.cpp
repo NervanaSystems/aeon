@@ -28,17 +28,16 @@ video_classifier::video_classifier(nlohmann::json js)
     , label_extractor(label_config)
     , label_loader(label_config)
 {
-    num_inputs = 2;
-    oshapes.push_back(video_config.get_shape_type());
-    oshapes.push_back(label_config.get_shape_type());
+    m_output_shapes.insert({"video", video_config.get_shape_type()});
+    m_output_shapes.insert({"label", label_config.get_shape_type()});
 }
 
 void video_classifier::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
     std::vector<char>& datum_in   = in_buf[0]->get_item(idx);
     std::vector<char>& target_in  = in_buf[1]->get_item(idx);
-    char*              datum_out  = out_buf[0]->get_item(idx);
-    char*              target_out = out_buf[1]->get_item(idx);
+    char*              datum_out  = out_buf["video"]->get_item(idx);
+    char*              target_out = out_buf["label"]->get_item(idx);
 
     if (datum_in.size() == 0)
     {
@@ -53,4 +52,9 @@ void video_classifier::provide(int idx, buffer_in_array& in_buf, buffer_out_arra
     // Process target data
     auto label_dec = label_extractor.extract(target_in.data(), target_in.size());
     label_loader.load({target_out}, label_dec);
+}
+
+size_t video_classifier::get_input_count() const
+{
+    return 2;
 }

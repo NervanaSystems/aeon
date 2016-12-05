@@ -25,14 +25,13 @@ video_only::video_only(nlohmann::json js)
     , video_loader(video_config)
     , frame_factory(video_config.frame)
 {
-    num_inputs = 1;
-    oshapes.push_back(video_config.get_shape_type());
+    m_output_shapes.insert({"video", video_config.get_shape_type()});
 }
 
 void video_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
     std::vector<char>& datum_in  = in_buf[0]->get_item(idx);
-    char*              datum_out = out_buf[0]->get_item(idx);
+    char*              datum_out = out_buf["video"]->get_item(idx);
 
     if (datum_in.size() == 0)
     {
@@ -45,4 +44,9 @@ void video_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out
     auto video_dec    = video_extractor.extract(datum_in.data(), datum_in.size());
     auto frame_params = frame_factory.make_params(video_dec);
     video_loader.load({datum_out}, video_transformer.transform(frame_params, video_dec));
+}
+
+size_t video_only::get_input_count() const
+{
+    return 1;
 }

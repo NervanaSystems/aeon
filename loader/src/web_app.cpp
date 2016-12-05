@@ -113,7 +113,7 @@ void web_app::home_page(web::page& p)
 {
     time_t     t   = time(0);
     struct tm* now = localtime(&t);
-    ostream& out = p.output_stream();
+    ostream&   out = p.output_stream();
 
     out << "<span>Current time: " << asctime(now) << "</span>\n";
 
@@ -161,9 +161,7 @@ void web_app::forms_response(web::page& p)
     ostream& out = p.output_stream();
     for (auto arg : p.args())
     {
-        string name, value;
-        p.parse_arg(arg, name, value);
-        out << "<span>" << name << " = " << value << "</span>";
+        out << "<span>" << arg.first << " = " << arg.second << "</span>";
         out << "<br>";
     }
 }
@@ -202,14 +200,14 @@ void web_app::process_page_request(web::page& p, const string& url)
     }
     else if (url == "/test/uploadfile")
     {
-//        cout << "Reading " << p.content_length() << " bytes\n";
-//        for (int i = 0; i < p.content_length(); i++)
-//        {
-//            p.connection().read();
-//        }
-//        cout << "Done reading\n";
-//        p.page_ok();
-//        out << "Upload " << p.content_length() << " bytes complete\n";
+        //        cout << "Reading " << p.content_length() << " bytes\n";
+        //        for (int i = 0; i < p.content_length(); i++)
+        //        {
+        //            p.connection().read();
+        //        }
+        //        cout << "Done reading\n";
+        //        p.page_ok();
+        //        out << "Upload " << p.content_length() << " bytes complete\n";
     }
     else
     {

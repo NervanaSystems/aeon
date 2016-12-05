@@ -62,31 +62,79 @@ TEST(block_loader_cpio_cache, integration)
     auto cache = make_cache(file_util::get_temp_directory(), block_loader_random::randomString(), "version123");
 
     ASSERT_EQ(load_string(cache), load_string(cache));
+
+    file_util::remove_directory(cache.get_cache_dir());
 }
 
 TEST(block_loader_cpio_cache, same_version)
 {
     string hash = block_loader_random::randomString();
-    ASSERT_EQ(load_string(make_cache(file_util::get_temp_directory(), hash, "version123")),
-              load_string(make_cache(file_util::get_temp_directory(), hash, "version123")));
+
+    auto c1 = make_cache(file_util::get_temp_directory(), hash, "version123");
+    auto c2 = make_cache(file_util::get_temp_directory(), hash, "version123");
+
+    ASSERT_EQ(load_string(c1), load_string(c2));
+
+    file_util::remove_directory(c1.get_cache_dir());
+    if (c1.get_cache_dir() != c2.get_cache_dir())
+    {
+        file_util::remove_directory(c2.get_cache_dir());
+    }
 }
 
 TEST(block_loader_cpio_cache, cache_incomplete)
 {
     string hash = block_loader_random::randomString();
-    load_string(make_cache(file_util::get_temp_directory(), hash, "version123", false));
-    EXPECT_THROW(load_string(make_cache(file_util::get_temp_directory(), hash, "version123", false)), std::runtime_error);
+
+    auto c1 = make_cache(file_util::get_temp_directory(), hash, "version123", false);
+    EXPECT_THROW(make_cache(file_util::get_temp_directory(), hash, "version123", false), std::runtime_error);
+
+    // fill cache so we can delete it
+    buffer_in_array bp(2); // 2 buffer_in:  1 for datum, 1 for target
+    for (int i = 0; i < c1.object_count(); i++)
+    {
+        c1.load_block(bp, i);
+    }
+
+    file_util::remove_directory(c1.get_cache_dir());
 }
 
-TEST(block_loader_cpio_cache, differnt_version)
+TEST(block_loader_cpio_cache, different_version)
 {
     string hash = block_loader_random::randomString();
-    ASSERT_NE(load_string(make_cache(file_util::get_temp_directory(), hash, "version123")),
-              load_string(make_cache(file_util::get_temp_directory(), hash, "version456")));
+
+    auto c1 = make_cache(file_util::get_temp_directory(), hash, "version123");
+    auto c2 = make_cache(file_util::get_temp_directory(), hash, "version456");
+
+    ASSERT_NE(load_string(c1), load_string(c2));
+
+    try
+    {
+        file_util::remove_directory(c1.get_cache_dir());
+    }
+    catch(exception)
+    {
+    }
+
+    try
+    {
+        file_util::remove_directory(c2.get_cache_dir());
+    }
+    catch(exception)
+    {
+    }
 }
 
-TEST(block_loader_cpio_cache, differnt_hash)
+TEST(block_loader_cpio_cache, different_hash)
 {
-    ASSERT_NE(load_string(make_cache(file_util::get_temp_directory(), block_loader_random::randomString(), "version123")),
-              load_string(make_cache(file_util::get_temp_directory(), block_loader_random::randomString(), "version123")));
+    auto c1 = make_cache(file_util::get_temp_directory(), block_loader_random::randomString(), "version123");
+    auto c2 = make_cache(file_util::get_temp_directory(), block_loader_random::randomString(), "version123");
+
+    ASSERT_NE(load_string(c1), load_string(c2));
+
+    file_util::remove_directory(c1.get_cache_dir());
+    if (c1.get_cache_dir() != c2.get_cache_dir())
+    {
+        file_util::remove_directory(c2.get_cache_dir());
+    }
 }

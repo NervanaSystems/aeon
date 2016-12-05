@@ -81,15 +81,15 @@ TEST(block_loader_file, subset_fraction)
     buffer_in_array bp(2);
 
     blf.load_block(bp, 0);
-    ASSERT_EQ(bp[0]->get_item_count(), 4);
+    ASSERT_EQ(bp[0]->record_count(), 4);
     bp[0]->reset();
 
     blf.load_block(bp, 1);
-    ASSERT_EQ(bp[0]->get_item_count(), 4);
+    ASSERT_EQ(bp[0]->record_count(), 4);
     bp[0]->reset();
 
     blf.load_block(bp, 2);
-    ASSERT_EQ(bp[0]->get_item_count(), 2);
+    ASSERT_EQ(bp[0]->record_count(), 2);
     bp[0]->reset();
 }
 

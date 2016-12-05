@@ -71,7 +71,7 @@ void batch_iterator::pop_item_from_block(buffer_in_array& dst_buffer_array)
     // load a new macrobatch if we've already iterated through the previous one
     buffer_in_array& src_buffer_array = *m_src_buffer_array_ptr;
 
-    if (m_i >= src_buffer_array[0]->get_item_count())
+    if (m_i >= src_buffer_array[0]->record_count())
     {
         for (auto m : src_buffer_array)
         {

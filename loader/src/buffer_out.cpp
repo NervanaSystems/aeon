@@ -30,7 +30,7 @@
 using namespace std;
 using namespace nervana;
 
-buffer_out::buffer_out(size_t element_size, size_t minibatch_size, bool pinned)
+buffer_out::buffer_out(const string& name, size_t element_size, size_t minibatch_size, bool pinned)
     : m_size(element_size * minibatch_size)
     , m_batch_size(minibatch_size)
     , m_pinned(pinned)
@@ -43,6 +43,19 @@ buffer_out::buffer_out(size_t element_size, size_t minibatch_size, bool pinned)
 buffer_out::~buffer_out()
 {
     dealloc(m_data);
+}
+
+const char* buffer_out::get_item(size_t index) const
+{
+    size_t offset = index * m_stride;
+    if (index >= (int)m_batch_size)
+    {
+        // TODO: why not raise exception here?  Is anyone actually
+        // checking the return value of get_item to make sure it is
+        // non-0?
+        return 0;
+    }
+    return &m_data[offset];
 }
 
 char* buffer_out::get_item(size_t index)
@@ -58,12 +71,12 @@ char* buffer_out::get_item(size_t index)
     return &m_data[offset];
 }
 
-size_t buffer_out::get_item_count()
+size_t buffer_out::record_count() const
 {
     return m_size / m_item_size;
 }
 
-size_t buffer_out::size()
+size_t buffer_out::size() const
 {
     return m_size;
 }

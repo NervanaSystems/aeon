@@ -43,10 +43,7 @@ TEST(provider, audio_classify)
                            {"feature_type", "specgram"}}},
                          {"label", {{"binary", true}}}};
     auto                               media   = nervana::provider_factory::create(js);
-    const vector<nervana::shape_type>& oshapes = media->get_oshapes();
-
-    size_t dsize = oshapes[0].get_byte_size();
-    size_t tsize = 4;
+    auto oshapes = media->get_output_shapes();
 
     size_t batch_size = 128;
 
@@ -58,7 +55,7 @@ TEST(provider, audio_classify)
     buffer_in&      data_p   = *bp[0];
     buffer_in&      target_p = *bp[1];
 
-    buffer_out_array outBuf({dsize, tsize}, batch_size);
+    buffer_out_array outBuf(oshapes, batch_size);
 
     for (int i = 0; i < batch_size; i++)
     {
@@ -68,7 +65,7 @@ TEST(provider, audio_classify)
         target_p.add_item(packed_int);
     }
 
-    EXPECT_EQ(data_p.get_item_count(), batch_size);
+    EXPECT_EQ(data_p.record_count(), batch_size);
 
     for (int i = 0; i < batch_size; i++)
     {
@@ -77,7 +74,7 @@ TEST(provider, audio_classify)
 
     for (int i = 0; i < batch_size; i++)
     {
-        int target_value = unpack<int>(outBuf[1]->get_item(i));
+        int target_value = unpack<int>(outBuf["label"]->get_item(i));
         EXPECT_EQ(42 + i, target_value);
     }
 }
@@ -130,13 +127,12 @@ TEST(provider, audio_transcript)
         target_p.add_item(((i % 2) == 0 ? tr0_char : tr1_char));
     }
 
-    EXPECT_EQ(data_p.get_item_count(), batch_size);
-    EXPECT_EQ(target_p.get_item_count(), batch_size);
+    EXPECT_EQ(data_p.record_count(), batch_size);
+    EXPECT_EQ(target_p.record_count(), batch_size);
 
     // Generate output buffers using shapes from the provider
-    buffer_out_array outBuf({media->get_oshapes()[0].get_byte_size(), media->get_oshapes()[1].get_byte_size(),
-                             media->get_oshapes()[2].get_byte_size(), media->get_oshapes()[3].get_byte_size()},
-                            batch_size);
+    auto oshapes = media->get_output_shapes();
+    buffer_out_array outBuf(oshapes, batch_size);
 
     // Call the provider
     for (int i = 0; i < batch_size; i++)
@@ -147,7 +143,7 @@ TEST(provider, audio_transcript)
     // Check target sequences against their source string
     for (int i = 0; i < batch_size; i++)
     {
-        char* target_out  = outBuf[1]->get_item(i);
+        char* target_out  = outBuf["transcription"]->get_item(i);
         auto  orig_string = tr[i % 2];
         for (auto c : orig_string)
         {
@@ -158,12 +154,12 @@ TEST(provider, audio_transcript)
     // Check the transcript lengths match source string length
     for (int i = 0; i < batch_size; i++)
     {
-        ASSERT_EQ(unpack<uint32_t>(outBuf[2]->get_item(i)), tr[i % 2].length());
+        ASSERT_EQ(unpack<uint32_t>(outBuf["trans_length"]->get_item(i)), tr[i % 2].length());
     }
 
     for (int i = 0; i < batch_size; i++)
     {
-        ASSERT_EQ(unpack<uint32_t>(outBuf[3]->get_item(i)), 100);
+        ASSERT_EQ(unpack<uint32_t>(outBuf["valid_pct"]->get_item(i)), 100);
     }
 
     // Do the packing
@@ -172,13 +168,13 @@ TEST(provider, audio_transcript)
     uint32_t packed_length   = combined_string.size() * batch_size / 2;
 
     // Check that target sequence contains abutted vals corresponding to original strings
-    char* target_ptr = outBuf[1]->data();
+    char* target_ptr = outBuf["transcription"]->data();
     for (int i = 0; i < packed_length; i++)
     {
         char c = combined_string[i % combined_string.size()];
         ASSERT_EQ(unpack<uint8_t>(target_ptr++), cmap[std::toupper(c)]);
     }
-    for (int i = packed_length; i < outBuf[1]->size(); i++)
+    for (int i = packed_length; i < outBuf["transcription"]->size(); i++)
     {
         ASSERT_EQ(0, *(target_ptr++));
     }

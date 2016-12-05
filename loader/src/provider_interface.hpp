@@ -30,10 +30,42 @@ class nervana::provider_interface
 {
 public:
     virtual void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) = 0;
-    virtual void post_process(buffer_out_array&     out_buf) {}
-    virtual const std::vector<nervana::shape_type>& get_oshapes() { return oshapes; }
-    uint32_t                                        num_inputs;
+    virtual size_t get_input_count() const = 0;
+
+    virtual void post_process(buffer_out_array& out_buf)
+    {
+    }
+
+    const shape_type& get_output_shape(const std::string& name) const
+    {
+        auto it = m_output_shapes.find(name);
+        if (it == m_output_shapes.end())
+        {
+            std::stringstream ss;
+            ss << "key '" << name << "' not found";
+            throw std::runtime_error(ss.str());
+        }
+        return it->second;
+    }
+
+    std::map<std::string,shape_type> get_output_shapes() const
+    {
+        return m_output_shapes;
+    }
+
+    const std::vector<std::string>& get_buffer_names()
+    {
+        if (m_buffer_names.empty())
+        {
+            for (auto i : m_output_shapes)
+            {
+                m_buffer_names.push_back(i.first);
+            }
+        }
+        return m_buffer_names;
+    }
 
 protected:
-    std::vector<nervana::shape_type> oshapes;
+    std::map<std::string,shape_type> m_output_shapes;
+    std::vector<std::string>         m_buffer_names;
 };

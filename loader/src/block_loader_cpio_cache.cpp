@@ -84,42 +84,44 @@ bool block_loader_cpio_cache::load_block_from_cache(buffer_in_array& dest, uint3
 {
     // load a block from cpio cache into dest.  If file doesn't exist, return false.
     //  If loading from cpio cache was successful return true.
-    cpio::file_reader reader;
+    bool rc = false;
 
-    if (!reader.open(block_filename(block_num)))
+    ifstream f(block_filename(block_num));
+    if (f)
     {
-        // couldn't load the file
-        return false;
-    }
-    // load cpio file into dest one item at a time
-    for (int i = 0; i < reader.itemCount(); ++i)
-    {
-        for (auto d : dest)
+        cpio::reader reader(f);
+        // load cpio file into dest one item at a time
+        for (int i = 0; i < reader.record_count(); ++i)
         {
-            try
+            for (auto d : dest)
             {
-                reader.read(*d);
-            }
-            catch (std::exception& e)
-            {
-                d->add_exception(std::current_exception());
+                try
+                {
+                    reader.read(*d);
+                }
+                catch (std::exception& e)
+                {
+                    d->add_exception(std::current_exception());
+                }
             }
         }
+        reader.close();
+        rc = true;
     }
-
-    reader.close();
 
     // cpio file was read successfully, no need to hit primary data
     // source
-    return true;
+    return rc;
 }
 
 void block_loader_cpio_cache::write_block_to_cache(buffer_in_array& buff, uint32_t block_num)
 {
-    cpio::file_writer writer;
-    writer.open(block_filename(block_num));
-    writer.write_all_records(buff);
-    writer.close();
+    ofstream f{block_filename(block_num)};
+    if (f)
+    {
+        cpio::writer writer(f);
+        writer.write_all_records(buff);
+    }
 }
 
 void block_loader_cpio_cache::invalidate_old_cache(const string& rootCacheDir, const string& cache_id, const string& version)
@@ -174,6 +176,11 @@ string block_loader_cpio_cache::block_filename(uint32_t block_num)
 uint32_t block_loader_cpio_cache::object_count()
 {
     return m_loader->object_count();
+}
+
+string block_loader_cpio_cache::get_cache_dir() const
+{
+    return m_cache_dir;
 }
 
 bool block_loader_cpio_cache::check_if_complete()

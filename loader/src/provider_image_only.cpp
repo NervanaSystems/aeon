@@ -25,14 +25,13 @@ image_only::image_only(nlohmann::json js)
     , image_loader(image_config)
     , image_factory(image_config)
 {
-    num_inputs = 1;
-    oshapes.push_back(image_config.get_shape_type());
+    m_output_shapes.insert({"image", image_config.get_shape_type()});
 }
 
 void image_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
 {
     std::vector<char>& datum_in  = in_buf[0]->get_item(idx);
-    char*              datum_out = out_buf[0]->get_item(idx);
+    char*              datum_out = out_buf["image"]->get_item(idx);
 
     if (datum_in.size() == 0)
     {
@@ -45,4 +44,9 @@ void image_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out
     auto image_dec    = image_extractor.extract(datum_in.data(), datum_in.size());
     auto image_params = image_factory.make_params(image_dec);
     image_loader.load({datum_out}, image_transformer.transform(image_params, image_dec));
+}
+
+size_t image_only::get_input_count() const
+{
+    return 1;
 }

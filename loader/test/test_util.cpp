@@ -17,6 +17,7 @@
 #include <string>
 #include <sstream>
 #include <random>
+#include <future>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -430,26 +431,12 @@ static void test_function(void* p)
     usleep(100000);
 }
 
-TEST(util, async)
-{
-    int   param = 42;
-    async a;
-    a.run(&test_function, &param);
-
-    EXPECT_FALSE(a.is_ready());
-    usleep(200000);
-    EXPECT_TRUE(a.is_ready());
-    a.wait();
-
-    EXPECT_EQ(100, param);
-}
-
-static void test_function_exception1(void*)
+static void test_function_exception1()
 {
     throw runtime_error("this is to be expected");
 }
 
-static void test_function_exception2(void*)
+static void test_function_exception2()
 {
     throw out_of_range("this is to be expected");
 }
@@ -457,15 +444,11 @@ static void test_function_exception2(void*)
 TEST(util, async_exception)
 {
     {
-        async a;
-        a.run(&test_function_exception1);
-        a.wait();
-        EXPECT_THROW(a.rethrow_exception(), std::runtime_error);
+        future<void> func = async(&test_function_exception1);
+        EXPECT_THROW(func.get(), std::runtime_error);
     }
     {
-        async a;
-        a.run(&test_function_exception2);
-        a.wait();
-        EXPECT_THROW(a.rethrow_exception(), std::out_of_range);
+        future<void> func = async(&test_function_exception2);
+        EXPECT_THROW(func.get(), std::out_of_range);
     }
 }

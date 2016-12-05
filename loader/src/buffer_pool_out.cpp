@@ -31,12 +31,12 @@
 using namespace std;
 using namespace nervana;
 
-buffer_pool_out::buffer_pool_out(const std::vector<size_t>& writeSizes, size_t batchSize, bool pinned)
+buffer_pool_out::buffer_pool_out(const std::map<string, size_t>& write_sizes, size_t batch_size, bool pinned)
     : buffer_pool()
 {
     for (int i = 0; i < m_count; i++)
     {
-        m_bufs.push_back(make_shared<buffer_out_array>(writeSizes, batchSize, pinned));
+        m_bufs.push_back(make_shared<buffer_out_array>(write_sizes, batch_size, pinned));
     }
 }
 

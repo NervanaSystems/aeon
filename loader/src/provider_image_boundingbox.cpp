@@ -29,9 +29,8 @@ image_boundingbox::image_boundingbox(nlohmann::json js)
     , bbox_transformer(bbox_config)
     , bbox_loader(bbox_config)
 {
-    num_inputs = 2;
-    oshapes.push_back(image_config.get_shape_type());
-    oshapes.push_back(bbox_config.get_shape_type());
+    m_output_shapes.insert({"image",image_config.get_shape_type()});
+    m_output_shapes.insert({"boundingbox",bbox_config.get_shape_type()});
 }
 
 void image_boundingbox::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
@@ -39,8 +38,8 @@ void image_boundingbox::provide(int idx, buffer_in_array& in_buf, buffer_out_arr
     std::vector<char>& datum_in  = in_buf[0]->get_item(idx);
     std::vector<char>& target_in = in_buf[1]->get_item(idx);
 
-    char* datum_out  = out_buf[0]->get_item(idx);
-    char* target_out = out_buf[1]->get_item(idx);
+    char* datum_out  = out_buf["image"]->get_item(idx);
+    char* target_out = out_buf["boundingbox"]->get_item(idx);
 
     if (datum_in.size() == 0)
     {
@@ -56,4 +55,9 @@ void image_boundingbox::provide(int idx, buffer_in_array& in_buf, buffer_out_arr
     // Process target data
     auto target_dec = bbox_extractor.extract(target_in.data(), target_in.size());
     bbox_loader.load({target_out}, bbox_transformer.transform(image_params, target_dec));
+}
+
+size_t image_boundingbox::get_input_count() const
+{
+    return 2;
 }

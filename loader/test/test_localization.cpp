@@ -1116,7 +1116,7 @@ TEST(localization, provider)
                          {"localization", {{"max_gt_boxes", 64}, {"class_names", {"bicycle", "person"}}}}};
 
     shared_ptr<provider_interface> media   = provider_factory::create(js);
-    const vector<shape_type>&      oshapes = media->get_oshapes();
+    auto oshapes = media->get_output_shapes();
     ASSERT_NE(nullptr, media);
     ASSERT_EQ(11, oshapes.size());
 
@@ -1138,20 +1138,15 @@ TEST(localization, provider)
     in_buf[0]->add_item(image_cdata);
     in_buf[1]->add_item(target_data);
 
-    vector<size_t> output_sizes;
-    for (const shape_type& shape : oshapes)
-    {
-        output_sizes.push_back(shape.get_byte_size());
-    }
-    buffer_out_array  out_buf(output_sizes, 1);
-    const shape_type& image_shape = oshapes[0];
+    buffer_out_array  out_buf(oshapes, 1);
+    const shape_type& image_shape = media->get_output_shape("image");
 
     media->provide(0, in_buf, out_buf);
 
     int     width    = image_shape.get_shape()[0];
     int     height   = image_shape.get_shape()[1];
     int     channels = image_shape.get_shape()[2];
-    cv::Mat result(height, width, CV_8UC(channels), out_buf[0]->get_item(0));
+    cv::Mat result(height, width, CV_8UC(channels), out_buf["image"]->get_item(0));
     //    cv::imwrite("localization_provider_source.png", image);
     //    cv::imwrite("localization_provider.png", result);
 
@@ -1190,8 +1185,8 @@ TEST(localization, provider_channel_major)
                            {"fixed_scaling_factor", 1.6}}},
                          {"localization", {{"max_gt_boxes", 64}, {"class_names", {"bicycle", "person"}}}}};
 
-    shared_ptr<provider_interface> media   = provider_factory::create(js);
-    const vector<shape_type>&      oshapes = media->get_oshapes();
+    auto media   = provider_factory::create(js);
+    auto oshapes = media->get_output_shapes();
     ASSERT_NE(nullptr, media);
     ASSERT_EQ(11, oshapes.size());
 
@@ -1213,19 +1208,14 @@ TEST(localization, provider_channel_major)
     in_buf[0]->add_item(image_cdata);
     in_buf[1]->add_item(target_data);
 
-    vector<size_t> output_sizes;
-    for (const shape_type& shape : oshapes)
-    {
-        output_sizes.push_back(shape.get_byte_size());
-    }
-    buffer_out_array  out_buf(output_sizes, 1);
-    const shape_type& image_shape = oshapes[0];
+    buffer_out_array  out_buf(oshapes, 1);
+    const shape_type& image_shape = media->get_output_shape("image");
 
     media->provide(0, in_buf, out_buf);
 
     int     width  = image_shape.get_shape()[1];
     int     height = image_shape.get_shape()[2];
-    cv::Mat result(height * 3, width, CV_8UC1, out_buf[0]->get_item(0));
+    cv::Mat result(height * 3, width, CV_8UC1, out_buf["image"]->get_item(0));
     cv::imwrite("localization_provider_channel_major.png", result);
     uint8_t* data = result.data;
     for (int row = 0; row < result.rows; row++)

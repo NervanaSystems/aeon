@@ -38,7 +38,7 @@ import distutils.ccompiler
 distutils.ccompiler.CCompiler.compile=parallelCCompile
 
 module = Extension(
-    'aeon_lib',
+    'aeon',
     sources=sources,
     include_dirs=include_dirs,
     libraries=libraries,
@@ -49,6 +49,5 @@ module = Extension(
 setup(
     name='nervana-aeon',
     version='0.2.6',
-    packages=['aeon'],
     ext_modules=[module],
 )
