@@ -4,10 +4,10 @@ manifest_file = "loader/test/test_data/manifest.csv"
 batch_size = 128
 cache_root = ""
 
-config = {
+cfg = {
            'manifest_filename': manifest_file,
-           'minibatch_size': batch_size,
-           'macrobatch_size': 25000,
+           'batch_size': batch_size,
+           'block_size': 25000,
            'cache_directory': cache_root,
            'type': 'image,label',
            'image': {'height': 28,
@@ -16,7 +16,7 @@ config = {
            'label': {'binary': False}
         }
 
-d1 = AeonDataloader(config)
+d1 = AeonDataloader(config=cfg, batch_size=128, batch_count='INFINITE')
 names = d1.get_buffer_names()
 print("names {0}").format(names)
 d1.get_buffer_shape("test_name")

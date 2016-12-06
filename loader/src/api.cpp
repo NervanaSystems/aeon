@@ -139,37 +139,50 @@ static std::string dictionary_to_string(PyObject* dict)
 static PyObject* AeonDataloader_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
     std::cout << __FILE__ << " " << __LINE__ << " AeonDataloader_new" << std::endl;
-    long int             m;
-    aeon_AeonDataloader* p;
+    aeon_AeonDataloader* p = nullptr;
+
+    static char* keyword_list[] = {"config", "batch_size", "batch_count", nullptr};
 
     PyObject* dict;
-    PyArg_ParseTuple(args, "O!", &PyDict_Type, &dict);
-
-    std::string    dict_string = dictionary_to_string(dict);
-    nlohmann::json json_config = nlohmann::json::parse(dict_string);
-
-    /* I don't need python callable __init__() method for this iterator,
-       so I'll simply allocate it as PyObject and initialize it by hand. */
-
-    p = PyObject_New(aeon_AeonDataloader, &aeon_AeonDataloaderType);
-    if (!p)
+    int batch_size = -1;
+    int batch_count;
+    char* batch_count_string = "";
+    string batch_mode_count;
+    // auto rc = PyArg_ParseTuple(args, "O!", &PyDict_Type, &dict);
+    auto rc = PyArg_ParseTupleAndKeywords(args, kwds, "Ois", keyword_list, &dict, &batch_size, &batch_count_string);
+    if (rc)
     {
-        return NULL;
+        std::string    dict_string = dictionary_to_string(dict);
+        nlohmann::json json_config = nlohmann::json::parse(dict_string);
+
+        cout << __FILE__ << " " << __LINE__ << " batch_size " << batch_size << endl;
+        cout << __FILE__ << " " << __LINE__ << " batch_count_string " << batch_count_string << endl;
+        cout << __FILE__ << " " << __LINE__ << " batch_mode_count " << batch_mode_count << endl;
+        cout << __FILE__ << " " << __LINE__ << " config " << json_config.dump(4) << endl;
+
+        /* I don't need python callable __init__() method for this iterator,
+           so I'll simply allocate it as PyObject and initialize it by hand. */
+
+        p = PyObject_New(aeon_AeonDataloader, &aeon_AeonDataloaderType);
+        if (!p)
+        {
+            return NULL;
+        }
+
+        /* I'm not sure if it's strictly necessary. */
+        if (!PyObject_Init((PyObject*)p, &aeon_AeonDataloaderType))
+        {
+            Py_DECREF(p);
+            return NULL;
+        }
+
+        p->m = 5;
+        p->i = 0;
+        std::cout << __FILE__ << " " << __LINE__ << std::endl;
+        p->m_loader = make_shared<loader>(json_config.dump());
+        std::cout << __FILE__ << " " << __LINE__ << std::endl;
     }
 
-    /* I'm not sure if it's strictly necessary. */
-    if (!PyObject_Init((PyObject*)p, &aeon_AeonDataloaderType))
-    {
-        Py_DECREF(p);
-        return NULL;
-    }
-
-    p->m = 5;
-    p->i = 0;
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
-    p->m_loader = make_shared<loader>(json_config.dump());
-    p->m_loader = shared_ptr<loader>(new loader(json_config.dump()));
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     return (PyObject*)p;
 }
 

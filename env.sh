@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SRCS="
+    api.cpp
     avi.cpp
     buffer_batch.cpp
     batch_iterator_async.cpp
