@@ -86,7 +86,6 @@ fixed_buffer_map* loader_async::filler()
         {
             t.join();
         }
-
         // Now perform any potentially necessary whole-batch operation
         m_providers[0]->post_process(*outputs);
     }
@@ -144,7 +143,6 @@ loader::loader(const std::string& config_string)
 
     m_block_loader = make_shared<block_loader_file_async>(m_manifest.get(), block_size);
 
-    INFO << "loader object_count: " << m_block_loader->object_count();
     // base_manifest  = manifest;
 
     // if (lcfg.cache_directory.length() > 0)
@@ -176,7 +174,6 @@ loader::loader(const std::string& config_string)
     }
 
     m_provider = provider_factory::create(config_json);
-    INFO << "loader ctor";
 }
 
 const vector<string>& loader::get_buffer_names() const

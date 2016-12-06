@@ -89,7 +89,6 @@ TEST(block_loader_async, iterate_batch)
     for (int batch = 0; batch < num_batches; ++batch)
     {
         auto b = *biter.next();
-
         for (int item = 0; item < batch_size; ++item)
         {
             uint* object_data = (uint*)b[0].get_item(item).data();
@@ -97,6 +96,8 @@ TEST(block_loader_async, iterate_batch)
             for (int offset = 0; offset < object_size / sizeof(uint); offset++)
             {
                 EXPECT_EQ(object_data[offset] + 1, target_data[offset]);
+                // INFO << "batch_iter " << object_data[offset] << " " << offset << ", " << item <<  ", " << batch << ", " << batch_size;
+                EXPECT_EQ(object_data[offset], 2 * (batch * batch_size + item));
             }
         }
     }

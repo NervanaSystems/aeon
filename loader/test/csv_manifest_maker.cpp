@@ -82,7 +82,7 @@ string manifest_maker::image_manifest(uint32_t record_count, int height, int wid
         cv::Mat mat = embedded_id_image::generate_image(height, width, i);
 //        cv::Mat mat{height, width, CV_8UC3};
 //        mat = cv::Scalar(0,0,0);
-        string image_path = tmp_filename(".png");
+        string image_path = tmp_filename("_" + std::to_string(i) + ".png");
         string target_path = tmp_filename();
         f_manifest << image_path << ',' << target_path << '\n';
         cv::imwrite(image_path, mat);

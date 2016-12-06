@@ -39,9 +39,16 @@ variable_buffer_array* batch_iterator_async::filler()
 {
     variable_buffer_array* rc = get_pending_buffer();
 
+    // This is for the first pass
     if (m_input_ptr == nullptr)
     {
         m_input_ptr = m_source->next();
+    }
+
+    // Empty this buffer so that it can be filled
+    for (auto& ct : *rc)
+    {
+        ct.reset();
     }
 
     size_t number_needed = m_batch_size - rc->at(0).size();
@@ -66,7 +73,7 @@ variable_buffer_array* batch_iterator_async::filler()
 
         move_src_to_dst(m_input_ptr, rc, move_count);
 
-        number_needed = number_needed - move_count;
+        number_needed -= move_count;
 
         if (number_needed > 0)
         {

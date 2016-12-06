@@ -82,7 +82,7 @@ public:
 
         if (block_size == 0)
         {
-            block_size = 2 * batch_size;
+            block_size = 3 * batch_size;
         }
 
         set_global_random_seed(random_seed);

@@ -205,7 +205,7 @@ TEST(loader,test)
 {
     int height = 32;
     int width = 64;
-    size_t batch_size = 128;
+    size_t batch_size = 32;
     size_t input_file_count = 1000;
     manifest_maker mm(input_file_count, height, width);
     string manifest_filename = mm.get_manifest_name();
@@ -273,6 +273,7 @@ TEST(loader,test)
             const char* image_data = image_buffer.get_item(i);
             cv::Mat image{height, width, CV_8UC3, (char*)image_data};
             int actual_id = embedded_id_image::read_embedded_id(image);
+            // INFO << "train_loop " << expected_id << "," << actual_id;
             ASSERT_EQ(expected_id%input_file_count, actual_id);
             expected_id++;
         }
