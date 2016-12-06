@@ -44,10 +44,10 @@ image_localization::image_localization(nlohmann::json js)
     m_output_shapes.insert({"difficult_flag", os[9]});
 }
 
-void image_localization::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
+void image_localization::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
 {
-    vector<char>& datum_in  = in_buf[0]->get_item(idx);
-    vector<char>& target_in = in_buf[1]->get_item(idx);
+    vector<char>& datum_in  = in_buf[0].get_item(idx);
+    vector<char>& target_in = in_buf[1].get_item(idx);
 
     char* datum_out          = out_buf["image"]->get_item(idx);
     char* bbtargets_out      = out_buf["bbtargets"]->get_item(idx);

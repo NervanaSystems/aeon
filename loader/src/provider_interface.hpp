@@ -18,8 +18,7 @@
 #include <memory>
 #include "util.hpp"
 #include "interface.hpp"
-#include "buffer_in.hpp"
-#include "buffer_out.hpp"
+#include "buffer_batch.hpp"
 
 namespace nervana
 {
@@ -29,12 +28,9 @@ namespace nervana
 class nervana::provider_interface
 {
 public:
-    virtual void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) = 0;
+    virtual void provide(int idx, nervana::variable_buffer_array& in_buf, nervana::fixed_buffer_map& out_buf) = 0;
     virtual size_t get_input_count() const = 0;
-
-    virtual void post_process(buffer_out_array& out_buf)
-    {
-    }
+    virtual void post_process(fixed_buffer_map&     out_buf) {}
 
     const shape_type& get_output_shape(const std::string& name) const
     {

@@ -1,21 +1,11 @@
 #!/bin/bash
 
 SRCS="
-    api.cpp
     avi.cpp
-    batch_iterator.cpp
-    block_iterator_sequential.cpp
-    block_iterator_shuffled.cpp
-    block_loader.cpp
-    block_loader_cpio_cache.cpp
-    block_loader_file.cpp
-    block_loader_nds.cpp
+    buffer_batch.cpp
+    batch_iterator_async.cpp
+    block_loader_file_async.cpp
     box.cpp
-    buffer_in.cpp
-    buffer_out.cpp
-    buffer_pool.cpp
-    buffer_pool_in.cpp
-    buffer_pool_out.cpp
     cap_mjpeg_decoder.cpp
     cpio.cpp
     etl_audio.cpp
@@ -48,10 +38,7 @@ SRCS="
     provider_image_stereo.cpp
     provider_video_classifier.cpp
     provider_video_only.cpp
-    python_backend.cpp
     specgram.cpp
-    thread_pool_read.cpp
-    thread_pool_decode.cpp
     util.cpp
     wav_data.cpp
     crc.cpp

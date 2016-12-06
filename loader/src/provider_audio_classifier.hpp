@@ -28,7 +28,7 @@ class nervana::audio_classifier : public provider_interface
 {
 public:
     audio_classifier(nlohmann::json js);
-    void provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf) override;
+    void provide(int idx, nervana::variable_buffer_array& in_buf, nervana::fixed_buffer_map& out_buf) override;
     size_t get_input_count() const override;
 
 private:

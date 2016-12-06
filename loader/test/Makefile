@@ -28,12 +28,8 @@ TEST_SRCS := \
     helpers.cpp \
     main.cpp \
     test_audio.cpp \
-    test_batch_iterator.cpp \
     test_bbox.cpp \
-    test_block_iterator_shuffled.cpp \
-    test_block_loader_cpio_cache.cpp \
-    test_block_loader_file.cpp \
-    test_block_loader_nds.cpp \
+    test_block_loader_async.cpp \
     test_char_map.cpp \
     test_image.cpp \
     test_label_map.cpp \
@@ -48,10 +44,16 @@ TEST_SRCS := \
     test_video.cpp \
     test_config.cpp \
     test_cpio.cpp \
-    test_cpio_cache.cpp \
     test_file_util.cpp \
-    block_loader_util.cpp \
     test_loader.cpp \
+    test_async_manager.cpp
+    # test_cpio_cache.cpp \
+    # test_batch_iterator.cpp \
+    # test_block_iterator_shuffled.cpp \
+    # test_block_loader_cpio_cache.cpp \
+    # test_block_loader_file.cpp \
+    # test_block_loader_nds.cpp \
+    # block_loader_util.cpp \
 
 OBJS             = $(subst .cpp,.o,$(TEST_SRCS))
 INC             := -I../src $(INC)

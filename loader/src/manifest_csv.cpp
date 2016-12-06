@@ -26,11 +26,15 @@
 #include "manifest_csv.hpp"
 #include "util.hpp"
 #include "file_util.hpp"
-
+#include "log.hpp"
 using namespace std;
 using namespace nervana;
 
-manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root, float subset_fraction)
+
+manifest_csv::manifest_csv(const string& filename,
+                           bool shuffle,
+                           const string& root,
+                           float subset_fraction)
     : m_filename(filename)
 {
     // for now parse the entire manifest on creation
@@ -51,8 +55,12 @@ manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& r
     // file, so a purely stream based interface is not sufficient.
     if (shuffle)
     {
-        shuffle_filename_lists();
+        std::shuffle(m_filename_lists.begin(), m_filename_lists.end(), std::mt19937(0));
     }
+
+    affirm(subset_fraction > 0.0 && subset_fraction <= 1.0, "subset_fraction must be >= 0 and <= 1");
+    generate_subset(subset_fraction);
+
 }
 
 string manifest_csv::cache_id()
@@ -116,16 +124,11 @@ void manifest_csv::parse_stream(istream& is, const string& root)
     }
 }
 
-void manifest_csv::shuffle_filename_lists()
+vector<string>* manifest_csv::next()
 {
-    // shuffles m_filename_lists.  It is possible that the order of the
-    // filenames in the manifest file were in some sorted order and we
-    // don't want our blocks to be biased by that order.
-
-    // hardcode random seed to 0 since this step can be cached into a
-    // CPIO file.  We don't want to cache anything that is based on a
-    // changing random seed, so don't use a changing random seed.
-    std::shuffle(m_filename_lists.begin(), m_filename_lists.end(), std::mt19937(0));
+    vector<string>* res = &(m_filename_lists[m_counter]);
+    m_counter = (m_counter + 1) % object_count();
+    return res;
 }
 
 void manifest_csv::generate_subset(float subset_fraction)
@@ -151,8 +154,6 @@ void manifest_csv::generate_subset(float subset_fraction)
                     break;
             }
         }
-        //        cout << __FILE__ << " " << __LINE__ << " expected=" << expected_count << ", actual=" << m_filename_lists.size() <<
-        //        endl;
     }
 }
 
@@ -171,9 +172,4 @@ uint32_t manifest_csv::get_crc()
         m_crc_computed = true;
     }
     return m_computed_crc;
-}
-
-int manifest_csv::nelements()
-{
-    return m_filename_lists.size() > 0 ? m_filename_lists[0].size() : 0;
 }

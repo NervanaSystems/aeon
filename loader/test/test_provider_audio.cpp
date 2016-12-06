@@ -27,7 +27,7 @@
 #include "wav_data.hpp"
 #include "json.hpp"
 #include "util.hpp"
-#include "buffer_in.hpp"
+#include "log.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -51,30 +51,27 @@ TEST(provider, audio_classify)
     vector<char> buf(wav_data::HEADER_SIZE + wav.nbytes());
     wav.write_to_buffer(&buf[0], buf.size());
 
-    buffer_in_array bp(2);
-    buffer_in&      data_p   = *bp[0];
-    buffer_in&      target_p = *bp[1];
-
-    buffer_out_array outBuf(oshapes, batch_size);
+    fixed_buffer_map out_buf(oshapes, batch_size);
+    variable_buffer_array bp{2};
 
     for (int i = 0; i < batch_size; i++)
     {
-        data_p.add_item(buf);
+        bp[0].add_item(buf);
         vector<char> packed_int(4);
         pack<int>(&packed_int[0], 42 + i);
-        target_p.add_item(packed_int);
+        bp[1].add_item(packed_int);
     }
 
-    EXPECT_EQ(data_p.record_count(), batch_size);
+    EXPECT_EQ(bp[0].get_item_count(), batch_size);
 
     for (int i = 0; i < batch_size; i++)
     {
-        media->provide(i, bp, outBuf);
+        media->provide(i, bp, out_buf);
     }
 
     for (int i = 0; i < batch_size; i++)
     {
-        int target_value = unpack<int>(outBuf["label"]->get_item(i));
+        int target_value = unpack<int>(out_buf["label"]->get_item(i));
         EXPECT_EQ(42 + i, target_value);
     }
 }
@@ -116,34 +113,29 @@ TEST(provider, audio_transcript)
     vector<char>   tr1_char(tr[1].begin(), tr[1].end());
 
     // Create the input buffer
-    buffer_in_array bp(2);
-    buffer_in&      data_p   = *bp[0];
-    buffer_in&      target_p = *bp[1];
-
-    // Fill the input buffer
+    variable_buffer_array bp{2};
     for (int i = 0; i < batch_size; i++)
     {
-        data_p.add_item(buf);
-        target_p.add_item(((i % 2) == 0 ? tr0_char : tr1_char));
+        bp[0].add_item(buf);
+        bp[1].add_item(((i % 2) == 0 ? tr0_char : tr1_char));
     }
-
-    EXPECT_EQ(data_p.record_count(), batch_size);
-    EXPECT_EQ(target_p.record_count(), batch_size);
+    EXPECT_EQ(bp[0].get_item_count(), batch_size);
+    EXPECT_EQ(bp[1].get_item_count(), batch_size);
 
     // Generate output buffers using shapes from the provider
     auto oshapes = media->get_output_shapes();
-    buffer_out_array outBuf(oshapes, batch_size);
+    fixed_buffer_map out_buf(oshapes, batch_size);
 
     // Call the provider
     for (int i = 0; i < batch_size; i++)
     {
-        media->provide(i, bp, outBuf);
+        media->provide(i, bp, out_buf);
     }
 
     // Check target sequences against their source string
     for (int i = 0; i < batch_size; i++)
     {
-        char* target_out  = outBuf["transcription"]->get_item(i);
+        char* target_out  = out_buf["transcription"]->get_item(i);
         auto  orig_string = tr[i % 2];
         for (auto c : orig_string)
         {
@@ -154,27 +146,27 @@ TEST(provider, audio_transcript)
     // Check the transcript lengths match source string length
     for (int i = 0; i < batch_size; i++)
     {
-        ASSERT_EQ(unpack<uint32_t>(outBuf["trans_length"]->get_item(i)), tr[i % 2].length());
+        ASSERT_EQ(unpack<uint32_t>(out_buf["trans_length"]->get_item(i)), tr[i % 2].length());
     }
 
     for (int i = 0; i < batch_size; i++)
     {
-        ASSERT_EQ(unpack<uint32_t>(outBuf["valid_pct"]->get_item(i)), 100);
+        ASSERT_EQ(unpack<uint32_t>(out_buf["valid_pct"]->get_item(i)), 100);
     }
 
     // Do the packing
-    media->post_process(outBuf);
+    media->post_process(out_buf);
     string   combined_string = tr[0] + tr[1];
     uint32_t packed_length   = combined_string.size() * batch_size / 2;
 
     // Check that target sequence contains abutted vals corresponding to original strings
-    char* target_ptr = outBuf["transcription"]->data();
+    char* target_ptr = out_buf["transcription"]->data();
     for (int i = 0; i < packed_length; i++)
     {
         char c = combined_string[i % combined_string.size()];
         ASSERT_EQ(unpack<uint8_t>(target_ptr++), cmap[std::toupper(c)]);
     }
-    for (int i = packed_length; i < outBuf["transcription"]->size(); i++)
+    for (int i = packed_length; i < out_buf["transcription"]->size(); i++)
     {
         ASSERT_EQ(0, *(target_ptr++));
     }

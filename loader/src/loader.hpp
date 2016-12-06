@@ -24,16 +24,13 @@
 #include <map>
 #include <future>
 
-#include "python_backend.hpp"
-#include "thread_pool_read.hpp"
-#include "thread_pool_decode.hpp"
-#include "block_loader.hpp"
-#include "block_iterator.hpp"
-#include "batch_iterator.hpp"
 #include "manifest.hpp"
 #include "provider_factory.hpp"
-#include "buffer_pool_in.hpp"
-#include "buffer_pool_out.hpp"
+
+#include "async_manager.hpp"
+#include "buffer_batch.hpp"
+#include "batch_iterator_async.hpp"
+
 #include "util.hpp"
 
 namespace nervana
@@ -41,6 +38,7 @@ namespace nervana
     class loader_config;
     class loader;
     class dataset_builder;
+    class loader_async;
 }
 
 /* decode_thread_pool
@@ -57,15 +55,16 @@ class nervana::loader_config : public nervana::interface::config
 public:
     std::string manifest_filename;
     std::string manifest_root;
-    int         minibatch_size;
+    int         batch_size;
 
     std::string type;
     std::string cache_directory     = "";
-    int         macrobatch_size     = 0;
+    int         block_size     = 0;
     float       subset_fraction     = 1.0;
     bool        shuffle_every_epoch = false;
     bool        shuffle_manifest    = false;
     bool        single_thread       = false;
+    bool        pinned              = false;
     int         random_seed         = 0;
 
     loader_config(nlohmann::json js)
@@ -81,9 +80,9 @@ public:
         }
         verify_config("loader", config_list, js);
 
-        if (macrobatch_size == 0)
+        if (block_size == 0)
         {
-            macrobatch_size = minibatch_size;
+            block_size = 2 * batch_size;
         }
 
         set_global_random_seed(random_seed);
@@ -95,13 +94,14 @@ private:
         ADD_SCALAR(type, mode::REQUIRED),
         ADD_SCALAR(manifest_filename, mode::REQUIRED),
         ADD_SCALAR(manifest_root, mode::OPTIONAL),
-        ADD_SCALAR(minibatch_size, mode::REQUIRED),
+        ADD_SCALAR(batch_size, mode::REQUIRED),
         ADD_SCALAR(cache_directory, mode::OPTIONAL),
-        ADD_SCALAR(macrobatch_size, mode::OPTIONAL),
+        ADD_SCALAR(block_size, mode::OPTIONAL),
         ADD_SCALAR(subset_fraction, mode::OPTIONAL, [](decltype(subset_fraction) v) { return v <= 1.0 && v >= 0.0; }),
         ADD_SCALAR(shuffle_every_epoch, mode::OPTIONAL),
         ADD_SCALAR(shuffle_manifest, mode::OPTIONAL),
         ADD_SCALAR(single_thread, mode::OPTIONAL),
+        ADD_SCALAR(pinned, mode::OPTIONAL),
         ADD_SCALAR(random_seed, mode::OPTIONAL),
     };
 
@@ -109,12 +109,32 @@ private:
     bool validate() { return true; }
 };
 
-/* loader
- *
- * The loader instantiates and then coordinates the effort of loading ingested data, caching
- * blocks of it in contiguous disk (using cpio file format), transforming the data and finally
- * loading the data into device memory
-*/
+
+class nervana::loader_async : public nervana::async_manager<nervana::variable_buffer_array, nervana::fixed_buffer_map>
+{
+public:
+    loader_async(batch_iterator_async* b_itor, const std::string& config_string);
+
+    virtual ~loader_async() { finalize(); }
+    virtual size_t object_count() override { return m_batch_size; }
+    virtual size_t element_count() override { return m_number_elements_out; }
+
+    virtual nervana::fixed_buffer_map* filler() override;
+
+private:
+    void work(int id, nervana::variable_buffer_array* in_buf, nervana::fixed_buffer_map* out_buf);
+
+    std::vector<std::shared_ptr<nervana::provider_interface>> m_providers;
+    uint32_t                        m_batch_size;
+    size_t                          m_number_elements_in;
+    size_t                          m_number_elements_out;
+    int                             m_items_per_thread;
+    std::vector<int>                m_start_inds;
+    std::vector<int>                m_end_inds;
+    nlohmann::json                  m_lcfg_json;
+};
+
+
 
 class nervana::loader
 {
@@ -138,7 +158,7 @@ public:
 
     // member typedefs provided through inheriting from std::iterator
     class iterator : public std::iterator<std::input_iterator_tag, // iterator_category
-                                          buffer_out_array         // value_type
+                                          fixed_buffer_map         // value_type
                                           // long,                    // difference_type
                                           // const buffer_out*,       // pointer
                                           // buffer_out               // reference
@@ -154,21 +174,21 @@ public:
         iterator& operator++(int);
         bool operator==(const iterator& other) const; // {return num == other.num;}
         bool operator!=(const iterator& other) const; // {return !(*this == other);}
-        const buffer_out_array& operator*() const;    // {return num;}
+        const fixed_buffer_map& operator*() const;    // {return num;}
     private:
         iterator() = delete;
         iterator(const iterator&);
-        void read_input();
-        void fill_buffer();
+        // void read_input();
+        // void fill_buffer();
 
         loader&                          m_current_loader;
         const bool                       m_is_end;
-        size_t                           m_num_inputs;
-        std::future<void>                m_async_result;
-        buffer_out_array                 m_output_buffer;
+        // size_t                           m_num_inputs;
+        // std::future<void>                m_async_result;
+        fixed_buffer_map*                m_output_buffer_ptr{nullptr};
         size_t                           m_object_count;
         size_t                           m_position;
-        buffer_in_array                  m_pending_block;
+        // variable_buffer_array            m_pending_block;
         BatchMode                        m_batch_mode;
     };
 
@@ -181,8 +201,10 @@ private:
     friend class nervana::loader::iterator;
 
     bool                                m_single_thread_mode = false;
-    std::shared_ptr<block_loader>       m_block_loader;
-    std::shared_ptr<batch_iterator>     m_batch_iterator;
+    std::shared_ptr<manifest_csv>       m_manifest;
+    std::shared_ptr<block_loader_file_async>       m_block_loader;
+    std::shared_ptr<batch_iterator_async>     m_batch_iterator;
+    std::shared_ptr<loader_async>       m_decoder;
     std::shared_ptr<provider_interface> m_provider;
     int                                 m_batch_size;
     std::map<std::string, size_t>       m_out_sizes;

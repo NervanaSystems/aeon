@@ -19,9 +19,9 @@
 #include "interface.hpp"
 #include <Python.h>
 
-#include "buffer_in.hpp"
+#include "loader.hpp"
+#include "buffer_batch.hpp"
 #include "util.hpp"
-#include "buffer_out.hpp"
 
 namespace nervana
 {
@@ -41,30 +41,22 @@ private:
     PyGILState_STATE m_gstate;
 };
 
-class nervana::python_backend
+class nervana::python_backend : public nervana::async_manager<nervana::fixed_buffer_map, std::vector<PyObject*>>
 {
 public:
-    python_backend(PyObject*);
+    python_backend(loader_async* loader_source, PyObject* py_obj_backend,
+                   const std::vector<nervana::shape_type>& oshape_types);
     ~python_backend();
-    void setup_buffers(const std::vector<nervana::shape_type>& oshape_types, int batchSize);
-    void clear_buffers();
+    void setup_buffers();
 
-    bool use_pinned_memory();
-    void call_backend_transfer(nervana::buffer_out_array& outBuf, int bufIdx);
-    PyObject* get_host_tuple(int bufIdx);
-    PyObject*                        get_shapes();
-    std::vector<nervana::shape_type> m_oshape_types;
-    int                              m_batch_size;
+    virtual std::vector<PyObject*>* filler() override;
+
 
 private:
     python_backend() = delete;
-    PyObject* initPyList(int length = 2);
-    void wrap_buffer_pool(PyObject* list, nervana::buffer_out* buf, int bufIdx, const nervana::shape_type& shape_type);
+    PyObject* wrap_buffer_as_np_array(buffer_fixed_size_elements buf, const nervana::shape_type& st);
 
     PyObject* m_py_obj_backend;
-
-    std::vector<PyObject*> m_host_lists;
-    std::vector<PyObject*> m_dev_lists;
-
+    std::vector<nervana::shape_type> m_oshape_types;
     PyObject* m_f_consume = NULL;
 };

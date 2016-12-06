@@ -15,13 +15,13 @@
 
 #include "gtest/gtest.h"
 
-#include "buffer_in.hpp"
+#include "buffer_batch.hpp"
 #include "helpers.hpp"
 
 using namespace std;
 using namespace nervana;
 
-void read(buffer_in& b, const char* str)
+void read(buffer_variable_size_elements& b, const char* str)
 {
     istringstream is(str);
     b.read(is, strlen(str));
@@ -33,7 +33,7 @@ TEST(buffer, shuffle)
     // that they are sorted, then shuffle, then assert that they are
     // not sorted
 
-    buffer_in b;
+    buffer_variable_size_elements b;
 
     read(b, "abc");
     read(b, "asd");
@@ -51,7 +51,7 @@ TEST(buffer, shuffle)
     ASSERT_EQ(sorted(buffer_to_vector_of_strings(b)), false);
 }
 
-void setup_buffer_exception(buffer_in& b)
+void setup_buffer_exception(buffer_variable_size_elements& b)
 {
     // setup b with length 4, one value is an exception
     read(b, "a");
@@ -71,14 +71,14 @@ void setup_buffer_exception(buffer_in& b)
 
 TEST(buffer, write_exception)
 {
-    buffer_in b;
+    buffer_variable_size_elements b;
 
     setup_buffer_exception(b);
 }
 
 TEST(buffer, read_exception)
 {
-    buffer_in b;
+    buffer_variable_size_elements b;
 
     setup_buffer_exception(b);
 

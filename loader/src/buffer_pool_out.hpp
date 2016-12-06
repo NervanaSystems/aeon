@@ -34,27 +34,27 @@ class nervana::buffer_pool_out : public nervana::buffer_pool
 public:
     buffer_pool_out(const std::map<std::string, size_t>& writeSizes, size_t batchSize, bool pinned = false);
     virtual ~buffer_pool_out();
-    buffer_out_array& get_for_write();
-    buffer_out_array& get_for_read();
+    buffer_out_array& get_write_buffer();
+    buffer_out_array& get_read_buffer();
 
-    void        advance_read_pos();
-    void        advance_write_pos();
-    bool        empty();
-    bool        full();
+    void        switch_read_buffer();
+    void        switch_write_buffer();
+    bool        no_read_buffers();
+    bool        has_read_buffers();
+    bool        no_write_buffers();
+    bool        has_write_buffers();
+
     std::mutex& get_mutex();
-    void wait_for_not_empty(std::unique_lock<std::mutex>& lock);
-    void wait_for_non_full(std::unique_lock<std::mutex>& lock);
-    void signal_not_empty();
-    void signal_not_full();
+    void wait_for_available_read_buffer(std::unique_lock<std::mutex>& lock);
+    void wait_for_available_write_buffer(std::unique_lock<std::mutex>& lock);
+    void signal_available_read_buffer();
+    void signal_available_write_buffer();
 
 protected:
-    void advance(int& index);
+    int                               m_used  = 0;
+    std::shared_ptr<buffer_out_array> m_bufs[2];
+    std::mutex                        m_mutex;
+    std::condition_variable           m_available_read_buffer;
+    std::condition_variable           m_available_write_buffer;
 
-protected:
-    static constexpr int                           m_count = 2;
-    int                                            m_used  = 0;
-    std::vector<std::shared_ptr<buffer_out_array>> m_bufs;
-    std::mutex                                     m_mutex;
-    std::condition_variable                        m_non_full;
-    std::condition_variable                        m_non_empty;
 };

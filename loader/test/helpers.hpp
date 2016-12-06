@@ -18,10 +18,10 @@
 #include <vector>
 #include <string>
 
-#include "buffer_in.hpp"
+#include "buffer_batch.hpp"
 #include "etl_image.hpp"
 
-std::vector<std::string> buffer_to_vector_of_strings(nervana::buffer_in& b);
+std::vector<std::string> buffer_to_vector_of_strings(nervana::buffer_variable_size_elements& b);
 bool sorted(std::vector<std::string> words);
 void dump_vector_of_strings(std::vector<std::string>& words);
 

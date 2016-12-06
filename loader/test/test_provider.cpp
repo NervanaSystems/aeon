@@ -54,7 +54,8 @@ TEST(provider, image)
 
     size_t batch_size = 128;
 
-    buffer_out_array outBuf(oshapes, batch_size);
+    fixed_buffer_map out_buf(oshapes, batch_size);
+    variable_buffer_array bp{2};
 
     auto files = image_dataset.GetFiles();
     ASSERT_NE(0, files.size());
@@ -62,18 +63,16 @@ TEST(provider, image)
     ifstream f(files[0], istream::binary);
     ASSERT_TRUE(f);
     cpio::reader reader(f);
-    buffer_in_array bp(2);
-    buffer_in&      data_p   = *bp[0];
-    buffer_in&      target_p = *bp[1];
     for (int i = 0; i < reader.record_count() / 2; i++)
     {
-        reader.read(data_p);
-        reader.read(target_p);
+        reader.read(bp[0]);
+        reader.read(bp[1]);
     }
-    EXPECT_GT(data_p.record_count(), batch_size);
+
+    EXPECT_GT(bp[0].get_item_count(), batch_size);
     for (int i = 0; i < batch_size; i++)
     {
-        media->provide(i, bp, outBuf);
+        media->provide(i, bp, out_buf);
 
         //        cv::Mat mat(width,height,CV_8UC3,&dbuffer[0]);
         //        string filename = "data" + to_string(i) + ".png";
@@ -81,7 +80,7 @@ TEST(provider, image)
     }
     for (int i = 0; i < batch_size; i++)
     {
-        int target_value = unpack<int>(outBuf["label"]->get_item(i));
+        int target_value = unpack<int>(out_buf["label"]->get_item(i));
         EXPECT_EQ(42 + i, target_value);
     }
 }
@@ -175,11 +174,12 @@ TEST(provider, blob)
 
     size_t batch_size = 1;
 
-    buffer_out_array out_buf(oshapes, batch_size);
-    buffer_in_array  in_buf(3);
-    in_buf[0]->add_item(input_left);
-    in_buf[1]->add_item(input_right);
-    in_buf[2]->add_item(target_cdata);
+    fixed_buffer_map out_buf(oshapes, batch_size);
+
+    variable_buffer_array in_buf{3};
+    in_buf[0].add_item(input_left);
+    in_buf[1].add_item(input_right);
+    in_buf[2].add_item(target_cdata);
 
     // call the provider
     media->provide(0, in_buf, out_buf);

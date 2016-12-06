@@ -19,7 +19,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
-
+#include <atomic>
 #include "python_backend.hpp"
 #include "thread_pool.hpp"
 #include "buffer_pool_in.hpp"
@@ -42,8 +42,10 @@ namespace nervana
 class nervana::decode_thread_pool : public nervana::thread_pool
 {
 public:
-    decode_thread_pool(int count, const std::shared_ptr<nervana::buffer_pool_in>& in,
-                       const std::shared_ptr<nervana::buffer_pool_out>& out, const std::shared_ptr<python_backend>& pbe);
+    decode_thread_pool(int count,
+                       const std::shared_ptr<nervana::buffer_pool_in>& in,
+                       const std::shared_ptr<nervana::buffer_pool_out>& out,
+                       const std::shared_ptr<python_backend>& pbe);
 
     virtual ~decode_thread_pool();
     virtual void start() override;
@@ -62,8 +64,8 @@ private:
     decode_thread_pool(const decode_thread_pool&);
 
     std::vector<std::shared_ptr<nervana::provider_interface>> m_providers;
-    std::shared_ptr<nervana::buffer_pool_in>                  m_in;
-    std::shared_ptr<nervana::buffer_pool_out>                 m_out;
+    std::shared_ptr<nervana::buffer_pool_in>                  m_buffer_pool_encoded;
+    std::shared_ptr<nervana::buffer_pool_out>                 m_buffer_pool_decoded;
     std::shared_ptr<python_backend>                           m_python_backend;
 
     int                       m_items_per_thread;
@@ -71,13 +73,13 @@ private:
     std::condition_variable   m_started;
     std::condition_variable   m_ended;
     int                       m_batch_size;
-    int                       m_end_signaled    = 0;
+    std::atomic<int>          m_end_signaled{0};
     std::thread*              m_manager         = 0;
     bool                      m_stop_manager    = false;
     bool                      m_manager_stopped = false;
-    nervana::buffer_in_array* m_input_buf       = 0;
     int                       m_buffer_index    = 0;
-    std::vector<int>          m_start_signaled;
     std::vector<int>          m_start_inds;
     std::vector<int>          m_end_inds;
+    std::vector<std::atomic<bool>>          m_start_signaled;
+
 };

@@ -20,8 +20,8 @@
 
 #include "gtest/gtest.h"
 #include "cpio.hpp"
-#include "buffer_in.hpp"
 #include "util.hpp"
+#include "buffer_batch.hpp"
 
 #define private public
 
@@ -36,10 +36,10 @@ TEST(cpio, read_nds)
     cpio::reader reader(f);
     EXPECT_EQ(1, reader.record_count());
 
-    nervana::buffer_in buffer;
-    EXPECT_EQ(0, buffer.record_count());
+    nervana::buffer_variable_size_elements buffer;
+    EXPECT_EQ(0, buffer.get_item_count());
     reader.read(buffer);
-    EXPECT_EQ(1, buffer.record_count());
+    EXPECT_EQ(1, buffer.get_item_count());
 }
 
 TEST(cpio,write_string)
@@ -52,9 +52,9 @@ TEST(cpio,write_string)
         cpio::writer writer(ss);
         for (int i=0; i<record_count; i++)
         {
-            buffer_in_array bin{2};
-            bin[0]->add_item(image_data);
-            bin[1]->add_item(label_data);
+            variable_buffer_array bin{2};
+            bin[0].add_item(image_data);
+            bin[1].add_item(label_data);
             writer.write_all_records(bin);
         }
     }

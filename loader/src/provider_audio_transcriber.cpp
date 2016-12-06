@@ -38,10 +38,10 @@ audio_transcriber::audio_transcriber(nlohmann::json js)
     m_output_shapes.insert({"valid_pct", valid_pct});
 }
 
-void audio_transcriber::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
+void audio_transcriber::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
 {
-    vector<char>& datum_in  = in_buf[0]->get_item(idx);
-    vector<char>& target_in = in_buf[1]->get_item(idx);
+    vector<char>& datum_in  = in_buf[0].get_item(idx);
+    vector<char>& target_in = in_buf[1].get_item(idx);
 
     char* datum_out  = out_buf["audio"]->get_item(idx);
     char* target_out = out_buf["transcription"]->get_item(idx);
@@ -73,13 +73,13 @@ size_t audio_transcriber::get_input_count() const
     return 2;
 }
 
-void audio_transcriber::post_process(buffer_out_array& out_buf)
+void audio_transcriber::post_process(fixed_buffer_map& out_buf)
 {
     auto transcription = out_buf["transcription"];
     auto trans_length = out_buf["trans_length"];
     if (trans_config.pack_for_ctc)
     {
-        auto     num_items  = transcription->record_count();
+        auto     num_items  = transcription->get_item_count();
         char*    dptr       = transcription->data();
         uint32_t packed_len = 0;
 

@@ -35,7 +35,7 @@ namespace nervana
 class nervana::read_thread_pool : public thread_pool
 {
 public:
-    read_thread_pool(const std::shared_ptr<nervana::buffer_pool_in>& out,
+    read_thread_pool(const std::shared_ptr<nervana::buffer_pool_in>& buffer_pool_from_block,
                      const std::shared_ptr<nervana::batch_iterator>& batch_iterator);
 
 protected:
@@ -44,6 +44,6 @@ protected:
 private:
     read_thread_pool();
     read_thread_pool(const read_thread_pool&);
-    std::shared_ptr<nervana::buffer_pool_in> m_out;
+    std::shared_ptr<nervana::buffer_pool_in> m_buffer_pool_from_block;
     std::shared_ptr<nervana::batch_iterator> m_batch_iterator;
 };

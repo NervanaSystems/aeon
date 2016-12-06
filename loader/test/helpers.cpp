@@ -23,10 +23,10 @@
 using namespace std;
 using namespace nervana;
 
-vector<string> buffer_to_vector_of_strings(buffer_in& b)
+vector<string> buffer_to_vector_of_strings(buffer_variable_size_elements& b)
 {
     vector<string> words;
-    for (auto i = 0; i != b.record_count(); ++i)
+    for (auto i = 0; i != b.get_item_count(); ++i)
     {
         vector<char>& s = b.get_item(i);
         words.push_back(string(s.data(), s.size()));

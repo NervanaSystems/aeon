@@ -32,7 +32,7 @@
 #include "etl_localization.hpp"
 #include "json.hpp"
 #include "provider_factory.hpp"
-
+#include "log.hpp"
 using namespace std;
 using namespace nervana;
 using namespace nervana::localization;
@@ -1134,11 +1134,11 @@ TEST(localization, provider)
         image_cdata.push_back(c);
     };
 
-    buffer_in_array in_buf(2);
-    in_buf[0]->add_item(image_cdata);
-    in_buf[1]->add_item(target_data);
+    variable_buffer_array in_buf{2};
+    in_buf[0].add_item(image_cdata);
+    in_buf[1].add_item(target_data);
 
-    buffer_out_array  out_buf(oshapes, 1);
+    fixed_buffer_map out_buf(oshapes, 1);
     const shape_type& image_shape = media->get_output_shape("image");
 
     media->provide(0, in_buf, out_buf);
@@ -1204,15 +1204,14 @@ TEST(localization, provider_channel_major)
         image_cdata.push_back(c);
     };
 
-    buffer_in_array in_buf(2);
-    in_buf[0]->add_item(image_cdata);
-    in_buf[1]->add_item(target_data);
+    variable_buffer_array in_buf{2};
+    in_buf[0].add_item(image_cdata);
+    in_buf[1].add_item(target_data);
 
-    buffer_out_array  out_buf(oshapes, 1);
+    fixed_buffer_map  out_buf(oshapes, 1);
     const shape_type& image_shape = media->get_output_shape("image");
 
     media->provide(0, in_buf, out_buf);
-
     int     width  = image_shape.get_shape()[1];
     int     height = image_shape.get_shape()[2];
     cv::Mat result(height * 3, width, CV_8UC1, out_buf["image"]->get_item(0));

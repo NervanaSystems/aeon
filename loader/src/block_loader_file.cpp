@@ -29,7 +29,7 @@ block_loader_file::block_loader_file(shared_ptr<nervana::manifest_csv> mfst, flo
     : block_loader(block_size)
     , m_manifest(mfst)
 {
-    m_elements_per_record = m_manifest->nelements();
+    m_elements_per_record = m_manifest->element_count();
     affirm(subset_fraction > 0.0 && subset_fraction <= 1.0, "subset_fraction must be >= 0 and <= 1");
 
     m_manifest->generate_subset(subset_fraction);

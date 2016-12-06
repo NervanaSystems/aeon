@@ -39,7 +39,7 @@ TEST(loader,iterator)
     string manifest_filename = mm.get_manifest_name();
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
-                         {"minibatch_size", batch_size},
+                         {"batch_size", batch_size},
                          {"image", {
                             {"height",height},
                             {"width",width},
@@ -88,7 +88,7 @@ TEST(loader,once)
     string manifest_filename = mm.get_manifest_name();
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
-                         {"minibatch_size", batch_size},
+                         {"batch_size", batch_size},
                          {"image", {
                             {"height",height},
                             {"width",width},
@@ -108,13 +108,13 @@ TEST(loader,once)
             .create();
 
     int count = 0;
-    for(const buffer_out_array& data : train_set)
+    for(const fixed_buffer_map& data : train_set)
     {
         (void)data; // silence compiler warning
         ASSERT_NE(count, input_file_count);
         count++;
     }
-    ASSERT_EQ(count, input_file_count);
+    ASSERT_EQ(input_file_count, count);
 }
 
 TEST(loader,count)
@@ -127,7 +127,7 @@ TEST(loader,count)
     string manifest_filename = mm.get_manifest_name();
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
-                         {"minibatch_size", batch_size},
+                         {"batch_size", batch_size},
                          {"image", {
                             {"height",height},
                             {"width",width},
@@ -149,7 +149,7 @@ TEST(loader,count)
 
     int count = 0;
     ASSERT_EQ(expected_iterations, train_set.m_batch_count_value);
-    for(const buffer_out_array& data : train_set)
+    for(const fixed_buffer_map& data : train_set)
     {
         (void)data; // silence compiler warning
         ASSERT_NE(count, input_file_count);
@@ -168,7 +168,7 @@ TEST(loader,infinite)
     string manifest_filename = mm.get_manifest_name();
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
-                         {"minibatch_size", batch_size},
+                         {"batch_size", batch_size},
                          {"image", {
                             {"height",height},
                             {"width",width},
@@ -189,7 +189,7 @@ TEST(loader,infinite)
 
     int count = 0;
     int expected_iterations = input_file_count * 3;
-    for(const buffer_out_array& data : train_set)
+    for(const fixed_buffer_map& data : train_set)
     {
         (void)data; // silence compiler warning
         count++;
@@ -211,7 +211,7 @@ TEST(loader,test)
     string manifest_filename = mm.get_manifest_name();
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
-                         {"minibatch_size", batch_size},
+                         {"batch_size", batch_size},
                          {"image", {
                             {"height",height},
                             {"width",width},
@@ -257,7 +257,7 @@ TEST(loader,test)
 
     int count=0;
     int expected_id = 0;
-    for(const buffer_out_array& data : train_set)  // if d1 created with infinite, this will just keep going
+    for(const fixed_buffer_map& data : train_set)  // if d1 created with infinite, this will just keep going
     {
         ASSERT_EQ(2, data.size());
 //        model_fit_one_iter(data);
@@ -265,9 +265,9 @@ TEST(loader,test)
 //        if(error < thresh) {
 //            break;
 //        }
-        const buffer_out* image_buffer_ptr = data["image"];
+        const buffer_fixed_size_elements* image_buffer_ptr = data["image"];
         ASSERT_NE(nullptr, image_buffer_ptr);
-        const buffer_out& image_buffer = *image_buffer_ptr;
+        const buffer_fixed_size_elements& image_buffer = *image_buffer_ptr;
         for(int i=0; i<batch_size; i++)
         {
             const char* image_data = image_buffer.get_item(i);

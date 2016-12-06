@@ -28,9 +28,9 @@ image_only::image_only(nlohmann::json js)
     m_output_shapes.insert({"image", image_config.get_shape_type()});
 }
 
-void image_only::provide(int idx, buffer_in_array& in_buf, buffer_out_array& out_buf)
+void image_only::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
 {
-    std::vector<char>& datum_in  = in_buf[0]->get_item(idx);
+    std::vector<char>& datum_in  = in_buf[0].get_item(idx);
     char*              datum_out = out_buf["image"]->get_item(idx);
 
     if (datum_in.size() == 0)

@@ -208,7 +208,7 @@ void cpio::reader::read_header()
     m_header.read(m_is);
 }
 
-void cpio::reader::read(nervana::buffer_in& dest)
+void cpio::reader::read(nervana::buffer_variable_size_elements& dest)
 {
     uint32_t element_size;
     m_record_header.read(m_is, &element_size);
@@ -264,9 +264,9 @@ cpio::writer::~writer()
     }
 }
 
-void cpio::writer::write_all_records(nervana::buffer_in_array& buff)
+void cpio::writer::write_all_records(nervana::variable_buffer_array& buff)
 {
-    int record_count = buff[0]->record_count();
+    int record_count = buff[0].get_item_count();
     if (m_header.m_elements_per_record == 0)
     {
         m_header.m_elements_per_record = record_count;
@@ -277,12 +277,12 @@ void cpio::writer::write_all_records(nervana::buffer_in_array& buff)
     }
 }
 
-void cpio::writer::write_record(nervana::buffer_in_array& buff, int record_idx)
+void cpio::writer::write_record(nervana::variable_buffer_array& buff, int record_idx)
 {
     uint32_t element_idx = 0;
     for (auto b : buff)
     {
-        const vector<char>& record_element = b->get_item(record_idx);
+        const vector<char>& record_element = b.get_item(record_idx);
         write_record_element(record_element.data(), record_element.size(), element_idx++);
     }
     increment_record_count();

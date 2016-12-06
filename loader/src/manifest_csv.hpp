@@ -20,6 +20,7 @@
 #include <random>
 
 #include "manifest.hpp"
+#include "async_manager.hpp"
 #include "crc.hpp"
 
 /* Manifest
@@ -42,18 +43,29 @@ namespace nervana
     class manifest_csv;
 }
 
-class nervana::manifest_csv : public manifest
+class nervana::manifest_csv : public nervana::async_manager_source<std::vector<std::string>>,
+                              public nervana::manifest
 {
 public:
-    manifest_csv(const std::string& filename, bool shuffle, const std::string& root = "", float subset_fraction = 1.0);
+    manifest_csv(const std::string& filename,
+                 bool shuffle,
+                 const std::string& root = "",
+                 float subset_fraction = 1.0);
 
+    virtual ~manifest_csv() {}
     typedef std::vector<std::string>                  FilenameList;
     typedef std::vector<FilenameList>::const_iterator iter;
 
-    std::string cache_id() override;
-    std::string version() override;
-    size_t      object_count() const { return m_filename_lists.size(); }
-    int         nelements();
+    std::string cache_id();
+    std::string version();
+    virtual size_t      object_count() override { return m_filename_lists.size(); }
+
+    virtual std::vector<std::string>* next() override;
+
+    virtual size_t      element_count() override
+    {
+        return m_filename_lists.size() > 0 ? m_filename_lists[0].size() : 0;
+    }
 
     // begin and end provide iterators over the FilenameLists
     iter begin() const { return m_filename_lists.begin(); }
@@ -63,7 +75,6 @@ public:
 
 protected:
     void parse_stream(std::istream& is, const std::string& root);
-    void shuffle_filename_lists();
 
 private:
     const std::string         m_filename;
@@ -71,4 +82,5 @@ private:
     CryptoPP::CRC32C          m_crc_engine;
     bool                      m_crc_computed = false;
     uint32_t                  m_computed_crc;
+    size_t                    m_counter{0};
 };

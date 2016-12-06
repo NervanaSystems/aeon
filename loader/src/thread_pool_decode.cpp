@@ -21,8 +21,8 @@ using namespace nervana;
 decode_thread_pool::decode_thread_pool(int count, const shared_ptr<buffer_pool_in>& in, const shared_ptr<buffer_pool_out>& out,
                                        const shared_ptr<python_backend>& pbe)
     : thread_pool(count)
-    , m_in(in)
-    , m_out(out)
+    , m_buffer_pool_encoded(in)
+    , m_buffer_pool_decoded(out)
     , m_python_backend(pbe)
     , m_batch_size(m_python_backend->m_batch_size)
 {
@@ -34,8 +34,7 @@ decode_thread_pool::decode_thread_pool(int count, const shared_ptr<buffer_pool_i
 void decode_thread_pool::add_provider(std::shared_ptr<nervana::provider_interface> prov)
 {
     m_providers.push_back(prov);
-    m_start_signaled.push_back(0);
-
+    m_start_signaled.emplace_back(false);
     m_start_inds.push_back(0);
     m_end_inds.push_back(0);
 }
@@ -65,16 +64,16 @@ void decode_thread_pool::stop()
     while (stopped() == false)
     {
         std::this_thread::yield();
-        m_in->advance_write_pos();
-        m_in->signal_not_empty();
+        m_buffer_pool_encoded->switch_write_buffer();
+        m_buffer_pool_encoded->signal_available_read_buffer();
     }
 
     m_stop_manager = true;
     while (m_manager_stopped == false)
     {
         std::this_thread::yield();
-        m_in->advance_write_pos();
-        m_in->signal_not_empty();
+        m_buffer_pool_encoded->switch_write_buffer();
+        m_buffer_pool_encoded->signal_available_read_buffer();
         m_end_signaled++;
         m_ended.notify_one();
     }
@@ -110,12 +109,13 @@ void decode_thread_pool::run(int id)
     }
 }
 
+
 void decode_thread_pool::work(int id)
 {
     // Thread function.
     {
         unique_lock<mutex> lock(m_mutex);
-        while (m_start_signaled[id] == 0)
+        while (!m_start_signaled[id])
         {
             m_started.wait(lock);
             if (m_done == true)
@@ -123,31 +123,32 @@ void decode_thread_pool::work(int id)
                 return;
             }
         }
-        m_start_signaled[id]--;
-        affirm(m_start_signaled[id] == 0, "startSignaled not cleared");
+        m_start_signaled[id] = !m_start_signaled[id];
+        affirm(m_start_signaled[id] == false, "startSignaled not cleared");
     }
 
     // No locking required because threads write into non-overlapping regions.
     try
     {
-        affirm((*m_input_buf)[0]->record_count() != 0, "input buffer to decoded_thread_pool is empty");
+        buffer_in_array &input_buf_array = m_buffer_pool_encoded->get_read_buffer();
+        affirm(input_buf_array[0]->get_item_count() != 0, "input buffer pool is empty");
 
         for (int i = m_start_inds[id]; i < m_end_inds[id]; i++)
         {
-            m_providers[id]->provide(i, *m_input_buf, m_out->get_for_write());
+            m_providers[id]->provide(i,
+                                     m_buffer_pool_encoded->get_read_buffer(),
+                                     m_buffer_pool_decoded->get_write_buffer());
         }
     }
     catch (std::exception& e)
     {
         cout << "decode_thread_pool exception: " << e.what() << endl;
-        m_out->write_exception(std::current_exception());
+        m_buffer_pool_decoded->write_exception(std::current_exception());
     }
 
-    {
-        lock_guard<mutex> lock(m_mutex);
-        m_end_signaled++;
-        affirm(m_end_signaled <= m_count, "endSignaled > count");
-    }
+    m_end_signaled++;
+    affirm(m_end_signaled <= m_count, "endSignaled > count");
+
     m_ended.notify_one();
 }
 
@@ -155,20 +156,23 @@ void decode_thread_pool::produce()
 {
     // lock on output buffers and copy to device
     {
-        unique_lock<mutex> lock(m_out->get_mutex());
-        while (m_out->full() == true)
+        // Make sure we have somewhere to write
+        unique_lock<mutex> out_lock(m_buffer_pool_decoded->get_mutex());
+        while (m_buffer_pool_decoded->no_write_buffers())
         {
-            m_out->wait_for_non_full(lock);
+            m_buffer_pool_decoded->wait_for_available_write_buffer(out_lock);
         }
+
+        for (unsigned int i = 0; i < m_start_signaled.size(); i++)
         {
-            lock_guard<mutex> lock(m_mutex);
-            for (unsigned int i = 0; i < m_start_signaled.size(); i++)
-            {
-                m_start_signaled[i] = 1;
-            }
+            m_start_signaled[i] = true;
         }
+
+        // Let all the providers know they can start
         m_started.notify_all();
+
         {
+            // Checks to make sure that all worker threads have returned
             unique_lock<mutex> lock(m_mutex);
             while (m_end_signaled < m_count)
             {
@@ -180,55 +184,52 @@ void decode_thread_pool::produce()
         try
         {
             // At this point, we have decoded data for the whole minibatch.
-            buffer_out_array& outBuf = m_out->get_for_write();
-
             // Do any messy cross datum stuff you may need to do that requires minibatch consistency
-            m_providers[0]->post_process(outBuf);
+            m_providers[0]->post_process(m_buffer_pool_decoded->get_write_buffer());
 
             // Copy to device.
-            m_python_backend->call_backend_transfer(outBuf, m_buffer_index);
+            m_python_backend->call_backend_transfer(m_buffer_pool_decoded->get_write_buffer(),
+                                                    m_buffer_index);
         }
         catch (std::exception& e)
         {
             cout << "exception in provider post_process/call to backend transfer: " << e.what();
         }
-
         m_buffer_index = (m_buffer_index == 0) ? 1 : 0;
-        m_out->advance_write_pos();
+        m_buffer_pool_decoded->switch_write_buffer();
     }
-    m_out->signal_not_empty();
+    m_buffer_pool_decoded->signal_available_read_buffer();
 }
 
 void decode_thread_pool::consume()
 {
     // lock on input buffers and call produce
     {
-        unique_lock<mutex> lock(m_in->get_mutex());
-        while (m_in->empty() == true)
+        // Make sure we have something to read
+        unique_lock<mutex> in_lock(m_buffer_pool_encoded->get_mutex());
+        while (m_buffer_pool_encoded->no_read_buffers())
         {
-            m_in->wait_for_not_empty(lock);
-            if (m_stop_manager == true)
+            m_buffer_pool_encoded->wait_for_available_read_buffer(in_lock);
+
+            if (m_stop_manager)
             {
                 return;
             }
         }
-        m_input_buf = &m_in->get_for_read();
+
+        // Signal Workers to start and wait for them to finish
         produce();
-        m_in->advance_read_pos();
+
+        m_buffer_pool_encoded->switch_read_buffer();
+
     }
-    m_in->signal_not_full();
+    m_buffer_pool_encoded->signal_available_write_buffer();
 }
 
 void decode_thread_pool::manage()
 {
     try
     {
-        // Thread function.
-        int result = 0;
-        if (result != 0)
-        {
-            m_stop_manager = true;
-        }
         while (m_stop_manager == false)
         {
             consume();

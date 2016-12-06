@@ -34,17 +34,15 @@ using namespace nervana;
 buffer_pool_in::buffer_pool_in(unsigned int nbuffers_in)
     : buffer_pool()
 {
-    for (int i = 0; i < m_count; i++)
-    {
-        m_bufs.push_back(make_shared<buffer_in_array>(nbuffers_in));
-    }
+    m_bufs[0] = make_shared<buffer_in_array>(nbuffers_in);
+    m_bufs[1] = make_shared<buffer_in_array>(nbuffers_in);
 }
 
 buffer_pool_in::~buffer_pool_in()
 {
 }
 
-buffer_in_array& buffer_pool_in::get_for_write()
+buffer_in_array& buffer_pool_in::get_write_buffer()
 {
     buffer_in_array& buf_ary = *m_bufs[m_write_pos];
     for (auto& b : buf_ary)
@@ -54,35 +52,45 @@ buffer_in_array& buffer_pool_in::get_for_write()
     return buf_ary;
 }
 
-buffer_in_array& buffer_pool_in::get_for_read()
+buffer_in_array& buffer_pool_in::get_read_buffer()
 {
     reraise_exception();
     return *m_bufs[m_read_pos];
 }
 
-void buffer_pool_in::advance_read_pos()
+void buffer_pool_in::switch_read_buffer()
 {
     m_used--;
-    advance(m_read_pos);
+    m_read_pos = (m_read_pos == 0) ? 1 : 0;
 }
 
-void buffer_pool_in::advance_write_pos()
+void buffer_pool_in::switch_write_buffer()
 {
     m_used++;
-    advance(m_write_pos);
+    m_write_pos = (m_write_pos == 0) ? 1 : 0;
     clear_exception();
 }
 
-bool buffer_pool_in::empty()
+bool buffer_pool_in::no_read_buffers()
 {
     affirm(m_used >= 0, "buffer_pool_in used < 0");
     return (m_used == 0);
 }
 
-bool buffer_pool_in::full()
+bool buffer_pool_in::has_read_buffers()
 {
-    affirm(m_used <= m_count, "buffer_pool_in used > count");
-    return (m_used == m_count);
+    return no_read_buffers() == false;
+}
+
+bool buffer_pool_in::no_write_buffers()
+{
+    affirm(m_used <= 2, "buffer_pool_in used > count");
+    return (m_used == 2);
+}
+
+bool buffer_pool_in::has_write_buffers()
+{
+    return no_write_buffers() == false;
 }
 
 std::mutex& buffer_pool_in::get_mutex()
@@ -90,31 +98,22 @@ std::mutex& buffer_pool_in::get_mutex()
     return m_mutex;
 }
 
-void buffer_pool_in::wait_for_not_empty(std::unique_lock<std::mutex>& lock)
+void buffer_pool_in::wait_for_available_read_buffer(std::unique_lock<std::mutex>& lock)
 {
-    m_non_empty.wait(lock);
+    m_available_read_buffer.wait(lock);
 }
 
-void buffer_pool_in::wait_for_non_full(std::unique_lock<std::mutex>& lock)
+void buffer_pool_in::wait_for_available_write_buffer(std::unique_lock<std::mutex>& lock)
 {
-    m_non_full.wait(lock);
+    m_available_write_buffer.wait(lock);
 }
 
-void buffer_pool_in::signal_not_empty()
+void buffer_pool_in::signal_available_read_buffer()
 {
-    m_non_empty.notify_all();
+    m_available_read_buffer.notify_all();
 }
 
-void buffer_pool_in::signal_not_full()
+void buffer_pool_in::signal_available_write_buffer()
 {
-    m_non_full.notify_all();
-}
-
-void buffer_pool_in::advance(int& index)
-{
-    // increment index and reset to 0 when index hits `m_count`
-    if (++index == m_count)
-    {
-        index = 0;
-    }
+    m_available_write_buffer.notify_all();
 }
