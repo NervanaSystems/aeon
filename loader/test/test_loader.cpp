@@ -29,6 +29,105 @@
 using namespace std;
 using namespace nervana;
 
+TEST(loader,iteration_mode)
+{
+    int height = 32;
+    int width = 32;
+    size_t batch_size = 1;
+    string manifest = string(CURDIR)+"/test_data/manifest.csv";
+
+    {
+        nlohmann::json js = {{"type","image,label"},
+                             {"manifest_filename", manifest},
+                             {"batch_size", batch_size},
+                             {"iteration_mode", "INFINITE"},
+                             {"image", {
+                                {"height",height},
+                                {"width",width},
+                                {"channel_major",false},
+                                {"flip_enable",true}}},
+                             {"label", {
+                                  {"binary",true}
+                              }
+                             }};
+
+        auto train_set = loader{js};
+    }
+
+    {
+        nlohmann::json js = {{"type","image,label"},
+                             {"manifest_filename", manifest},
+                             {"batch_size", batch_size},
+                             {"iteration_mode", "ONCE"},
+                             {"image", {
+                                {"height",height},
+                                {"width",width},
+                                {"channel_major",false},
+                                {"flip_enable",true}}},
+                             {"label", {
+                                  {"binary",true}
+                              }
+                             }};
+
+        auto train_set = loader{js};
+    }
+
+    {
+        nlohmann::json js = {{"type","image,label"},
+                             {"manifest_filename", manifest},
+                             {"batch_size", batch_size},
+                             {"iteration_mode", "COUNT"},
+                             {"iteration_mode_count", 1000},
+                             {"image", {
+                                {"height",height},
+                                {"width",width},
+                                {"channel_major",false},
+                                {"flip_enable",true}}},
+                             {"label", {
+                                  {"binary",true}
+                              }
+                             }};
+
+        auto train_set = loader{js};
+    }
+
+    {
+        nlohmann::json js = {{"type","image,label"},
+                             {"manifest_filename", manifest},
+                             {"batch_size", batch_size},
+                             {"iteration_mode", "COUNT"},
+                             {"image", {
+                                {"height",height},
+                                {"width",width},
+                                {"channel_major",false},
+                                {"flip_enable",true}}},
+                             {"label", {
+                                  {"binary",true}
+                              }
+                             }};
+
+        EXPECT_THROW(loader{js}, std::invalid_argument);
+    }
+
+    {
+        nlohmann::json js = {{"type","image,label"},
+                             {"manifest_filename", manifest},
+                             {"batch_size", batch_size},
+                             {"iteration_mode", "BLAH"},
+                             {"image", {
+                                {"height",height},
+                                {"width",width},
+                                {"channel_major",false},
+                                {"flip_enable",true}}},
+                             {"label", {
+                                  {"binary",true}
+                              }
+                             }};
+
+        EXPECT_THROW(loader{js}, std::invalid_argument);
+    }
+}
+
 TEST(loader,iterator)
 {
     int height = 32;
@@ -49,14 +148,8 @@ TEST(loader,iterator)
                               {"binary",true}
                           }
                          }};
-    string config_string = js.dump();
 
-
-    auto train_set = dataset_builder()
-            .config(config_string)
-            .batch_size(batch_size)
-            .batch_count(loader::BatchMode::ONCE)
-            .create();
+    loader train_set{js};
 
     auto begin = train_set.begin();
     auto end   = train_set.end();
@@ -89,6 +182,7 @@ TEST(loader,once)
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
+                         {"iteration_mode", "ONCE"},
                          {"image", {
                             {"height",height},
                             {"width",width},
@@ -98,14 +192,8 @@ TEST(loader,once)
                               {"binary",true}
                           }
                          }};
-    string config_string = js.dump();
 
-
-    auto train_set = dataset_builder()
-            .config(config_string)
-            .batch_size(batch_size)
-            .batch_count(loader::BatchMode::ONCE)
-            .create();
+    loader train_set{js};
 
     int count = 0;
     for(const fixed_buffer_map& data : train_set)
@@ -128,6 +216,8 @@ TEST(loader,count)
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
+                         {"iteration_mode", "COUNT"},
+                         {"iteration_mode_count", 4},
                          {"image", {
                             {"height",height},
                             {"width",width},
@@ -137,15 +227,10 @@ TEST(loader,count)
                               {"binary",true}
                           }
                          }};
-    string config_string = js.dump();
 
     int expected_iterations = 4;
 
-    auto train_set = dataset_builder()
-            .config(config_string)
-            .batch_size(batch_size)
-            .batch_count(expected_iterations)
-            .create();
+    loader train_set{js};
 
     int count = 0;
     ASSERT_EQ(expected_iterations, train_set.m_batch_count_value);
@@ -169,6 +254,7 @@ TEST(loader,infinite)
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
+                         {"iteration_mode", "INFINITE"},
                          {"image", {
                             {"height",height},
                             {"width",width},
@@ -178,14 +264,8 @@ TEST(loader,infinite)
                               {"binary",true}
                           }
                          }};
-    string config_string = js.dump();
 
-
-    auto train_set = dataset_builder()
-            .config(config_string)
-            .batch_size(batch_size)
-            .batch_count(loader::BatchMode::INFINITE)
-            .create();
+    loader train_set{js};
 
     int count = 0;
     int expected_iterations = input_file_count * 3;
@@ -221,23 +301,8 @@ TEST(loader,test)
                               {"binary",true}
                           }
                          }};
-    string config_string = js.dump();
 
-    auto train_set = dataset_builder()
-            .config(config_string)
-            .batch_size(batch_size)
-            .batch_count(loader::BatchMode::INFINITE)
-            .create();
-    auto partial_set = dataset_builder()
-            .config(config_string)
-            .batch_size(32)
-            .batch_count(10)
-            .create();
-    auto valid_set = dataset_builder()
-            .config(config_string)
-            .batch_size(64)
-            .batch_count(loader::BatchMode::ONCE)
-            .create();
+    loader train_set{js};
 
     auto buf_names = train_set.get_buffer_names();
     EXPECT_EQ(2, buf_names.size());

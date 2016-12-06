@@ -116,13 +116,80 @@ void loader_async::work(int id, variable_buffer_array* in_buf, fixed_buffer_map*
     }
 }
 
+loader_config::loader_config(nlohmann::json js)
+{
+    if (js.is_null())
+    {
+        throw std::runtime_error("missing loader config in json config");
+    }
+
+    for (auto& info : config_list)
+    {
+        info->parse(js);
+    }
+    verify_config("loader", config_list, js);
+
+    if (block_size == 0)
+    {
+        block_size = 2 * batch_size;
+    }
+
+    set_global_random_seed(random_seed);
+    validate();
+}
+
+void loader_config::validate()
+{
+    if (iteration_mode == "ONCE")
+    {
+    }
+    else if (iteration_mode == "INFINITE")
+    {
+    }
+    else if (iteration_mode == "COUNT")
+    {
+        if (iteration_mode_count <= 0)
+        {
+            throw invalid_argument("iteration_mode_count must be a positive integer");
+        }
+    }
+    else
+    {
+        throw invalid_argument("iteration_mode must be one of ONCE, COUNT, or INFINITE");
+    }
+}
 
 loader::loader(const std::string& config_string)
 {
-    auto config_json = nlohmann::json::parse(config_string);
+    auto tmp = nlohmann::json::parse(config_string);
+    initialize(tmp);
+}
+
+loader::loader(nlohmann::json& config_json)
+{
+    initialize(config_json);
+}
+
+void loader::initialize(nlohmann::json& config_json)
+{
+    string config_string = config_json.dump();
     loader_config lcfg(config_json);
     m_batch_size                       = lcfg.batch_size;
     int block_size = lcfg.block_size == 0 ? lcfg.batch_size * 2 : lcfg.block_size;
+
+    if (lcfg.iteration_mode == "ONCE")
+    {
+        m_batch_mode = BatchMode::ONCE;
+    }
+    else if (lcfg.iteration_mode == "INFINITE")
+    {
+        m_batch_mode = BatchMode::INFINITE;
+    }
+    else if (lcfg.iteration_mode == "COUNT")
+    {
+        m_batch_mode = BatchMode::COUNT;
+        m_batch_count_value = lcfg.iteration_mode_count;
+    }
 
     // shared_ptr<manifest> base_manifest;
     sox_format_init();
@@ -317,44 +384,3 @@ loader::iterator loader::end()
     return rc;
 }
 
-nervana::dataset_builder& dataset_builder::config(const std::string& config)
-{
-    m_config = config;
-    return *this;
-}
-
-nervana::dataset_builder& dataset_builder::batch_size(size_t size)
-{
-    m_batch_size = size;
-    return *this;
-}
-
-nervana::dataset_builder& dataset_builder::batch_count(loader::BatchMode type)
-{
-    m_batch_mode = type;
-    return *this;
-}
-
-nervana::dataset_builder& dataset_builder::batch_count(size_t count)
-{
-    m_batch_mode = loader::BatchMode::COUNT;
-    m_batch_count_value = count;
-    return *this;
-}
-
-nervana::loader dataset_builder::create()
-{
-    nlohmann::json js = nlohmann::json::parse(m_config);
-    js["batch_size"] = m_batch_size;
-
-    loader rc(js.dump());
-    if (m_batch_mode == loader::BatchMode::COUNT)
-    {
-        rc.set_iterator_count(m_batch_count_value);
-    }
-    else
-    {
-        rc.set_iterator_count(m_batch_mode);
-    }
-    return rc;
-}

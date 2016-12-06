@@ -59,37 +59,21 @@ public:
 
     std::string type;
     std::string cache_directory     = "";
-    int         block_size     = 0;
+    int         block_size          = 0;
     float       subset_fraction     = 1.0;
     bool        shuffle_every_epoch = false;
     bool        shuffle_manifest    = false;
     bool        single_thread       = false;
     bool        pinned              = false;
     int         random_seed         = 0;
+    std::string iteration_mode      = "ONCE";
+    int         iteration_mode_count = 0;
 
-    loader_config(nlohmann::json js)
-    {
-        if (js.is_null())
-        {
-            throw std::runtime_error("missing loader config in json config");
-        }
-
-        for (auto& info : config_list)
-        {
-            info->parse(js);
-        }
-        verify_config("loader", config_list, js);
-
-        if (block_size == 0)
-        {
-            block_size = 3 * batch_size;
-        }
-
-        set_global_random_seed(random_seed);
-        validate();
-    }
+    loader_config(nlohmann::json js);
 
 private:
+    loader_config() {}
+
     std::vector<std::shared_ptr<nervana::interface::config_info_interface>> config_list = {
         ADD_SCALAR(type, mode::REQUIRED),
         ADD_SCALAR(manifest_filename, mode::REQUIRED),
@@ -103,10 +87,11 @@ private:
         ADD_SCALAR(single_thread, mode::OPTIONAL),
         ADD_SCALAR(pinned, mode::OPTIONAL),
         ADD_SCALAR(random_seed, mode::OPTIONAL),
+        ADD_SCALAR(iteration_mode, mode::OPTIONAL),
+        ADD_SCALAR(iteration_mode_count, mode::OPTIONAL)
     };
 
-    loader_config() {}
-    bool validate() { return true; }
+    void validate();
 };
 
 
@@ -147,6 +132,7 @@ public:
     };
 
     loader(const std::string&);
+    loader(nlohmann::json&);
 
     const std::vector<std::string>& get_buffer_names() const;
     const shape_t& get_shape(const std::string& name) const;
@@ -197,6 +183,7 @@ public:
 
 private:
     loader() = delete;
+    void initialize(nlohmann::json& config_json);
 
     friend class nervana::loader::iterator;
 
@@ -210,19 +197,4 @@ private:
     std::map<std::string, size_t>       m_out_sizes;
     BatchMode                           m_batch_mode;
     size_t                              m_batch_count_value;
-};
-
-class nervana::dataset_builder
-{
-public:
-    dataset_builder& config(const std::string&);
-    dataset_builder& batch_size(size_t);
-    dataset_builder& batch_count(loader::BatchMode);
-    dataset_builder& batch_count(size_t);
-    loader create();
-private:
-    loader::BatchMode      m_batch_mode;
-    size_t          m_batch_count_value;
-    size_t          m_batch_size;
-    std::string     m_config;
 };
