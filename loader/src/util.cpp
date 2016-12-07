@@ -27,7 +27,7 @@ using namespace std;
 
 void nervana::dump(ostream& out, const void* _data, size_t _size)
 {
-    auto flags = out.flags();
+    auto           flags = out.flags();
     const uint8_t* data  = reinterpret_cast<const uint8_t*>(_data);
     int            len   = _size;
     int            index = 0;

@@ -19,13 +19,14 @@ using namespace nervana;
 using namespace std;
 
 audio_only::audio_only(nlohmann::json js)
-    : audio_config(js["audio"])
+    : provider_interface(js, 1)
+    , audio_config(js["audio"])
     , audio_extractor()
     , audio_transformer(audio_config)
     , audio_loader(audio_config)
     , audio_factory(audio_config)
 {
-    m_output_shapes.insert({"audio",audio_config.get_shape_type()});
+    m_output_shapes.insert({"audio", audio_config.get_shape_type()});
 }
 
 void audio_only::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
@@ -37,9 +38,4 @@ void audio_only::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_ma
     auto audio_dec    = audio_extractor.extract(datum_in.data(), datum_in.size());
     auto audio_params = audio_factory.make_params(audio_dec);
     audio_loader.load({datum_out}, audio_transformer.transform(audio_params, audio_dec));
-}
-
-size_t audio_only::get_input_count() const
-{
-    return 1;
 }

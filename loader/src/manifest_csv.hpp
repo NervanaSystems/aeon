@@ -43,30 +43,22 @@ namespace nervana
     class manifest_csv;
 }
 
-class nervana::manifest_csv : public nervana::async_manager_source<std::vector<std::string>>,
-                              public nervana::manifest
+class nervana::manifest_csv : public nervana::async_manager_source<std::vector<std::string>>, public nervana::manifest
 {
 public:
-    manifest_csv(const std::string& filename,
-                 bool shuffle,
-                 const std::string& root = "",
-                 float subset_fraction = 1.0);
+    manifest_csv(const std::string& filename, bool shuffle, const std::string& root = "", float subset_fraction = 1.0);
 
     virtual ~manifest_csv() {}
     typedef std::vector<std::string>                  FilenameList;
     typedef std::vector<FilenameList>::const_iterator iter;
 
-    std::string cache_id();
-    std::string version();
-    virtual size_t      object_count() override { return m_filename_lists.size(); }
-
+    std::string                       cache_id();
+    std::string                       version();
+    virtual size_t                    object_count() override { return m_filename_lists.size(); }
     virtual std::vector<std::string>* next() override;
+    virtual void reset() override;
 
-    virtual size_t      element_count() override
-    {
-        return m_filename_lists.size() > 0 ? m_filename_lists[0].size() : 0;
-    }
-
+    virtual size_t element_count() override { return m_filename_lists.size() > 0 ? m_filename_lists[0].size() : 0; }
     // begin and end provide iterators over the FilenameLists
     iter begin() const { return m_filename_lists.begin(); }
     iter end() const { return m_filename_lists.end(); }

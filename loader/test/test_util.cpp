@@ -424,12 +424,12 @@ TEST(DISABLED_util, dump)
     dump(cout, text.data(), text.size());
 }
 
-static void test_function(void* p)
-{
-    int& param = *(int*)p;
-    param      = 100;
-    usleep(100000);
-}
+// static void test_function(void* p)
+// {
+//     int& param = *(int*)p;
+//     param      = 100;
+//     usleep(100000);
+// }
 
 static void test_function_exception1()
 {

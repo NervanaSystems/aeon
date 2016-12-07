@@ -25,14 +25,14 @@
 #include "provider_video_classifier.hpp"
 #include "provider_video_only.hpp"
 #include "provider_image_stereo.hpp"
-
+#include "log.hpp"
 #include <sstream>
 
 using namespace std;
 
-std::shared_ptr<nervana::provider_interface> nervana::provider_factory::create(nlohmann::json configJs)
+shared_ptr<nervana::provider_interface> nervana::provider_factory::create(nlohmann::json configJs)
 {
-    std::shared_ptr<nervana::provider_interface> rc;
+    shared_ptr<nervana::provider_interface> rc;
     if (!configJs["type"].is_string())
     {
         throw std::invalid_argument("must have a property 'type' with type string.");
@@ -91,4 +91,9 @@ std::shared_ptr<nervana::provider_interface> nervana::provider_factory::create(n
         throw std::runtime_error(ss.str());
     }
     return rc;
+}
+
+shared_ptr<nervana::provider_interface> nervana::provider_factory::clone(const shared_ptr<nervana::provider_interface>& r)
+{
+    return create(r->get_config());
 }

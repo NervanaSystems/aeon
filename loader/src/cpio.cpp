@@ -102,7 +102,7 @@ void cpio::record_header::read(istream& ifs, uint32_t* fileSize)
 
     auto buffer = new char[m_namesize];
     ifs.read(buffer, m_namesize);
-    m_filename = string(buffer, m_namesize-1);
+    m_filename = string(buffer, m_namesize - 1);
     delete[] buffer;
 
     readPadding(ifs, m_namesize);

@@ -19,7 +19,8 @@ using namespace nervana;
 using namespace std;
 
 image_localization::image_localization(nlohmann::json js)
-    : image_config(js["image"])
+    : provider_interface(js, 2)
+    , image_config(js["image"])
     , localization_config(js["localization"], image_config)
     , image_extractor(image_config)
     , image_transformer(image_config)
@@ -29,18 +30,18 @@ image_localization::image_localization(nlohmann::json js)
     , localization_transformer(localization_config)
     , localization_loader(localization_config)
 {
-    m_output_shapes.insert({"image",image_config.get_shape_type()});
+    m_output_shapes.insert({"image", image_config.get_shape_type()});
 
     auto os = localization_config.get_shape_type_list();
-    m_output_shapes.insert({"bbtargets",      os[0]});
+    m_output_shapes.insert({"bbtargets", os[0]});
     m_output_shapes.insert({"bbtargets_mask", os[1]});
-    m_output_shapes.insert({"labels_flat",    os[2]});
-    m_output_shapes.insert({"labels_mask",    os[3]});
-    m_output_shapes.insert({"image_shape",    os[4]});
-    m_output_shapes.insert({"gt_boxes",       os[5]});
-    m_output_shapes.insert({"gt_box_count",   os[6]});
+    m_output_shapes.insert({"labels_flat", os[2]});
+    m_output_shapes.insert({"labels_mask", os[3]});
+    m_output_shapes.insert({"image_shape", os[4]});
+    m_output_shapes.insert({"gt_boxes", os[5]});
+    m_output_shapes.insert({"gt_box_count", os[6]});
     m_output_shapes.insert({"gt_class_count", os[7]});
-    m_output_shapes.insert({"image_scale",    os[8]});
+    m_output_shapes.insert({"image_scale", os[8]});
     m_output_shapes.insert({"difficult_flag", os[9]});
 }
 
@@ -62,7 +63,7 @@ void image_localization::provide(int idx, variable_buffer_array& in_buf, fixed_b
     char* gt_difficult       = out_buf["difficult_flag"]->get_item(idx);
 
     vector<void*> target_list = {bbtargets_out, bbtargets_mask_out, labels_flat_out, labels_mask_out, image_shape_out,
-                                 gt_boxes_out,    num_gt_boxes_out,     gt_classes_out,    image_scale_out,      gt_difficult};
+                                 gt_boxes_out,  num_gt_boxes_out,   gt_classes_out,  image_scale_out, gt_difficult};
 
     if (datum_in.size() == 0)
     {
@@ -84,9 +85,4 @@ void image_localization::provide(int idx, variable_buffer_array& in_buf, fixed_b
             localization_loader.load(target_list, localization_transformer.transform(image_params, target_dec));
         }
     }
-}
-
-size_t image_localization::get_input_count() const
-{
-    return 2;
 }

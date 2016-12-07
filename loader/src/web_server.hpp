@@ -145,10 +145,10 @@ public:
 
     void flush();
 
-    const std::map<std::string,std::string>& args() const;
-    const std::string&              content_type() const;
-    const size_t                    content_length() const;
-    tcp::connection&                connection();
+    const std::map<std::string, std::string>& args() const;
+    const std::string& content_type() const;
+    const size_t       content_length() const;
+    tcp::connection&   connection();
 
     page();
 
@@ -161,10 +161,10 @@ private:
     void   close_pending_open();
     size_t get_file_size(const std::string& filename);
 
-    std::string                           m_url;
-    std::string                           m_content_type;
-    int                                   m_content_length;
-    std::map<std::string,std::string>     m_args;
+    std::string m_url;
+    std::string m_content_type;
+    int         m_content_length;
+    std::map<std::string, std::string> m_args;
     std::shared_ptr<web::tcp::connection> m_connection;
     std::thread                           m_thread;
     server*                               m_server;

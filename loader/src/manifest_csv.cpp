@@ -30,11 +30,7 @@
 using namespace std;
 using namespace nervana;
 
-
-manifest_csv::manifest_csv(const string& filename,
-                           bool shuffle,
-                           const string& root,
-                           float subset_fraction)
+manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root, float subset_fraction)
     : m_filename(filename)
 {
     // for now parse the entire manifest on creation
@@ -60,7 +56,6 @@ manifest_csv::manifest_csv(const string& filename,
 
     affirm(subset_fraction > 0.0 && subset_fraction <= 1.0, "subset_fraction must be >= 0 and <= 1");
     generate_subset(subset_fraction);
-
 }
 
 string manifest_csv::cache_id()
@@ -127,8 +122,13 @@ void manifest_csv::parse_stream(istream& is, const string& root)
 vector<string>* manifest_csv::next()
 {
     vector<string>* res = &(m_filename_lists[m_counter]);
-    m_counter = (m_counter + 1) % object_count();
+    m_counter           = (m_counter + 1) % object_count();
     return res;
+}
+
+void manifest_csv::reset()
+{
+    m_counter = 0;
 }
 
 void manifest_csv::generate_subset(float subset_fraction)

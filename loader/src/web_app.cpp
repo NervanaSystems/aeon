@@ -123,12 +123,12 @@ void web_app::home_page(web::page& p)
     out << "    <th>Size of class</th>\n";
     out << "  </thead>\n";
     out << "  <tbody>\n";
-//    out << "    <tr><td>MAC</td><td> " << sizeof(tcpStack.MAC)  << "</td></tr>\n";
-//    out << "    <tr><td>IP</td><td>  " << sizeof(tcpStack.IP)   << "</td></tr>\n";
-//    out << "    <tr><td>TCP</td><td> " << sizeof(tcpStack.TCP)  << "</td></tr>\n";
-//    out << "    <tr><td>ARP</td><td> " << sizeof(tcpStack.ARP)  << "</td></tr>\n";
-//    out << "    <tr><td>ICMP</td><td>" << sizeof(tcpStack.ICMP) << "</td></tr>\n";
-//    out << "    <tr><td>DHCP</td><td>" << sizeof(tcpStack.DHCP) << "</td></tr>\n";
+    //    out << "    <tr><td>MAC</td><td> " << sizeof(tcpStack.MAC)  << "</td></tr>\n";
+    //    out << "    <tr><td>IP</td><td>  " << sizeof(tcpStack.IP)   << "</td></tr>\n";
+    //    out << "    <tr><td>TCP</td><td> " << sizeof(tcpStack.TCP)  << "</td></tr>\n";
+    //    out << "    <tr><td>ARP</td><td> " << sizeof(tcpStack.ARP)  << "</td></tr>\n";
+    //    out << "    <tr><td>ICMP</td><td>" << sizeof(tcpStack.ICMP) << "</td></tr>\n";
+    //    out << "    <tr><td>DHCP</td><td>" << sizeof(tcpStack.DHCP) << "</td></tr>\n";
     out << "  </tbody>\n";
     out << "</table>\n";
 }

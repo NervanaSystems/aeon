@@ -1,86 +1,95 @@
-/*
- Copyright 2016 Nervana Systems Inc.
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
+// /*
+//  Copyright 2016 Nervana Systems Inc.
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+//       http://www.apache.org/licenses/LICENSE-2.0
 
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+// */
 
-#include <Python.h>
 #include <iostream>
 #include <sstream>
-#include <vector>
-#include <memory>
+// #include <memory>
 
-#include "json.hpp"
 #include "api.hpp"
-#include "loader.hpp"
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
 using namespace nervana;
 using namespace std;
 
+
 extern "C" {
+#define DL_get_loader(v) (((aeon_Dataloader*)(v))->m_loader)
+#define DL_get_i(v) (((aeon_Dataloader*)(v))->m_i)
+
+
+static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf);
+
 
 typedef struct
 {
     PyObject_HEAD;
-    long int            m;
-    long int            i;
-    shared_ptr<loader>  m_loader;
-
+    loader* m_loader;
+    uint32_t m_i;
     // I don't know why we need padding but it crashes without it.
     // TODO: figure out what is going on.
-    uint64_t            m_padding[10];
-} aeon_AeonDataloader;
+    uint64_t m_padding[10];
+} aeon_Dataloader;
 
-PyObject* aeon_AeonDataloader_iter(PyObject* self)
+static PyObject* Dataloader_iter(PyObject* self)
 {
-    std::cout << __FILE__ << " " << __LINE__ << " aeon_AeonDataloader_iter" << std::endl;
-    aeon_AeonDataloader* p = (aeon_AeonDataloader*)self;
+    INFO << " aeon_Dataloader_iter";
     Py_INCREF(self);
     return self;
 }
 
-PyObject* aeon_AeonDataloader_iternext(PyObject* self)
+static PyObject* Dataloader_iternext(PyObject* self)
 {
-    std::cout << __FILE__ << " " << __LINE__ << " aeon_AeonDataloader_iternext" << std::endl;
-    aeon_AeonDataloader* p = (aeon_AeonDataloader*)self;
-    if (p->i < p->m)
+    INFO << " aeon_Dataloader_iternext";
+    PyObject* result = NULL;
+    if (DL_get_loader(self)->get_current_iter() != DL_get_loader(self)->get_end_iter())
     {
-        PyObject* tmp = Py_BuildValue("l", p->i);
-        (p->i)++;
-        return tmp;
+        // d will be const fixed_buffer_map&
+        const fixed_buffer_map& d = *(DL_get_loader(self)->get_current_iter());
+        auto names = DL_get_loader(self)->get_buffer_names();
+
+        result = PyDict_New();
+
+        for (auto&& nm : names)
+        {
+            PyObject* wrapped_buf = wrap_buffer_as_np_array(d[nm]);
+            if (PyDict_SetItemString(result, nm.c_str(), wrapped_buf) < 0)
+            {
+                ERR << "Error building shape string";
+                PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
+            }
+        }
+        DL_get_loader(self)->get_current_iter()++;
     }
     else
     {
         /* Raising of standard StopIteration exception with empty value. */
         PyErr_SetNone(PyExc_StopIteration);
-        return NULL;
     }
+
+    return result;
 }
 
-static Py_ssize_t aeon_AeonDataloader_length(PyObject* self)
+static Py_ssize_t aeon_Dataloader_length(PyObject* self)
 {
-    std::cout << __FILE__ << " " << __LINE__ << " aeon_AeonDataloader_length" << std::endl;
-    aeon_AeonDataloader* p = (aeon_AeonDataloader*)self;
-    return p->m_loader->itemCount();
+    INFO << " aeon_Dataloader_length " << DL_get_loader(self)->item_count();
+    return DL_get_loader(self)->item_count();
 }
 
-static PyTypeObject aeon_AeonDataloaderType = {
-    PyObject_HEAD_INIT(NULL) 0, /*ob_size*/
-    "aeon.AeonDataloader",      /*tp_name*/
-    sizeof(aeon_AeonDataloader) /*tp_basicsize*/
-};
-
-static PySequenceMethods aeon_AeonDataloader_sequence_methods = {
-    aeon_AeonDataloader_length /* sq_length */
+static PySequenceMethods Dataloader_sequence_methods = {
+    aeon_Dataloader_length /* sq_length */
 };
 
 static PyMethodDef module_methods[] = {
@@ -136,137 +145,194 @@ static std::string dictionary_to_string(PyObject* dict)
     return ss.str();
 }
 
-static PyObject* AeonDataloader_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
+static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf)
 {
-    std::cout << __FILE__ << " " << __LINE__ << " AeonDataloader_new" << std::endl;
-    aeon_AeonDataloader* p = nullptr;
+    std::vector<npy_intp> dims;
+    dims.push_back(buf->get_item_count());
+    auto shape = buf->get_shape_type().get_shape();
+    dims.insert(dims.end(), shape.begin(), shape.end());
 
-    static char* keyword_list[] = {"config", "batch_size", "batch_count", nullptr};
+    int nptype = buf->get_shape_type().get_otype().get_np_type();
+
+    PyObject* p_array = PyArray_SimpleNewFromData(dims.size(), &dims[0], nptype, const_cast<char *>(buf->data()));
+
+    if (p_array == NULL)
+    {
+        ERR << "Unable to wrap buffer as npy array";
+        PyErr_SetString(PyExc_RuntimeError, "Unable to wrap buffer as npy array");
+    }
+
+    return p_array;
+}
+
+static void
+Dataloader_dealloc(aeon_Dataloader* self)
+{
+    INFO << " Dataloader_dealloc";
+    if (self->m_loader != nullptr)
+    {
+        delete self->m_loader;
+    }
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+static PyObject*
+Dataloader_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
+{
+    INFO << " Dataloader_new";
+    aeon_Dataloader* self = nullptr;
+
+    static const char* keyword_list[] = {"config", nullptr};
 
     PyObject* dict;
-    int batch_size = -1;
-    int batch_count;
-    char* batch_count_string = "";
-    string batch_mode_count;
-    // auto rc = PyArg_ParseTuple(args, "O!", &PyDict_Type, &dict);
-    auto rc = PyArg_ParseTupleAndKeywords(args, kwds, "Ois", keyword_list, &dict, &batch_size, &batch_count_string);
+    auto rc = PyArg_ParseTupleAndKeywords(args, kwds, "O", const_cast<char **>(keyword_list), &dict);
+
     if (rc)
     {
         std::string    dict_string = dictionary_to_string(dict);
         nlohmann::json json_config = nlohmann::json::parse(dict_string);
 
-        cout << __FILE__ << " " << __LINE__ << " batch_size " << batch_size << endl;
-        cout << __FILE__ << " " << __LINE__ << " batch_count_string " << batch_count_string << endl;
-        cout << __FILE__ << " " << __LINE__ << " batch_mode_count " << batch_mode_count << endl;
-        cout << __FILE__ << " " << __LINE__ << " config " << json_config.dump(4) << endl;
+        INFO << " config " << json_config.dump(4);
 
-        /* I don't need python callable __init__() method for this iterator,
-           so I'll simply allocate it as PyObject and initialize it by hand. */
-
-        p = PyObject_New(aeon_AeonDataloader, &aeon_AeonDataloaderType);
-        if (!p)
+        self = (aeon_Dataloader*)type->tp_alloc(type, 0);
+        if (!self)
         {
             return NULL;
         }
 
-        /* I'm not sure if it's strictly necessary. */
-        if (!PyObject_Init((PyObject*)p, &aeon_AeonDataloaderType))
-        {
-            Py_DECREF(p);
-            return NULL;
-        }
-
-        p->m = 5;
-        p->i = 0;
-        std::cout << __FILE__ << " " << __LINE__ << std::endl;
-        p->m_loader = make_shared<loader>(json_config.dump());
-        std::cout << __FILE__ << " " << __LINE__ << std::endl;
+        self->m_loader = new loader(json_config);
+        self->m_i = 0;
     }
 
-    return (PyObject*)p;
+    return (PyObject*) self;
 }
 
-static PyObject* aeon_shapes(PyObject* self, PyObject*)
+static int
+Dataloader_init(aeon_Dataloader *self, PyObject *args, PyObject *kwds)
 {
-    std::cout << __FILE__ << " " << __LINE__ << " aeon_shapes" << std::endl;
-    aeon_AeonDataloader* p = (aeon_AeonDataloader*)self;
-    //    uint32_t num_shapes = _oshape_types.size();
-    uint32_t  num_shapes = 2;
-    PyObject* all_shapes = PyTuple_New(num_shapes);
-    for (uint32_t idx = 0; idx < num_shapes; ++idx)
+    return 0;
+}
+
+static PyObject* aeon_shapes(PyObject* self, PyObject *)
+{
+    INFO << " aeon_shapes";
+
+    auto name_shape_list = DL_get_loader(self)->get_names_and_shapes();
+
+    PyObject* py_shape_dict = PyDict_New();
+
+    if (!py_shape_dict)
     {
-        //        auto shapevec = _oshape_types[idx].get_shape();
-        std::vector<int> shapevec   = {2, 3};
-        PyObject*        this_shape = PyTuple_New(shapevec.size());
-        for (uint32_t dim = 0; dim < shapevec.size(); dim++)
-        {
-            PyTuple_SetItem(this_shape, dim, Py_BuildValue("i", shapevec[dim]));
-        }
-        PyTuple_SetItem(all_shapes, idx, this_shape);
+        PyErr_SetNone(PyExc_RuntimeError);
     }
+    else
+    {
+        for (auto&& name_shape : name_shape_list)
+        {
+            auto name = name_shape.first;
+            auto shape = name_shape.second.get_shape();
 
-    return all_shapes;
-}
+            PyObject* py_shape_tuple = PyTuple_New(shape.size());
 
-static PyObject* aeon_get_buffer_names(PyObject* self, PyObject*)
-{
-    aeon_AeonDataloader* p = (aeon_AeonDataloader*)self;
-    std::cout << __FILE__ << " " << __LINE__ << " aeon_get_buffer_names" << std::endl;
-    p->i = 0;
-    return Py_None;
-}
+            if (!py_shape_tuple)
+            {
+                ERR << "Error building shape string";
+                PyErr_SetString(PyExc_RuntimeError, "Error building shape");
+            }
+            else
+            {
+                for (size_t i = 0; i < shape.size(); ++i)
+                {
+                    PyTuple_SetItem(py_shape_tuple, i, Py_BuildValue("i", shape[i]));
+                }
+            }
 
-static PyObject* aeon_get_buffer_shape(PyObject* self, PyObject* args)
-{
-    aeon_AeonDataloader* p = (aeon_AeonDataloader*)self;
-    std::cout << __FILE__ << " " << __LINE__ << " aeon_get_buffer_shape" << std::endl;
-    char* s;
-    PyArg_ParseTuple(args, "s", &s);
-    std::string name = s;
-    std::cout << __FILE__ << " " << __LINE__ << " buffer name " << name << std::endl;
-    p->i = 0;
-    return Py_None;
+            if (PyDict_SetItemString(py_shape_dict, name.c_str(), py_shape_tuple) < 0)
+            {
+                ERR << "Error building shape string";
+                PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
+            }
+        }
+    }
+    return py_shape_dict;
 }
 
 static PyObject* aeon_reset(PyObject* self, PyObject*)
 {
-    aeon_AeonDataloader* p = (aeon_AeonDataloader*)self;
-    std::cout << __FILE__ << " " << __LINE__ << " aeon_reset" << std::endl;
-    p->i = 0;
+    INFO << " aeon_reset";
+    DL_get_i(self) = 0;
     return Py_None;
 }
 
-static PyMethodDef AeonMethods[] = {
-    //    {"AeonDataloader",  aeon_myiter, METH_VARARGS, "Iterate from i=0 while i<m."},
+static PyMethodDef Dataloader_methods[] = {
+    //    {"Dataloader",  aeon_myiter, METH_VARARGS, "Iterate from i=0 while i<m."},
     {"shapes", aeon_shapes, METH_NOARGS, "Get output shapes"},
-    {"get_buffer_names", aeon_get_buffer_names, METH_NOARGS, "Get output buffer names"},
-    {"get_buffer_shape", aeon_get_buffer_shape, METH_VARARGS, "Get shape of named buffer"},
     {"reset", aeon_reset, METH_NOARGS, "Reset iterator"},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
+
+static PyTypeObject aeon_DataloaderType = {
+    PyObject_HEAD_INIT(NULL)
+    0, /*ob_size*/
+    "aeon.Dataloader",       /*tp_name*/
+    sizeof(aeon_Dataloader), /*tp_basicsize*/
+    0,                         /*tp_itemsize*/
+    (destructor)Dataloader_dealloc, /*tp_dealloc*/
+    0,                         /*tp_print*/
+    0,                         /*tp_getattr*/
+    0,                         /*tp_setattr*/
+    0,                         /*tp_compare*/
+    0,                         /*tp_repr*/
+    0,                         /*tp_as_number*/
+    &Dataloader_sequence_methods,/*tp_as_sequence*/
+    0,                         /*tp_as_mapping*/
+    0,                         /*tp_hash */
+    0,                         /*tp_call*/
+    0,                         /*tp_str*/
+    0,                         /*tp_getattro*/
+    0,                         /*tp_setattro*/
+    0,                         /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    "Internal myiter iterator object.",           /* tp_doc */
+    0,                         /* tp_traverse */
+    0,                         /* tp_clear */
+    0,                         /* tp_richcompare */
+    0,                         /* tp_weaklistoffset */
+    Dataloader_iter,           /* tp_iter */
+    Dataloader_iternext,       /* tp_iternext */
+    Dataloader_methods,        /* tp_methods */
+    0,                         /* tp_members */
+    0,                         /* tp_getset */
+    0,                         /* tp_base */
+    0,                         /* tp_dict */
+    0,                         /* tp_descr_get */
+    0,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc)Dataloader_init, /* tp_init */
+    0,                         /* tp_alloc */
+    Dataloader_new,            /* tp_new */
+};
+
 PyMODINIT_FUNC initaeon(void)
 {
-    std::cout << __FILE__ << " " << __LINE__ << " initaeon" << std::endl;
+    INFO << " initaeon";
 
     PyObject* m;
 
-    aeon_AeonDataloaderType.tp_new         = &AeonDataloader_new;
-    aeon_AeonDataloaderType.tp_as_sequence = &aeon_AeonDataloader_sequence_methods;
-    aeon_AeonDataloaderType.tp_methods     = AeonMethods;
-    aeon_AeonDataloaderType.tp_flags       = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER;
-    aeon_AeonDataloaderType.tp_doc         = "Internal myiter iterator object.";
-    aeon_AeonDataloaderType.tp_iter        = aeon_AeonDataloader_iter;     // __iter__() method
-    aeon_AeonDataloaderType.tp_iternext    = aeon_AeonDataloader_iternext; // next() method
-
-    if (PyType_Ready(&aeon_AeonDataloaderType) < 0)
+    if (PyType_Ready(&aeon_DataloaderType) < 0)
     {
         return;
     }
 
-    m = Py_InitModule("aeon", module_methods);
+    if (_import_array() < 0)
+    {
+        return;
+    }
 
-    Py_INCREF(&aeon_AeonDataloaderType);
-    PyModule_AddObject(m, "AeonDataloader", (PyObject*)&aeon_AeonDataloaderType);
+    m = Py_InitModule3("aeon", module_methods, "Dataloader containing module");
+
+    Py_INCREF(&aeon_DataloaderType);
+    PyModule_AddObject(m, "Dataloader", (PyObject*)&aeon_DataloaderType);
 }
 }

@@ -19,7 +19,8 @@ using namespace nervana;
 using namespace std;
 
 audio_transcriber::audio_transcriber(nlohmann::json js)
-    : audio_config(js["audio"])
+    : provider_interface(js, 2)
+    , audio_config(js["audio"])
     , trans_config(js["transcription"])
     , audio_extractor()
     , audio_transformer(audio_config)
@@ -28,8 +29,8 @@ audio_transcriber::audio_transcriber(nlohmann::json js)
     , trans_extractor(trans_config)
     , trans_loader(trans_config)
 {
-    m_output_shapes.insert({"audio",audio_config.get_shape_type()});
-    m_output_shapes.insert({"transcription",trans_config.get_shape_type()});
+    m_output_shapes.insert({"audio", audio_config.get_shape_type()});
+    m_output_shapes.insert({"transcription", trans_config.get_shape_type()});
 
     shape_type trans_length({1, 1}, output_type("uint32_t"));
     m_output_shapes.insert({"trans_length", trans_length});
@@ -68,15 +69,10 @@ void audio_transcriber::provide(int idx, variable_buffer_array& in_buf, fixed_bu
     pack(valid_out, valid_pct);
 }
 
-size_t audio_transcriber::get_input_count() const
-{
-    return 2;
-}
-
 void audio_transcriber::post_process(fixed_buffer_map& out_buf)
 {
     auto transcription = out_buf["transcription"];
-    auto trans_length = out_buf["trans_length"];
+    auto trans_length  = out_buf["trans_length"];
     if (trans_config.pack_for_ctc)
     {
         auto     num_items  = transcription->get_item_count();

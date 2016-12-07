@@ -19,10 +19,9 @@ using namespace nervana;
 using namespace std;
 
 image_classifier::image_classifier(nlohmann::json js)
-    : image_config(js["image"])
-    ,
-    // must use a default value {} otherwise, segfault ...
-    label_config(js["label"])
+    : provider_interface(js, 2)
+    , image_config(js["image"])
+    , label_config(js["label"])
     , image_extractor(image_config)
     , image_transformer(image_config)
     , image_loader(image_config)
@@ -30,8 +29,8 @@ image_classifier::image_classifier(nlohmann::json js)
     , label_extractor(label_config)
     , label_loader(label_config)
 {
-    m_output_shapes.insert({"image",image_config.get_shape_type()});
-    m_output_shapes.insert({"label",label_config.get_shape_type()});
+    m_output_shapes.insert({"image", image_config.get_shape_type()});
+    m_output_shapes.insert({"label", label_config.get_shape_type()});
 }
 
 void image_classifier::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
@@ -56,9 +55,4 @@ void image_classifier::provide(int idx, variable_buffer_array& in_buf, fixed_buf
     // Process target data
     auto label_dec = label_extractor.extract(target_in.data(), target_in.size());
     label_loader.load({target_out}, label_dec);
-}
-
-size_t image_classifier::get_input_count() const
-{
-    return 2;
 }

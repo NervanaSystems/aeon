@@ -22,12 +22,9 @@ using namespace std;
 
 // TODO: need to use outputs buffer to iterate through named fixed_buffer_map
 
-python_backend::python_backend(loader_async* loader_source,
-                               PyObject* py_obj_backend,
-                               const vector<nervana::shape_type>& oshape_types)
+python_backend::python_backend(loader_async* loader_source, PyObject* py_obj_backend)
     : async_manager<fixed_buffer_map, std::vector<PyObject*>>(loader_source)
     , m_py_obj_backend(py_obj_backend)
-    , m_oshape_types{oshape_types}
 {
     gil_state state;
 
@@ -50,12 +47,6 @@ python_backend::python_backend(loader_async* loader_source,
         throw std::runtime_error("Backend 'consume' function does not exist or is not callable");
     }
 
-    setup_buffers();
-}
-
-void python_backend::setup_buffers()
-{
-    gil_state         state;
     PyOS_sighandler_t sighandler = PyOS_getsig(SIGINT);
     if (_import_array() < 0)
     {
@@ -97,15 +88,16 @@ python_backend::~python_backend()
 
 std::vector<PyObject*>* python_backend::filler()
 {
-    gil_state state;
+    gil_state               state;
     std::vector<PyObject*>* outputs = get_pending_buffer();
-    fixed_buffer_map* inputs = m_source->next();
+    fixed_buffer_map*       inputs  = m_source->next();
 
-    affirm(inputs->size() == outputs->size(), "number of input elements do not match number of output elements");
+    auto buf_names = inputs->get_names();
+    affirm(buf_names.size() == outputs->size(), "number of input elements do not match number of output elements");
 
-    for (size_t i = 0; i < inputs->size(); ++i)
+    for (size_t i = 0; i < buf_names.size(); ++i)
     {
-        PyObject* npy_buffer = wrap_buffer_as_np_array(inputs->at(i), m_oshape_types[i]);
+        PyObject* npy_buffer = wrap_buffer_as_np_array((*inputs)[buf_names[i]]);
 
         PyObject* pArgs = Py_BuildValue("OO", npy_buffer, outputs->at(i));
 
@@ -128,20 +120,18 @@ std::vector<PyObject*>* python_backend::filler()
     return outputs;
 }
 
-
-PyObject* python_backend::wrap_buffer_as_np_array(buffer_fixed_size_elements buf, const nervana::shape_type& st)
+PyObject* python_backend::wrap_buffer_as_np_array(buffer_fixed_size_elements* buf)
 {
-    // For now, we will collapse everything into two dimensions
     std::vector<npy_intp> dims;
-    dims.push_back(object_count());
+    dims.push_back(buf->get_item_count());
+    auto shape_and_type = buf->get_shape_type();
 
-    for (auto& d : st.get_shape())
+    for (auto d : shape_and_type.get_shape())
     {
         dims.push_back(d);
     }
 
-    PyObject* p_array = PyArray_SimpleNewFromData(dims.size(), &dims[0],
-                                                  st.get_otype().get_np_type(), buf.data());
+    PyObject* p_array = PyArray_SimpleNewFromData(dims.size(), &dims[0], shape_and_type.get_otype().get_np_type(), buf->data());
 
     if (p_array == NULL)
     {

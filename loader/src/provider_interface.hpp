@@ -28,10 +28,16 @@ namespace nervana
 class nervana::provider_interface
 {
 public:
-    virtual void provide(int idx, nervana::variable_buffer_array& in_buf, nervana::fixed_buffer_map& out_buf) = 0;
-    virtual size_t get_input_count() const = 0;
-    virtual void post_process(fixed_buffer_map&     out_buf) {}
+    provider_interface(nlohmann::json js, size_t input_count)
+        : m_js(js)
+        , m_input_count(input_count)
+    {
+    }
 
+    virtual void provide(int idx, nervana::variable_buffer_array& in_buf, nervana::fixed_buffer_map& out_buf) = 0;
+
+    size_t       get_input_count() const { return m_input_count; }
+    virtual void post_process(fixed_buffer_map& out_buf) {}
     const shape_type& get_output_shape(const std::string& name) const
     {
         auto it = m_output_shapes.find(name);
@@ -44,11 +50,8 @@ public:
         return it->second;
     }
 
-    std::map<std::string,shape_type> get_output_shapes() const
-    {
-        return m_output_shapes;
-    }
-
+    const std::map<std::string, shape_type>& get_output_shapes() const { return m_output_shapes; }
+    nlohmann::json                  get_config() { return m_js; }
     const std::vector<std::string>& get_buffer_names()
     {
         if (m_buffer_names.empty())
@@ -62,6 +65,8 @@ public:
     }
 
 protected:
-    std::map<std::string,shape_type> m_output_shapes;
-    std::vector<std::string>         m_buffer_names;
+    std::map<std::string, shape_type> m_output_shapes;
+    std::vector<std::string> m_buffer_names;
+    nlohmann::json           m_js;
+    size_t                   m_input_count{0};
 };

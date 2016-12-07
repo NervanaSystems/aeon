@@ -109,7 +109,6 @@ void decode_thread_pool::run(int id)
     }
 }
 
-
 void decode_thread_pool::work(int id)
 {
     // Thread function.
@@ -130,14 +129,12 @@ void decode_thread_pool::work(int id)
     // No locking required because threads write into non-overlapping regions.
     try
     {
-        buffer_in_array &input_buf_array = m_buffer_pool_encoded->get_read_buffer();
+        buffer_in_array& input_buf_array = m_buffer_pool_encoded->get_read_buffer();
         affirm(input_buf_array[0]->get_item_count() != 0, "input buffer pool is empty");
 
         for (int i = m_start_inds[id]; i < m_end_inds[id]; i++)
         {
-            m_providers[id]->provide(i,
-                                     m_buffer_pool_encoded->get_read_buffer(),
-                                     m_buffer_pool_decoded->get_write_buffer());
+            m_providers[id]->provide(i, m_buffer_pool_encoded->get_read_buffer(), m_buffer_pool_decoded->get_write_buffer());
         }
     }
     catch (std::exception& e)
@@ -188,8 +185,7 @@ void decode_thread_pool::produce()
             m_providers[0]->post_process(m_buffer_pool_decoded->get_write_buffer());
 
             // Copy to device.
-            m_python_backend->call_backend_transfer(m_buffer_pool_decoded->get_write_buffer(),
-                                                    m_buffer_index);
+            m_python_backend->call_backend_transfer(m_buffer_pool_decoded->get_write_buffer(), m_buffer_index);
         }
         catch (std::exception& e)
         {
@@ -221,7 +217,6 @@ void decode_thread_pool::consume()
         produce();
 
         m_buffer_pool_encoded->switch_read_buffer();
-
     }
     m_buffer_pool_encoded->signal_available_write_buffer();
 }

@@ -98,14 +98,11 @@ public:
         return (it == m_data.end() ? nullptr : it->second);
     }
 
-    size_t size() const
-    {
-        return m_data.size();
-    }
+    size_t size() const { return m_data.size(); }
 private:
     // these must be defined because buffer_out_array[0] is resolved to call the string method
     const buffer_out* operator[](int) const = delete;
-    buffer_out* operator[](int) = delete;
+    buffer_out* operator[](int)             = delete;
 
     std::map<std::string, buffer_out*> m_data;
 };

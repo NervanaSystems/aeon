@@ -98,7 +98,7 @@ block_loader_nds::buffer_t block_loader_nds::fetch_block(uint32_t block_num)
     while (stream)
     {
         vector<char> buffer;
-        string filename = reader.read(buffer);
+        string       filename = reader.read(buffer);
         if (filename == cpio::CPIO_TRAILER || filename == cpio::AEON_TRAILER)
         {
             break;

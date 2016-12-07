@@ -83,14 +83,14 @@ public:
     size_t                            size() const { return m_data.size(); }
     std::vector<buffer_in*>::iterator begin() { return m_data.begin(); }
     std::vector<buffer_in*>::iterator end() { return m_data.end(); }
-
-    void clear()
+    void                              clear()
     {
         for (auto b : m_data)
         {
             b->clear();
         }
     }
+
 private:
     std::vector<buffer_in*> m_data;
 };

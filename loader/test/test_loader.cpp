@@ -25,7 +25,6 @@
 #include "loader.hpp"
 #include "csv_manifest_maker.hpp"
 #include "gen_image.hpp"
-
 using namespace std;
 using namespace nervana;
 
@@ -39,6 +38,7 @@ TEST(loader,iteration_mode)
     {
         nlohmann::json js = {{"type","image,label"},
                              {"manifest_filename", manifest},
+                             {"manifest_root", string(CURDIR) + "/test_data"},
                              {"batch_size", batch_size},
                              {"iteration_mode", "INFINITE"},
                              {"image", {
@@ -47,7 +47,7 @@ TEST(loader,iteration_mode)
                                 {"channel_major",false},
                                 {"flip_enable",true}}},
                              {"label", {
-                                  {"binary",true}
+                                  {"binary",false}
                               }
                              }};
 
@@ -57,6 +57,7 @@ TEST(loader,iteration_mode)
     {
         nlohmann::json js = {{"type","image,label"},
                              {"manifest_filename", manifest},
+                             {"manifest_root", string(CURDIR) + "/test_data"},
                              {"batch_size", batch_size},
                              {"iteration_mode", "ONCE"},
                              {"image", {
@@ -65,7 +66,7 @@ TEST(loader,iteration_mode)
                                 {"channel_major",false},
                                 {"flip_enable",true}}},
                              {"label", {
-                                  {"binary",true}
+                                  {"binary",false}
                               }
                              }};
 
@@ -75,6 +76,7 @@ TEST(loader,iteration_mode)
     {
         nlohmann::json js = {{"type","image,label"},
                              {"manifest_filename", manifest},
+                             {"manifest_root", string(CURDIR) + "/test_data"},
                              {"batch_size", batch_size},
                              {"iteration_mode", "COUNT"},
                              {"iteration_mode_count", 1000},
@@ -84,7 +86,7 @@ TEST(loader,iteration_mode)
                                 {"channel_major",false},
                                 {"flip_enable",true}}},
                              {"label", {
-                                  {"binary",true}
+                                  {"binary",false}
                               }
                              }};
 
@@ -155,19 +157,19 @@ TEST(loader,iterator)
     auto end   = train_set.end();
 
     EXPECT_NE(begin, end);
-    EXPECT_EQ(0, begin.m_position);
+    EXPECT_EQ(0, begin.position());
     begin++;
     EXPECT_NE(begin, end);
-    EXPECT_EQ(1, begin.m_position);
+    EXPECT_EQ(1, begin.position());
     ++begin;
     EXPECT_NE(begin, end);
-    EXPECT_EQ(2, begin.m_position);
+    EXPECT_EQ(2, begin.position());
     for (int i=2; i<input_file_count; i++)
     {
         EXPECT_NE(begin, end);
         begin++;
     }
-    EXPECT_EQ(input_file_count, begin.m_position);
+    EXPECT_EQ(input_file_count, begin.position());
     EXPECT_EQ(begin, end);
 }
 
@@ -320,35 +322,66 @@ TEST(loader,test)
     ASSERT_EQ(1, label_shape.size());
     EXPECT_EQ(1, label_shape[0]);
 
-    int count=0;
-    int expected_id = 0;
-    for(const fixed_buffer_map& data : train_set)  // if d1 created with infinite, this will just keep going
+    // Range based first
+    // Run pass twice to ensure that breaking and restarting starts from the beginning
+    for (int pass_number = 0; pass_number < 2; ++pass_number)
     {
-        ASSERT_EQ(2, data.size());
-//        model_fit_one_iter(data);
-//        data['image'], data['label'];  // for image, label provider
-//        if(error < thresh) {
-//            break;
-//        }
-        const buffer_fixed_size_elements* image_buffer_ptr = data["image"];
-        ASSERT_NE(nullptr, image_buffer_ptr);
-        const buffer_fixed_size_elements& image_buffer = *image_buffer_ptr;
-        for(int i=0; i<batch_size; i++)
+        int count=0;
+        int expected_id = 0;
+        for(const fixed_buffer_map& data : train_set)  // if d1 created with infinite, this will just keep going
         {
-            const char* image_data = image_buffer.get_item(i);
-            cv::Mat image{height, width, CV_8UC3, (char*)image_data};
-            int actual_id = embedded_id_image::read_embedded_id(image);
-            // INFO << "train_loop " << expected_id << "," << actual_id;
-            ASSERT_EQ(expected_id%input_file_count, actual_id);
-            expected_id++;
-        }
+            ASSERT_EQ(2, data.size());
 
-        if(count++ == 8)
-        {
-            break;
+            const buffer_fixed_size_elements* image_buffer_ptr = data["image"];
+            ASSERT_NE(nullptr, image_buffer_ptr);
+            const buffer_fixed_size_elements& image_buffer = *image_buffer_ptr;
+            for(int i=0; i<batch_size; i++)
+            {
+                const char* image_data = image_buffer.get_item(i);
+                cv::Mat image{height, width, CV_8UC3, (char*)image_data};
+                int actual_id = embedded_id_image::read_embedded_id(image);
+                ASSERT_EQ(expected_id%input_file_count, actual_id);
+                expected_id++;
+            }
+
+            if(count++ == 8)
+            {
+                break;
+            }
         }
     }
 
+    for (int pass_number = 0; pass_number < 2; ++pass_number)
+    {
+        train_set.reset();
+        int count=0;
+        int expected_id = 0;
+        loader::iterator& ts_iter = train_set.get_current_iter();
+
+        while (ts_iter != train_set.get_end_iter())
+        {
+            const fixed_buffer_map& data = *ts_iter;
+            ASSERT_EQ(2, data.size());
+
+            const buffer_fixed_size_elements* image_buffer_ptr = data["image"];
+            ASSERT_NE(nullptr, image_buffer_ptr);
+            const buffer_fixed_size_elements& image_buffer = *image_buffer_ptr;
+            for(int i=0; i<batch_size; i++)
+            {
+                const char* image_data = image_buffer.get_item(i);
+                cv::Mat image{height, width, CV_8UC3, (char*)image_data};
+                int actual_id = embedded_id_image::read_embedded_id(image);
+                ASSERT_EQ(expected_id%input_file_count, actual_id);
+                expected_id++;
+            }
+
+            ++ts_iter;
+            if(count++ == 8)
+            {
+                break;
+            }
+        }
+    }
 
 //    all_errors = [];
 
@@ -365,3 +398,73 @@ TEST(loader,test)
 //    valid_set.reset();
 //    sleep(2);
 }
+
+
+
+// TEST(loader,mnist)
+// {
+//     size_t batch_size = 32;
+//     nlohmann::json js = {{"type","image,label"},
+//                          {"manifest_filename", "/scratch/alex/mnist/train-index.csv"},
+//                          {"batch_size", batch_size},
+//                          {"image", {
+//                             {"height",28},
+//                             {"width",28},
+//                             {"channels",1}}},
+//                          {"label", {
+//                               {"binary",false}
+//                           }
+//                          }};
+
+//     loader train_set{js};
+
+//     auto buf_names = train_set.get_buffer_names();
+//     EXPECT_EQ(2, buf_names.size());
+//     EXPECT_NE(find(buf_names.begin(), buf_names.end(), "image"), buf_names.end());
+//     EXPECT_NE(find(buf_names.begin(), buf_names.end(), "label"), buf_names.end());
+
+//     auto image_shape = train_set.get_shape("image");
+//     auto label_shape = train_set.get_shape("label");
+
+//     int count=0;
+//     int expected_id = 0;
+
+//     auto itt = train_set.begin();
+//     while (itt != train_set.end())
+//     {
+//         const fixed_buffer_map& data = *itt;
+//         const buffer_fixed_size_elements* label_buffer_ptr = data["label"];
+//         ASSERT_NE(nullptr, label_buffer_ptr);
+//         const buffer_fixed_size_elements& label_buffer = *label_buffer_ptr;
+//         for(int i=0; i<batch_size; i++)
+//         {
+//             uint32_t *dptr = (uint32_t *) label_buffer.get_item(i);
+//             INFO << "train_loop " << *dptr;
+//         }
+//         ++itt;
+//         if(count++ == 8)
+//         {
+//             break;
+//         }
+//     }
+
+//     // for(const fixed_buffer_map& data : train_set)
+//     // {
+//     //     ASSERT_EQ(2, data.size());
+
+//     //     const buffer_fixed_size_elements* label_buffer_ptr = data["label"];
+//     //     ASSERT_NE(nullptr, label_buffer_ptr);
+//     //     const buffer_fixed_size_elements& label_buffer = *label_buffer_ptr;
+//     //     for(int i=0; i<batch_size; i++)
+//     //     {
+//     //         uint32_t *dptr = (uint32_t *) label_buffer.get_item(i);
+//     //         INFO << "train_loop " << *dptr;
+//     //     }
+
+//     //     if(count++ == 8)
+//     //     {
+//     //         break;
+//     //     }
+//     // }
+// }
+

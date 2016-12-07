@@ -29,7 +29,7 @@ using namespace std;
 using namespace nervana;
 
 block_loader_file_async::block_loader_file_async(manifest_csv* mfst, uint32_t block_size)
-    : async_manager<vector<string>,variable_buffer_array>(mfst)
+    : async_manager<vector<string>, variable_buffer_array>(mfst)
     , m_block_size(block_size)
 {
     m_elements_per_record = element_count();
@@ -39,7 +39,6 @@ block_loader_file_async::block_loader_file_async(manifest_csv* mfst, uint32_t bl
         {
             m_containers[k].emplace_back();
         }
-
     }
 }
 

@@ -135,7 +135,7 @@ void web::server::page_request(web::page& current_page)
 
     if (lines.size() > 0)
     {
-        line = lines[0];
+        line                  = lines[0];
         vector<string> tokens = split(line, ' ');
 
         if (tokens.size() > 1)
@@ -207,7 +207,7 @@ void web::server::page_request(web::page& current_page)
 void web::server::connection_handler_entry(std::shared_ptr<page> page)
 {
     page->m_server->page_request(*page);
-//    page->m_thread.detach();
+    //    page->m_thread.detach();
 }
 
 void web::server::process_loop()
@@ -238,7 +238,7 @@ void web::server::process_loop()
             }
             else
             {
-                auto fn = std::bind(&web::server::connection_handler_entry, current_page);
+                auto fn                = std::bind(&web::server::connection_handler_entry, current_page);
                 current_page->m_thread = std::thread(fn);
             }
         }
@@ -461,7 +461,7 @@ void web::page::flush()
     m_connection->flush();
 }
 
-const std::map<std::string,std::string>& web::page::args() const
+const std::map<std::string, std::string>& web::page::args() const
 {
     return m_args;
 }
@@ -640,12 +640,13 @@ void web::tcp::connection::close()
 {
     if (m_is_server)
     {
-        int sock=socket(AF_INET, SOCK_STREAM, 0);
+        int                sock = socket(AF_INET, SOCK_STREAM, 0);
         struct sockaddr_in remote;
-        remote.sin_family=AF_INET;
+        remote.sin_family = AF_INET;
         inet_pton(AF_INET, "127.0.0.1", &remote.sin_addr);
         remote.sin_port = ntohs(m_listening_port);
-        if(connect(sock, (struct sockaddr*)&remote, sizeof(remote)) < 0) {
+        if (connect(sock, (struct sockaddr*)&remote, sizeof(remote)) < 0)
+        {
             cout << __FILE__ << " " << __LINE__ << " error connecting to self" << endl;
         }
         ::close(sock);
@@ -654,23 +655,22 @@ void web::tcp::connection::close()
     else
     {
         struct linger ling;
-        ling.l_onoff=1;
-        ling.l_linger=30;
+        ling.l_onoff  = 1;
+        ling.l_linger = 30;
         setsockopt(m_socket, SOL_SOCKET, SO_LINGER, &ling, sizeof(ling));
 
         shutdown(m_socket, SHUT_WR);
 
-        while(!m_is_server)
+        while (!m_is_server)
         {
-    //        int flags = fcntl(m_socket, F_GETFL, 0);
-    //        fcntl(m_socket, F_SETFL, flags | O_NONBLOCK);
+            //        int flags = fcntl(m_socket, F_GETFL, 0);
+            //        fcntl(m_socket, F_SETFL, flags | O_NONBLOCK);
 
-    //        int pending_data;
-    //        fcntl(m_socket, TIOCOUTQ, &pending_data);
-    //        cout << __FILE__ << " " << __LINE__ << " pending_data " << pending_data << endl;
+            //        int pending_data;
+            //        fcntl(m_socket, TIOCOUTQ, &pending_data);
+            //        cout << __FILE__ << " " << __LINE__ << " pending_data " << pending_data << endl;
 
-
-            char buffer[32];
+            char   buffer[32];
             size_t rc = read(m_socket, buffer, sizeof(buffer));
             if (rc == 0)
             {

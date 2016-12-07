@@ -19,7 +19,8 @@ using namespace nervana;
 using namespace std;
 
 audio_classifier::audio_classifier(nlohmann::json js)
-    : audio_config(js["audio"])
+    : provider_interface(js, 2)
+    , audio_config(js["audio"])
     , label_config(js["label"])
     , audio_extractor()
     , audio_transformer(audio_config)
@@ -48,9 +49,4 @@ void audio_classifier::provide(int idx, variable_buffer_array& in_buf, fixed_buf
     // Process target data
     auto label_dec = label_extractor.extract(target_in.data(), target_in.size());
     label_loader.load({target_out}, label_dec);
-}
-
-size_t audio_classifier::get_input_count() const
-{
-    return 2;
 }

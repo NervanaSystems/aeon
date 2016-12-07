@@ -19,7 +19,8 @@ using namespace nervana;
 using namespace std;
 
 video_classifier::video_classifier(nlohmann::json js)
-    : video_config(js["video"])
+    : provider_interface(js, 2)
+    , video_config(js["video"])
     , video_extractor(video_config)
     , video_transformer(video_config)
     , video_loader(video_config)
@@ -52,9 +53,4 @@ void video_classifier::provide(int idx, variable_buffer_array& in_buf, fixed_buf
     // Process target data
     auto label_dec = label_extractor.extract(target_in.data(), target_in.size());
     label_loader.load({target_out}, label_dec);
-}
-
-size_t video_classifier::get_input_count() const
-{
-    return 2;
 }

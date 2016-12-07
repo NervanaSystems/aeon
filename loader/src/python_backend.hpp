@@ -44,19 +44,15 @@ private:
 class nervana::python_backend : public nervana::async_manager<nervana::fixed_buffer_map, std::vector<PyObject*>>
 {
 public:
-    python_backend(loader_async* loader_source, PyObject* py_obj_backend,
-                   const std::vector<nervana::shape_type>& oshape_types);
+    python_backend(loader_async* loader_source, PyObject* py_obj_backend);
     ~python_backend();
-    void setup_buffers();
 
     virtual std::vector<PyObject*>* filler() override;
 
-
 private:
     python_backend() = delete;
-    PyObject* wrap_buffer_as_np_array(buffer_fixed_size_elements buf, const nervana::shape_type& st);
+    PyObject* wrap_buffer_as_np_array(buffer_fixed_size_elements* buf);
 
     PyObject* m_py_obj_backend;
-    std::vector<nervana::shape_type> m_oshape_types;
     PyObject* m_f_consume = NULL;
 };

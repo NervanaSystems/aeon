@@ -28,20 +28,22 @@
 using namespace std;
 using namespace nervana;
 
-loader_async::loader_async(batch_iterator_async* b_itor, const std::string& config_string)
+loader_async::loader_async(batch_iterator_async* b_itor, size_t batch_size, bool single_thread, bool pinned,
+                           const std::shared_ptr<provider_interface>& prov)
     : async_manager<variable_buffer_array, fixed_buffer_map>(b_itor)
+    , m_batch_size(batch_size)
 {
     // Note:  all we need are single_thread, batch_size, pinned + the provider template
     //        can we just use copy constructor instead?
-    m_lcfg_json = nlohmann::json::parse(config_string);
-    loader_config lcfg(m_lcfg_json);
+    int nthreads = 1;
 
-    int ncores         = thread::hardware_concurrency();
-    int itemsPerThread = (lcfg.batch_size - 1) / ncores + 1;
-    int nthreads       = (lcfg.batch_size - 1) / itemsPerThread + 1;
-    nthreads           = lcfg.single_thread ? 1 : std::min(nthreads, lcfg.batch_size);
+    if (!single_thread)
+    {
+        int itemsPerThread = (batch_size - 1) / thread::hardware_concurrency() + 1;
+        nthreads           = std::min((batch_size - 1) / itemsPerThread + 1, batch_size);
+    }
 
-    m_items_per_thread = (lcfg.batch_size - 1) / nthreads + 1;
+    m_items_per_thread = (batch_size - 1) / nthreads + 1;
 
     if (nthreads <= 0)
     {
@@ -50,13 +52,13 @@ loader_async::loader_async(batch_iterator_async* b_itor, const std::string& conf
 
     for (int i = 0; i < nthreads; i++)
     {
-        m_providers.push_back(nervana::provider_factory::create(m_lcfg_json));
+        m_providers.push_back(nervana::provider_factory::clone(prov));
         m_start_inds.push_back(i * m_items_per_thread);
-        int item_count = i == nthreads - 1 ? (lcfg.batch_size - i * m_items_per_thread) : m_items_per_thread;
+        int item_count = i == nthreads - 1 ? (batch_size - i * m_items_per_thread) : m_items_per_thread;
         m_end_inds.push_back(m_start_inds[i] + item_count);
     }
 
-    auto oshapes = m_providers[0]->get_output_shapes();
+    auto oshapes         = m_providers[0]->get_output_shapes();
     m_number_elements_in = m_providers[0]->get_input_count();
 
     // Allocate the space in the output buffers
@@ -64,15 +66,15 @@ loader_async::loader_async(batch_iterator_async* b_itor, const std::string& conf
     {
         for (auto& sz : oshapes)
         {
-            m_containers[k].add_item(sz.first, sz.second.get_byte_size(), lcfg.batch_size, lcfg.pinned);
+            m_containers[k].add_item(sz.first, sz.second, batch_size, pinned);
         }
     }
 }
 
 fixed_buffer_map* loader_async::filler()
 {
-    fixed_buffer_map* outputs = get_pending_buffer();
-    variable_buffer_array* inputs = m_source->next();
+    fixed_buffer_map*      outputs = get_pending_buffer();
+    variable_buffer_array* inputs  = m_source->next();
 
     std::vector<std::thread> provider_threads;
     try
@@ -160,47 +162,31 @@ void loader_config::validate()
 }
 
 loader::loader(const std::string& config_string)
+    : m_current_iter(*this, false)
+    , m_end_iter(*this, true)
 {
     auto tmp = nlohmann::json::parse(config_string);
     initialize(tmp);
 }
 
 loader::loader(nlohmann::json& config_json)
+    : m_current_iter(*this, false)
+    , m_end_iter(*this, true)
 {
     initialize(config_json);
 }
 
 void loader::initialize(nlohmann::json& config_json)
 {
-    string config_string = config_json.dump();
+    string        config_string = config_json.dump();
     loader_config lcfg(config_json);
-    m_batch_size                       = lcfg.batch_size;
-    int block_size = lcfg.block_size == 0 ? lcfg.batch_size * 2 : lcfg.block_size;
-
-    if (lcfg.iteration_mode == "ONCE")
-    {
-        m_batch_mode = BatchMode::ONCE;
-    }
-    else if (lcfg.iteration_mode == "INFINITE")
-    {
-        m_batch_mode = BatchMode::INFINITE;
-    }
-    else if (lcfg.iteration_mode == "COUNT")
-    {
-        m_batch_mode = BatchMode::COUNT;
-        m_batch_count_value = lcfg.iteration_mode_count;
-    }
+    m_batch_size = lcfg.batch_size;
 
     // shared_ptr<manifest> base_manifest;
     sox_format_init();
 
     // the manifest defines which data should be included in the dataset
-    m_manifest = make_shared<manifest_csv>(
-                                    lcfg.manifest_filename,
-                                    lcfg.shuffle_manifest,
-                                    lcfg.manifest_root,
-                                    lcfg.subset_fraction
-                            );
+    m_manifest = make_shared<manifest_csv>(lcfg.manifest_filename, lcfg.shuffle_manifest, lcfg.manifest_root, lcfg.subset_fraction);
 
     // TODO: make the constructor throw this error
     if (m_manifest->object_count() == 0)
@@ -208,7 +194,23 @@ void loader::initialize(nlohmann::json& config_json)
         throw std::runtime_error("manifest file is empty");
     }
 
-    m_block_loader = make_shared<block_loader_file_async>(m_manifest.get(), block_size);
+    if (lcfg.iteration_mode == "ONCE")
+    {
+        m_batch_mode = BatchMode::ONCE;
+        m_batch_count_value = m_manifest->object_count();
+    }
+    else if (lcfg.iteration_mode == "INFINITE")
+    {
+        m_batch_mode = BatchMode::INFINITE;
+        m_batch_count_value = m_manifest->object_count();
+    }
+    else if (lcfg.iteration_mode == "COUNT")
+    {
+        m_batch_mode        = BatchMode::COUNT;
+        m_batch_count_value = lcfg.iteration_mode_count;
+    }
+
+    m_block_loader = make_shared<block_loader_file_async>(m_manifest.get(), lcfg.block_size);
 
     // base_manifest  = manifest;
 
@@ -231,16 +233,13 @@ void loader::initialize(nlohmann::json& config_json)
 
     m_batch_iterator = make_shared<batch_iterator_async>(m_block_loader.get(), lcfg.batch_size);
 
-    m_decoder = make_shared<loader_async>(m_batch_iterator.get(), config_string);
-
-    auto                      media   = provider_factory::create(config_json);
-
-    for (auto shape : media->get_output_shapes())
-    {
-        m_out_sizes.insert({shape.first, shape.second.get_byte_size()});
-    }
-
     m_provider = provider_factory::create(config_json);
+
+    m_decoder = make_shared<loader_async>(m_batch_iterator.get(), static_cast<size_t>(lcfg.batch_size), lcfg.single_thread,
+                                          lcfg.pinned, m_provider);
+
+    m_output_buffer_ptr = m_decoder->next();
+
 }
 
 const vector<string>& loader::get_buffer_names() const
@@ -248,105 +247,29 @@ const vector<string>& loader::get_buffer_names() const
     return m_provider->get_buffer_names();
 }
 
+const map<string, shape_type>& loader::get_names_and_shapes() const
+{
+    return m_provider->get_output_shapes();
+}
+
 const shape_t& loader::get_shape(const string& name) const
 {
     return m_provider->get_output_shape(name).get_shape();
 }
 
-void loader::set_iterator_count(BatchMode count)
-{
-    m_batch_mode = count;
-    m_batch_count_value = 0;
-}
-
-void loader::set_iterator_count(size_t count)
-{
-    m_batch_mode = BatchMode::COUNT;
-    m_batch_count_value = count;
-}
-
-loader::iterator::iterator(loader& ld, bool is_end, size_t num_inputs)
+loader::iterator::iterator(loader& ld, bool is_end)
     : m_current_loader(ld)
     , m_is_end{is_end}
-    // , m_num_inputs{num_inputs}
-    // , m_output_buffer{ld.m_out_sizes, (size_t)ld.m_batch_size}
-    , m_object_count{ld.m_manifest->object_count()}
-    // , m_pending_block{(uint32_t)m_num_inputs}
-    , m_batch_mode{ld.m_batch_mode}
-{
-    if (m_is_end)
-    {
-        if (m_batch_mode == loader::BatchMode::COUNT)
-        {
-            m_position = ld.m_batch_count_value;
-        }
-        else
-        {
-            m_position = m_object_count;
-        }
-    }
-    else
-    {
-        m_position = 0;
-    }
-
-    // variable size buffers for reading encoded data (start off zero and grow as needed)
-    if (!m_is_end)
-    {
-        m_output_buffer_ptr = m_current_loader.m_decoder->next();
-        // m_async_result = async(&loader::iterator::read_input, this);
-        // fill_buffer();
-    }
-}
+{}
 
 loader::iterator::iterator(const iterator& other)
     : m_current_loader{other.m_current_loader}
     , m_is_end{other.m_is_end}
-    // , m_num_inputs{other.m_num_inputs}
-    , m_object_count{other.m_object_count}
-    , m_position{other.m_position}
-    , m_batch_mode{other.m_batch_mode}
-{
-    INFO << "iterator copy ctor";
-}
-
-loader::iterator::~iterator()
-{
-}
-
-// void loader::iterator::read_input()
-// {
-//     m_pending_block.clear();
-//     m_current_loader.m_batch_iterator->read(m_pending_block);
-// }
-
-// void loader::iterator::fill_buffer()
-// {
-//     if (!m_is_end)
-//     {
-//         m_async_result.get();
-//         variable_buffer_array& input_buffer = m_pending_block;
-
-//         if (m_current_loader.m_provider)
-//         {
-//             for (int i = 0; i < m_current_loader.m_batch_size; i++)
-//             {
-//                 m_current_loader.m_provider->provide(i, input_buffer, m_output_buffer);
-//             }
-//         }
-//         m_async_result = async(&loader::iterator::read_input, this);
-//     }
-// }
+{}
 
 loader::iterator& loader::iterator::operator++()
 {
-    m_output_buffer_ptr = m_current_loader.m_decoder->next();
-    // fill_buffer();
-    m_position++;
-    if (m_batch_mode == BatchMode::INFINITE && m_position == m_object_count)
-    {
-        m_position = 0;
-    }
+    m_current_loader.increment_position();
     return *this;
 }
 
@@ -359,7 +282,9 @@ loader::iterator& loader::iterator::operator++(int)
 
 bool loader::iterator::operator==(const iterator& other) const
 {
-    return &m_current_loader == &other.m_current_loader && m_position == other.m_position;
+    bool res = &m_current_loader == &other.m_current_loader;
+    res &= (other.m_is_end && positional_end()) || (m_is_end && other.positional_end());
+    return res;
 }
 
 bool loader::iterator::operator!=(const iterator& other) const
@@ -367,20 +292,25 @@ bool loader::iterator::operator!=(const iterator& other) const
     return !(*this == other);
 }
 
+// Whether or not this strictly positional iterator has reached the end
+bool loader::iterator::positional_end() const
+{
+    return !m_is_end && (position() >= m_current_loader.m_batch_count_value);
+}
+
 const fixed_buffer_map& loader::iterator::operator*() const
 {
-    return *m_output_buffer_ptr;
+    return *(m_current_loader.m_output_buffer_ptr);
 }
 
-loader::iterator loader::begin()
+void loader::increment_position()
 {
-    iterator rc{*this, false, m_provider->get_input_count()};
-    return rc;
-}
+    m_output_buffer_ptr = m_decoder->next();
+    m_position++;
 
-loader::iterator loader::end()
-{
-    iterator rc{*this, true, m_provider->get_input_count()};
-    return rc;
+    // Wrap around if this is an infinite iterator
+    if (m_batch_mode == BatchMode::INFINITE && m_position == m_batch_count_value)
+    {
+        m_position = 0;
+    }
 }
-

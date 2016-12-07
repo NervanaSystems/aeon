@@ -19,9 +19,8 @@
 using namespace nervana;
 
 batch_iterator_async::batch_iterator_async(block_loader_file_async* blkl, size_t batch_size)
-    : async_manager<variable_buffer_array,variable_buffer_array>(blkl)
+    : async_manager<variable_buffer_array, variable_buffer_array>(blkl)
     , m_batch_size(batch_size)
-    , m_input_ptr{nullptr}
 {
     m_element_count = element_count();
     for (int k = 0; k < 2; ++k)
@@ -30,9 +29,7 @@ batch_iterator_async::batch_iterator_async(block_loader_file_async* blkl, size_t
         {
             m_containers[k].emplace_back();
         }
-
     }
-
 }
 
 variable_buffer_array* batch_iterator_async::filler()
@@ -68,7 +65,7 @@ variable_buffer_array* batch_iterator_async::filler()
         }
         else
         {
-            move_count = number_needed;  // Enough in the block to service this batch and more
+            move_count = number_needed; // Enough in the block to service this batch and more
         }
 
         move_src_to_dst(m_input_ptr, rc, move_count);
@@ -84,10 +81,7 @@ variable_buffer_array* batch_iterator_async::filler()
     return rc;
 }
 
-
-void batch_iterator_async::move_src_to_dst(variable_buffer_array* src_array_ptr,
-                                           variable_buffer_array* dst_array_ptr,
-                                           size_t count)
+void batch_iterator_async::move_src_to_dst(variable_buffer_array* src_array_ptr, variable_buffer_array* dst_array_ptr, size_t count)
 {
     for (size_t ridx = 0; ridx < m_element_count; ++ridx)
     {
@@ -95,7 +89,7 @@ void batch_iterator_async::move_src_to_dst(variable_buffer_array* src_array_ptr,
         buffer_variable_size_elements& dst = dst_array_ptr->at(ridx);
 
         auto start_iter = src.begin();
-        auto end_iter = src.begin() + count;
+        auto end_iter   = src.begin() + count;
 
         dst.append(make_move_iterator(start_iter), make_move_iterator(end_iter));
         src.erase(start_iter, end_iter);

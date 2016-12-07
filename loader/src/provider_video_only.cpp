@@ -19,7 +19,8 @@ using namespace nervana;
 using namespace std;
 
 video_only::video_only(nlohmann::json js)
-    : video_config(js["video"])
+    : provider_interface(js, 1)
+    , video_config(js["video"])
     , video_extractor(video_config)
     , video_transformer(video_config)
     , video_loader(video_config)
@@ -44,9 +45,4 @@ void video_only::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_ma
     auto video_dec    = video_extractor.extract(datum_in.data(), datum_in.size());
     auto frame_params = frame_factory.make_params(video_dec);
     video_loader.load({datum_out}, video_transformer.transform(frame_params, video_dec));
-}
-
-size_t video_only::get_input_count() const
-{
-    return 1;
 }

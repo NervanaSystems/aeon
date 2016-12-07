@@ -36,12 +36,12 @@ public:
     buffer_in_array& get_write_buffer();
     buffer_in_array& get_read_buffer();
 
-    void        switch_read_buffer();
-    void        switch_write_buffer();
-    bool        no_read_buffers();
-    bool        has_read_buffers();
-    bool        no_write_buffers();
-    bool        has_write_buffers();
+    void switch_read_buffer();
+    void switch_write_buffer();
+    bool no_read_buffers();
+    bool has_read_buffers();
+    bool no_write_buffers();
+    bool has_write_buffers();
 
     std::mutex& get_mutex();
     void wait_for_available_read_buffer(std::unique_lock<std::mutex>& lock);
@@ -50,7 +50,7 @@ public:
     void signal_available_write_buffer();
 
 protected:
-    int                              m_used  = 0;
+    int                              m_used = 0;
     std::shared_ptr<buffer_in_array> m_bufs[2];
     std::mutex                       m_mutex;
     std::condition_variable          m_available_read_buffer;

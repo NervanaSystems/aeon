@@ -12,5 +12,13 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-
 #pragma once
+#include <Python.h>
+
+#include <vector>
+#include <map>
+
+#include "json.hpp"
+#include "buffer_batch.hpp"
+#include "loader.hpp"
+#include "log.hpp"

@@ -54,12 +54,12 @@ private:
     const std::string metadata_url();
     buffer_t fetch_block(uint32_t block_num);
 
-    const std::string m_baseurl;
-    const std::string m_token;
-    const int         m_collection_id;
-    const int         m_shard_count;
-    const int         m_shard_index;
-    unsigned int      m_object_count;
-    unsigned int      m_block_count;
-    std::future<buffer_t>  m_future;
+    const std::string     m_baseurl;
+    const std::string     m_token;
+    const int             m_collection_id;
+    const int             m_shard_count;
+    const int             m_shard_index;
+    unsigned int          m_object_count;
+    unsigned int          m_block_count;
+    std::future<buffer_t> m_future;
 };

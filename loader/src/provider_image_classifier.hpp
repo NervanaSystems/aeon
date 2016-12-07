@@ -29,7 +29,6 @@ class nervana::image_classifier : public provider_interface
 public:
     image_classifier(nlohmann::json js);
     void provide(int idx, nervana::variable_buffer_array& in_buf, nervana::fixed_buffer_map& out_buf);
-    size_t get_input_count() const override;
 
 private:
     image::config        image_config;

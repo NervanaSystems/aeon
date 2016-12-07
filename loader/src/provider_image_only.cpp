@@ -19,7 +19,8 @@ using namespace nervana;
 using namespace std;
 
 image_only::image_only(nlohmann::json js)
-    : image_config(js["image"])
+    : provider_interface(js, 1)
+    , image_config(js["image"])
     , image_extractor(image_config)
     , image_transformer(image_config)
     , image_loader(image_config)
@@ -44,9 +45,4 @@ void image_only::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_ma
     auto image_dec    = image_extractor.extract(datum_in.data(), datum_in.size());
     auto image_params = image_factory.make_params(image_dec);
     image_loader.load({datum_out}, image_transformer.transform(image_params, image_dec));
-}
-
-size_t image_only::get_input_count() const
-{
-    return 1;
 }

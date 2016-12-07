@@ -49,6 +49,6 @@ private:
     void prefetch_block(uint32_t block_num) override;
 
     const std::shared_ptr<nervana::manifest_csv> m_manifest;
-    std::future<buffer_t>     m_future;
-    size_t   m_elements_per_record;
+    std::future<buffer_t>                        m_future;
+    size_t                                       m_elements_per_record;
 };

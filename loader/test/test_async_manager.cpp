@@ -54,6 +54,10 @@ public:
     {
         return 1;
     }
+    void reset() override
+    {
+        m_data_index = 0;
+    }
 private:
     vector<int> m_data;
     int         m_data_index;

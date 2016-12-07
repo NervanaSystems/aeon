@@ -37,8 +37,8 @@ namespace nervana
         static const uint32_t WRITER_VERSION = 1;
         static const char*    MAGIC_STRING   = "MACR";
         static const char*    CPIO_TRAILER   = "TRAILER!!!";
-        static const char*    AEON_HEADER = "cpiohdr";
-        static const char*    AEON_TRAILER = "cpiotlr";
+        static const char*    AEON_HEADER    = "cpiohdr";
+        static const char*    AEON_TRAILER   = "cpiotlr";
 
         class record_header;
         class file_header;
@@ -81,17 +81,17 @@ public:
     void write(std::ostream& ofs, uint32_t fileSize, const char* fileName);
 
 public:
-    uint16_t m_magic;
-    uint16_t m_dev;
-    uint16_t m_ino;
-    uint16_t m_mode;
-    uint16_t m_uid;
-    uint16_t m_gid;
-    uint16_t m_nlink;
-    uint16_t m_rdev;
-    uint16_t m_mtime[2];
-    uint16_t m_namesize;
-    uint16_t m_filesize[2];
+    uint16_t    m_magic;
+    uint16_t    m_dev;
+    uint16_t    m_ino;
+    uint16_t    m_mode;
+    uint16_t    m_uid;
+    uint16_t    m_gid;
+    uint16_t    m_nlink;
+    uint16_t    m_rdev;
+    uint16_t    m_mtime[2];
+    uint16_t    m_namesize;
+    uint16_t    m_filesize[2];
     std::string m_filename;
 };
 

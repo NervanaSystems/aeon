@@ -19,7 +19,8 @@ using namespace nervana;
 using namespace std;
 
 image_stereo_blob::image_stereo_blob(nlohmann::json js)
-    : image_config(js["stereo_image"])
+    : provider_interface(js, 3)
+    , image_config(js["stereo_image"])
     , target_config(js["blob"])
     , image_extractor(image_config)
     , image_transformer(image_config)
@@ -30,9 +31,9 @@ image_stereo_blob::image_stereo_blob(nlohmann::json js)
     //    target_transformer(target_config),
     target_loader(target_config)
 {
-    m_output_shapes.insert({"image_left",image_config.get_shape_type()});
-    m_output_shapes.insert({"image_right",image_config.get_shape_type()});
-    m_output_shapes.insert({"depthmap",target_config.get_shape_type()});
+    m_output_shapes.insert({"image_left", image_config.get_shape_type()});
+    m_output_shapes.insert({"image_right", image_config.get_shape_type()});
+    m_output_shapes.insert({"depthmap", target_config.get_shape_type()});
 }
 
 void image_stereo_blob::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
@@ -57,9 +58,4 @@ void image_stereo_blob::provide(int idx, variable_buffer_array& in_buf, fixed_bu
     auto target_dec = target_extractor.extract(target_in.data(), target_in.size());
     //    auto target_transformed = target_transformer.transform(image_params, target_dec);
     target_loader.load({target_out}, target_dec);
-}
-
-size_t image_stereo_blob::get_input_count() const
-{
-    return 3;
 }

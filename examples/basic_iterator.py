@@ -1,13 +1,18 @@
-from aeon import AeonDataloader
+import os
+from aeon import Dataloader
 
-manifest_file = "loader/test/test_data/manifest.csv"
-batch_size = 128
+
+pdir = os.path.dirname(os.path.abspath(__file__))
+manifest_root = os.path.join(pdir, '..', 'loader', 'test', 'test_data')
+
+manifest_file = os.path.join(manifest_root, 'manifest.csv')
 cache_root = ""
 
 cfg = {
            'manifest_filename': manifest_file,
-           'batch_size': batch_size,
-           'block_size': 25000,
+           'manifest_root': manifest_root,
+           'batch_size': 20,
+           'block_size': 40,
            'cache_directory': cache_root,
            'type': 'image,label',
            'image': {'height': 28,
@@ -16,19 +21,17 @@ cfg = {
            'label': {'binary': False}
         }
 
-d1 = AeonDataloader(config=cfg, batch_size=128, batch_count='INFINITE')
-names = d1.get_buffer_names()
-print("names {0}").format(names)
-d1.get_buffer_shape("test_name")
-
+d1 = Dataloader(config=cfg)
 print("d1 length {0}").format(len(d1))
 
 shapes = d1.shapes()
 
-for x in d1:
-    print("d1 {0}").format(x)
-
-d1.reset()
+print("shapes {}".format(shapes))
 
 for x in d1:
-    print("d1 {0}").format(x)
+    print("d1, v1: {0}").format(x.keys())
+
+# d1.reset()
+
+# for x in d1:
+#     print("d1 {0}").format(x.keys())

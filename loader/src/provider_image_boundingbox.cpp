@@ -19,7 +19,8 @@ using namespace nervana;
 using namespace std;
 
 image_boundingbox::image_boundingbox(nlohmann::json js)
-    : image_config(js["image"])
+    : provider_interface(js, 2)
+    , image_config(js["image"])
     , bbox_config(js["boundingbox"])
     , image_extractor(image_config)
     , image_transformer(image_config)
@@ -29,8 +30,8 @@ image_boundingbox::image_boundingbox(nlohmann::json js)
     , bbox_transformer(bbox_config)
     , bbox_loader(bbox_config)
 {
-    m_output_shapes.insert({"image",image_config.get_shape_type()});
-    m_output_shapes.insert({"boundingbox",bbox_config.get_shape_type()});
+    m_output_shapes.insert({"image", image_config.get_shape_type()});
+    m_output_shapes.insert({"boundingbox", bbox_config.get_shape_type()});
 }
 
 void image_boundingbox::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
@@ -55,9 +56,4 @@ void image_boundingbox::provide(int idx, variable_buffer_array& in_buf, fixed_bu
     // Process target data
     auto target_dec = bbox_extractor.extract(target_in.data(), target_in.size());
     bbox_loader.load({target_out}, bbox_transformer.transform(image_params, target_dec));
-}
-
-size_t image_boundingbox::get_input_count() const
-{
-    return 2;
 }

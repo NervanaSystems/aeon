@@ -30,7 +30,6 @@ public:
     image_boundingbox(nlohmann::json js);
     virtual ~image_boundingbox() {}
     void provide(int idx, nervana::variable_buffer_array& in_buf, nervana::fixed_buffer_map& out_buf);
-    size_t get_input_count() const override;
 
 private:
     image_boundingbox() = delete;

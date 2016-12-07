@@ -29,4 +29,5 @@ public:
     virtual ~provider_factory() {}
 public:
     static std::shared_ptr<nervana::provider_interface> create(nlohmann::json configJs);
+    static std::shared_ptr<nervana::provider_interface> clone(const std::shared_ptr<nervana::provider_interface>& r);
 };

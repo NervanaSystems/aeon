@@ -30,17 +30,20 @@
 
 namespace nervana
 {
-    template <typename OUTPUT>  class async_manager_source;
-    template <typename INPUT, typename OUTPUT> class async_manager;
+    template <typename OUTPUT>
+    class async_manager_source;
+    template <typename INPUT, typename OUTPUT>
+    class async_manager;
 }
 
 template <typename OUTPUT>
 class nervana::async_manager_source
 {
 public:
-    virtual OUTPUT* next() = 0;
-    virtual size_t object_count() = 0;
-    virtual size_t element_count() = 0;
+    virtual OUTPUT* next()          = 0;
+    virtual size_t  object_count()  = 0;
+    virtual size_t  element_count() = 0;
+    virtual void    reset()         = 0;
 };
 
 template <typename INPUT, typename OUTPUT>
@@ -52,9 +55,8 @@ public:
     {
         // Make the container pair?  Currently letting child handle it in filler()
     }
-    virtual size_t object_count() override { return m_source->object_count(); }
-    virtual size_t element_count() override { return m_source->element_count(); }
-
+    virtual size_t  object_count() override { return m_source->object_count(); }
+    virtual size_t  element_count() override { return m_source->element_count(); }
     virtual OUTPUT* next() override
     {
         // Special case for first time through
@@ -64,7 +66,6 @@ public:
             m_first = false;
             // Just run this one in blocking mode
             m_pending_result = std::async(&nervana::async_manager<INPUT, OUTPUT>::filler, this);
-
         }
         result = m_pending_result.get();
         if (result != nullptr)
@@ -73,16 +74,28 @@ public:
 
             // Now kick off this one in async
             m_pending_result = std::async(&nervana::async_manager<INPUT, OUTPUT>::filler, this);
-
         }
         return result;
     }
 
+    // do the work to fill up m_containers
     virtual OUTPUT* filler() = 0;
+
+    virtual void reset() override
+    {
+        finalize();
+        m_source->reset();
+        initialize();
+    }
 
     virtual ~async_manager()
     {
         finalize();
+    }
+
+    virtual void initialize()
+    {
+        m_first = true;
     }
 
     void finalize()
@@ -102,13 +115,12 @@ protected:
         m_index_pend = m_index_pend == 1 ? 0 : 1;
     }
 
-    OUTPUT*                         get_pending_buffer() { return &m_containers[m_index_pend]; }
-    std::mutex                      m_mutex;
-    OUTPUT                          m_containers[2];
-    int                             m_index_pend{0};
-    int                             m_index_done{0};
-    std::future<OUTPUT*>            m_pending_result;
-    bool                            m_first{true};
-    async_manager_source<INPUT>*    m_source;
-
+    OUTPUT*                      get_pending_buffer() { return &m_containers[m_index_pend]; }
+    std::mutex                   m_mutex;
+    OUTPUT                       m_containers[2];
+    int                          m_index_pend{0};
+    int                          m_index_done{0};
+    std::future<OUTPUT*>         m_pending_result;
+    bool                         m_first{true};
+    async_manager_source<INPUT>* m_source;
 };

@@ -19,7 +19,8 @@ using namespace nervana;
 using namespace std;
 
 image_pixelmask::image_pixelmask(nlohmann::json js)
-    : image_config(js["image"])
+    : provider_interface(js, 2)
+    , image_config(js["image"])
     , target_config(js["pixelmask"])
     , image_extractor(image_config)
     , image_transformer(image_config)
@@ -29,8 +30,8 @@ image_pixelmask::image_pixelmask(nlohmann::json js)
     , target_transformer(target_config)
     , target_loader(target_config)
 {
-    m_output_shapes.insert({"image",image_config.get_shape_type()});
-    m_output_shapes.insert({"pixelmask",target_config.get_shape_type()});
+    m_output_shapes.insert({"image", image_config.get_shape_type()});
+    m_output_shapes.insert({"pixelmask", target_config.get_shape_type()});
 }
 
 void image_pixelmask::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
@@ -56,9 +57,4 @@ void image_pixelmask::provide(int idx, variable_buffer_array& in_buf, fixed_buff
     auto target_dec         = target_extractor.extract(target_in.data(), target_in.size());
     auto target_transformed = target_transformer.transform(image_params, target_dec);
     target_loader.load({target_out}, target_transformed);
-}
-
-size_t image_pixelmask::get_input_count() const
-{
-    return 2;
 }

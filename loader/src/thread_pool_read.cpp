@@ -19,8 +19,7 @@
 using namespace nervana;
 using namespace std;
 
-read_thread_pool::read_thread_pool(const shared_ptr<buffer_pool_in>& buffer_pool_from_block,
-                                   const shared_ptr<batch_iterator>& b_it)
+read_thread_pool::read_thread_pool(const shared_ptr<buffer_pool_in>& buffer_pool_from_block, const shared_ptr<batch_iterator>& b_it)
     : thread_pool(1)
     , m_buffer_pool_from_block(buffer_pool_from_block)
     , m_batch_iterator(b_it)

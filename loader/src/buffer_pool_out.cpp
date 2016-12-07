@@ -111,4 +111,3 @@ void buffer_pool_out::signal_available_write_buffer()
 {
     m_available_write_buffer.notify_all();
 }
-

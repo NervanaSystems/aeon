@@ -37,14 +37,10 @@ class nervana::block_loader_file_async : public nervana::async_manager<std::vect
 public:
     block_loader_file_async(nervana::manifest_csv* mfst, uint32_t block_size);
     virtual ~block_loader_file_async() { finalize(); }
-    virtual size_t object_count() override { return m_block_size; }
-
+    virtual size_t                          object_count() override { return m_block_size; }
     virtual nervana::variable_buffer_array* filler() override;
-    uint32_t block_size() { return m_block_size; }
-
+    uint32_t                                block_size() { return m_block_size; }
 private:
     uint32_t m_block_size;
     size_t   m_elements_per_record;
 };
-
-
