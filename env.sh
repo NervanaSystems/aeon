@@ -39,7 +39,6 @@ SRCS="
     provider_image_stereo.cpp
     provider_video_classifier.cpp
     provider_video_only.cpp
-    python_backend.cpp
     specgram.cpp
     util.cpp
     wav_data.cpp
