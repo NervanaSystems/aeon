@@ -90,7 +90,7 @@ bool block_loader_cpio_cache::load_block_from_cache(buffer_in_array& dest, uint3
     if (f)
     {
         cpio::reader reader(f);
-        // load cpio file into dest one item at a time
+        // load cpio file into dest one record at a time
         for (int i = 0; i < reader.record_count(); ++i)
         {
             for (auto d : dest)
@@ -173,9 +173,9 @@ string block_loader_cpio_cache::block_filename(uint32_t block_num)
     return rc;
 }
 
-uint32_t block_loader_cpio_cache::object_count()
+uint32_t block_loader_cpio_cache::record_count()
 {
-    return m_loader->object_count();
+    return m_loader->record_count();
 }
 
 string block_loader_cpio_cache::get_cache_dir() const

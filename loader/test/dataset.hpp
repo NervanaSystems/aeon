@@ -30,62 +30,62 @@ class dataset
 {
 public:
     dataset()
-        : _path()
-        , _prefix("archive-")
-        , _maxItems(4000)
-        , _maxSize(-1)
-        , _setSize(100000)
-        , _pathExisted(false)
+        : m_path()
+        , m_prefix("archive-")
+        , m_max_items(4000)
+        , m_max_size(-1)
+        , m_set_size(100000)
+        , m_path_existed(false)
     {
     }
 
-    T& Directory(const std::string& dir)
+    T& directory(const std::string& dir)
     {
-        _path = dir;
+        m_path = dir;
         return *(T*)this;
     }
 
-    T& Prefix(const std::string& prefix)
+    T& prefix(const std::string& prefix)
     {
-        _prefix = prefix;
+        m_prefix = prefix;
         return *(T*)this;
     }
 
-    T& MacrobatchMaxItems(int max)
+    T& macrobatch_max_records(int max)
     {
         assert(max > 0);
-        _maxItems = max;
+        m_max_items = max;
         return *(T*)this;
     }
 
-    T& MacrobatchMaxSize(int max)
+    T& macrobatch_max_size(int max)
     {
         assert(max > 0);
-        _maxSize = max;
+        m_max_size = max;
         return *(T*)this;
     }
 
-    T& DatasetSize(int size)
+    T& dataset_size(int size)
     {
         assert(size > 0);
-        _setSize = size;
+        m_set_size = size;
         return *(T*)this;
     }
 
-    int Create()
+    int create()
     {
         int rc          = -1;
         int fileNo      = 0;
-        _pathExisted    = exists(_path);
+        m_path_existed    = exists(m_path);
         int datumNumber = 0;
-        if (_pathExisted || mkdir(_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
+        if (m_path_existed || mkdir(m_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
         {
-            int remainder = _setSize;
+            int remainder = m_set_size;
             while (remainder > 0)
             {
-                int         batchSize = std::min(remainder, _maxItems);
-                std::string fileName  = nervana::file_util::path_join(_path, _prefix + std::to_string(fileNo++) + ".cpio");
-                _fileList.push_back(fileName);
+                int         batchSize = std::min(remainder, m_max_items);
+                std::string fileName  = nervana::file_util::path_join(m_path, m_prefix + std::to_string(fileNo++) + ".cpio");
+                m_file_list.push_back(fileName);
                 std::ofstream f(fileName, std::ostream::binary);
                 if (f)
                 {
@@ -107,26 +107,26 @@ public:
         }
         else
         {
-            std::cout << "failed to create path " << _path << std::endl;
+            std::cout << "failed to create path " << m_path << std::endl;
         }
         return rc;
     }
 
-    void Delete()
+    void delete_files()
     {
-        for (const std::string& f : _fileList)
+        for (const std::string& f : m_file_list)
         {
             remove(f.c_str());
         }
-        if (!_pathExisted)
+        if (!m_path_existed)
         {
             // delete directory
-            remove(_path.c_str());
+            remove(m_path.c_str());
         }
     }
 
-    std::string              GetDatasetPath() { return _path; }
-    std::vector<std::string> GetFiles() { return _fileList; }
+    std::string              get_dataset_path() { return m_path; }
+    std::vector<std::string> get_files() { return m_file_list; }
 protected:
     virtual std::vector<unsigned char> render_target(int datumNumber) = 0;
     virtual std::vector<unsigned char> render_datum(int datumNumber)  = 0;
@@ -138,12 +138,12 @@ private:
         return stat(fileName.c_str(), &stats) == 0;
     }
 
-    std::string _path;
-    std::string _prefix;
-    int         _maxItems;
-    int         _maxSize;
-    int         _setSize;
-    bool        _pathExisted;
+    std::string m_path;
+    std::string m_prefix;
+    int         m_max_items;
+    int         m_max_size;
+    int         m_set_size;
+    bool        m_path_existed;
 
-    std::vector<std::string> _fileList;
+    std::vector<std::string> m_file_list;
 };

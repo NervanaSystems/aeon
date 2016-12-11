@@ -43,36 +43,79 @@ namespace nervana
     class manifest_csv;
 }
 
-class nervana::manifest_csv : public nervana::async_manager_source<std::vector<std::string>>, public nervana::manifest
+class nervana::manifest_csv : public nervana::async_manager_source<std::vector<std::string>>,
+                              public nervana::manifest
 {
 public:
-    manifest_csv(const std::string& filename, bool shuffle, const std::string& root = "", float subset_fraction = 1.0);
+    manifest_csv(const std::string& filename, bool shuffle, const std::string& root = "",
+                 float subset_fraction = 1.0);
 
-    virtual ~manifest_csv() {}
-    typedef std::vector<std::string>                  FilenameList;
-    typedef std::vector<FilenameList>::const_iterator iter;
+    manifest_csv(std::istream& stream, bool shuffle, const std::string& root = "",
+                 float subset_fraction = 1.0);
 
-    std::string                       cache_id();
-    std::string                       version();
-    virtual size_t                    object_count() override { return m_filename_lists.size(); }
-    virtual std::vector<std::string>* next() override;
-    virtual void reset() override;
+    virtual ~manifest_csv()
+    {
+    }
 
-    virtual size_t element_count() override { return m_filename_lists.size() > 0 ? m_filename_lists[0].size() : 0; }
-    // begin and end provide iterators over the FilenameLists
-    iter begin() const { return m_filename_lists.begin(); }
-    iter end() const { return m_filename_lists.end(); }
+    typedef std::vector<std::string> record;
+
+    std::string cache_id();
+    std::string version();
+
+    std::vector<std::string>* next() override;
+    void reset() override;
+
+    size_t record_count() const override
+    {
+        return m_record_list.size();
+    }
+
+    size_t element_count() const override
+    {
+        return m_record_list.size() > 0 ? m_record_list[0].size() : 0;
+    }
+
+    // begin and end provide iterators over the records
+    std::vector<record>::const_iterator begin() const
+    {
+        return m_record_list.begin();
+    }
+
+    std::vector<record>::const_iterator end() const
+    {
+        return m_record_list.end();
+    }
+
+    const record& operator[](size_t index) const
+    {
+        return m_record_list[index];
+    }
+
     void generate_subset(float subset_fraction);
     uint32_t get_crc();
+
+    static char get_delimiter()
+    {
+        return m_delimiter_char;
+    }
+
+    const std::vector<element_t>& get_element_types() const;
 
 protected:
     void parse_stream(std::istream& is, const std::string& root);
 
+    void initialize(std::istream& stream, bool shuffle, const std::string& root,
+                    float subset_fraction);
+
 private:
-    const std::string         m_filename;
-    std::vector<FilenameList> m_filename_lists;
-    CryptoPP::CRC32C          m_crc_engine;
-    bool                      m_crc_computed = false;
-    uint32_t                  m_computed_crc;
-    size_t                    m_counter{0};
+    const std::string      m_source_filename;
+    std::vector<record>    m_record_list;
+    CryptoPP::CRC32C       m_crc_engine;
+    bool                   m_crc_computed = false;
+    uint32_t               m_computed_crc;
+    size_t                 m_counter{0};
+    static const char      m_delimiter_char = '\t';
+    static const char      m_comment_char = '#';
+    static const char      m_metadata_char = '@';
+    std::vector<element_t> m_element_types;
 };

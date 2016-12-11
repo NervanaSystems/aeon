@@ -51,7 +51,7 @@ TEST(minibatch_iterator, simple)
 
     // for (auto w : words) cout << w << endl;
 
-    ASSERT_EQ(words.size(), mbl->object_count());
+    ASSERT_EQ(words.size(), mbl->record_count());
     ASSERT_EQ(sorted(words), true);
 
     assert_vector_unique(words);
@@ -86,7 +86,7 @@ TEST(minibatch_iterator, shuffled)
     for (uint32_t i = 0; i < words_a.size(); ++i)
         ASSERT_EQ(words_a[i], words_b[i]);
 
-    ASSERT_EQ(words_a.size(), mbl->object_count());
+    ASSERT_EQ(words_a.size(), mbl->record_count());
     ASSERT_EQ(sorted(words_a), false);
 
     assert_vector_unique(words_a);

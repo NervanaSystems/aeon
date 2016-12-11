@@ -57,7 +57,7 @@ TEST(provider, image)
     fixed_buffer_map out_buf(oshapes, batch_size);
     variable_buffer_array bp{2};
 
-    auto files = image_dataset.GetFiles();
+    auto files = image_dataset.get_files();
     ASSERT_NE(0, files.size());
 
     ifstream f(files[0], istream::binary);

@@ -298,13 +298,13 @@ TEST(block_loader_nds, curl_stream_error)
     EXPECT_THROW(client.get("http://127.0.0.1:5000/error", stream), std::runtime_error);
 }
 
-TEST(block_loader_nds, object_count)
+TEST(block_loader_nds, record_count)
 {
     start_server();
     block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 
     // 200 and 5 are hard coded in the mock nds server
-    ASSERT_EQ(client.object_count(), 200);
+    ASSERT_EQ(client.record_count(), 200);
     ASSERT_EQ(client.block_count(), 5);
 }
 

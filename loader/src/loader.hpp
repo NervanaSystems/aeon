@@ -30,6 +30,8 @@
 #include "async_manager.hpp"
 #include "buffer_batch.hpp"
 #include "batch_iterator_async.hpp"
+#include "block_loader_file_async.hpp"
+#include "block_manager_async.hpp"
 #include "log.hpp"
 #include "util.hpp"
 
@@ -92,28 +94,28 @@ private:
     void validate();
 };
 
-class nervana::loader_async : public nervana::async_manager<nervana::variable_buffer_array, nervana::fixed_buffer_map>
+class nervana::loader_async : public async_manager<variable_buffer_array, fixed_buffer_map>
 {
 public:
     loader_async(batch_iterator_async* b_itor, size_t batch_size, bool single_thread, bool pinned,
-                 const std::shared_ptr<nervana::provider_interface>& prov);
+                 const std::shared_ptr<provider_interface>& prov);
 
-    virtual ~loader_async() { finalize(); }
+    virtual ~loader_async();
 
-    virtual size_t                     object_count() override { return m_batch_size; }
-    virtual size_t                     element_count() override { return m_number_elements_out; }
-    virtual nervana::fixed_buffer_map* filler() override;
+    virtual size_t                     record_count() const override { return m_batch_size; }
+    virtual size_t                     element_count() const override { return m_number_elements_out; }
+    virtual fixed_buffer_map* filler() override;
 
 private:
-    void work(int id, nervana::variable_buffer_array* in_buf, nervana::fixed_buffer_map* out_buf);
+    void work(int id, variable_buffer_array* in_buf, fixed_buffer_map* out_buf);
 
-    std::vector<std::shared_ptr<nervana::provider_interface>> m_providers;
-    size_t                                                    m_batch_size;
-    size_t                                                    m_number_elements_in;
-    size_t                                                    m_number_elements_out;
-    int                                                       m_items_per_thread;
-    std::vector<int>                                          m_start_inds;
-    std::vector<int>                                          m_end_inds;
+    std::vector<std::shared_ptr<provider_interface>> m_providers;
+    size_t                                           m_batch_size;
+    size_t                                           m_number_elements_in;
+    size_t                                           m_number_elements_out;
+    int                                              m_items_per_thread;
+    std::vector<int>                                 m_start_inds;
+    std::vector<int>                                 m_end_inds;
 };
 
 class nervana::loader
@@ -133,7 +135,7 @@ public:
     const std::map<std::string, shape_type>& get_names_and_shapes() const;
     const shape_t& get_shape(const std::string& name) const;
 
-    int item_count() { return m_manifest->object_count(); }
+    int record_count() { return m_manifest->record_count(); }
     // member typedefs provided through inheriting from std::iterator
     class iterator : public std::iterator<std::input_iterator_tag,     // iterator_category
                                           fixed_buffer_map             // value_type
@@ -197,6 +199,7 @@ private:
     iterator                                 m_end_iter;
     std::shared_ptr<manifest_csv>            m_manifest;
     std::shared_ptr<block_loader_file_async> m_block_loader;
+    std::shared_ptr<block_manager_async>     m_block_manager;
     std::shared_ptr<batch_iterator_async>    m_batch_iterator;
     std::shared_ptr<provider_interface>      m_provider;
     std::shared_ptr<loader_async>            m_decoder;

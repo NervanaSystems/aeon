@@ -151,7 +151,7 @@ class nervana::localization::extractor : public nervana::interface::extractor<lo
 public:
     extractor(const localization::config&);
 
-    virtual std::shared_ptr<localization::decoded> extract(const char* data, int size) override
+    virtual std::shared_ptr<localization::decoded> extract(const void* data, size_t size) override
     {
         auto rc = std::make_shared<localization::decoded>();
         auto bb = std::static_pointer_cast<boundingbox::decoded>(rc);

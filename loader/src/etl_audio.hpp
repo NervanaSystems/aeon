@@ -309,7 +309,7 @@ class nervana::audio::extractor : public interface::extractor<audio::decoded>
 public:
     extractor() {}
     ~extractor() {}
-    std::shared_ptr<audio::decoded> extract(const char*, int) override;
+    std::shared_ptr<audio::decoded> extract(const void*, size_t) override;
 
 private:
 };

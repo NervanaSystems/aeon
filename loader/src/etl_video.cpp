@@ -19,7 +19,7 @@
 using namespace std;
 using namespace nervana;
 
-std::shared_ptr<image::decoded> video::extractor::extract(const char* item, int itemSize)
+std::shared_ptr<image::decoded> video::extractor::extract(const void* item, size_t itemSize)
 {
     // Very bad -- need to circle back and make an imemstream so we don't have to strip
     // constness from item

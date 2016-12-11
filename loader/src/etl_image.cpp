@@ -103,13 +103,13 @@ image::extractor::extractor(const image::config& cfg)
     }
 }
 
-shared_ptr<image::decoded> image::extractor::extract(const char* inbuf, int insize)
+shared_ptr<image::decoded> image::extractor::extract(const void* inbuf, size_t insize)
 {
     cv::Mat output_img;
 
     // It is bad to cast away const, but opencv does not support a const Mat
     // The Mat is only used for imdecode on the next line so it is OK here
-    cv::Mat input_img(1, insize, _pixel_type, const_cast<char*>(inbuf));
+    cv::Mat input_img(1, insize, _pixel_type, (char*)inbuf);
     cv::imdecode(input_img, _color_mode, &output_img);
 
     auto rc = make_shared<image::decoded>();

@@ -82,11 +82,11 @@ public:
     config() {}
     const nervana::shape_type& get_shape_type(size_t index = 0) const
     {
-        if (index >= shape_type_list.size())
+        if (index >= m_shape_type_list.size())
             throw std::out_of_range("config output shape index out of range");
-        return shape_type_list[index];
+        return m_shape_type_list[index];
     }
-    const std::vector<nervana::shape_type>& get_shape_type_list() const { return shape_type_list; }
+    const std::vector<nervana::shape_type>& get_shape_type_list() const { return m_shape_type_list; }
     void verify_config(const std::string& location, const std::vector<std::shared_ptr<interface::config_info_interface>>& config,
                        nlohmann::json js) const;
 
@@ -158,15 +158,15 @@ public:
 
     void add_shape_type(const std::vector<size_t>& sh, const std::string& output_type, const bool flatten_all_dims = false)
     {
-        shape_type_list.emplace_back(sh, nervana::output_type{output_type}, flatten_all_dims);
+        m_shape_type_list.emplace_back(sh, nervana::output_type{output_type}, flatten_all_dims);
     }
     void add_shape_type(const std::vector<size_t>& sh, const nervana::output_type& ot, const bool flatten_all_dims = false)
     {
-        shape_type_list.emplace_back(sh, ot, flatten_all_dims);
+        m_shape_type_list.emplace_back(sh, ot, flatten_all_dims);
     }
 
 private:
-    std::vector<nervana::shape_type> shape_type_list;
+    std::vector<nervana::shape_type> m_shape_type_list;
 };
 
 namespace nervana
@@ -202,38 +202,38 @@ public:
     config_info(T& var, const std::string& name, nervana::interface::config::mode m,
                 std::function<void(T&, const std::string&, const nlohmann::json&, nervana::interface::config::mode)> parse,
                 std::function<bool(T)> validate = [](T) -> bool { return true; })
-        : target_variable{var}
-        , var_name{name}
-        , parse_mode{m}
-        , parse_function{parse}
-        , validate_function{validate}
-        , default_value{var}
+        : m_target_variable{var}
+        , m_variable_name{name}
+        , m_parse_mode{m}
+        , m_parse_function{parse}
+        , m_validate_function{validate}
+        , m_default_value{var}
     {
     }
 
-    const std::string& name() const override { return var_name; }
-    bool               required() const override { return parse_mode == interface::config::mode::REQUIRED; }
+    const std::string& name() const override { return m_variable_name; }
+    bool               required() const override { return m_parse_mode == interface::config::mode::REQUIRED; }
     std::string        type() const override { return type_name<T>(); }
-    std::string        get_default_value() const override { return dump_default(default_value); }
+    std::string        get_default_value() const override { return dump_default(m_default_value); }
     void parse(nlohmann::json js) override
     {
-        parse_function(target_variable, var_name, js, parse_mode);
-        if (!validate_function(target_variable))
+        m_parse_function(m_target_variable, m_variable_name, js, m_parse_mode);
+        if (!m_validate_function(m_target_variable))
         {
             std::stringstream ss;
-            ss << "value for '" << var_name << "' out of range";
+            ss << "value for '" << m_variable_name << "' out of range";
             throw std::invalid_argument(ss.str());
         }
     }
 
 private:
     config_info() = delete;
-    T&                               target_variable;
-    const std::string                var_name;
-    nervana::interface::config::mode parse_mode;
-    std::function<void(T&, const std::string&, const nlohmann::json&, nervana::interface::config::mode)> parse_function;
-    std::function<bool(T)> validate_function;
-    T                      default_value;
+    T&                               m_target_variable;
+    const std::string                m_variable_name;
+    nervana::interface::config::mode m_parse_mode;
+    std::function<void(T&, const std::string&, const nlohmann::json&, nervana::interface::config::mode)> m_parse_function;
+    std::function<bool(T)> m_validate_function;
+    T                      m_default_value;
 };
 
 template <typename T, typename S>
@@ -249,7 +249,7 @@ class nervana::interface::extractor
 {
 public:
     virtual ~extractor() {}
-    virtual std::shared_ptr<T> extract(const char*, int) = 0;
+    virtual std::shared_ptr<T> extract(const void*, size_t) = 0;
 };
 
 template <typename T, typename S>

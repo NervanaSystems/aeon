@@ -18,10 +18,10 @@
 using namespace std;
 using namespace nervana;
 
-std::shared_ptr<char_map::decoded> char_map::extractor::extract(const char* in_array, int in_sz)
+std::shared_ptr<char_map::decoded> char_map::extractor::extract(const void* in_array, size_t in_sz)
 {
     uint32_t        nvalid = std::min((uint32_t)in_sz, _max_length);
-    string          transcript(in_array, nvalid);
+    string          transcript((const char*)in_array, nvalid);
     vector<uint8_t> char_ints((vector<uint8_t>::size_type)_max_length, (uint8_t)0);
 
     uint32_t j = 0;

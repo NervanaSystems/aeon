@@ -77,7 +77,7 @@ class nervana::label_map::extractor : public interface::extractor<label_map::dec
 public:
     extractor(const label_map::config&);
     virtual ~extractor() {}
-    virtual std::shared_ptr<label_map::decoded> extract(const char*, int) override;
+    virtual std::shared_ptr<label_map::decoded> extract(const void*, size_t) override;
 
     const std::unordered_map<std::string, int>& get_data() { return dictionary; }
 private:

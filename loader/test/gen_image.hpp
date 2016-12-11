@@ -34,13 +34,13 @@ public:
     gen_image& ImageSize(int rows, int cols);
 
 private:
-    int _imageRows;
-    int _imageCols;
+    int m_image_rows;
+    int m_image_cols;
 
     std::vector<unsigned char> render_target(int datumNumber) override;
     std::vector<unsigned char> render_datum(int datumNumber) override;
 
-    std::vector<unsigned char> RenderImage(int number, int label);
+    std::vector<unsigned char> render_image(int number, int label);
 };
 
 class embedded_id_image

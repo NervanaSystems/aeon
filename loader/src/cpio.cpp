@@ -279,20 +279,20 @@ void cpio::writer::write_all_records(nervana::variable_buffer_array& buff)
 
 void cpio::writer::write_record(nervana::variable_buffer_array& buff, int record_idx)
 {
-    uint32_t element_idx = 0;
+    uint32_t element_index = 0;
     for (auto b : buff)
     {
         const vector<char>& record_element = b.get_item(record_idx);
-        write_record_element(record_element.data(), record_element.size(), element_idx++);
+        write_record_element(record_element.data(), record_element.size(), element_index++);
     }
     increment_record_count();
 }
 
-void cpio::writer::write_record_element(const char* elem, uint32_t elem_size, uint32_t element_idx)
+void cpio::writer::write_record_element(const char* element, uint32_t element_size, uint32_t element_index)
 {
-    char fileName[16];
-    snprintf(fileName, sizeof(fileName), "rec_%07d.%02d", m_header.m_record_count, element_idx);
-    m_recordHeader.write(m_ofs, elem_size, fileName);
-    m_ofs.write(elem, elem_size);
-    writePadding(m_ofs, elem_size);
+    char file_name[16];
+    snprintf(file_name, sizeof(file_name), "rec_%07d.%02d", m_header.m_record_count, element_index);
+    m_recordHeader.write(m_ofs, element_size, file_name);
+    m_ofs.write(element, element_size);
+    writePadding(m_ofs, element_size);
 }

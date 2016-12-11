@@ -16,7 +16,7 @@
 #pragma once
 #include <string>
 #include "async_manager.hpp"
-#include "block_loader_file_async.hpp"
+#include "block_manager_async.hpp"
 #include "buffer_batch.hpp"
 #include "util.hpp"
 
@@ -31,12 +31,13 @@ namespace nervana
     class batch_iterator_async;
 }
 
-class nervana::batch_iterator_async : public nervana::async_manager<nervana::variable_buffer_array, nervana::variable_buffer_array>
+class nervana::batch_iterator_async
+    : public async_manager<variable_buffer_array, variable_buffer_array>
 {
 public:
-    batch_iterator_async(block_loader_file_async* blkl, size_t batch_size);
+    batch_iterator_async(block_manager_async*, size_t batch_size);
     virtual ~batch_iterator_async() { finalize(); }
-    virtual size_t                          object_count() override { return m_batch_size; }
+    virtual size_t record_count() const override { return m_batch_size; }
     virtual variable_buffer_array* filler() override;
 
     virtual void initialize() override
@@ -47,6 +48,7 @@ public:
 
 private:
     void move_src_to_dst(variable_buffer_array* src_array_ptr, variable_buffer_array* dst_array_ptr, size_t count);
+
     size_t                 m_batch_size;
     size_t                 m_element_count;
     variable_buffer_array* m_input_ptr{nullptr};

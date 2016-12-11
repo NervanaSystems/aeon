@@ -16,6 +16,7 @@
 #pragma once
 
 #include <memory>
+#include <cstddef>
 #include "util.hpp"
 #include "interface.hpp"
 #include "buffer_batch.hpp"

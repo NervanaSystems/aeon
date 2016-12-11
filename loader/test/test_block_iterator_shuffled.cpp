@@ -45,7 +45,7 @@ TEST(block_iterator_shuffled, shuffled_block)
     block_iterator_shuffled bis(mbl);
     buffer_in_array         bp(2);
 
-    uint32_t num_records = mbl->object_count();
+    uint32_t num_records = mbl->record_count();
 
     // ensure that loading successive blocks from shuffling iterator
     // result in unsorted strings

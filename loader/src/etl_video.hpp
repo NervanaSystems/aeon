@@ -64,7 +64,7 @@ class nervana::video::extractor : public interface::extractor<image::decoded>
 public:
     extractor(const video::config&) {}
     virtual ~extractor() {}
-    virtual std::shared_ptr<image::decoded> extract(const char* item, int itemSize) override;
+    virtual std::shared_ptr<image::decoded> extract(const void* item, size_t itemSize) override;
 
 protected:
 private:

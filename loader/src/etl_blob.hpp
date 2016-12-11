@@ -61,16 +61,16 @@ class nervana::blob::decoded : public interface::decoded_media
     friend class loader;
 
 public:
-    decoded(const char* buf, int bufSize)
-        : data{buf}
-        , data_size{bufSize}
+    decoded(const void* buf, size_t bufSize)
+        : m_data{buf}
+        , m_data_size{bufSize}
     {
     }
 
     virtual ~decoded() override {}
 private:
-    const char* data;
-    int         data_size;
+    const void* m_data;
+    size_t      m_data_size;
 };
 
 class nervana::blob::extractor : public interface::extractor<blob::decoded>
@@ -78,7 +78,7 @@ class nervana::blob::extractor : public interface::extractor<blob::decoded>
 public:
     extractor(const blob::config& cfg) {}
     ~extractor() {}
-    std::shared_ptr<blob::decoded> extract(const char* buf, int bufSize) override
+    std::shared_ptr<blob::decoded> extract(const void* buf, size_t bufSize) override
     {
         return std::make_shared<blob::decoded>(buf, bufSize);
     }
@@ -93,8 +93,8 @@ public:
     ~loader() {}
     void load(const std::vector<void*>& buflist, std::shared_ptr<blob::decoded> mp) override
     {
-        char* buf = (char*)buflist[0];
-        memcpy(buf, mp->data, mp->data_size);
+        void* buf = buflist[0];
+        memcpy(buf, mp->m_data, mp->m_data_size);
     }
 
 private:

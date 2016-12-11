@@ -84,8 +84,8 @@ static PyObject* Dataloader_iternext(PyObject* self)
 
 static Py_ssize_t aeon_Dataloader_length(PyObject* self)
 {
-    INFO << " aeon_Dataloader_length " << DL_get_loader(self)->item_count();
-    return DL_get_loader(self)->item_count();
+    INFO << " aeon_Dataloader_length " << DL_get_loader(self)->record_count();
+    return DL_get_loader(self)->record_count();
 }
 
 static PySequenceMethods Dataloader_sequence_methods = {

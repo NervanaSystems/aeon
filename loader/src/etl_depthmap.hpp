@@ -38,7 +38,7 @@ class nervana::depthmap::extractor : public interface::extractor<image::decoded>
 public:
     extractor(const image::config&);
     virtual ~extractor();
-    virtual std::shared_ptr<image::decoded> extract(const char*, int) override;
+    virtual std::shared_ptr<image::decoded> extract(const void*, size_t) override;
 
 private:
 };

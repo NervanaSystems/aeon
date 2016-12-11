@@ -46,11 +46,11 @@ public:
         }
         return rc;
     }
-    size_t object_count() override
+    size_t record_count() const override
     {
         return m_data.size();
     }
-    size_t element_count() override
+    size_t element_count() const override
     {
         return 1;
     }

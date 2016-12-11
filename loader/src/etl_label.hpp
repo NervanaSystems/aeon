@@ -79,7 +79,7 @@ public:
     }
 
     ~extractor() {}
-    std::shared_ptr<label::decoded> extract(const char* buf, int bufSize) override
+    std::shared_ptr<label::decoded> extract(const void* buf, size_t bufSize) override
     {
         int lbl;
         if (_binary)
@@ -91,11 +91,11 @@ public:
                 ss << "label_extractor::extract received " << bufSize << " bytes";
                 throw std::runtime_error(ss.str());
             }
-            lbl = unpack<int>(buf);
+            lbl = unpack<int>((const char*)buf);
         }
         else
         {
-            lbl = std::stoi(std::string(buf, (size_t)bufSize));
+            lbl = std::stoi(std::string((const char*)buf, bufSize));
         }
         return std::make_shared<label::decoded>(lbl);
     }

@@ -56,10 +56,10 @@ extractor::extractor(const label_map::config& cfg)
     }
 }
 
-shared_ptr<decoded> extractor::extract(const char* data, int size)
+shared_ptr<decoded> extractor::extract(const void* data, size_t size)
 {
     auto         rc = make_shared<decoded>();
-    stringstream ss(string(data, size));
+    stringstream ss(string((const char*)data, size));
     string       label;
     while (ss >> label)
     {

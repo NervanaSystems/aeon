@@ -27,21 +27,35 @@
 #include "util.hpp"
 #include "file_util.hpp"
 #include "log.hpp"
+
 using namespace std;
 using namespace nervana;
 
-manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root, float subset_fraction)
-    : m_filename(filename)
+manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root,
+                           float subset_fraction)
+    : m_source_filename(filename)
 {
     // for now parse the entire manifest on creation
-    ifstream infile(m_filename);
+    ifstream infile(m_source_filename);
 
     if (!infile.is_open())
     {
-        throw std::runtime_error("Manifest file " + m_filename + " doesn't exist.");
+        throw std::runtime_error("Manifest file " + m_source_filename + " doesn't exist.");
     }
 
-    parse_stream(infile, root);
+    initialize(infile, shuffle, root, subset_fraction);
+}
+
+manifest_csv::manifest_csv(std::istream& stream, bool shuffle, const std::string& root,
+                           float subset_fraction)
+{
+    initialize(stream, shuffle, root, subset_fraction);
+}
+
+void manifest_csv::initialize(std::istream& stream, bool shuffle, const std::string& root,
+                              float subset_fraction)
+{
+    parse_stream(stream, root);
 
     // If we don't need to shuffle, there may be small performance
     // benefits in some situations to stream the filename_lists instead
@@ -51,17 +65,18 @@ manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& r
     // file, so a purely stream based interface is not sufficient.
     if (shuffle)
     {
-        std::shuffle(m_filename_lists.begin(), m_filename_lists.end(), std::mt19937(0));
+        std::shuffle(m_record_list.begin(), m_record_list.end(), std::mt19937(0));
     }
 
-    affirm(subset_fraction > 0.0 && subset_fraction <= 1.0, "subset_fraction must be >= 0 and <= 1");
+    affirm(subset_fraction > 0.0 && subset_fraction <= 1.0,
+           "subset_fraction must be >= 0 and <= 1");
     generate_subset(subset_fraction);
 }
 
 string manifest_csv::cache_id()
 {
     // returns a hash of the m_filename
-    std::size_t  h = std::hash<std::string>()(m_filename);
+    std::size_t  h = std::hash<std::string>()(m_source_filename);
     stringstream ss;
     ss << setfill('0') << setw(16) << hex << h;
     return ss.str();
@@ -76,54 +91,126 @@ string manifest_csv::version()
 
 void manifest_csv::parse_stream(istream& is, const string& root)
 {
-    // parse istream is and load the entire thing into m_filename_lists
-    uint32_t prev_num_fields = 0, lineno = 0;
-    string   line;
+    // parse istream is and load the entire thing into m_record_list
+    size_t previous_element_count = 0;
+    size_t line_number = 0;
+    string line;
 
     // read in each line, then from that istringstream, break into
-    // comma-separated fields.
+    // comma-separated elements.
     while (std::getline(is, line))
     {
-        if (line.empty() || line[0] == '#') // Skip comments and empty lines
+        if (line.empty())
         {
-            continue;
         }
-
-        vector<string> field_list = split(line, ',');
-        if (!root.empty())
+        else if (line[0] == m_metadata_char)
         {
-            for (int i = 0; i < field_list.size(); i++)
+            // trim off the metadata char at the beginning of the line
+            line = line.substr(1);
+            if (m_element_types.empty() == false)
             {
-                field_list[i] = file_util::path_join(root, field_list[i]);
+                // Already have element types so this is an error
+                // Element types must be defined before any data
+                ostringstream ss;
+                ss << "metadata must be defined before any data at line " << line_number;
+                throw std::invalid_argument(ss.str());
+            }
+            vector<string> element_list = split(line, m_delimiter_char);
+            for (const string& type : element_list)
+            {
+                if (type == "FILE")
+                {
+                    m_element_types.push_back(element_t::FILE);
+                }
+                else if (type == "BINARY")
+                {
+                    m_element_types.push_back(element_t::BINARY);
+                }
+                else if (type == "STRING")
+                {
+                    m_element_types.push_back(element_t::STRING);
+                }
+                else if (type == "ASCII_INT")
+                {
+                    m_element_types.push_back(element_t::ASCII_INT);
+                }
+                else if (type == "ASCII_FLOAT")
+                {
+                    m_element_types.push_back(element_t::ASCII_FLOAT);
+                }
+                else
+                {
+                    ostringstream ss;
+                    ss << "invalid metadata type '" << type;
+                    ss << "' at line " << line_number;
+                    throw std::invalid_argument(ss.str());
+                }
             }
         }
-
-        if (lineno == 0)
+        else if (line[0] == m_comment_char)
         {
-            prev_num_fields = field_list.size();
+            // Skip comments and empty lines
         }
-
-        if (field_list.size() != prev_num_fields)
+        else
         {
-            ostringstream ss;
-            ss << "at line: " << lineno;
-            ss << ", manifest file has a line with differing number of files (";
-            ss << field_list.size() << ") vs (" << prev_num_fields << "): ";
+            vector<string> element_list = split(line, m_delimiter_char);
+            if (m_element_types.empty())
+            {
+                // No element type metadata found so create defaults
+                for (int i = 0; i < element_list.size(); i++)
+                {
+                    m_element_types.push_back(element_t::FILE);
+                }
+            }
 
-            std::copy(field_list.begin(), field_list.end(), ostream_iterator<std::string>(ss, " "));
-            throw std::runtime_error(ss.str());
+            if (!root.empty())
+            {
+                for (int i = 0; i < element_list.size(); i++)
+                {
+                    if (m_element_types[i] == element_t::FILE)
+                    {
+                        element_list[i] = file_util::path_join(root, element_list[i]);
+                    }
+                }
+            }
+
+            if (line_number == 0)
+            {
+                previous_element_count = element_list.size();
+            }
+
+            if (element_list.size() != previous_element_count)
+            {
+                ostringstream ss;
+                ss << "at line: " << line_number;
+                ss << ", manifest file has a line with differing number of files (";
+                ss << element_list.size() << ") vs (" << previous_element_count << "): ";
+
+                std::copy(element_list.begin(), element_list.end(),
+                          ostream_iterator<std::string>(ss, " "));
+                throw std::runtime_error(ss.str());
+            }
+            previous_element_count = element_list.size();
+            m_record_list.push_back(element_list);
+            line_number++;
         }
-        prev_num_fields = field_list.size();
-        m_filename_lists.push_back(field_list);
-        lineno++;
     }
+}
+
+const std::vector<manifest_csv::element_t>& manifest_csv::get_element_types() const
+{
+    return m_element_types;
 }
 
 vector<string>* manifest_csv::next()
 {
-    vector<string>* res = &(m_filename_lists[m_counter]);
-    m_counter           = (m_counter + 1) % object_count();
-    return res;
+    vector<string>* rc = nullptr;
+    if (m_counter < record_count())
+    {
+        rc = &(m_record_list[m_counter]);
+        m_counter++;
+    }
+    return rc;
 }
 
 void manifest_csv::reset()
@@ -138,17 +225,17 @@ void manifest_csv::generate_subset(float subset_fraction)
         m_crc_computed = false;
         std::bernoulli_distribution distribution(subset_fraction);
         std::default_random_engine  generator(get_global_random_seed());
-        vector<FilenameList>        tmp;
-        tmp.swap(m_filename_lists);
+        vector<record>              tmp;
+        tmp.swap(m_record_list);
         size_t expected_count = tmp.size() * subset_fraction;
-        size_t needed         = expected_count;
+        size_t needed = expected_count;
 
         for (int i = 0; i < tmp.size(); i++)
         {
             size_t remainder = tmp.size() - i;
             if ((needed == remainder) || distribution(generator))
             {
-                m_filename_lists.push_back(tmp[i]);
+                m_record_list.push_back(tmp[i]);
                 needed--;
                 if (needed == 0)
                     break;
@@ -161,7 +248,7 @@ uint32_t manifest_csv::get_crc()
 {
     if (m_crc_computed == false)
     {
-        for (const vector<string>& tmp : m_filename_lists)
+        for (const vector<string>& tmp : m_record_list)
         {
             for (const string& s : tmp)
             {

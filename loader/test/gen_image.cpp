@@ -22,8 +22,8 @@
 using namespace std;
 
 gen_image::gen_image()
-    : _imageRows(256)
-    , _imageCols(256)
+    : m_image_rows(256)
+    , m_image_cols(256)
 {
 }
 
@@ -35,24 +35,24 @@ gen_image& gen_image::ImageSize(int rows, int cols)
 {
     assert(rows > 0);
     assert(cols > 0);
-    _imageRows = rows;
-    _imageCols = cols;
+    m_image_rows = rows;
+    m_image_cols = cols;
     return *this;
 }
 
 vector<unsigned char> gen_image::render_datum(int number)
 {
-    cv::Mat image      = cv::Mat(_imageRows, _imageCols, CV_8UC3);
+    cv::Mat image      = cv::Mat(m_image_rows, m_image_cols, CV_8UC3);
     image              = cv::Scalar(255, 255, 255);
     auto     fontFace  = cv::FONT_HERSHEY_PLAIN;
     string   text      = to_string(number); // + ", " + to_string(label);
-    float    scale     = 2.0 / 256. * _imageRows;
+    float    scale     = 2.0 / 256. * m_image_rows;
     int      thickness = 1;
     int      baseline  = 0;
     cv::Size textSize  = getTextSize(text, fontFace, scale, thickness, &baseline);
     baseline += thickness;
 
-    cv::Point position((_imageRows - textSize.width) / 2, (_imageCols + textSize.height) / 2);
+    cv::Point position((m_image_rows - textSize.width) / 2, (m_image_cols + textSize.height) / 2);
 
     cv::putText(image, text, position, fontFace, scale, cv::Scalar(0, 0, 255));
     vector<unsigned char> result;

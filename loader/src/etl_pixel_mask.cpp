@@ -26,13 +26,13 @@ pixel_mask::extractor::~extractor()
 {
 }
 
-shared_ptr<image::decoded> pixel_mask::extractor::extract(const char* inbuf, int insize)
+shared_ptr<image::decoded> pixel_mask::extractor::extract(const void* inbuf, size_t insize)
 {
     cv::Mat image;
 
     // It is bad to cast away const, but opencv does not support a const Mat
     // The Mat is only used for imdecode on the next line so it is OK here
-    cv::Mat input_img(1, insize, CV_8UC1, const_cast<char*>(inbuf));
+    cv::Mat input_img(1, insize, CV_8UC1, (char*)inbuf);
     cv::imdecode(input_img, CV_LOAD_IMAGE_ANYDEPTH, &image);
 
     // convert input image to single channel if needed

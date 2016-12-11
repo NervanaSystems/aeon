@@ -18,13 +18,14 @@
 using namespace std;
 using namespace nervana;
 
+
 void buffer_variable_size_elements::shuffle(uint32_t random_seed)
 {
     std::minstd_rand0 rand_items(random_seed);
     std::shuffle(m_buffers.begin(), m_buffers.end(), rand_items);
 }
 
-vector<char>& buffer_variable_size_elements::get_item(int index)
+vector<char>& buffer_variable_size_elements::get_item (int index)
 {
     if (index >= (int)m_buffers.size())
     {
@@ -48,6 +49,17 @@ void buffer_variable_size_elements::add_item(std::vector<char>&& buf)
     m_buffers.emplace_back(move(buf), nullptr);
 }
 
+void buffer_variable_size_elements::add_item(const void* data, size_t size)
+{
+    vector<char> tmp(size);
+    const char* p = (const char*)data;
+    for (size_t i=0; i<size; i++)
+    {
+        tmp[i] = p[i];
+    }
+    m_buffers.emplace_back(tmp, nullptr);
+}
+
 void buffer_variable_size_elements::add_exception(std::exception_ptr e)
 {
     std::vector<char> empty;
@@ -66,9 +78,9 @@ buffer_fixed_size_elements::buffer_fixed_size_elements(const shape_type& shp_tp,
     : m_pinned{pinned}
     , m_shape_type{shp_tp}
 {
-    m_size       = m_shape_type.get_byte_size() * batch_size;
+    m_size = m_shape_type.get_byte_size() * batch_size;
     m_batch_size = batch_size;
-    m_stride     = m_shape_type.get_byte_size();
+    m_stride = m_shape_type.get_byte_size();
 #if HAS_GPU
     if (m_pinned)
     {
@@ -106,7 +118,7 @@ cv::Mat buffer_fixed_size_elements::get_item_as_mat(size_t index)
     }
     int ndims = static_cast<int>(sizes.size());
 
-    cv::Mat ret(ndims, &sizes[0], m_shape_type.get_otype().get_cv_type(), (void*)&m_data[index * m_stride]);
+    cv::Mat ret(ndims, &sizes[0], m_shape_type.get_otype().get_cv_type(), (void *) &m_data[index * m_stride]);
     return ret;
 }
 
@@ -122,9 +134,9 @@ const char* buffer_fixed_size_elements::get_item(size_t index) const
 
 void buffer_fixed_size_elements::allocate(const shape_type& shp_tp, size_t batch_size, bool pinned)
 {
-    m_size       = m_shape_type.get_byte_size() * batch_size;
+    m_size = m_shape_type.get_byte_size() * batch_size;
     m_batch_size = batch_size;
-    m_stride     = m_shape_type.get_byte_size();
+    m_stride = m_shape_type.get_byte_size();
 #if HAS_GPU
     if (m_pinned)
     {
@@ -158,3 +170,4 @@ buffer_fixed_size_elements::~buffer_fixed_size_elements()
     delete[] m_data;
 #endif
 }
+

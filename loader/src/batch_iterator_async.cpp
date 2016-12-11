@@ -18,7 +18,7 @@
 
 using namespace nervana;
 
-batch_iterator_async::batch_iterator_async(block_loader_file_async* blkl, size_t batch_size)
+batch_iterator_async::batch_iterator_async(block_manager_async* blkl, size_t batch_size)
     : async_manager<variable_buffer_array, variable_buffer_array>(blkl)
     , m_batch_size(batch_size)
 {
@@ -78,6 +78,7 @@ variable_buffer_array* batch_iterator_async::filler()
         }
     }
 
+//    if (rc) INFO << rc->at(0).size() << ", " << rc->at(1).size(); else INFO << "nullptr";
     return rc;
 }
 

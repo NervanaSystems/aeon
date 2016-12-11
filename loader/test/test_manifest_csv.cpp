@@ -33,9 +33,14 @@
 #include "file_util.hpp"
 #include "manifest_csv.hpp"
 #include "crc.hpp"
+#include "file_util.hpp"
+#include "block_loader_file_async.hpp"
+#include "base64.hpp"
 
 using namespace std;
 using namespace nervana;
+
+static string test_data_directory = file_util::path_join(string(CURDIR), "test_data");
 
 TEST(manifest, constructor)
 {
@@ -81,7 +86,7 @@ TEST(manifest, parse_file_doesnt_exist)
     string                tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_csv manifest0(tmpname, false);
 
-    ASSERT_EQ(manifest0.object_count(), 0);
+    ASSERT_EQ(manifest0.record_count(), 0);
 }
 
 TEST(manifest, parse_file)
@@ -90,7 +95,7 @@ TEST(manifest, parse_file)
     string         tmpname = mm.tmp_manifest_file(2, {0, 0});
 
     nervana::manifest_csv manifest0(tmpname, false);
-    ASSERT_EQ(manifest0.object_count(), 2);
+    ASSERT_EQ(manifest0.record_count(), 2);
 }
 
 TEST(manifest, no_shuffle)
@@ -100,10 +105,12 @@ TEST(manifest, no_shuffle)
     nervana::manifest_csv manifest1(filename, false);
     nervana::manifest_csv manifest2(filename, false);
 
-    for (auto it1 = manifest1.begin(), it2 = manifest2.begin(); it1 != manifest1.end(); ++it1, ++it2)
+    ASSERT_EQ(manifest1.record_count(), manifest2.record_count());
+    ASSERT_EQ(2, manifest1.element_count());
+    for (int i=0; i<manifest1.record_count(); i++)
     {
-        ASSERT_EQ((*it1)[0], (*it2)[0]);
-        ASSERT_EQ((*it1)[1], (*it2)[1]);
+        ASSERT_EQ(manifest1[i][0], manifest2[i][0]);
+        ASSERT_EQ(manifest1[i][1], manifest2[i][1]);
     }
 }
 
@@ -116,9 +123,10 @@ TEST(manifest, shuffle)
 
     bool different = false;
 
-    for (auto it1 = manifest1.begin(), it2 = manifest2.begin(); it1 != manifest1.end(); ++it1, ++it2)
+    ASSERT_EQ(manifest1.record_count(), manifest2.record_count());
+    for (int i=0; i<manifest1.record_count(); i++)
     {
-        if ((*it1)[0] != (*it2)[0])
+        if (manifest1[i][0] != manifest2[i][0])
         {
             different = true;
         }
@@ -132,13 +140,13 @@ TEST(manifest, non_paired_manifests)
         manifest_maker        mm;
         string                filename = mm.tmp_manifest_file(20, {4, 4, 4});
         nervana::manifest_csv manifest1(filename, false);
-        ASSERT_EQ(manifest1.object_count(), 20);
+        ASSERT_EQ(manifest1.record_count(), 20);
     }
     {
         manifest_maker        mm;
         string                filename = mm.tmp_manifest_file(20, {4});
         nervana::manifest_csv manifest1(filename, false);
-        ASSERT_EQ(manifest1.object_count(), 20);
+        ASSERT_EQ(manifest1.record_count(), 20);
     }
 }
 
@@ -146,15 +154,7 @@ TEST(manifest, uneven_records)
 {
     manifest_maker mm;
     string         filename = mm.tmp_manifest_file_with_ragged_fields();
-    try
-    {
-        nervana::manifest_csv manifest1(filename, false);
-        FAIL();
-    }
-    catch (std::exception& e)
-    {
-        ASSERT_EQ(string("at line: 1, manifest file has a line with differing"), string(e.what()).substr(0, 51));
-    }
+    EXPECT_THROW(nervana::manifest_csv manifest1(filename, false), runtime_error);
 }
 
 TEST(manifest, root_path)
@@ -164,7 +164,8 @@ TEST(manifest, root_path)
         ofstream f(manifest_file);
         for (int i = 0; i < 10; i++)
         {
-            f << "/t1/image" << i << ".png,/t1/target" << i << ".txt\n";
+            f << "/t1/image" << i << ".png" << manifest_csv::get_delimiter();
+            f << "/t1/target" << i << ".txt\n";
         }
         f.close();
         nervana::manifest_csv manifest(manifest_file, false);
@@ -185,7 +186,8 @@ TEST(manifest, root_path)
         ofstream f(manifest_file);
         for (int i = 0; i < 10; i++)
         {
-            f << "/t1/image" << i << ".png,/t1/target" << i << ".txt\n";
+            f << "/t1/image" << i << ".png" << manifest_csv::get_delimiter();
+            f << "/t1/target" << i << ".txt\n";
         }
         f.close();
         nervana::manifest_csv manifest(manifest_file, false, "/x1");
@@ -206,7 +208,8 @@ TEST(manifest, root_path)
         ofstream f(manifest_file);
         for (int i = 0; i < 10; i++)
         {
-            f << "t1/image" << i << ".png,t1/target" << i << ".txt\n";
+            f << "t1/image" << i << ".png" << manifest_csv::get_delimiter();
+            f << "t1/target" << i << ".txt\n";
         }
         f.close();
         nervana::manifest_csv manifest(manifest_file, false, "/x1");
@@ -240,6 +243,210 @@ TEST(manifest, crc)
     //    cout << "actual   0x" << setfill('0') << setw(2) << hex << actual << dec << endl;
 
     EXPECT_EQ(expected, actual);
+}
+
+TEST(manifest, file_implicit)
+{
+    vector<string> image_files = {"flowers.jpg", "img_2112_70.jpg"};
+    vector<string> target_files = {"1.txt", "2.txt"};
+
+    stringstream ss;
+
+    for (int count=0; count<32; count++)
+    {
+        for (int i=0; i<image_files.size(); i++)
+        {
+            ss << image_files[i] << "\t" << target_files[i] << "\n";
+        }
+    }
+
+    manifest_csv manifest{ss, false, test_data_directory};
+    size_t block_size = 16;
+
+    block_loader_file_async bload{&manifest, block_size};
+
+    for (int i=0; i<2; i++)
+    {
+        variable_buffer_array* buffer = bload.filler();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(2, buffer->size());
+        buffer_variable_size_elements image_data = buffer->at(0);
+        buffer_variable_size_elements target_data = buffer->at(1);
+//        ASSERT_EQ(batch_size, image_data.get_item_count());
+//        ASSERT_EQ(batch_size, target_data.get_item_count());
+        for (int j=0; j<image_data.get_item_count(); j++)
+        {
+            auto idata = image_data.get_item(j);
+            auto tdata = target_data.get_item(j);
+            string target{tdata.data(), tdata.size()};
+//            INFO << target;
+//            int value = stod(target);
+//            EXPECT_EQ(j%2+1, value);
+        }
+    }
+
+}
+
+TEST(manifest, file_explicit)
+{
+    vector<string> image_files = {"flowers.jpg", "img_2112_70.jpg"};
+    vector<string> target_files = {"1.txt", "2.txt"};
+
+    stringstream ss;
+    ss << "@FILE" << "\t" << "FILE" << "\n";
+    for (int count=0; count<32; count++)
+    {
+        for (int i=0; i<image_files.size(); i++)
+        {
+            ss << image_files[i] << "\t" << target_files[i] << "\n";
+        }
+    }
+
+    manifest_csv manifest{ss, false, test_data_directory};
+    size_t block_size = 16;
+
+    auto types = manifest.get_element_types();
+    ASSERT_EQ(2, types.size());
+    EXPECT_EQ(manifest::element_t::FILE, types[0]);
+    EXPECT_EQ(manifest::element_t::FILE, types[1]);
+
+    block_loader_file_async bload{&manifest, block_size};
+    for (int i=0; i<2; i++)
+    {
+        variable_buffer_array* buffer = bload.filler();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(2, buffer->size());
+        buffer_variable_size_elements image_data = buffer->at(0);
+        buffer_variable_size_elements target_data = buffer->at(1);
+//        ASSERT_EQ(batch_size, image_data.get_item_count());
+//        ASSERT_EQ(batch_size, target_data.get_item_count());
+        for (int j=0; j<image_data.get_item_count(); j++)
+        {
+            auto idata = image_data.get_item(j);
+            auto tdata = target_data.get_item(j);
+            string target{tdata.data(), tdata.size()};
+            int value = stod(target);
+            EXPECT_EQ(j%2+1, value);
+        }
+    }
+}
+
+string make_target_data(size_t index)
+{
+    stringstream tmp;
+    tmp << "target_number" << index++;
+    return tmp.str();
+}
+
+TEST(manifest, binary)
+{
+    vector<string> image_files = {"flowers.jpg", "img_2112_70.jpg"};
+    stringstream ss;
+    size_t index = 0;
+    ss << "@FILE" << "\t" << "BINARY" << "\n";
+    for (int count=0; count<32; count++)
+    {
+        for (int i=0; i<image_files.size(); i++)
+        {
+            vector<char> str = string2vector(make_target_data(index++));
+            auto data_string = base64::encode(str);
+            ss << image_files[i] << "\t" << vector2string(data_string) << "\n";
+        }
+    }
+
+    manifest_csv manifest{ss, false, test_data_directory};
+    size_t block_size = 16;
+
+//    for (auto data : manifest)
+//    {
+//        INFO << data[0] << ", " << data[1];
+//    }
+
+    auto types = manifest.get_element_types();
+    ASSERT_EQ(2, types.size());
+    EXPECT_EQ(manifest::element_t::FILE, types[0]);
+    EXPECT_EQ(manifest::element_t::BINARY, types[1]);
+
+    block_loader_file_async block_loader{&manifest, block_size};
+    index = 0;
+    for (int i=0; i<2; i++)
+    {
+        variable_buffer_array* buffer = block_loader.filler();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(2, buffer->size());
+        buffer_variable_size_elements image_data = buffer->at(0);
+        buffer_variable_size_elements target_data = buffer->at(1);
+//        ASSERT_EQ(batch_size, image_data.get_item_count());
+//        ASSERT_EQ(batch_size, target_data.get_item_count());
+        for (int j=0; j<image_data.get_item_count(); j++)
+        {
+            auto idata = image_data.get_item(j);
+            auto tdata = target_data.get_item(j);
+            string str = vector2string(tdata);
+            string expected = make_target_data(index);
+            index = (index+1) % manifest.record_count();
+            EXPECT_STREQ(expected.c_str(), str.c_str());
+        }
+    }
+}
+
+TEST(manifest, string)
+{
+    vector<string> image_files = {"flowers.jpg", "img_2112_70.jpg"};
+    stringstream ss;
+    size_t index = 0;
+    ss << "@FILE" << "\t" << "STRING" << "\n";
+    for (int count=0; count<32; count++)
+    {
+        for (int i=0; i<image_files.size(); i++)
+        {
+            string str = make_target_data(index++);
+            ss << image_files[i] << "\t" << str << "\n";
+        }
+    }
+
+    manifest_csv manifest{ss, false, test_data_directory};
+    size_t block_size = 16;
+
+//    for (auto data : manifest)
+//    {
+//        INFO << data[0] << ", " << data[1];
+//    }
+
+    auto types = manifest.get_element_types();
+    ASSERT_EQ(2, types.size());
+    EXPECT_EQ(manifest::element_t::FILE, types[0]);
+    EXPECT_EQ(manifest::element_t::STRING, types[1]);
+
+    block_loader_file_async block_loader{&manifest, block_size};
+    index = 0;
+    for (int i=0; i<2; i++)
+    {
+        variable_buffer_array* buffer = block_loader.filler();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(2, buffer->size());
+        buffer_variable_size_elements image_data = buffer->at(0);
+        buffer_variable_size_elements target_data = buffer->at(1);
+//        ASSERT_EQ(batch_size, image_data.get_item_count());
+//        ASSERT_EQ(batch_size, target_data.get_item_count());
+        for (int j=0; j<image_data.get_item_count(); j++)
+        {
+            auto idata = image_data.get_item(j);
+            auto tdata = target_data.get_item(j);
+            string str = vector2string(tdata);
+            string expected = make_target_data(index);
+            index = (index+1) % manifest.record_count();
+            EXPECT_STREQ(expected.c_str(), str.c_str());
+        }
+    }
+}
+
+TEST(manifest, ascii_int)
+{
+}
+
+TEST(manifest, ascii_float)
+{
 }
 
 // TEST(manifest, performance)

@@ -150,7 +150,7 @@ public:
     }
 
     virtual ~extractor() {}
-    virtual std::shared_ptr<char_map::decoded> extract(const char*, int) override;
+    virtual std::shared_ptr<char_map::decoded> extract(const void*, size_t) override;
 
 private:
     const std::unordered_map<char, uint8_t>& _cmap; // This comes from config

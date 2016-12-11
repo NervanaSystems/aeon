@@ -64,9 +64,9 @@ boundingbox::extractor::extractor(const std::unordered_map<std::string, int>& ma
 {
 }
 
-void boundingbox::extractor::extract(const char* data, int size, std::shared_ptr<boundingbox::decoded>& rc)
+void boundingbox::extractor::extract(const void* data, size_t size, std::shared_ptr<boundingbox::decoded>& rc)
 {
-    string buffer(data, size);
+    string buffer((const char*)data, size);
     json   j = json::parse(buffer);
     if (j["object"].is_null())
     {
@@ -142,7 +142,7 @@ void boundingbox::extractor::extract(const char* data, int size, std::shared_ptr
     }
 }
 
-shared_ptr<boundingbox::decoded> boundingbox::extractor::extract(const char* data, int size)
+shared_ptr<boundingbox::decoded> boundingbox::extractor::extract(const void* data, size_t size)
 {
     shared_ptr<decoded> rc = make_shared<decoded>();
     extract(data, size, rc);

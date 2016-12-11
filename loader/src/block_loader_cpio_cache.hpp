@@ -43,7 +43,7 @@ public:
 
     void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
     void prefetch_block(uint32_t block_num) override;
-    uint32_t    object_count() override;
+    uint32_t    record_count() override;
     std::string get_cache_dir() const;
 
 private:
@@ -58,9 +58,6 @@ private:
     void mark_cache_complete();
     bool take_ownership();
     void release_ownership();
-
-    const std::string m_owner_lock_filename     = "caching_in_progress";
-    const std::string m_cache_complete_filename = "cache_complete";
 
     std::string                   m_cache_dir;
     std::shared_ptr<block_loader> m_loader;

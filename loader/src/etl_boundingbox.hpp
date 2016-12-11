@@ -86,7 +86,7 @@ class nervana::boundingbox::decoded : public interface::decoded_media
 
 public:
     decoded();
-    bool extract(const char* data, int size, const std::unordered_map<std::string, int>& label_map);
+    bool extract(const void* data, size_t size, const std::unordered_map<std::string, int>& label_map);
     virtual ~decoded() {}
     const std::vector<boundingbox::box>& boxes() const { return _boxes; }
     int                                  width() const { return _width; }
@@ -104,8 +104,8 @@ class nervana::boundingbox::extractor : public nervana::interface::extractor<ner
 public:
     extractor(const std::unordered_map<std::string, int>&);
     virtual ~extractor() {}
-    virtual std::shared_ptr<boundingbox::decoded> extract(const char*, int) override;
-    void                                          extract(const char*, int, std::shared_ptr<boundingbox::decoded>&);
+    virtual std::shared_ptr<boundingbox::decoded> extract(const void*, size_t) override;
+    void                                          extract(const void*, size_t, std::shared_ptr<boundingbox::decoded>&);
 
 private:
     extractor() = delete;

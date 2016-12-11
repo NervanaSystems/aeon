@@ -30,6 +30,7 @@ TEST_SRCS := \
     test_audio.cpp \
     test_bbox.cpp \
     test_block_loader_async.cpp \
+    test_block_manager.cpp \
     test_char_map.cpp \
     test_image.cpp \
     test_label_map.cpp \
@@ -46,7 +47,7 @@ TEST_SRCS := \
     test_cpio.cpp \
     test_file_util.cpp \
     test_loader.cpp \
-    test_async_manager.cpp
+    test_async_manager.cpp \
     # test_cpio_cache.cpp \
     # test_batch_iterator.cpp \
     # test_block_iterator_shuffled.cpp \

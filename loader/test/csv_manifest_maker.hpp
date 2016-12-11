@@ -21,20 +21,20 @@
 class manifest_maker
 {
 public:
-    manifest_maker(uint32_t record_count, std::vector<uint32_t> sizes);
-    manifest_maker(uint32_t record_count, int height, int width);
+    manifest_maker(size_t record_count, std::vector<size_t> sizes);
+    manifest_maker(size_t record_count, int height, int width);
     manifest_maker();
     ~manifest_maker();
 
     std::string get_manifest_name();
 
     std::string tmp_filename(const std::string& extension="");
-    std::string tmp_zero_file(uint32_t size);
-    std::string tmp_manifest_file(uint32_t num_records, std::vector<uint32_t> sizes);
-    std::string image_manifest(uint32_t num_records, int height, int width);
+    std::string tmp_zero_file(size_t size);
+    std::string tmp_manifest_file(size_t record_count, std::vector<size_t> sizes);
+    std::string image_manifest(size_t record_count, int height, int width);
     std::string tmp_manifest_file_with_invalid_filename();
     std::string tmp_manifest_file_with_ragged_fields();
-    std::string tmp_file_repeating(uint32_t size, uint32_t x);
+    std::string tmp_file_repeating(size_t size, uint32_t x);
     void remove_files();
 
     std::string manifest_name;

@@ -36,8 +36,9 @@ namespace nervana
     class fixed_buffer_map;
 
     typedef std::vector<buffer_variable_size_elements> variable_buffer_array;
-    typedef std::pair<std::vector<char>, std::exception_ptr> variable_record_field;
+    typedef std::pair<std::vector<char>,std::exception_ptr> variable_record_field;
     typedef std::vector<nervana::variable_record_field> variable_record_field_list;
+
 }
 
 class nervana::buffer_variable_size_elements
@@ -46,30 +47,39 @@ public:
     buffer_variable_size_elements() {}
     virtual ~buffer_variable_size_elements() {}
     void read(std::istream& is, int size);
-    void               reset() { m_buffers.clear(); }
-    std::vector<char>& get_item(int index);
+    void reset() { m_buffers.clear(); }
+    std::vector<char>& get_item (int index);
 
     void add_item(const std::vector<char>&);
     void add_item(std::vector<char>&&);
+    void add_item(const void* data, size_t size);
     void add_exception(std::exception_ptr);
 
     void shuffle(uint32_t random_seed);
 
-    size_t                                       size() const { return m_buffers.size(); }
-    size_t                                       get_item_count() { return size(); }
+    size_t size() const { return m_buffers.size(); }
+    size_t get_item_count() { return size(); }
+
     typedef variable_record_field_list::iterator vrfl_iter;
 
     vrfl_iter begin() { return m_buffers.begin(); }
     vrfl_iter end() { return m_buffers.end(); }
-    void append(std::move_iterator<vrfl_iter> first, std::move_iterator<vrfl_iter> last)
+
+    void append(std::move_iterator<vrfl_iter> first,
+                std::move_iterator<vrfl_iter> last)
     {
         m_buffers.insert(m_buffers.end(), first, last);
     }
 
-    void erase(vrfl_iter first, vrfl_iter last) { m_buffers.erase(first, last); }
+    void erase(vrfl_iter first, vrfl_iter last)
+    {
+        m_buffers.erase(first, last);
+    }
+
 private:
-    nervana::variable_record_field_list m_buffers;
+    variable_record_field_list m_buffers;
 };
+
 
 class nervana::buffer_fixed_size_elements
 {
@@ -82,27 +92,28 @@ public:
     const char* get_item(size_t index) const;
     char* get_item(size_t index);
     cv::Mat get_item_as_mat(size_t index);
-    char*             data() { return m_data; }
-    const char*       data() const { return m_data; }
-
-    size_t            get_item_count() const { return m_size / m_stride; }
-    size_t            size() { return m_size; }
+    char*  data() const { return m_data; }
+    size_t get_item_count() const { return m_size / m_stride; }
+    size_t size() const { return m_size; }
     const shape_type& get_shape_type() const { return m_shape_type; }
+
 protected:
     buffer_fixed_size_elements() = delete;
 
-    char*      m_data{nullptr};
-    size_t     m_size{0};
-    size_t     m_batch_size{0};
-    size_t     m_stride{0};
-    bool       m_pinned{false};
+    char*  m_data{nullptr};
+    size_t m_size{0};
+    size_t m_batch_size{0};
+    size_t m_stride{0};
+    bool   m_pinned{false};
     shape_type m_shape_type;
 };
+
 
 class nervana::fixed_buffer_map
 {
 public:
     fixed_buffer_map() {}
+
     fixed_buffer_map(const std::map<std::string, shape_type>& write_sizes, size_t batch_size, bool pinned = false)
     {
         for (auto sz : write_sizes)
@@ -111,7 +122,7 @@ public:
         }
     }
 
-    void add_item(const std::string& name, const shape_type& shp_tp, size_t batch_size, bool pinned = false)
+    void add_item(const std::string &name, const shape_type& shp_tp, size_t batch_size, bool pinned = false)
     {
         m_names.push_back(name);
         m_data.insert({name, new buffer_fixed_size_elements(shp_tp, batch_size, pinned)});
@@ -125,7 +136,11 @@ public:
         }
     }
 
-    const std::vector<std::string>& get_names() { return m_names; }
+    const std::vector<std::string>& get_names()
+    {
+        return m_names;
+    }
+
     const buffer_fixed_size_elements* operator[](const std::string& name) const
     {
         auto it = m_data.find(name);
@@ -138,11 +153,14 @@ public:
         return (it == m_data.end() ? nullptr : it->second);
     }
 
-    size_t size() const { return m_data.size(); }
+    size_t size() const
+    {
+        return m_data.size();
+    }
 private:
     // these must be defined because fixed_buffer_map[0] is resolved to call the string method
     const buffer_fixed_size_elements* operator[](int) const = delete;
-    buffer_fixed_size_elements* operator[](int)             = delete;
+    buffer_fixed_size_elements* operator[](int) = delete;
     std::vector<std::string> m_names;
     std::map<std::string, buffer_fixed_size_elements*> m_data;
 };

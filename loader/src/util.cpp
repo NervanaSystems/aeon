@@ -28,8 +28,8 @@ using namespace std;
 void nervana::dump(ostream& out, const void* _data, size_t _size)
 {
     auto           flags = out.flags();
-    const uint8_t* data  = reinterpret_cast<const uint8_t*>(_data);
-    int            len   = _size;
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(_data);
+    int            len = _size;
     int            index = 0;
     while (index < len)
     {
@@ -101,11 +101,17 @@ int nervana::LevenshteinDistance(const string& s, const string& t)
 {
     // degenerate cases
     if (s == t)
+    {
         return 0;
+    }
     if (s.size() == 0)
+    {
         return t.size();
+    }
     if (t.size() == 0)
+    {
         return s.size();
+    }
 
     // create two work vectors of integer distances
     vector<int> v0(t.size() + 1);
@@ -115,7 +121,9 @@ int nervana::LevenshteinDistance(const string& s, const string& t)
     // this row is A[0][i]: edit distance for an empty s
     // the distance is just the number of characters to delete from t
     for (int i = 0; i < v0.size(); i++)
-        v0[i]  = i;
+    {
+        v0[i] = i;
+    }
 
     for (int i = 0; i < s.size(); i++)
     {
@@ -134,7 +142,9 @@ int nervana::LevenshteinDistance(const string& s, const string& t)
 
         // copy v1 (current row) to v0 (previous row) for next iteration
         for (int j = 0; j < v0.size(); j++)
-            v0[j]  = v1[j];
+        {
+            v0[j] = v1[j];
+        }
     }
 
     return v1[t.size()];
@@ -144,7 +154,7 @@ size_t nervana::unbiased_round(float x)
 {
     float i;
     float fracpart = std::modf(x, &i);
-    int   intpart  = int(i);
+    int   intpart = int(i);
     int   rc;
 
     if (std::fabs(fracpart) == 0.5)
@@ -181,12 +191,10 @@ void nervana::set_global_random_seed(uint32_t newval)
 {
     nervana::global_random_seed = newval;
 }
-
 uint32_t nervana::get_global_random_seed()
 {
     return nervana::global_random_seed;
 }
-
 cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
 {
     SOX_SAMPLE_LOCALS;
@@ -198,7 +206,7 @@ cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
         affirm(in->signal.precision == 16, "input audio must be signed short");
 
         sox_sample_t* sample_buffer = new sox_sample_t[in->signal.length];
-        size_t        number_read   = sox_read(in, sample_buffer, in->signal.length);
+        size_t        number_read = sox_read(in, sample_buffer, in->signal.length);
 
         size_t nclipped = 0;
 
@@ -220,4 +228,14 @@ cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
         cv::Mat samples_mat(1, 1, CV_16SC1);
         return samples_mat;
     }
+}
+
+std::vector<char> nervana::string2vector(const std::string& s)
+{
+    return vector<char>{s.begin(), s.end()};
+}
+
+std::string nervana::vector2string(const std::vector<char>& v)
+{
+    return string{v.data(), v.size()};
 }

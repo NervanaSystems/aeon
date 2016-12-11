@@ -43,7 +43,7 @@ block_loader_cpio_cache make_cache(const string& rootCacheDir, const string& has
     {
         // Take one pass to create the cache
         buffer_in_array bp(2); // 2 buffer_in:  1 for datum, 1 for target
-        for (int i = 0; i < cache.object_count(); i++)
+        for (int i = 0; i < cache.record_count(); i++)
         {
             cache.load_block(bp, i);
         }
@@ -91,7 +91,7 @@ TEST(block_loader_cpio_cache, cache_incomplete)
 
     // fill cache so we can delete it
     buffer_in_array bp(2); // 2 buffer_in:  1 for datum, 1 for target
-    for (int i = 0; i < c1.object_count(); i++)
+    for (int i = 0; i < c1.record_count(); i++)
     {
         c1.load_block(bp, i);
     }

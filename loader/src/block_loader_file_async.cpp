@@ -24,14 +24,22 @@
 #include "util.hpp"
 #include "file_util.hpp"
 #include "log.hpp"
+#include "base64.hpp"
 
 using namespace std;
 using namespace nervana;
 
-block_loader_file_async::block_loader_file_async(manifest_csv* mfst, uint32_t block_size)
-    : async_manager<vector<string>, variable_buffer_array>(mfst)
+block_loader_file_async::block_loader_file_async(manifest_csv* manifest, size_t block_size)
+    : block_loader_source_async(manifest)
     , m_block_size(block_size)
+    , m_manifest(*manifest)
 {
+//    INFO << "file loader requested block size " << m_block_size;
+    m_block_count = round((float)m_manifest.record_count() / (float)m_block_size);
+    m_block_size = ceil((float)m_manifest.record_count() / (float)m_block_count);
+//    INFO << "file loader new block size " << m_block_size;
+//    INFO << "file loader record count " << m_manifest.record_count();
+//    INFO << "file loader m_block_count " << m_block_count;
     m_elements_per_record = element_count();
     for (int k = 0; k < 2; ++k)
     {
@@ -54,20 +62,57 @@ nervana::variable_buffer_array* block_loader_file_async::filler()
 
     for (int i = 0; i < m_block_size; ++i)
     {
-        auto filename_list = m_source->next();
+        auto element_list = m_source->next();
 
-        if (filename_list == nullptr)
+        if (element_list == nullptr)
         {
-            rc = nullptr;
+            break;
         }
         else
         {
+            const vector<manifest::element_t>& types = m_manifest.get_element_types();
             for (int j = 0; j < m_elements_per_record; ++j)
             {
                 try
                 {
-                    auto buffer = file_util::read_file_contents(filename_list->at(j));
-                    rc->at(j).add_item(std::move(buffer));
+                    const string& element = element_list->at(j);
+                    switch (types[j])
+                    {
+                    case manifest::element_t::FILE:
+                    {
+                        auto buffer = file_util::read_file_contents(element);
+                         rc->at(j).add_item(std::move(buffer));
+                        break;
+                    }
+                    case manifest::element_t::BINARY:
+                    {
+                        vector<char> buffer = string2vector(element);
+                        vector<char> decoded = base64::decode(buffer);
+                        rc->at(j).add_item(std::move(decoded));
+                        break;
+                    }
+                    case manifest::element_t::STRING:
+                    {
+                        rc->at(j).add_item(element.data(), element.size());
+                        break;
+                    }
+                    case manifest::element_t::ASCII_INT:
+                    {
+                        int32_t value = stod(element);
+                        rc->at(j).add_item(&value, sizeof(value));
+                        break;
+                    }
+                    case manifest::element_t::ASCII_FLOAT:
+                    {
+                        float value = stof(element);
+                        rc->at(j).add_item(&value, sizeof(value));
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                    }
                 }
                 catch (std::exception& e)
                 {
@@ -76,5 +121,12 @@ nervana::variable_buffer_array* block_loader_file_async::filler()
             }
         }
     }
+
+    if (rc && rc->at(0).size() == 0)
+    {
+        rc = nullptr;
+    }
+
+//    if (rc) INFO << rc->at(0).size() << ", " << rc->at(1).size(); else INFO << "nullptr";
     return rc;
 }

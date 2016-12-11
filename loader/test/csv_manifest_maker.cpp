@@ -27,18 +27,19 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "csv_manifest_maker.hpp"
+#include "manifest_csv.hpp"
 #include "file_util.hpp"
 #include "gen_image.hpp"
 
 using namespace std;
 using namespace nervana;
 
-manifest_maker::manifest_maker(uint32_t num_records, std::vector<uint32_t> sizes)
+manifest_maker::manifest_maker(size_t record_count, std::vector<size_t> sizes)
 {
-    manifest_name = tmp_manifest_file(num_records, sizes);
+    manifest_name = tmp_manifest_file(record_count, sizes);
 }
 
-manifest_maker::manifest_maker(uint32_t record_count, int height, int width)
+manifest_maker::manifest_maker(size_t record_count, int height, int width)
 {
     manifest_name = image_manifest(record_count, height, width);
 }
@@ -72,7 +73,7 @@ string manifest_maker::tmp_filename(const string& extension)
     return tmpname;
 }
 
-string manifest_maker::image_manifest(uint32_t record_count, int height, int width)
+string manifest_maker::image_manifest(size_t record_count, int height, int width)
 {
     string   tmpname = tmp_filename();
     ofstream f_manifest(tmpname);
@@ -84,7 +85,7 @@ string manifest_maker::image_manifest(uint32_t record_count, int height, int wid
 //        mat = cv::Scalar(0,0,0);
         string image_path = tmp_filename("_" + std::to_string(i) + ".png");
         string target_path = tmp_filename();
-        f_manifest << image_path << ',' << target_path << '\n';
+        f_manifest << image_path << manifest_csv::get_delimiter() << target_path << '\n';
         cv::imwrite(image_path, mat);
         {
             ofstream f(target_path);
@@ -98,7 +99,7 @@ string manifest_maker::image_manifest(uint32_t record_count, int height, int wid
     return tmpname;
 }
 
-string manifest_maker::tmp_manifest_file(uint32_t record_count, vector<uint32_t> sizes)
+string manifest_maker::tmp_manifest_file(size_t record_count, vector<size_t> sizes)
 {
     string   tmpname = tmp_filename();
     ofstream f(tmpname);
@@ -110,7 +111,7 @@ string manifest_maker::tmp_manifest_file(uint32_t record_count, vector<uint32_t>
         {
             if (j != 0)
             {
-                f << ",";
+                f << manifest_csv::get_delimiter();
             }
 
             f << tmp_file_repeating(sizes[j], (i * sizes.size()) + j);
@@ -123,7 +124,7 @@ string manifest_maker::tmp_manifest_file(uint32_t record_count, vector<uint32_t>
     return tmpname;
 }
 
-string manifest_maker::tmp_file_repeating(uint32_t size, uint32_t x)
+string manifest_maker::tmp_file_repeating(size_t size, uint32_t x)
 {
     // create a temp file of `size` bytes filled with uint32_t x
     string   tmpname = tmp_filename();
@@ -147,7 +148,7 @@ std::string manifest_maker::tmp_manifest_file_with_invalid_filename()
 
     for (uint32_t i = 0; i < 10; ++i)
     {
-        f << tmp_filename() + ".this_file_shouldnt_exist" << ',';
+        f << tmp_filename() + ".this_file_shouldnt_exist" << manifest_csv::get_delimiter();
         f << tmp_filename() + ".this_file_shouldnt_exist" << endl;
     }
 
@@ -164,7 +165,11 @@ std::string manifest_maker::tmp_manifest_file_with_ragged_fields()
     {
         for (uint32_t j = 0; j < i % 3 + 1; ++j)
         {
-            f << (j != 0 ? "," : "") << tmp_filename();
+            if (j != 0)
+            {
+                f << manifest_csv::get_delimiter();
+            }
+            f << tmp_filename();
         }
         f << endl;
     }

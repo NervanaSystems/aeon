@@ -216,7 +216,7 @@ class nervana::image::extractor : public interface::extractor<image::decoded>
 public:
     extractor(const image::config&);
     ~extractor() {}
-    virtual std::shared_ptr<image::decoded> extract(const char*, int) override;
+    virtual std::shared_ptr<image::decoded> extract(const void*, size_t) override;
 
     const int get_channel_count() { return _color_mode == CV_LOAD_IMAGE_COLOR ? 3 : 1; }
 private:

@@ -13,25 +13,27 @@
  limitations under the License.
 */
 
-#pragma once
-
+#include <vector>
 #include <string>
+#include <cstdlib>
 
 namespace nervana
 {
-    class manifest
-    {
-    public:
-        enum class element_t
-        {
-            FILE,
-            BINARY,
-            STRING,
-            ASCII_INT,
-            ASCII_FLOAT
-        };
-
-        virtual std::string cache_id() = 0;
-        virtual std::string version()  = 0;
-    };
+    class base64;
 }
+
+class nervana::base64
+{
+public:
+    static std::vector<char> encode(const std::vector<char>& data);
+    static std::vector<char> encode(const char* data, size_t size);
+
+    static std::vector<char> decode(const std::vector<char>& data);
+    static std::vector<char> decode(const char* data, size_t size);
+
+    static std::string gen_decode_table();
+
+private:
+    static const char* character_codes;
+    static const char  decode_codes[];
+};

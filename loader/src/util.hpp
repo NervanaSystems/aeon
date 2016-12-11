@@ -40,7 +40,7 @@ namespace nervana
     T unpack(const char* data, int offset = 0, endian e = endian::LITTLE)
     {
         T     value = 0;
-        char* v     = (char*)&value;
+        char* v = (char*)&value;
         for (int i = 0; i < sizeof(T); i++)
         {
             v[i] = data[offset + BYTEIDX(i, sizeof(T), e)];
@@ -65,7 +65,9 @@ namespace nervana
         for (const auto& x : v)
         {
             if (&x != &v[0])
+            {
                 ss << sep;
+            }
             ss << x;
         }
         return ss.str();
@@ -122,4 +124,7 @@ namespace nervana
     void set_global_random_seed(uint32_t newval);
     uint32_t get_global_random_seed();
     cv::Mat read_audio_from_mem(const char* item, int itemSize);
+
+    std::vector<char> string2vector(const std::string& s);
+    std::string vector2string(const std::vector<char>& s);
 }

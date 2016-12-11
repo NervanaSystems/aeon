@@ -54,8 +54,8 @@ loader_async::loader_async(batch_iterator_async* b_itor, size_t batch_size, bool
     {
         m_providers.push_back(nervana::provider_factory::clone(prov));
         m_start_inds.push_back(i * m_items_per_thread);
-        int item_count = i == nthreads - 1 ? (batch_size - i * m_items_per_thread) : m_items_per_thread;
-        m_end_inds.push_back(m_start_inds[i] + item_count);
+        int record_count = i == nthreads - 1 ? (batch_size - i * m_items_per_thread) : m_items_per_thread;
+        m_end_inds.push_back(m_start_inds[i] + record_count);
     }
 
     auto oshapes         = m_providers[0]->get_output_shapes();
@@ -71,30 +71,43 @@ loader_async::loader_async(batch_iterator_async* b_itor, size_t batch_size, bool
     }
 }
 
+loader_async::~loader_async()
+{
+    finalize();
+}
+
 fixed_buffer_map* loader_async::filler()
 {
     fixed_buffer_map*      outputs = get_pending_buffer();
     variable_buffer_array* inputs  = m_source->next();
 
-    std::vector<std::thread> provider_threads;
-    try
-    {
-        for (int id = 0; id < m_providers.size(); ++id)
-        {
-            provider_threads.emplace_back(&loader_async::work, this, id, inputs, outputs);
-        }
-
-        for (auto& t : provider_threads)
-        {
-            t.join();
-        }
-        // Now perform any potentially necessary whole-batch operation
-        m_providers[0]->post_process(*outputs);
-    }
-    catch (std::exception& e)
+    if (inputs == nullptr)
     {
         outputs = nullptr;
     }
+    else
+    {
+        std::vector<std::thread> provider_threads;
+        try
+        {
+            for (int id = 0; id < m_providers.size(); ++id)
+            {
+                provider_threads.emplace_back(&loader_async::work, this, id, inputs, outputs);
+            }
+
+            for (auto& t : provider_threads)
+            {
+                t.join();
+            }
+            // Now perform any potentially necessary whole-batch operation
+            m_providers[0]->post_process(*outputs);
+        }
+        catch (std::exception& e)
+        {
+            outputs = nullptr;
+        }
+    }
+
     return outputs;
 }
 
@@ -189,7 +202,7 @@ void loader::initialize(nlohmann::json& config_json)
     m_manifest = make_shared<manifest_csv>(lcfg.manifest_filename, lcfg.shuffle_manifest, lcfg.manifest_root, lcfg.subset_fraction);
 
     // TODO: make the constructor throw this error
-    if (m_manifest->object_count() == 0)
+    if (m_manifest->record_count() == 0)
     {
         throw std::runtime_error("manifest file is empty");
     }
@@ -197,12 +210,12 @@ void loader::initialize(nlohmann::json& config_json)
     if (lcfg.iteration_mode == "ONCE")
     {
         m_batch_mode = BatchMode::ONCE;
-        m_batch_count_value = m_manifest->object_count();
+        m_batch_count_value = m_manifest->record_count();
     }
     else if (lcfg.iteration_mode == "INFINITE")
     {
         m_batch_mode = BatchMode::INFINITE;
-        m_batch_count_value = m_manifest->object_count();
+        m_batch_count_value = m_manifest->record_count();
     }
     else if (lcfg.iteration_mode == "COUNT")
     {
@@ -212,26 +225,9 @@ void loader::initialize(nlohmann::json& config_json)
 
     m_block_loader = make_shared<block_loader_file_async>(m_manifest.get(), lcfg.block_size);
 
-    // base_manifest  = manifest;
+    m_block_manager = make_shared<block_manager_async>(m_block_loader.get(), lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_every_epoch);
 
-    // if (lcfg.cache_directory.length() > 0)
-    // {
-    //     string cache_id = base_manifest->cache_id() + to_string(m_block_loader->object_count());
-    //     m_block_loader =
-    //         make_shared<block_loader_cpio_cache>(lcfg.cache_directory, cache_id, base_manifest->version(), m_block_loader);
-    // }
-
-    // shared_ptr<block_iterator> block_iter;
-    // if (lcfg.shuffle_every_epoch)
-    // {
-    //     block_iter = make_shared<block_iterator_shuffled>(m_block_loader);
-    // }
-    // else
-    // {
-    //     block_iter = make_shared<block_iterator_sequential>(m_block_loader);
-    // }
-
-    m_batch_iterator = make_shared<batch_iterator_async>(m_block_loader.get(), lcfg.batch_size);
+    m_batch_iterator = make_shared<batch_iterator_async>(m_block_manager.get(), lcfg.batch_size);
 
     m_provider = provider_factory::create(config_json);
 

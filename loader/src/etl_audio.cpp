@@ -32,9 +32,9 @@ shared_ptr<audio::params> audio::param_factory::make_params(std::shared_ptr<cons
 }
 
 /** \brief Extract audio data from a wav file using sox */
-std::shared_ptr<audio::decoded> audio::extractor::extract(const char* item, int itemSize)
+std::shared_ptr<audio::decoded> audio::extractor::extract(const void* item, size_t itemSize)
 {
-    return make_shared<audio::decoded>(nervana::read_audio_from_mem(item, itemSize));
+    return make_shared<audio::decoded>(nervana::read_audio_from_mem((const char*)item, itemSize));
 }
 
 audio::transformer::transformer(const audio::config& config)

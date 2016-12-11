@@ -41,8 +41,8 @@ class nervana::async_manager_source
 {
 public:
     virtual OUTPUT* next()          = 0;
-    virtual size_t  object_count()  = 0;
-    virtual size_t  element_count() = 0;
+    virtual size_t  record_count() const  = 0;
+    virtual size_t  element_count() const = 0;
     virtual void    reset()         = 0;
 };
 
@@ -55,8 +55,8 @@ public:
     {
         // Make the container pair?  Currently letting child handle it in filler()
     }
-    virtual size_t  object_count() override { return m_source->object_count(); }
-    virtual size_t  element_count() override { return m_source->element_count(); }
+    virtual size_t  record_count() const override { return m_source->record_count(); }
+    virtual size_t  element_count() const override { return m_source->element_count(); }
     virtual OUTPUT* next() override
     {
         // Special case for first time through

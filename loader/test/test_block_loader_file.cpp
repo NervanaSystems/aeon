@@ -14,12 +14,9 @@
 */
 
 #include "gtest/gtest.h"
-#include "block_loader_file.hpp"
+#include "block_loader_file_async.hpp"
 #include "csv_manifest_maker.hpp"
 #include "file_util.hpp"
-#include "block_loader_util.hpp"
-#include "block_loader_cpio_cache.hpp"
-#include "block_iterator_shuffled.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -40,8 +37,9 @@ TEST(block_loader_file, load_block)
     uint32_t target_size     = 16;
     float    subset_fraction = 1.0;
 
-    block_loader_file blf(make_shared<nervana::manifest_csv>(mm.tmp_manifest_file(4, {object_size, target_size}), true),
-                          subset_fraction, block_size);
+    auto manifest_file = mm.tmp_manifest_file(4, {object_size, target_size});
+    auto manifest = make_shared<manifest_csv>(manifest_file, true);
+    block_loader_file_async blf(manifest, subset_fraction, block_size);
 
     buffer_in_array bp(2);
 
@@ -76,7 +74,7 @@ TEST(block_loader_file, subset_fraction)
     block_loader_file blf(make_shared<nervana::manifest_csv>(mm.tmp_manifest_file(total_records, {object_size, target_size}), true),
                           subset_fraction, block_size);
 
-    EXPECT_EQ(blf.object_count(), size_t(total_records * subset_fraction));
+    EXPECT_EQ(blf.record_count(), size_t(total_records * subset_fraction));
 
     buffer_in_array bp(2);
 
@@ -118,7 +116,7 @@ TEST(block_loader_file, exception)
     }
 }
 
-// TEST(block_loader_file, subset_object_count)
+// TEST(block_loader_file, subset_record_count)
 //{
 //    manifest_maker mm;
 //    float subset_fraction = 0.5;
@@ -128,7 +126,7 @@ TEST(block_loader_file, exception)
 //        5
 //    );
 
-//    ASSERT_EQ(blf.object_count(), 2 + 2 + 1);
+//    ASSERT_EQ(blf.record_count(), 2 + 2 + 1);
 //}
 
 TEST(block_loader_file, performance)
