@@ -1134,9 +1134,11 @@ TEST(localization, provider)
         image_cdata.push_back(c);
     };
 
-    variable_buffer_array in_buf{2};
-    in_buf[0].add_item(image_cdata);
-    in_buf[1].add_item(target_data);
+    encoded_record_list in_buf;
+    encoded_record record;
+    record.add_element(image_cdata);
+    record.add_element(target_data);
+    in_buf.add_record(record);
 
     fixed_buffer_map out_buf(oshapes, 1);
     const shape_type& image_shape = media->get_output_shape("image");
@@ -1204,9 +1206,11 @@ TEST(localization, provider_channel_major)
         image_cdata.push_back(c);
     };
 
-    variable_buffer_array in_buf{2};
-    in_buf[0].add_item(image_cdata);
-    in_buf[1].add_item(target_data);
+    encoded_record_list in_buf;
+    encoded_record record;
+    record.add_element(image_cdata);
+    record.add_element(target_data);
+    in_buf.add_record(record);
 
     fixed_buffer_map  out_buf(oshapes, 1);
     const shape_type& image_shape = media->get_output_shape("image");

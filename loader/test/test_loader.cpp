@@ -23,11 +23,21 @@
 #define private public
 
 #include "loader.hpp"
-#include "csv_manifest_maker.hpp"
+#include "manifest_builder.hpp"
 #include "gen_image.hpp"
 
 using namespace std;
 using namespace nervana;
+
+static string create_manifest_file(size_t record_count, size_t width, size_t height)
+{
+    string manifest_filename = file_util::tmp_filename();
+    manifest_builder mb;
+    auto& ms = mb.record_count(record_count).image_width(width).image_height(height).create();
+    ofstream f(manifest_filename);
+    f << ms.str();
+    return manifest_filename;
+}
 
 TEST(loader,iteration_mode)
 {
@@ -139,9 +149,8 @@ TEST(loader,iterator)
     int height = 32;
     int width = 32;
     size_t batch_size = 1;
-    size_t input_file_count = 10;
-    manifest_maker mm(input_file_count, height, width);
-    string manifest_filename = mm.get_manifest_name();
+    size_t record_count = 10;
+    string manifest_filename = create_manifest_file(record_count, width, height);
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
@@ -151,7 +160,7 @@ TEST(loader,iterator)
                             {"channel_major",false},
                             {"flip_enable",true}}},
                          {"label", {
-                              {"binary",true}
+                              {"binary",false}
                           }
                          }};
 
@@ -168,12 +177,12 @@ TEST(loader,iterator)
     ++begin;
     EXPECT_NE(begin, end);
     EXPECT_EQ(2, begin.position());
-    for (int i=2; i<input_file_count; i++)
+    for (int i=2; i<record_count; i++)
     {
         EXPECT_NE(begin, end);
         begin++;
     }
-    EXPECT_EQ(input_file_count, begin.position());
+    EXPECT_EQ(record_count, begin.position());
     EXPECT_EQ(begin, end);
 }
 
@@ -182,9 +191,8 @@ TEST(loader,once)
     int height = 32;
     int width = 32;
     size_t batch_size = 1;
-    size_t input_file_count = 10;
-    manifest_maker mm(input_file_count, height, width);
-    string manifest_filename = mm.get_manifest_name();
+    size_t record_count = 10;
+    string manifest_filename = create_manifest_file(record_count, width, height);
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
@@ -195,7 +203,7 @@ TEST(loader,once)
                             {"channel_major",false},
                             {"flip_enable",true}}},
                          {"label", {
-                              {"binary",true}
+                              {"binary",false}
                           }
                          }};
 
@@ -205,10 +213,10 @@ TEST(loader,once)
     for(const fixed_buffer_map& data : train_set)
     {
         (void)data; // silence compiler warning
-        ASSERT_NE(count, input_file_count);
+        ASSERT_NE(count, record_count);
         count++;
     }
-    ASSERT_EQ(input_file_count, count);
+    ASSERT_EQ(record_count, count);
 }
 
 TEST(loader,count)
@@ -216,9 +224,8 @@ TEST(loader,count)
     int height = 32;
     int width = 32;
     size_t batch_size = 1;
-    size_t input_file_count = 10;
-    manifest_maker mm(input_file_count, height, width);
-    string manifest_filename = mm.get_manifest_name();
+    size_t record_count = 10;
+    string manifest_filename = create_manifest_file(record_count, width, height);
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
@@ -230,7 +237,7 @@ TEST(loader,count)
                             {"channel_major",false},
                             {"flip_enable",true}}},
                          {"label", {
-                              {"binary",true}
+                              {"binary",false}
                           }
                          }};
 
@@ -243,7 +250,7 @@ TEST(loader,count)
     for(const fixed_buffer_map& data : train_set)
     {
         (void)data; // silence compiler warning
-        ASSERT_NE(count, input_file_count);
+        ASSERT_NE(count, record_count);
         count++;
     }
     ASSERT_EQ(expected_iterations, count);
@@ -254,9 +261,8 @@ TEST(loader,infinite)
     int height = 32;
     int width = 32;
     size_t batch_size = 1;
-    size_t input_file_count = 10;
-    manifest_maker mm(input_file_count, height, width);
-    string manifest_filename = mm.get_manifest_name();
+    size_t record_count = 10;
+    string manifest_filename = create_manifest_file(record_count, width, height);
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
@@ -267,14 +273,14 @@ TEST(loader,infinite)
                             {"channel_major",false},
                             {"flip_enable",true}}},
                          {"label", {
-                              {"binary",true}
+                              {"binary",false}
                           }
                          }};
 
     loader train_set{js};
 
     int count = 0;
-    int expected_iterations = input_file_count * 3;
+    int expected_iterations = record_count * 3;
     for(const fixed_buffer_map& data : train_set)
     {
         (void)data; // silence compiler warning
@@ -292,11 +298,10 @@ TEST(loader,cache)
     int height = 16;
     int width = 16;
     size_t batch_size = 32;
-    size_t input_file_count = 1002;
+    size_t record_count = 1002;
     size_t block_size = 300;
     string cache_root = file_util::get_temp_directory();
-    manifest_maker mm(input_file_count, height, width);
-    string manifest_filename = mm.get_manifest_name();
+    string manifest_filename = create_manifest_file(record_count, width, height);
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
@@ -309,14 +314,14 @@ TEST(loader,cache)
                             {"channel_major",false},
                             {"flip_enable",true}}},
                          {"label", {
-                              {"binary",true}
+                              {"binary",false}
                           }
                          }};
 
     loader train_set{js};
 
     int count = 0;
-    int expected_iterations = input_file_count * 3;
+    int expected_iterations = record_count * 3;
     for(const fixed_buffer_map& data : train_set)
     {
         (void)data; // silence compiler warning
@@ -334,10 +339,9 @@ TEST(loader,test)
     int height = 16;
     int width = 16;
     size_t batch_size = 32;
-    size_t input_file_count = 1002;
+    size_t record_count = 1003;
     size_t block_size = 300;
-    manifest_maker mm(input_file_count, height, width);
-    string manifest_filename = mm.get_manifest_name();
+    string manifest_filename = create_manifest_file(record_count, width, height);
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
@@ -348,7 +352,7 @@ TEST(loader,test)
                             {"channel_major",false},
                             {"flip_enable",true}}},
                          {"label", {
-                              {"binary",true}
+                              {"binary",false}
                           }
                          }};
 
@@ -389,7 +393,7 @@ TEST(loader,test)
             cv::Mat image{height, width, CV_8UC3, (char*)image_data};
             int actual_id = embedded_id_image::read_embedded_id(image);
             // INFO << "train_loop " << expected_id << "," << actual_id;
-            ASSERT_EQ(expected_id%input_file_count, actual_id);
+            ASSERT_EQ(expected_id%record_count, actual_id);
             expected_id++;
         }
 

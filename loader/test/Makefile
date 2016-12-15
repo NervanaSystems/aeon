@@ -22,14 +22,15 @@ include ../Makefile.base
 
 TEST_SRCS := \
     test_buffer.cpp \
-    csv_manifest_maker.cpp \
+    manifest_builder.cpp \
     test_manifest_csv.cpp \
     gen_image.cpp \
     helpers.cpp \
     main.cpp \
     test_audio.cpp \
     test_bbox.cpp \
-    test_block_loader_async.cpp \
+    test_block_loader_file.cpp \
+    test_block_loader_nds.cpp \
     test_block_manager.cpp \
     test_char_map.cpp \
     test_image.cpp \
@@ -48,6 +49,7 @@ TEST_SRCS := \
     test_file_util.cpp \
     test_loader.cpp \
     test_async_manager.cpp \
+    test_base64.cpp \
     # test_cpio_cache.cpp \
     # test_batch_iterator.cpp \
     # test_block_iterator_shuffled.cpp \

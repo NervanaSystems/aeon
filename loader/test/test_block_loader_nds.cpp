@@ -26,11 +26,7 @@
 
 // cringe
 #define private public
-#include "block_loader_nds.hpp"
-#include "block_iterator_shuffled.hpp"
-#include "block_iterator_sequential.hpp"
-#include "block_loader_cpio_cache.hpp"
-#include "block_loader_util.hpp"
+#include "manifest_nds.hpp"
 #include "file_util.hpp"
 #include "web_server.hpp"
 #include "json.hpp"
@@ -38,127 +34,6 @@
 
 using namespace std;
 using namespace nervana;
-
-// NDSMockServer starts a python process in the constructor and kills the
-// process in the destructor
-class NDSMockServer
-{
-public:
-//    NDSMockServer()
-//    {
-//        cout << "starting mock nds server ..." << endl;
-//        pid_t pid = fork();
-//        if(pid == 0) {
-//            int i = system("../test/start_nds_server");
-//            if(i) {
-//                cout << "error starting nds_server: " << strerror(i) << endl;
-//            }
-//            exit(1);
-//        }
-
-//        // sleep for 3 seconds to let the nds_server come up
-//        usleep(3 * 1000 * 1000);
-//        _pid = pid;
-//    }
-
-//    ~NDSMockServer()
-//    {
-//        cout << "killing mock nds server ..." << endl;
-//        // kill the python process running the mock NDS
-//        stringstream stream;
-//        block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
-//        client.get("http://127.0.0.1:5000/shutdown/", stream);
-//        //  kill(_pid, 15);
-//    }
-
-
-    NDSMockServer()
-    {
-        page_request_handler fn = bind(&NDSMockServer::page_handler, this, placeholders::_1, placeholders::_2);
-        m_server.register_page_handler(fn);
-        m_server.start(5000);
-    }
-
-    ~NDSMockServer()
-    {
-        m_server.stop();
-    }
-
-    void set_elements_per_record(initializer_list<int> init)
-    {
-        m_elements_per_record = init;
-    }
-
-    void page_handler(web::page& page, const std::string& url)
-    {
-        if (url == "/object_count/")
-        {
-            nlohmann::json js = {
-                {"record_count", 200},
-                {"macro_batch_per_shard", 5}
-            };
-            string rc = js.dump();
-            page.send_string(rc);
-        }
-        else if (url == "/macrobatch/")
-        {
-            map<string,string> args = page.args();
-            int macro_batch_max_size = stod(args["macro_batch_max_size"]);
-//            int macro_batch_index = stod(args["macro_batch_index"]);
-//            int collection_id = stod(args["collection_id"]);
-//            string token = args["token"];
-            stringstream ss;
-            {
-                cpio::writer writer(ss);
-                for (int record_number=0; record_number<macro_batch_max_size; record_number++)
-                {
-                    buffer_in_array bin{(uint32_t)m_elements_per_record.size()};
-                    for (int element_number=0; element_number<m_elements_per_record.size(); element_number++)
-                    {
-                        vector<char> data(m_elements_per_record[element_number]);
-                        stringstream ss;
-                        ss << record_number << ":" << element_number;
-                        string id = ss.str();
-                        id.copy(data.data(), id.size());
-                        data[id.size()] = 0;
-                        bin[element_number]->add_item(data);
-                    }
-                    writer.write_all_records(bin);
-                }
-            }
-
-            string cpio_data = ss.str();
-            page.send_as_file(cpio_data.data(), cpio_data.size());
-        }
-        else if (url == "/test_pattern/")
-        {
-            for (int i=0; i<1024; i++)
-            {
-                page.send_string("0123456789abcdef");
-            }
-        }
-        else if (url == "/error")
-        {
-            page.page_not_found();
-        }
-    }
-
-private:
-    web::server m_server;
-    vector<int> m_elements_per_record = {1024, 8};
-};
-
-std::shared_ptr<NDSMockServer> mock_server;
-
-size_t curl_client_callback(void* ptr, size_t size, size_t nmemb, void* stream)
-{
-    stringstream& ss = *(stringstream*)stream;
-    // callback used by curl.  writes data from ptr into the
-    // stringstream passed in to `stream`.
-
-    ss.write((const char*)ptr, size * nmemb);
-    return size * nmemb;
-}
 
 class curl_client
 {
@@ -180,6 +55,16 @@ public:
         curl_global_cleanup();
     }
 
+    static size_t callback(void* ptr, size_t size, size_t nmemb, void* stream)
+    {
+        stringstream& ss = *(stringstream*)stream;
+        // callback used by curl.  writes data from ptr into the
+        // stringstream passed in to `stream`.
+
+        ss.write((const char*)ptr, size * nmemb);
+        return size * nmemb;
+    }
+
     void get(const string& url, stringstream& stream)
     {
         // reuse curl connection across requests
@@ -189,7 +74,7 @@ public:
         // the body of the response
 
         curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, curl_client_callback);
+        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, callback);
         curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
 
         // Perform the request, res will get the return code
@@ -251,17 +136,8 @@ private:
     uint32_t          m_macrobatch_size;
 };
 
-static void start_server()
-{
-    if (mock_server == nullptr)
-    {
-        mock_server = make_shared<NDSMockServer>();
-    }
-}
-
 TEST(DISABLED_curl,test)
 {
-    start_server();
     curl_client client("http://127.0.0.1:5000", "token", 1, 500, 1, 0);
 
     for (int i=0; i<1000; i++)
@@ -275,8 +151,8 @@ TEST(DISABLED_curl,test)
 
 TEST(block_loader_nds, curl_stream)
 {
-    start_server();
-    block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
+            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
 
     stringstream stream;
     client.get("http://127.0.0.1:5000/test_pattern/", stream);
@@ -291,8 +167,8 @@ TEST(block_loader_nds, curl_stream)
 
 TEST(block_loader_nds, curl_stream_error)
 {
-    start_server();
-    block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
+            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
 
     stringstream stream;
     EXPECT_THROW(client.get("http://127.0.0.1:5000/error", stream), std::runtime_error);
@@ -300,8 +176,8 @@ TEST(block_loader_nds, curl_stream_error)
 
 TEST(block_loader_nds, record_count)
 {
-    start_server();
-    block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
+            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
 
     // 200 and 5 are hard coded in the mock nds server
     ASSERT_EQ(client.record_count(), 200);
@@ -310,112 +186,112 @@ TEST(block_loader_nds, record_count)
 
 TEST(block_loader_nds, cpio)
 {
-    start_server();
-    block_loader_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
+            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
 
-    buffer_in_array dest(2);
-    ASSERT_EQ(dest.size(), 2);
-    ASSERT_EQ(dest[0]->record_count(), 0);
+//     buffer_in_array dest(2);
+//     ASSERT_EQ(dest.size(), 2);
+//     ASSERT_EQ(dest[0]->record_count(), 0);
 
-    client.load_block(dest, 0);
+    encoded_record_list block = client.load_block(0);
 
-//    ASSERT_EQ(dest[0]->record_count(), 2);
+//     ASSERT_EQ(dest[0]->record_count(), 2);
 }
 
-TEST(block_loader_nds, multiblock_sequential)
-{
+// TEST(block_loader_nds, multiblock_sequential)
+// {
 
-    start_server();
-    int block_size = 5000;
-    int elements_per_record = 2;
-    auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, block_size, 1, 0);
-    block_iterator_sequential iter(client);
+//     start_server();
+//     int block_size = 5000;
+//     int elements_per_record = 2;
+//     auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, block_size, 1, 0);
+//     block_iterator_sequential iter(client);
 
-    for(int block_number=0; block_number<10; block_number++)
-    {
-        buffer_in_array dest(elements_per_record);
-        iter.read(dest);
+//     for(int block_number=0; block_number<10; block_number++)
+//     {
+//         buffer_in_array dest(elements_per_record);
+//         iter.read(dest);
 
-        vector<buffer_in*> data_buffer;
-        for (int element_number=0; element_number<elements_per_record; element_number++)
-        {
-            data_buffer.push_back(dest[element_number]);
-            ASSERT_EQ(block_size, data_buffer[element_number]->record_count());
-        }
+//         vector<buffer_in*> data_buffer;
+//         for (int element_number=0; element_number<elements_per_record; element_number++)
+//         {
+//             data_buffer.push_back(dest[element_number]);
+//             ASSERT_EQ(block_size, data_buffer[element_number]->record_count());
+//         }
 
-        for (int record_number=0; record_number<block_size; record_number++)
-        {
-            for (int element_number=0; element_number<elements_per_record; element_number++)
-            {
-                const vector<char>& data_actual = data_buffer[element_number]->get_item(record_number);
-                ASSERT_NE(0, data_actual.size());
-                string data        = data_actual.data();
-                auto tokens        = split(data, ':');
-                int record_actual  = stod(tokens[0]);
-                ASSERT_EQ(record_number, record_actual);
-                int element_actual = stod(tokens[1]);
-                ASSERT_EQ(element_number, element_actual);
-            }
-        }
-    }
-}
+//         for (int record_number=0; record_number<block_size; record_number++)
+//         {
+//             for (int element_number=0; element_number<elements_per_record; element_number++)
+//             {
+//                 const vector<char>& data_actual = data_buffer[element_number]->get_item(record_number);
+//                 ASSERT_NE(0, data_actual.size());
+//                 string data        = data_actual.data();
+//                 auto tokens        = split(data, ':');
+//                 int record_actual  = stod(tokens[0]);
+//                 ASSERT_EQ(record_number, record_actual);
+//                 int element_actual = stod(tokens[1]);
+//                 ASSERT_EQ(element_number, element_actual);
+//             }
+//         }
+//     }
+// }
 
-TEST(block_loader_nds, multiblock_shuffled)
-{
-    start_server();
-    int block_size = 5000;
-    int elements_per_record = 2;
-    auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, block_size, 1, 0);
-    block_iterator_shuffled iter(client);
+// TEST(block_loader_nds, multiblock_shuffled)
+// {
+//     start_server();
+//     int block_size = 5000;
+//     int elements_per_record = 2;
+//     auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, block_size, 1, 0);
+//     block_iterator_shuffled iter(client);
 
-    for(int block_number=0; block_number<10; block_number++)
-    {
-        buffer_in_array dest(elements_per_record);
-        iter.read(dest);
+//     for(int block_number=0; block_number<10; block_number++)
+//     {
+//         buffer_in_array dest(elements_per_record);
+//         iter.read(dest);
 
-        vector<buffer_in*> data_buffer;
-        for (int element_number=0; element_number<elements_per_record; element_number++)
-        {
-            data_buffer.push_back(dest[element_number]);
-            ASSERT_EQ(block_size, data_buffer[element_number]->record_count());
-        }
+//         vector<buffer_in*> data_buffer;
+//         for (int element_number=0; element_number<elements_per_record; element_number++)
+//         {
+//             data_buffer.push_back(dest[element_number]);
+//             ASSERT_EQ(block_size, data_buffer[element_number]->record_count());
+//         }
 
-        for (int record_number=0; record_number<block_size; record_number++)
-        {
-            for (int element_number=0; element_number<elements_per_record; element_number++)
-            {
-                const vector<char>& data_actual = data_buffer[element_number]->get_item(record_number);
-                ASSERT_NE(0, data_actual.size());
-                string data        = data_actual.data();
-                auto tokens        = split(data, ':');
-//                int record_actual  = stod(tokens[0]);
-//                ASSERT_EQ(record_number, record_actual);
-                int element_actual = stod(tokens[1]);
-                ASSERT_EQ(element_number, element_actual);
-            }
-        }
-    }
-}
+//         for (int record_number=0; record_number<block_size; record_number++)
+//         {
+//             for (int element_number=0; element_number<elements_per_record; element_number++)
+//             {
+//                 const vector<char>& data_actual = data_buffer[element_number]->get_item(record_number);
+//                 ASSERT_NE(0, data_actual.size());
+//                 string data        = data_actual.data();
+//                 auto tokens        = split(data, ':');
+// //                int record_actual  = stod(tokens[0]);
+// //                ASSERT_EQ(record_number, record_actual);
+//                 int element_actual = stod(tokens[1]);
+//                 ASSERT_EQ(element_number, element_actual);
+//             }
+//         }
+//     }
+// }
 
-//TEST(block_loader_nds, performance)
-//{
-//    //    generate_large_cpio_file();
-//    string                        cache_dir = file_util::make_temp_directory();
-//    chrono::high_resolution_clock timer;
-//    start_server();
-//    auto                    client   = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
-//    string                  cache_id = block_loader_random::randomString();
-//    string                  version  = "version123";
-//    auto                    cache    = make_shared<block_loader_cpio_cache>(cache_dir, cache_id, version, client);
-//    block_iterator_shuffled iter(cache);
+// //TEST(block_loader_nds, performance)
+// //{
+// //    //    generate_large_cpio_file();
+// //    string                        cache_dir = file_util::make_temp_directory();
+// //    chrono::high_resolution_clock timer;
+// //    start_server();
+// //    auto                    client   = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+// //    string                  cache_id = block_loader_random::randomString();
+// //    string                  version  = "version123";
+// //    auto                    cache    = make_shared<block_loader_cpio_cache>(cache_dir, cache_id, version, client);
+// //    block_iterator_shuffled iter(cache);
 
-//    auto startTime = timer.now();
-//    for (int i = 0; i < 300; i++)
-//    {
-//        buffer_in_array dest(2);
-//        iter.read(dest);
-//    }
-//    auto endTime = timer.now();
-//    cout << "time " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count() << " ms" << endl;
-//    file_util::remove_directory(cache_dir);
-//}
+// //    auto startTime = timer.now();
+// //    for (int i = 0; i < 300; i++)
+// //    {
+// //        buffer_in_array dest(2);
+// //        iter.read(dest);
+// //    }
+// //    auto endTime = timer.now();
+// //    cout << "time " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count() << " ms" << endl;
+// //    file_util::remove_directory(cache_dir);
+// //}

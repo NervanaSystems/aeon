@@ -19,17 +19,22 @@
 
 #include "helpers.hpp"
 #include "gtest/gtest.h"
+#include "log.hpp"
 
 using namespace std;
 using namespace nervana;
 
-vector<string> buffer_to_vector_of_strings(buffer_variable_size_elements& b)
+vector<string> buffer_to_vector_of_strings(encoded_record_list& b)
 {
     vector<string> words;
-    for (auto i = 0; i != b.get_item_count(); ++i)
+
+    if (b.size() > 0)
     {
-        vector<char>& s = b.get_item(i);
-        words.push_back(string(s.data(), s.size()));
+        for (auto i = 0; i != b.size(); ++i)
+        {
+            vector<char>& s = b.record(i).element(0);
+            words.push_back(string(s.data(), s.size()));
+        }
     }
 
     return words;

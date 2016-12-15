@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "manifest_csv.hpp"
+#include "manifest_file.hpp"
 #include "buffer_batch.hpp"
 #include "block_loader_source_async.hpp"
 
@@ -35,27 +35,28 @@ namespace nervana
 class nervana::block_loader_file_async : public block_loader_source_async
 {
 public:
-    block_loader_file_async(manifest_csv* mfst, size_t block_size);
+    block_loader_file_async(manifest_file* mfst, size_t block_size);
     virtual ~block_loader_file_async()
     {
         finalize();
     }
 
-    variable_buffer_array* filler() override;
+    encoded_record_list* filler() override;
+    void reset() override;
+
+    size_t block_count() const override
+    {
+        return m_manifest.block_count();
+    }
 
     size_t record_count() const override
     {
-        return m_block_size;
+        return m_manifest.record_count();
     }
 
     size_t block_size() const override
     {
-        return m_block_size;
-    }
-
-    size_t block_count() const override
-    {
-        return m_block_count;
+        return 1;
     }
 
     size_t elements_per_record() const override
@@ -71,6 +72,7 @@ public:
 private:
     size_t        m_block_size;
     size_t        m_block_count;
+    size_t        m_record_count;
     size_t        m_elements_per_record;
-    manifest_csv& m_manifest;
+    manifest_file& m_manifest;
 };

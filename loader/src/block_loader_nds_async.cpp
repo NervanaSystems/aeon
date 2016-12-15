@@ -25,27 +25,31 @@
 #include "file_util.hpp"
 #include "log.hpp"
 #include "base64.hpp"
+#include "json.hpp"
+#include "interface.hpp"
 
 using namespace std;
 using namespace nervana;
 
-block_loader_nds_async::block_loader_nds_async(manifest_csv* manifest, size_t block_size)
-    : block_loader_source_async(manifest)
-    , m_block_size(block_size)
-    , m_manifest(*manifest)
+block_loader_nds_async::block_loader_nds_async(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
+                                   size_t shard_count, size_t shard_index)
+    : block_loader_source_async(*this)
+    , m_baseurl(baseurl)
+    , m_token(token)
+    , m_collection_id(collection_id)
+    , m_shard_count(shard_count)
+    , m_shard_index(shard_index)
 {
-    for (int k = 0; k < 2; ++k)
-    {
-        for (size_t j = 0; j < element_count(); ++j)
-        {
-            m_containers[k].emplace_back();
-        }
-    }
 }
 
-nervana::variable_buffer_array* block_loader_nds_async::filler()
+nervana::encoded_record_list* block_loader_nds_async::filler()
 {
-    variable_buffer_array* rc = get_pending_buffer();
+    encoded_record_list* rc = get_pending_buffer();
 
     return rc;
 }
+
+// size_t block_loader_nds_async::object_count() const
+// {
+//     return m_object_count;
+// }

@@ -32,24 +32,22 @@ namespace nervana
 }
 
 class nervana::batch_iterator_async
-    : public async_manager<variable_buffer_array, variable_buffer_array>
+    : public async_manager<encoded_record_list, encoded_record_list>
 {
 public:
     batch_iterator_async(block_manager_async*, size_t batch_size);
     virtual ~batch_iterator_async() { finalize(); }
     virtual size_t record_count() const override { return m_batch_size; }
-    virtual variable_buffer_array* filler() override;
+    virtual encoded_record_list* filler() override;
 
     virtual void initialize() override
     {
-        async_manager<variable_buffer_array, variable_buffer_array>::initialize();
+        async_manager<encoded_record_list, encoded_record_list>::initialize();
         m_input_ptr = nullptr;
     }
 
 private:
-    void move_src_to_dst(variable_buffer_array* src_array_ptr, variable_buffer_array* dst_array_ptr, size_t count);
-
     size_t                 m_batch_size;
     size_t                 m_element_count;
-    variable_buffer_array* m_input_ptr{nullptr};
+    encoded_record_list*   m_input_ptr{nullptr};
 };

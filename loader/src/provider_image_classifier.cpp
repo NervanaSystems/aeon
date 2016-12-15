@@ -33,10 +33,10 @@ image_classifier::image_classifier(nlohmann::json js)
     m_output_shapes.insert({"label", label_config.get_shape_type()});
 }
 
-void image_classifier::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
+void image_classifier::provide(int idx, encoded_record_list& in_buf, fixed_buffer_map& out_buf)
 {
-    std::vector<char>& datum_in   = in_buf[0].get_item(idx);
-    std::vector<char>& target_in  = in_buf[1].get_item(idx);
+    vector<char>& datum_in  = in_buf.record(idx).element(0);
+    vector<char>& target_in = in_buf.record(idx).element(1);
     char*              datum_out  = out_buf["image"]->get_item(idx);
     char*              target_out = out_buf["label"]->get_item(idx);
 

@@ -18,62 +18,6 @@
 using namespace std;
 using namespace nervana;
 
-
-void buffer_variable_size_elements::shuffle(uint32_t random_seed)
-{
-    std::minstd_rand0 rand_items(random_seed);
-    std::shuffle(m_buffers.begin(), m_buffers.end(), rand_items);
-}
-
-vector<char>& buffer_variable_size_elements::get_item (int index)
-{
-    if (index >= (int)m_buffers.size())
-    {
-        throw invalid_argument("buffer_variable_size: index out-of-range");
-    }
-
-    if (m_buffers[index].second != nullptr)
-    {
-        std::rethrow_exception(m_buffers[index].second);
-    }
-    return m_buffers[index].first;
-}
-
-void buffer_variable_size_elements::add_item(const std::vector<char>& buf)
-{
-    m_buffers.emplace_back(buf, nullptr);
-}
-
-void buffer_variable_size_elements::add_item(std::vector<char>&& buf)
-{
-    m_buffers.emplace_back(move(buf), nullptr);
-}
-
-void buffer_variable_size_elements::add_item(const void* data, size_t size)
-{
-    vector<char> tmp(size);
-    const char* p = (const char*)data;
-    for (size_t i=0; i<size; i++)
-    {
-        tmp[i] = p[i];
-    }
-    m_buffers.emplace_back(tmp, nullptr);
-}
-
-void buffer_variable_size_elements::add_exception(std::exception_ptr e)
-{
-    std::vector<char> empty;
-    m_buffers.emplace_back(empty, e);
-}
-
-void buffer_variable_size_elements::read(istream& is, int size)
-{
-    // read `size` bytes out of `ifs` and push into buffer
-    vector<char> b(size);
-    is.read(b.data(), size);
-    m_buffers.emplace_back(b, nullptr);
-}
-
 buffer_fixed_size_elements::buffer_fixed_size_elements(const shape_type& shp_tp, size_t batch_size, bool pinned)
     : m_pinned{pinned}
     , m_shape_type{shp_tp}

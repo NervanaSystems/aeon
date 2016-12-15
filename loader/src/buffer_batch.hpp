@@ -31,55 +31,174 @@
 namespace nervana
 {
     // class buffer_batch;
-    class buffer_variable_size_elements;
     class buffer_fixed_size_elements;
     class fixed_buffer_map;
+    class encoded_record;
+    class encoded_record_list;
 
-    typedef std::vector<buffer_variable_size_elements> variable_buffer_array;
-    typedef std::pair<std::vector<char>,std::exception_ptr> variable_record_field;
+    typedef std::vector<char> variable_record_field;
     typedef std::vector<nervana::variable_record_field> variable_record_field_list;
-
 }
 
-class nervana::buffer_variable_size_elements
+class nervana::encoded_record
 {
+    friend class encoded_record_list;
 public:
-    buffer_variable_size_elements() {}
-    virtual ~buffer_variable_size_elements() {}
-    void read(std::istream& is, int size);
-    void reset() { m_buffers.clear(); }
-    std::vector<char>& get_item (int index);
-
-    void add_item(const std::vector<char>&);
-    void add_item(std::vector<char>&&);
-    void add_item(const void* data, size_t size);
-    void add_exception(std::exception_ptr);
-
-    void shuffle(uint32_t random_seed);
-
-    size_t size() const { return m_buffers.size(); }
-    size_t get_item_count() { return size(); }
-
-    typedef variable_record_field_list::iterator vrfl_iter;
-
-    vrfl_iter begin() { return m_buffers.begin(); }
-    vrfl_iter end() { return m_buffers.end(); }
-
-    void append(std::move_iterator<vrfl_iter> first,
-                std::move_iterator<vrfl_iter> last)
+    variable_record_field& element(size_t index)
     {
-        m_buffers.insert(m_buffers.end(), first, last);
+        return m_elements[index];
     }
 
-    void erase(vrfl_iter first, vrfl_iter last)
+    const variable_record_field& element(size_t index) const
     {
-        m_buffers.erase(first, last);
+        return m_elements[index];
+    }
+
+    size_t size() const
+    {
+        return m_elements.size();
+    }
+
+    void add_element(const void* data, size_t size)
+    {
+        std::vector<char> tmp(size);
+        const char* p = (const char*)data;
+        for (size_t i=0; i<size; i++)
+        {
+            tmp[i] = p[i];
+        }
+        m_elements.emplace_back(tmp);
+    }
+
+    void add_element(const std::vector<char>& data)
+    {
+        m_elements.emplace_back(data);
+    }
+
+    void add_element(std::vector<char>&& data)
+    {
+        m_elements.emplace_back(std::move(data));
+    }
+
+    void add_exception(std::exception_ptr e)
+    {
+        m_exception = e;
+    }
+
+    variable_record_field_list::iterator begin()
+    {
+        return m_elements.begin();
+    }
+
+    variable_record_field_list::iterator end()
+    {
+        return m_elements.end();
     }
 
 private:
-    variable_record_field_list m_buffers;
+    variable_record_field_list  m_elements;
+    std::exception_ptr          m_exception;
 };
 
+class nervana::encoded_record_list
+{
+public:
+    encoded_record& record(size_t index)
+    {
+        encoded_record& rc = m_records[index];
+        if (rc.m_exception != nullptr)
+        {
+            std::rethrow_exception(rc.m_exception);
+        }
+        return rc;
+    }
+
+    const encoded_record& record(size_t index) const
+    {
+        const encoded_record& rc = m_records[index];
+        if (rc.m_exception != nullptr)
+        {
+            std::rethrow_exception(rc.m_exception);
+        }
+        return rc;
+    }
+
+    void add_record(const encoded_record& buffer)
+    {
+        verify(buffer);
+        m_records.push_back(buffer);
+    }
+
+    void add_record(encoded_record&& buffer)
+    {
+        verify(buffer);
+        m_records.push_back(std::move(buffer));
+    }
+
+    size_t size() const
+    {
+        return m_records.size();
+    }
+
+    size_t elements_per_record() const
+    {
+        return m_elements_per_record;
+    }
+
+    void swap(encoded_record_list& other)
+    {
+        m_records.swap(other.m_records);
+    }
+
+    void move_to(encoded_record_list& target, size_t count)
+    {
+        auto begin = m_records.begin();
+        auto end   = begin+count;
+
+        std::move(begin, end, std::back_inserter(target.m_records));
+        m_records.erase(begin, end);
+    }
+
+    void clear()
+    {
+        m_records.clear();
+    }
+
+    std::vector<encoded_record>::iterator begin()
+    {
+        return m_records.begin();
+    }
+
+    std::vector<encoded_record>::iterator end()
+    {
+        return m_records.end();
+    }
+
+    void shuffle(uint32_t random_seed)
+    {
+        std::minstd_rand0 rand_items(random_seed);
+        std::shuffle(m_records.begin(), m_records.end(), rand_items);
+    }
+
+private:
+    void verify(const encoded_record& buffer)
+    {
+        if (buffer.m_exception != nullptr)
+        {
+        }
+        else if (m_elements_per_record == -1)
+        {
+            m_elements_per_record = buffer.size();
+        }
+        else if (buffer.size() != m_elements_per_record)
+        {
+            throw std::runtime_error("all records must have the same number of elements");
+        }
+    }
+
+    std::vector<encoded_record> m_records;
+    size_t m_elements_per_record = -1;
+};
 
 class nervana::buffer_fixed_size_elements
 {

@@ -17,14 +17,16 @@
 
 #include "buffer_batch.hpp"
 #include "helpers.hpp"
+#include "log.hpp"
 
 using namespace std;
 using namespace nervana;
 
-void read(buffer_variable_size_elements& b, const char* str)
+void read(encoded_record_list& b, const string& str)
 {
-    istringstream is(str);
-    b.read(is, strlen(str));
+    encoded_record record;
+    record.add_element(string2vector(str));
+    b.add_record(record);
 }
 
 TEST(buffer, shuffle)
@@ -33,7 +35,7 @@ TEST(buffer, shuffle)
     // that they are sorted, then shuffle, then assert that they are
     // not sorted
 
-    buffer_variable_size_elements b;
+    encoded_record_list b;
 
     read(b, "abc");
     read(b, "asd");
@@ -51,7 +53,7 @@ TEST(buffer, shuffle)
     ASSERT_EQ(sorted(buffer_to_vector_of_strings(b)), false);
 }
 
-void setup_buffer_exception(buffer_variable_size_elements& b)
+void setup_buffer_exception(encoded_record_list& b)
 {
     // setup b with length 4, one value is an exception
     read(b, "a");
@@ -62,7 +64,9 @@ void setup_buffer_exception(buffer_variable_size_elements& b)
     }
     catch (std::exception& e)
     {
-        b.add_exception(std::current_exception());
+        encoded_record record;
+        record.add_exception(std::current_exception());
+        b.add_record(record);
     }
 
     read(b, "c");
@@ -71,26 +75,26 @@ void setup_buffer_exception(buffer_variable_size_elements& b)
 
 TEST(buffer, write_exception)
 {
-    buffer_variable_size_elements b;
+    encoded_record_list b;
 
     setup_buffer_exception(b);
 }
 
 TEST(buffer, read_exception)
 {
-    buffer_variable_size_elements b;
+    encoded_record_list b;
 
     setup_buffer_exception(b);
 
     // no exceptions if we hit index 0, 2 and 3
-    ASSERT_EQ(b.get_item(0)[0], 'a');
-    ASSERT_EQ(b.get_item(2)[0], 'c');
-    ASSERT_EQ(b.get_item(3)[0], 'd');
+    ASSERT_EQ(b.record(0).element(0)[0], 'a');
+    ASSERT_EQ(b.record(2).element(0)[0], 'c');
+    ASSERT_EQ(b.record(3).element(0)[0], 'd');
 
     // assert that exception is raised
     try
     {
-        b.get_item(1);
+        b.record(1).element(0);
         FAIL();
     }
     catch (std::exception& e)

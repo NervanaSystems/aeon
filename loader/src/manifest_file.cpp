@@ -23,17 +23,26 @@
 #include <sstream>
 #include <iomanip>
 
-#include "manifest_csv.hpp"
+#include "manifest_file.hpp"
 #include "util.hpp"
 #include "file_util.hpp"
 #include "log.hpp"
+#include "block.hpp"
 
 using namespace std;
 using namespace nervana;
 
-manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root,
-                           float subset_fraction)
+const string manifest_file::m_file_type_id        = "FILE";
+const string manifest_file::m_binary_type_id      = "BINARY";
+const string manifest_file::m_string_type_id      = "STRING";
+const string manifest_file::m_ascii_int_type_id   = "ASCII_INT";
+const string manifest_file::m_ascii_float_type_id = "ASCII_FLOAT";
+
+manifest_file::manifest_file(const string& filename, bool shuffle, const string& root, float subset_fraction, size_t block_size)
     : m_source_filename(filename)
+    , m_record_count{0}
+    , m_shuffle{shuffle}
+    , m_rnd{get_global_random_seed()}
 {
     // for now parse the entire manifest on creation
     ifstream infile(m_source_filename);
@@ -43,37 +52,18 @@ manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& r
         throw std::runtime_error("Manifest file " + m_source_filename + " doesn't exist.");
     }
 
-    initialize(infile, shuffle, root, subset_fraction);
+    initialize(infile, block_size, root, subset_fraction);
 }
 
-manifest_csv::manifest_csv(std::istream& stream, bool shuffle, const std::string& root,
-                           float subset_fraction)
+manifest_file::manifest_file(std::istream& stream, bool shuffle, const std::string& root, float subset_fraction, size_t block_size)
+    : m_record_count{0}
+    , m_shuffle{shuffle}
+    , m_rnd{get_global_random_seed()}
 {
-    initialize(stream, shuffle, root, subset_fraction);
+    initialize(stream, block_size, root, subset_fraction);
 }
 
-void manifest_csv::initialize(std::istream& stream, bool shuffle, const std::string& root,
-                              float subset_fraction)
-{
-    parse_stream(stream, root);
-
-    // If we don't need to shuffle, there may be small performance
-    // benefits in some situations to stream the filename_lists instead
-    // of loading them all at once.  That said, in the event that there
-    // is no cache and we are resuming training at a specific epoch, we
-    // may need to be able to jump around and read random blocks of the
-    // file, so a purely stream based interface is not sufficient.
-    if (shuffle)
-    {
-        std::shuffle(m_record_list.begin(), m_record_list.end(), std::mt19937(0));
-    }
-
-    affirm(subset_fraction > 0.0 && subset_fraction <= 1.0,
-           "subset_fraction must be >= 0 and <= 1");
-    generate_subset(subset_fraction);
-}
-
-string manifest_csv::cache_id()
+string manifest_file::cache_id()
 {
     // returns a hash of the m_filename
     std::size_t  h = std::hash<std::string>()(m_source_filename);
@@ -82,23 +72,25 @@ string manifest_csv::cache_id()
     return ss.str();
 }
 
-string manifest_csv::version()
+string manifest_file::version()
 {
     stringstream ss;
     ss << setfill('0') << setw(8) << hex << get_crc();
     return ss.str();
 }
 
-void manifest_csv::parse_stream(istream& is, const string& root)
+void manifest_file::initialize(std::istream& stream, size_t block_size, const std::string& root,
+                               float subset_fraction)
 {
     // parse istream is and load the entire thing into m_record_list
-    size_t previous_element_count = 0;
-    size_t line_number = 0;
-    string line;
+    size_t                 previous_element_count = 0;
+    size_t                 line_number            = 0;
+    string                 line;
+    vector<vector<string>> record_list;
 
     // read in each line, then from that istringstream, break into
     // comma-separated elements.
-    while (std::getline(is, line))
+    while (std::getline(stream, line))
     {
         if (line.empty())
         {
@@ -118,23 +110,23 @@ void manifest_csv::parse_stream(istream& is, const string& root)
             vector<string> element_list = split(line, m_delimiter_char);
             for (const string& type : element_list)
             {
-                if (type == "FILE")
+                if (type == get_file_type_id())
                 {
                     m_element_types.push_back(element_t::FILE);
                 }
-                else if (type == "BINARY")
+                else if (type == get_binary_type_id())
                 {
                     m_element_types.push_back(element_t::BINARY);
                 }
-                else if (type == "STRING")
+                else if (type == get_string_type_id())
                 {
                     m_element_types.push_back(element_t::STRING);
                 }
-                else if (type == "ASCII_INT")
+                else if (type == get_ascii_int_type_id())
                 {
                     m_element_types.push_back(element_t::ASCII_INT);
                 }
-                else if (type == "ASCII_FLOAT")
+                else if (type == get_ascii_float_type_id())
                 {
                     m_element_types.push_back(element_t::ASCII_FLOAT);
                 }
@@ -186,39 +178,69 @@ void manifest_csv::parse_stream(istream& is, const string& root)
                 ss << ", manifest file has a line with differing number of files (";
                 ss << element_list.size() << ") vs (" << previous_element_count << "): ";
 
-                std::copy(element_list.begin(), element_list.end(),
-                          ostream_iterator<std::string>(ss, " "));
+                std::copy(element_list.begin(), element_list.end(), ostream_iterator<std::string>(ss, " "));
                 throw std::runtime_error(ss.str());
             }
             previous_element_count = element_list.size();
-            m_record_list.push_back(element_list);
+            record_list.push_back(element_list);
             line_number++;
         }
     }
+
+    affirm(subset_fraction > 0.0 && subset_fraction <= 1.0, "subset_fraction must be >= 0 and <= 1");
+    generate_subset(record_list, subset_fraction);
+
+    if (m_shuffle)
+    {
+        std::shuffle(record_list.begin(), record_list.end(), std::mt19937(0));
+    }
+
+    m_record_count = record_list.size();
+
+    // now that we have a list of all records, create blocks
+    std::vector<block_info> block_list = generate_block_list(m_record_count, block_size);
+    for (auto info : block_list)
+    {
+        vector<vector<string>> block;
+        for (int i = info.start(); i < info.end(); i++)
+        {
+            block.push_back(record_list[i]);
+        }
+        m_block_list.push_back(block);
+    }
+
+    m_block_load_sequence.reserve(m_block_list.size());
+    m_block_load_sequence.resize(m_block_list.size());
+    iota(m_block_load_sequence.begin(), m_block_load_sequence.end(), 0);
 }
 
-const std::vector<manifest_csv::element_t>& manifest_csv::get_element_types() const
+const std::vector<manifest_file::element_t>& manifest_file::get_element_types() const
 {
     return m_element_types;
 }
 
-vector<string>* manifest_csv::next()
+vector<vector<string>>* manifest_file::next()
 {
-    vector<string>* rc = nullptr;
-    if (m_counter < record_count())
+    vector<vector<string>>* rc = nullptr;
+    if (m_counter < m_block_list.size())
     {
-        rc = &(m_record_list[m_counter]);
+        auto load_index = m_block_load_sequence[m_counter];
+        rc = &(m_block_list[load_index]);
         m_counter++;
     }
     return rc;
 }
 
-void manifest_csv::reset()
+void manifest_file::reset()
 {
+    if (m_shuffle)
+    {
+        shuffle(m_block_load_sequence.begin(), m_block_load_sequence.end(), m_rnd);
+    }
     m_counter = 0;
 }
 
-void manifest_csv::generate_subset(float subset_fraction)
+void manifest_file::generate_subset(vector<vector<string>>& record_list, float subset_fraction)
 {
     if (subset_fraction < 1.0)
     {
@@ -226,16 +248,16 @@ void manifest_csv::generate_subset(float subset_fraction)
         std::bernoulli_distribution distribution(subset_fraction);
         std::default_random_engine  generator(get_global_random_seed());
         vector<record>              tmp;
-        tmp.swap(m_record_list);
+        tmp.swap(record_list);
         size_t expected_count = tmp.size() * subset_fraction;
-        size_t needed = expected_count;
+        size_t needed         = expected_count;
 
         for (int i = 0; i < tmp.size(); i++)
         {
             size_t remainder = tmp.size() - i;
             if ((needed == remainder) || distribution(generator))
             {
-                m_record_list.push_back(tmp[i]);
+                record_list.push_back(tmp[i]);
                 needed--;
                 if (needed == 0)
                     break;
@@ -244,19 +266,38 @@ void manifest_csv::generate_subset(float subset_fraction)
     }
 }
 
-uint32_t manifest_csv::get_crc()
+uint32_t manifest_file::get_crc()
 {
     if (m_crc_computed == false)
     {
-        for (const vector<string>& tmp : m_record_list)
+        for (auto block : m_block_list)
         {
-            for (const string& s : tmp)
+            for (auto rec : block)
             {
-                m_crc_engine.Update((const uint8_t*)s.data(), s.size());
+                for (const string& s : rec)
+                {
+                    m_crc_engine.Update((const uint8_t*)s.data(), s.size());
+                }
             }
         }
         m_crc_engine.TruncatedFinal((uint8_t*)&m_computed_crc, sizeof(m_computed_crc));
         m_crc_computed = true;
     }
     return m_computed_crc;
+}
+
+const std::vector<std::string>& manifest_file::operator[](size_t offset) const
+{
+    for (const vector<record>& block : m_block_list)
+    {
+        if (offset < block.size())
+        {
+            return block[offset];
+        }
+        else
+        {
+            offset -= block.size();
+        }
+    }
+    throw out_of_range("record not found in manifest");
 }

@@ -94,7 +94,7 @@ private:
     void validate();
 };
 
-class nervana::loader_async : public async_manager<variable_buffer_array, fixed_buffer_map>
+class nervana::loader_async : public async_manager<encoded_record_list, fixed_buffer_map>
 {
 public:
     loader_async(batch_iterator_async* b_itor, size_t batch_size, bool single_thread, bool pinned,
@@ -107,7 +107,7 @@ public:
     virtual fixed_buffer_map* filler() override;
 
 private:
-    void work(int id, variable_buffer_array* in_buf, fixed_buffer_map* out_buf);
+    void work(int id, encoded_record_list* in_buf, fixed_buffer_map* out_buf);
 
     std::vector<std::shared_ptr<provider_interface>> m_providers;
     size_t                                           m_batch_size;
@@ -197,7 +197,7 @@ private:
 
     iterator                                 m_current_iter;
     iterator                                 m_end_iter;
-    std::shared_ptr<manifest_csv>            m_manifest;
+    std::shared_ptr<manifest_file>            m_manifest;
     std::shared_ptr<block_loader_file_async> m_block_loader;
     std::shared_ptr<block_manager_async>     m_block_manager;
     std::shared_ptr<batch_iterator_async>    m_batch_iterator;

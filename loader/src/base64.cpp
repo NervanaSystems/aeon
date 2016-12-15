@@ -20,8 +20,8 @@
 
 using namespace std;
 
-const char* nervana::base64::character_codes = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-const char  nervana::base64::decode_codes[] = {
+const uint8_t  nervana::base64::character_codes[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+const uint8_t  nervana::base64::decode_codes[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x00, 0x3f, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c,
@@ -40,7 +40,7 @@ vector<char> nervana::base64::encode(const char* data, size_t size)
 
     for (int i = 0; i < size; i += 3)
     {
-        const char* p = &data[i];
+        const uint8_t* p = (uint8_t*)&data[i];
         rc.push_back(character_codes[0x3F & (p[0] >> 2)]);
         rc.push_back(character_codes[0x3F & (p[0] << 4 | p[1] >> 4)]);
         if (i + 1 == size)
@@ -92,7 +92,7 @@ vector<char> nervana::base64::decode(const char* data, size_t size)
 
 string nervana::base64::gen_decode_table()
 {
-    string       codes = character_codes;
+    string       codes = (const char*)character_codes;
     stringstream ss;
     for (int i = 0; i < 128; ++i)
     {

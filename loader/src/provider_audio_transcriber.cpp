@@ -39,10 +39,10 @@ audio_transcriber::audio_transcriber(nlohmann::json js)
     m_output_shapes.insert({"valid_pct", valid_pct});
 }
 
-void audio_transcriber::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
+void audio_transcriber::provide(int idx, encoded_record_list& in_buf, fixed_buffer_map& out_buf)
 {
-    vector<char>& datum_in  = in_buf[0].get_item(idx);
-    vector<char>& target_in = in_buf[1].get_item(idx);
+    vector<char>& datum_in  = in_buf.record(idx).element(0);
+    vector<char>& target_in = in_buf.record(idx).element(1);
 
     char* datum_out  = out_buf["audio"]->get_item(idx);
     char* target_out = out_buf["transcription"]->get_item(idx);

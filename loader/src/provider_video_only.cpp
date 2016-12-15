@@ -29,9 +29,9 @@ video_only::video_only(nlohmann::json js)
     m_output_shapes.insert({"video", video_config.get_shape_type()});
 }
 
-void video_only::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
+void video_only::provide(int idx, encoded_record_list& in_buf, fixed_buffer_map& out_buf)
 {
-    std::vector<char>& datum_in  = in_buf[0].get_item(idx);
+    vector<char>& datum_in  = in_buf.record(idx).element(0);
     char*              datum_out = out_buf["video"]->get_item(idx);
 
     if (datum_in.size() == 0)

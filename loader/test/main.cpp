@@ -22,11 +22,100 @@
 #include "file_util.hpp"
 #include "web_server.hpp"
 #include "web_app.hpp"
+#include "log.hpp"
+#include "json.hpp"
+#include "cpio.hpp"
 
 using namespace std;
+using namespace nervana;
 
 gen_image image_dataset;
 string test_cache_directory;
+
+
+// NDSMockServer starts a python process in the constructor and kills the
+// process in the destructor
+class mock_nds_server
+{
+public:
+    mock_nds_server()
+    {
+        page_request_handler fn = bind(&mock_nds_server::page_handler, this, placeholders::_1, placeholders::_2);
+        m_server.register_page_handler(fn);
+        m_server.start(5000);
+    }
+
+    ~mock_nds_server()
+    {
+    }
+
+    void set_elements_per_record(initializer_list<int> init)
+    {
+        m_elements_size_list = init;
+    }
+
+    void page_handler(web::page& page, const std::string& url)
+    {
+        if (url == "/object_count/")
+        {
+            nlohmann::json js = {
+                {"record_count", 200},
+                {"macro_batch_per_shard", 5}
+            };
+            string rc = js.dump();
+            page.send_string(rc);
+        }
+        else if (url == "/macrobatch/")
+        {
+            map<string,string> args = page.args();
+            int block_size = stod(args["macro_batch_max_size"]);
+            int block_index = stod(args["macro_batch_index"]);
+            int collection_id = stod(args["collection_id"]);
+            string token = args["token"];
+            (void)block_index; (void)collection_id; (void)token; // silence warning
+            stringstream ss;
+            {
+                cpio::writer writer(ss);
+                encoded_record_list record_list;
+                for (int record_number=0; record_number<block_size; record_number++)
+                {
+                    encoded_record record;
+                    for (int element_number=0; element_number<m_elements_size_list.size(); element_number++)
+                    {
+                        vector<char> data(m_elements_size_list[element_number]);
+                        stringstream ss;
+                        ss << record_number << ":" << element_number;
+                        string id = ss.str();
+                        id.copy(data.data(), id.size());
+                        data[id.size()] = 0;
+                        record.add_element(data);
+                    }
+                    record_list.add_record(record);
+                }
+                writer.write_all_records(record_list);
+            }
+
+            string cpio_data = ss.str();
+            page.send_as_file(cpio_data.data(), cpio_data.size());
+        }
+        else if (url == "/test_pattern/")
+        {
+            for (int i=0; i<1024; i++)
+            {
+                page.send_string("0123456789abcdef");
+            }
+        }
+        else if (url == "/error")
+        {
+            page.page_not_found();
+        }
+    }
+
+private:
+    web::server m_server;
+    vector<int> m_elements_size_list = {1024, 32};
+};
+
 
 static void CreateImageDataset()
 {
@@ -82,6 +171,7 @@ extern "C" int main( int argc, char** argv )
 
 //    web_server();
 //    return 0;
+    mock_nds_server server;
 
     CreateImageDataset();
     test_cache_directory = nervana::file_util::make_temp_directory();

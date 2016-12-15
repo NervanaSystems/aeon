@@ -13,27 +13,31 @@
  limitations under the License.
 */
 
+#pragma once
+
 #include <vector>
-#include <string>
 #include <cstdlib>
 
 namespace nervana
 {
-    class base64;
+    class block_info
+    {
+    public:
+        block_info(size_t start, size_t count)
+            : m_start{start}
+            , m_count{count}
+        {
+        }
+        size_t start() const { return m_start; }
+        size_t count() const { return m_count; }
+        size_t end() const { return m_start + m_count; }
+
+    private:
+        size_t      m_start;
+        size_t      m_count;
+    };
+
+
+    std::vector<block_info> generate_block_list(size_t record_count, size_t block_size);
 }
 
-class nervana::base64
-{
-public:
-    static std::vector<char> encode(const std::vector<char>& data);
-    static std::vector<char> encode(const char* data, size_t size);
-
-    static std::vector<char> decode(const std::vector<char>& data);
-    static std::vector<char> decode(const char* data, size_t size);
-
-    static std::string gen_decode_table();
-
-private:
-    static const uint8_t character_codes[];
-    static const uint8_t  decode_codes[];
-};

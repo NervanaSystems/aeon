@@ -18,10 +18,11 @@
 #include "gtest/gtest.h"
 #include "file_util.hpp"
 #include "log.hpp"
-#include "csv_manifest_maker.hpp"
-#include "manifest_csv.hpp"
+#include "manifest_builder.hpp"
+#include "manifest_file.hpp"
 #include "block_loader_file_async.hpp"
 #include "block_loader_source_async.hpp"
+#include "block.hpp"
 
 #define private public
 
@@ -29,6 +30,30 @@
 
 using namespace std;
 using namespace nervana;
+
+TEST(block_manager, block_list)
+{
+    {
+        vector<block_info> seq = generate_block_list(1003, 335);
+        ASSERT_EQ(3, seq.size());
+
+        EXPECT_EQ(0, seq[0].start());
+        EXPECT_EQ(335, seq[0].count());
+
+        EXPECT_EQ(335, seq[1].start());
+        EXPECT_EQ(335, seq[1].count());
+
+        EXPECT_EQ(670, seq[2].start());
+        EXPECT_EQ(333, seq[2].count());
+    }
+    {
+        vector<block_info> seq = generate_block_list(20, 5000);
+        ASSERT_EQ(1, seq.size());
+
+        EXPECT_EQ(0, seq[0].start());
+        EXPECT_EQ(20, seq[0].count());
+    }
+}
 
 TEST(block_manager, cache_complete)
 {
@@ -63,15 +88,15 @@ TEST(block_manager, cache_busy)
 {
     string cache_root = file_util::make_temp_directory();
 
-    manifest_maker mm;
+    manifest_builder mb;
 
     size_t record_count    = 10;
     size_t block_size      = 4;
     size_t object_size     = 16;
     size_t target_size     = 16;
 
-    auto manifest_file = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_csv manifest(manifest_file, false);
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, false);
 
     block_loader_file_async file_reader(&manifest, block_size);
     string cache_name = block_manager_async::create_cache_name(file_reader.get_uid());
@@ -92,7 +117,7 @@ TEST(block_manager, build_cache)
 {
     string cache_root = file_util::make_temp_directory();
 
-    manifest_maker mm;
+    manifest_builder mb;
 
     size_t record_count    = 12;
     size_t block_size      = 4;
@@ -103,8 +128,8 @@ TEST(block_manager, build_cache)
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
-    auto manifest_file = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_csv manifest(manifest_file, false);
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
 
     block_loader_file_async file_reader(&manifest, block_size);
     string cache_name = block_manager_async::create_cache_name(file_reader.get_uid());
@@ -112,23 +137,25 @@ TEST(block_manager, build_cache)
 
     block_manager_async manager(&file_reader, block_size, cache_root, false);
 
-    size_t record_index = 0;
+    size_t record_number = 0;
     for (size_t i=0; i<block_count*2; i++)
     {
-        variable_buffer_array* buffer = manager.next();
+        encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
-        ASSERT_EQ(2, buffer->size());
+        ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t i=0; i<block_size; i++)
         {
-            auto data0 = (uint32_t*)buffer->at(0).get_item(record).data();
-            auto data1 = (uint32_t*)buffer->at(1).get_item(record).data();
-            for (size_t offset = 0; offset < object_size / sizeof(uint32_t); offset++)
+            const encoded_record& record = buffer->record(i);
+            for (size_t element_number=0; element_number<record.size(); element_number++)
             {
-                EXPECT_EQ(data0[offset] + 1, data1[offset]);
-                EXPECT_EQ(data0[offset], record_index * 2);
+                stringstream ss;
+                ss << record_number << ":" << element_number;
+                string expected = ss.str();
+                string element = vector2string(record.element(element_number));
+                ASSERT_STREQ(expected.c_str(), element.c_str());
             }
-            record_index = (record_index + 1) % record_count;
+            record_number = (record_number + 1) % record_count;
         }
     }
 
@@ -153,7 +180,7 @@ TEST(block_manager, reuse_cache)
 {
     string cache_root = file_util::make_temp_directory();
 
-    manifest_maker mm;
+    manifest_builder mb;
 
     size_t record_count    = 12;
     size_t block_size      = 4;
@@ -164,8 +191,8 @@ TEST(block_manager, reuse_cache)
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
-    auto manifest_file = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_csv manifest(manifest_file, false);
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
 
     // first build the cache
     {
@@ -173,23 +200,25 @@ TEST(block_manager, reuse_cache)
 
         block_manager_async manager(&file_reader, block_size, cache_root, false);
 
-        size_t record_index = 0;
+        size_t record_number = 0;
         for (size_t i=0; i<block_count; i++)
         {
-            variable_buffer_array* buffer = manager.next();
+            encoded_record_list* buffer = manager.next();
             ASSERT_NE(nullptr, buffer);
-            ASSERT_EQ(2, buffer->size());
+            ASSERT_EQ(4, buffer->size());
 
-            for (size_t record=0; record<block_size; record++)
+            for (size_t i=0; i<block_size; i++)
             {
-                auto data0 = (uint32_t*)buffer->at(0).get_item(record).data();
-                auto data1 = (uint32_t*)buffer->at(1).get_item(record).data();
-                for (size_t offset = 0; offset < object_size / sizeof(uint32_t); offset++)
+                const encoded_record& record = buffer->record(i);
+                for (size_t element_number=0; element_number<record.size(); element_number++)
                 {
-                    EXPECT_EQ(data0[offset] + 1, data1[offset]);
-                    EXPECT_EQ(data0[offset], record_index * 2);
+                    stringstream ss;
+                    ss << record_number << ":" << element_number;
+                    string expected = ss.str();
+                    string element = vector2string(record.element(element_number));
+                    ASSERT_STREQ(expected.c_str(), element.c_str());
                 }
-                record_index = (record_index + 1) % record_count;
+                record_number = (record_number + 1) % record_count;
             }
         }
         ASSERT_EQ(0, manager.m_cache_hit);
@@ -202,23 +231,25 @@ TEST(block_manager, reuse_cache)
 
         block_manager_async manager(&file_reader, block_size, cache_root, false);
 
-        size_t record_index = 0;
+        size_t record_number = 0;
         for (size_t i=0; i<block_count; i++)
         {
-            variable_buffer_array* buffer = manager.next();
+            encoded_record_list* buffer = manager.next();
             ASSERT_NE(nullptr, buffer);
-            ASSERT_EQ(2, buffer->size());
+            ASSERT_EQ(4, buffer->size());
 
-            for (size_t record=0; record<block_size; record++)
+            for (size_t i=0; i<block_size; i++)
             {
-                auto data0 = (uint32_t*)buffer->at(0).get_item(record).data();
-                auto data1 = (uint32_t*)buffer->at(1).get_item(record).data();
-                for (size_t offset = 0; offset < object_size / sizeof(uint32_t); offset++)
+                const encoded_record& record = buffer->record(i);
+                for (size_t element_number=0; element_number<record.size(); element_number++)
                 {
-                    EXPECT_EQ(data0[offset] + 1, data1[offset]);
-                    EXPECT_EQ(data0[offset], record_index * 2);
+                    stringstream ss;
+                    ss << record_number << ":" << element_number;
+                    string expected = ss.str();
+                    string element = vector2string(record.element(element_number));
+                    ASSERT_STREQ(expected.c_str(), element.c_str());
                 }
-                record_index = (record_index + 1) % record_count;
+                record_number = (record_number + 1) % record_count;
             }
         }
         EXPECT_EQ(block_count, manager.m_cache_hit);
@@ -226,4 +257,252 @@ TEST(block_manager, reuse_cache)
     }
 
     file_util::remove_directory(cache_root);
+}
+
+TEST(block_manager, no_shuffle_cache)
+{
+    manifest_builder mb;
+
+    string cache_root = file_util::make_temp_directory();
+    size_t record_count    = 12;
+    size_t block_size      = 4;
+    size_t object_size     = 16;
+    size_t target_size     = 16;
+    size_t block_count     = record_count / block_size;
+    bool enable_shuffle = false;
+    ASSERT_EQ(0, record_count % block_size);
+    ASSERT_EQ(0, object_size % sizeof(uint32_t));
+    ASSERT_EQ(0, target_size % sizeof(uint32_t));
+
+    vector<size_t> sorted_record_list(record_count);
+    iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
+
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    block_loader_file_async file_reader(&manifest, block_size);
+    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+
+    vector<size_t> first_pass;
+    vector<size_t> second_pass;
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            first_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+
+    // second read should be shuffled
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            second_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_TRUE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_TRUE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+
+    file_util::remove_directory(cache_root);
+}
+
+TEST(block_manager, no_shuffle_no_cache)
+{
+    manifest_builder mb;
+
+    string cache_root = "";
+    size_t record_count    = 12;
+    size_t block_size      = 4;
+    size_t object_size     = 16;
+    size_t target_size     = 16;
+    size_t block_count     = record_count / block_size;
+    bool enable_shuffle = false;
+    ASSERT_EQ(0, record_count % block_size);
+    ASSERT_EQ(0, object_size % sizeof(uint32_t));
+    ASSERT_EQ(0, target_size % sizeof(uint32_t));
+
+    vector<size_t> sorted_record_list(record_count);
+    iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
+
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    block_loader_file_async file_reader(&manifest, block_size);
+    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+
+    vector<size_t> first_pass;
+    vector<size_t> second_pass;
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            first_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+
+    // second read should be shuffled
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            second_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_TRUE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_TRUE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+}
+
+TEST(block_manager, shuffle_cache)
+{
+    manifest_builder mb;
+
+    string cache_root = file_util::make_temp_directory();
+    size_t record_count    = 12;
+    size_t block_size      = 4;
+    size_t object_size     = 16;
+    size_t target_size     = 16;
+    size_t block_count     = record_count / block_size;
+    bool enable_shuffle = true;
+    ASSERT_EQ(0, record_count % block_size);
+    ASSERT_EQ(0, object_size % sizeof(uint32_t));
+    ASSERT_EQ(0, target_size % sizeof(uint32_t));
+
+    vector<size_t> sorted_record_list(record_count);
+    iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
+
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    block_loader_file_async file_reader(&manifest, block_size);
+    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+
+    vector<size_t> first_pass;
+    vector<size_t> second_pass;
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            first_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+    EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+
+    // second read should be shuffled
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            second_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+
+    file_util::remove_directory(cache_root);
+}
+
+TEST(block_manager, shuffle_no_cache)
+{
+    manifest_builder mb;
+
+    string cache_root = "";
+    size_t record_count    = 12;
+    size_t block_size      = 4;
+    size_t object_size     = 16;
+    size_t target_size     = 16;
+    size_t block_count     = record_count / block_size;
+    bool enable_shuffle = true;
+    ASSERT_EQ(0, record_count % block_size);
+    ASSERT_EQ(0, object_size % sizeof(uint32_t));
+    ASSERT_EQ(0, target_size % sizeof(uint32_t));
+
+    vector<size_t> sorted_record_list(record_count);
+    iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
+
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    block_loader_file_async file_reader(&manifest, block_size);
+    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+
+    vector<size_t> first_pass;
+    vector<size_t> second_pass;
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            first_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+    EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+
+    // second read should be shuffled
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            second_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
 }

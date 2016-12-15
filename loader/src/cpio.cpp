@@ -17,6 +17,7 @@
 
 #include "cpio.hpp"
 #include "util.hpp"
+#include "log.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -208,12 +209,16 @@ void cpio::reader::read_header()
     m_header.read(m_is);
 }
 
-void cpio::reader::read(nervana::buffer_variable_size_elements& dest)
+void cpio::reader::read(nervana::encoded_record_list& dest, size_t element_count)
 {
-    uint32_t element_size;
-    m_record_header.read(m_is, &element_size);
-    dest.read(m_is, element_size);
-    readPadding(m_is, element_size);
+    encoded_record record;
+    for (size_t i=0; i<element_count; i++)
+    {
+        vector<char> buffer;
+        read(buffer);
+        record.add_element(buffer);
+    }
+    dest.add_record(record);
 }
 
 string cpio::reader::read(vector<char>& dest)
@@ -264,28 +269,22 @@ cpio::writer::~writer()
     }
 }
 
-void cpio::writer::write_all_records(nervana::variable_buffer_array& buff)
+void cpio::writer::write_all_records(nervana::encoded_record_list& buff)
 {
-    int record_count = buff[0].get_item_count();
+    size_t record_count = buff.size();
+    size_t element_index = 0;
     if (m_header.m_elements_per_record == 0)
     {
         m_header.m_elements_per_record = record_count;
     }
-    for (int i = 0; i < record_count; ++i)
-    {
-        write_record(buff, i);
-    }
-}
-
-void cpio::writer::write_record(nervana::variable_buffer_array& buff, int record_idx)
-{
-    uint32_t element_index = 0;
     for (auto b : buff)
     {
-        const vector<char>& record_element = b.get_item(record_idx);
-        write_record_element(record_element.data(), record_element.size(), element_index++);
+        for (auto element : b)
+        {
+            write_record_element(element.data(), element.size(), element_index++);
+        }
+        increment_record_count();
     }
-    increment_record_count();
 }
 
 void cpio::writer::write_record_element(const char* element, uint32_t element_size, uint32_t element_index)

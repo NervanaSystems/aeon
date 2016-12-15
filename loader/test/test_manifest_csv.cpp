@@ -27,15 +27,16 @@
 #include <chrono>
 
 #include "gtest/gtest.h"
-#include "manifest_csv.hpp"
-#include "csv_manifest_maker.hpp"
+#include "manifest_file.hpp"
+#include "manifest_builder.hpp"
 #include "util.hpp"
 #include "file_util.hpp"
-#include "manifest_csv.hpp"
+#include "manifest_file.hpp"
 #include "crc.hpp"
 #include "file_util.hpp"
 #include "block_loader_file_async.hpp"
 #include "base64.hpp"
+#include "gen_image.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -44,66 +45,52 @@ static string test_data_directory = file_util::path_join(string(CURDIR), "test_d
 
 TEST(manifest, constructor)
 {
-    manifest_maker        mm;
-    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_csv manifest0(tmpname, false);
+    manifest_builder        mm;
+    auto& ms = mm.sizes({0, 0}).record_count(0).create();
+    nervana::manifest_file manifest0(ms, false);
 }
 
 TEST(manifest, no_file)
 {
-    ASSERT_THROW(nervana::manifest_csv manifest0("/tmp/jsdkfjsjkfdjaskdfj_doesnt_exist", false), std::runtime_error);
-}
-
-TEST(manifest, id_eq)
-{
-    manifest_maker        mm;
-    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_csv manifest1(tmpname, false);
-    nervana::manifest_csv manifest2(tmpname, false);
-    ASSERT_EQ(manifest1.cache_id(), manifest2.cache_id());
-}
-
-TEST(manifest, id_ne)
-{
-    manifest_maker        mm;
-    nervana::manifest_csv manifest1(mm.tmp_manifest_file(0, {0, 0}), false);
-    nervana::manifest_csv manifest2(mm.tmp_manifest_file(0, {0, 0}), false);
-    ASSERT_NE(manifest1.cache_id(), manifest2.cache_id());
+    ASSERT_THROW(nervana::manifest_file manifest0("/tmp/jsdkfjsjkfdjaskdfj_doesnt_exist", false), std::runtime_error);
 }
 
 TEST(manifest, version_eq)
 {
-    manifest_maker        mm;
-    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_csv manifest1(tmpname, false);
-    nervana::manifest_csv manifest2(tmpname, false);
+    manifest_builder        mm;
+    auto& ms = mm.sizes({0, 0}).record_count(0).create();
+    nervana::manifest_file manifest1(ms, false);
+    nervana::manifest_file manifest2(ms, false);
     ASSERT_EQ(manifest1.version(), manifest2.version());
 }
 
 TEST(manifest, parse_file_doesnt_exist)
 {
-    manifest_maker        mm;
-    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_csv manifest0(tmpname, false);
+    manifest_builder        mm;
+    auto& ms = mm.sizes({0, 0}).record_count(0).create();
+    nervana::manifest_file manifest0(ms, false);
 
     ASSERT_EQ(manifest0.record_count(), 0);
 }
 
 TEST(manifest, parse_file)
 {
-    manifest_maker mm;
-    string         tmpname = mm.tmp_manifest_file(2, {0, 0});
+    manifest_builder mm;
+    auto& ms = mm.sizes({0, 0}).record_count(2).create();
 
-    nervana::manifest_csv manifest0(tmpname, false);
+    nervana::manifest_file manifest0(ms, false);
     ASSERT_EQ(manifest0.record_count(), 2);
 }
 
 TEST(manifest, no_shuffle)
 {
-    manifest_maker        mm;
-    string                filename = mm.tmp_manifest_file(20, {4, 4});
-    nervana::manifest_csv manifest1(filename, false);
-    nervana::manifest_csv manifest2(filename, false);
+    manifest_builder        mm1;
+    auto& ms1 = mm1.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest1(ms1, false);
+
+    manifest_builder        mm2;
+    auto& ms2 = mm2.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest2(ms2, false);
 
     ASSERT_EQ(manifest1.record_count(), manifest2.record_count());
     ASSERT_EQ(2, manifest1.element_count());
@@ -116,10 +103,13 @@ TEST(manifest, no_shuffle)
 
 TEST(manifest, shuffle)
 {
-    manifest_maker        mm;
-    string                filename = mm.tmp_manifest_file(20, {4, 4});
-    nervana::manifest_csv manifest1(filename, false);
-    nervana::manifest_csv manifest2(filename, true);
+    manifest_builder        mm1;
+    auto& ms1 = mm1.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest1(ms1, false);
+
+    manifest_builder        mm2;
+    auto& ms2 = mm2.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest2(ms2, true);
 
     bool different = false;
 
@@ -137,24 +127,17 @@ TEST(manifest, shuffle)
 TEST(manifest, non_paired_manifests)
 {
     {
-        manifest_maker        mm;
-        string                filename = mm.tmp_manifest_file(20, {4, 4, 4});
-        nervana::manifest_csv manifest1(filename, false);
+        manifest_builder        mm;
+        auto& ms = mm.sizes({4, 4, 4}).record_count(20).create();
+        nervana::manifest_file manifest1(ms, false);
         ASSERT_EQ(manifest1.record_count(), 20);
     }
     {
-        manifest_maker        mm;
-        string                filename = mm.tmp_manifest_file(20, {4});
-        nervana::manifest_csv manifest1(filename, false);
+        manifest_builder        mm;
+        auto& ms = mm.sizes({4}).record_count(20).create();
+        nervana::manifest_file manifest1(ms, false);
         ASSERT_EQ(manifest1.record_count(), 20);
     }
-}
-
-TEST(manifest, uneven_records)
-{
-    manifest_maker mm;
-    string         filename = mm.tmp_manifest_file_with_ragged_fields();
-    EXPECT_THROW(nervana::manifest_csv manifest1(filename, false), runtime_error);
 }
 
 TEST(manifest, root_path)
@@ -164,14 +147,15 @@ TEST(manifest, root_path)
         ofstream f(manifest_file);
         for (int i = 0; i < 10; i++)
         {
-            f << "/t1/image" << i << ".png" << manifest_csv::get_delimiter();
+            f << "/t1/image" << i << ".png" << manifest_file::get_delimiter();
             f << "/t1/target" << i << ".txt\n";
         }
         f.close();
-        nervana::manifest_csv manifest(manifest_file, false);
-        int                   i = 0;
-        for (const vector<string>& x : manifest)
+        nervana::manifest_file manifest(manifest_file, false);
+        for (int i=0; i<manifest.record_count(); i++)
         {
+            const vector<string>& x = manifest[i];
+
             ASSERT_EQ(2, x.size());
             stringstream ss;
             ss << "/t1/image" << i << ".png";
@@ -179,21 +163,21 @@ TEST(manifest, root_path)
             ss.str("");
             ss << "/t1/target" << i << ".txt";
             EXPECT_STREQ(x[1].c_str(), ss.str().c_str());
-            i++;
         }
     }
     {
         ofstream f(manifest_file);
         for (int i = 0; i < 10; i++)
         {
-            f << "/t1/image" << i << ".png" << manifest_csv::get_delimiter();
+            f << "/t1/image" << i << ".png" << manifest_file::get_delimiter();
             f << "/t1/target" << i << ".txt\n";
         }
         f.close();
-        nervana::manifest_csv manifest(manifest_file, false, "/x1");
-        int                   i = 0;
-        for (const vector<string>& x : manifest)
+        nervana::manifest_file manifest(manifest_file, false, "/x1");
+        for (int i=0; i<manifest.record_count(); i++)
         {
+            const vector<string>& x = manifest[i];
+
             ASSERT_EQ(2, x.size());
             stringstream ss;
             ss << "/t1/image" << i << ".png";
@@ -201,21 +185,21 @@ TEST(manifest, root_path)
             ss.str("");
             ss << "/t1/target" << i << ".txt";
             EXPECT_STREQ(x[1].c_str(), ss.str().c_str());
-            i++;
         }
     }
     {
         ofstream f(manifest_file);
         for (int i = 0; i < 10; i++)
         {
-            f << "t1/image" << i << ".png" << manifest_csv::get_delimiter();
+            f << "t1/image" << i << ".png" << manifest_file::get_delimiter();
             f << "t1/target" << i << ".txt\n";
         }
         f.close();
-        nervana::manifest_csv manifest(manifest_file, false, "/x1");
-        int                   i = 0;
-        for (const vector<string>& x : manifest)
+        nervana::manifest_file manifest(manifest_file, false, "/x1");
+        for (int i=0; i<manifest.record_count(); i++)
         {
+            const vector<string>& x = manifest[i];
+
             ASSERT_EQ(2, x.size());
             stringstream ss;
             ss << "/x1/t1/image" << i << ".png";
@@ -223,7 +207,6 @@ TEST(manifest, root_path)
             ss.str("");
             ss << "/x1/t1/target" << i << ".txt";
             EXPECT_STREQ(x[1].c_str(), ss.str().c_str());
-            i++;
         }
     }
     remove(manifest_file.c_str());
@@ -260,24 +243,21 @@ TEST(manifest, file_implicit)
         }
     }
 
-    manifest_csv manifest{ss, false, test_data_directory};
     size_t block_size = 16;
+    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
 
     block_loader_file_async bload{&manifest, block_size};
 
     for (int i=0; i<2; i++)
     {
-        variable_buffer_array* buffer = bload.filler();
+        encoded_record_list* buffer = bload.filler();
         ASSERT_NE(nullptr, buffer);
-        ASSERT_EQ(2, buffer->size());
-        buffer_variable_size_elements image_data = buffer->at(0);
-        buffer_variable_size_elements target_data = buffer->at(1);
-//        ASSERT_EQ(batch_size, image_data.get_item_count());
-//        ASSERT_EQ(batch_size, target_data.get_item_count());
-        for (int j=0; j<image_data.get_item_count(); j++)
+        ASSERT_EQ(block_size, buffer->size());
+        for (int j=0; j<buffer->size(); j++)
         {
-            auto idata = image_data.get_item(j);
-            auto tdata = target_data.get_item(j);
+            encoded_record record = buffer->record(j);
+            auto idata = record.element(0);
+            auto tdata = record.element(1);
             string target{tdata.data(), tdata.size()};
 //            INFO << target;
 //            int value = stod(target);
@@ -302,8 +282,8 @@ TEST(manifest, file_explicit)
         }
     }
 
-    manifest_csv manifest{ss, false, test_data_directory};
     size_t block_size = 16;
+    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
 
     auto types = manifest.get_element_types();
     ASSERT_EQ(2, types.size());
@@ -313,17 +293,14 @@ TEST(manifest, file_explicit)
     block_loader_file_async bload{&manifest, block_size};
     for (int i=0; i<2; i++)
     {
-        variable_buffer_array* buffer = bload.filler();
+        encoded_record_list* buffer = bload.filler();
         ASSERT_NE(nullptr, buffer);
-        ASSERT_EQ(2, buffer->size());
-        buffer_variable_size_elements image_data = buffer->at(0);
-        buffer_variable_size_elements target_data = buffer->at(1);
-//        ASSERT_EQ(batch_size, image_data.get_item_count());
-//        ASSERT_EQ(batch_size, target_data.get_item_count());
-        for (int j=0; j<image_data.get_item_count(); j++)
+        ASSERT_EQ(block_size, buffer->size());
+        for (int j=0; j<buffer->size(); j++)
         {
-            auto idata = image_data.get_item(j);
-            auto tdata = target_data.get_item(j);
+            encoded_record record = buffer->record(j);
+            auto idata = record.element(0);
+            auto tdata = record.element(1);
             string target{tdata.data(), tdata.size()};
             int value = stod(target);
             EXPECT_EQ(j%2+1, value);
@@ -354,8 +331,8 @@ TEST(manifest, binary)
         }
     }
 
-    manifest_csv manifest{ss, false, test_data_directory};
     size_t block_size = 16;
+    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
 
 //    for (auto data : manifest)
 //    {
@@ -371,17 +348,14 @@ TEST(manifest, binary)
     index = 0;
     for (int i=0; i<2; i++)
     {
-        variable_buffer_array* buffer = block_loader.filler();
+        encoded_record_list* buffer = block_loader.filler();
         ASSERT_NE(nullptr, buffer);
-        ASSERT_EQ(2, buffer->size());
-        buffer_variable_size_elements image_data = buffer->at(0);
-        buffer_variable_size_elements target_data = buffer->at(1);
-//        ASSERT_EQ(batch_size, image_data.get_item_count());
-//        ASSERT_EQ(batch_size, target_data.get_item_count());
-        for (int j=0; j<image_data.get_item_count(); j++)
+        ASSERT_EQ(block_size, buffer->size());
+        for (int j=0; j<buffer->size(); j++)
         {
-            auto idata = image_data.get_item(j);
-            auto tdata = target_data.get_item(j);
+            encoded_record record = buffer->record(j);
+            auto idata = record.element(0);
+            auto tdata = record.element(1);
             string str = vector2string(tdata);
             string expected = make_target_data(index);
             index = (index+1) % manifest.record_count();
@@ -405,8 +379,8 @@ TEST(manifest, string)
         }
     }
 
-    manifest_csv manifest{ss, false, test_data_directory};
     size_t block_size = 16;
+    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
 
 //    for (auto data : manifest)
 //    {
@@ -422,17 +396,14 @@ TEST(manifest, string)
     index = 0;
     for (int i=0; i<2; i++)
     {
-        variable_buffer_array* buffer = block_loader.filler();
+        encoded_record_list* buffer = block_loader.filler();
         ASSERT_NE(nullptr, buffer);
-        ASSERT_EQ(2, buffer->size());
-        buffer_variable_size_elements image_data = buffer->at(0);
-        buffer_variable_size_elements target_data = buffer->at(1);
-//        ASSERT_EQ(batch_size, image_data.get_item_count());
-//        ASSERT_EQ(batch_size, target_data.get_item_count());
-        for (int j=0; j<image_data.get_item_count(); j++)
+        ASSERT_EQ(block_size, buffer->size());
+        for (int j=0; j<buffer->size(); j++)
         {
-            auto idata = image_data.get_item(j);
-            auto tdata = target_data.get_item(j);
+            encoded_record record = buffer->record(j);
+            auto idata = record.element(0);
+            auto tdata = record.element(1);
             string str = vector2string(tdata);
             string expected = make_target_data(index);
             index = (index+1) % manifest.record_count();
@@ -447,6 +418,105 @@ TEST(manifest, ascii_int)
 
 TEST(manifest, ascii_float)
 {
+}
+
+
+extern string test_cache_directory;
+
+class manifest_manager
+{
+public:
+    manifest_manager(const string& source_dir, size_t count, int rows, int cols)
+    {
+        test_root         = source_dir;
+        source_directory  = file_util::make_temp_directory(source_dir);
+        manifest_filename = file_util::path_join(source_directory, "manifest.csv");
+        file_list.push_back(manifest_filename);
+        ofstream mfile(manifest_filename);
+        for (size_t i = 0; i < count; i++)
+        {
+            cv::Mat image           = embedded_id_image::generate_image(rows, cols, i);
+            string  number          = to_string(i);
+            string  image_filename  = file_util::path_join(source_directory, "image" + number + ".png");
+            string  target_filename = file_util::path_join(source_directory, "target" + number + ".txt");
+            //            cout << image_filename << ", " << target_filename << endl;
+            file_list.push_back(image_filename);
+            file_list.push_back(target_filename);
+            cv::imwrite(image_filename, image);
+            ofstream tfile(target_filename);
+            tfile << i;
+            mfile << image_filename << ",";
+            mfile << target_filename << "\n";
+        }
+    }
+
+    const string& manifest_file() const { return manifest_filename; }
+    ~manifest_manager() { file_util::remove_directory(test_root); }
+private:
+    string         test_root;
+    string         manifest_filename;
+    string         source_directory;
+    vector<string> file_list;
+};
+
+TEST(manifest, manifest_shuffle)
+{
+    string           source_dir = file_util::make_temp_directory(test_cache_directory);
+    manifest_manager manifest_builder{source_dir, 10, 25, 25};
+
+    string manifest_root;
+
+    nervana::manifest_file manifest1{manifest_builder.manifest_file(), true, manifest_root};
+    nervana::manifest_file manifest2{manifest_builder.manifest_file(), false, manifest_root};
+
+    EXPECT_NE(manifest1.get_crc(), manifest2.get_crc());
+}
+
+TEST(manifest, manifest_shuffle_repeatable)
+{
+    string           source_dir = file_util::make_temp_directory(test_cache_directory);
+    manifest_manager manifest_builder{source_dir, 10, 25, 25};
+
+    string manifest_root;
+
+    nervana::manifest_file manifest1{manifest_builder.manifest_file(), false, manifest_root};
+    nervana::manifest_file manifest2{manifest_builder.manifest_file(), true, manifest_root};
+    nervana::manifest_file manifest3{manifest_builder.manifest_file(), true, manifest_root};
+
+    EXPECT_NE(manifest1.get_crc(), manifest2.get_crc());
+    EXPECT_EQ(manifest2.get_crc(), manifest3.get_crc());
+}
+
+TEST(manifest, subset_fraction)
+{
+    string           source_dir = file_util::make_temp_directory(test_cache_directory);
+    manifest_manager manifest_builder{source_dir, 1000, 25, 25};
+
+    uint32_t manifest1_crc;
+    uint32_t manifest2_crc;
+
+    float  subset_fraction  = 0.01;
+    int    block_size  = 4;
+    bool   shuffle_manifest = true;
+    string manifest_root;
+
+    {
+        auto manifest = make_shared<nervana::manifest_file>(manifest_builder.manifest_file(), shuffle_manifest, manifest_root, subset_fraction, block_size);
+
+        ASSERT_NE(nullptr, manifest);
+
+        manifest1_crc = manifest->get_crc();
+    }
+
+    {
+        auto manifest = make_shared<nervana::manifest_file>(manifest_builder.manifest_file(), shuffle_manifest, manifest_root, subset_fraction, block_size);
+
+        ASSERT_NE(nullptr, manifest);
+
+        manifest2_crc = manifest->get_crc();
+    }
+
+    EXPECT_EQ(manifest1_crc, manifest2_crc);
 }
 
 // TEST(manifest, performance)
@@ -472,10 +542,10 @@ TEST(manifest, ascii_float)
 //    }
 
 //    // Parse the manifest file
-//    shared_ptr<manifest_csv> manifest;
+//    shared_ptr<manifest_file> manifest;
 //    {
 //        auto startTime = timer.now();
-//        manifest = make_shared<manifest_csv>(manifest_filename, false);
+//        manifest = make_shared<manifest_file>(manifest_filename, false);
 //        auto endTime = timer.now();
 //        cout << "load manifest " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" << endl;
 //    }

@@ -135,7 +135,7 @@ public:
     virtual ~reader();
 
     void close();
-    void read(nervana::buffer_variable_size_elements& dest);
+    void read(nervana::encoded_record_list& dest, size_t element_count);
     std::string read(std::vector<char>& dest);
 
     int record_count();
@@ -156,8 +156,7 @@ public:
     writer(std::ostream& stream);
     virtual ~writer();
 
-    void write_all_records(nervana::variable_buffer_array& buff);
-    void write_record(nervana::variable_buffer_array& buff, int record_idx);
+    void write_all_records(nervana::encoded_record_list& buff);
     void write_record_element(const char* elem, uint32_t elem_size, uint32_t element_idx);
     void increment_record_count() { m_header.m_record_count++; }
 private:

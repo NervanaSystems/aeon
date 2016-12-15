@@ -28,21 +28,20 @@
 using namespace std;
 using namespace nervana;
 
-TEST(cpio, read_nds)
+#warning put a better test here later
+TEST(cpio, read_canonical)
 {
-
-    ifstream f(CURDIR "/test_data/test.cpio", istream::binary);
+    ifstream f(string(CURDIR)+"/test_data/test.cpio", istream::binary);
     ASSERT_TRUE(f);
     cpio::reader reader(f);
     EXPECT_EQ(1, reader.record_count());
 
-    nervana::buffer_variable_size_elements buffer;
-    EXPECT_EQ(0, buffer.get_item_count());
-    reader.read(buffer);
-    EXPECT_EQ(1, buffer.get_item_count());
+    encoded_record_list buffer;
+    reader.read(buffer, 1);
+    EXPECT_EQ(1, buffer.size());
 }
 
-TEST(cpio,write_string)
+TEST(cpio, write_string)
 {
     int record_count = 10;
     stringstream ss;
@@ -50,13 +49,15 @@ TEST(cpio,write_string)
         vector<char> image_data(32);
         vector<char> label_data(4);
         cpio::writer writer(ss);
+        encoded_record_list bin;
         for (int i=0; i<record_count; i++)
         {
-            variable_buffer_array bin{2};
-            bin[0].add_item(image_data);
-            bin[1].add_item(label_data);
-            writer.write_all_records(bin);
+            encoded_record record;
+            record.add_element(image_data);
+            record.add_element(label_data);
+            bin.add_record(record);
         }
+        writer.write_all_records(bin);
     }
     cpio::reader reader(ss);
     EXPECT_EQ(record_count, reader.record_count());

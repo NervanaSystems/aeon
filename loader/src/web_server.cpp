@@ -13,8 +13,6 @@
  limitations under the License.
 */
 
-#include "web_server.hpp"
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,6 +28,8 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/ioctl.h>
+
+#include "web_server.hpp"
 
 using namespace std;
 
@@ -83,6 +83,7 @@ web::server::server()
 
 web::server::~server()
 {
+    stop();
 }
 
 void web::server::start(uint16_t port)
@@ -640,7 +641,7 @@ void web::tcp::connection::close()
 {
     if (m_is_server)
     {
-        int                sock = socket(AF_INET, SOCK_STREAM, 0);
+        int sock = socket(AF_INET, SOCK_STREAM, 0);
         struct sockaddr_in remote;
         remote.sin_family = AF_INET;
         inet_pton(AF_INET, "127.0.0.1", &remote.sin_addr);
@@ -649,6 +650,7 @@ void web::tcp::connection::close()
         {
             cout << __FILE__ << " " << __LINE__ << " error connecting to self" << endl;
         }
+        usleep(100);
         ::close(sock);
         ::close(m_socket);
     }

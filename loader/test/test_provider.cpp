@@ -49,34 +49,32 @@ TEST(provider, image)
                          {"image", {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
                          {"label", {{"binary", true}}}};
 
-    auto                               media   = nervana::provider_factory::create(js);
+    auto media   = nervana::provider_factory::create(js);
     auto oshapes = media->get_output_shapes();
 
     size_t batch_size = 128;
 
     fixed_buffer_map out_buf(oshapes, batch_size);
-    variable_buffer_array bp{2};
+    encoded_record_list bp;
 
     auto files = image_dataset.get_files();
     ASSERT_NE(0, files.size());
-
     ifstream f(files[0], istream::binary);
     ASSERT_TRUE(f);
     cpio::reader reader(f);
     for (int i = 0; i < reader.record_count() / 2; i++)
     {
-        reader.read(bp[0]);
-        reader.read(bp[1]);
+        reader.read(bp, 2);
     }
 
-    EXPECT_GT(bp[0].get_item_count(), batch_size);
+    EXPECT_GT(bp.size(), batch_size);
     for (int i = 0; i < batch_size; i++)
     {
         media->provide(i, bp, out_buf);
 
-        //        cv::Mat mat(width,height,CV_8UC3,&dbuffer[0]);
-        //        string filename = "data" + to_string(i) + ".png";
-        //        cv::imwrite(filename,mat);
+        //  cv::Mat mat(width,height,CV_8UC3,&dbuffer[0]);
+        //  string filename = "data" + to_string(i) + ".png";
+        //  cv::imwrite(filename,mat);
     }
     for (int i = 0; i < batch_size; i++)
     {
@@ -176,10 +174,12 @@ TEST(provider, blob)
 
     fixed_buffer_map out_buf(oshapes, batch_size);
 
-    variable_buffer_array in_buf{3};
-    in_buf[0].add_item(input_left);
-    in_buf[1].add_item(input_right);
-    in_buf[2].add_item(target_cdata);
+    encoded_record_list in_buf;
+    encoded_record record;
+    record.add_element(input_left);
+    record.add_element(input_right);
+    record.add_element(target_cdata);
+    in_buf.add_record(record);
 
     // call the provider
     media->provide(0, in_buf, out_buf);

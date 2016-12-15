@@ -19,22 +19,17 @@
 using namespace nervana;
 
 batch_iterator_async::batch_iterator_async(block_manager_async* blkl, size_t batch_size)
-    : async_manager<variable_buffer_array, variable_buffer_array>(blkl)
+    : async_manager<encoded_record_list, encoded_record_list>(blkl)
     , m_batch_size(batch_size)
 {
     m_element_count = element_count();
-    for (int k = 0; k < 2; ++k)
-    {
-        for (size_t j = 0; j < m_element_count; ++j)
-        {
-            m_containers[k].emplace_back();
-        }
-    }
 }
 
-variable_buffer_array* batch_iterator_async::filler()
+encoded_record_list* batch_iterator_async::filler()
 {
-    variable_buffer_array* rc = get_pending_buffer();
+    encoded_record_list* rc = get_pending_buffer();
+
+    rc->clear();
 
     // This is for the first pass
     if (m_input_ptr == nullptr)
@@ -42,15 +37,8 @@ variable_buffer_array* batch_iterator_async::filler()
         m_input_ptr = m_source->next();
     }
 
-    // Empty this buffer so that it can be filled
-    for (auto& ct : *rc)
-    {
-        ct.reset();
-    }
-
-    size_t number_needed = m_batch_size - rc->at(0).size();
-
-    while (number_needed > 0)
+    size_t remainder = m_batch_size;
+    while (remainder > 0)
     {
         if (m_input_ptr == nullptr)
         {
@@ -59,40 +47,35 @@ variable_buffer_array* batch_iterator_async::filler()
         }
 
         size_t move_count;
-        if (m_input_ptr->at(0).size() <= number_needed)
+        if (m_input_ptr->size() <= remainder)
         {
-            move_count = m_input_ptr->at(0).size();
+            move_count = m_input_ptr->size();
         }
         else
         {
-            move_count = number_needed; // Enough in the block to service this batch and more
+            move_count = remainder; // Enough in the block to service this batch and more
         }
 
-        move_src_to_dst(m_input_ptr, rc, move_count);
+        // swap records one at a time
+        m_input_ptr->move_to(*rc, move_count);
 
-        number_needed -= move_count;
+        remainder -= move_count;
 
-        if (number_needed > 0)
+        if (remainder > 0 || m_input_ptr->size() == 0)
         {
             m_input_ptr = m_source->next();
         }
     }
 
-//    if (rc) INFO << rc->at(0).size() << ", " << rc->at(1).size(); else INFO << "nullptr";
+//    for (size_t item = 0; item < rc->size(); ++item)
+//    {
+//        const encoded_record& record = rc->record(item);
+//        for (size_t element_number=0; element_number<record.size(); element_number++)
+//        {
+//            std::string element = vector2string(record.element(element_number));
+//            INFO << "got element " << element;
+//        }
+//    }
+
     return rc;
-}
-
-void batch_iterator_async::move_src_to_dst(variable_buffer_array* src_array_ptr, variable_buffer_array* dst_array_ptr, size_t count)
-{
-    for (size_t ridx = 0; ridx < m_element_count; ++ridx)
-    {
-        buffer_variable_size_elements& src = src_array_ptr->at(ridx);
-        buffer_variable_size_elements& dst = dst_array_ptr->at(ridx);
-
-        auto start_iter = src.begin();
-        auto end_iter   = src.begin() + count;
-
-        dst.append(make_move_iterator(start_iter), make_move_iterator(end_iter));
-        src.erase(start_iter, end_iter);
-    }
 }

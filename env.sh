@@ -6,7 +6,6 @@ SRCS="
     buffer_batch.cpp
     batch_iterator_async.cpp
     block_loader_file_async.cpp
-    block_loader_nds_async.cpp
     block_manager_async.cpp
     box.cpp
     cap_mjpeg_decoder.cpp
@@ -26,7 +25,7 @@ SRCS="
     interface.cpp
     loader.cpp
     log.cpp
-    manifest_csv.cpp
+    manifest_file.cpp
     manifest_nds.cpp
     noise_clips.cpp
     provider_audio_classifier.cpp
@@ -48,6 +47,7 @@ SRCS="
     web_app.cpp
     web_server.cpp
     base64.cpp
+    block.cpp
 "
 # remove newlines
 export SRCS="$(echo ${SRCS} | sed 's/\n//g')"

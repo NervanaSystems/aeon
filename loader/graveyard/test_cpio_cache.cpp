@@ -80,8 +80,8 @@ TEST(cpio_cache, manifest_shuffle)
 
     string manifest_root;
 
-    nervana::manifest_csv manifest1{manifest_builder.manifest_file(), true, manifest_root};
-    nervana::manifest_csv manifest2{manifest_builder.manifest_file(), false, manifest_root};
+    nervana::manifest_file manifest1{manifest_builder.manifest_file(), true, manifest_root};
+    nervana::manifest_file manifest2{manifest_builder.manifest_file(), false, manifest_root};
 
     EXPECT_NE(manifest1.get_crc(), manifest2.get_crc());
 }
@@ -93,9 +93,9 @@ TEST(cpio_cache, manifest_shuffle_repeatable)
 
     string manifest_root;
 
-    nervana::manifest_csv manifest1{manifest_builder.manifest_file(), false, manifest_root};
-    nervana::manifest_csv manifest2{manifest_builder.manifest_file(), true, manifest_root};
-    nervana::manifest_csv manifest3{manifest_builder.manifest_file(), true, manifest_root};
+    nervana::manifest_file manifest1{manifest_builder.manifest_file(), false, manifest_root};
+    nervana::manifest_file manifest2{manifest_builder.manifest_file(), true, manifest_root};
+    nervana::manifest_file manifest3{manifest_builder.manifest_file(), true, manifest_root};
 
     EXPECT_NE(manifest1.get_crc(), manifest2.get_crc());
     EXPECT_EQ(manifest2.get_crc(), manifest3.get_crc());
@@ -115,7 +115,7 @@ TEST(cpio_cache, subset_fraction)
     string manifest_root;
 
     {
-        auto manifest = make_shared<nervana::manifest_csv>(manifest_builder.manifest_file(), shuffle_manifest, manifest_root);
+        auto manifest = make_shared<nervana::manifest_file>(manifest_builder.manifest_file(), shuffle_manifest, manifest_root);
 
         ASSERT_NE(nullptr, manifest);
 
@@ -126,7 +126,7 @@ TEST(cpio_cache, subset_fraction)
     }
 
     {
-        auto manifest = make_shared<nervana::manifest_csv>(manifest_builder.manifest_file(), shuffle_manifest, manifest_root);
+        auto manifest = make_shared<nervana::manifest_file>(manifest_builder.manifest_file(), shuffle_manifest, manifest_root);
 
         ASSERT_NE(nullptr, manifest);
 

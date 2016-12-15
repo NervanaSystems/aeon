@@ -71,12 +71,10 @@ TEST(video, extract_transform)
         ASSERT_EQ(transformed_vid->get_image_count(), 5);
         ASSERT_EQ(transformed_vid->get_image_size(), cv::Size2i(width / 2, height / 2));
 
-        INFO << "Extract test successful" << endl;
         remove(test_file.c_str());
     }
     else
     {
-        INFO << vidgen_command.str() << endl;
         ERR << "Missing ffmpeg for video extraction test" << endl;
     }
 }

@@ -29,9 +29,9 @@ audio_only::audio_only(nlohmann::json js)
     m_output_shapes.insert({"audio", audio_config.get_shape_type()});
 }
 
-void audio_only::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
+void audio_only::provide(int idx, encoded_record_list& in_buf, fixed_buffer_map& out_buf)
 {
-    vector<char>& datum_in  = in_buf[0].get_item(idx);
+    vector<char>& datum_in  = in_buf.record(idx).element(0);
     char*         datum_out = out_buf["audio"]->get_item(idx);
 
     // Process audio data

@@ -13,27 +13,27 @@
  limitations under the License.
 */
 
-#include <vector>
+#pragma once
+
 #include <string>
-#include <cstdlib>
+#include <vector>
+#include <sstream>
 
-namespace nervana
-{
-    class base64;
-}
-
-class nervana::base64
+class manifest_builder
 {
 public:
-    static std::vector<char> encode(const std::vector<char>& data);
-    static std::vector<char> encode(const char* data, size_t size);
 
-    static std::vector<char> decode(const std::vector<char>& data);
-    static std::vector<char> decode(const char* data, size_t size);
+    manifest_builder& record_count(size_t value);
+    manifest_builder& sizes(const std::vector<size_t>& sizes);
+    manifest_builder& image_width(size_t value);
+    manifest_builder& image_height(size_t value);
 
-    static std::string gen_decode_table();
+    std::stringstream& create();
 
 private:
-    static const uint8_t character_codes[];
-    static const uint8_t  decode_codes[];
+    std::vector<size_t> m_sizes;
+    size_t m_image_width = 0;
+    size_t m_image_height = 0;
+    size_t m_record_count = 0;
+    std::stringstream m_stream;
 };

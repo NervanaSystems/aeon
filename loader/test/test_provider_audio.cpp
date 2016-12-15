@@ -52,17 +52,19 @@ TEST(provider, audio_classify)
     wav.write_to_buffer(&buf[0], buf.size());
 
     fixed_buffer_map out_buf(oshapes, batch_size);
-    variable_buffer_array bp{2};
+    encoded_record_list bp;
 
     for (int i = 0; i < batch_size; i++)
     {
-        bp[0].add_item(buf);
+        encoded_record record;
+        record.add_element(buf);
         vector<char> packed_int(4);
         pack<int>(&packed_int[0], 42 + i);
-        bp[1].add_item(packed_int);
+        record.add_element(packed_int);
+        bp.add_record(record);
     }
 
-    EXPECT_EQ(bp[0].get_item_count(), batch_size);
+    EXPECT_EQ(bp.size(), batch_size);
 
     for (int i = 0; i < batch_size; i++)
     {
@@ -113,14 +115,16 @@ TEST(provider, audio_transcript)
     vector<char>   tr1_char(tr[1].begin(), tr[1].end());
 
     // Create the input buffer
-    variable_buffer_array bp{2};
+    encoded_record_list bp;
     for (int i = 0; i < batch_size; i++)
     {
-        bp[0].add_item(buf);
-        bp[1].add_item(((i % 2) == 0 ? tr0_char : tr1_char));
+        encoded_record record;
+        record.add_element(buf);
+        record.add_element(((i % 2) == 0 ? tr0_char : tr1_char));
+        bp.add_record(record);
     }
-    EXPECT_EQ(bp[0].get_item_count(), batch_size);
-    EXPECT_EQ(bp[1].get_item_count(), batch_size);
+    EXPECT_EQ(bp.size(), batch_size);
+    EXPECT_EQ(bp.size(), batch_size);
 
     // Generate output buffers using shapes from the provider
     auto oshapes = media->get_output_shapes();

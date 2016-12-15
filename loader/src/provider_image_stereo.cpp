@@ -36,11 +36,11 @@ image_stereo_blob::image_stereo_blob(nlohmann::json js)
     m_output_shapes.insert({"depthmap", target_config.get_shape_type()});
 }
 
-void image_stereo_blob::provide(int idx, variable_buffer_array& in_buf, fixed_buffer_map& out_buf)
+void image_stereo_blob::provide(int idx, encoded_record_list& in_buf, fixed_buffer_map& out_buf)
 {
-    std::vector<char>& l_in      = in_buf[0].get_item(idx);
-    std::vector<char>& r_in      = in_buf[1].get_item(idx);
-    std::vector<char>& target_in = in_buf[2].get_item(idx);
+    std::vector<char>& l_in      = in_buf.record(idx).element(0);
+    std::vector<char>& r_in      = in_buf.record(idx).element(1);
+    std::vector<char>& target_in = in_buf.record(idx).element(2);
 
     char* l_out      = out_buf["image_left"]->get_item(idx);
     char* r_out      = out_buf["image_right"]->get_item(idx);

@@ -28,24 +28,22 @@ const std::string block_manager_async::m_owner_lock_filename     = "caching_in_p
 const std::string block_manager_async::m_cache_complete_filename = "cache_complete";
 
 nervana::block_manager_async::block_manager_async(block_loader_source_async* file_loader, size_t block_size, const string& cache_root, bool enable_shuffle)
-    : async_manager<variable_buffer_array, variable_buffer_array>{file_loader}
+    : async_manager<encoded_record_list, encoded_record_list>{file_loader}
     , m_file_loader{*file_loader}
     , m_block_size{m_file_loader.block_size()}
     , m_block_count{m_file_loader.block_count()}
+    , m_record_count{m_file_loader.record_count()}
     , m_current_block_number{0}
     , m_elements_per_record{m_file_loader.element_count()}
     , m_cache_root{cache_root}
     , m_cache_enabled{m_cache_root.empty() == false}
     , m_shuffle_enabled{enable_shuffle}
+    , m_block_load_sequence{}
+    , m_rnd{get_global_random_seed()}
 {
-    for (int k = 0; k < 2; ++k)
-    {
-        for (size_t j = 0; j < m_elements_per_record; ++j)
-        {
-            m_containers[k].emplace_back();
-        }
-    }
-
+    m_block_load_sequence.reserve(m_block_count);
+    m_block_load_sequence.resize(m_block_count);
+    iota(m_block_load_sequence.begin(), m_block_load_sequence.end(), 0);
     if (m_cache_enabled)
     {
         m_source_uid = file_loader->get_uid();
@@ -72,21 +70,17 @@ nervana::block_manager_async::block_manager_async(block_loader_source_async* fil
     }
 }
 
-nervana::variable_buffer_array* block_manager_async::filler()
+nervana::encoded_record_list* block_manager_async::filler()
 {
-    variable_buffer_array* rc = get_pending_buffer();
-    variable_buffer_array* input = nullptr;
+    encoded_record_list* rc = get_pending_buffer();
+    encoded_record_list* input = nullptr;
 
-    for (size_t i = 0; i < m_elements_per_record; ++i)
-    {
-        // These should be empty at this point
-        rc->at(i).reset();
-    }
+    rc->clear();
 
     if (m_cache_enabled)
     {
         // cache path
-        string block_name = create_cache_block_name(m_current_block_number);
+        string block_name = create_cache_block_name(m_block_load_sequence[m_current_block_number]);
         string block_file_path = file_util::path_join(m_cache_dir, block_name);
 
         if (file_util::exists(block_file_path))
@@ -96,12 +90,16 @@ nervana::variable_buffer_array* block_manager_async::filler()
             if (f)
             {
                 cpio::reader reader(f);
-                for (size_t record=0; record<reader.record_count(); record++)
+                for (size_t record_number=0; record_number<reader.record_count(); record_number++)
                 {
+                    encoded_record record;
                     for (size_t element=0; element<m_elements_per_record; element++)
                     {
-                        reader.read(rc->at(element));
+                        vector<char> e;
+                        reader.read(e);
+                        record.add_element(e);
                     }
+                    rc->add_record(record);
                 }
             }
         }
@@ -121,10 +119,7 @@ nervana::variable_buffer_array* block_manager_async::filler()
                     cpio::writer writer(f);
                     writer.write_all_records(*input);
                 }
-                for (size_t i = 0; i < m_elements_per_record; ++i)
-                {
-                    rc->at(i) = input->at(i);
-                }
+                input->swap(*rc);
             }
         }
 
@@ -140,43 +135,29 @@ nervana::variable_buffer_array* block_manager_async::filler()
     else
     {
         // The non-cache path
-        if (m_current_block_number == m_block_count)
+        input = m_source->next();
+
+        rc->swap(*input);
+
+        if (++m_current_block_number == m_block_count)
         {
             m_current_block_number = 0;
             m_file_loader.reset();
         }
-
-        input = m_source->next();
-
-        m_current_block_number++;
-
-        for (size_t i = 0; i < m_elements_per_record; ++i)
-        {
-            rc->at(i) = input->at(i);
-        }
     }
 
-    if (rc && rc->at(0).size() == 0)
+    if (m_shuffle_enabled && m_current_block_number == 0)
+    {
+        // This will not trigger on the first pass through the dataset
+        shuffle(m_block_load_sequence.begin(), m_block_load_sequence.end(), m_rnd);
+    }
+
+    if (rc && rc->size() == 0)
     {
         rc = nullptr;
     }
 
     return rc;
-}
-
-void block_manager_async::move_src_to_dst(variable_buffer_array* src_array_ptr, variable_buffer_array* dst_array_ptr, size_t count)
-{
-    for (size_t ridx = 0; ridx < m_elements_per_record; ++ridx)
-    {
-        buffer_variable_size_elements& src = src_array_ptr->at(ridx);
-        buffer_variable_size_elements& dst = dst_array_ptr->at(ridx);
-
-        auto start_iter = src.begin();
-        auto end_iter   = src.begin() + count;
-
-        dst.append(make_move_iterator(start_iter), make_move_iterator(end_iter));
-        src.erase(start_iter, end_iter);
-    }
 }
 
 string block_manager_async::create_cache_name(source_uid_t uid)

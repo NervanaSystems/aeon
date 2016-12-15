@@ -20,6 +20,7 @@
 #include "async_manager.hpp"
 #include "block_loader_source_async.hpp"
 #include "buffer_batch.hpp"
+#include "block.hpp"
 
 /* block_manager_async
  *
@@ -33,7 +34,7 @@ namespace nervana
 }
 
 class nervana::block_manager_async
-    : public async_manager<variable_buffer_array, variable_buffer_array>
+    : public async_manager<encoded_record_list, encoded_record_list>
 {
 public:
     block_manager_async(block_loader_source_async* file_loader, size_t block_size, const std::string& cache_root, bool enable_shuffle);
@@ -43,7 +44,7 @@ public:
         finalize();
     }
 
-    variable_buffer_array* filler() override;
+    encoded_record_list* filler() override;
 
     size_t record_count() const override
     {
@@ -61,7 +62,6 @@ public:
     }
 
 private:
-    void move_src_to_dst(variable_buffer_array* src_array_ptr, variable_buffer_array* dst_array_ptr, size_t count);
     static std::string create_cache_name(source_uid_t uid);
     static std::string create_cache_block_name(size_t block_number);
 
@@ -76,6 +76,7 @@ private:
     block_loader_source_async& m_file_loader;
     size_t                     m_block_size;
     size_t                     m_block_count;
+    size_t                     m_record_count;
     size_t                     m_current_block_number;
     size_t                     m_elements_per_record;
     const std::string          m_cache_root;
@@ -86,4 +87,6 @@ private:
     int                        m_cache_lock;
     size_t                     m_cache_hit = 0;
     size_t                     m_cache_miss = 0;
+    std::vector<size_t>        m_block_load_sequence;
+    std::minstd_rand0          m_rnd;
 };

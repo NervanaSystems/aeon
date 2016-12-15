@@ -21,7 +21,7 @@
 #include "buffer_batch.hpp"
 #include "etl_image.hpp"
 
-std::vector<std::string> buffer_to_vector_of_strings(nervana::buffer_variable_size_elements& b);
+std::vector<std::string> buffer_to_vector_of_strings(nervana::encoded_record_list& b);
 bool sorted(std::vector<std::string> words);
 void dump_vector_of_strings(std::vector<std::string>& words);
 
