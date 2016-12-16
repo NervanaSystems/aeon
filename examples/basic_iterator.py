@@ -22,14 +22,14 @@ cfg = {
         }
 
 d1 = Dataloader(config=cfg)
-print("d1 length {0}").format(len(d1))
+print("d1 length {0}".format(len(d1)))
 
 shapes = d1.shapes()
 
 print("shapes {}".format(shapes))
 
 for x in d1:
-    print("d1, v1: {0}").format(x.keys())
+    print("d1, v1: {0}".format(x.keys()))
 
 # d1.reset()
 

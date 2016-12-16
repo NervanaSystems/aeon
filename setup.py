@@ -48,6 +48,6 @@ module = Extension(
 
 setup(
     name='nervana-aeon',
-    version='0.2.6',
+    version='1.0.0',
     ext_modules=[module],
 )
