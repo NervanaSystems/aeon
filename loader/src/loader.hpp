@@ -29,9 +29,9 @@
 
 #include "async_manager.hpp"
 #include "buffer_batch.hpp"
-#include "batch_iterator_async.hpp"
-#include "block_loader_file_async.hpp"
-#include "block_manager_async.hpp"
+#include "batch_iterator.hpp"
+#include "block_loader_file.hpp"
+#include "block_manager.hpp"
 #include "log.hpp"
 #include "util.hpp"
 
@@ -40,17 +40,8 @@ namespace nervana
     class loader_config;
     class loader;
     class dataset_builder;
-    class loader_async;
+    class batch_decoder;
 }
-
-/* decode_thread_pool
- *
- * decode_thread_pool takes data from the BufferPool `in`, transforms it
- * using `count` threads with a Media::transform built from
- * `mediaParams`.  Each minibatch is transposed by a manager thread and
- * then copied to the `device`.
- *
- */
 
 class nervana::loader_config : public nervana::interface::config
 {
@@ -94,13 +85,13 @@ private:
     void validate();
 };
 
-class nervana::loader_async : public async_manager<encoded_record_list, fixed_buffer_map>
+class nervana::batch_decoder : public async_manager<encoded_record_list, fixed_buffer_map>
 {
 public:
-    loader_async(batch_iterator_async* b_itor, size_t batch_size, bool single_thread, bool pinned,
+    batch_decoder(batch_iterator* b_itor, size_t batch_size, bool single_thread, bool pinned,
                  const std::shared_ptr<provider_interface>& prov);
 
-    virtual ~loader_async();
+    virtual ~batch_decoder();
 
     virtual size_t                     record_count() const override { return m_batch_size; }
     virtual size_t                     element_count() const override { return m_number_elements_out; }
@@ -198,11 +189,11 @@ private:
     iterator                                 m_current_iter;
     iterator                                 m_end_iter;
     std::shared_ptr<manifest_file>            m_manifest;
-    std::shared_ptr<block_loader_file_async> m_block_loader;
-    std::shared_ptr<block_manager_async>     m_block_manager;
-    std::shared_ptr<batch_iterator_async>    m_batch_iterator;
+    std::shared_ptr<block_loader_file> m_block_loader;
+    std::shared_ptr<block_manager>     m_block_manager;
+    std::shared_ptr<batch_iterator>    m_batch_iterator;
     std::shared_ptr<provider_interface>      m_provider;
-    std::shared_ptr<loader_async>            m_decoder;
+    std::shared_ptr<batch_decoder>            m_decoder;
     int                                      m_batch_size;
     BatchMode                                m_batch_mode;
     size_t                                   m_batch_count_value;

@@ -16,8 +16,8 @@
 #include "gtest/gtest.h"
 #include "async_manager.hpp"
 #include "manifest_file.hpp"
-#include "block_loader_file_async.hpp"
-#include "batch_iterator_async.hpp"
+#include "block_loader_file.hpp"
+#include "batch_iterator.hpp"
 #include "manifest_builder.hpp"
 #include "file_util.hpp"
 #include "log.hpp"
@@ -42,7 +42,7 @@ TEST(block_loader_file, file_block)
 
     // each call to next() will yield pointer to variable buffer_array
     //   which is vector of encoded_record_list
-    block_loader_file_async loader(&manifest, block_size);
+    block_loader_file loader(&manifest, block_size);
 
     auto block_count = loader.block_count();
     ASSERT_EQ(record_count/block_size, block_count);
@@ -84,7 +84,7 @@ TEST(block_loader_file, file_block_odd)
 
     // each call to next() will yield pointer to variable buffer_array
     //   which is vector of encoded_record_list
-    block_loader_file_async loader(&manifest, block_size);
+    block_loader_file loader(&manifest, block_size);
 
     auto block_count = ceil((float)record_count / (float)block_size);
     ASSERT_EQ(2, block_count);
@@ -119,9 +119,9 @@ TEST(block_loader_file, iterate_batch)
 
     // each call to next() will yield pointer to variable buffer_array
     //   which is vector of encoded_record_list
-    block_loader_file_async block_loader(&manifest, block_size);
-    block_manager_async block_manager(&block_loader, block_size, "", false);
-    batch_iterator_async batch_iterator(&block_manager, batch_size);
+    block_loader_file block_loader(&manifest, block_size);
+    block_manager block_manager(&block_loader, block_size, "", false);
+    batch_iterator batch_iterator(&block_manager, batch_size);
 
     auto batch_count = record_count / batch_size;
     ASSERT_EQ(record_count/block_size, block_size);

@@ -28,7 +28,7 @@
 using namespace std;
 using namespace nervana;
 
-loader_async::loader_async(batch_iterator_async* b_itor, size_t batch_size, bool single_thread, bool pinned,
+batch_decoder::batch_decoder(batch_iterator* b_itor, size_t batch_size, bool single_thread, bool pinned,
                            const std::shared_ptr<provider_interface>& prov)
     : async_manager<encoded_record_list, fixed_buffer_map>(b_itor)
     , m_batch_size(batch_size)
@@ -71,12 +71,12 @@ loader_async::loader_async(batch_iterator_async* b_itor, size_t batch_size, bool
     }
 }
 
-loader_async::~loader_async()
+batch_decoder::~batch_decoder()
 {
     finalize();
 }
 
-fixed_buffer_map* loader_async::filler()
+fixed_buffer_map* batch_decoder::filler()
 {
     fixed_buffer_map*      outputs = get_pending_buffer();
     encoded_record_list* inputs  = m_source->next();
@@ -92,7 +92,7 @@ fixed_buffer_map* loader_async::filler()
         {
             for (int id = 0; id < m_providers.size(); ++id)
             {
-                provider_threads.emplace_back(&loader_async::work, this, id, inputs, outputs);
+                provider_threads.emplace_back(&batch_decoder::work, this, id, inputs, outputs);
             }
 
             for (auto& t : provider_threads)
@@ -111,7 +111,7 @@ fixed_buffer_map* loader_async::filler()
     return outputs;
 }
 
-void loader_async::work(int id, encoded_record_list* in_buf, fixed_buffer_map* out_buf)
+void batch_decoder::work(int id, encoded_record_list* in_buf, fixed_buffer_map* out_buf)
 {
     // Thread function.
     // No locking required because threads write into non-overlapping regions.
@@ -223,15 +223,15 @@ void loader::initialize(nlohmann::json& config_json)
         m_batch_count_value = lcfg.iteration_mode_count;
     }
 
-    m_block_loader = make_shared<block_loader_file_async>(m_manifest.get(), lcfg.block_size);
+    m_block_loader = make_shared<block_loader_file>(m_manifest.get(), lcfg.block_size);
 
-    m_block_manager = make_shared<block_manager_async>(m_block_loader.get(), lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_every_epoch);
+    m_block_manager = make_shared<block_manager>(m_block_loader.get(), lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_every_epoch);
 
-    m_batch_iterator = make_shared<batch_iterator_async>(m_block_manager.get(), lcfg.batch_size);
+    m_batch_iterator = make_shared<batch_iterator>(m_block_manager.get(), lcfg.batch_size);
 
     m_provider = provider_factory::create(config_json);
 
-    m_decoder = make_shared<loader_async>(m_batch_iterator.get(), static_cast<size_t>(lcfg.batch_size), lcfg.single_thread,
+    m_decoder = make_shared<batch_decoder>(m_batch_iterator.get(), static_cast<size_t>(lcfg.batch_size), lcfg.single_thread,
                                           lcfg.pinned, m_provider);
 
     m_output_buffer_ptr = m_decoder->next();

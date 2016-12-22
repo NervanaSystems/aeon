@@ -19,7 +19,7 @@
 
 #include "manifest_file.hpp"
 #include "buffer_batch.hpp"
-#include "block_loader_source_async.hpp"
+#include "block_loader_source.hpp"
 
 /* block_loader_file
  *
@@ -29,14 +29,14 @@
 
 namespace nervana
 {
-    class block_loader_file_async;
+    class block_loader_file;
 }
 
-class nervana::block_loader_file_async : public block_loader_source_async
+class nervana::block_loader_file : public block_loader_source
 {
 public:
-    block_loader_file_async(manifest_file* mfst, size_t block_size);
-    virtual ~block_loader_file_async()
+    block_loader_file(manifest_file* mfst, size_t block_size);
+    virtual ~block_loader_file()
     {
         finalize();
     }

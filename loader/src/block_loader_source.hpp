@@ -23,16 +23,16 @@
 
 namespace nervana
 {
-    class block_loader_source_async;
+    class block_loader_source;
 
     typedef uint32_t source_uid_t;
 }
 
-class nervana::block_loader_source_async
+class nervana::block_loader_source
     : public async_manager<std::vector<std::vector<std::string>>, encoded_record_list>
 {
 public:
-    block_loader_source_async(async_manager_source<std::vector<std::vector<std::string>>>* source)
+    block_loader_source(async_manager_source<std::vector<std::vector<std::string>>>* source)
         : async_manager<std::vector<std::vector<std::string>>, encoded_record_list>(source)
     {
         // Make the container pair?  Currently letting child handle it in filler()

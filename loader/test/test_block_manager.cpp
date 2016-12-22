@@ -20,13 +20,13 @@
 #include "log.hpp"
 #include "manifest_builder.hpp"
 #include "manifest_file.hpp"
-#include "block_loader_file_async.hpp"
-#include "block_loader_source_async.hpp"
+#include "block_loader_file.hpp"
+#include "block_loader_source.hpp"
 #include "block.hpp"
 
 #define private public
 
-#include "block_manager_async.hpp"
+#include "block_manager.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -59,9 +59,9 @@ TEST(block_manager, cache_complete)
 {
     string cache_root = file_util::make_temp_directory();
 
-    EXPECT_FALSE(block_manager_async::check_if_complete(cache_root));
-    block_manager_async::mark_cache_complete(cache_root);
-    EXPECT_TRUE(block_manager_async::check_if_complete(cache_root));
+    EXPECT_FALSE(block_manager::check_if_complete(cache_root));
+    block_manager::mark_cache_complete(cache_root);
+    EXPECT_TRUE(block_manager::check_if_complete(cache_root));
 
     file_util::remove_directory(cache_root);
 }
@@ -71,15 +71,15 @@ TEST(block_manager, cache_ownership)
     string cache_root = file_util::make_temp_directory();
 
     int lock;
-    EXPECT_TRUE(block_manager_async::take_ownership(cache_root, lock));
+    EXPECT_TRUE(block_manager::take_ownership(cache_root, lock));
 
     int lock2;
-    EXPECT_FALSE(block_manager_async::take_ownership(cache_root, lock2));
+    EXPECT_FALSE(block_manager::take_ownership(cache_root, lock2));
 
-    block_manager_async::release_ownership(cache_root, lock);
+    block_manager::release_ownership(cache_root, lock);
 
-    EXPECT_TRUE(block_manager_async::take_ownership(cache_root, lock));
-    block_manager_async::release_ownership(cache_root, lock);
+    EXPECT_TRUE(block_manager::take_ownership(cache_root, lock));
+    block_manager::release_ownership(cache_root, lock);
 
     file_util::remove_directory(cache_root);
 }
@@ -98,17 +98,17 @@ TEST(block_manager, cache_busy)
     stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
     manifest_file manifest(manifest_stream, false);
 
-    block_loader_file_async file_reader(&manifest, block_size);
-    string cache_name = block_manager_async::create_cache_name(file_reader.get_uid());
+    block_loader_file file_reader(&manifest, block_size);
+    string cache_name = block_manager::create_cache_name(file_reader.get_uid());
     auto cache_dir = file_util::path_join(cache_root, cache_name);
 
     int lock;
     file_util::make_directory(cache_dir);
-    EXPECT_TRUE(block_manager_async::take_ownership(cache_dir, lock));
+    EXPECT_TRUE(block_manager::take_ownership(cache_dir, lock));
 
-    EXPECT_THROW(block_manager_async(&file_reader, block_size, cache_root, false), runtime_error);
+    EXPECT_THROW(block_manager(&file_reader, block_size, cache_root, false), runtime_error);
 
-    block_manager_async::release_ownership(cache_root, lock);
+    block_manager::release_ownership(cache_root, lock);
 
     file_util::remove_directory(cache_root);
 }
@@ -131,11 +131,11 @@ TEST(block_manager, build_cache)
     stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
     manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
 
-    block_loader_file_async file_reader(&manifest, block_size);
-    string cache_name = block_manager_async::create_cache_name(file_reader.get_uid());
+    block_loader_file file_reader(&manifest, block_size);
+    string cache_name = block_manager::create_cache_name(file_reader.get_uid());
     auto cache_dir = file_util::path_join(cache_root, cache_name);
 
-    block_manager_async manager(&file_reader, block_size, cache_root, false);
+    block_manager manager(&file_reader, block_size, cache_root, false);
 
     size_t record_number = 0;
     for (size_t i=0; i<block_count*2; i++)
@@ -160,7 +160,7 @@ TEST(block_manager, build_cache)
     }
 
     // check that the cache files exist
-    string cache_complete = block_manager_async::m_cache_complete_filename;
+    string cache_complete = block_manager::m_cache_complete_filename;
     string cache_complete_path = file_util::path_join(cache_dir, cache_complete);
     EXPECT_TRUE(file_util::exists(cache_complete_path));
     for (size_t block_number=0; block_number<block_count; block_number++)
@@ -196,9 +196,9 @@ TEST(block_manager, reuse_cache)
 
     // first build the cache
     {
-        block_loader_file_async file_reader(&manifest, block_size);
+        block_loader_file file_reader(&manifest, block_size);
 
-        block_manager_async manager(&file_reader, block_size, cache_root, false);
+        block_manager manager(&file_reader, block_size, cache_root, false);
 
         size_t record_number = 0;
         for (size_t i=0; i<block_count; i++)
@@ -227,9 +227,9 @@ TEST(block_manager, reuse_cache)
 
     // now read data with new reader, same manifest
     {
-        block_loader_file_async file_reader(&manifest, block_size);
+        block_loader_file file_reader(&manifest, block_size);
 
-        block_manager_async manager(&file_reader, block_size, cache_root, false);
+        block_manager manager(&file_reader, block_size, cache_root, false);
 
         size_t record_number = 0;
         for (size_t i=0; i<block_count; i++)
@@ -279,8 +279,8 @@ TEST(block_manager, no_shuffle_cache)
 
     stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
     manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
-    block_loader_file_async file_reader(&manifest, block_size);
-    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+    block_loader_file file_reader(&manifest, block_size);
+    block_manager manager(&file_reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
@@ -342,8 +342,8 @@ TEST(block_manager, no_shuffle_no_cache)
 
     stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
     manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
-    block_loader_file_async file_reader(&manifest, block_size);
-    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+    block_loader_file file_reader(&manifest, block_size);
+    block_manager manager(&file_reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
@@ -403,8 +403,8 @@ TEST(block_manager, shuffle_cache)
 
     stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
     manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
-    block_loader_file_async file_reader(&manifest, block_size);
-    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+    block_loader_file file_reader(&manifest, block_size);
+    block_manager manager(&file_reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
@@ -466,8 +466,8 @@ TEST(block_manager, shuffle_no_cache)
 
     stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
     manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
-    block_loader_file_async file_reader(&manifest, block_size);
-    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+    block_loader_file file_reader(&manifest, block_size);
+    block_manager manager(&file_reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;

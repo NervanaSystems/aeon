@@ -20,7 +20,7 @@
 #include <iostream>
 #include <iterator>
 
-#include "block_loader_nds_async.hpp"
+#include "block_loader_nds.hpp"
 #include "util.hpp"
 #include "file_util.hpp"
 #include "log.hpp"
@@ -31,9 +31,9 @@
 using namespace std;
 using namespace nervana;
 
-block_loader_nds_async::block_loader_nds_async(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
+block_loader_nds::block_loader_nds(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
                                    size_t shard_count, size_t shard_index)
-    : block_loader_source_async(*this)
+    : block_loader_source(*this)
     , m_baseurl(baseurl)
     , m_token(token)
     , m_collection_id(collection_id)
@@ -42,14 +42,14 @@ block_loader_nds_async::block_loader_nds_async(const std::string& baseurl, const
 {
 }
 
-nervana::encoded_record_list* block_loader_nds_async::filler()
+nervana::encoded_record_list* block_loader_nds::filler()
 {
     encoded_record_list* rc = get_pending_buffer();
 
     return rc;
 }
 
-// size_t block_loader_nds_async::object_count() const
+// size_t block_loader_nds::object_count() const
 // {
 //     return m_object_count;
 // }

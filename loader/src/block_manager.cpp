@@ -17,17 +17,17 @@
 #include <fstream>
 #include <exception>
 
-#include "block_manager_async.hpp"
+#include "block_manager.hpp"
 #include "file_util.hpp"
 #include "cpio.hpp"
 
 using namespace std;
 using namespace nervana;
 
-const std::string block_manager_async::m_owner_lock_filename     = "caching_in_progress";
-const std::string block_manager_async::m_cache_complete_filename = "cache_complete";
+const std::string block_manager::m_owner_lock_filename     = "caching_in_progress";
+const std::string block_manager::m_cache_complete_filename = "cache_complete";
 
-nervana::block_manager_async::block_manager_async(block_loader_source_async* file_loader, size_t block_size, const string& cache_root, bool enable_shuffle)
+nervana::block_manager::block_manager(block_loader_source* file_loader, size_t block_size, const string& cache_root, bool enable_shuffle)
     : async_manager<encoded_record_list, encoded_record_list>{file_loader}
     , m_file_loader{*file_loader}
     , m_block_size{m_file_loader.block_size()}
@@ -70,7 +70,7 @@ nervana::block_manager_async::block_manager_async(block_loader_source_async* fil
     }
 }
 
-nervana::encoded_record_list* block_manager_async::filler()
+nervana::encoded_record_list* block_manager::filler()
 {
     encoded_record_list* rc = get_pending_buffer();
     encoded_record_list* input = nullptr;
@@ -160,7 +160,7 @@ nervana::encoded_record_list* block_manager_async::filler()
     return rc;
 }
 
-string block_manager_async::create_cache_name(source_uid_t uid)
+string block_manager::create_cache_name(source_uid_t uid)
 {
     stringstream ss;
     ss << "aeon_cache_";
@@ -168,33 +168,33 @@ string block_manager_async::create_cache_name(source_uid_t uid)
     return ss.str();
 }
 
-string block_manager_async::create_cache_block_name(size_t block_number)
+string block_manager::create_cache_block_name(size_t block_number)
 {
     stringstream ss;
     ss << "block_" << block_number << ".cpio";
     return ss.str();
 }
 
-bool block_manager_async::check_if_complete(const std::string& cache_dir)
+bool block_manager::check_if_complete(const std::string& cache_dir)
 {
     string file = file_util::path_join(cache_dir, m_cache_complete_filename);
     return file_util::exists(file);
 }
 
-void block_manager_async::mark_cache_complete(const std::string& cache_dir)
+void block_manager::mark_cache_complete(const std::string& cache_dir)
 {
     string   file = file_util::path_join(cache_dir, m_cache_complete_filename);
     ofstream f{file};
 }
 
-bool block_manager_async::take_ownership(const std::string& cache_dir, int& lock)
+bool block_manager::take_ownership(const std::string& cache_dir, int& lock)
 {
     string file = file_util::path_join(cache_dir, m_owner_lock_filename);
     lock = file_util::try_get_lock(file);
     return lock != -1;
 }
 
-void block_manager_async::release_ownership(const std::string& cache_dir, int lock)
+void block_manager::release_ownership(const std::string& cache_dir, int lock)
 {
     string file = file_util::path_join(cache_dir, m_owner_lock_filename);
     file_util::release_lock(lock, file);

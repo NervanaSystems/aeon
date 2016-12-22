@@ -34,7 +34,7 @@
 #include "manifest_file.hpp"
 #include "crc.hpp"
 #include "file_util.hpp"
-#include "block_loader_file_async.hpp"
+#include "block_loader_file.hpp"
 #include "base64.hpp"
 #include "gen_image.hpp"
 
@@ -246,7 +246,7 @@ TEST(manifest, file_implicit)
     size_t block_size = 16;
     manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
 
-    block_loader_file_async bload{&manifest, block_size};
+    block_loader_file bload{&manifest, block_size};
 
     for (int i=0; i<2; i++)
     {
@@ -290,7 +290,7 @@ TEST(manifest, file_explicit)
     EXPECT_EQ(manifest::element_t::FILE, types[0]);
     EXPECT_EQ(manifest::element_t::FILE, types[1]);
 
-    block_loader_file_async bload{&manifest, block_size};
+    block_loader_file bload{&manifest, block_size};
     for (int i=0; i<2; i++)
     {
         encoded_record_list* buffer = bload.filler();
@@ -344,7 +344,7 @@ TEST(manifest, binary)
     EXPECT_EQ(manifest::element_t::FILE, types[0]);
     EXPECT_EQ(manifest::element_t::BINARY, types[1]);
 
-    block_loader_file_async block_loader{&manifest, block_size};
+    block_loader_file block_loader{&manifest, block_size};
     index = 0;
     for (int i=0; i<2; i++)
     {
@@ -392,7 +392,7 @@ TEST(manifest, string)
     EXPECT_EQ(manifest::element_t::FILE, types[0]);
     EXPECT_EQ(manifest::element_t::STRING, types[1]);
 
-    block_loader_file_async block_loader{&manifest, block_size};
+    block_loader_file block_loader{&manifest, block_size};
     index = 0;
     for (int i=0; i<2; i++)
     {

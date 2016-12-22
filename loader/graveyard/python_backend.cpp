@@ -22,7 +22,7 @@ using namespace std;
 
 // TODO: need to use outputs buffer to iterate through named fixed_buffer_map
 
-python_backend::python_backend(loader_async* loader_source, PyObject* py_obj_backend)
+python_backend::python_backend(batch_decoder* loader_source, PyObject* py_obj_backend)
     : async_manager<fixed_buffer_map, std::vector<PyObject*>>(loader_source)
     , m_py_obj_backend(py_obj_backend)
 {

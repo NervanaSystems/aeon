@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "block_loader_source_async.hpp"
+#include "block_loader_source.hpp"
 #include "manifest_file.hpp"
 #include "buffer_batch.hpp"
 
@@ -29,14 +29,14 @@
 
 namespace nervana
 {
-    class block_loader_nds_async;
+    class block_loader_nds;
 }
 
-class nervana::block_loader_nds_async
-    : public block_loader_source_async
+class nervana::block_loader_nds
+    : public block_loader_source
 {
 public:
-    block_loader_nds_async(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
+    block_loader_nds(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
                      size_t shard_count = 1, size_t shard_index = 0);
 
     // void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
@@ -47,7 +47,7 @@ public:
 
 
 
-    virtual ~block_loader_nds_async()
+    virtual ~block_loader_nds()
     {
         finalize();
     }

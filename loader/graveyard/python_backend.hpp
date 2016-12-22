@@ -44,7 +44,7 @@ private:
 class nervana::python_backend : public nervana::async_manager<nervana::fixed_buffer_map, std::vector<PyObject*>>
 {
 public:
-    python_backend(loader_async* loader_source, PyObject* py_obj_backend);
+    python_backend(batch_decoder* loader_source, PyObject* py_obj_backend);
     ~python_backend();
 
     virtual std::vector<PyObject*>* filler() override;

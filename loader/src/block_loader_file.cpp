@@ -20,7 +20,7 @@
 #include <iostream>
 #include <iterator>
 
-#include "block_loader_file_async.hpp"
+#include "block_loader_file.hpp"
 #include "util.hpp"
 #include "file_util.hpp"
 #include "log.hpp"
@@ -29,8 +29,8 @@
 using namespace std;
 using namespace nervana;
 
-block_loader_file_async::block_loader_file_async(manifest_file* manifest, size_t block_size)
-    : block_loader_source_async(manifest)
+block_loader_file::block_loader_file(manifest_file* manifest, size_t block_size)
+    : block_loader_source(manifest)
     , m_block_size(block_size)
     , m_record_count{manifest->record_count()}
     , m_manifest(*manifest)
@@ -40,7 +40,7 @@ block_loader_file_async::block_loader_file_async(manifest_file* manifest, size_t
     m_elements_per_record = element_count();
 }
 
-nervana::encoded_record_list* block_loader_file_async::filler()
+nervana::encoded_record_list* block_loader_file::filler()
 {
     encoded_record_list* rc = get_pending_buffer();
 
@@ -113,7 +113,7 @@ nervana::encoded_record_list* block_loader_file_async::filler()
     return rc;
 }
 
-void block_loader_file_async::reset()
+void block_loader_file::reset()
 {
-    block_loader_source_async::reset();
+    block_loader_source::reset();
 }

@@ -16,7 +16,7 @@
 #pragma once
 #include <string>
 #include "async_manager.hpp"
-#include "block_manager_async.hpp"
+#include "block_manager.hpp"
 #include "buffer_batch.hpp"
 #include "util.hpp"
 
@@ -28,15 +28,15 @@
 
 namespace nervana
 {
-    class batch_iterator_async;
+    class batch_iterator;
 }
 
-class nervana::batch_iterator_async
+class nervana::batch_iterator
     : public async_manager<encoded_record_list, encoded_record_list>
 {
 public:
-    batch_iterator_async(block_manager_async*, size_t batch_size);
-    virtual ~batch_iterator_async() { finalize(); }
+    batch_iterator(block_manager*, size_t batch_size);
+    virtual ~batch_iterator() { finalize(); }
     virtual size_t record_count() const override { return m_batch_size; }
     virtual encoded_record_list* filler() override;
 

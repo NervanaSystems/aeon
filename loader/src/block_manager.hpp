@@ -18,11 +18,11 @@
 #include <string>
 
 #include "async_manager.hpp"
-#include "block_loader_source_async.hpp"
+#include "block_loader_source.hpp"
 #include "buffer_batch.hpp"
 #include "block.hpp"
 
-/* block_manager_async
+/* block_manager
  *
  * Reads files from the manifest and optionally caches and shuffles them.
  *
@@ -30,16 +30,16 @@
 
 namespace nervana
 {
-    class block_manager_async;
+    class block_manager;
 }
 
-class nervana::block_manager_async
+class nervana::block_manager
     : public async_manager<encoded_record_list, encoded_record_list>
 {
 public:
-    block_manager_async(block_loader_source_async* file_loader, size_t block_size, const std::string& cache_root, bool enable_shuffle);
+    block_manager(block_loader_source* file_loader, size_t block_size, const std::string& cache_root, bool enable_shuffle);
 
-    virtual ~block_manager_async()
+    virtual ~block_manager()
     {
         finalize();
     }
@@ -73,7 +73,7 @@ private:
     static const std::string m_owner_lock_filename;
     static const std::string m_cache_complete_filename;
 
-    block_loader_source_async& m_file_loader;
+    block_loader_source& m_file_loader;
     size_t                     m_block_size;
     size_t                     m_block_count;
     size_t                     m_record_count;

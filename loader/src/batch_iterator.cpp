@@ -13,19 +13,19 @@
  limitations under the License.
 */
 
-#include "batch_iterator_async.hpp"
+#include "batch_iterator.hpp"
 #include "log.hpp"
 
 using namespace nervana;
 
-batch_iterator_async::batch_iterator_async(block_manager_async* blkl, size_t batch_size)
+batch_iterator::batch_iterator(block_manager* blkl, size_t batch_size)
     : async_manager<encoded_record_list, encoded_record_list>(blkl)
     , m_batch_size(batch_size)
 {
     m_element_count = element_count();
 }
 
-encoded_record_list* batch_iterator_async::filler()
+encoded_record_list* batch_iterator::filler()
 {
     encoded_record_list* rc = get_pending_buffer();
 
