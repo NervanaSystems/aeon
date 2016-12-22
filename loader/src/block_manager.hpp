@@ -51,14 +51,9 @@ public:
         return m_block_size;
     }
 
-    size_t block_size() const
+    size_t elements_per_record() const override
     {
-        return m_block_size;
-    }
-
-    size_t block_count() const
-    {
-        return m_block_count;
+        return m_file_loader.elements_per_record();
     }
 
 private:

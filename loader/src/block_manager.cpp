@@ -34,7 +34,7 @@ nervana::block_manager::block_manager(block_loader_source* file_loader, size_t b
     , m_block_count{m_file_loader.block_count()}
     , m_record_count{m_file_loader.record_count()}
     , m_current_block_number{0}
-    , m_elements_per_record{m_file_loader.element_count()}
+    , m_elements_per_record{m_file_loader.elements_per_record()}
     , m_cache_root{cache_root}
     , m_cache_enabled{m_cache_root.empty() == false}
     , m_shuffle_enabled{enable_shuffle}
@@ -137,12 +137,15 @@ nervana::encoded_record_list* block_manager::filler()
         // The non-cache path
         input = m_source->next();
 
-        rc->swap(*input);
-
-        if (++m_current_block_number == m_block_count)
+        if (input != nullptr)
         {
-            m_current_block_number = 0;
-            m_file_loader.reset();
+            rc->swap(*input);
+
+            if (++m_current_block_number == m_block_count)
+            {
+                m_current_block_number = 0;
+                m_file_loader.reset();
+            }
         }
     }
 

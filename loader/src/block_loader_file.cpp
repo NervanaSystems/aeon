@@ -30,14 +30,14 @@ using namespace std;
 using namespace nervana;
 
 block_loader_file::block_loader_file(manifest_file* manifest, size_t block_size)
-    : block_loader_source(manifest)
+    : async_manager<std::vector<std::vector<std::string>>, encoded_record_list>{manifest}
     , m_block_size(block_size)
     , m_record_count{manifest->record_count()}
     , m_manifest(*manifest)
 {
     m_block_count = round((float)m_manifest.record_count() / (float)m_block_size);
     m_block_size = ceil((float)m_manifest.record_count() / (float)m_block_count);
-    m_elements_per_record = element_count();
+    m_elements_per_record = manifest->elements_per_record();
 }
 
 nervana::encoded_record_list* block_loader_file::filler()
@@ -111,9 +111,4 @@ nervana::encoded_record_list* block_loader_file::filler()
     }
 
     return rc;
-}
-
-void block_loader_file::reset()
-{
-    block_loader_source::reset();
 }

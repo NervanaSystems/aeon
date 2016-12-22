@@ -93,8 +93,8 @@ public:
 
     virtual ~batch_decoder();
 
-    virtual size_t                     record_count() const override { return m_batch_size; }
-    virtual size_t                     element_count() const override { return m_number_elements_out; }
+    virtual size_t record_count() const override { return m_batch_size; }
+    virtual size_t elements_per_record() const override { return m_number_elements_out; }
     virtual fixed_buffer_map* filler() override;
 
 private:

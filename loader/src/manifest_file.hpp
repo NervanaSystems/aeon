@@ -43,7 +43,9 @@ namespace nervana
     class manifest_file;
 }
 
-class nervana::manifest_file : public nervana::async_manager_source<std::vector<std::vector<std::string>>>, public nervana::manifest
+class nervana::manifest_file
+        : public nervana::async_manager_source<std::vector<std::vector<std::string>>>
+        , public nervana::manifest
 {
 public:
     manifest_file(const std::string& filename, bool shuffle, const std::string& root = "", float subset_fraction = 1.0,
@@ -63,7 +65,7 @@ public:
 
     size_t block_count() const { return m_block_list.size(); }
     size_t record_count() const override { return m_record_count; }
-    size_t element_count() const override { return m_element_types.size(); }
+    size_t elements_per_record() const override { return m_element_types.size(); }
     void generate_subset(std::vector<std::vector<std::string>>&, float subset_fraction);
     uint32_t get_crc();
 

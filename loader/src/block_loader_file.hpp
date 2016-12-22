@@ -32,17 +32,24 @@ namespace nervana
     class block_loader_file;
 }
 
-class nervana::block_loader_file : public block_loader_source
+class nervana::block_loader_file
+        : public block_loader_source
+        , public async_manager<std::vector<std::vector<std::string>>, encoded_record_list>
 {
 public:
     block_loader_file(manifest_file* mfst, size_t block_size);
+
     virtual ~block_loader_file()
     {
         finalize();
     }
 
     encoded_record_list* filler() override;
-    void reset() override;
+
+    void reset() override
+    {
+        m_manifest.reset();
+    }
 
     size_t block_count() const override
     {
@@ -67,6 +74,11 @@ public:
     source_uid_t get_uid() const override
     {
         return m_manifest.get_crc();
+    }
+
+    encoded_record_list* next() override
+    {
+        return async_manager<std::vector<std::vector<std::string>>, encoded_record_list>::next();
     }
 
 private:

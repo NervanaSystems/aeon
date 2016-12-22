@@ -20,12 +20,38 @@
 
 #include "buffer_batch.hpp"
 #include "etl_image.hpp"
+#include "util.hpp"
 
 std::vector<std::string> buffer_to_vector_of_strings(nervana::encoded_record_list& b);
 bool sorted(std::vector<std::string> words);
 void dump_vector_of_strings(std::vector<std::string>& words);
 
 void assert_vector_unique(std::vector<std::string>& words);
+
+class element_info
+{
+public:
+    element_info(const std::string& s)
+    {
+        auto tmp = nervana::split(s, ':');
+        m_record_number = stod(tmp[0]);
+        m_element_number = stod(tmp[1]);
+    }
+
+    size_t record_number() const
+    {
+        return m_record_number;
+    }
+
+    size_t element_number() const
+    {
+        return m_element_number;
+    }
+
+private:
+    size_t m_record_number;
+    size_t m_element_number;
+};
 
 class image_params_builder
 {

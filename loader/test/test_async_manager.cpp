@@ -50,7 +50,7 @@ public:
     {
         return m_data.size();
     }
-    size_t element_count() const override
+    size_t elements_per_record() const override
     {
         return 1;
     }
@@ -71,7 +71,7 @@ class integer_batcher : public async_manager<int, minibatch>
 {
 public:
     integer_batcher(data_source* d)
-    : async_manager<int, minibatch>(d)
+        : async_manager<int, minibatch>(d)
     {
     }
 
@@ -99,6 +99,16 @@ public:
             rc = output;
         }
         return rc;
+    }
+
+    size_t record_count() const
+    {
+        return 100;
+    }
+
+    size_t elements_per_record() const
+    {
+        return 1;
     }
 };
 

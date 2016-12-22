@@ -31,25 +31,27 @@
 using namespace std;
 using namespace nervana;
 
-block_loader_nds::block_loader_nds(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
-                                   size_t shard_count, size_t shard_index)
-    : block_loader_source(*this)
-    , m_baseurl(baseurl)
-    , m_token(token)
-    , m_collection_id(collection_id)
-    , m_shard_count(shard_count)
-    , m_shard_index(shard_index)
+block_loader_nds::block_loader_nds(manifest_nds* manifest, size_t block_size)
+    : async_manager<encoded_record_list, encoded_record_list>{manifest}
+    , m_manifest{*manifest}
+    , m_block_size{0}
+    , m_block_count{manifest->block_count()}
+    , m_record_count{manifest->record_count()}
+    , m_elements_per_record{manifest->elements_per_record()}
 {
 }
 
 nervana::encoded_record_list* block_loader_nds::filler()
 {
     encoded_record_list* rc = get_pending_buffer();
+    encoded_record_list* input = nullptr;
+
+    rc->clear();
+    input = m_manifest.next();
+    if (input != nullptr)
+    {
+        input->swap(*rc);
+    }
 
     return rc;
 }
-
-// size_t block_loader_nds::object_count() const
-// {
-//     return m_object_count;
-// }

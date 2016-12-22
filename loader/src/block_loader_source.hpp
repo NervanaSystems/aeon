@@ -29,18 +29,10 @@ namespace nervana
 }
 
 class nervana::block_loader_source
-    : public async_manager<std::vector<std::vector<std::string>>, encoded_record_list>
+    : public async_manager_source<encoded_record_list>
 {
 public:
-    block_loader_source(async_manager_source<std::vector<std::vector<std::string>>>* source)
-        : async_manager<std::vector<std::vector<std::string>>, encoded_record_list>(source)
-    {
-        // Make the container pair?  Currently letting child handle it in filler()
-    }
-
-    virtual size_t record_count() const = 0;
     virtual size_t block_size() const = 0;
     virtual size_t block_count() const = 0;
-    virtual size_t elements_per_record() const = 0;
     virtual source_uid_t get_uid() const = 0;
 };

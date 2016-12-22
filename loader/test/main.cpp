@@ -68,26 +68,25 @@ public:
         else if (url == "/macrobatch/")
         {
             map<string,string> args = page.args();
-            int block_size = stod(args["macro_batch_max_size"]);
-            int block_index = stod(args["macro_batch_index"]);
-            int collection_id = stod(args["collection_id"]);
+            size_t block_size = stod(args["macro_batch_max_size"]);
+            size_t block_index = stod(args["macro_batch_index"]);
+            size_t collection_id = stod(args["collection_id"]);
             string token = args["token"];
             (void)block_index; (void)collection_id; (void)token; // silence warning
             stringstream ss;
             {
+                size_t record_start = block_size * block_index;
                 cpio::writer writer(ss);
                 encoded_record_list record_list;
-                for (int record_number=0; record_number<block_size; record_number++)
+                for (size_t record_number=0; record_number<block_size; record_number++)
                 {
                     encoded_record record;
-                    for (int element_number=0; element_number<m_elements_size_list.size(); element_number++)
+                    for (size_t element_number=0; element_number<m_elements_size_list.size(); element_number++)
                     {
-                        vector<char> data(m_elements_size_list[element_number]);
                         stringstream ss;
-                        ss << record_number << ":" << element_number;
+                        ss << record_number+record_start << ":" << element_number;
                         string id = ss.str();
-                        id.copy(data.data(), id.size());
-                        data[id.size()] = 0;
+                        auto data = string2vector(id);
                         record.add_element(data);
                     }
                     record_list.add_record(record);

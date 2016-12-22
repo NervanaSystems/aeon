@@ -24,121 +24,21 @@
 
 #include "gtest/gtest.h"
 
-// cringe
-#define private public
-#include "manifest_nds.hpp"
 #include "file_util.hpp"
 #include "web_server.hpp"
 #include "json.hpp"
 #include "cpio.hpp"
+#include "helpers.hpp"
+
+#define private public
+#include "manifest_nds.hpp"
 
 using namespace std;
 using namespace nervana;
 
-class curl_client
-{
-public:
-    curl_client(const std::string& baseurl, const std::string& token, int collection_id, uint32_t block_size,
-                                       int shard_count, int shard_index)
-        : m_baseurl(baseurl)
-        , m_token(token)
-        , m_collection_id(collection_id)
-        , m_shard_count(shard_count)
-        , m_shard_index(shard_index)
-        , m_macrobatch_size(block_size)
-    {
-        curl_global_init(CURL_GLOBAL_ALL);
-    }
-
-    ~curl_client()
-    {
-        curl_global_cleanup();
-    }
-
-    static size_t callback(void* ptr, size_t size, size_t nmemb, void* stream)
-    {
-        stringstream& ss = *(stringstream*)stream;
-        // callback used by curl.  writes data from ptr into the
-        // stringstream passed in to `stream`.
-
-        ss.write((const char*)ptr, size * nmemb);
-        return size * nmemb;
-    }
-
-    void get(const string& url, stringstream& stream)
-    {
-        // reuse curl connection across requests
-        void* m_curl = curl_easy_init();
-
-        // given a url, make an HTTP GET request and fill stream with
-        // the body of the response
-
-        curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, callback);
-        curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
-
-        // Perform the request, res will get the return code
-        CURLcode res = curl_easy_perform(m_curl);
-
-        // Check for errors
-        long http_code = 0;
-        curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &http_code);
-        if (http_code != 200 || res != CURLE_OK)
-        {
-            stringstream ss;
-            ss << "HTTP GET on \n'" << url << "' failed. ";
-            ss << "status code: " << http_code;
-            if (res != CURLE_OK)
-            {
-                ss << " curl return: " << curl_easy_strerror(res);
-            }
-
-            curl_easy_cleanup(m_curl);
-            throw std::runtime_error(ss.str());
-        }
-
-        curl_easy_cleanup(m_curl);
-    }
-
-    string load_block_url(uint32_t block_num)
-    {
-        stringstream ss;
-        ss << m_baseurl << "/macrobatch/?";
-        ss << "macro_batch_index=" << block_num;
-        ss << "&macro_batch_max_size=" << m_macrobatch_size;
-        ss << "&collection_id=" << m_collection_id;
-        ss << "&shard_count=" << m_shard_count;
-        ss << "&shard_index=" << m_shard_index;
-        ss << "&token=" << m_token;
-        return ss.str();
-    }
-
-    string metadata_url()
-    {
-        stringstream ss;
-        ss << m_baseurl << "/object_count/?";
-        ss << "macro_batch_max_size=" << m_macrobatch_size;
-        ss << "&collection_id=" << m_collection_id;
-        ss << "&shard_count=" << m_shard_count;
-        ss << "&shard_index=" << m_shard_index;
-        ss << "&token=" << m_token;
-        return ss.str();
-    }
-
-private:
-    const std::string m_baseurl;
-    const std::string m_token;
-    const int         m_collection_id;
-    const int         m_shard_count;
-    const int         m_shard_index;
-    unsigned int      m_object_count;
-    unsigned int      m_block_count;
-    uint32_t          m_macrobatch_size;
-};
-
 TEST(DISABLED_curl,test)
 {
-    curl_client client("http://127.0.0.1:5000", "token", 1, 500, 1, 0);
+    network_client client("http://127.0.0.1:5000", "token", 1, 500, 1, 0);
 
     for (int i=0; i<1000; i++)
     {
@@ -151,11 +51,19 @@ TEST(DISABLED_curl,test)
 
 TEST(block_loader_nds, curl_stream)
 {
-    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
-            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
+    size_t block_size = 16;
+    size_t elements_per_record = 2;
+
+    manifest_nds client = manifest_nds_builder()
+            .base_url("http://127.0.0.1:5000")
+            .token("token")
+            .collection_id(1)
+            .block_size(block_size)
+            .elements_per_record(elements_per_record)
+            .create();
 
     stringstream stream;
-    client.get("http://127.0.0.1:5000/test_pattern/", stream);
+    client.m_network_client.get("http://127.0.0.1:5000/test_pattern/", stream);
 
     stringstream expected;
     for (int i = 0; i < 1024; ++i)
@@ -167,17 +75,33 @@ TEST(block_loader_nds, curl_stream)
 
 TEST(block_loader_nds, curl_stream_error)
 {
-    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
-            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
+    size_t block_size = 16;
+    size_t elements_per_record = 2;
+
+    manifest_nds client = manifest_nds_builder()
+            .base_url("http://127.0.0.1:5000")
+            .token("token")
+            .collection_id(1)
+            .block_size(block_size)
+            .elements_per_record(elements_per_record)
+            .create();
 
     stringstream stream;
-    EXPECT_THROW(client.get("http://127.0.0.1:5000/error", stream), std::runtime_error);
+    EXPECT_THROW(client.m_network_client.get("http://127.0.0.1:5000/error", stream), std::runtime_error);
 }
 
 TEST(block_loader_nds, record_count)
 {
-    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
-            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
+    size_t block_size = 16;
+    size_t elements_per_record = 2;
+
+    manifest_nds client = manifest_nds_builder()
+            .base_url("http://127.0.0.1:5000")
+            .token("token")
+            .collection_id(1)
+            .block_size(block_size)
+            .elements_per_record(elements_per_record)
+            .create();
 
     // 200 and 5 are hard coded in the mock nds server
     ASSERT_EQ(client.record_count(), 200);
@@ -186,16 +110,37 @@ TEST(block_loader_nds, record_count)
 
 TEST(block_loader_nds, cpio)
 {
-    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
-            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
+    size_t block_size = 16;
+    size_t elements_per_record = 2;
+    size_t block_count = 3;
 
-//     buffer_in_array dest(2);
-//     ASSERT_EQ(dest.size(), 2);
-//     ASSERT_EQ(dest[0]->record_count(), 0);
+    manifest_nds client = manifest_nds_builder()
+            .base_url("http://127.0.0.1:5000")
+            .token("token")
+            .collection_id(1)
+            .block_size(block_size)
+            .elements_per_record(elements_per_record)
+            .create();
 
-    encoded_record_list block = client.load_block(0);
+    size_t record_number = 0;
+    for (size_t block_number=0; block_number<block_count; block_number++)
+    {
+        encoded_record_list* block = client.load_block(block_number);
+        ASSERT_EQ(block_size, block->size());
 
-//     ASSERT_EQ(dest[0]->record_count(), 2);
+        for (auto record : *block)
+        {
+            element_info info0(vector2string(record.element(0)));
+            element_info info1(vector2string(record.element(1)));
+
+            ASSERT_EQ(record_number, info0.record_number());
+            ASSERT_EQ(record_number, info1.record_number());
+            ASSERT_EQ(0, info0.element_number());
+            ASSERT_EQ(1, info1.element_number());
+
+            record_number++;
+        }
+    }
 }
 
 // TEST(block_loader_nds, multiblock_sequential)

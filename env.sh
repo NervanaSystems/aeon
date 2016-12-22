@@ -6,6 +6,7 @@ SRCS="
     buffer_batch.cpp
     batch_iterator.cpp
     block_loader_file.cpp
+    block_loader_nds.cpp
     block_manager.cpp
     box.cpp
     cap_mjpeg_decoder.cpp

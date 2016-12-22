@@ -18,7 +18,7 @@
 #include <string>
 
 #include "block_loader_source.hpp"
-#include "manifest_file.hpp"
+#include "manifest_nds.hpp"
 #include "buffer_batch.hpp"
 
 /* block_loader_nds
@@ -34,18 +34,10 @@ namespace nervana
 
 class nervana::block_loader_nds
     : public block_loader_source
+    , public async_manager<encoded_record_list, encoded_record_list>
 {
 public:
-    block_loader_nds(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
-                     size_t shard_count = 1, size_t shard_index = 0);
-
-    // void load_block(nervana::buffer_in_array& dest, uint32_t block_num) override;
-    // uint32_t object_count() override;
-
-    // uint32_t block_count();
-
-
-
+    block_loader_nds(manifest_nds*, size_t block_size);
 
     virtual ~block_loader_nds()
     {
@@ -54,12 +46,10 @@ public:
 
     encoded_record_list* filler() override;
 
-
-    // source
-    std::vector<std::vector<std::string>>* next() override;
-    size_t element_count() const override;
-    void reset() override;
-
+    void reset() override
+    {
+        m_manifest.reset();
+   }
 
     size_t record_count() const override
     {
@@ -86,16 +76,15 @@ public:
         return 0;
     }
 
+    encoded_record_list* next() override
+    {
+        return async_manager<encoded_record_list, encoded_record_list>::next();
+    }
+
 private:
+    manifest_nds& m_manifest;
     size_t        m_block_size;
+    size_t        m_block_count;
     size_t        m_record_count;
     size_t        m_elements_per_record;
-
-    const std::string     m_baseurl;
-    const std::string     m_token;
-    const size_t             m_collection_id;
-    const size_t             m_shard_count;
-    const size_t             m_shard_index;
-    size_t          m_object_count;
-    size_t          m_block_count;
 };

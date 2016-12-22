@@ -93,7 +93,7 @@ TEST(manifest, no_shuffle)
     nervana::manifest_file manifest2(ms2, false);
 
     ASSERT_EQ(manifest1.record_count(), manifest2.record_count());
-    ASSERT_EQ(2, manifest1.element_count());
+    ASSERT_EQ(2, manifest1.elements_per_record());
     for (int i=0; i<manifest1.record_count(); i++)
     {
         ASSERT_EQ(manifest1[i][0], manifest2[i][0]);
