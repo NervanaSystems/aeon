@@ -35,7 +35,8 @@ public:
     static std::string get_temp_directory();
     static void remove_file(const std::string& file);
     static std::vector<char> read_file_contents(const std::string& path);
-    static void iterate_files(const std::string& path, std::function<void(const std::string& file, bool is_dir)> func,
+    static void iterate_files(const std::string& path,
+                              std::function<void(const std::string& file, bool is_dir)> func,
                               bool recurse = false);
     static std::string tmp_filename(const std::string& extension = "");
     static void touch(const std::string& filename);
@@ -44,6 +45,7 @@ public:
     static void release_lock(int fd, const std::string& filename);
 
 private:
-    static void iterate_files_worker(const std::string& path, std::function<void(const std::string& file, bool is_dir)> func,
+    static void iterate_files_worker(const std::string& path,
+                                     std::function<void(const std::string& file, bool is_dir)> func,
                                      bool recurse = false);
 };

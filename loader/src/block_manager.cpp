@@ -27,7 +27,10 @@ using namespace nervana;
 const std::string block_manager::m_owner_lock_filename     = "caching_in_progress";
 const std::string block_manager::m_cache_complete_filename = "cache_complete";
 
-nervana::block_manager::block_manager(block_loader_source* file_loader, size_t block_size, const string& cache_root, bool enable_shuffle)
+nervana::block_manager::block_manager(block_loader_source* file_loader,
+                                      size_t               block_size,
+                                      const string&        cache_root,
+                                      bool                 enable_shuffle)
     : async_manager<encoded_record_list, encoded_record_list>{file_loader}
     , m_file_loader{*file_loader}
     , m_block_size{m_file_loader.block_size()}
@@ -72,7 +75,7 @@ nervana::block_manager::block_manager(block_loader_source* file_loader, size_t b
 
 nervana::encoded_record_list* block_manager::filler()
 {
-    encoded_record_list* rc = get_pending_buffer();
+    encoded_record_list* rc    = get_pending_buffer();
     encoded_record_list* input = nullptr;
 
     rc->clear();
@@ -90,10 +93,11 @@ nervana::encoded_record_list* block_manager::filler()
             if (f)
             {
                 cpio::reader reader(f);
-                for (size_t record_number=0; record_number<reader.record_count(); record_number++)
+                for (size_t record_number = 0; record_number < reader.record_count();
+                     record_number++)
                 {
                     encoded_record record;
-                    for (size_t element=0; element<m_elements_per_record; element++)
+                    for (size_t element = 0; element < m_elements_per_record; element++)
                     {
                         vector<char> e;
                         reader.read(e);
@@ -193,7 +197,7 @@ void block_manager::mark_cache_complete(const std::string& cache_dir)
 bool block_manager::take_ownership(const std::string& cache_dir, int& lock)
 {
     string file = file_util::path_join(cache_dir, m_owner_lock_filename);
-    lock = file_util::try_get_lock(file);
+    lock        = file_util::try_get_lock(file);
     return lock != -1;
 }
 

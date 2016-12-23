@@ -31,7 +31,7 @@ using namespace nervana;
 #warning put a better test here later
 TEST(cpio, read_canonical)
 {
-    ifstream f(string(CURDIR)+"/test_data/test.cpio", istream::binary);
+    ifstream f(string(CURDIR) + "/test_data/test.cpio", istream::binary);
     ASSERT_TRUE(f);
     cpio::reader reader(f);
     EXPECT_EQ(1, reader.record_count());
@@ -43,14 +43,14 @@ TEST(cpio, read_canonical)
 
 TEST(cpio, write_string)
 {
-    int record_count = 10;
+    int          record_count = 10;
     stringstream ss;
     {
-        vector<char> image_data(32);
-        vector<char> label_data(4);
-        cpio::writer writer(ss);
+        vector<char>        image_data(32);
+        vector<char>        label_data(4);
+        cpio::writer        writer(ss);
         encoded_record_list bin;
-        for (int i=0; i<record_count; i++)
+        for (int i = 0; i < record_count; i++)
         {
             encoded_record record;
             record.add_element(image_data);

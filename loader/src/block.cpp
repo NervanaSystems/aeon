@@ -22,17 +22,17 @@ using namespace nervana;
 std::vector<block_info> nervana::generate_block_list(size_t record_count, size_t block_size)
 {
     size_t block_count = round((float)record_count / (float)block_size);
-    block_count = std::max<size_t>(block_count, 1);
-    block_size = ceil((float)record_count / (float)block_count);
+    block_count        = std::max<size_t>(block_count, 1);
+    block_size         = ceil((float)record_count / (float)block_count);
 
     std::vector<block_info> rc;
-    for (size_t block=0; block<block_count; block++)
+    for (size_t block = 0; block < block_count; block++)
     {
         size_t sequence_start = block_size * block;
         size_t sequence_count = block_size;
-        if (sequence_start+sequence_count > record_count)
+        if (sequence_start + sequence_count > record_count)
         {
-            sequence_count -= sequence_start+sequence_count - record_count;
+            sequence_count -= sequence_start + sequence_count - record_count;
         }
         rc.emplace_back(sequence_start, sequence_count);
     }

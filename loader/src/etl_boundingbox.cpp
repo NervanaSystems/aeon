@@ -64,7 +64,9 @@ boundingbox::extractor::extractor(const std::unordered_map<std::string, int>& ma
 {
 }
 
-void boundingbox::extractor::extract(const void* data, size_t size, std::shared_ptr<boundingbox::decoded>& rc)
+void boundingbox::extractor::extract(const void*                            data,
+                                     size_t                                 size,
+                                     std::shared_ptr<boundingbox::decoded>& rc)
 {
     string buffer((const char*)data, size);
     json   j = json::parse(buffer);
@@ -153,8 +155,12 @@ boundingbox::transformer::transformer(const boundingbox::config&)
 {
 }
 
-vector<boundingbox::box> boundingbox::transformer::transform_box(const std::vector<boundingbox::box>& boxes, const cv::Rect& crop,
-                                                                 bool flip, float x_scale, float y_scale)
+vector<boundingbox::box>
+    boundingbox::transformer::transform_box(const std::vector<boundingbox::box>& boxes,
+                                            const cv::Rect&                      crop,
+                                            bool                                 flip,
+                                            float                                x_scale,
+                                            float                                y_scale)
 {
     // 1) rotate
     // 2) crop
@@ -230,17 +236,18 @@ vector<boundingbox::box> boundingbox::transformer::transform_box(const std::vect
     return rc;
 }
 
-shared_ptr<boundingbox::decoded> boundingbox::transformer::transform(shared_ptr<image::params>        pptr,
-                                                                     shared_ptr<boundingbox::decoded> boxes)
+shared_ptr<boundingbox::decoded>
+    boundingbox::transformer::transform(shared_ptr<image::params>        pptr,
+                                        shared_ptr<boundingbox::decoded> boxes)
 {
     if (pptr->angle != 0)
     {
         return shared_ptr<boundingbox::decoded>();
     }
-    shared_ptr<boundingbox::decoded> rc      = make_shared<boundingbox::decoded>();
-    cv::Rect                         crop    = pptr->cropbox;
-    float                            x_scale = (float)(pptr->output_size.width) / (float)(crop.width);
-    float                            y_scale = (float)(pptr->output_size.height) / (float)(crop.height);
+    shared_ptr<boundingbox::decoded> rc   = make_shared<boundingbox::decoded>();
+    cv::Rect                         crop = pptr->cropbox;
+    float x_scale                         = (float)(pptr->output_size.width) / (float)(crop.width);
+    float y_scale = (float)(pptr->output_size.height) / (float)(crop.height);
 
     rc->_boxes = transform_box(boxes->boxes(), crop, pptr->flip, x_scale, y_scale);
 

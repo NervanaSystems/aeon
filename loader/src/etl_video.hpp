@@ -50,13 +50,14 @@ public:
         verify_config("video", config_list, js);
 
         // channel major only
-        add_shape_type({frame.channels, max_frame_count, frame.height, frame.width}, frame.output_type);
+        add_shape_type({frame.channels, max_frame_count, frame.height, frame.width},
+                       frame.output_type);
     }
 
 private:
     config() {}
-    std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {ADD_SCALAR(max_frame_count, mode::REQUIRED),
-                                                                                  ADD_IGNORE(frame)};
+    std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+        ADD_SCALAR(max_frame_count, mode::REQUIRED), ADD_IGNORE(frame)};
 };
 
 class nervana::video::extractor : public interface::extractor<image::decoded>
@@ -77,7 +78,8 @@ class nervana::video::transformer : public interface::transformer<image::decoded
 public:
     transformer(const video::config&);
     virtual ~transformer() {}
-    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params>, std::shared_ptr<image::decoded>) override;
+    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params>,
+                                                      std::shared_ptr<image::decoded>) override;
 
 protected:
     transformer() = delete;

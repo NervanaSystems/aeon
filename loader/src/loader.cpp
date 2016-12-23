@@ -28,8 +28,11 @@
 using namespace std;
 using namespace nervana;
 
-batch_decoder::batch_decoder(batch_iterator* b_itor, size_t batch_size, bool single_thread, bool pinned,
-                           const std::shared_ptr<provider_interface>& prov)
+batch_decoder::batch_decoder(batch_iterator*                            b_itor,
+                             size_t                                     batch_size,
+                             bool                                       single_thread,
+                             bool                                       pinned,
+                             const std::shared_ptr<provider_interface>& prov)
     : async_manager<encoded_record_list, fixed_buffer_map>(b_itor)
     , m_batch_size(batch_size)
 {
@@ -54,7 +57,8 @@ batch_decoder::batch_decoder(batch_iterator* b_itor, size_t batch_size, bool sin
     {
         m_providers.push_back(nervana::provider_factory::clone(prov));
         m_start_inds.push_back(i * m_items_per_thread);
-        int record_count = i == nthreads - 1 ? (batch_size - i * m_items_per_thread) : m_items_per_thread;
+        int record_count =
+            i == nthreads - 1 ? (batch_size - i * m_items_per_thread) : m_items_per_thread;
         m_end_inds.push_back(m_start_inds[i] + record_count);
     }
 
@@ -78,7 +82,7 @@ batch_decoder::~batch_decoder()
 
 fixed_buffer_map* batch_decoder::filler()
 {
-    fixed_buffer_map*      outputs = get_pending_buffer();
+    fixed_buffer_map*    outputs = get_pending_buffer();
     encoded_record_list* inputs  = m_source->next();
 
     if (inputs == nullptr)
@@ -199,7 +203,8 @@ void loader::initialize(nlohmann::json& config_json)
     sox_format_init();
 
     // the manifest defines which data should be included in the dataset
-    m_manifest = make_shared<manifest_file>(lcfg.manifest_filename, lcfg.shuffle_manifest, lcfg.manifest_root, lcfg.subset_fraction);
+    m_manifest = make_shared<manifest_file>(
+        lcfg.manifest_filename, lcfg.shuffle_manifest, lcfg.manifest_root, lcfg.subset_fraction);
 
     // TODO: make the constructor throw this error
     if (m_manifest->record_count() == 0)
@@ -209,12 +214,12 @@ void loader::initialize(nlohmann::json& config_json)
 
     if (lcfg.iteration_mode == "ONCE")
     {
-        m_batch_mode = BatchMode::ONCE;
+        m_batch_mode        = BatchMode::ONCE;
         m_batch_count_value = m_manifest->record_count();
     }
     else if (lcfg.iteration_mode == "INFINITE")
     {
-        m_batch_mode = BatchMode::INFINITE;
+        m_batch_mode        = BatchMode::INFINITE;
         m_batch_count_value = m_manifest->record_count();
     }
     else if (lcfg.iteration_mode == "COUNT")
@@ -225,17 +230,20 @@ void loader::initialize(nlohmann::json& config_json)
 
     m_block_loader = make_shared<block_loader_file>(m_manifest.get(), lcfg.block_size);
 
-    m_block_manager = make_shared<block_manager>(m_block_loader.get(), lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_every_epoch);
+    m_block_manager = make_shared<block_manager>(
+        m_block_loader.get(), lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_every_epoch);
 
     m_batch_iterator = make_shared<batch_iterator>(m_block_manager.get(), lcfg.batch_size);
 
     m_provider = provider_factory::create(config_json);
 
-    m_decoder = make_shared<batch_decoder>(m_batch_iterator.get(), static_cast<size_t>(lcfg.batch_size), lcfg.single_thread,
-                                          lcfg.pinned, m_provider);
+    m_decoder = make_shared<batch_decoder>(m_batch_iterator.get(),
+                                           static_cast<size_t>(lcfg.batch_size),
+                                           lcfg.single_thread,
+                                           lcfg.pinned,
+                                           m_provider);
 
     m_output_buffer_ptr = m_decoder->next();
-
 }
 
 const vector<string>& loader::get_buffer_names() const
@@ -256,12 +264,14 @@ const shape_t& loader::get_shape(const string& name) const
 loader::iterator::iterator(loader& ld, bool is_end)
     : m_current_loader(ld)
     , m_is_end{is_end}
-{}
+{
+}
 
 loader::iterator::iterator(const iterator& other)
     : m_current_loader{other.m_current_loader}
     , m_is_end{other.m_is_end}
-{}
+{
+}
 
 loader::iterator& loader::iterator::operator++()
 {

@@ -31,13 +31,10 @@ namespace nervana
         size_t start() const { return m_start; }
         size_t count() const { return m_count; }
         size_t end() const { return m_start + m_count; }
-
     private:
-        size_t      m_start;
-        size_t      m_count;
+        size_t m_start;
+        size_t m_count;
     };
-
 
     std::vector<block_info> generate_block_list(size_t record_count, size_t block_size);
 }
-

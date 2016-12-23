@@ -46,7 +46,8 @@ int nervana::CV_FOURCC(char c1, char c2, char c3, char c4)
 string nervana::fourccToString(uint32_t fourcc)
 {
     stringstream ss;
-    ss << (char)(fourcc & 255) << (char)((fourcc >> 8) & 255) << (char)((fourcc >> 16) & 255) << (char)((fourcc >> 24) & 255);
+    ss << (char)(fourcc & 255) << (char)((fourcc >> 8) & 255) << (char)((fourcc >> 16) & 255)
+       << (char)((fourcc >> 24) & 255);
     return ss.str();
 }
 
@@ -90,29 +91,41 @@ void nervana::AviMjpegStream::printError(istream& in_str, RiffList& list, uint32
 {
     if (!in_str)
     {
-        fprintf(stderr, "Unexpected end of file while searching for %s list\n", fourccToString(expected_fourcc).c_str());
+        fprintf(stderr,
+                "Unexpected end of file while searching for %s list\n",
+                fourccToString(expected_fourcc).c_str());
     }
     else if (list.m_riff_or_list_cc != LIST_CC)
     {
-        fprintf(stderr, "Unexpected element. Expected: %s. Got: %s.\n", fourccToString(LIST_CC).c_str(),
+        fprintf(stderr,
+                "Unexpected element. Expected: %s. Got: %s.\n",
+                fourccToString(LIST_CC).c_str(),
                 fourccToString(list.m_riff_or_list_cc).c_str());
     }
     else
     {
-        fprintf(stderr, "Unexpected list type. Expected: %s. Got: %s.\n", fourccToString(expected_fourcc).c_str(),
+        fprintf(stderr,
+                "Unexpected list type. Expected: %s. Got: %s.\n",
+                fourccToString(expected_fourcc).c_str(),
                 fourccToString(list.m_list_type_cc).c_str());
     }
 }
 
-void nervana::AviMjpegStream::printError(istream& in_str, RiffChunk& chunk, uint32_t expected_fourcc)
+void nervana::AviMjpegStream::printError(istream&   in_str,
+                                         RiffChunk& chunk,
+                                         uint32_t   expected_fourcc)
 {
     if (!in_str)
     {
-        fprintf(stderr, "Unexpected end of file while searching for %s chunk\n", fourccToString(expected_fourcc).c_str());
+        fprintf(stderr,
+                "Unexpected end of file while searching for %s chunk\n",
+                fourccToString(expected_fourcc).c_str());
     }
     else
     {
-        fprintf(stderr, "Unexpected element. Expected: %s. Got: %s.\n", fourccToString(expected_fourcc).c_str(),
+        fprintf(stderr,
+                "Unexpected element. Expected: %s. Got: %s.\n",
+                fourccToString(expected_fourcc).c_str(),
                 fourccToString(chunk.m_four_cc).c_str());
     }
 }
@@ -129,7 +142,9 @@ bool nervana::AviMjpegStream::parseInfo(istream&)
     return true;
 }
 
-bool nervana::AviMjpegStream::parseIndex(istream& in_str, uint32_t index_size, frame_list& in_frame_list)
+bool nervana::AviMjpegStream::parseIndex(istream&    in_str,
+                                         uint32_t    index_size,
+                                         frame_list& in_frame_list)
 {
     uint64_t index_end = in_str.tellg();
     index_end += index_size;
@@ -187,8 +202,11 @@ bool nervana::AviMjpegStream::parseStrl(istream& in_str, uint8_t stream_id)
             else
             {
                 // second mjpeg video stream found which is not supported
-                fprintf(stderr, "More than one video stream found within AVI/AVIX list. Stream %c%cdc would be ignored\n",
-                        first_digit, second_digit);
+                fprintf(stderr,
+                        "More than one video stream found within AVI/AVIX list. Stream %c%cdc "
+                        "would be ignored\n",
+                        first_digit,
+                        second_digit);
             }
 
             return true;
@@ -246,7 +264,8 @@ bool nervana::AviMjpegStream::parseHdrlList(istream& in_str)
                 RiffList strl_list;
                 in_str >> strl_list;
 
-                if (in_str && strl_list.m_riff_or_list_cc == LIST_CC && strl_list.m_list_type_cc == STRL_CC)
+                if (in_str && strl_list.m_riff_or_list_cc == LIST_CC &&
+                    strl_list.m_list_type_cc == STRL_CC)
                 {
                     next_strl_list = in_str.tellg();
                     // RiffList::m_size includes fourCC field which we have already read
@@ -288,7 +307,8 @@ bool nervana::AviMjpegStream::parseAviWithFrameList(istream& in_str, frame_list&
             in_str >> some_list;
 
             // an optional section INFO
-            if (in_str && some_list.m_riff_or_list_cc == LIST_CC && some_list.m_list_type_cc == INFO_CC)
+            if (in_str && some_list.m_riff_or_list_cc == LIST_CC &&
+                some_list.m_list_type_cc == INFO_CC)
             {
                 next_list = in_str.tellg();
                 // RiffList::m_size includes fourCC field which we have already read
@@ -303,7 +323,8 @@ bool nervana::AviMjpegStream::parseAviWithFrameList(istream& in_str, frame_list&
             skipJunk(some_list, in_str);
 
             // we are expecting to find here movi list. Must present in avi
-            if (in_str && some_list.m_riff_or_list_cc == LIST_CC && some_list.m_list_type_cc == MOVI_CC)
+            if (in_str && some_list.m_riff_or_list_cc == LIST_CC &&
+                some_list.m_list_type_cc == MOVI_CC)
             {
                 bool is_index_found = false;
 

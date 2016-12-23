@@ -43,7 +43,7 @@ block_loader_nds::block_loader_nds(manifest_nds* manifest, size_t block_size)
 
 nervana::encoded_record_list* block_loader_nds::filler()
 {
-    encoded_record_list* rc = get_pending_buffer();
+    encoded_record_list* rc    = get_pending_buffer();
     encoded_record_list* input = nullptr;
 
     rc->clear();

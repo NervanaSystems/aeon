@@ -40,7 +40,7 @@ namespace nervana
     T unpack(const char* data, int offset = 0, endian e = endian::LITTLE)
     {
         T     value = 0;
-        char* v = (char*)&value;
+        char* v     = (char*)&value;
         for (int i = 0; i < sizeof(T); i++)
         {
             v[i] = data[offset + BYTEIDX(i, sizeof(T), e)];
@@ -86,13 +86,21 @@ namespace nervana
     {
     public:
         memstream(CharT* data, size_t size) { this->setg(data, data, data + size); }
-        std::ios::pos_type seekoff(std::ios::off_type off, std::ios_base::seekdir dir, std::ios_base::openmode which) override
+        std::ios::pos_type seekoff(std::ios::off_type      off,
+                                   std::ios_base::seekdir  dir,
+                                   std::ios_base::openmode which) override
         {
             switch (dir)
             {
-            case std::ios_base::beg: this->setg(this->eback(), this->eback() + off, this->egptr()); break;
-            case std::ios_base::cur: this->setg(this->eback(), this->gptr() + off, this->egptr()); break;
-            case std::ios_base::end: this->setg(this->eback(), this->egptr() - off, this->egptr()); break;
+            case std::ios_base::beg:
+                this->setg(this->eback(), this->eback() + off, this->egptr());
+                break;
+            case std::ios_base::cur:
+                this->setg(this->eback(), this->gptr() + off, this->egptr());
+                break;
+            case std::ios_base::end:
+                this->setg(this->eback(), this->egptr() - off, this->egptr());
+                break;
             default: break;
             }
             return this->gptr() - this->eback();

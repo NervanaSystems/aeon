@@ -36,8 +36,24 @@ TEST(label_map, test)
 {
     {
         nlohmann::json js = {{"class_names",
-                              {"a", "and", "the", "quick", "fox", "cow", "dog", "blue", "black", "brown", "happy", "lazy", "skip",
-                               "jumped", "run", "under", "over", "around"}}};
+                              {"a",
+                               "and",
+                               "the",
+                               "quick",
+                               "fox",
+                               "cow",
+                               "dog",
+                               "blue",
+                               "black",
+                               "brown",
+                               "happy",
+                               "lazy",
+                               "skip",
+                               "jumped",
+                               "run",
+                               "under",
+                               "over",
+                               "around"}}};
         label_map::config             cfg{js};
         label_map::extractor          extractor{cfg};
         label_map::transformer        transformer;
@@ -98,8 +114,24 @@ TEST(label_map, test)
     }
     {
         nlohmann::json js = {{"class_names",
-                              {"a", "and", "the", "quick", "fox", "cow", "dog", "blue", "black", "brown", "happy", "lazy", "skip",
-                               "jumped", "run", "under", "over", "around"}}};
+                              {"a",
+                               "and",
+                               "the",
+                               "quick",
+                               "fox",
+                               "cow",
+                               "dog",
+                               "blue",
+                               "black",
+                               "brown",
+                               "happy",
+                               "lazy",
+                               "skip",
+                               "jumped",
+                               "run",
+                               "under",
+                               "over",
+                               "around"}}};
         label_map::config    cfg{js};
         label_map::extractor extractor(cfg);
         auto                 data = extractor.get_data();
@@ -116,7 +148,8 @@ TEST(label_map, test)
             vector<int> expected  = {2, 3, 9, 4, 13, 16, 2, 11, 6};
             auto        extracted = extractor.extract(&t1[0], t1.size());
             ASSERT_NE(nullptr, extracted);
-            shared_ptr<label_map::decoded> decoded = static_pointer_cast<label_map::decoded>(extracted);
+            shared_ptr<label_map::decoded> decoded =
+                static_pointer_cast<label_map::decoded>(extracted);
             ASSERT_EQ(expected.size(), decoded->get_data().size());
             for (int i = 0; i < expected.size(); i++)
             {

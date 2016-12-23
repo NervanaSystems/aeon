@@ -22,7 +22,6 @@
 class manifest_builder
 {
 public:
-
     manifest_builder& record_count(size_t value);
     manifest_builder& sizes(const std::vector<size_t>& sizes);
     manifest_builder& image_width(size_t value);
@@ -32,8 +31,8 @@ public:
 
 private:
     std::vector<size_t> m_sizes;
-    size_t m_image_width = 0;
-    size_t m_image_height = 0;
-    size_t m_record_count = 0;
-    std::stringstream m_stream;
+    size_t              m_image_width  = 0;
+    size_t              m_image_height = 0;
+    size_t              m_record_count = 0;
+    std::stringstream   m_stream;
 };

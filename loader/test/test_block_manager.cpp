@@ -91,17 +91,18 @@ TEST(block_manager, cache_busy)
 
     manifest_builder mb;
 
-    size_t record_count    = 10;
-    size_t block_size      = 4;
-    size_t object_size     = 16;
-    size_t target_size     = 16;
+    size_t record_count = 10;
+    size_t block_size   = 4;
+    size_t object_size  = 16;
+    size_t target_size  = 16;
 
-    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    stringstream& manifest_stream =
+        mb.sizes({object_size, target_size}).record_count(record_count).create();
     manifest_file manifest(manifest_stream, false);
 
     block_loader_file reader(&manifest, block_size);
-    string cache_name = block_manager::create_cache_name(reader.get_uid());
-    auto cache_dir = file_util::path_join(cache_root, cache_name);
+    string            cache_name = block_manager::create_cache_name(reader.get_uid());
+    auto              cache_dir  = file_util::path_join(cache_root, cache_name);
 
     int lock;
     file_util::make_directory(cache_dir);
@@ -120,40 +121,41 @@ TEST(block_manager, build_cache)
 
     manifest_builder mb;
 
-    size_t record_count    = 12;
-    size_t block_size      = 4;
-    size_t object_size     = 16;
-    size_t target_size     = 16;
-    size_t block_count     = record_count / block_size;
+    size_t record_count = 12;
+    size_t block_size   = 4;
+    size_t object_size  = 16;
+    size_t target_size  = 16;
+    size_t block_count  = record_count / block_size;
     ASSERT_EQ(0, record_count % block_size);
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
-    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    stringstream& manifest_stream =
+        mb.sizes({object_size, target_size}).record_count(record_count).create();
     manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
 
     block_loader_file reader(&manifest, block_size);
-    string cache_name = block_manager::create_cache_name(reader.get_uid());
-    auto cache_dir = file_util::path_join(cache_root, cache_name);
+    string            cache_name = block_manager::create_cache_name(reader.get_uid());
+    auto              cache_dir  = file_util::path_join(cache_root, cache_name);
 
     block_manager manager(&reader, block_size, cache_root, false);
 
     size_t record_number = 0;
-    for (size_t i=0; i<block_count*2; i++)
+    for (size_t i = 0; i < block_count * 2; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t i=0; i<block_size; i++)
+        for (size_t i = 0; i < block_size; i++)
         {
             const encoded_record& record = buffer->record(i);
-            for (size_t element_number=0; element_number<record.size(); element_number++)
+            for (size_t element_number = 0; element_number < record.size(); element_number++)
             {
                 stringstream ss;
                 ss << record_number << ":" << element_number;
                 string expected = ss.str();
-                string element = vector2string(record.element(element_number));
+                string element  = vector2string(record.element(element_number));
                 ASSERT_STREQ(expected.c_str(), element.c_str());
             }
             record_number = (record_number + 1) % record_count;
@@ -161,10 +163,10 @@ TEST(block_manager, build_cache)
     }
 
     // check that the cache files exist
-    string cache_complete = block_manager::m_cache_complete_filename;
+    string cache_complete      = block_manager::m_cache_complete_filename;
     string cache_complete_path = file_util::path_join(cache_dir, cache_complete);
     EXPECT_TRUE(file_util::exists(cache_complete_path));
-    for (size_t block_number=0; block_number<block_count; block_number++)
+    for (size_t block_number = 0; block_number < block_count; block_number++)
     {
         string cache_block_name = manager.create_cache_block_name(block_number);
         string cache_block_path = file_util::path_join(cache_dir, cache_block_name);
@@ -183,16 +185,17 @@ TEST(block_manager, reuse_cache)
 
     manifest_builder mb;
 
-    size_t record_count    = 12;
-    size_t block_size      = 4;
-    size_t object_size     = 16;
-    size_t target_size     = 16;
-    size_t block_count     = record_count / block_size;
+    size_t record_count = 12;
+    size_t block_size   = 4;
+    size_t object_size  = 16;
+    size_t target_size  = 16;
+    size_t block_count  = record_count / block_size;
     ASSERT_EQ(0, record_count % block_size);
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
-    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    stringstream& manifest_stream =
+        mb.sizes({object_size, target_size}).record_count(record_count).create();
     manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
 
     // first build the cache
@@ -202,21 +205,21 @@ TEST(block_manager, reuse_cache)
         block_manager manager(&reader, block_size, cache_root, false);
 
         size_t record_number = 0;
-        for (size_t i=0; i<block_count; i++)
+        for (size_t i = 0; i < block_count; i++)
         {
             encoded_record_list* buffer = manager.next();
             ASSERT_NE(nullptr, buffer);
             ASSERT_EQ(4, buffer->size());
 
-            for (size_t i=0; i<block_size; i++)
+            for (size_t i = 0; i < block_size; i++)
             {
                 const encoded_record& record = buffer->record(i);
-                for (size_t element_number=0; element_number<record.size(); element_number++)
+                for (size_t element_number = 0; element_number < record.size(); element_number++)
                 {
                     stringstream ss;
                     ss << record_number << ":" << element_number;
                     string expected = ss.str();
-                    string element = vector2string(record.element(element_number));
+                    string element  = vector2string(record.element(element_number));
                     ASSERT_STREQ(expected.c_str(), element.c_str());
                 }
                 record_number = (record_number + 1) % record_count;
@@ -233,21 +236,21 @@ TEST(block_manager, reuse_cache)
         block_manager manager(&reader, block_size, cache_root, false);
 
         size_t record_number = 0;
-        for (size_t i=0; i<block_count; i++)
+        for (size_t i = 0; i < block_count; i++)
         {
             encoded_record_list* buffer = manager.next();
             ASSERT_NE(nullptr, buffer);
             ASSERT_EQ(4, buffer->size());
 
-            for (size_t i=0; i<block_size; i++)
+            for (size_t i = 0; i < block_size; i++)
             {
                 const encoded_record& record = buffer->record(i);
-                for (size_t element_number=0; element_number<record.size(); element_number++)
+                for (size_t element_number = 0; element_number < record.size(); element_number++)
                 {
                     stringstream ss;
                     ss << record_number << ":" << element_number;
                     string expected = ss.str();
-                    string element = vector2string(record.element(element_number));
+                    string element  = vector2string(record.element(element_number));
                     ASSERT_STREQ(expected.c_str(), element.c_str());
                 }
                 record_number = (record_number + 1) % record_count;
@@ -264,13 +267,13 @@ TEST(block_manager, file_no_shuffle_cache)
 {
     manifest_builder mb;
 
-    string cache_root = file_util::make_temp_directory();
-    size_t record_count    = 12;
-    size_t block_size      = 4;
-    size_t object_size     = 16;
-    size_t target_size     = 16;
-    size_t block_count     = record_count / block_size;
-    bool enable_shuffle = false;
+    string cache_root     = file_util::make_temp_directory();
+    size_t record_count   = 12;
+    size_t block_size     = 4;
+    size_t object_size    = 16;
+    size_t target_size    = 16;
+    size_t block_count    = record_count / block_size;
+    bool   enable_shuffle = false;
     ASSERT_EQ(0, record_count % block_size);
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
@@ -278,20 +281,21 @@ TEST(block_manager, file_no_shuffle_cache)
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
-    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    stringstream& manifest_stream =
+        mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file     manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
     block_loader_file reader(&manifest, block_size);
-    block_manager manager(&reader, block_size, cache_root, enable_shuffle);
+    block_manager     manager(&reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(4, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -302,13 +306,13 @@ TEST(block_manager, file_no_shuffle_cache)
     EXPECT_TRUE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
 
     // second read should be shuffled
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(4, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -327,13 +331,13 @@ TEST(block_manager, file_no_shuffle_no_cache)
 {
     manifest_builder mb;
 
-    string cache_root = "";
-    size_t record_count    = 12;
-    size_t block_size      = 4;
-    size_t object_size     = 16;
-    size_t target_size     = 16;
-    size_t block_count     = record_count / block_size;
-    bool enable_shuffle = false;
+    string cache_root     = "";
+    size_t record_count   = 12;
+    size_t block_size     = 4;
+    size_t object_size    = 16;
+    size_t target_size    = 16;
+    size_t block_count    = record_count / block_size;
+    bool   enable_shuffle = false;
     ASSERT_EQ(0, record_count % block_size);
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
@@ -341,20 +345,21 @@ TEST(block_manager, file_no_shuffle_no_cache)
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
-    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    stringstream& manifest_stream =
+        mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file     manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
     block_loader_file reader(&manifest, block_size);
-    block_manager manager(&reader, block_size, cache_root, enable_shuffle);
+    block_manager     manager(&reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(4, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -365,13 +370,13 @@ TEST(block_manager, file_no_shuffle_no_cache)
     EXPECT_TRUE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
 
     // second read should be shuffled
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(4, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -388,13 +393,13 @@ TEST(block_manager, file_shuffle_cache)
 {
     manifest_builder mb;
 
-    string cache_root = file_util::make_temp_directory();
-    size_t record_count    = 12;
-    size_t block_size      = 4;
-    size_t object_size     = 16;
-    size_t target_size     = 16;
-    size_t block_count     = record_count / block_size;
-    bool enable_shuffle = true;
+    string cache_root     = file_util::make_temp_directory();
+    size_t record_count   = 12;
+    size_t block_size     = 4;
+    size_t object_size    = 16;
+    size_t target_size    = 16;
+    size_t block_count    = record_count / block_size;
+    bool   enable_shuffle = true;
     ASSERT_EQ(0, record_count % block_size);
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
@@ -402,20 +407,21 @@ TEST(block_manager, file_shuffle_cache)
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
-    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    stringstream& manifest_stream =
+        mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file     manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
     block_loader_file reader(&manifest, block_size);
-    block_manager manager(&reader, block_size, cache_root, enable_shuffle);
+    block_manager     manager(&reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(4, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -426,13 +432,13 @@ TEST(block_manager, file_shuffle_cache)
     EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
 
     // second read should be shuffled
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(4, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -451,13 +457,13 @@ TEST(block_manager, file_shuffle_no_cache)
 {
     manifest_builder mb;
 
-    string cache_root = "";
-    size_t record_count    = 12;
-    size_t block_size      = 4;
-    size_t object_size     = 16;
-    size_t target_size     = 16;
-    size_t block_count     = record_count / block_size;
-    bool enable_shuffle = true;
+    string cache_root     = "";
+    size_t record_count   = 12;
+    size_t block_size     = 4;
+    size_t object_size    = 16;
+    size_t target_size    = 16;
+    size_t block_count    = record_count / block_size;
+    bool   enable_shuffle = true;
     ASSERT_EQ(0, record_count % block_size);
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
@@ -465,20 +471,21 @@ TEST(block_manager, file_shuffle_no_cache)
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
-    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    stringstream& manifest_stream =
+        mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file     manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
     block_loader_file reader(&manifest, block_size);
-    block_manager manager(&reader, block_size, cache_root, enable_shuffle);
+    block_manager     manager(&reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(4, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -489,13 +496,13 @@ TEST(block_manager, file_shuffle_no_cache)
     EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
 
     // second read should be shuffled
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(4, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -508,66 +515,39 @@ TEST(block_manager, file_shuffle_no_cache)
     EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 TEST(block_manager, nds_no_shuffle_cache)
 {
-    string cache_root = file_util::make_temp_directory();
-    size_t record_count    = 1000;
-    size_t block_size      = 200;
-    size_t block_count     = record_count / block_size;
+    string cache_root          = file_util::make_temp_directory();
+    size_t record_count        = 1000;
+    size_t block_size          = 200;
+    size_t block_count         = record_count / block_size;
     size_t elements_per_record = 2;
-    bool enable_shuffle = false;
+    bool   enable_shuffle      = false;
     ASSERT_EQ(0, record_count % block_size);
 
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
     manifest_nds manifest = manifest_nds_builder()
-            .base_url("http://127.0.0.1:5000")
-            .token("token")
-            .collection_id(1)
-            .block_size(block_size)
-            .elements_per_record(elements_per_record)
-            .shuffle(enable_shuffle)
-            .create();
+                                .base_url("http://127.0.0.1:5000")
+                                .token("token")
+                                .collection_id(1)
+                                .block_size(block_size)
+                                .elements_per_record(elements_per_record)
+                                .shuffle(enable_shuffle)
+                                .create();
     block_loader_nds reader(&manifest, block_size);
-    block_manager manager(&reader, block_size, cache_root, enable_shuffle);
+    block_manager    manager(&reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -578,13 +558,13 @@ TEST(block_manager, nds_no_shuffle_cache)
     EXPECT_TRUE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
 
     // second read should be shuffled
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -601,37 +581,37 @@ TEST(block_manager, nds_no_shuffle_cache)
 
 TEST(block_manager, nds_no_shuffle_no_cache)
 {
-    string cache_root = "";
-    size_t record_count    = 1000;
-    size_t block_size      = 200;
-    size_t block_count     = record_count / block_size;
+    string cache_root          = "";
+    size_t record_count        = 1000;
+    size_t block_size          = 200;
+    size_t block_count         = record_count / block_size;
     size_t elements_per_record = 2;
-    bool enable_shuffle = false;
+    bool   enable_shuffle      = false;
     ASSERT_EQ(0, record_count % block_size);
 
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
     manifest_nds manifest = manifest_nds_builder()
-            .base_url("http://127.0.0.1:5000")
-            .token("token")
-            .collection_id(1)
-            .block_size(block_size)
-            .elements_per_record(elements_per_record)
-            .shuffle(enable_shuffle)
-            .create();
+                                .base_url("http://127.0.0.1:5000")
+                                .token("token")
+                                .collection_id(1)
+                                .block_size(block_size)
+                                .elements_per_record(elements_per_record)
+                                .shuffle(enable_shuffle)
+                                .create();
     block_loader_nds reader(&manifest, block_size);
-    block_manager manager(&reader, block_size, cache_root, enable_shuffle);
+    block_manager    manager(&reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -642,13 +622,13 @@ TEST(block_manager, nds_no_shuffle_no_cache)
     EXPECT_TRUE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
 
     // second read should be shuffled
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -663,37 +643,37 @@ TEST(block_manager, nds_no_shuffle_no_cache)
 
 TEST(block_manager, nds_shuffle_cache)
 {
-    string cache_root = file_util::make_temp_directory();
-    size_t record_count    = 1000;
-    size_t block_size      = 200;
+    string cache_root          = file_util::make_temp_directory();
+    size_t record_count        = 1000;
+    size_t block_size          = 200;
     size_t elements_per_record = 2;
-    size_t block_count     = record_count / block_size;
-    bool enable_shuffle = true;
+    size_t block_count         = record_count / block_size;
+    bool   enable_shuffle      = true;
     ASSERT_EQ(0, record_count % block_size);
 
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
     manifest_nds manifest = manifest_nds_builder()
-            .base_url("http://127.0.0.1:5000")
-            .token("token")
-            .collection_id(1)
-            .block_size(block_size)
-            .elements_per_record(elements_per_record)
-            .shuffle(enable_shuffle)
-            .create();
+                                .base_url("http://127.0.0.1:5000")
+                                .token("token")
+                                .collection_id(1)
+                                .block_size(block_size)
+                                .elements_per_record(elements_per_record)
+                                .shuffle(enable_shuffle)
+                                .create();
     block_loader_nds reader(&manifest, block_size);
-    block_manager manager(&reader, block_size, cache_root, enable_shuffle);
+    block_manager    manager(&reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -704,13 +684,13 @@ TEST(block_manager, nds_shuffle_cache)
     EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
 
     // second read should be shuffled
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -727,37 +707,37 @@ TEST(block_manager, nds_shuffle_cache)
 
 TEST(block_manager, nds_shuffle_no_cache)
 {
-    string cache_root = "";
-    size_t record_count    = 1000;
-    size_t block_size      = 200;
+    string cache_root          = "";
+    size_t record_count        = 1000;
+    size_t block_size          = 200;
     size_t elements_per_record = 2;
-    size_t block_count     = record_count / block_size;
-    bool enable_shuffle = true;
+    size_t block_count         = record_count / block_size;
+    bool   enable_shuffle      = true;
     ASSERT_EQ(0, record_count % block_size);
 
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
     manifest_nds manifest = manifest_nds_builder()
-            .base_url("http://127.0.0.1:5000")
-            .token("token")
-            .collection_id(1)
-            .block_size(block_size)
-            .elements_per_record(elements_per_record)
-            .shuffle(enable_shuffle)
-            .create();
+                                .base_url("http://127.0.0.1:5000")
+                                .token("token")
+                                .collection_id(1)
+                                .block_size(block_size)
+                                .elements_per_record(elements_per_record)
+                                .shuffle(enable_shuffle)
+                                .create();
     block_loader_nds reader(&manifest, block_size);
-    block_manager manager(&reader, block_size, cache_root, enable_shuffle);
+    block_manager    manager(&reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);
@@ -768,13 +748,13 @@ TEST(block_manager, nds_shuffle_no_cache)
     EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
 
     // second read should be shuffled
-    for (size_t i=0; i<block_count; i++)
+    for (size_t i = 0; i < block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t record = 0; record < block_size; record++)
         {
             string data0 = vector2string(buffer->record(record).element(0));
             size_t value = stod(split(data0, ':')[0]);

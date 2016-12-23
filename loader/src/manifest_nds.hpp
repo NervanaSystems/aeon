@@ -31,8 +31,12 @@ namespace nervana
 class nervana::network_client
 {
 public:
-    network_client(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
-                                       size_t shard_count, size_t shard_index);
+    network_client(const std::string& baseurl,
+                   const std::string& token,
+                   size_t             collection_id,
+                   size_t             block_size,
+                   size_t             shard_count,
+                   size_t             shard_index);
 
     ~network_client();
 
@@ -69,14 +73,14 @@ public:
     manifest_nds create();
 
 private:
-    std::string   m_base_url;
-    std::string   m_token;
-    size_t        m_collection_id = -1;
-    size_t        m_block_size = 5000;
-    size_t        m_elements_per_record = -1;
-    size_t        m_shard_count = 1;
-    size_t        m_shard_index = 0;
-    size_t        m_shuffle = false;
+    std::string m_base_url;
+    std::string m_token;
+    size_t      m_collection_id       = -1;
+    size_t      m_block_size          = 5000;
+    size_t      m_elements_per_record = -1;
+    size_t      m_shard_count         = 1;
+    size_t      m_shard_index         = 0;
+    size_t      m_shuffle             = false;
 };
 
 class nervana::manifest_nds : public nervana::async_manager_source<encoded_record_list>,
@@ -85,12 +89,9 @@ class nervana::manifest_nds : public nervana::async_manager_source<encoded_recor
     friend class manifest_nds_builder;
 
 public:
-    ~manifest_nds()
-    {
-    }
-
+    ~manifest_nds() {}
     encoded_record_list* next() override;
-    void reset() override
+    void                 reset() override
     {
         if (m_shuffle)
         {
@@ -99,28 +100,15 @@ public:
         m_current_block_number = 0;
     }
 
-    size_t record_count() const override
-    {
-        return m_record_count;
-    }
-
-    size_t elements_per_record() const override
-    {
-        return 2;
-    }
-
-    size_t block_count() const
-    {
-        return m_block_count;
-    }
-
+    size_t               record_count() const override { return m_record_count; }
+    size_t               elements_per_record() const override { return 2; }
+    size_t               block_count() const { return m_block_count; }
     encoded_record_list* load_block(size_t block_index);
 
     std::string cache_id() override;
 
     // NDS manifests doesn't have versions since collections are immutable
     std::string version() override { return ""; }
-
 private:
     static bool is_likely_json(const std::string filename);
 
@@ -143,8 +131,14 @@ private:
     std::minstd_rand0   m_rnd;
 
     manifest_nds() = delete;
-    manifest_nds(const std::string& base_url, const std::string& token, size_t collection_id, size_t block_size,
-                 size_t elements_per_record, size_t shard_count, size_t shard_index, bool shuffle);
+    manifest_nds(const std::string& base_url,
+                 const std::string& token,
+                 size_t             collection_id,
+                 size_t             block_size,
+                 size_t             elements_per_record,
+                 size_t             shard_count,
+                 size_t             shard_index,
+                 bool               shuffle);
 
     static size_t write_data(void* ptr, size_t size, size_t nmemb, void* stream);
 };

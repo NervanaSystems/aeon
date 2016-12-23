@@ -68,7 +68,11 @@ void noise_clips::load_index(const std::string& index_file, const std::string& r
 *
 *
 */
-void noise_clips::addNoise(cv::Mat& wav_mat, bool add_noise, uint32_t noise_index, float noise_offset_fraction, float noise_level)
+void noise_clips::addNoise(cv::Mat& wav_mat,
+                           bool     add_noise,
+                           uint32_t noise_index,
+                           float    noise_offset_fraction,
+                           float    noise_level)
 {
     // No-op if we have no noise files or randomly not adding noise on this datum
     if (!add_noise || _noise_data.empty())

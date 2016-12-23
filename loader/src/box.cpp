@@ -19,7 +19,8 @@ using namespace std;
 
 ostream& operator<<(ostream& out, const nervana::box& b)
 {
-    out << "[" << b.xmax - b.xmin << " x " << b.ymax - b.ymin << " from (" << b.xmin << ", " << b.ymin << ")]";
+    out << "[" << b.xmax - b.xmin << " x " << b.ymax - b.ymin << " from (" << b.xmin << ", "
+        << b.ymin << ")]";
     return out;
 }
 

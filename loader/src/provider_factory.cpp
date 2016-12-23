@@ -93,7 +93,8 @@ shared_ptr<nervana::provider_interface> nervana::provider_factory::create(nlohma
     return rc;
 }
 
-shared_ptr<nervana::provider_interface> nervana::provider_factory::clone(const shared_ptr<nervana::provider_interface>& r)
+shared_ptr<nervana::provider_interface>
+    nervana::provider_factory::clone(const shared_ptr<nervana::provider_interface>& r)
 {
     return create(r->get_config());
 }

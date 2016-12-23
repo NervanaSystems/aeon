@@ -35,5 +35,5 @@ public:
 
 private:
     static const uint8_t character_codes[];
-    static const uint8_t  decode_codes[];
+    static const uint8_t decode_codes[];
 };

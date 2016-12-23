@@ -9,19 +9,21 @@ AccessModifierOffset: -4
 AlignConsecutiveDeclarations: true
 AlignConsecutiveAssignments: true
 AlignTrailingComments: true
+
 AllowShortBlocksOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Inline
+
 AlwaysBreakBeforeMultilineStrings: true
 AlwaysBreakTemplateDeclarations: true
 
-BinPackArguments: true
-BinPackParameters: true
+BinPackArguments: false
+BinPackParameters: false
 
 BreakBeforeBraces: Allman
 BreakConstructorInitializersBeforeComma: true
 
-ColumnLimit: 132
+ColumnLimit: 100
 CommentPragmas: '.*'
 
 IndentCaseLabels: false
@@ -33,7 +35,7 @@ NamespaceIndentation: All
 PointerAlignment: Left
 SpaceAfterCStyleCast: false
 SpaceBeforeAssignmentOperators: true
-SpaceBeforeParens: true
+SpaceBeforeParens: ControlStatements
 SpaceInEmptyParentheses: false
 SpacesInAngles: false
 SpacesInCStyleCastParentheses: false

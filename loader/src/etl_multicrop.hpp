@@ -48,11 +48,12 @@ public:
 
 private:
     config() {}
-    std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {// from image class
-                                                                                  ADD_IGNORE(crop_config),
-                                                                                  // local params
-                                                                                  ADD_SCALAR(crop_scales, mode::REQUIRED),
-                                                                                  ADD_SCALAR(crop_count, mode::OPTIONAL)};
+    std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+        // from image class
+        ADD_IGNORE(crop_config),
+        // local params
+        ADD_SCALAR(crop_scales, mode::REQUIRED),
+        ADD_SCALAR(crop_count, mode::OPTIONAL)};
 
     void validate();
 };
@@ -62,7 +63,8 @@ class nervana::multicrop::transformer : public interface::transformer<image::dec
 public:
     transformer(const multicrop::config& cfg);
     ~transformer() {}
-    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params>, std::shared_ptr<image::decoded>) override;
+    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params>,
+                                                      std::shared_ptr<image::decoded>) override;
 
 private:
     image::transformer _crop_transformer;

@@ -73,7 +73,9 @@ private:
         ADD_SCALAR(batch_size, mode::REQUIRED),
         ADD_SCALAR(cache_directory, mode::OPTIONAL),
         ADD_SCALAR(block_size, mode::OPTIONAL),
-        ADD_SCALAR(subset_fraction, mode::OPTIONAL, [](decltype(subset_fraction) v) { return v <= 1.0 && v >= 0.0; }),
+        ADD_SCALAR(subset_fraction,
+                   mode::OPTIONAL,
+                   [](decltype(subset_fraction) v) { return v <= 1.0 && v >= 0.0; }),
         ADD_SCALAR(shuffle_every_epoch, mode::OPTIONAL),
         ADD_SCALAR(shuffle_manifest, mode::OPTIONAL),
         ADD_SCALAR(single_thread, mode::OPTIONAL),
@@ -88,13 +90,16 @@ private:
 class nervana::batch_decoder : public async_manager<encoded_record_list, fixed_buffer_map>
 {
 public:
-    batch_decoder(batch_iterator* b_itor, size_t batch_size, bool single_thread, bool pinned,
-                 const std::shared_ptr<provider_interface>& prov);
+    batch_decoder(batch_iterator*                            b_itor,
+                  size_t                                     batch_size,
+                  bool                                       single_thread,
+                  bool                                       pinned,
+                  const std::shared_ptr<provider_interface>& prov);
 
     virtual ~batch_decoder();
 
-    virtual size_t record_count() const override { return m_batch_size; }
-    virtual size_t elements_per_record() const override { return m_number_elements_out; }
+    virtual size_t            record_count() const override { return m_batch_size; }
+    virtual size_t            elements_per_record() const override { return m_number_elements_out; }
     virtual fixed_buffer_map* filler() override;
 
 private:
@@ -128,8 +133,8 @@ public:
 
     int record_count() { return m_manifest->record_count(); }
     // member typedefs provided through inheriting from std::iterator
-    class iterator : public std::iterator<std::input_iterator_tag,     // iterator_category
-                                          fixed_buffer_map             // value_type
+    class iterator : public std::iterator<std::input_iterator_tag, // iterator_category
+                                          fixed_buffer_map         // value_type
                                           // long,                     // difference_type
                                           // const fixed_buffer_map*,  // pointer
                                           // fixed_buffer_map          // reference
@@ -147,13 +152,13 @@ public:
         bool operator!=(const iterator& other) const; // {return !(*this == other);}
         const fixed_buffer_map& operator*() const;    // {return num;}
         const size_t& position() const { return m_current_loader.m_position; }
-        bool positional_end() const;
+        bool          positional_end() const;
 
     private:
         iterator() = delete;
 
-        loader&           m_current_loader;
-        const bool        m_is_end;
+        loader&    m_current_loader;
+        const bool m_is_end;
     };
 
     // Note that these are returning COPIES
@@ -163,20 +168,15 @@ public:
         return m_current_iter;
     }
 
-    iterator end()
-    {
-        return m_end_iter;
-    }
-
+    iterator end() { return m_end_iter; }
     // These are returning references
     iterator& get_current_iter() { return m_current_iter; }
     iterator& get_end_iter() { return m_end_iter; }
-
-    void reset()
+    void      reset()
     {
         m_decoder->reset();
         m_output_buffer_ptr = m_decoder->next();
-        m_position = 0;
+        m_position          = 0;
     }
 
 private:
@@ -186,17 +186,17 @@ private:
 
     friend class nervana::loader::iterator;
 
-    iterator                                 m_current_iter;
-    iterator                                 m_end_iter;
-    std::shared_ptr<manifest_file>            m_manifest;
-    std::shared_ptr<block_loader_file> m_block_loader;
-    std::shared_ptr<block_manager>     m_block_manager;
-    std::shared_ptr<batch_iterator>    m_batch_iterator;
-    std::shared_ptr<provider_interface>      m_provider;
-    std::shared_ptr<batch_decoder>            m_decoder;
-    int                                      m_batch_size;
-    BatchMode                                m_batch_mode;
-    size_t                                   m_batch_count_value;
-    size_t                                   m_position{0};
-    fixed_buffer_map*                        m_output_buffer_ptr{nullptr};
+    iterator                            m_current_iter;
+    iterator                            m_end_iter;
+    std::shared_ptr<manifest_file>      m_manifest;
+    std::shared_ptr<block_loader_file>  m_block_loader;
+    std::shared_ptr<block_manager>      m_block_manager;
+    std::shared_ptr<batch_iterator>     m_batch_iterator;
+    std::shared_ptr<provider_interface> m_provider;
+    std::shared_ptr<batch_decoder>      m_decoder;
+    int                                 m_batch_size;
+    BatchMode                           m_batch_mode;
+    size_t                              m_batch_count_value;
+    size_t                              m_position{0};
+    fixed_buffer_map*                   m_output_buffer_ptr{nullptr};
 };

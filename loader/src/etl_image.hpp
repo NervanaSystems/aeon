@@ -128,22 +128,36 @@ public:
 
 private:
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
-        ADD_SCALAR(height, mode::REQUIRED), ADD_SCALAR(width, mode::REQUIRED),
-        ADD_DISTRIBUTION(scale, mode::OPTIONAL,
+        ADD_SCALAR(height, mode::REQUIRED),
+        ADD_SCALAR(width, mode::REQUIRED),
+        ADD_DISTRIBUTION(scale,
+                         mode::OPTIONAL,
                          [](const std::uniform_real_distribution<float>& v) {
-                             return v.a() >= 0 && v.a() <= 1 && v.b() >= 0 && v.b() <= 1 && v.a() <= v.b();
+                             return v.a() >= 0 && v.a() <= 1 && v.b() >= 0 && v.b() <= 1 &&
+                                    v.a() <= v.b();
                          }),
         ADD_DISTRIBUTION(angle, mode::OPTIONAL, [](decltype(angle) v) { return v.a() <= v.b(); }),
         ADD_DISTRIBUTION(lighting, mode::OPTIONAL),
-        ADD_DISTRIBUTION(horizontal_distortion, mode::OPTIONAL, [](decltype(horizontal_distortion) v) { return v.a() <= v.b(); }),
-        ADD_SCALAR(flip_enable, mode::OPTIONAL), ADD_SCALAR(center, mode::OPTIONAL),
-        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) { return output_type::is_valid_type(v); }),
-        ADD_SCALAR(do_area_scale, mode::OPTIONAL), ADD_SCALAR(channel_major, mode::OPTIONAL),
-        ADD_SCALAR(channels, mode::OPTIONAL, [](uint32_t v) { return v == 1 || v == 3; }), ADD_SCALAR(crop_enable, mode::OPTIONAL),
-        ADD_SCALAR(fixed_aspect_ratio, mode::OPTIONAL), ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL),
-        ADD_DISTRIBUTION(contrast, mode::OPTIONAL, [](decltype(contrast) v) { return v.a() <= v.b(); }),
-        ADD_DISTRIBUTION(brightness, mode::OPTIONAL, [](decltype(brightness) v) { return v.a() <= v.b(); }),
-        ADD_DISTRIBUTION(saturation, mode::OPTIONAL, [](decltype(saturation) v) { return v.a() <= v.b(); }),
+        ADD_DISTRIBUTION(horizontal_distortion,
+                         mode::OPTIONAL,
+                         [](decltype(horizontal_distortion) v) { return v.a() <= v.b(); }),
+        ADD_SCALAR(flip_enable, mode::OPTIONAL),
+        ADD_SCALAR(center, mode::OPTIONAL),
+        ADD_SCALAR(output_type,
+                   mode::OPTIONAL,
+                   [](const std::string& v) { return output_type::is_valid_type(v); }),
+        ADD_SCALAR(do_area_scale, mode::OPTIONAL),
+        ADD_SCALAR(channel_major, mode::OPTIONAL),
+        ADD_SCALAR(channels, mode::OPTIONAL, [](uint32_t v) { return v == 1 || v == 3; }),
+        ADD_SCALAR(crop_enable, mode::OPTIONAL),
+        ADD_SCALAR(fixed_aspect_ratio, mode::OPTIONAL),
+        ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL),
+        ADD_DISTRIBUTION(
+            contrast, mode::OPTIONAL, [](decltype(contrast) v) { return v.a() <= v.b(); }),
+        ADD_DISTRIBUTION(
+            brightness, mode::OPTIONAL, [](decltype(brightness) v) { return v.a() <= v.b(); }),
+        ADD_DISTRIBUTION(
+            saturation, mode::OPTIONAL, [](decltype(saturation) v) { return v.a() <= v.b(); }),
         ADD_DISTRIBUTION(hue, mode::OPTIONAL, [](decltype(hue) v) { return v.a() <= v.b(); })};
 
     config() {}
@@ -197,7 +211,11 @@ public:
     cv::Size2i             get_image_size() const { return _images[0].size(); }
     int                    get_image_channels() const { return _images[0].channels(); }
     size_t                 get_image_count() const { return _images.size(); }
-    size_t                 get_size() const { return get_image_size().area() * get_image_channels() * get_image_count(); }
+    size_t                 get_size() const
+    {
+        return get_image_size().area() * get_image_channels() * get_image_count();
+    }
+
 protected:
     bool all_images_are_same_size()
     {
@@ -229,7 +247,8 @@ class nervana::image::transformer : public interface::transformer<image::decoded
 public:
     transformer(const image::config&);
     ~transformer() {}
-    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params>, std::shared_ptr<image::decoded>) override;
+    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params>,
+                                                      std::shared_ptr<image::decoded>) override;
 
     cv::Mat transform_single_image(std::shared_ptr<image::params>, cv::Mat&);
 

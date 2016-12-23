@@ -76,7 +76,7 @@ public:
     {
         int rc          = -1;
         int fileNo      = 0;
-        m_path_existed    = exists(m_path);
+        m_path_existed  = exists(m_path);
         int datumNumber = 0;
         if (m_path_existed || mkdir(m_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
         {
@@ -84,7 +84,8 @@ public:
             while (remainder > 0)
             {
                 int         batchSize = std::min(remainder, m_max_items);
-                std::string fileName  = nervana::file_util::path_join(m_path, m_prefix + std::to_string(fileNo++) + ".cpio");
+                std::string fileName  = nervana::file_util::path_join(
+                    m_path, m_prefix + std::to_string(fileNo++) + ".cpio");
                 m_file_list.push_back(fileName);
                 std::ofstream f(fileName, std::ostream::binary);
                 if (f)

@@ -40,10 +40,10 @@ template <typename OUTPUT>
 class nervana::async_manager_source
 {
 public:
-    virtual OUTPUT* next()          = 0;
-    virtual size_t  record_count() const  = 0;
+    virtual OUTPUT* next()                      = 0;
+    virtual size_t  record_count() const        = 0;
     virtual size_t  elements_per_record() const = 0;
-    virtual void    reset()         = 0;
+    virtual void    reset()                     = 0;
 };
 
 template <typename INPUT, typename OUTPUT>
@@ -86,17 +86,9 @@ public:
         initialize();
     }
 
-    virtual ~async_manager()
-    {
-        finalize();
-    }
-
-    virtual void initialize()
-    {
-        m_first = true;
-    }
-
-    void finalize()
+    virtual ~async_manager() { finalize(); }
+    virtual void initialize() { m_first = true; }
+    void         finalize()
     {
         if (m_pending_result.valid())
         {

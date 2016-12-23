@@ -52,7 +52,8 @@ class nervana::depthmap::transformer : public interface::transformer<image::deco
 public:
     transformer(const image::config&);
     ~transformer();
-    std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params> txs, std::shared_ptr<image::decoded> mp) override;
+    std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params>  txs,
+                                              std::shared_ptr<image::decoded> mp) override;
 };
 
 //-------------------------------------------------------------------------

@@ -208,12 +208,14 @@ public:
         {
             if (frame_length_tn != 1 || frame_stride_tn != 1)
             {
-                throw std::invalid_argument("frame and stride must both be 1 sample to use raw sample feature_type");
+                throw std::invalid_argument(
+                    "frame and stride must both be 1 sample to use raw sample feature_type");
             }
         }
         if (time_steps != ((max_duration_tn - frame_length_tn) / frame_stride_tn) + 1)
         {
-            throw std::invalid_argument("time_steps != ((max_duration_tn - frame_length_tn) / frame_stride_tn) + 1");
+            throw std::invalid_argument(
+                "time_steps != ((max_duration_tn - frame_length_tn) / frame_stride_tn) + 1");
         }
         if (noise_offset_fraction.param().a() < 0.0f)
         {
@@ -229,15 +231,26 @@ private:
     config() {}
     float                                                          add_noise_probability = 0.0f;
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list           = {
-        ADD_SCALAR(max_duration, mode::REQUIRED), ADD_SCALAR(frame_stride, mode::REQUIRED),
-        ADD_SCALAR(frame_length, mode::REQUIRED), ADD_SCALAR(num_cepstra, mode::OPTIONAL), ADD_SCALAR(num_filters, mode::OPTIONAL),
-        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) { return output_type::is_valid_type(v); }),
-        ADD_SCALAR(feature_type, mode::OPTIONAL), ADD_SCALAR(window_type, mode::OPTIONAL),
-        ADD_SCALAR(noise_index_file, mode::OPTIONAL), ADD_SCALAR(noise_root, mode::OPTIONAL),
-        ADD_SCALAR(add_noise_probability, mode::OPTIONAL), ADD_SCALAR(sample_freq_hz, mode::OPTIONAL),
-        ADD_DISTRIBUTION(time_scale_fraction, mode::OPTIONAL, [](decltype(time_scale_fraction) v) { return v.a() <= v.b(); }),
+        ADD_SCALAR(max_duration, mode::REQUIRED),
+        ADD_SCALAR(frame_stride, mode::REQUIRED),
+        ADD_SCALAR(frame_length, mode::REQUIRED),
+        ADD_SCALAR(num_cepstra, mode::OPTIONAL),
+        ADD_SCALAR(num_filters, mode::OPTIONAL),
+        ADD_SCALAR(output_type,
+                   mode::OPTIONAL,
+                   [](const std::string& v) { return output_type::is_valid_type(v); }),
+        ADD_SCALAR(feature_type, mode::OPTIONAL),
+        ADD_SCALAR(window_type, mode::OPTIONAL),
+        ADD_SCALAR(noise_index_file, mode::OPTIONAL),
+        ADD_SCALAR(noise_root, mode::OPTIONAL),
+        ADD_SCALAR(add_noise_probability, mode::OPTIONAL),
+        ADD_SCALAR(sample_freq_hz, mode::OPTIONAL),
+        ADD_DISTRIBUTION(time_scale_fraction,
+                         mode::OPTIONAL,
+                         [](decltype(time_scale_fraction) v) { return v.a() <= v.b(); }),
         // ADD_DISTRIBUTION(noise_index, mode::OPTIONAL),
-        ADD_DISTRIBUTION(noise_level, mode::OPTIONAL, [](decltype(noise_level) v) { return v.a() <= v.b(); }),
+        ADD_DISTRIBUTION(
+            noise_level, mode::OPTIONAL, [](decltype(noise_level) v) { return v.a() <= v.b(); }),
     };
 
     void parse_samples_or_seconds(const std::string& unit, float& ms, uint32_t& tn)
@@ -319,7 +332,8 @@ class nervana::audio::transformer : public interface::transformer<audio::decoded
 public:
     transformer(const audio::config& config);
     ~transformer();
-    std::shared_ptr<audio::decoded> transform(std::shared_ptr<audio::params>, std::shared_ptr<audio::decoded>) override;
+    std::shared_ptr<audio::decoded> transform(std::shared_ptr<audio::params>,
+                                              std::shared_ptr<audio::decoded>) override;
 
 private:
     transformer() = delete;

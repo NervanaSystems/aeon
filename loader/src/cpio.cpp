@@ -212,7 +212,7 @@ void cpio::reader::read_header()
 void cpio::reader::read(nervana::encoded_record_list& dest, size_t element_count)
 {
     encoded_record record;
-    for (size_t i=0; i<element_count; i++)
+    for (size_t i = 0; i < element_count; i++)
     {
         vector<char> buffer;
         read(buffer);
@@ -271,7 +271,7 @@ cpio::writer::~writer()
 
 void cpio::writer::write_all_records(nervana::encoded_record_list& buff)
 {
-    size_t record_count = buff.size();
+    size_t record_count  = buff.size();
     size_t element_index = 0;
     if (m_header.m_elements_per_record == 0)
     {
@@ -287,7 +287,9 @@ void cpio::writer::write_all_records(nervana::encoded_record_list& buff)
     }
 }
 
-void cpio::writer::write_record_element(const char* element, uint32_t element_size, uint32_t element_index)
+void cpio::writer::write_record_element(const char* element,
+                                        uint32_t    element_size,
+                                        uint32_t    element_index)
 {
     char file_name[16];
     snprintf(file_name, sizeof(file_name), "rec_%07d.%02d", m_header.m_record_count, element_index);

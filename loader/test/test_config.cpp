@@ -28,7 +28,8 @@ TEST(config, loader)
         {"type", "image,label"},
         {"manifest_filename", "blah"},
         {"batch_size", 128},
-        {"image", {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
+        {"image",
+         {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
     };
 
     EXPECT_NO_THROW(loader_config cfg{js});
@@ -40,7 +41,8 @@ TEST(config, throws)
     nlohmann::json js = {
         {"type", "image,label"},
         {"batch_size", 128},
-        {"image", {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
+        {"image",
+         {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
     };
     EXPECT_THROW(loader_config cfg{js}, invalid_argument);
 }

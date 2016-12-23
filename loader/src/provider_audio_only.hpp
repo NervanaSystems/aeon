@@ -27,7 +27,9 @@ class nervana::audio_only : public provider_interface
 {
 public:
     audio_only(nlohmann::json js);
-    void provide(int idx, nervana::encoded_record_list& in_buf, nervana::fixed_buffer_map& out_buf) override;
+    void provide(int                           idx,
+                 nervana::encoded_record_list& in_buf,
+                 nervana::fixed_buffer_map&    out_buf) override;
 
 private:
     audio::config        audio_config;

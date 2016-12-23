@@ -155,7 +155,9 @@ vector<char> nervana::file_util::read_file_contents(const string& path)
     return data;
 }
 
-void nervana::file_util::iterate_files(const string& path, std::function<void(const string& file, bool is_dir)> func, bool recurse)
+void nervana::file_util::iterate_files(const string& path,
+                                       std::function<void(const string& file, bool is_dir)> func,
+                                       bool recurse)
 {
     vector<string> files;
     vector<string> dirs;
@@ -174,8 +176,8 @@ void nervana::file_util::iterate_files(const string& path, std::function<void(co
         func(f, true);
 }
 
-void nervana::file_util::iterate_files_worker(const string& path, std::function<void(const string& file, bool is_dir)> func,
-                                              bool recurse)
+void nervana::file_util::iterate_files_worker(
+    const string& path, std::function<void(const string& file, bool is_dir)> func, bool recurse)
 {
     DIR*           dir;
     struct dirent* ent;
@@ -212,8 +214,9 @@ void nervana::file_util::iterate_files_worker(const string& path, std::function<
 
 string nervana::file_util::tmp_filename(const string& extension)
 {
-    string tmp_template = file_util::path_join(file_util::get_temp_directory(), "aeonXXXXXX" + extension);
-    char*  tmpname      = strdup(tmp_template.c_str());
+    string tmp_template =
+        file_util::path_join(file_util::get_temp_directory(), "aeonXXXXXX" + extension);
+    char* tmpname = strdup(tmp_template.c_str());
 
     // mkstemp opens the file with open() so we need to close it
     close(mkstemps(tmpname, extension.size()));

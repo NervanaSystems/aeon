@@ -37,7 +37,9 @@ using namespace nervana;
 TEST(provider, empty_config)
 {
     nlohmann::json js = {
-        {"type", "image,label"}, {"image", {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
+        {"type", "image,label"},
+        {"image",
+         {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
     };
 
     nervana::provider_factory::create(js);
@@ -45,16 +47,18 @@ TEST(provider, empty_config)
 
 TEST(provider, image)
 {
-    nlohmann::json js = {{"type", "image,label"},
-                         {"image", {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
-                         {"label", {{"binary", true}}}};
+    nlohmann::json js = {
+        {"type", "image,label"},
+        {"image",
+         {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
+        {"label", {{"binary", true}}}};
 
     auto media   = nervana::provider_factory::create(js);
     auto oshapes = media->get_output_shapes();
 
     size_t batch_size = 128;
 
-    fixed_buffer_map out_buf(oshapes, batch_size);
+    fixed_buffer_map    out_buf(oshapes, batch_size);
     encoded_record_list bp;
 
     auto files = image_dataset.get_files();
@@ -126,9 +130,10 @@ TEST(provider, argtype)
 
 TEST(provider, blob)
 {
-    nlohmann::json js = {{"type", "stereo_image,blob"},
-                         {"stereo_image", {{"height", 360}, {"width", 480}, {"channel_major", false}}},
-                         {"blob", {{"output_type", "float"}, {"output_count", 480 * 360}}}};
+    nlohmann::json js = {
+        {"type", "stereo_image,blob"},
+        {"stereo_image", {{"height", 360}, {"width", 480}, {"channel_major", false}}},
+        {"blob", {{"output_type", "float"}, {"output_count", 480 * 360}}}};
 
     vector<char> input_left  = file_util::read_file_contents(CURDIR "/test_data/img_2112_70.jpg");
     vector<char> input_right = file_util::read_file_contents(CURDIR "/test_data/img_2112_70.jpg");
@@ -175,7 +180,7 @@ TEST(provider, blob)
     fixed_buffer_map out_buf(oshapes, batch_size);
 
     encoded_record_list in_buf;
-    encoded_record record;
+    encoded_record      record;
     record.add_element(input_left);
     record.add_element(input_right);
     record.add_element(target_cdata);

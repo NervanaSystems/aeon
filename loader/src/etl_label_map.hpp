@@ -54,8 +54,11 @@ public:
     int max_label_count() const { return max_classes; }
 private:
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
-        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) { return output_type::is_valid_type(v); }),
-        ADD_SCALAR(class_names, mode::REQUIRED), ADD_SCALAR(max_classes, mode::OPTIONAL)};
+        ADD_SCALAR(output_type,
+                   mode::OPTIONAL,
+                   [](const std::string& v) { return output_type::is_valid_type(v); }),
+        ADD_SCALAR(class_names, mode::REQUIRED),
+        ADD_SCALAR(max_classes, mode::OPTIONAL)};
 
     config() {}
 };
@@ -84,13 +87,14 @@ private:
     std::unordered_map<std::string, int> dictionary;
 };
 
-class nervana::label_map::transformer : public interface::transformer<label_map::decoded, label_map::params>
+class nervana::label_map::transformer
+    : public interface::transformer<label_map::decoded, label_map::params>
 {
 public:
     transformer();
     virtual ~transformer() {}
-    virtual std::shared_ptr<label_map::decoded> transform(std::shared_ptr<label_map::params>,
-                                                          std::shared_ptr<label_map::decoded>) override;
+    virtual std::shared_ptr<label_map::decoded>
+        transform(std::shared_ptr<label_map::params>, std::shared_ptr<label_map::decoded>) override;
 
 private:
 };

@@ -28,7 +28,9 @@ class nervana::audio_transcriber : public provider_interface
 {
 public:
     audio_transcriber(nlohmann::json js);
-    void provide(int idx, nervana::encoded_record_list& in_buf, nervana::fixed_buffer_map& out_buf) override;
+    void provide(int                           idx,
+                 nervana::encoded_record_list& in_buf,
+                 nervana::fixed_buffer_map&    out_buf) override;
     void post_process(nervana::fixed_buffer_map& out_buf) override;
     const std::unordered_map<char, uint8_t>& get_cmap() const { return trans_config.get_cmap(); }
 private:

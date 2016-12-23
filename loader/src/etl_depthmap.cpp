@@ -57,8 +57,9 @@ depthmap::transformer::~transformer()
 {
 }
 
-std::shared_ptr<image::decoded> depthmap::transformer::transform(std::shared_ptr<image::params>  img_xform,
-                                                                 std::shared_ptr<image::decoded> image_list)
+std::shared_ptr<image::decoded>
+    depthmap::transformer::transform(std::shared_ptr<image::params>  img_xform,
+                                     std::shared_ptr<image::decoded> image_list)
 {
     if (image_list->get_image_count() != 1)
         throw invalid_argument("depthmap transform only supports a single image");
@@ -105,7 +106,8 @@ void depthmap::loader::load(const std::vector<void*>& outlist, shared_ptr<image:
         {
             for (int ch = 0; ch < _cfg.channels; ch++)
             {
-                target.emplace_back(img.size(), cv_type, (char*)(outbuf_i + ch * img.total() * element_size));
+                target.emplace_back(
+                    img.size(), cv_type, (char*)(outbuf_i + ch * img.total() * element_size));
                 from_to.push_back(ch);
                 from_to.push_back(ch);
             }

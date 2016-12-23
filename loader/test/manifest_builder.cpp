@@ -42,9 +42,9 @@ stringstream& manifest_builder::create()
     {
         // all exements are text elements
         m_stream << manifest_file::get_metadata_char();
-        for (size_t i=0; i<m_sizes.size(); i++)
+        for (size_t i = 0; i < m_sizes.size(); i++)
         {
-            if (i>0)
+            if (i > 0)
             {
                 m_stream << manifest_file::get_delimiter();
             }
@@ -53,11 +53,11 @@ stringstream& manifest_builder::create()
         m_stream << endl;
 
         // now add the records
-        for (size_t record_number=0; record_number < m_record_count; record_number++)
+        for (size_t record_number = 0; record_number < m_record_count; record_number++)
         {
-            for (size_t element_number=0; element_number<m_sizes.size(); element_number++)
+            for (size_t element_number = 0; element_number < m_sizes.size(); element_number++)
             {
-                if (element_number>0)
+                if (element_number > 0)
                 {
                     m_stream << manifest_file::get_delimiter();
                 }
@@ -74,9 +74,9 @@ stringstream& manifest_builder::create()
         m_stream << manifest_file::get_metadata_char() << manifest_file::get_binary_type_id();
         m_stream << manifest_file::get_delimiter() << manifest_file::get_string_type_id();
         m_stream << endl;
-        for (size_t record_number=0; record_number < m_record_count; record_number++)
+        for (size_t record_number = 0; record_number < m_record_count; record_number++)
         {
-            cv::Mat mat = embedded_id_image::generate_image(rows, cols, record_number);
+            cv::Mat         mat = embedded_id_image::generate_image(rows, cols, record_number);
             vector<uint8_t> result;
             cv::imencode(".png", mat, result);
             vector<char> image_data = base64::encode((const char*)result.data(), result.size());

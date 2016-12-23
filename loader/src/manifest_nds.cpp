@@ -28,8 +28,12 @@
 using namespace std;
 using namespace nervana;
 
-network_client::network_client(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
-                                   size_t shard_count, size_t shard_index)
+network_client::network_client(const std::string& baseurl,
+                               const std::string& token,
+                               size_t             collection_id,
+                               size_t             block_size,
+                               size_t             shard_count,
+                               size_t             shard_index)
     : m_baseurl(baseurl)
     , m_token(token)
     , m_collection_id(collection_id)
@@ -182,12 +186,24 @@ manifest_nds manifest_nds_builder::create()
         throw invalid_argument("elements_per_record is required");
     }
 
-    return manifest_nds(m_base_url, m_token, m_collection_id, m_block_size, m_elements_per_record, m_shard_count, m_shard_index, m_shuffle);
+    return manifest_nds(m_base_url,
+                        m_token,
+                        m_collection_id,
+                        m_block_size,
+                        m_elements_per_record,
+                        m_shard_count,
+                        m_shard_index,
+                        m_shuffle);
 }
 
-
-manifest_nds::manifest_nds(const std::string& base_url, const std::string& token, size_t collection_id, size_t block_size,
-                           size_t elements_per_record, size_t shard_count, size_t shard_index, bool enable_shuffle)
+manifest_nds::manifest_nds(const std::string& base_url,
+                           const std::string& token,
+                           size_t             collection_id,
+                           size_t             block_size,
+                           size_t             elements_per_record,
+                           size_t             shard_count,
+                           size_t             shard_index,
+                           bool               enable_shuffle)
     : m_base_url(base_url)
     , m_token(token)
     , m_collection_id(collection_id)
@@ -274,19 +290,19 @@ encoded_record_list* manifest_nds::load_block(size_t block_index)
 
     // get data from url and write it into cpio_stream
     stringstream stream;
-    string url = m_network_client.load_block_url(block_index);
+    string       url = m_network_client.load_block_url(block_index);
     m_network_client.get(url, stream);
 
     // parse cpio_stream into dest one record (consisting of multiple elements) at a time
     nervana::cpio::reader reader(stream);
-    size_t record_count = reader.record_count();
-    for (size_t record_number=0; record_number<record_count; record_number++)
+    size_t                record_count = reader.record_count();
+    for (size_t record_number = 0; record_number < record_count; record_number++)
     {
         encoded_record record;
-        for (size_t element=0; element<m_elements_per_record; element++)
+        for (size_t element = 0; element < m_elements_per_record; element++)
         {
             vector<char> buffer;
-            string filename = reader.read(buffer);
+            string       filename = reader.read(buffer);
             if (filename == cpio::CPIO_TRAILER || filename == cpio::AEON_TRAILER)
             {
                 break;
@@ -336,9 +352,9 @@ void manifest_nds::load_metadata()
     // fetch metadata and store in local attributes
 
     stringstream json_stream;
-    string url = m_network_client.metadata_url();
+    string       url = m_network_client.metadata_url();
     m_network_client.get(url, json_stream);
-    string json_str = json_stream.str();
+    string         json_str = json_stream.str();
     nlohmann::json metadata;
 
     try
@@ -354,7 +370,10 @@ void manifest_nds::load_metadata()
         throw std::runtime_error(ss.str());
     }
 
-    nervana::interface::config::parse_value(m_record_count, "record_count", metadata, nervana::interface::config::mode::REQUIRED);
-    nervana::interface::config::parse_value(m_block_count, "macro_batch_per_shard", metadata,
+    nervana::interface::config::parse_value(
+        m_record_count, "record_count", metadata, nervana::interface::config::mode::REQUIRED);
+    nervana::interface::config::parse_value(m_block_count,
+                                            "macro_batch_per_shard",
+                                            metadata,
                                             nervana::interface::config::mode::REQUIRED);
 }

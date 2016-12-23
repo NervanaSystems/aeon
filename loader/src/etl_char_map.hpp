@@ -80,9 +80,13 @@ public:
     const std::unordered_map<char, uint8_t>& get_cmap() const { return _cmap; }
 private:
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
-        ADD_SCALAR(max_length, mode::REQUIRED), ADD_SCALAR(alphabet, mode::REQUIRED), ADD_SCALAR(unknown_value, mode::OPTIONAL),
+        ADD_SCALAR(max_length, mode::REQUIRED),
+        ADD_SCALAR(alphabet, mode::REQUIRED),
+        ADD_SCALAR(unknown_value, mode::OPTIONAL),
         ADD_SCALAR(pack_for_ctc, mode::OPTIONAL),
-        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) { return output_type::is_valid_type(v); })};
+        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) {
+            return output_type::is_valid_type(v);
+        })};
     std::unordered_map<char, uint8_t> _cmap;
 
     config() {}

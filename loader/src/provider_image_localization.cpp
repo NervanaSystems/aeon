@@ -62,8 +62,16 @@ void image_localization::provide(int idx, encoded_record_list& in_buf, fixed_buf
     char* image_scale_out    = out_buf["image_scale"]->get_item(idx);
     char* gt_difficult       = out_buf["difficult_flag"]->get_item(idx);
 
-    vector<void*> target_list = {bbtargets_out, bbtargets_mask_out, labels_flat_out, labels_mask_out, image_shape_out,
-                                 gt_boxes_out,  num_gt_boxes_out,   gt_classes_out,  image_scale_out, gt_difficult};
+    vector<void*> target_list = {bbtargets_out,
+                                 bbtargets_mask_out,
+                                 labels_flat_out,
+                                 labels_mask_out,
+                                 image_shape_out,
+                                 gt_boxes_out,
+                                 num_gt_boxes_out,
+                                 gt_classes_out,
+                                 image_scale_out,
+                                 gt_difficult};
 
     if (datum_in.size() == 0)
     {
@@ -82,7 +90,8 @@ void image_localization::provide(int idx, encoded_record_list& in_buf, fixed_buf
         auto target_dec = localization_extractor.extract(target_in.data(), target_in.size());
         if (target_dec)
         {
-            localization_loader.load(target_list, localization_transformer.transform(image_params, target_dec));
+            localization_loader.load(target_list,
+                                     localization_transformer.transform(image_params, target_dec));
         }
     }
 }

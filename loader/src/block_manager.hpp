@@ -33,29 +33,19 @@ namespace nervana
     class block_manager;
 }
 
-class nervana::block_manager
-    : public async_manager<encoded_record_list, encoded_record_list>
+class nervana::block_manager : public async_manager<encoded_record_list, encoded_record_list>
 {
 public:
-    block_manager(block_loader_source* file_loader, size_t block_size, const std::string& cache_root, bool enable_shuffle);
+    block_manager(block_loader_source* file_loader,
+                  size_t               block_size,
+                  const std::string&   cache_root,
+                  bool                 enable_shuffle);
 
-    virtual ~block_manager()
-    {
-        finalize();
-    }
-
+    virtual ~block_manager() { finalize(); }
     encoded_record_list* filler() override;
 
-    size_t record_count() const override
-    {
-        return m_block_size;
-    }
-
-    size_t elements_per_record() const override
-    {
-        return m_file_loader.elements_per_record();
-    }
-
+    size_t record_count() const override { return m_block_size; }
+    size_t elements_per_record() const override { return m_file_loader.elements_per_record(); }
 private:
     static std::string create_cache_name(source_uid_t uid);
     static std::string create_cache_block_name(size_t block_number);
@@ -69,19 +59,19 @@ private:
     static const std::string m_cache_complete_filename;
 
     block_loader_source& m_file_loader;
-    size_t                     m_block_size;
-    size_t                     m_block_count;
-    size_t                     m_record_count;
-    size_t                     m_current_block_number;
-    size_t                     m_elements_per_record;
-    const std::string          m_cache_root;
-    bool                       m_cache_enabled;
-    std::string                m_cache_dir;
-    bool                       m_shuffle_enabled;
-    source_uid_t               m_source_uid;
-    int                        m_cache_lock;
-    size_t                     m_cache_hit = 0;
-    size_t                     m_cache_miss = 0;
-    std::vector<size_t>        m_block_load_sequence;
-    std::minstd_rand0          m_rnd;
+    size_t               m_block_size;
+    size_t               m_block_count;
+    size_t               m_record_count;
+    size_t               m_current_block_number;
+    size_t               m_elements_per_record;
+    const std::string    m_cache_root;
+    bool                 m_cache_enabled;
+    std::string          m_cache_dir;
+    bool                 m_shuffle_enabled;
+    source_uid_t         m_source_uid;
+    int                  m_cache_lock;
+    size_t               m_cache_hit  = 0;
+    size_t               m_cache_miss = 0;
+    std::vector<size_t>  m_block_load_sequence;
+    std::minstd_rand0    m_rnd;
 };

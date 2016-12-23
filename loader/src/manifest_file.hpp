@@ -44,15 +44,21 @@ namespace nervana
 }
 
 class nervana::manifest_file
-        : public nervana::async_manager_source<std::vector<std::vector<std::string>>>
-        , public nervana::manifest
+    : public nervana::async_manager_source<std::vector<std::vector<std::string>>>,
+      public nervana::manifest
 {
 public:
-    manifest_file(const std::string& filename, bool shuffle, const std::string& root = "", float subset_fraction = 1.0,
-                  size_t block_size = 5000);
+    manifest_file(const std::string& filename,
+                  bool               shuffle,
+                  const std::string& root            = "",
+                  float              subset_fraction = 1.0,
+                  size_t             block_size      = 5000);
 
-    manifest_file(std::istream& stream, bool shuffle, const std::string& root = "", float subset_fraction = 1.0,
-                  size_t block_size = 5000);
+    manifest_file(std::istream&      stream,
+                  bool               shuffle,
+                  const std::string& root            = "",
+                  float              subset_fraction = 1.0,
+                  size_t             block_size      = 5000);
 
     virtual ~manifest_file() {}
     typedef std::vector<std::string> record;
@@ -82,7 +88,10 @@ public:
     const std::vector<std::string>& operator[](size_t offset) const;
 
 protected:
-    void initialize(std::istream& stream, size_t block_size, const std::string& root, float subset_fraction);
+    void initialize(std::istream&      stream,
+                    size_t             block_size,
+                    const std::string& root,
+                    float              subset_fraction);
 
 private:
     const std::string                m_source_filename;

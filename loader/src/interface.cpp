@@ -23,8 +23,10 @@ using namespace nervana;
 using namespace std;
 using namespace nlohmann;
 
-void interface::config::verify_config(const std::string&                                          location,
-                                      const vector<shared_ptr<interface::config_info_interface>>& config, nlohmann::json js) const
+void interface::config::verify_config(
+    const std::string&                                          location,
+    const vector<shared_ptr<interface::config_info_interface>>& config,
+    nlohmann::json                                              js) const
 {
     vector<string>          ignore_list;
     json::parser_callback_t cb = [&](int depth, json::parse_event_t event, json& parsed) {

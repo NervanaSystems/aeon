@@ -36,31 +36,32 @@
 using namespace std;
 using namespace nervana;
 
-TEST(DISABLED_curl,test)
+TEST(DISABLED_curl, test)
 {
     network_client client("http://127.0.0.1:5000", "token", 1, 500, 1, 0);
 
-    for (int i=0; i<1000; i++)
+    for (int i = 0; i < 1000; i++)
     {
-        auto url = client.load_block_url(i);
+        auto         url = client.load_block_url(i);
         stringstream ss;
         client.get(url, ss);
-        cout << __FILE__ << " " << __LINE__ << " iteration " << i+1 << " size " << ss.tellp() << endl;
+        cout << __FILE__ << " " << __LINE__ << " iteration " << i + 1 << " size " << ss.tellp()
+             << endl;
     }
 }
 
 TEST(block_loader_nds, curl_stream)
 {
-    size_t block_size = 16;
+    size_t block_size          = 16;
     size_t elements_per_record = 2;
 
     manifest_nds client = manifest_nds_builder()
-            .base_url("http://127.0.0.1:5000")
-            .token("token")
-            .collection_id(1)
-            .block_size(block_size)
-            .elements_per_record(elements_per_record)
-            .create();
+                              .base_url("http://127.0.0.1:5000")
+                              .token("token")
+                              .collection_id(1)
+                              .block_size(block_size)
+                              .elements_per_record(elements_per_record)
+                              .create();
 
     stringstream stream;
     client.m_network_client.get("http://127.0.0.1:5000/test_pattern/", stream);
@@ -75,33 +76,34 @@ TEST(block_loader_nds, curl_stream)
 
 TEST(block_loader_nds, curl_stream_error)
 {
-    size_t block_size = 16;
+    size_t block_size          = 16;
     size_t elements_per_record = 2;
 
     manifest_nds client = manifest_nds_builder()
-            .base_url("http://127.0.0.1:5000")
-            .token("token")
-            .collection_id(1)
-            .block_size(block_size)
-            .elements_per_record(elements_per_record)
-            .create();
+                              .base_url("http://127.0.0.1:5000")
+                              .token("token")
+                              .collection_id(1)
+                              .block_size(block_size)
+                              .elements_per_record(elements_per_record)
+                              .create();
 
     stringstream stream;
-    EXPECT_THROW(client.m_network_client.get("http://127.0.0.1:5000/error", stream), std::runtime_error);
+    EXPECT_THROW(client.m_network_client.get("http://127.0.0.1:5000/error", stream),
+                 std::runtime_error);
 }
 
 TEST(block_loader_nds, record_count)
 {
-    size_t block_size = 16;
+    size_t block_size          = 16;
     size_t elements_per_record = 2;
 
     manifest_nds client = manifest_nds_builder()
-            .base_url("http://127.0.0.1:5000")
-            .token("token")
-            .collection_id(1)
-            .block_size(block_size)
-            .elements_per_record(elements_per_record)
-            .create();
+                              .base_url("http://127.0.0.1:5000")
+                              .token("token")
+                              .collection_id(1)
+                              .block_size(block_size)
+                              .elements_per_record(elements_per_record)
+                              .create();
 
     // 200 and 5 are hard coded in the mock nds server
     ASSERT_EQ(client.record_count(), 200);
@@ -110,20 +112,20 @@ TEST(block_loader_nds, record_count)
 
 TEST(block_loader_nds, cpio)
 {
-    size_t block_size = 16;
+    size_t block_size          = 16;
     size_t elements_per_record = 2;
-    size_t block_count = 3;
+    size_t block_count         = 3;
 
     manifest_nds client = manifest_nds_builder()
-            .base_url("http://127.0.0.1:5000")
-            .token("token")
-            .collection_id(1)
-            .block_size(block_size)
-            .elements_per_record(elements_per_record)
-            .create();
+                              .base_url("http://127.0.0.1:5000")
+                              .token("token")
+                              .collection_id(1)
+                              .block_size(block_size)
+                              .elements_per_record(elements_per_record)
+                              .create();
 
     size_t record_number = 0;
-    for (size_t block_number=0; block_number<block_count; block_number++)
+    for (size_t block_number = 0; block_number < block_count; block_number++)
     {
         encoded_record_list* block = client.load_block(block_number);
         ASSERT_EQ(block_size, block->size());

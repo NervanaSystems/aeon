@@ -99,7 +99,8 @@ string master_page = R"(
 
 web_app::web_app()
 {
-    page_request_handler fn = bind(&web_app::process_page_request, this, placeholders::_1, placeholders::_2);
+    page_request_handler fn =
+        bind(&web_app::process_page_request, this, placeholders::_1, placeholders::_2);
     web_server.register_page_handler(fn);
     web_server.start(8086);
 }

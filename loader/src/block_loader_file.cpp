@@ -35,8 +35,8 @@ block_loader_file::block_loader_file(manifest_file* manifest, size_t block_size)
     , m_record_count{manifest->record_count()}
     , m_manifest(*manifest)
 {
-    m_block_count = round((float)m_manifest.record_count() / (float)m_block_size);
-    m_block_size = ceil((float)m_manifest.record_count() / (float)m_block_count);
+    m_block_count         = round((float)m_manifest.record_count() / (float)m_block_size);
+    m_block_size          = ceil((float)m_manifest.record_count() / (float)m_block_count);
     m_elements_per_record = manifest->elements_per_record();
 }
 
@@ -52,7 +52,7 @@ nervana::encoded_record_list* block_loader_file::filler()
         for (auto element_list : *block)
         {
             const vector<manifest::element_t>& types = m_manifest.get_element_types();
-            encoded_record record;
+            encoded_record                     record;
             for (int j = 0; j < m_elements_per_record; ++j)
             {
                 try
@@ -68,7 +68,7 @@ nervana::encoded_record_list* block_loader_file::filler()
                     }
                     case manifest::element_t::BINARY:
                     {
-                        vector<char> buffer = string2vector(element);
+                        vector<char> buffer  = string2vector(element);
                         vector<char> decoded = base64::decode(buffer);
                         record.add_element(std::move(decoded));
                         break;
@@ -90,9 +90,7 @@ nervana::encoded_record_list* block_loader_file::filler()
                         record.add_element(&value, sizeof(value));
                         break;
                     }
-                    default:
-                    {
-                        break;
+                    default: { break;
                     }
                     }
                 }

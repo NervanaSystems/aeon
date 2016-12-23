@@ -239,7 +239,7 @@ void web::server::process_loop()
             }
             else
             {
-                auto fn                = std::bind(&web::server::connection_handler_entry, current_page);
+                auto fn = std::bind(&web::server::connection_handler_entry, current_page);
                 current_page->m_thread = std::thread(fn);
             }
         }
@@ -493,7 +493,9 @@ void web::page::master_page_file(const string& path, const string& marker, marke
     master_page_string(data, marker, content);
 }
 
-void web::page::master_page_string(const string& source, const string& marker, marker_content content)
+void web::page::master_page_string(const string&  source,
+                                   const string&  marker,
+                                   marker_content content)
 {
     int markerIndex = 0;
     for (char c : source)
@@ -641,7 +643,7 @@ void web::tcp::connection::close()
 {
     if (m_is_server)
     {
-        int sock = socket(AF_INET, SOCK_STREAM, 0);
+        int                sock = socket(AF_INET, SOCK_STREAM, 0);
         struct sockaddr_in remote;
         remote.sin_family = AF_INET;
         inet_pton(AF_INET, "127.0.0.1", &remote.sin_addr);

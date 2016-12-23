@@ -97,7 +97,8 @@ void wav_data::write_to_file(string filename)
 void wav_data::write_to_buffer(char* buf, uint32_t bufsize)
 {
     uint32_t reqsize = nbytes() + HEADER_SIZE;
-    wav_assert(bufsize >= reqsize, "output buffer is too small " + to_string(bufsize) + " vs " + to_string(reqsize));
+    wav_assert(bufsize >= reqsize,
+               "output buffer is too small " + to_string(bufsize) + " vs " + to_string(reqsize));
     write_header(buf, HEADER_SIZE);
     write_data(buf + HEADER_SIZE, nbytes());
 }

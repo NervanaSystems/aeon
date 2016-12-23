@@ -48,8 +48,9 @@ public:
     virtual float    readF32() = 0;
     virtual double   readF64() = 0;
 
-    virtual void     seek(size_t offset) = 0;
+    virtual void seek(size_t offset) = 0;
     virtual uint8_t* read(uint8_t* target, size_t count, size_t channels) = 0;
+
 protected:
     endian_t endian = endian_t::LITTLE;
 };
@@ -62,18 +63,18 @@ public:
     bstream_mem(const std::vector<char>& data);
     ~bstream_mem();
 
-    uint8_t  readU8()  override;
+    uint8_t  readU8() override;
     uint16_t readU16() override;
     uint32_t readU32() override;
     uint64_t readU64() override;
-    int8_t   readS8()  override;
+    int8_t   readS8() override;
     int16_t  readS16() override;
     int32_t  readS32() override;
     int64_t  readS64() override;
     float    readF32() override;
     double   readF64() override;
 
-    void     seek(size_t offset) override;
+    void seek(size_t offset) override;
     uint8_t* read(uint8_t* target, size_t count, size_t channels) override;
 
 private:

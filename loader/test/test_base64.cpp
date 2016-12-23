@@ -56,17 +56,18 @@ TEST(base64, decode)
 
 TEST(base64, padding_encode)
 {
-    vector<pair<string, string>> padding = {{"any carnal pleasure.", "YW55IGNhcm5hbCBwbGVhc3VyZS4="},
-                                            {"any carnal pleasure", "YW55IGNhcm5hbCBwbGVhc3VyZQ=="},
-                                            {"any carnal pleasur", "YW55IGNhcm5hbCBwbGVhc3Vy"},
-                                            {"any carnal pleasu", "YW55IGNhcm5hbCBwbGVhc3U="},
-                                            {"any carnal pleas", "YW55IGNhcm5hbCBwbGVhcw=="}};
+    vector<pair<string, string>> padding = {
+        {"any carnal pleasure.", "YW55IGNhcm5hbCBwbGVhc3VyZS4="},
+        {"any carnal pleasure", "YW55IGNhcm5hbCBwbGVhc3VyZQ=="},
+        {"any carnal pleasur", "YW55IGNhcm5hbCBwbGVhc3Vy"},
+        {"any carnal pleasu", "YW55IGNhcm5hbCBwbGVhc3U="},
+        {"any carnal pleas", "YW55IGNhcm5hbCBwbGVhcw=="}};
 
     for (auto p : padding)
     {
-        string       decoded = p.first;
+        string       decoded  = p.first;
         string       expected = p.second;
-        vector<char> encoded = base64::encode(decoded.data(), decoded.size());
+        vector<char> encoded  = base64::encode(decoded.data(), decoded.size());
         string       actual{encoded.data(), encoded.size()};
         EXPECT_STREQ(expected.c_str(), actual.c_str());
     }
@@ -74,23 +75,24 @@ TEST(base64, padding_encode)
 
 TEST(base64, padding_decode)
 {
-    vector<pair<string, string>> padding = {{"any carnal pleasure.", "YW55IGNhcm5hbCBwbGVhc3VyZS4="},
-                                            {"any carnal pleasure.", "YW55IGNhcm5hbCBwbGVhc3VyZS4"},
-                                            {"any carnal pleasure", "YW55IGNhcm5hbCBwbGVhc3VyZQ=="},
-                                            {"any carnal pleasure", "YW55IGNhcm5hbCBwbGVhc3VyZQ="},
-                                            {"any carnal pleasure", "YW55IGNhcm5hbCBwbGVhc3VyZQ"},
-                                            {"any carnal pleasur", "YW55IGNhcm5hbCBwbGVhc3Vy"},
-                                            {"any carnal pleasu", "YW55IGNhcm5hbCBwbGVhc3U="},
-                                            {"any carnal pleasu", "YW55IGNhcm5hbCBwbGVhc3U"},
-                                            {"any carnal pleas", "YW55IGNhcm5hbCBwbGVhcw=="},
-                                            {"any carnal pleas", "YW55IGNhcm5hbCBwbGVhcw="},
-                                            {"any carnal pleas", "YW55IGNhcm5hbCBwbGVhcw"}};
+    vector<pair<string, string>> padding = {
+        {"any carnal pleasure.", "YW55IGNhcm5hbCBwbGVhc3VyZS4="},
+        {"any carnal pleasure.", "YW55IGNhcm5hbCBwbGVhc3VyZS4"},
+        {"any carnal pleasure", "YW55IGNhcm5hbCBwbGVhc3VyZQ=="},
+        {"any carnal pleasure", "YW55IGNhcm5hbCBwbGVhc3VyZQ="},
+        {"any carnal pleasure", "YW55IGNhcm5hbCBwbGVhc3VyZQ"},
+        {"any carnal pleasur", "YW55IGNhcm5hbCBwbGVhc3Vy"},
+        {"any carnal pleasu", "YW55IGNhcm5hbCBwbGVhc3U="},
+        {"any carnal pleasu", "YW55IGNhcm5hbCBwbGVhc3U"},
+        {"any carnal pleas", "YW55IGNhcm5hbCBwbGVhcw=="},
+        {"any carnal pleas", "YW55IGNhcm5hbCBwbGVhcw="},
+        {"any carnal pleas", "YW55IGNhcm5hbCBwbGVhcw"}};
 
     for (auto p : padding)
     {
         string       expected = p.first;
-        string       encoded = p.second;
-        vector<char> decoded = base64::decode(encoded.data(), encoded.size());
+        string       encoded  = p.second;
+        vector<char> decoded  = base64::decode(encoded.data(), encoded.size());
         string       actual{decoded.data(), decoded.size()};
         EXPECT_STREQ(expected.c_str(), actual.c_str());
     }
@@ -99,14 +101,14 @@ TEST(base64, padding_decode)
 TEST(base64, binary)
 {
     vector<char> source;
-    for (size_t i=0; i<256; i++)
+    for (size_t i = 0; i < 256; i++)
     {
         source.push_back(i);
     }
 
     vector<char> encoded = base64::encode(source);
     vector<char> decoded = base64::decode(encoded);
-    for (size_t i=0; i<256; i++)
+    for (size_t i = 0; i < 256; i++)
     {
         ASSERT_EQ((uint8_t)source[i], (uint8_t)decoded[i]) << i;
     }

@@ -46,7 +46,8 @@ TEST(video, extract_transform)
         vector<char> buf((istreambuf_iterator<char>(ifs)), istreambuf_iterator<char>());
 
         // extract
-        nlohmann::json js = {{"max_frame_count", 5}, {"frame", {{"height", height}, {"width", width}}}};
+        nlohmann::json js = {{"max_frame_count", 5},
+                             {"frame", {{"height", height}, {"width", width}}}};
 
         video::config config(js);
 
@@ -119,12 +120,13 @@ TEST(video, loader)
     // each dimension is unique to help debug and detect incorrect
     // dimension ordering
     // extract
-    nlohmann::json js = {{"max_frame_count", 5}, {"frame", {{"channels", 3}, {"height", 4}, {"width", 2}}}};
-    video::config  vconfig{js};
+    nlohmann::json js = {{"max_frame_count", 5},
+                         {"frame", {{"channels", 3}, {"height", 4}, {"width", 2}}}};
+    video::config vconfig{js};
 
     int channels, height, width, depth;
-    tie(channels, height, width, depth) =
-        make_tuple(vconfig.frame.channels, vconfig.frame.height, vconfig.frame.width, vconfig.max_frame_count);
+    tie(channels, height, width, depth) = make_tuple(
+        vconfig.frame.channels, vconfig.frame.height, vconfig.frame.width, vconfig.max_frame_count);
 
     auto decoded_vid = make_shared<image::decoded>();
 

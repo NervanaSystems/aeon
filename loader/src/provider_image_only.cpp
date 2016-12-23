@@ -32,7 +32,7 @@ image_only::image_only(nlohmann::json js)
 void image_only::provide(int idx, encoded_record_list& in_buf, fixed_buffer_map& out_buf)
 {
     vector<char>& datum_in  = in_buf.record(idx).element(0);
-    char* datum_out = out_buf["image"]->get_item(idx);
+    char*         datum_out = out_buf["image"]->get_item(idx);
 
     if (datum_in.size() == 0)
     {

@@ -53,7 +53,9 @@ private:
     config() {}
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_SCALAR(binary, mode::OPTIONAL),
-        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) { return output_type::is_valid_type(v); })};
+        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) {
+            return output_type::is_valid_type(v);
+        })};
 };
 
 class nervana::label::decoded : public interface::decoded_media

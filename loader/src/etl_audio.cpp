@@ -43,7 +43,8 @@ audio::transformer::transformer(const audio::config& config)
     if (_cfg.feature_type != "samples")
     {
         specgram::create_window(_cfg.window_type, _cfg.frame_length_tn, _window);
-        specgram::create_filterbanks(_cfg.num_filters, _cfg.frame_length_tn, _cfg.sample_freq_hz, _filterbank);
+        specgram::create_filterbanks(
+            _cfg.num_filters, _cfg.frame_length_tn, _cfg.sample_freq_hz, _filterbank);
     }
     _noisemaker = make_shared<noise_clips>(_cfg.noise_index_file, _cfg.noise_root);
 }
@@ -62,11 +63,15 @@ audio::transformer::~transformer()
 * 4. Optionally convert to MFCC (controlled by feature_type parameter)
 * 5. Optionally time-warp (controlled by time_scale_fraction)
 */
-std::shared_ptr<audio::decoded> audio::transformer::transform(std::shared_ptr<audio::params>  params,
-                                                              std::shared_ptr<audio::decoded> decoded)
+std::shared_ptr<audio::decoded>
+    audio::transformer::transform(std::shared_ptr<audio::params>  params,
+                                  std::shared_ptr<audio::decoded> decoded)
 {
     cv::Mat& samples_mat = decoded->get_time_data();
-    _noisemaker->addNoise(samples_mat, params->add_noise, params->noise_index, params->noise_offset_fraction,
+    _noisemaker->addNoise(samples_mat,
+                          params->add_noise,
+                          params->noise_index,
+                          params->noise_offset_fraction,
                           params->noise_level); // no-op if no noise files
 
     if (_cfg.feature_type == "samples")
@@ -77,7 +82,11 @@ std::shared_ptr<audio::decoded> audio::transformer::transform(std::shared_ptr<au
     else
     {
         // convert from time domain to frequency domain into the freq mat
-        specgram::wav_to_specgram(samples_mat, _cfg.frame_length_tn, _cfg.frame_stride_tn, _cfg.time_steps, _window,
+        specgram::wav_to_specgram(samples_mat,
+                                  _cfg.frame_length_tn,
+                                  _cfg.frame_stride_tn,
+                                  _cfg.time_steps,
+                                  _window,
                                   decoded->get_freq_data());
         if (_cfg.feature_type != "specgram")
         {
@@ -95,7 +104,11 @@ std::shared_ptr<audio::decoded> audio::transformer::transform(std::shared_ptr<au
 
         // place into a destination with the appropriate time dimensions
         cv::Mat resized;
-        cv::resize(decoded->get_freq_data(), resized, cv::Size(), 1.0, params->time_scale_fraction,
+        cv::resize(decoded->get_freq_data(),
+                   resized,
+                   cv::Size(),
+                   1.0,
+                   params->time_scale_fraction,
                    (params->time_scale_fraction > 1.0) ? CV_INTER_CUBIC : CV_INTER_AREA);
         decoded->get_freq_data() = resized;
         decoded->valid_frames    = std::min((uint32_t)resized.rows, (uint32_t)_cfg.time_steps);
@@ -117,7 +130,8 @@ void audio::loader::load(const vector<void*>& outbuf, shared_ptr<audio::decoded>
 
     cv::Mat padded_frames(_cfg.time_steps, _cfg.freq_steps, cv_type);
 
-    frames(cv::Range(0, nframes), cv::Range::all()).convertTo(padded_frames(cv::Range(0, nframes), cv::Range::all()), cv_type);
+    frames(cv::Range(0, nframes), cv::Range::all())
+        .convertTo(padded_frames(cv::Range(0, nframes), cv::Range::all()), cv_type);
 
     if (nframes < _cfg.time_steps)
     {

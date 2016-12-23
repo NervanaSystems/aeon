@@ -87,7 +87,7 @@ TEST(pixel_mask, scale_up)
     image::loader           loader{cfg};
     image::param_factory    factory{cfg};
 
-    auto                       extracted = extractor.extract((const char*)test_data.data(), test_data.size());
+    auto extracted = extractor.extract((const char*)test_data.data(), test_data.size());
     image_params_builder       builder(factory.make_params(extracted));
     shared_ptr<image::params>  params_ptr  = builder.output_size(300, 300);
     shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
@@ -111,7 +111,7 @@ TEST(pixel_mask, scale_down)
     image::loader           loader{cfg};
     image::param_factory    factory{cfg};
 
-    auto                       extracted = extractor.extract((const char*)test_data.data(), test_data.size());
+    auto extracted = extractor.extract((const char*)test_data.data(), test_data.size());
     image_params_builder       builder(factory.make_params(extracted));
     shared_ptr<image::params>  params_ptr  = builder.output_size(100, 100);
     shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
@@ -135,7 +135,7 @@ TEST(pixel_mask, rotate)
     image::loader           loader{cfg};
     image::param_factory    factory{cfg};
 
-    auto                       extracted = extractor.extract((const char*)test_data.data(), test_data.size());
+    auto extracted = extractor.extract((const char*)test_data.data(), test_data.size());
     image_params_builder       builder(factory.make_params(extracted));
     shared_ptr<image::params>  params_ptr  = builder.angle(45);
     shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
@@ -163,15 +163,16 @@ TEST(pixel_mask, load_int)
     vector<uint8_t> test_data;
     cv::imencode(".png", test_image, test_data);
 
-    nlohmann::json js = {{"width", 256}, {"height", 256}, {"output_type", "int32_t"}, {"channels", 1}};
-    image::config  cfg(js);
+    nlohmann::json js = {
+        {"width", 256}, {"height", 256}, {"output_type", "int32_t"}, {"channels", 1}};
+    image::config cfg(js);
 
     pixel_mask::extractor   extractor{cfg};
     pixel_mask::transformer transformer{cfg};
     image::loader           loader{cfg};
     image::param_factory    factory{cfg};
 
-    auto                       extracted = extractor.extract((const char*)test_data.data(), test_data.size());
+    auto extracted = extractor.extract((const char*)test_data.data(), test_data.size());
     image_params_builder       builder(factory.make_params(extracted));
     shared_ptr<image::params>  params_ptr  = builder;
     shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);

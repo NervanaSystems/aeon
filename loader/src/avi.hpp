@@ -25,10 +25,12 @@ struct nervana::AviMainHeader
     uint32_t dwMicroSecPerFrame; //  The period between video frames
     uint32_t dwMaxBytesPerSec;   //  Maximum data rate of the file
     uint32_t dwReserved1;        // 0
-    uint32_t dwFlags;            //  0x10 AVIF_HASINDEX: The AVI file has an idx1 chunk containing an index at the end of the file.
-    uint32_t dwTotalFrames;      // Field of the main header specifies the total number of frames of data in file.
-    uint32_t dwInitialFrames;    // Is used for interleaved files
-    uint32_t dwStreams;          // Specifies the number of streams in the file.
+    uint32_t
+        dwFlags; //  0x10 AVIF_HASINDEX: The AVI file has an idx1 chunk containing an index at the end of the file.
+    uint32_t
+             dwTotalFrames; // Field of the main header specifies the total number of frames of data in file.
+    uint32_t dwInitialFrames;       // Is used for interleaved files
+    uint32_t dwStreams;             // Specifies the number of streams in the file.
     uint32_t dwSuggestedBufferSize; // Field specifies the suggested buffer size forreading the file
     uint32_t dwWidth;               // Fields specify the width of the AVIfile in pixels.
     uint32_t dwHeight;              // Fields specify the height of the AVIfile in pixels.
@@ -37,18 +39,19 @@ struct nervana::AviMainHeader
 
 struct nervana::AviStreamHeader
 {
-    uint32_t fccType;               // 'vids', 'auds', 'txts'...
-    uint32_t fccHandler;            // "cvid", "DIB "
-    uint32_t dwFlags;               // 0
-    uint32_t dwPriority;            // 0
-    uint32_t dwInitialFrames;       // 0
-    uint32_t dwScale;               // 1
-    uint32_t dwRate;                // Fps (dwRate - frame rate for video streams)
-    uint32_t dwStart;               // 0
-    uint32_t dwLength;              // Frames number (playing time of AVI file as defined by scale and rate)
+    uint32_t fccType;         // 'vids', 'auds', 'txts'...
+    uint32_t fccHandler;      // "cvid", "DIB "
+    uint32_t dwFlags;         // 0
+    uint32_t dwPriority;      // 0
+    uint32_t dwInitialFrames; // 0
+    uint32_t dwScale;         // 1
+    uint32_t dwRate;          // Fps (dwRate - frame rate for video streams)
+    uint32_t dwStart;         // 0
+    uint32_t dwLength; // Frames number (playing time of AVI file as defined by scale and rate)
     uint32_t dwSuggestedBufferSize; // For reading the stream
-    uint32_t dwQuality;             // -1 (encoding quality. If set to -1, drivers use the default quality value)
-    uint32_t dwSampleSize;          // 0 means that each frame is in its own chunk
+    uint32_t
+             dwQuality; // -1 (encoding quality. If set to -1, drivers use the default quality value)
+    uint32_t dwSampleSize; // 0 means that each frame is in its own chunk
     struct
     {
         int16_t left;
@@ -79,7 +82,8 @@ struct nervana::BitmapInfoHeader
     int32_t  biXPelsPerMeter; // Horizontal resolution in pixels per meter
     int32_t  biYPelsPerMeter; // Vertical resolution in pixels per meter
     uint32_t biClrUsed;       // 256 (color table size; for 8-bit only)
-    uint32_t biClrImportant;  // Specifies that the first x colors of the color table. Are important to the DIB.
+    uint32_t
+        biClrImportant; // Specifies that the first x colors of the color table. Are important to the DIB.
 };
 
 struct nervana::RiffChunk
@@ -109,7 +113,8 @@ std::istream& operator>>(std::istream& is, nervana::AviIndex& idx1);
 namespace nervana
 {
 #ifndef CV_FOURCC_MACRO
-#define CV_FOURCC_MACRO(c1, c2, c3, c4) (((c1)&255) + (((c2)&255) << 8) + (((c3)&255) << 16) + (((c4)&255) << 24))
+#define CV_FOURCC_MACRO(c1, c2, c3, c4)                                                            \
+    (((c1)&255) + (((c2)&255) << 8) + (((c3)&255) << 16) + (((c4)&255) << 24))
 #endif
 
     int CV_FOURCC(char c1, char c2, char c3, char c4);

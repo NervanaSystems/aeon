@@ -31,7 +31,10 @@ namespace nervana
         {
         }
 
-        constexpr char operator[](size_t i) const { return i < _size ? _string[i] : throw std::out_of_range(""); }
+        constexpr char operator[](size_t i) const
+        {
+            return i < _size ? _string[i] : throw std::out_of_range("");
+        }
         constexpr const char* get_ptr(size_t offset) const { return &_string[offset]; }
         constexpr size_t                     size() const { return _size; }
     private:
@@ -41,10 +44,14 @@ namespace nervana
 
     constexpr const char* find_last(conststring s, size_t offset, char ch)
     {
-        return offset == 0 ? s.get_ptr(0) : (s[offset] == ch ? s.get_ptr(offset + 1) : find_last(s, offset - 1, ch));
+        return offset == 0 ? s.get_ptr(0) : (s[offset] == ch ? s.get_ptr(offset + 1)
+                                                             : find_last(s, offset - 1, ch));
     }
 
-    constexpr const char* find_last(conststring s, char ch) { return find_last(s, s.size() - 1, ch); }
+    constexpr const char* find_last(conststring s, char ch)
+    {
+        return find_last(s, s.size() - 1, ch);
+    }
     constexpr const char* get_file_name(conststring s) { return find_last(s, '/'); }
     enum class LOG_TYPE
     {
@@ -81,12 +88,22 @@ namespace nervana
         static std::deque<std::string> queue;
     };
 
-#define ERR                                                                                                                        \
-    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_ERROR, nervana::get_file_name(__FILE__), __LINE__, __PRETTY_FUNCTION__)       \
+#define ERR                                                                                        \
+    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_ERROR,                                        \
+                        nervana::get_file_name(__FILE__),                                          \
+                        __LINE__,                                                                  \
+                        __PRETTY_FUNCTION__)                                                       \
         .stream()
-#define WARN                                                                                                                       \
-    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_WARNING, nervana::get_file_name(__FILE__), __LINE__, __PRETTY_FUNCTION__)     \
+#define WARN                                                                                       \
+    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_WARNING,                                      \
+                        nervana::get_file_name(__FILE__),                                          \
+                        __LINE__,                                                                  \
+                        __PRETTY_FUNCTION__)                                                       \
         .stream()
-#define INFO                                                                                                                       \
-    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_INFO, nervana::get_file_name(__FILE__), __LINE__, __PRETTY_FUNCTION__).stream()
+#define INFO                                                                                       \
+    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_INFO,                                         \
+                        nervana::get_file_name(__FILE__),                                          \
+                        __LINE__,                                                                  \
+                        __PRETTY_FUNCTION__)                                                       \
+        .stream()
 }

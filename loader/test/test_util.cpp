@@ -176,7 +176,8 @@ TEST(avi, video_buffer)
     vector<char> data(size);
     data.assign(istreambuf_iterator<char>(in), istreambuf_iterator<char>());
 
-    shared_ptr<MotionJpegCapture> mjdecoder = make_shared<MotionJpegCapture>(data.data(), data.size());
+    shared_ptr<MotionJpegCapture> mjdecoder =
+        make_shared<MotionJpegCapture>(data.data(), data.size());
     ASSERT_TRUE(mjdecoder->isOpened());
     cv::Mat image;
     int     image_number = 0;
@@ -309,12 +310,12 @@ void dump_config_info(ostream& f, shared_ptr<nervana::interface::config_info_int
     f << "\n";
 }
 
-#define DUMP_CONFIG(arg)                                                                                                           \
-    {                                                                                                                              \
-        arg::config cfg;                                                                                                           \
-        f << #arg << ":\n";                                                                                                        \
-        for (auto x : cfg.config_list)                                                                                             \
-            dump_config_info(f, x);                                                                                                \
+#define DUMP_CONFIG(arg)                                                                           \
+    {                                                                                              \
+        arg::config cfg;                                                                           \
+        f << #arg << ":\n";                                                                        \
+        for (auto x : cfg.config_list)                                                             \
+            dump_config_info(f, x);                                                                \
     }
 
 TEST(util, param_dump)

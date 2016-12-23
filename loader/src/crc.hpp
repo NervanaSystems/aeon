@@ -54,7 +54,7 @@ namespace CryptoPP
         void TruncatedFinal(byte* hash, size_t size);
         unsigned int                          DigestSize() const { return DIGESTSIZE; }
         CRYPTOPP_CONSTEXPR static const char* StaticAlgorithmName() { return "CRC32"; }
-        std::string                           AlgorithmName() const { return StaticAlgorithmName(); }
+        std::string AlgorithmName() const { return StaticAlgorithmName(); }
         void UpdateByte(byte b) { m_crc = m_tab[CRC32_INDEX(m_crc) ^ b] ^ CRC32_SHIFTED(m_crc); }
         byte GetCrcByte(size_t i) const { return ((byte*)&(m_crc))[i]; }
     protected:
@@ -76,7 +76,7 @@ namespace CryptoPP
         void TruncatedFinal(byte* hash, size_t size);
         unsigned int                          DigestSize() const { return DIGESTSIZE; }
         CRYPTOPP_CONSTEXPR static const char* StaticAlgorithmName() { return "CRC32C"; }
-        std::string                           AlgorithmName() const { return StaticAlgorithmName(); }
+        std::string AlgorithmName() const { return StaticAlgorithmName(); }
         void UpdateByte(byte b) { m_crc = m_tab[CRC32_INDEX(m_crc) ^ b] ^ CRC32_SHIFTED(m_crc); }
         byte GetCrcByte(size_t i) const { return ((byte*)&(m_crc))[i]; }
     protected:

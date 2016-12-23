@@ -30,8 +30,7 @@ using namespace std;
 using namespace nervana;
 
 gen_image image_dataset;
-string test_cache_directory;
-
+string    test_cache_directory;
 
 // NDSMockServer starts a python process in the constructor and kills the
 // process in the destructor
@@ -40,53 +39,47 @@ class mock_nds_server
 public:
     mock_nds_server()
     {
-        page_request_handler fn = bind(&mock_nds_server::page_handler, this, placeholders::_1, placeholders::_2);
+        page_request_handler fn =
+            bind(&mock_nds_server::page_handler, this, placeholders::_1, placeholders::_2);
         m_server.register_page_handler(fn);
         m_server.start(5000);
     }
 
-    ~mock_nds_server()
-    {
-    }
-
-    void set_elements_per_record(initializer_list<int> init)
-    {
-        m_elements_size_list = init;
-    }
-
+    ~mock_nds_server() {}
+    void set_elements_per_record(initializer_list<int> init) { m_elements_size_list = init; }
     void page_handler(web::page& page, const std::string& url)
     {
         if (url == "/object_count/")
         {
-            nlohmann::json js = {
-                {"record_count", 200},
-                {"macro_batch_per_shard", 5}
-            };
-            string rc = js.dump();
+            nlohmann::json js = {{"record_count", 200}, {"macro_batch_per_shard", 5}};
+            string         rc = js.dump();
             page.send_string(rc);
         }
         else if (url == "/macrobatch/")
         {
-            map<string,string> args = page.args();
-            size_t block_size = stod(args["macro_batch_max_size"]);
-            size_t block_index = stod(args["macro_batch_index"]);
+            map<string, string> args = page.args();
+            size_t block_size    = stod(args["macro_batch_max_size"]);
+            size_t block_index   = stod(args["macro_batch_index"]);
             size_t collection_id = stod(args["collection_id"]);
-            string token = args["token"];
-            (void)block_index; (void)collection_id; (void)token; // silence warning
+            string token         = args["token"];
+            (void)block_index;
+            (void)collection_id;
+            (void)token; // silence warning
             stringstream ss;
             {
-                size_t record_start = block_size * block_index;
-                cpio::writer writer(ss);
+                size_t              record_start = block_size * block_index;
+                cpio::writer        writer(ss);
                 encoded_record_list record_list;
-                for (size_t record_number=0; record_number<block_size; record_number++)
+                for (size_t record_number = 0; record_number < block_size; record_number++)
                 {
                     encoded_record record;
-                    for (size_t element_number=0; element_number<m_elements_size_list.size(); element_number++)
+                    for (size_t element_number = 0; element_number < m_elements_size_list.size();
+                         element_number++)
                     {
                         stringstream ss;
-                        ss << record_number+record_start << ":" << element_number;
-                        string id = ss.str();
-                        auto data = string2vector(id);
+                        ss << record_number + record_start << ":" << element_number;
+                        string id   = ss.str();
+                        auto   data = string2vector(id);
                         record.add_element(data);
                     }
                     record_list.add_record(record);
@@ -99,7 +92,7 @@ public:
         }
         else if (url == "/test_pattern/")
         {
-            for (int i=0; i<1024; i++)
+            for (int i = 0; i < 1024; i++)
             {
                 page.send_string("0123456789abcdef");
             }
@@ -115,37 +108,37 @@ private:
     vector<int> m_elements_size_list = {1024, 32};
 };
 
-
 static void CreateImageDataset()
 {
-//    std::chrono::high_resolution_clock timer;
-//    auto start = timer.now();
+    //    std::chrono::high_resolution_clock timer;
+    //    auto start = timer.now();
     image_dataset.directory("image_data")
-            .prefix("archive-")
-            .macrobatch_max_records(500)
-            // SetSize must be a multiple of (minibatchCount*batchSize) which is 8320 currently
-            .dataset_size(1500)
-            .ImageSize(128,128)
-            .create();
-//    auto end = timer.now();
-//    cout << "image dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
+        .prefix("archive-")
+        .macrobatch_max_records(500)
+        // SetSize must be a multiple of (minibatchCount*batchSize) which is 8320 currently
+        .dataset_size(1500)
+        .ImageSize(128, 128)
+        .create();
+    //    auto end = timer.now();
+    //    cout << "image dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
 }
 
-static void DeleteDataset() {
+static void DeleteDataset()
+{
     image_dataset.delete_files();
 }
 
 void exit_func(int s)
 {
-//    cout << __FILE__ << " " << __LINE__ << "exit function " << s << endl;
-//    exit(-1);
+    //    cout << __FILE__ << " " << __LINE__ << "exit function " << s << endl;
+    //    exit(-1);
 }
 
 void page_handler(web::page& page, const std::string& url)
 {
     using std::chrono::system_clock;
     system_clock::time_point today = system_clock::now();
-    time_t tt = system_clock::to_time_t ( today );
+    time_t                   tt    = system_clock::to_time_t(today);
 
     page.page_ok();
     page.output_stream() << "<html>Now is " << ctime(&tt) << "</html>";
@@ -160,16 +153,16 @@ void web_server()
     ws.stop();
 }
 
-extern "C" int main( int argc, char** argv )
+extern "C" int main(int argc, char** argv)
 {
-//    struct sigaction sigIntHandler;
-//    sigIntHandler.sa_handler = exit_func;
-//    sigemptyset(&sigIntHandler.sa_mask);
-//    sigIntHandler.sa_flags = 0;
-//    sigaction(SIGINT, &sigIntHandler, NULL);
+    //    struct sigaction sigIntHandler;
+    //    sigIntHandler.sa_handler = exit_func;
+    //    sigemptyset(&sigIntHandler.sa_mask);
+    //    sigIntHandler.sa_flags = 0;
+    //    sigaction(SIGINT, &sigIntHandler, NULL);
 
-//    web_server();
-//    return 0;
+    //    web_server();
+    //    return 0;
     mock_nds_server server;
 
     CreateImageDataset();

@@ -86,8 +86,12 @@ public:
             throw std::out_of_range("config output shape index out of range");
         return m_shape_type_list[index];
     }
-    const std::vector<nervana::shape_type>& get_shape_type_list() const { return m_shape_type_list; }
-    void verify_config(const std::string& location, const std::vector<std::shared_ptr<interface::config_info_interface>>& config,
+    const std::vector<nervana::shape_type>& get_shape_type_list() const
+    {
+        return m_shape_type_list;
+    }
+    void verify_config(const std::string& location,
+                       const std::vector<std::shared_ptr<interface::config_info_interface>>& config,
                        nlohmann::json js) const;
 
     enum class mode
@@ -96,13 +100,18 @@ public:
         REQUIRED
     };
 
-#define ADD_SCALAR(var, mode, ...)                                                                                                 \
-    std::make_shared<nervana::interface::config_info<decltype(var)>>(var, #var, mode, parse_value<decltype(var)>, ##__VA_ARGS__)
-#define ADD_IGNORE(var)                                                                                                            \
-    std::make_shared<nervana::interface::config_info<int>>(IGNORE_VALUE, #var, mode::OPTIONAL,                                     \
-                                                           [](int, const std::string&, const nlohmann::json&, mode) {})
-#define ADD_DISTRIBUTION(var, mode, ...)                                                                                           \
-    std::make_shared<nervana::interface::config_info<decltype(var)>>(var, #var, mode, parse_dist<decltype(var)>, ##__VA_ARGS__)
+#define ADD_SCALAR(var, mode, ...)                                                                 \
+    std::make_shared<nervana::interface::config_info<decltype(var)>>(                              \
+        var, #var, mode, parse_value<decltype(var)>, ##__VA_ARGS__)
+#define ADD_IGNORE(var)                                                                            \
+    std::make_shared<nervana::interface::config_info<int>>(                                        \
+        IGNORE_VALUE,                                                                              \
+        #var,                                                                                      \
+        mode::OPTIONAL,                                                                            \
+        [](int, const std::string&, const nlohmann::json&, mode) {})
+#define ADD_DISTRIBUTION(var, mode, ...)                                                           \
+    std::make_shared<nervana::interface::config_info<decltype(var)>>(                              \
+        var, #var, mode, parse_dist<decltype(var)>, ##__VA_ARGS__)
 
     template <typename T, typename S>
     static void set_dist_params(T& dist, S& params)
@@ -117,7 +126,10 @@ public:
     }
 
     template <typename T>
-    static void parse_dist(T& value, const std::string& key, const nlohmann::json& js, mode required = mode::OPTIONAL)
+    static void parse_dist(T&                    value,
+                           const std::string&    key,
+                           const nlohmann::json& js,
+                           mode                  required = mode::OPTIONAL)
     {
         auto val = js.find(key);
         if (val != js.end())
@@ -128,7 +140,10 @@ public:
     }
 
     template <typename T>
-    static void parse_value(T& value, const std::string& key, const nlohmann::json& js, mode required = mode::OPTIONAL)
+    static void parse_value(T&                    value,
+                            const std::string&    key,
+                            const nlohmann::json& js,
+                            mode                  required = mode::OPTIONAL)
     {
         auto val = js.find(key);
         if (val != js.end())
@@ -142,7 +157,10 @@ public:
     }
 
     template <typename T>
-    static void parse_enum(T& value, const std::string key, const nlohmann::json& js, mode required = mode::OPTIONAL)
+    static void parse_enum(T&                    value,
+                           const std::string     key,
+                           const nlohmann::json& js,
+                           mode                  required = mode::OPTIONAL)
     {
         auto val = js.find(key);
         if (val != js.end())
@@ -156,11 +174,15 @@ public:
         }
     }
 
-    void add_shape_type(const std::vector<size_t>& sh, const std::string& output_type, const bool flatten_all_dims = false)
+    void add_shape_type(const std::vector<size_t>& sh,
+                        const std::string&         output_type,
+                        const bool                 flatten_all_dims = false)
     {
         m_shape_type_list.emplace_back(sh, nervana::output_type{output_type}, flatten_all_dims);
     }
-    void add_shape_type(const std::vector<size_t>& sh, const nervana::output_type& ot, const bool flatten_all_dims = false)
+    void add_shape_type(const std::vector<size_t>&  sh,
+                        const nervana::output_type& ot,
+                        const bool                  flatten_all_dims = false)
     {
         m_shape_type_list.emplace_back(sh, ot, flatten_all_dims);
     }
@@ -199,9 +221,13 @@ template <typename T>
 class nervana::interface::config_info : public nervana::interface::config_info_interface
 {
 public:
-    config_info(T& var, const std::string& name, nervana::interface::config::mode m,
-                std::function<void(T&, const std::string&, const nlohmann::json&, nervana::interface::config::mode)> parse,
-                std::function<bool(T)> validate = [](T) -> bool { return true; })
+    config_info(
+        T&                               var,
+        const std::string&               name,
+        nervana::interface::config::mode m,
+        std::function<void(
+            T&, const std::string&, const nlohmann::json&, nervana::interface::config::mode)> parse,
+        std::function<bool(T)> validate = [](T) -> bool { return true; })
         : m_target_variable{var}
         , m_variable_name{name}
         , m_parse_mode{m}
@@ -212,9 +238,9 @@ public:
     }
 
     const std::string& name() const override { return m_variable_name; }
-    bool               required() const override { return m_parse_mode == interface::config::mode::REQUIRED; }
-    std::string        type() const override { return type_name<T>(); }
-    std::string        get_default_value() const override { return dump_default(m_default_value); }
+    bool required() const override { return m_parse_mode == interface::config::mode::REQUIRED; }
+    std::string type() const override { return type_name<T>(); }
+    std::string get_default_value() const override { return dump_default(m_default_value); }
     void parse(nlohmann::json js) override
     {
         m_parse_function(m_target_variable, m_variable_name, js, m_parse_mode);
@@ -231,7 +257,9 @@ private:
     T&                               m_target_variable;
     const std::string                m_variable_name;
     nervana::interface::config::mode m_parse_mode;
-    std::function<void(T&, const std::string&, const nlohmann::json&, nervana::interface::config::mode)> m_parse_function;
+    std::function<void(
+        T&, const std::string&, const nlohmann::json&, nervana::interface::config::mode)>
+                           m_parse_function;
     std::function<bool(T)> m_validate_function;
     T                      m_default_value;
 };

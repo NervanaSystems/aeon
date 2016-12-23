@@ -75,7 +75,8 @@ TEST(audio, specgram)
 
     // Now generate spectrogram
     cv::Mat spec, window;
-    specgram::wav_to_specgram(wav.get_data(), frame_length_tn, frame_stride_tn, time_steps, window, spec);
+    specgram::wav_to_specgram(
+        wav.get_data(), frame_length_tn, frame_stride_tn, time_steps, window, spec);
 
     // Scale back because our original signal was set up to use full 16-bit dynamic range
     spec = spec / INT16_MAX;

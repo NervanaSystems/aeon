@@ -22,8 +22,12 @@ using namespace std;
 using namespace nervana;
 
 // These can all be static
-void specgram::wav_to_specgram(const Mat& wav_col_mat, const int frame_length_tn, const int frame_stride_tn,
-                               const int max_time_steps, const Mat& window, Mat& specgram)
+void specgram::wav_to_specgram(const Mat& wav_col_mat,
+                               const int  frame_length_tn,
+                               const int  frame_stride_tn,
+                               const int  max_time_steps,
+                               const Mat& window,
+                               Mat&       specgram)
 {
     // const Mat& wav_mat = wav.get_data();
     // Read as a row vector
@@ -32,7 +36,8 @@ void specgram::wav_to_specgram(const Mat& wav_col_mat, const int frame_length_tn
     // TODO: support more sample formats
     if (wav_mat.elemSize1() != 2)
     {
-        throw std::runtime_error("Unsupported number of bytes per sample: " + std::to_string(wav_mat.elemSize1()));
+        throw std::runtime_error("Unsupported number of bytes per sample: " +
+                                 std::to_string(wav_mat.elemSize1()));
     }
 
     // Go from time domain to strided signal
@@ -84,7 +89,10 @@ void specgram::wav_to_specgram(const Mat& wav_col_mat, const int frame_length_tn
 * For reference, see:
 * http://practicalcryptography.com/miscellaneous/machine-learning/guide-mel-frequency-cepstral-coefficients-mfccs/#computing-the-mel-filterbank
 */
-void specgram::create_filterbanks(const int num_filters, const int fftsz, const int sample_freq_hz, Mat& fbank)
+void specgram::create_filterbanks(const int num_filters,
+                                  const int fftsz,
+                                  const int sample_freq_hz,
+                                  Mat&      fbank)
 {
     double min_mel_freq   = hz_to_mel(0.0);
     double max_mel_freq   = hz_to_mel(sample_freq_hz / 2.0);

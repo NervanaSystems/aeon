@@ -45,8 +45,9 @@ video::transformer::transformer(const video::config& config)
 {
 }
 
-std::shared_ptr<image::decoded> video::transformer::transform(std::shared_ptr<image::params>  img_xform,
-                                                              std::shared_ptr<image::decoded> img)
+std::shared_ptr<image::decoded>
+    video::transformer::transform(std::shared_ptr<image::params>  img_xform,
+                                  std::shared_ptr<image::decoded> img)
 {
     auto tx_img  = frame_transformer.transform(img_xform, img);
     auto out_img = make_shared<image::decoded>();

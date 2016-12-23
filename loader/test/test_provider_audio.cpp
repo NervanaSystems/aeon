@@ -42,7 +42,7 @@ TEST(provider, audio_classify)
                            {"sample_freq_hz", 44100},
                            {"feature_type", "specgram"}}},
                          {"label", {{"binary", true}}}};
-    auto                               media   = nervana::provider_factory::create(js);
+    auto media   = nervana::provider_factory::create(js);
     auto oshapes = media->get_output_shapes();
 
     size_t batch_size = 128;
@@ -51,7 +51,7 @@ TEST(provider, audio_classify)
     vector<char> buf(wav_data::HEADER_SIZE + wav.nbytes());
     wav.write_to_buffer(&buf[0], buf.size());
 
-    fixed_buffer_map out_buf(oshapes, batch_size);
+    fixed_buffer_map    out_buf(oshapes, batch_size);
     encoded_record_list bp;
 
     for (int i = 0; i < batch_size; i++)
@@ -80,15 +80,17 @@ TEST(provider, audio_classify)
 
 TEST(provider, audio_transcript)
 {
-    nlohmann::json js = {
-        {"type", "audio,transcription"},
-        {"audio",
-         {{"max_duration", "2000 milliseconds"},
-          {"frame_length", "1024 samples"},
-          {"frame_stride", "256 samples"},
-          {"sample_freq_hz", 44100},
-          {"feature_type", "specgram"}}},
-        {"transcription", {{"alphabet", "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()"}, {"pack_for_ctc", true}, {"max_length", 50}}}};
+    nlohmann::json js = {{"type", "audio,transcription"},
+                         {"audio",
+                          {{"max_duration", "2000 milliseconds"},
+                           {"frame_length", "1024 samples"},
+                           {"frame_stride", "256 samples"},
+                           {"sample_freq_hz", 44100},
+                           {"feature_type", "specgram"}}},
+                         {"transcription",
+                          {{"alphabet", "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()"},
+                           {"pack_for_ctc", true},
+                           {"max_length", 50}}}};
 
     // Create the config
     auto media = dynamic_pointer_cast<audio_transcriber>(nervana::provider_factory::create(js));
@@ -110,9 +112,10 @@ TEST(provider, audio_transcript)
     wav.write_to_buffer(&buf[0], buf.size());
 
     // Generate alternating fake transcripts
-    vector<string> tr{"The quick brown fox jumped over the lazy dog", "A much more interesting sentence."};
-    vector<char>   tr0_char(tr[0].begin(), tr[0].end());
-    vector<char>   tr1_char(tr[1].begin(), tr[1].end());
+    vector<string> tr{"The quick brown fox jumped over the lazy dog",
+                      "A much more interesting sentence."};
+    vector<char> tr0_char(tr[0].begin(), tr[0].end());
+    vector<char> tr1_char(tr[1].begin(), tr[1].end());
 
     // Create the input buffer
     encoded_record_list bp;
@@ -127,7 +130,7 @@ TEST(provider, audio_transcript)
     EXPECT_EQ(bp.size(), batch_size);
 
     // Generate output buffers using shapes from the provider
-    auto oshapes = media->get_output_shapes();
+    auto             oshapes = media->get_output_shapes();
     fixed_buffer_map out_buf(oshapes, batch_size);
 
     // Call the provider

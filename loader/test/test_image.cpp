@@ -171,8 +171,12 @@ TEST(image, decoded)
 
 TEST(image, missing_config_arg)
 {
-    nlohmann::json js = {{"width", 30},         {"channels", 1},          {"angle", {-20, 20}},
-                         {"scale", {0.2, 0.8}}, {"lighting", {0.0, 0.1}}, {"horizontal_distortion", {0.75, 1.33}},
+    nlohmann::json js = {{"width", 30},
+                         {"channels", 1},
+                         {"angle", {-20, 20}},
+                         {"scale", {0.2, 0.8}},
+                         {"lighting", {0.0, 0.1}},
+                         {"horizontal_distortion", {0.75, 1.33}},
                          {"flip_enable", false}};
 
     EXPECT_THROW(image::config itpj(js), std::invalid_argument);
@@ -310,7 +314,8 @@ TEST(image, transform_flip)
     image::param_factory factory(cfg);
 
     image_params_builder      builder(factory.make_params(decoded));
-    shared_ptr<image::params> params_ptr = builder.cropbox(100, 150, 20, 20).output_size(20, 20).flip(true);
+    shared_ptr<image::params> params_ptr =
+        builder.cropbox(100, 150, 20, 20).output_size(20, 20).flip(true);
 
     image::transformer         trans{cfg};
     shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
@@ -326,8 +331,12 @@ TEST(image, transform_flip)
 
 TEST(image, noconvert_nosplit)
 {
-    nlohmann::json js = {{"width", 10}, {"height", 10}, {"channels", 3}, {"channel_major", false}, {"output_type", "uint8_t"}};
-    image::config  cfg(js);
+    nlohmann::json js = {{"width", 10},
+                         {"height", 10},
+                         {"channels", 3},
+                         {"channel_major", false},
+                         {"output_type", "uint8_t"}};
+    image::config cfg(js);
 
     cv::Mat input_image(100, 100, CV_8UC3);
     input_image = cv::Scalar(50, 100, 200);
@@ -358,8 +367,12 @@ TEST(image, noconvert_nosplit)
 
 TEST(image, noconvert_split)
 {
-    nlohmann::json js = {{"width", 10}, {"height", 10}, {"channels", 3}, {"channel_major", true}, {"output_type", "uint8_t"}};
-    image::config  cfg(js);
+    nlohmann::json js = {{"width", 10},
+                         {"height", 10},
+                         {"channels", 3},
+                         {"channel_major", true},
+                         {"output_type", "uint8_t"}};
+    image::config cfg(js);
 
     cv::Mat input_image(100, 100, CV_8UC3);
     input_image = cv::Scalar(50, 100, 150);
@@ -391,8 +404,12 @@ TEST(image, noconvert_split)
 
 TEST(image, convert_nosplit)
 {
-    nlohmann::json js = {{"width", 10}, {"height", 10}, {"channels", 3}, {"channel_major", false}, {"output_type", "uint32_t"}};
-    image::config  cfg(js);
+    nlohmann::json js = {{"width", 10},
+                         {"height", 10},
+                         {"channels", 3},
+                         {"channel_major", false},
+                         {"output_type", "uint32_t"}};
+    image::config cfg(js);
 
     cv::Mat input_image(100, 100, CV_8UC3);
     input_image = cv::Scalar(50, 100, 200);
@@ -423,8 +440,12 @@ TEST(image, convert_nosplit)
 
 TEST(image, convert_split)
 {
-    nlohmann::json js = {{"width", 10}, {"height", 10}, {"channels", 3}, {"channel_major", true}, {"output_type", "uint32_t"}};
-    image::config  cfg(js);
+    nlohmann::json js = {{"width", 10},
+                         {"height", 10},
+                         {"channels", 3},
+                         {"channel_major", true},
+                         {"output_type", "uint32_t"}};
+    image::config cfg(js);
 
     cv::Mat input_image(100, 100, CV_8UC3);
     input_image = cv::Scalar(50, 100, 150);
@@ -559,8 +580,11 @@ TEST(image, multi_crop)
         Mat    resize_crop;
         Size2i out_sz(112, 112), crp_sz(224, 224);
 
-        std::vector<idxPt> vip{
-            {0, Point2i(16, 16)}, {1, Point2i(0, 0)}, {2, Point2i(0, 32)}, {3, Point2i(32, 0)}, {4, Point2i(32, 32)}};
+        std::vector<idxPt> vip{{0, Point2i(16, 16)},
+                               {1, Point2i(0, 0)},
+                               {2, Point2i(0, 32)},
+                               {3, Point2i(32, 0)},
+                               {4, Point2i(32, 32)}};
 
         for (const idxPt& pp : vip)
         {
@@ -622,7 +646,8 @@ TEST(image, calculate_scale)
     cv::Size size{500, 375};
     float    scale;
     scale = image::calculate_scale(size, width, height);
-    size  = cv::Size{int(unbiased_round(size.width * scale)), int(unbiased_round(size.height * scale))};
+    size =
+        cv::Size{int(unbiased_round(size.width * scale)), int(unbiased_round(size.height * scale))};
     EXPECT_FLOAT_EQ(1.6, scale);
     EXPECT_EQ(800, size.width);
     EXPECT_EQ(600, size.height);
@@ -636,8 +661,11 @@ TEST(image, transform)
         int            height   = 128;
         int            width    = 256;
         int            channels = 3;
-        nlohmann::json js       = {
-            {"height", height}, {"width", width}, {"channels", channels}, {"channel_major", false}, {"flip_enable", false}};
+        nlohmann::json js       = {{"height", height},
+                             {"width", width},
+                             {"channels", channels},
+                             {"channel_major", false},
+                             {"flip_enable", false}};
 
         image::config        cfg{js};
         image::extractor     extractor{cfg};
@@ -658,8 +686,11 @@ TEST(image, transform)
         int            height   = 128;
         int            width    = 256;
         int            channels = 3;
-        nlohmann::json js       = {
-            {"height", height}, {"width", width}, {"channels", channels}, {"channel_major", false}, {"flip_enable", false}};
+        nlohmann::json js       = {{"height", height},
+                             {"width", width},
+                             {"channels", channels},
+                             {"channel_major", false},
+                             {"flip_enable", false}};
 
         image::config        cfg{js};
         image::extractor     extractor{cfg};
@@ -683,9 +714,13 @@ TEST(image, transform)
         int            height   = 128;
         int            width    = 256;
         int            channels = 3;
-        nlohmann::json js       = {
-            {"height", height},    {"width", width},         {"channels", channels}, {"horizontal_distortion", {2, 2}},
-            {"scale", {0.5, 0.5}}, {"channel_major", false}, {"flip_enable", false}};
+        nlohmann::json js       = {{"height", height},
+                             {"width", width},
+                             {"channels", channels},
+                             {"horizontal_distortion", {2, 2}},
+                             {"scale", {0.5, 0.5}},
+                             {"channel_major", false},
+                             {"flip_enable", false}};
 
         image::config        cfg{js};
         image::extractor     extractor{cfg};
@@ -712,8 +747,13 @@ TEST(image, config_bad_scale)
     int            height   = 128;
     int            width    = 256;
     int            channels = 3;
-    nlohmann::json js = {{"height", height},    {"width", width},         {"channels", channels}, {"horizontal_distortion", {2, 2}},
-                         {"scale", {0.5, 1.5}}, {"channel_major", false}, {"flip_enable", false}};
+    nlohmann::json js       = {{"height", height},
+                         {"width", width},
+                         {"channels", channels},
+                         {"horizontal_distortion", {2, 2}},
+                         {"scale", {0.5, 1.5}},
+                         {"channel_major", false},
+                         {"flip_enable", false}};
 
     EXPECT_THROW(image::config{js}, std::invalid_argument);
 }
@@ -804,8 +844,11 @@ TEST(image, var_resize)
     vector<unsigned char> img;
     cv::imencode(".png", mat, img);
 
-    nlohmann::json jsConfig = {
-        {"width", 400}, {"height", 400}, {"channels", 3}, {"fixed_aspect_ratio", true}, {"crop_enable", false}};
+    nlohmann::json jsConfig = {{"width", 400},
+                               {"height", 400},
+                               {"channels", 3},
+                               {"fixed_aspect_ratio", true},
+                               {"crop_enable", false}};
 
     image::config config_ptr{jsConfig};
 
@@ -835,9 +878,12 @@ TEST(image, var_resize_fixed_scale)
     vector<unsigned char> img;
     cv::imencode(".png", mat, img);
 
-    nlohmann::json jsConfig = {{"width", 400},         {"height", 400},
-                               {"channels", 3},        {"fixed_aspect_ratio", true},
-                               {"crop_enable", false}, {"fixed_scaling_factor", 1.0}};
+    nlohmann::json jsConfig = {{"width", 400},
+                               {"height", 400},
+                               {"channels", 3},
+                               {"fixed_aspect_ratio", true},
+                               {"crop_enable", false},
+                               {"fixed_scaling_factor", 1.0}};
 
     image::config config_ptr{jsConfig};
 
@@ -866,8 +912,11 @@ TEST(image, var_transform_flip)
     auto                  indexed = generate_indexed_image();
     vector<unsigned char> img;
     cv::imencode(".png", indexed, img);
-    nlohmann::json jsConfig = {
-        {"width", 256}, {"height", 256}, {"channels", 3}, {"fixed_aspect_ratio", true}, {"crop_enable", false}};
+    nlohmann::json jsConfig = {{"width", 256},
+                               {"height", 256},
+                               {"channels", 3},
+                               {"fixed_aspect_ratio", true},
+                               {"crop_enable", false}};
 
     image::config config_ptr{jsConfig};
 
@@ -1146,10 +1195,10 @@ TEST(DISABLED_photometric, hue)
     }
 }
 
-TEST(tiff,uint16_t)
+TEST(tiff, uint16_t)
 {
-    const vector<uint8_t> buffer = { 0x00, 0x01, 0x00, 0x02 };
-    bstream_mem bs{buffer};
+    const vector<uint8_t> buffer = {0x00, 0x01, 0x00, 0x02};
+    bstream_mem           bs{buffer};
 
     auto v1 = bs.readU16();
     auto v2 = bs.readU16();
@@ -1157,20 +1206,36 @@ TEST(tiff,uint16_t)
     EXPECT_EQ(512, v2);
 }
 
-TEST(tiff,uint32_t)
+TEST(tiff, uint32_t)
 {
-    const vector<uint8_t> buffer = { 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02 };
-    bstream_mem bs{buffer};
+    const vector<uint8_t> buffer = {0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02};
+    bstream_mem           bs{buffer};
 
     auto v1 = bs.readU32();
     auto v2 = bs.readU32();
-    EXPECT_EQ(1<<24, v1);
-    EXPECT_EQ(2<<24, v2);
+    EXPECT_EQ(1 << 24, v1);
+    EXPECT_EQ(2 << 24, v2);
 }
 
-TEST(tiff,uint64_t)
+TEST(tiff, uint64_t)
 {
-    const vector<uint8_t> buffer = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    const vector<uint8_t> buffer = {0x01,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x02,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00};
     bstream_mem bs{buffer};
 
     auto v1 = bs.readU64();
@@ -1179,10 +1244,10 @@ TEST(tiff,uint64_t)
     EXPECT_EQ((uint64_t)2, v2);
 }
 
-TEST(tiff,int8_t)
+TEST(tiff, int8_t)
 {
-    const vector<uint8_t> buffer = { 0x01,0x02 };
-    bstream_mem bs{buffer};
+    const vector<uint8_t> buffer = {0x01, 0x02};
+    bstream_mem           bs{buffer};
 
     auto v1 = bs.readS8();
     auto v2 = bs.readS8();
@@ -1190,10 +1255,10 @@ TEST(tiff,int8_t)
     EXPECT_EQ(2, v2);
 }
 
-TEST(tiff,int16_t)
+TEST(tiff, int16_t)
 {
-    const vector<uint8_t> buffer = { 0xFF, 0xFF, 0xFE, 0xFF };
-    bstream_mem bs{buffer};
+    const vector<uint8_t> buffer = {0xFF, 0xFF, 0xFE, 0xFF};
+    bstream_mem           bs{buffer};
 
     auto v1 = bs.readS16();
     auto v2 = bs.readS16();
@@ -1201,10 +1266,10 @@ TEST(tiff,int16_t)
     EXPECT_EQ(-2, v2);
 }
 
-TEST(tiff,int32_t)
+TEST(tiff, int32_t)
 {
-    const vector<uint8_t> buffer = { 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00 };
-    bstream_mem bs{buffer};
+    const vector<uint8_t> buffer = {0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
+    bstream_mem           bs{buffer};
 
     auto v1 = bs.readS32();
     auto v2 = bs.readS32();
@@ -1212,9 +1277,25 @@ TEST(tiff,int32_t)
     EXPECT_EQ(2, v2);
 }
 
-TEST(tiff,int64_t)
+TEST(tiff, int64_t)
 {
-    const vector<uint8_t> buffer = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    const vector<uint8_t> buffer = {0x01,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x02,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00,
+                                    0x00};
     bstream_mem bs{buffer};
 
     auto v1 = bs.readS64();
@@ -1223,30 +1304,30 @@ TEST(tiff,int64_t)
     EXPECT_EQ((int64_t)2, v2);
 }
 
-TEST(DISABLED_tiff,read_3band)
+TEST(DISABLED_tiff, read_3band)
 {
     string data_base = "/mnt/c/Users/rkimball/dev/tiff/data/";
-    string f1 = data_base + "3band/3band_013022232200_Public_img6993.tif";
+    string f1        = data_base + "3band/3band_013022232200_Public_img6993.tif";
     cout << f1 << endl;
     auto f1_data = file_util::read_file_contents(f1);
 
     tiff::reader reader{f1_data.data(), f1_data.size()};
 }
 
-TEST(DISABLED_tiff,read_8band)
+TEST(DISABLED_tiff, read_8band)
 {
     string data_base = "/mnt/c/Users/rkimball/dev/tiff/data/";
-    string f1 = data_base + "8band/8band_013022232200_Public_img6993.tif";
+    string f1        = data_base + "8band/8band_013022232200_Public_img6993.tif";
     cout << f1 << endl;
     auto f1_data = file_util::read_file_contents(f1);
 
     tiff::reader reader{f1_data.data(), f1_data.size()};
 }
 
-TEST(DISABLED_tiff,read_compressed)
+TEST(DISABLED_tiff, read_compressed)
 {
     string data_base = "/mnt/c/Users/rkimball/dev/tiff/data/";
-    string f1 = data_base + "opencv_tiff/3band_013022232200_Public_img6993.tif";
+    string f1        = data_base + "opencv_tiff/3band_013022232200_Public_img6993.tif";
     cout << f1 << endl;
     auto f1_data = file_util::read_file_contents(f1);
 

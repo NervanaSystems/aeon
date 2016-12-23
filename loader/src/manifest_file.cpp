@@ -38,7 +38,11 @@ const string manifest_file::m_string_type_id      = "STRING";
 const string manifest_file::m_ascii_int_type_id   = "ASCII_INT";
 const string manifest_file::m_ascii_float_type_id = "ASCII_FLOAT";
 
-manifest_file::manifest_file(const string& filename, bool shuffle, const string& root, float subset_fraction, size_t block_size)
+manifest_file::manifest_file(const string& filename,
+                             bool          shuffle,
+                             const string& root,
+                             float         subset_fraction,
+                             size_t        block_size)
     : m_source_filename(filename)
     , m_record_count{0}
     , m_shuffle{shuffle}
@@ -55,7 +59,11 @@ manifest_file::manifest_file(const string& filename, bool shuffle, const string&
     initialize(infile, block_size, root, subset_fraction);
 }
 
-manifest_file::manifest_file(std::istream& stream, bool shuffle, const std::string& root, float subset_fraction, size_t block_size)
+manifest_file::manifest_file(std::istream&      stream,
+                             bool               shuffle,
+                             const std::string& root,
+                             float              subset_fraction,
+                             size_t             block_size)
     : m_record_count{0}
     , m_shuffle{shuffle}
     , m_rnd{get_global_random_seed()}
@@ -79,8 +87,10 @@ string manifest_file::version()
     return ss.str();
 }
 
-void manifest_file::initialize(std::istream& stream, size_t block_size, const std::string& root,
-                               float subset_fraction)
+void manifest_file::initialize(std::istream&      stream,
+                               size_t             block_size,
+                               const std::string& root,
+                               float              subset_fraction)
 {
     // parse istream is and load the entire thing into m_record_list
     size_t                 previous_element_count = 0;
@@ -178,7 +188,9 @@ void manifest_file::initialize(std::istream& stream, size_t block_size, const st
                 ss << ", manifest file has a line with differing number of files (";
                 ss << element_list.size() << ") vs (" << previous_element_count << "): ";
 
-                std::copy(element_list.begin(), element_list.end(), ostream_iterator<std::string>(ss, " "));
+                std::copy(element_list.begin(),
+                          element_list.end(),
+                          ostream_iterator<std::string>(ss, " "));
                 throw std::runtime_error(ss.str());
             }
             previous_element_count = element_list.size();
@@ -187,7 +199,8 @@ void manifest_file::initialize(std::istream& stream, size_t block_size, const st
         }
     }
 
-    affirm(subset_fraction > 0.0 && subset_fraction <= 1.0, "subset_fraction must be >= 0 and <= 1");
+    affirm(subset_fraction > 0.0 && subset_fraction <= 1.0,
+           "subset_fraction must be >= 0 and <= 1");
     generate_subset(record_list, subset_fraction);
 
     if (m_shuffle)
@@ -225,7 +238,7 @@ vector<vector<string>>* manifest_file::next()
     if (m_counter < m_block_list.size())
     {
         auto load_index = m_block_load_sequence[m_counter];
-        rc = &(m_block_list[load_index]);
+        rc              = &(m_block_list[load_index]);
         m_counter++;
     }
     return rc;

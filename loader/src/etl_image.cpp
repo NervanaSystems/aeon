@@ -136,7 +136,8 @@ image::transformer::transformer(const image::config&)
 {
 }
 
-shared_ptr<image::decoded> image::transformer::transform(shared_ptr<image::params> img_xform, shared_ptr<image::decoded> img)
+shared_ptr<image::decoded> image::transformer::transform(shared_ptr<image::params>  img_xform,
+                                                         shared_ptr<image::decoded> img)
 {
     vector<cv::Mat> finalImageList;
     for (int i = 0; i < img->get_image_count(); i++)
@@ -152,7 +153,8 @@ shared_ptr<image::decoded> image::transformer::transform(shared_ptr<image::param
     return rc;
 }
 
-cv::Mat image::transformer::transform_single_image(shared_ptr<image::params> img_xform, cv::Mat& single_img)
+cv::Mat image::transformer::transform_single_image(shared_ptr<image::params> img_xform,
+                                                   cv::Mat&                  single_img)
 {
     cv::Mat rotatedImage;
     image::rotate(single_img, rotatedImage, img_xform->angle);
@@ -160,7 +162,11 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<image::params> img
 
     cv::Mat resizedImage;
     image::resize(croppedImage, resizedImage, img_xform->output_size);
-    photo.cbsjitter(resizedImage, img_xform->contrast, img_xform->brightness, img_xform->saturation, img_xform->hue);
+    photo.cbsjitter(resizedImage,
+                    img_xform->contrast,
+                    img_xform->brightness,
+                    img_xform->saturation,
+                    img_xform->hue);
     photo.lighting(resizedImage, img_xform->lighting, img_xform->color_noise_std);
 
     cv::Mat* finalImage = &resizedImage;
@@ -307,14 +313,16 @@ void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::de
             {
                 for (int ch = 0; ch < channels; ch++)
                 {
-                    target.emplace_back(img.size(), cv_type, (char*)(outbuf_i + ch * img.total() * element_size));
+                    target.emplace_back(
+                        img.size(), cv_type, (char*)(outbuf_i + ch * img.total() * element_size));
                     from_to.push_back(ch);
                     from_to.push_back(ch);
                 }
             }
             else
             {
-                target.emplace_back(input_image.size(), CV_MAKETYPE(cv_type, channels), (char*)(outbuf_i));
+                target.emplace_back(
+                    input_image.size(), CV_MAKETYPE(cv_type, channels), (char*)(outbuf_i));
                 for (int ch = 0; ch < channels; ch++)
                 {
                     from_to.push_back(ch);

@@ -21,7 +21,8 @@
 using namespace nervana;
 using namespace std;
 
-void image::rotate(const cv::Mat& input, cv::Mat& output, int angle, bool interpolate, const cv::Scalar& border)
+void image::rotate(
+    const cv::Mat& input, cv::Mat& output, int angle, bool interpolate, const cv::Scalar& border)
 {
     if (angle == 0)
     {
@@ -65,7 +66,9 @@ void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size
     }
 }
 
-void image::convert_mix_channels(vector<cv::Mat>& source, vector<cv::Mat>& target, vector<int>& from_to)
+void image::convert_mix_channels(vector<cv::Mat>& source,
+                                 vector<cv::Mat>& target,
+                                 vector<int>&     from_to)
 {
     if (source.size() == 0)
         throw invalid_argument("convertMixChannels source size must be > 0");
@@ -129,7 +132,9 @@ cv::Size2f image::cropbox_linear_scale(const cv::Size2f& in_size, float scale)
     return in_size * scale;
 }
 
-cv::Size2f image::cropbox_area_scale(const cv::Size2f& in_size, const cv::Size2f& cropbox_size, float scale)
+cv::Size2f image::cropbox_area_scale(const cv::Size2f& in_size,
+                                     const cv::Size2f& cropbox_size,
+                                     float             scale)
 {
     cv::Size2f result     = cropbox_size;
     float      in_area    = in_size.area();
@@ -147,7 +152,10 @@ cv::Size2f image::cropbox_area_scale(const cv::Size2f& in_size, const cv::Size2f
     return result;
 }
 
-cv::Point2f image::cropbox_shift(const cv::Size2f& in_size, const cv::Size2f& crop_box, float xoff, float yoff)
+cv::Point2f image::cropbox_shift(const cv::Size2f& in_size,
+                                 const cv::Size2f& crop_box,
+                                 float             xoff,
+                                 float             yoff)
 {
     cv::Point2f result;
     result.x = (in_size.width - crop_box.width) * xoff;
@@ -170,8 +178,9 @@ cv::Point2f image::cropbox_shift(const cv::Size2f& in_size, const cv::Size2f& cr
 
 */
 
-const float image::photometric::_CPCA[3][3]{
-    {0.39731118, 0.70119634, -0.59200296}, {-0.81698062, -0.02354167, -0.57618440}, {0.41795513, -0.71257945, -0.56351045}};
+const float image::photometric::_CPCA[3][3]{{0.39731118, 0.70119634, -0.59200296},
+                                            {-0.81698062, -0.02354167, -0.57618440},
+                                            {0.41795513, -0.71257945, -0.56351045}};
 const cv::Mat image::photometric::CPCA(3, 3, CV_32FC1, (float*)_CPCA);
 const cv::Mat image::photometric::CSTD(3, 1, CV_32FC1, {19.72083305, 37.09388853, 121.78006099});
 
@@ -206,7 +215,8 @@ photometric is filled with uniformly distributed values prior to calling this fu
 */
 // adjusts contrast, brightness, and saturation according
 // to values in photometric[0], photometric[1], photometric[2], respectively
-void image::photometric::cbsjitter(cv::Mat& inout, float contrast, float brightness, float saturation, int hue)
+void image::photometric::cbsjitter(
+    cv::Mat& inout, float contrast, float brightness, float saturation, int hue)
 {
     // Skip transformations if given deterministic settings
     if (brightness != 1.0 || saturation != 1.0 || hue != 0)

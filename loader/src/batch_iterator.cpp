@@ -68,15 +68,15 @@ encoded_record_list* batch_iterator::filler()
         }
     }
 
-//    for (size_t item = 0; item < rc->size(); ++item)
-//    {
-//        const encoded_record& record = rc->record(item);
-//        for (size_t element_number=0; element_number<record.size(); element_number++)
-//        {
-//            std::string element = vector2string(record.element(element_number));
-//            INFO << "got element " << element;
-//        }
-//    }
+    //    for (size_t item = 0; item < rc->size(); ++item)
+    //    {
+    //        const encoded_record& record = rc->record(item);
+    //        for (size_t element_number=0; element_number<record.size(); element_number++)
+    //        {
+    //            std::string element = vector2string(record.element(element_number));
+    //            INFO << "got element " << element;
+    //        }
+    //    }
 
     return rc;
 }

@@ -33,21 +33,13 @@ class element_info
 public:
     element_info(const std::string& s)
     {
-        auto tmp = nervana::split(s, ':');
-        m_record_number = stod(tmp[0]);
+        auto tmp         = nervana::split(s, ':');
+        m_record_number  = stod(tmp[0]);
         m_element_number = stod(tmp[1]);
     }
 
-    size_t record_number() const
-    {
-        return m_record_number;
-    }
-
-    size_t element_number() const
-    {
-        return m_element_number;
-    }
-
+    size_t record_number() const { return m_record_number; }
+    size_t element_number() const { return m_element_number; }
 private:
     size_t m_record_number;
     size_t m_element_number;

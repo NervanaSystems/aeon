@@ -50,7 +50,10 @@ namespace nervana
     };
 #pragma pack()
 
-    constexpr uint32_t FOURCC(char a, char b, char c, char d) { return (a | (b << 8) | (c << 16) | (d << 24)); }
+    constexpr uint32_t FOURCC(char a, char b, char c, char d)
+    {
+        return (a | (b << 8) | (c << 16) | (d << 24));
+    }
     class wavefile_exception : public std::runtime_error
     {
     public:
@@ -76,7 +79,11 @@ namespace nervana
         {
         }
 
-        int16_t operator()(float t) const override { return static_cast<int16_t>(sin(frequency * t) * amplitude); }
+        int16_t operator()(float t) const override
+        {
+            return static_cast<int16_t>(sin(frequency * t) * amplitude);
+        }
+
     private:
         float   frequency;
         int16_t amplitude;
@@ -110,7 +117,8 @@ namespace nervana
         inline uint32_t         nbytes() { return data.total() * data.elemSize(); }
         inline uint32_t         nsamples() { return data.rows; }
         inline int32_t          sample_rate() { return _sample_rate; }
-        static constexpr size_t HEADER_SIZE = sizeof(RiffMainHeader) + sizeof(FmtHeader) + sizeof(DataHeader);
+        static constexpr size_t HEADER_SIZE =
+            sizeof(RiffMainHeader) + sizeof(FmtHeader) + sizeof(DataHeader);
 
         static constexpr int WAVE_FORMAT_PCM        = 0x0001;
         static constexpr int WAVE_FORMAT_IEEE_FLOAT = 0x0003;

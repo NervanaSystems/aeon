@@ -36,8 +36,17 @@ extern gen_image image_dataset;
 using namespace std;
 using namespace nervana;
 
-static vector<string> label_list = {"person", "dog",  "lion", "tiger",   "eel",       "puma",
-                                    "rat",    "tick", "flea", "bicycle", "hovercraft"};
+static vector<string> label_list = {"person",
+                                    "dog",
+                                    "lion",
+                                    "tiger",
+                                    "eel",
+                                    "puma",
+                                    "rat",
+                                    "tick",
+                                    "flea",
+                                    "bicycle",
+                                    "hovercraft"};
 
 static string read_file(const string& path)
 {
@@ -49,9 +58,12 @@ static string read_file(const string& path)
 
 static nlohmann::json create_box(const cv::Rect& rect, const string& label)
 {
-    nlohmann::json j = {
-        {"bndbox", {{"xmax", rect.x + rect.width}, {"xmin", rect.x}, {"ymax", rect.y + rect.height}, {"ymin", rect.y}}},
-        {"name", label}};
+    nlohmann::json j = {{"bndbox",
+                         {{"xmax", rect.x + rect.width},
+                          {"xmin", rect.x},
+                          {"ymax", rect.y + rect.height},
+                          {"ymin", rect.y}}},
+                        {"name", label}};
     return j;
 }
 
@@ -70,7 +82,8 @@ static boundingbox::config make_bbox_config(int max_boxes)
     return boundingbox::config(obj);
 }
 
-cv::Mat draw(int width, int height, const vector<boundingbox::box>& blist, cv::Rect crop = cv::Rect())
+cv::Mat
+    draw(int width, int height, const vector<boundingbox::box>& blist, cv::Rect crop = cv::Rect())
 {
     cv::Mat image = cv::Mat(width, height, CV_8UC3);
     image         = cv::Scalar(255, 255, 255);
@@ -206,8 +219,14 @@ TEST(boundingbox, crop)
     cv::Rect r5   = cv::Rect(30, 70, 10, 10); // result[3]
     cv::Rect r6   = cv::Rect(70, 70, 10, 10); // result[4]
     cv::Rect r7   = cv::Rect(30, 30, 80, 80); // result[5]
-    auto     list = {create_box(r0, "lion"), create_box(r1, "tiger"), create_box(r2, "eel"), create_box(r3, "eel"),
-                 create_box(r4, "eel"),  create_box(r5, "eel"),   create_box(r6, "eel"), create_box(r7, "eel")};
+    auto     list = {create_box(r0, "lion"),
+                 create_box(r1, "tiger"),
+                 create_box(r2, "eel"),
+                 create_box(r3, "eel"),
+                 create_box(r4, "eel"),
+                 create_box(r5, "eel"),
+                 create_box(r6, "eel"),
+                 create_box(r7, "eel")};
     auto j = create_metadata(list, 256, 256);
 
     // cout << std::setw(4) << j << endl;
@@ -233,12 +252,18 @@ TEST(boundingbox, crop)
     auto                     tx_decoded = transform.transform(iparam, decoded);
     vector<boundingbox::box> tx_boxes   = tx_decoded->boxes();
     ASSERT_EQ(6, tx_boxes.size());
-    EXPECT_EQ(cv::Rect((35 - 35) * scale, (35 - 35) * scale, 5 * scale, 5 * scale), tx_boxes[0].rect());
-    EXPECT_EQ(cv::Rect((50 - 35) * scale, (50 - 35) * scale, 10 * scale, 10 * scale), tx_boxes[1].rect());
-    EXPECT_EQ(cv::Rect((70 - 35) * scale, (35 - 35) * scale, 5 * scale, 5 * scale), tx_boxes[2].rect());
-    EXPECT_EQ(cv::Rect((35 - 35) * scale, (70 - 35) * scale, 5 * scale, 5 * scale), tx_boxes[3].rect());
-    EXPECT_EQ(cv::Rect((70 - 35) * scale, (70 - 35) * scale, 5 * scale, 5 * scale), tx_boxes[4].rect());
-    EXPECT_EQ(cv::Rect((35 - 35) * scale, (35 - 35) * scale, 40 * scale, 40 * scale), tx_boxes[5].rect());
+    EXPECT_EQ(cv::Rect((35 - 35) * scale, (35 - 35) * scale, 5 * scale, 5 * scale),
+              tx_boxes[0].rect());
+    EXPECT_EQ(cv::Rect((50 - 35) * scale, (50 - 35) * scale, 10 * scale, 10 * scale),
+              tx_boxes[1].rect());
+    EXPECT_EQ(cv::Rect((70 - 35) * scale, (35 - 35) * scale, 5 * scale, 5 * scale),
+              tx_boxes[2].rect());
+    EXPECT_EQ(cv::Rect((35 - 35) * scale, (70 - 35) * scale, 5 * scale, 5 * scale),
+              tx_boxes[3].rect());
+    EXPECT_EQ(cv::Rect((70 - 35) * scale, (70 - 35) * scale, 5 * scale, 5 * scale),
+              tx_boxes[4].rect());
+    EXPECT_EQ(cv::Rect((35 - 35) * scale, (35 - 35) * scale, 40 * scale, 40 * scale),
+              tx_boxes[5].rect());
 }
 
 TEST(boundingbox, rescale)
@@ -252,8 +277,14 @@ TEST(boundingbox, rescale)
     cv::Rect r5   = cv::Rect(30, 70, 10, 10); // result[3]
     cv::Rect r6   = cv::Rect(70, 70, 10, 10); // result[4]
     cv::Rect r7   = cv::Rect(30, 30, 80, 80); // result[5]
-    auto     list = {create_box(r0, "lion"), create_box(r1, "tiger"), create_box(r2, "eel"), create_box(r3, "eel"),
-                 create_box(r4, "eel"),  create_box(r5, "eel"),   create_box(r6, "eel"), create_box(r7, "eel")};
+    auto     list = {create_box(r0, "lion"),
+                 create_box(r1, "tiger"),
+                 create_box(r2, "eel"),
+                 create_box(r3, "eel"),
+                 create_box(r4, "eel"),
+                 create_box(r5, "eel"),
+                 create_box(r6, "eel"),
+                 create_box(r7, "eel")};
     auto j = create_metadata(list, 256, 256);
     // cout << std::setw(4) << j << endl;
 
@@ -295,8 +326,14 @@ TEST(boundingbox, flip)
     cv::Rect r5   = cv::Rect(30, 70, 10, 10); // result[3]
     cv::Rect r6   = cv::Rect(70, 70, 10, 10); // result[4]
     cv::Rect r7   = cv::Rect(30, 30, 80, 80); // result[5]
-    auto     list = {create_box(r0, "lion"), create_box(r1, "tiger"), create_box(r2, "eel"), create_box(r3, "eel"),
-                 create_box(r4, "eel"),  create_box(r5, "eel"),   create_box(r6, "eel"), create_box(r7, "eel")};
+    auto     list = {create_box(r0, "lion"),
+                 create_box(r1, "tiger"),
+                 create_box(r2, "eel"),
+                 create_box(r3, "eel"),
+                 create_box(r4, "eel"),
+                 create_box(r5, "eel"),
+                 create_box(r6, "eel"),
+                 create_box(r7, "eel")};
     auto j = create_metadata(list, 256, 256);
     // cout << std::setw(4) << j << endl;
 
@@ -337,8 +374,14 @@ TEST(boundingbox, crop_flip)
     cv::Rect r5   = cv::Rect(30, 70, 10, 10); // result[3]
     cv::Rect r6   = cv::Rect(70, 70, 10, 10); // result[4]
     cv::Rect r7   = cv::Rect(30, 30, 80, 80); // result[5]
-    auto     list = {create_box(r0, "lion"), create_box(r1, "tiger"), create_box(r2, "eel"), create_box(r3, "eel"),
-                 create_box(r4, "eel"),  create_box(r5, "eel"),   create_box(r6, "eel"), create_box(r7, "eel")};
+    auto     list = {create_box(r0, "lion"),
+                 create_box(r1, "tiger"),
+                 create_box(r2, "eel"),
+                 create_box(r3, "eel"),
+                 create_box(r4, "eel"),
+                 create_box(r5, "eel"),
+                 create_box(r6, "eel"),
+                 create_box(r7, "eel")};
     auto j = create_metadata(list, 256, 256);
     // cout << std::setw(4) << j << endl;
 
@@ -363,7 +406,8 @@ TEST(boundingbox, crop_flip)
     float xscale = 256. / 40.;
     float yscale = 256. / 40.;
     EXPECT_EQ(cv::Rect((35 - 1) * xscale, 0 * yscale, 5 * xscale, 5 * yscale), tx_boxes[0].rect());
-    EXPECT_EQ(cv::Rect((15 - 1) * xscale, 15 * yscale, 10 * xscale, 10 * yscale), tx_boxes[1].rect());
+    EXPECT_EQ(cv::Rect((15 - 1) * xscale, 15 * yscale, 10 * xscale, 10 * yscale),
+              tx_boxes[1].rect());
     EXPECT_EQ(cv::Rect((0 - 1) * xscale, 0 * yscale, 5 * xscale, 5 * yscale), tx_boxes[2].rect());
     EXPECT_EQ(cv::Rect((35 - 1) * xscale, 35 * yscale, 5 * xscale, 5 * yscale), tx_boxes[3].rect());
     EXPECT_EQ(cv::Rect((0 - 1) * xscale, 35 * yscale, 5 * xscale, 5 * yscale), tx_boxes[4].rect());
@@ -411,8 +455,14 @@ TEST(boundingbox, load_pad)
     cv::Rect r5   = cv::Rect(30, 70, 10, 10); // result[3]
     cv::Rect r6   = cv::Rect(70, 70, 10, 10); // result[4]
     cv::Rect r7   = cv::Rect(30, 30, 80, 80); // result[5]
-    auto     list = {create_box(r0, "lion"), create_box(r1, "tiger"), create_box(r2, "eel"), create_box(r3, "eel"),
-                 create_box(r4, "eel"),  create_box(r5, "eel"),   create_box(r6, "eel"), create_box(r7, "eel")};
+    auto     list = {create_box(r0, "lion"),
+                 create_box(r1, "tiger"),
+                 create_box(r2, "eel"),
+                 create_box(r3, "eel"),
+                 create_box(r4, "eel"),
+                 create_box(r5, "eel"),
+                 create_box(r6, "eel"),
+                 create_box(r7, "eel")};
     auto   j      = create_metadata(list, 256, 256);
     string buffer = j.dump();
 
@@ -454,8 +504,14 @@ TEST(boundingbox, load_full)
     cv::Rect r5   = cv::Rect(30, 70, 10, 10); // result[3]
     cv::Rect r6   = cv::Rect(70, 70, 10, 10); // result[4]
     cv::Rect r7   = cv::Rect(30, 30, 80, 80); // result[5]
-    auto     list = {create_box(r0, "lion"), create_box(r1, "tiger"), create_box(r2, "eel"), create_box(r3, "eel"),
-                 create_box(r4, "eel"),  create_box(r5, "eel"),   create_box(r6, "eel"), create_box(r7, "eel")};
+    auto     list = {create_box(r0, "lion"),
+                 create_box(r1, "tiger"),
+                 create_box(r2, "eel"),
+                 create_box(r3, "eel"),
+                 create_box(r4, "eel"),
+                 create_box(r5, "eel"),
+                 create_box(r6, "eel"),
+                 create_box(r7, "eel")};
     auto   j      = create_metadata(list, 256, 256);
     string buffer = j.dump();
 

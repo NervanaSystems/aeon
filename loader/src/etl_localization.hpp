@@ -65,21 +65,27 @@ class nervana::localization::anchor
 {
 public:
     static std::vector<box> generate(const localization::config& cfg);
-    static std::vector<int> inside_image_bounds(int width, int height, const std::vector<box>& all_anchors);
+    static std::vector<int>
+        inside_image_bounds(int width, int height, const std::vector<box>& all_anchors);
 
 private:
     anchor() = delete;
 
     //    Generate anchor (reference) windows by enumerating aspect ratios X
     //    scales wrt a reference (0, 0, 15, 15) window.
-    static std::vector<box> generate_anchors(size_t base_size, const std::vector<float>& ratios, const std::vector<float>& scales);
+    static std::vector<box> generate_anchors(size_t                    base_size,
+                                             const std::vector<float>& ratios,
+                                             const std::vector<float>& scales);
 
     //    Enumerate a set of anchors for each aspect ratio wrt an anchor.
     static std::vector<box> ratio_enum(const box& anchor, const std::vector<float>& ratios);
 
     //    Given a vector of widths (ws) and heights (hs) around a center
     //    (x_ctr, y_ctr), output a set of anchors (windows).
-    static std::vector<box> mkanchors(const std::vector<float>& ws, const std::vector<float>& hs, float x_ctr, float y_ctr);
+    static std::vector<box> mkanchors(const std::vector<float>& ws,
+                                      const std::vector<float>& hs,
+                                      float                     x_ctr,
+                                      float                     y_ctr);
 
     //    Enumerate a set of anchors for each scale wrt an anchor.
     static std::vector<box> scale_enum(const box& anchor, const std::vector<float>& scales);
@@ -88,17 +94,17 @@ private:
 class nervana::localization::config : public nervana::interface::config
 {
 public:
-    size_t                   rois_per_image = 256;
-    size_t                   output_height; // copied from image config
-    size_t                   output_width;  // copied from image config
-    size_t                   base_size           = 16;
-    float                    scaling_factor      = 1.0 / 16.;
-    std::vector<float>       ratios              = {0.5, 1, 2};
-    std::vector<float>       scales              = {8, 16, 32};
-    float                    negative_overlap    = 0.3; // negative anchors have < 0.3 overlap with any gt box
-    float                    positive_overlap    = 0.7; // positive anchors have > 0.7 overlap with at least one gt box
-    float                    foreground_fraction = 0.5; // at most, positive anchors are 0.5 of the total rois
-    size_t                   max_gt_boxes        = 64;
+    size_t             rois_per_image = 256;
+    size_t             output_height; // copied from image config
+    size_t             output_width;  // copied from image config
+    size_t             base_size      = 16;
+    float              scaling_factor = 1.0 / 16.;
+    std::vector<float> ratios         = {0.5, 1, 2};
+    std::vector<float> scales         = {8, 16, 32};
+    float  negative_overlap           = 0.3; // negative anchors have < 0.3 overlap with any gt box
+    float  positive_overlap = 0.7; // positive anchors have > 0.7 overlap with at least one gt box
+    float  foreground_fraction = 0.5; // at most, positive anchors are 0.5 of the total rois
+    size_t max_gt_boxes        = 64;
     std::vector<std::string> class_names;
     float                    fixed_scaling_factor;
 
@@ -121,9 +127,10 @@ private:
         ADD_SCALAR(scaling_factor, mode::OPTIONAL),
         ADD_SCALAR(ratios, mode::OPTIONAL),
         ADD_SCALAR(scales, mode::OPTIONAL),
-        ADD_SCALAR(negative_overlap, mode::OPTIONAL, [](float v) { return v>=0.0 && v <=1.0; }),
-        ADD_SCALAR(positive_overlap, mode::OPTIONAL, [](float v) { return v>=0.0 && v <=1.0; }),
-        ADD_SCALAR(foreground_fraction, mode::OPTIONAL, [](float v) { return v>=0.0 && v <=1.0; }),
+        ADD_SCALAR(negative_overlap, mode::OPTIONAL, [](float v) { return v >= 0.0 && v <= 1.0; }),
+        ADD_SCALAR(positive_overlap, mode::OPTIONAL, [](float v) { return v >= 0.0 && v <= 1.0; }),
+        ADD_SCALAR(
+            foreground_fraction, mode::OPTIONAL, [](float v) { return v >= 0.0 && v <= 1.0; }),
         ADD_SCALAR(max_gt_boxes, mode::OPTIONAL),
         ADD_SCALAR(class_names, mode::REQUIRED)};
 
@@ -167,19 +174,23 @@ private:
     boundingbox::extractor bbox_extractor;
 };
 
-class nervana::localization::transformer : public interface::transformer<localization::decoded, image::params>
+class nervana::localization::transformer
+    : public interface::transformer<localization::decoded, image::params>
 {
 public:
     transformer(const localization::config&);
 
     virtual ~transformer() {}
-    std::shared_ptr<localization::decoded> transform(std::shared_ptr<image::params>         txs,
-                                                     std::shared_ptr<localization::decoded> mp) override;
+    std::shared_ptr<localization::decoded>
+        transform(std::shared_ptr<image::params>         txs,
+                  std::shared_ptr<localization::decoded> mp) override;
 
 private:
     transformer() = delete;
-    cv::Mat bbox_overlaps(const std::vector<box>& boxes, const std::vector<boundingbox::box>& query_boxes);
-    static std::vector<target> compute_targets(const std::vector<box>& gt_bb, const std::vector<box>& anchors);
+    cv::Mat bbox_overlaps(const std::vector<box>&              boxes,
+                          const std::vector<boundingbox::box>& query_boxes);
+    static std::vector<target> compute_targets(const std::vector<box>& gt_bb,
+                                               const std::vector<box>& anchors);
     std::vector<int> sample_anchors(const std::vector<int>& labels, bool debug = false);
 
     const localization::config& cfg;
@@ -193,7 +204,8 @@ public:
     loader(const localization::config&);
 
     virtual ~loader() {}
-    void load(const std::vector<void*>& buf_list, std::shared_ptr<localization::decoded> mp) override;
+    void load(const std::vector<void*>&              buf_list,
+              std::shared_ptr<localization::decoded> mp) override;
 
 private:
     loader() = delete;

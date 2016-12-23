@@ -40,16 +40,22 @@ public:
     {
     }
 
-    box operator+(const box& b) const { return box(xmin + b.xmin, ymin + b.ymin, xmax + b.xmax, ymax + b.ymax); }
+    box operator+(const box& b) const
+    {
+        return box(xmin + b.xmin, ymin + b.ymin, xmax + b.xmax, ymax + b.ymax);
+    }
     box operator*(float v) const { return box(xmin * v, ymin * v, xmax * v, ymax * v); }
-    bool operator==(const box& b) const { return xmin == b.xmin && ymin == b.ymin && xmax == b.xmax && ymax == b.ymax; }
-    cv::Rect                   rect() const { return cv::Rect(xmin, ymin, xmax - xmin, ymax - ymin); }
-    float                      xcenter() const { return xmin + (width() - 1.) / 2.; }
-    float                      ycenter() const { return ymin + (height() - 1.) / 2.; }
-    float                      x() const { return xmin; }
-    float                      y() const { return ymin; }
-    float                      width() const { return xmax - xmin + 1.; }
-    float                      height() const { return ymax - ymin + 1.; }
+    bool operator==(const box& b) const
+    {
+        return xmin == b.xmin && ymin == b.ymin && xmax == b.xmax && ymax == b.ymax;
+    }
+    cv::Rect rect() const { return cv::Rect(xmin, ymin, xmax - xmin, ymax - ymin); }
+    float    xcenter() const { return xmin + (width() - 1.) / 2.; }
+    float    ycenter() const { return ymin + (height() - 1.) / 2.; }
+    float    x() const { return xmin; }
+    float    y() const { return ymin; }
+    float    width() const { return xmax - xmin + 1.; }
+    float    height() const { return ymax - ymin + 1.; }
 };
 
 std::ostream& operator<<(std::ostream& out, const nervana::box& b);

@@ -42,30 +42,20 @@ public:
         if (m_data_index != m_data.size())
         {
             rc = &m_data[m_data_index++];
-            usleep(m_delay_ms*1000);
+            usleep(m_delay_ms * 1000);
         }
         return rc;
     }
-    size_t record_count() const override
-    {
-        return m_data.size();
-    }
-    size_t elements_per_record() const override
-    {
-        return 1;
-    }
-    void reset() override
-    {
-        m_data_index = 0;
-    }
+    size_t record_count() const override { return m_data.size(); }
+    size_t elements_per_record() const override { return 1; }
+    void   reset() override { m_data_index = 0; }
 private:
     vector<int> m_data;
     int         m_data_index;
     int         m_delay_ms;
 };
 
-typedef array<int,2> minibatch;
-
+typedef array<int, 2> minibatch;
 
 class integer_batcher : public async_manager<int, minibatch>
 {
@@ -77,11 +67,11 @@ public:
 
     virtual minibatch* filler() override
     {
-        minibatch* rc = nullptr;
-        int number_fetched = 0;
-        minibatch* output = get_pending_buffer();
+        minibatch* rc             = nullptr;
+        int        number_fetched = 0;
+        minibatch* output         = get_pending_buffer();
 
-        for (int i=0; i<2; i++)
+        for (int i = 0; i < 2; i++)
         {
             const int* value_ptr = m_source->next();
             if (value_ptr)
@@ -101,18 +91,11 @@ public:
         return rc;
     }
 
-    size_t record_count() const
-    {
-        return 100;
-    }
-
-    size_t elements_per_record() const
-    {
-        return 1;
-    }
+    size_t record_count() const { return 100; }
+    size_t elements_per_record() const { return 1; }
 };
 
-TEST(async_manager,source)
+TEST(async_manager, source)
 {
     data_source datagen(5, 0);
 
@@ -125,13 +108,12 @@ TEST(async_manager,source)
     EXPECT_EQ(nullptr, datagen.next());
 }
 
-
-TEST(async_manager,two_layer)
+TEST(async_manager, two_layer)
 {
-    data_source datagen(19, 0);
+    data_source     datagen(19, 0);
     integer_batcher layer_1(&datagen);
 
-    for (int i=0; i<10; i++)
+    for (int i = 0; i < 10; i++)
     {
         auto data_ptr = layer_1.next();
         if (data_ptr)

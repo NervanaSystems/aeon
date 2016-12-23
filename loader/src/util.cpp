@@ -28,8 +28,8 @@ using namespace std;
 void nervana::dump(ostream& out, const void* _data, size_t _size)
 {
     auto           flags = out.flags();
-    const uint8_t* data = reinterpret_cast<const uint8_t*>(_data);
-    int            len = _size;
+    const uint8_t* data  = reinterpret_cast<const uint8_t*>(_data);
+    int            len   = _size;
     int            index = 0;
     while (index < len)
     {
@@ -154,7 +154,7 @@ size_t nervana::unbiased_round(float x)
 {
     float i;
     float fracpart = std::modf(x, &i);
-    int   intpart = int(i);
+    int   intpart  = int(i);
     int   rc;
 
     if (std::fabs(fracpart) == 0.5)
@@ -206,7 +206,7 @@ cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
         affirm(in->signal.precision == 16, "input audio must be signed short");
 
         sox_sample_t* sample_buffer = new sox_sample_t[in->signal.length];
-        size_t        number_read = sox_read(in, sample_buffer, in->signal.length);
+        size_t        number_read   = sox_read(in, sample_buffer, in->signal.length);
 
         size_t nclipped = 0;
 

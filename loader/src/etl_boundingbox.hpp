@@ -71,9 +71,13 @@ public:
 
 private:
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
-        ADD_SCALAR(height, mode::REQUIRED), ADD_SCALAR(width, mode::REQUIRED), ADD_SCALAR(max_bbox_count, mode::REQUIRED),
+        ADD_SCALAR(height, mode::REQUIRED),
+        ADD_SCALAR(width, mode::REQUIRED),
+        ADD_SCALAR(max_bbox_count, mode::REQUIRED),
         ADD_SCALAR(class_names, mode::REQUIRED),
-        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) { return output_type::is_valid_type(v); })};
+        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) {
+            return output_type::is_valid_type(v);
+        })};
 
     config() {}
     void validate();
@@ -86,7 +90,9 @@ class nervana::boundingbox::decoded : public interface::decoded_media
 
 public:
     decoded();
-    bool extract(const void* data, size_t size, const std::unordered_map<std::string, int>& label_map);
+    bool extract(const void* data,
+                 size_t      size,
+                 const std::unordered_map<std::string, int>& label_map);
     virtual ~decoded() {}
     const std::vector<boundingbox::box>& boxes() const { return _boxes; }
     int                                  width() const { return _width; }
@@ -99,13 +105,14 @@ private:
     int                           _depth;
 };
 
-class nervana::boundingbox::extractor : public nervana::interface::extractor<nervana::boundingbox::decoded>
+class nervana::boundingbox::extractor
+    : public nervana::interface::extractor<nervana::boundingbox::decoded>
 {
 public:
     extractor(const std::unordered_map<std::string, int>&);
     virtual ~extractor() {}
     virtual std::shared_ptr<boundingbox::decoded> extract(const void*, size_t) override;
-    void                                          extract(const void*, size_t, std::shared_ptr<boundingbox::decoded>&);
+    void extract(const void*, size_t, std::shared_ptr<boundingbox::decoded>&);
 
 private:
     extractor() = delete;
@@ -118,16 +125,20 @@ class nervana::boundingbox::transformer
 public:
     transformer(const boundingbox::config&);
     virtual ~transformer() {}
-    virtual std::shared_ptr<boundingbox::decoded> transform(std::shared_ptr<image::params>,
-                                                            std::shared_ptr<boundingbox::decoded>) override;
+    virtual std::shared_ptr<boundingbox::decoded>
+        transform(std::shared_ptr<image::params>, std::shared_ptr<boundingbox::decoded>) override;
 
-    static std::vector<boundingbox::box> transform_box(const std::vector<boundingbox::box>& b, const cv::Rect& crop, bool flip,
-                                                       float x_scale, float y_scale);
+    static std::vector<boundingbox::box> transform_box(const std::vector<boundingbox::box>& b,
+                                                       const cv::Rect&                      crop,
+                                                       bool                                 flip,
+                                                       float                                x_scale,
+                                                       float y_scale);
 
 private:
 };
 
-class nervana::boundingbox::loader : public nervana::interface::loader<nervana::boundingbox::decoded>
+class nervana::boundingbox::loader
+    : public nervana::interface::loader<nervana::boundingbox::decoded>
 {
 public:
     loader(const boundingbox::config&);
