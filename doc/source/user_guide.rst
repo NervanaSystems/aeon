@@ -154,6 +154,6 @@ The above configuration will, for each image, take a random crop of 224x224 pixe
     from neon.backends import gen_backend
 
     be = gen_backend(backend='gpu')
-    train = DataLoader(config, backend)
+    train = DataLoader(config, be)
 
 The backend argument above from neon tells the dataloader where to place the buffers to provision to the model.
