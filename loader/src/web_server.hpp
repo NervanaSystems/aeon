@@ -147,7 +147,7 @@ public:
 
     const std::map<std::string, std::string>& args() const;
     const std::string& content_type() const;
-    const size_t       content_length() const;
+    size_t             content_length() const;
     tcp::connection&   connection();
 
     page();

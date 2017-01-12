@@ -106,7 +106,7 @@ fixed_buffer_map* batch_decoder::filler()
             // Now perform any potentially necessary whole-batch operation
             m_providers[0]->post_process(*outputs);
         }
-        catch (std::exception& e)
+        catch (std::exception&)
         {
             outputs = nullptr;
         }

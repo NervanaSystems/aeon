@@ -245,10 +245,10 @@ shared_ptr<image::params> image::param_factory::make_params(shared_ptr<const dec
 }
 
 image::loader::loader(const image::config& cfg)
-    : channel_major{cfg.channel_major}
-    , fixed_aspect_ratio{cfg.fixed_aspect_ratio}
-    , stype{cfg.get_shape_type()}
-    , channels{cfg.channels}
+    : m_channel_major{cfg.channel_major}
+    , m_fixed_aspect_ratio{cfg.fixed_aspect_ratio}
+    , m_stype{cfg.get_shape_type()}
+    , m_channels{cfg.channels}
 {
 }
 
@@ -256,8 +256,8 @@ void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::de
 {
     char* outbuf = (char*)outlist[0];
     // TODO: Generalize this to also handle multi_crop case
-    auto cv_type      = stype.get_otype().get_cv_type();
-    auto element_size = stype.get_otype().get_size();
+    auto cv_type      = m_stype.get_otype().get_cv_type();
+    auto element_size = m_stype.get_otype().get_size();
     auto img          = input->get_image(0);
     int  image_size   = img.channels() * img.total() * element_size;
 
@@ -269,15 +269,17 @@ void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::de
         vector<cv::Mat> target;
         vector<int>     from_to;
 
-        if (fixed_aspect_ratio)
+        if (m_fixed_aspect_ratio)
         {
             // zero out the output buffer as the image may not fill the canvas
-            for (int i    = 0; i < stype.get_byte_size(); i++)
-                outbuf[i] = 0;
+            for (int j = 0; j < m_stype.get_byte_size(); j++)
+            {
+                outbuf[j] = 0;
+            }
 
-            vector<size_t> shape = stype.get_shape();
+            vector<size_t> shape = m_stype.get_shape();
             // methods for image_var
-            if (channel_major)
+            if (m_channel_major)
             {
                 // Split into separate channels
                 int      width           = shape[1];
@@ -307,9 +309,9 @@ void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::de
         {
             // methods for image
             source.push_back(input_image);
-            if (channel_major)
+            if (m_channel_major)
             {
-                for (int ch = 0; ch < channels; ch++)
+                for (int ch = 0; ch < m_channels; ch++)
                 {
                     target.emplace_back(
                         img.size(), cv_type, (char*)(outbuf_i + ch * img.total() * element_size));
@@ -320,8 +322,8 @@ void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::de
             else
             {
                 target.emplace_back(
-                    input_image.size(), CV_MAKETYPE(cv_type, channels), (char*)(outbuf_i));
-                for (int ch = 0; ch < channels; ch++)
+                    input_image.size(), CV_MAKETYPE(cv_type, m_channels), (char*)(outbuf_i));
+                for (int ch = 0; ch < m_channels; ch++)
                 {
                     from_to.push_back(ch);
                     from_to.push_back(ch);

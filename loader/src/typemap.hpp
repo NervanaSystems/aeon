@@ -17,9 +17,21 @@
 
 #include <map>
 #include <opencv2/core/core.hpp>
+
+#ifdef PYTHON_FOUND
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarraytypes.h>
+#else
+#define NPY_INT8 0
+#define NPY_UINT8 0
+#define NPY_INT16 0
+#define NPY_UINT16 0
+#define NPY_INT32 0
+#define NPY_UINT32 0
+#define NPY_FLOAT32 0
+#define NPY_FLOAT64 0
+#endif
 
 namespace nervana
 {

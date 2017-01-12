@@ -1,5 +1,3 @@
-message("project '${PROJECT_NAME}'")
-
 set (SRC
     avi.cpp
     base64.cpp

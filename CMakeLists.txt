@@ -35,8 +35,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-float-equal")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-duplicate-enum") # from numpy
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-used-but-marked-unused") # from sox
-
-message(${CMAKE_CXX_FLAGS})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-compat-deprecated-writable-strings")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
 
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS} loader/src)
@@ -54,14 +54,14 @@ if (PYTHONLIBS_FOUND)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPYTHON_FOUND")
         include_directories(${PYTHON_INCLUDE_DIR})
         include_directories(${NUMPY_INCLUDE_DIRS})
-    else(NUMPY_FOUND)
+    else()
         message("Numpy not found, Python interface not included")
     endif(NUMPY_FOUND)
 else()
     message("Python not found, Python interface not included")
 endif (PYTHONLIBS_FOUND)
 
-set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
+set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/loader/test/test_data)
 
 add_subdirectory(loader)
 

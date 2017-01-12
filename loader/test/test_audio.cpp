@@ -46,9 +46,9 @@ TEST(wav, compare)
     for (int i = 0; i < num_samples; i++)
     {
         size_t   offset = i * sizeof(int16_t);
-        int16_t* waddr  = (int16_t*)(wav.get_raw_data()[0] + offset);
+        int16_t waddr  = unpack<int16_t>(wav.get_raw_data()[0] + offset);
         int16_t  dval   = extracted_wav.at<int16_t>(i, 0);
-        if (*waddr != dval)
+        if (waddr != dval)
         {
             all_eq = false;
             break;
@@ -253,8 +253,8 @@ TEST(audio, samples_out)
     for (int i = 0; i < wav_samples; i++)
     {
         size_t   offset = i * sizeof(int16_t);
-        int16_t* waddr  = (int16_t*)(wav.get_raw_data()[0] + offset);
-        if (*waddr != output_samples.at<int16_t>(0, i))
+        int16_t waddr  = unpack<int16_t>(wav.get_raw_data()[0] + offset);
+        if (waddr != output_samples.at<int16_t>(0, i))
         {
             all_eq = false;
             break;

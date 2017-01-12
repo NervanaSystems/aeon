@@ -39,6 +39,8 @@ public:
     {
     }
 
+    virtual ~dataset() {}
+
     T& directory(const std::string& dir)
     {
         m_path = dir;

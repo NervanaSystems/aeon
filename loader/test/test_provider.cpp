@@ -197,9 +197,9 @@ TEST(provider, blob)
     cv::imwrite("output_right.jpg", output_right);
     EXPECT_EQ(image_size, output_right.size());
 
-    float* fp = (float*)out_buf["depthmap"]->data();
+    char* fp = out_buf["depthmap"]->data();
     for (int i = 0; i < target_data.size(); i++)
     {
-        ASSERT_FLOAT_EQ(target_data[i], fp[i]);
+        ASSERT_FLOAT_EQ(target_data[i], unpack<float>(&fp[i*sizeof(float)]));
     }
 }

@@ -147,9 +147,9 @@ TEST(block_manager, build_cache)
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t i = 0; i < block_size; i++)
+        for (size_t j = 0; j < block_size; j++)
         {
-            const encoded_record& record = buffer->record(i);
+            const encoded_record& record = buffer->record(j);
             for (size_t element_number = 0; element_number < record.size(); element_number++)
             {
                 stringstream ss;
@@ -211,9 +211,9 @@ TEST(block_manager, reuse_cache)
             ASSERT_NE(nullptr, buffer);
             ASSERT_EQ(4, buffer->size());
 
-            for (size_t i = 0; i < block_size; i++)
+            for (size_t j = 0; j < block_size; j++)
             {
-                const encoded_record& record = buffer->record(i);
+                const encoded_record& record = buffer->record(j);
                 for (size_t element_number = 0; element_number < record.size(); element_number++)
                 {
                     stringstream ss;
@@ -242,9 +242,9 @@ TEST(block_manager, reuse_cache)
             ASSERT_NE(nullptr, buffer);
             ASSERT_EQ(4, buffer->size());
 
-            for (size_t i = 0; i < block_size; i++)
+            for (size_t j = 0; j < block_size; j++)
             {
-                const encoded_record& record = buffer->record(i);
+                const encoded_record& record = buffer->record(j);
                 for (size_t element_number = 0; element_number < record.size(); element_number++)
                 {
                     stringstream ss;

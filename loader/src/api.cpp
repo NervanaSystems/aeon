@@ -18,7 +18,6 @@
 // #include <memory>
 
 #include "api.hpp"
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 #include "structmember.h"
 using namespace nervana;
@@ -31,7 +30,6 @@ extern "C" {
 #endif
 
 #define DL_get_loader(v) (((aeon_Dataloader*)(v))->m_loader)
-#define DL_get_i(v) (((aeon_Dataloader*)(v))->m_i)
 
 struct aeon_state
 {
@@ -68,7 +66,7 @@ typedef struct
 } aeon_Dataloader;
 
 static PyMethodDef aeon_methods[] = {{"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
-                                     {NULL, NULL}};
+                                     {NULL, NULL, NULL, NULL}};
 
 static PyObject* Dataloader_iter(PyObject* self)
 {
@@ -128,8 +126,16 @@ static Py_ssize_t aeon_Dataloader_length(PyObject* self)
 }
 
 static PySequenceMethods Dataloader_sequence_methods = {
-    aeon_Dataloader_length /* sq_length */
-};
+    aeon_Dataloader_length, /* sq_length */
+    0,                      /* sq_length */
+    0,                      /* sq_concat */
+    0,                      /* sq_repeat */
+    0,                      /* sq_item */
+    0,                      /* sq_ass_item */
+    0,                      /* sq_contains */
+    0,                      /* sq_inplace_concat */
+    0,                      /* sq_inplace_repeat */
+    0                       /* sq_inplace_repeat */};
 
 /* This function handles py2 and py3 independent unpacking of string object (bytes or unicode)
  * as an ascii std::string
@@ -348,7 +354,7 @@ static PyMemberDef Dataloader_members[] = {
     {"ndata", T_OBJECT_EX, offsetof(aeon_Dataloader, ndata), 0, "number of records in dataset"},
     {"batch_size", T_OBJECT_EX, offsetof(aeon_Dataloader, batch_size), 0, "mini-batch size"},
     {"axes_info", T_OBJECT_EX, offsetof(aeon_Dataloader, axes_info), 0, "axes names and lengths"},
-    {NULL}  /* Sentinel */
+    {NULL, NULL, 0, 0, NULL}  /* Sentinel */
 };
 
 static PyTypeObject aeon_DataloaderType = {
@@ -394,6 +400,15 @@ static PyTypeObject aeon_DataloaderType = {
     (initproc)Dataloader_init,                 /* tp_init */
     0,                                         /* tp_alloc */
     Dataloader_new,                            /* tp_new */
+    0,                                         /* tp_free */
+    0,                                         /* tp_is_gc */
+    0,                                         /* tp_bases */
+    0,                                         /* tp_mro */
+    0,                                         /* tp_cache */
+    0,                                         /* tp_subclasses */
+    0,                                         /* tp_weaklist */
+    0,                                         /* tp_del */
+    0                                          /* tp_version_tag */
 };
 
 #ifdef IS_PY3K

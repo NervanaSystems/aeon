@@ -472,7 +472,7 @@ const std::string& web::page::content_type() const
     return m_content_type;
 }
 
-const size_t web::page::content_length() const
+size_t web::page::content_length() const
 {
     return m_content_length;
 }

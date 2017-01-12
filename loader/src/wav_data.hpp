@@ -74,19 +74,19 @@ namespace nervana
     {
     public:
         sinewave_generator(float frequency, int16_t amplitude = INT16_MAX)
-            : frequency(frequency)
-            , amplitude(amplitude)
+            : m_frequency(frequency)
+            , m_amplitude(amplitude)
         {
         }
 
         int16_t operator()(float t) const override
         {
-            return static_cast<int16_t>(sin(frequency * t) * amplitude);
+            return static_cast<int16_t>(sin(m_frequency * t) * m_amplitude);
         }
 
     private:
-        float   frequency;
-        int16_t amplitude;
+        float   m_frequency;
+        int16_t m_amplitude;
     };
 
     class wav_data

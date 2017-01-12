@@ -29,7 +29,7 @@ class gen_image : public dataset<gen_image>
 {
 public:
     gen_image();
-    ~gen_image();
+    virtual ~gen_image();
 
     gen_image& ImageSize(int rows, int cols);
 

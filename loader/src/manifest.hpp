@@ -34,6 +34,9 @@ namespace nervana
             ASCII_FLOAT
         };
 
+        manifest() {}
+        virtual ~manifest() {}
+
         virtual std::string cache_id() = 0;
         virtual std::string version()  = 0;
 
@@ -49,5 +52,7 @@ namespace nervana
 
     protected:
         std::vector<std::pair<size_t, size_t>> m_block_load_sequence;
+
+        manifest(const manifest&) = default;
     };
 }

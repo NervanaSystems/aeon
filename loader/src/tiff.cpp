@@ -295,7 +295,6 @@ ostream& nervana::tiff::operator<<(ostream& out, tag_type tag)
     case tag_type::YCbCrPositioning: out << "YCbCrPositioning"; break;
     case tag_type::ReferenceBlackWhite: out << "ReferenceBlackWhite"; break;
     case tag_type::Copyright: out << "Copyright"; break;
-    default: out << "unknown tag '" << (int)tag << "'"; break;
     }
     return out;
 }
@@ -311,7 +310,6 @@ ostream& nervana::tiff::operator<<(ostream& out, compression_t v)
     case compression_t::LZW: out << "LZW"; break;
     case compression_t::JPEG: out << "JPEG"; break;
     case compression_t::PackBits: out << "PackBits"; break;
-    default: out << "unknown photometric '" << (int)v << "'"; break;
     }
     return out;
 }
@@ -328,7 +326,6 @@ ostream& nervana::tiff::operator<<(ostream& out, photometric_t v)
     case photometric_t::CMYK: out << "CMYK"; break;
     case photometric_t::YCbCr: out << "YCbCr"; break;
     case photometric_t::CIELab: out << "CIELab"; break;
-    default: out << "unknown photometric '" << (int)v << "'"; break;
     }
     return out;
 }

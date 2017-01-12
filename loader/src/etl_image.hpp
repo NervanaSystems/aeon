@@ -236,7 +236,7 @@ public:
     ~extractor() {}
     virtual std::shared_ptr<image::decoded> extract(const void*, size_t) override;
 
-    const int get_channel_count() { return _color_mode == CV_LOAD_IMAGE_COLOR ? 3 : 1; }
+    int get_channel_count() { return _color_mode == CV_LOAD_IMAGE_COLOR ? 3 : 1; }
 private:
     int _pixel_type;
     int _color_mode;
@@ -266,8 +266,8 @@ public:
 private:
     void split(cv::Mat&, char*);
 
-    bool       channel_major;
-    bool       fixed_aspect_ratio;
-    shape_type stype;
-    uint32_t   channels;
+    bool       m_channel_major;
+    bool       m_fixed_aspect_ratio;
+    shape_type m_stype;
+    uint32_t   m_channels;
 };

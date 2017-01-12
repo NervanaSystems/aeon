@@ -29,6 +29,9 @@
 using namespace std;
 using namespace nervana;
 
+extern gen_image image_dataset;
+extern string    test_cache_directory;
+
 gen_image image_dataset;
 string    test_cache_directory;
 
@@ -76,9 +79,9 @@ public:
                     for (size_t element_number = 0; element_number < m_elements_size_list.size();
                          element_number++)
                     {
-                        stringstream ss;
-                        ss << record_number + record_start << ":" << element_number;
-                        string id   = ss.str();
+                        stringstream tmp;
+                        tmp << record_number + record_start << ":" << element_number;
+                        string id   = tmp.str();
                         auto   data = string2vector(id);
                         record.add_element(data);
                     }

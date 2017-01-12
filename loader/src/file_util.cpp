@@ -33,12 +33,6 @@
 
 using namespace std;
 
-// maximum number of files opened by nftw file enumeration function
-// For some platforms (older linux), OPEN_MAX needs to be defined
-#ifndef OPEN_MAX
-#define OPEN_MAX 128
-#endif
-
 string nervana::file_util::path_join(const string& s1, const string& s2)
 {
     string rc;
@@ -131,15 +125,19 @@ std::string nervana::file_util::get_temp_directory()
 {
     const vector<string> potential_tmps = {"NERVANA_AEON_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
 
-    const char* path;
+    const char* path = nullptr;
     for (const string& var : potential_tmps)
     {
         path = getenv(var.c_str());
-        if (path != 0)
+        if (path != nullptr)
+        {
             break;
+        }
     }
-    if (path == 0)
+    if (path == nullptr)
+    {
         path = "/tmp";
+    }
 
     return path;
 }
@@ -191,9 +189,9 @@ void nervana::file_util::iterate_files_worker(
             case DT_DIR:
                 if (recurse && name != "." && name != "..")
                 {
-                    string dir = file_util::path_join(path, name);
-                    iterate_files(dir, func, recurse);
-                    func(dir, true);
+                    string dir_path = file_util::path_join(path, name);
+                    iterate_files(dir_path, func, recurse);
+                    func(dir_path, true);
                 }
                 break;
             case DT_LNK: break;

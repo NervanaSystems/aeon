@@ -24,13 +24,13 @@
 using namespace std;
 using namespace nervana;
 
-string plain_text =
+static string plain_text =
     "Man is distinguished, not only by his reason, but by this singular passion from "
     "other animals, which is a lust of the mind, that by a perseverance of delight "
     "in the continued and indefatigable generation of knowledge, exceeds the short "
     "vehemence of any carnal pleasure.";
 
-string encoded_text =
+static string encoded_text =
     "TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz"
     "IHNpbmd1bGFyIHBhc3Npb24gZnJvbSBvdGhlciBhbmltYWxzLCB3aGljaCBpcyBhIGx1c3Qgb2Yg"
     "dGhlIG1pbmQsIHRoYXQgYnkgYSBwZXJzZXZlcmFuY2Ugb2YgZGVsaWdodCBpbiB0aGUgY29udGlu"
@@ -113,23 +113,3 @@ TEST(base64, binary)
         ASSERT_EQ((uint8_t)source[i], (uint8_t)decoded[i]) << i;
     }
 }
-
-//TEST(base64, image)
-//{
-//    size_t rows = 8;
-//    size_t cols = 8;
-//    size_t record_number = 8;
-
-//    cv::Mat mat = embedded_id_image::generate_image(rows, cols, record_number);
-//    vector<uint8_t> result;
-//    cv::imencode(".png", mat, result);
-//    vector<char> encoded = base64::encode((const char*)result.data(), result.size());
-//    vector<char> decoded = base64::decode(encoded);
-
-//    ASSERT_EQ(result.size(), (uint8_t)decoded.size());
-//    for (size_t i=0; i<result.size(); i++)
-//    {
-//        ASSERT_EQ(result[i], (uint8_t)decoded[i]) << i;
-//    }
-//    cv::Mat round_trip_mat = cv::imdecode(decoded, CV_LOAD_IMAGE_COLOR);
-//}

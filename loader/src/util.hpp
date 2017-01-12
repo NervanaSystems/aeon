@@ -37,11 +37,12 @@ namespace nervana
 #define DUMP_VALUE(a) cout << __FILE__ << " " << __LINE__ << " " #a " " << a << endl;
 
     template <typename T>
-    T unpack(const char* data, int offset = 0, endian e = endian::LITTLE)
+    T unpack(const void* _data, size_t offset = 0, endian e = endian::LITTLE)
     {
-        T     value = 0;
+        const char* data  = (const char*)_data;
+        T           value = 0;
         char* v     = (char*)&value;
-        for (int i = 0; i < sizeof(T); i++)
+        for (size_t i = 0; i < sizeof(T); i++)
         {
             v[i] = data[offset + BYTEIDX(i, sizeof(T), e)];
         }
@@ -49,15 +50,15 @@ namespace nervana
     }
 
     template <typename T>
-    void pack(char* data, T value, int offset = 0, endian e = endian::LITTLE)
+    void pack(void* _data, T value, size_t offset = 0, endian e = endian::LITTLE)
     {
+        char* data  = (char*)_data;
         char* v = (char*)&value;
-        for (int i = 0; i < sizeof(T); i++)
+        for (size_t i = 0; i < sizeof(T); i++)
         {
             data[offset + i] = v[BYTEIDX(i, sizeof(T), e)];
         }
     }
-
     template <typename T>
     std::string join(const T& v, const std::string& sep)
     {

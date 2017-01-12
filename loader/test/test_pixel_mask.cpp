@@ -182,14 +182,14 @@ TEST(pixel_mask, load_int)
     loader.load({output_image.data}, transformed);
 
     {
-        int32_t* output = (int32_t*)(output_image.data);
-        int      index  = 0;
+        uint8_t* output = output_image.data;
+        index  = 0;
         for (int row = 0; row < 256; row++)
         {
             for (int col = 0; col < 256; col++)
             {
                 uint8_t value = col;
-                ASSERT_EQ(value, output[index++]);
+                ASSERT_EQ(value, unpack<int32_t>(&output[sizeof(int32_t)*index++]));
             }
         }
     }

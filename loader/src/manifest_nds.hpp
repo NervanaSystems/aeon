@@ -37,6 +37,7 @@ public:
                    size_t             block_size,
                    size_t             shard_count,
                    size_t             shard_index);
+    network_client(const network_client&) = default;
 
     ~network_client();
 
@@ -89,7 +90,8 @@ class nervana::manifest_nds : public nervana::async_manager_source<encoded_recor
     friend class manifest_nds_builder;
 
 public:
-    ~manifest_nds() {}
+    manifest_nds(const manifest_nds&) = default;
+    virtual ~manifest_nds() {}
     encoded_record_list* next() override;
     void                 reset() override
     {

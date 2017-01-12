@@ -90,11 +90,9 @@ nervana::encoded_record_list* block_loader_file::filler()
                         record.add_element(&value, sizeof(value));
                         break;
                     }
-                    default: { break;
-                    }
                     }
                 }
-                catch (std::exception& e)
+                catch (std::exception&)
                 {
                     record.add_exception(current_exception());
                 }

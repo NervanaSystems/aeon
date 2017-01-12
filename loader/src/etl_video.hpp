@@ -78,6 +78,7 @@ class nervana::video::transformer : public interface::transformer<image::decoded
 {
 public:
     transformer(const video::config&);
+    transformer(const transformer&) = default;
     virtual ~transformer() {}
     virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params>,
                                                       std::shared_ptr<image::decoded>) override;

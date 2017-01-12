@@ -36,7 +36,7 @@ using namespace std;
 //    std::cout << __FILE__ << " " << __LINE__ << " test" << std::endl;
 //}
 
-string master_page = R"(
+static string master_page = R"(
     <html>
     <head>
         <title>Aeon Debug</title>

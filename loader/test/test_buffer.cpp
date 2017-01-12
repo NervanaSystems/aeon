@@ -62,7 +62,7 @@ void setup_buffer_exception(encoded_record_list& b)
     {
         throw std::runtime_error("expect me");
     }
-    catch (std::exception& e)
+    catch (std::exception&)
     {
         encoded_record record;
         record.add_exception(std::current_exception());

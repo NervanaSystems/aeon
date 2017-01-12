@@ -82,9 +82,9 @@ TEST(char_map, test)
             }
 
             // Unknown characters should be given value of UINT8_MAX
-            nlohmann::json js = {
+            nlohmann::json js1 = {
                 {"alphabet", alphabet}, {"max_length", max_length}, {"unknown_value", 255}};
-            char_map::config    unk_cfg{js};
+            char_map::config    unk_cfg{js1};
             char_map::extractor unk_extractor(unk_cfg);
             vector<int>         expected = {19, 7, 4, 255, 255, 255, 26, 255, 16, 255,
                                     20, 8, 2, 10,  26,  1,   17, 14,  22, 13};
@@ -96,7 +96,8 @@ TEST(char_map, test)
         }
 
         // Now check max length truncation
-        char outbuf[max_length];
+        vector<char> _outbuf(max_length);
+        char*        outbuf = _outbuf.data();
         {
             string long_str =
                 "This is a really long transcript that should overflow the buffer at the letter e "

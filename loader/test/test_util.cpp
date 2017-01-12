@@ -46,6 +46,19 @@
 using namespace std;
 using namespace nervana;
 
+template<typename T>
+static T setup(initializer_list<uint8_t> data)
+{
+    T        rc;
+    uint8_t* p = (uint8_t*)&rc;
+    for (uint8_t v : data)
+    {
+        *p++ = v;
+    }
+
+    return rc;
+}
+
 TEST(util, unpack_le)
 {
     {
@@ -116,36 +129,23 @@ TEST(util, unpack_be)
 TEST(util, pack_le)
 {
     {
-        char actual[]   = {0, 0, 0, 0};
-        char expected[] = {1, 0, 0, 0};
-        pack<int>(actual, 1);
-        EXPECT_EQ(*(unsigned int*)expected, *(unsigned int*)actual);
+        uint32_t actual;
+        auto expected = setup<uint32_t>({1, 0, 0, 0});
+        pack<uint32_t>(&actual, 1);
+        EXPECT_EQ(expected, actual);
     }
     {
-        char actual[]   = {0, 0, 0, 0};
-        char expected[] = {0, 1, 0, 0};
-        pack<int>(actual, 0x00000100);
-        EXPECT_EQ(*(unsigned int*)expected, *(unsigned int*)actual);
+        uint32_t actual;
+        uint32_t expected = setup<uint32_t>({0, 1, 0, 0});
+        pack<int>(&actual, 0x00000100);
+        EXPECT_EQ(expected, actual);
     }
     {
-        char actual[]   = {0, 0, 0, 0};
-        char expected[] = {0, 0, 0, 1};
-        pack<int>(actual, 0x01000000);
-        EXPECT_EQ(*(unsigned int*)expected, *(unsigned int*)actual);
+        uint32_t actual;
+        uint32_t expected = setup<uint32_t>({0, 0, 0, 1});
+        pack<int>(&actual, 0x01000000);
+        EXPECT_EQ(expected, actual);
     }
-
-    //    {
-    //        char actual[] = {0,0,0,0};
-    //        char expected[] = {0,0,0,1};
-    //        pack_le<int>(actual,0,3);
-    //        EXPECT_EQ(expected,actual);
-    //    }
-    //    {
-    //        char actual[] = {0,0,0,0};
-    //        char expected[] = {0,0,0,1};
-    //        pack_le<int>(actual,0x00010000,1,3);
-    //        EXPECT_EQ(expected,actual);
-    //    }
 }
 
 TEST(avi, video_file)
@@ -432,12 +432,12 @@ TEST(DISABLED_util, dump)
 //     usleep(100000);
 // }
 
-static void test_function_exception1()
+[[noreturn]] void test_function_exception1()
 {
     throw runtime_error("this is to be expected");
 }
 
-static void test_function_exception2()
+[[noreturn]] void test_function_exception2()
 {
     throw out_of_range("this is to be expected");
 }

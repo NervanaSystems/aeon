@@ -33,7 +33,7 @@ namespace nervana
 string                    nervana::logger::log_path;
 deque<string>             nervana::logger::queue;
 static mutex              queue_mutex;
-condition_variable        queue_condition;
+static condition_variable queue_condition;
 static unique_ptr<thread> queue_thread;
 static bool               active = false;
 

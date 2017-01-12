@@ -29,6 +29,8 @@ SOFTWARE.
 #ifndef NLOHMANN_JSON_HPP
 #define NLOHMANN_JSON_HPP
 
+#pragma GCC system_header // turn off warnings for this file
+
 #include <algorithm>
 #include <array>
 #include <cassert>

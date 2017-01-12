@@ -40,10 +40,14 @@ template <typename OUTPUT>
 class nervana::async_manager_source
 {
 public:
+    async_manager_source() {}
+    virtual ~async_manager_source() {}
     virtual OUTPUT* next()                      = 0;
     virtual size_t  record_count() const        = 0;
     virtual size_t  elements_per_record() const = 0;
     virtual void    reset()                     = 0;
+
+    async_manager_source(const async_manager_source&) = default;
 };
 
 template <typename INPUT, typename OUTPUT>
@@ -55,6 +59,7 @@ public:
     {
         // Make the container pair?  Currently letting child handle it in filler()
     }
+
     OUTPUT* next() override
     {
         // Special case for first time through

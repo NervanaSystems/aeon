@@ -425,15 +425,14 @@ TEST(image, convert_nosplit)
     loader.load({output_image.data}, decoded);
 
     //    cv::imwrite("image_convert_nosplit.png", output_image);
-    int32_t* input = (int32_t*)(output_image.data);
     int      index = 0;
     for (int row = 0; row < output_image.rows; row++)
     {
         for (int col = 0; col < output_image.cols; col++)
         {
-            ASSERT_EQ(50, input[index++]);  // b
-            ASSERT_EQ(100, input[index++]); // g
-            ASSERT_EQ(200, input[index++]); // r
+            ASSERT_EQ(50, unpack<int32_t>(output_image.data, sizeof(int32_t)*index++));  // b
+            ASSERT_EQ(100, unpack<int32_t>(output_image.data, sizeof(int32_t)*index++)); // g
+            ASSERT_EQ(200, unpack<int32_t>(output_image.data, sizeof(int32_t)*index++)); // r
         }
     }
 }
@@ -461,7 +460,6 @@ TEST(image, convert_split)
     loader.load({output_image.data}, decoded);
 
     //    cv::imwrite("image_convert_split.png", output_image);
-    int32_t* input = (int32_t*)(output_image.data);
     int      index = 0;
     for (int ch = 0; ch < 3; ch++)
     {
@@ -469,7 +467,7 @@ TEST(image, convert_split)
         {
             for (int col = 0; col < input_image.cols; col++)
             {
-                ASSERT_EQ(50 * (ch + 1), input[index++]);
+                ASSERT_EQ(50 * (ch + 1),  unpack<int32_t>(output_image.data, sizeof(int32_t)*index++));
             }
         }
     }
