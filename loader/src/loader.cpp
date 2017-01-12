@@ -211,16 +211,15 @@ void loader::initialize(nlohmann::json& config_json)
     {
         throw std::runtime_error("manifest file is empty");
     }
-
+    // Default ceil div to get number of batches
+    m_batch_count_value = (m_manifest->record_count() + m_batch_size - 1) / m_batch_size;
     if (lcfg.iteration_mode == "ONCE")
     {
         m_batch_mode        = BatchMode::ONCE;
-        m_batch_count_value = m_manifest->record_count();
     }
     else if (lcfg.iteration_mode == "INFINITE")
     {
         m_batch_mode        = BatchMode::INFINITE;
-        m_batch_count_value = m_manifest->record_count();
     }
     else if (lcfg.iteration_mode == "COUNT")
     {

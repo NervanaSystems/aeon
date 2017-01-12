@@ -51,6 +51,7 @@ public:
 
         // channel major only
         add_shape_type({frame.channels, max_frame_count, frame.height, frame.width},
+                       {"channels", "frames", "height", "width"},
                        frame.output_type);
     }
 

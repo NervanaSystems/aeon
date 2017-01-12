@@ -32,7 +32,6 @@ image::config::config(nlohmann::json js)
     verify_config("image", config_list, js);
 
     // Now fill in derived
-    shape_t shape;
     if (flip_enable)
     {
         flip_distribution = bernoulli_distribution{0.5};
@@ -45,13 +44,12 @@ image::config::config(nlohmann::json js)
 
     if (channel_major)
     {
-        shape = {channels, height, width};
+        add_shape_type({channels, height, width}, {"channels", "height", "width"}, output_type);
     }
     else
     {
-        shape = {height, width, channels};
+        add_shape_type({height, width, channels}, {"height", "width", "channels"}, output_type);
     }
-    add_shape_type(shape, output_type);
 
     validate();
 }

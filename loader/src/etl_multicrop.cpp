@@ -45,10 +45,12 @@ multicrop::config::config(nlohmann::json js)
 
     // shape is going to be different from crop_config because of multiple images
     shape_t multicrop_shape = crop_config.get_shape_type().get_shape();
+    auto axes_names = crop_config.get_shape_type().get_names();
+    axes_names.insert(axes_names.begin(), "views");
 
     uint32_t num_views = crop_count * crop_scales.size() * (crop_config.flip_enable ? 2 : 1);
     multicrop_shape.insert(multicrop_shape.begin(), num_views);
-    add_shape_type(multicrop_shape, crop_config.output_type);
+    add_shape_type(multicrop_shape, axes_names, crop_config.output_type);
 
     validate();
 }

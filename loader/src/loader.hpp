@@ -132,6 +132,8 @@ public:
     const shape_t& get_shape(const std::string& name) const;
 
     int record_count() { return m_manifest->record_count(); }
+    int batch_size() { return m_batch_size; }
+
     // member typedefs provided through inheriting from std::iterator
     class iterator : public std::iterator<std::input_iterator_tag, // iterator_category
                                           fixed_buffer_map         // value_type

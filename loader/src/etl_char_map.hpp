@@ -67,7 +67,7 @@ public:
 
         // Now fill in derived (pack_for_ctc passed as indicator whether to interpret
         // output shape as flattened across batch size)
-        add_shape_type({1, max_length}, output_type, pack_for_ctc);
+        add_shape_type({1, max_length}, {"character", "sequence"}, output_type, pack_for_ctc);
 
         uint8_t index = 0;
         for (auto c : alphabet)

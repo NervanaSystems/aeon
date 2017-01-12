@@ -194,7 +194,7 @@ public:
         }
 
         add_noise = std::bernoulli_distribution{add_noise_probability};
-        add_shape_type({1, freq_steps, time_steps}, output_type);
+        add_shape_type({1, freq_steps, time_steps}, {"channels", "frequency", "time"}, output_type);
         validate();
     }
 

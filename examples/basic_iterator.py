@@ -1,6 +1,6 @@
 import os
 from aeon import Dataloader
-
+import sys
 
 pdir = os.path.dirname(os.path.abspath(__file__))
 manifest_root = os.path.join(pdir, '..', 'loader', 'test', 'test_data')
@@ -23,15 +23,15 @@ cfg = {
 
 d1 = Dataloader(config=cfg)
 print("d1 length {0}".format(len(d1)))
-
-shapes = d1.shapes()
-
-print("shapes {}".format(shapes))
+print d1.ndata
+print("axes {}".format(d1.axes_info))
 
 for x in d1:
-    print("d1, v1: {0}".format(x.keys()))
+    print("d1, v1: {0} {1}".format(x.keys(), sys.getrefcount(d1)))
 
-# d1.reset()
+d1.reset()
+import pdb; pdb.set_trace()
+for x in d1:
+    print("d1, v1: {0} {1}".format(x.keys(), sys.getrefcount(d1)))
 
-# for x in d1:
-#     print("d1 {0}").format(x.keys())
+d1.reset()

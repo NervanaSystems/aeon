@@ -90,9 +90,40 @@ public:
     const std::vector<size_t>& get_shape() const { return m_shape; }
     const output_type&         get_otype() const { return m_otype; }
     bool                       flatten_all_dims() const { return m_flatten_with_batch_size; }
+
+    void set_names(const std::vector<std::string>& names)
+    {
+        if (m_shape.size() != names.size())
+        {
+            throw std::runtime_error("naming shape dimensions: number of names does not match number of dimensions");
+        }
+        else
+        {
+            m_names = names;
+        }
+    }
+
+    std::vector<std::string> get_names() const
+    {
+        if (m_names.size() == 0)
+        {
+            std::vector<std::string> res;
+            for (int i=0; i < m_shape.size(); ++i)
+            {
+                res.push_back(std::to_string(i));
+            }
+            return res;
+        }
+        else
+        {
+            return m_names;
+        }
+    }
+
 private:
     std::vector<size_t> m_shape;
     output_type         m_otype;
     size_t              m_byte_size;
     bool                m_flatten_with_batch_size;
+    std::vector<std::string> m_names;
 };

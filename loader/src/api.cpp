@@ -20,7 +20,7 @@
 #include "api.hpp"
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
-
+#include "structmember.h"
 using namespace nervana;
 using namespace std;
 
@@ -59,12 +59,12 @@ static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf);
 
 typedef struct
 {
-    PyObject_HEAD;
+    PyObject_HEAD
+    PyObject* ndata;
+    PyObject* batch_size;
+    PyObject* axes_info;
     loader*  m_loader;
     uint32_t m_i;
-    // I don't know why we need padding but it crashes without it.
-    // TODO: figure out what is going on.
-    uint64_t m_padding[10];
 } aeon_Dataloader;
 
 static PyMethodDef aeon_methods[] = {{"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
@@ -72,14 +72,19 @@ static PyMethodDef aeon_methods[] = {{"error_out", (PyCFunction)error_out, METH_
 
 static PyObject* Dataloader_iter(PyObject* self)
 {
+#ifdef AEON_DEBUG
     INFO << " aeon_Dataloader_iter";
+#endif
     Py_INCREF(self);
+    DL_get_loader(self)->reset();
     return self;
 }
 
 static PyObject* Dataloader_iternext(PyObject* self)
 {
+#ifdef AEON_DEBUG
     INFO << " aeon_Dataloader_iternext";
+#endif
     PyObject* result = NULL;
     if (DL_get_loader(self)->get_current_iter() != DL_get_loader(self)->get_end_iter())
     {
@@ -92,11 +97,16 @@ static PyObject* Dataloader_iternext(PyObject* self)
         for (auto&& nm : names)
         {
             PyObject* wrapped_buf = wrap_buffer_as_np_array(d[nm]);
-            if (PyDict_SetItemString(result, nm.c_str(), wrapped_buf) < 0)
+
+            int set_status = PyDict_SetItemString(result, nm.c_str(), wrapped_buf);
+            Py_DECREF(wrapped_buf); // DECREF is because SetItemString increments
+
+            if (set_status < 0)
             {
                 ERR << "Error building shape string";
                 PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
             }
+
         }
         DL_get_loader(self)->get_current_iter()++;
     }
@@ -111,7 +121,9 @@ static PyObject* Dataloader_iternext(PyObject* self)
 
 static Py_ssize_t aeon_Dataloader_length(PyObject* self)
 {
+#ifdef AEON_DEBUG
     INFO << " aeon_Dataloader_length " << DL_get_loader(self)->record_count();
+#endif
     return DL_get_loader(self)->record_count();
 }
 
@@ -222,17 +234,24 @@ static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf)
 
 static void Dataloader_dealloc(aeon_Dataloader* self)
 {
+#ifdef AEON_DEBUG
     INFO << " Dataloader_dealloc";
+#endif
     if (self->m_loader != nullptr)
     {
         delete self->m_loader;
     }
+    Py_XDECREF(self->ndata);
+    Py_XDECREF(self->batch_size);
+    Py_XDECREF(self->axes_info);
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 static PyObject* Dataloader_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
+#ifdef AEON_DEBUG
     INFO << " Dataloader_new";
+#endif
     aeon_Dataloader* self = nullptr;
 
     static const char* keyword_list[] = {"config", nullptr};
@@ -244,17 +263,61 @@ static PyObject* Dataloader_new(PyTypeObject* type, PyObject* args, PyObject* kw
     {
         std::string    dict_string = dictionary_to_string(dict);
         nlohmann::json json_config = nlohmann::json::parse(dict_string);
-
+#ifdef AEON_DEBUG
         INFO << " config " << json_config.dump(4);
-
+#endif
         self = (aeon_Dataloader*)type->tp_alloc(type, 0);
         if (!self)
         {
             return NULL;
         }
 
-        self->m_loader = new loader(json_config);
-        self->m_i      = 0;
+        try
+        {
+            self->m_loader   = new loader(json_config);
+            self->m_i        = 0;
+            self->ndata      = Py_BuildValue("i", self->m_loader->record_count());
+            self->batch_size = Py_BuildValue("i", self->m_loader->batch_size());
+            self->axes_info  = PyDict_New();
+
+            auto name_shape_list = self->m_loader->get_names_and_shapes();
+
+            for (auto&& name_shape : name_shape_list)
+            {
+                auto datum_name   = name_shape.first;
+                auto axes_lengths = name_shape.second.get_shape();
+                auto axes_names   = name_shape.second.get_names();
+
+                PyObject* py_axis_dict = PyDict_New();
+
+                for (size_t i = 0; i < axes_lengths.size(); ++i)
+                {
+                    PyObject* tmp_length = Py_BuildValue("i", axes_lengths[i]);
+                    PyDict_SetItemString(py_axis_dict, axes_names[i].c_str(), tmp_length);
+                    Py_DECREF(tmp_length);
+                }
+
+                int set_status = PyDict_SetItemString(self->axes_info, datum_name.c_str(), py_axis_dict);
+                Py_DECREF(py_axis_dict);
+
+                if (set_status < 0)
+                {
+                    ERR << "Error building shape string";
+                    PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
+                    return NULL;
+                }
+            }
+
+        }
+        catch (std::exception& e)
+        {
+            // Some kind of problem with creating the internal loader object
+            ERR << "Unable to create internal loader object";
+            std::stringstream ss;
+            ss << "Unable to create internal loader object: " << e.what();
+            PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
+            return NULL;
+        }
     }
 
     return (PyObject*)self;
@@ -265,62 +328,27 @@ static int Dataloader_init(aeon_Dataloader* self, PyObject* args, PyObject* kwds
     return 0;
 }
 
-static PyObject* aeon_shapes(PyObject* self, PyObject*)
-{
-    INFO << " aeon_shapes";
-
-    auto name_shape_list = DL_get_loader(self)->get_names_and_shapes();
-
-    PyObject* py_shape_dict = PyDict_New();
-
-    if (!py_shape_dict)
-    {
-        PyErr_SetNone(PyExc_RuntimeError);
-    }
-    else
-    {
-        for (auto&& name_shape : name_shape_list)
-        {
-            auto name  = name_shape.first;
-            auto shape = name_shape.second.get_shape();
-
-            PyObject* py_shape_tuple = PyTuple_New(shape.size());
-
-            if (!py_shape_tuple)
-            {
-                ERR << "Error building shape string";
-                PyErr_SetString(PyExc_RuntimeError, "Error building shape");
-            }
-            else
-            {
-                for (size_t i = 0; i < shape.size(); ++i)
-                {
-                    PyTuple_SetItem(py_shape_tuple, i, Py_BuildValue("i", shape[i]));
-                }
-            }
-
-            if (PyDict_SetItemString(py_shape_dict, name.c_str(), py_shape_tuple) < 0)
-            {
-                ERR << "Error building shape string";
-                PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
-            }
-        }
-    }
-    return py_shape_dict;
-}
-
 static PyObject* aeon_reset(PyObject* self, PyObject*)
 {
+#ifdef AEON_DEBUG
     INFO << " aeon_reset";
-    DL_get_i(self) = 0;
+#endif
+    DL_get_loader(self)->reset();
     return Py_None;
 }
 
 static PyMethodDef Dataloader_methods[] = {
     //    {"Dataloader",  aeon_myiter, METH_VARARGS, "Iterate from i=0 while i<m."},
-    {"shapes", aeon_shapes, METH_NOARGS, "Get output shapes"},
+    // {"shapes", aeon_shapes, METH_NOARGS, "Get output shapes"},
     {"reset", aeon_reset, METH_NOARGS, "Reset iterator"},
     {NULL, NULL, 0, NULL} /* Sentinel */
+};
+
+static PyMemberDef Dataloader_members[] = {
+    {"ndata", T_OBJECT_EX, offsetof(aeon_Dataloader, ndata), 0, "number of records in dataset"},
+    {"batch_size", T_OBJECT_EX, offsetof(aeon_Dataloader, batch_size), 0, "mini-batch size"},
+    {"axes_info", T_OBJECT_EX, offsetof(aeon_Dataloader, axes_info), 0, "axes names and lengths"},
+    {NULL}  /* Sentinel */
 };
 
 static PyTypeObject aeon_DataloaderType = {
@@ -347,7 +375,7 @@ static PyTypeObject aeon_DataloaderType = {
     0,                                         /*tp_getattro*/
     0,                                         /*tp_setattro*/
     0,                                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER, /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_ITER, /*tp_flags*/
     "Internal myiter iterator object.",        /* tp_doc */
     0,                                         /* tp_traverse */
     0,                                         /* tp_clear */
@@ -356,7 +384,7 @@ static PyTypeObject aeon_DataloaderType = {
     Dataloader_iter,                           /* tp_iter */
     Dataloader_iternext,                       /* tp_iternext */
     Dataloader_methods,                        /* tp_methods */
-    0,                                         /* tp_members */
+    Dataloader_members,                        /* tp_members */
     0,                                         /* tp_getset */
     0,                                         /* tp_base */
     0,                                         /* tp_dict */
@@ -395,7 +423,9 @@ PyMODINIT_FUNC PyInit_aeon(void)
 PyMODINIT_FUNC initaeon(void)
 #endif
 {
+#ifdef AEON_DEBUG
     INFO << " initaeon";
+#endif
 
     PyObject* m;
     if (PyType_Ready(&aeon_DataloaderType) < 0)

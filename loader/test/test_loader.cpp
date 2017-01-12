@@ -170,7 +170,7 @@ TEST(loader, once)
 {
     int            height            = 32;
     int            width             = 32;
-    size_t         batch_size        = 1;
+    size_t         batch_size        = 2;
     size_t         record_count      = 10;
     string         manifest_filename = create_manifest_file(record_count, width, height);
     nlohmann::json js                = {
@@ -191,7 +191,7 @@ TEST(loader, once)
         ASSERT_NE(count, record_count);
         count++;
     }
-    ASSERT_EQ(record_count, count);
+    ASSERT_EQ(record_count/2, count);
 }
 
 TEST(loader, count)

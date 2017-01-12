@@ -152,7 +152,7 @@ public:
         }
         else if (required == mode::REQUIRED)
         {
-            throw std::invalid_argument("Required Argument: " + key + " not set");
+            throw std::invalid_argument("Required Argument: '" + key + "' not set");
         }
     }
 
@@ -170,22 +170,32 @@ public:
         }
         else if (required == mode::REQUIRED)
         {
-            throw std::invalid_argument("Required Argument: " + key + " not set");
+            throw std::invalid_argument("Required Argument: '" + key + "' not set");
         }
     }
 
-    void add_shape_type(const std::vector<size_t>& sh,
-                        const std::string&         output_type,
-                        const bool                 flatten_all_dims = false)
+    void add_shape_type(const std::vector<size_t>& shape_,
+                        const std::string&         output_type_,
+                        const bool                 flatten_all_dims_ = false)
     {
-        m_shape_type_list.emplace_back(sh, nervana::output_type{output_type}, flatten_all_dims);
+        m_shape_type_list.emplace_back(shape_, nervana::output_type{output_type_}, flatten_all_dims_);
     }
-    void add_shape_type(const std::vector<size_t>&  sh,
-                        const nervana::output_type& ot,
-                        const bool                  flatten_all_dims = false)
+    void add_shape_type(const std::vector<size_t>&  shape_,
+                        const nervana::output_type& output_type_,
+                        const bool                  flatten_all_dims_ = false)
     {
-        m_shape_type_list.emplace_back(sh, ot, flatten_all_dims);
+        m_shape_type_list.emplace_back(shape_, output_type_, flatten_all_dims_);
     }
+
+    void add_shape_type(const std::vector<size_t>&  shape_,
+                        const std::vector<std::string>&  names_,
+                        const nervana::output_type& output_type_,
+                        const bool                  flatten_all_dims_ = false)
+    {
+        m_shape_type_list.emplace_back(shape_, output_type_, flatten_all_dims_);
+        m_shape_type_list.back().set_names(names_);
+    }
+
 
 private:
     std::vector<nervana::shape_type> m_shape_type_list;

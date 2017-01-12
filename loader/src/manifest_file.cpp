@@ -99,7 +99,7 @@ void manifest_file::initialize(std::istream&      stream,
     vector<vector<string>> record_list;
 
     // read in each line, then from that istringstream, break into
-    // comma-separated elements.
+    // tab-separated elements.
     while (std::getline(stream, line))
     {
         if (line.empty())
