@@ -50,6 +50,12 @@ set (SRC
     web_server.cpp
 )
 
+file(GLOB DEPLOY_HEADERS_ABS *.hpp)
+foreach(DEPLOY_HEADER ${DEPLOY_HEADERS_ABS})
+    get_filename_component(FNAME ${DEPLOY_HEADER} NAME)
+    set(DEPLOY_HEADERS ${DEPLOY_HEADERS} ${FNAME})
+endforeach()
+
 set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
 set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/../setup.py")
 configure_file(${SETUP_PY_IN} ${SETUP_PY})
@@ -59,3 +65,6 @@ set(SRC ${SRC} api.cpp)
 endif(PYTHON_FOUND)
 
 add_library(aeon SHARED ${SRC})
+
+install(TARGETS aeon DESTINATION lib)
+install(FILES ${DEPLOY_HEADERS} DESTINATION include/aeon)
