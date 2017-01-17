@@ -172,6 +172,11 @@ Each annotation is in the JSON format, which should have the main field "object"
                "name": "person",
            },
        ],
+       "size": {
+           "depth": 3,
+           "height": 375,
+           "width": 500
+       }
    }
 
 To generate these json files from the XML format used by some object localization datasets such as PASCALVOC, see the main neon repository.
