@@ -39,10 +39,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-compat-deprecated-writable-st
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
 
 find_package(OpenCV REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS} loader/src)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 find_package(CURL REQUIRED)
-include_directories(${CURL_INCLUDE_DIRS} loader/src)
+include_directories(${CURL_INCLUDE_DIRS})
 
 find_package(PythonLibs)
 find_package(PythonInterp)
@@ -61,7 +61,9 @@ else()
     message("Python not found, Python interface not included")
 endif (PYTHONLIBS_FOUND)
 
-set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/loader/test/test_data)
+set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 
-add_subdirectory(loader)
+add_subdirectory(src)
+include_directories(src)
+add_subdirectory(test)
 
