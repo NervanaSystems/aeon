@@ -126,6 +126,13 @@ public:
 
     config(nlohmann::json js);
 
+    const std::vector<std::shared_ptr<interface::config_info_interface>>& get_config_list()
+    {
+        return config_list;
+    }
+   
+    config() {}
+
 private:
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_SCALAR(height, mode::REQUIRED),
@@ -160,7 +167,6 @@ private:
             saturation, mode::OPTIONAL, [](decltype(saturation) v) { return v.a() <= v.b(); }),
         ADD_DISTRIBUTION(hue, mode::OPTIONAL, [](decltype(hue) v) { return v.a() <= v.b(); })};
 
-    config() {}
     void validate();
 
     bool flip_enable = false;

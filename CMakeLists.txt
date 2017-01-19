@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.8.11)
 project (aeon)
 
+set(AEON_VERSION 1.0.0)
+
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
@@ -66,4 +68,6 @@ set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 add_subdirectory(src)
 include_directories(src)
 add_subdirectory(test)
+add_subdirectory(examples)
+add_subdirectory(doc)
 

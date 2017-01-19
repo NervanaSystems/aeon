@@ -95,6 +95,8 @@ public:
 
     void page_request(page& page);
 
+    void wait_for_exit();
+
 private:
     server(server&);
 
@@ -102,6 +104,10 @@ private:
     void        connection_handler(void*);
 
     void process_loop();
+
+    static std::vector<std::string> split(const std::string& src, char delimiter);
+    static std::string to_lower(const std::string& s);
+    static std::string trim(const std::string& s);
 
     std::thread                           m_thread;
     std::shared_ptr<web::tcp::connection> m_listen_connection;

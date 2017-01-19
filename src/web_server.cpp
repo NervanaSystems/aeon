@@ -33,7 +33,7 @@
 
 using namespace std;
 
-vector<string> split(const string& src, char delimiter)
+vector<string> web::server::split(const string& src, char delimiter)
 {
     size_t         pos;
     string         token;
@@ -53,7 +53,7 @@ vector<string> split(const string& src, char delimiter)
     return rc;
 }
 
-string to_lower(const string& s)
+string web::server::to_lower(const string& s)
 {
     std::locale  loc;
     stringstream ss;
@@ -62,7 +62,7 @@ string to_lower(const string& s)
     return ss.str();
 }
 
-string trim(const string& s)
+string web::server::trim(const string& s)
 {
     string rc = s;
     while (rc.back() == '\r' || rc.back() == '\n')
@@ -98,6 +98,14 @@ void web::server::stop()
 {
     m_active = false;
     m_listen_connection->close();
+    if (m_thread.joinable())
+    {
+        m_thread.join();
+    }
+}
+
+void web::server::wait_for_exit()
+{
     if (m_thread.joinable())
     {
         m_thread.join();
