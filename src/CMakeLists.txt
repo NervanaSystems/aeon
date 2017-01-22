@@ -1,6 +1,8 @@
 set (SRC
+    async_manager.cpp
     avi.cpp
     base64.cpp
+    batch_decoder.cpp
     batch_iterator.cpp
     block.cpp
     block_loader_file.cpp

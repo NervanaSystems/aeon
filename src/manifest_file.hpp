@@ -72,7 +72,6 @@ public:
     size_t block_count() const { return m_block_list.size(); }
     size_t record_count() const override { return m_record_count; }
     size_t elements_per_record() const override { return m_element_types.size(); }
-    void generate_subset(std::vector<std::vector<std::string>>&, float subset_fraction);
     uint32_t get_crc();
 
     static char                   get_delimiter() { return m_delimiter_char; }
@@ -94,10 +93,11 @@ protected:
                     float              subset_fraction);
 
 private:
+    void generate_subset(std::vector<std::vector<std::string>>&, float subset_fraction);
+
     const std::string                m_source_filename;
     std::vector<std::vector<record>> m_block_list;
     CryptoPP::CRC32C                 m_crc_engine;
-    bool                             m_crc_computed = false;
     uint32_t                         m_computed_crc;
     size_t                           m_counter{0};
     size_t                           m_record_count;

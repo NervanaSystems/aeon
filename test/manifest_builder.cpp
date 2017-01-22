@@ -50,7 +50,7 @@ stringstream& manifest_builder::create()
             }
             m_stream << manifest_file::get_string_type_id();
         }
-        m_stream << endl;
+        m_stream << "\n";
 
         // now add the records
         for (size_t record_number = 0; record_number < m_record_count; record_number++)
@@ -63,7 +63,7 @@ stringstream& manifest_builder::create()
                 }
                 m_stream << record_number << ":" << element_number;
             }
-            m_stream << endl;
+            m_stream << "\n";
         }
     }
     else if (m_image_width > 0 && m_image_height > 0)
@@ -83,7 +83,7 @@ stringstream& manifest_builder::create()
             m_stream << vector2string(image_data);
             m_stream << manifest_file::get_delimiter();
             m_stream << record_number;
-            m_stream << endl;
+            m_stream << "\n";
         }
     }
     else

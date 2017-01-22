@@ -453,3 +453,24 @@ TEST(util, async_exception)
         EXPECT_THROW(func.get(), std::out_of_range);
     }
 }
+
+TEST(util, stopwatch)
+{
+    stopwatch t1;
+
+    t1.start();
+    usleep(1000);
+    t1.stop();
+
+    t1.start();
+    usleep(1000);
+    t1.stop();
+
+    t1.start();
+    usleep(1000);
+    t1.stop();
+
+    EXPECT_EQ(3, t1.get_call_count());
+
+    EXPECT_GT(t1.get_total_microseconds(), t1.get_microseconds());
+}

@@ -25,6 +25,8 @@
 
 using namespace std;
 
+map<string, nervana::stopwatch*> nervana::stopwatch_statistics;
+
 void nervana::dump(ostream& out, const void* _data, size_t _size)
 {
     auto           flags = out.flags();

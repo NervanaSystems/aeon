@@ -16,25 +16,32 @@
 #include <iostream>
 
 #include "web_app.hpp"
+#include "async_manager.hpp"
+#include "util.hpp"
 
 using namespace std;
 
-//class web_starter
-//{
-//public:
-//    web_starter()
-//    {
-//        cout << __FILE__ << " " << __LINE__ << " web_starter" << endl;
-//    }
-//    virtual ~web_starter() {}
-//};
+// class web_starter
+// {
+// public:
+//     web_starter()
+//     {
+//         cout << __FILE__ << " " << __LINE__ << " web_starter" << endl;
+//     }
+//     virtual ~web_starter()
+//     {
+//         cout << __FILE__ << " " << __LINE__ << " ~web_starter" << endl;
+//     }
+// };
 
-//static web_starter w_starter;
+// static web_starter w_starter;
 
-//void web_app::start()
-//{
-//    std::cout << __FILE__ << " " << __LINE__ << " test" << std::endl;
-//}
+// void web_app::start()
+// {
+//     cout << __FILE__ << " " << __LINE__ << " test" << endl;
+// }
+
+static web_app s_web_app{};
 
 static string master_page = R"(
     <html>
@@ -61,27 +68,9 @@ static string master_page = R"(
               <ul class="nav navbar-nav">
                 <li><a href="/">Home</a></li>
                 <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Demos <span class="caret"></span></a>
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Aeon Stats <span class="caret"></span></a>
                   <ul class="dropdown-menu">
-                    <li><a href="/forms">Forms Demo</a></li>
-                  </ul>
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Network Info <span class="caret"></span></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="/show/mac">show MAC</a></li>
-                    <li><a href="/show/ip">show IP</a></li>
-                    <li><a href="/show/arp">show ARP</a></li>
-                    <li><a href="/show/tcp">show TCP</a></li>
-                  </ul>
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">OS Info <span class="caret"></span></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="/show/thread">show threads</a></li>
-                    <li><a href="/show/queue">show queues</a></li>
-                    <li><a href="/show/event">show events</a></li>
-                    <li><a href="/show/mutex">show mutexs</a></li>
+                    <li><a href="/stopwatch">Stopwatch</a></li>
                   </ul>
                 </li>
               </ul>
@@ -107,7 +96,7 @@ web_app::web_app()
 
 web_app::~web_app()
 {
-    web_server.stop();
+    // web_server.stop();
 }
 
 void web_app::home_page(web::page& p)
@@ -120,51 +109,31 @@ void web_app::home_page(web::page& p)
 
     out << "<table class=\"table table-striped\">\n";
     out << "  <thead>\n";
-    out << "    <th>Protocol</th>\n";
-    out << "    <th>Size of class</th>\n";
+    out << "    <th>Name</th>\n";
+    out << "    <th>State</th>\n";
     out << "  </thead>\n";
     out << "  <tbody>\n";
-    //    out << "    <tr><td>MAC</td><td> " << sizeof(tcpStack.MAC)  << "</td></tr>\n";
-    //    out << "    <tr><td>IP</td><td>  " << sizeof(tcpStack.IP)   << "</td></tr>\n";
-    //    out << "    <tr><td>TCP</td><td> " << sizeof(tcpStack.TCP)  << "</td></tr>\n";
-    //    out << "    <tr><td>ARP</td><td> " << sizeof(tcpStack.ARP)  << "</td></tr>\n";
-    //    out << "    <tr><td>ICMP</td><td>" << sizeof(tcpStack.ICMP) << "</td></tr>\n";
-    //    out << "    <tr><td>DHCP</td><td>" << sizeof(tcpStack.DHCP) << "</td></tr>\n";
+    for (auto info : nervana::async_manager_status)
+    {
+        out << "<tr>";
+        out << "<td> " << info->get_name() << "</td>";
+        out << "<td>";
+        switch (info->get_state())
+        {
+        case nervana::async_state::idle: out << "idle"; break;
+        case nervana::async_state::wait_for_buffer: out << "waiting for buffer"; break;
+        case nervana::async_state::fetching_data: out << "fetching data"; break;
+        case nervana::async_state::processing: out << "processing"; break;
+        }
+        out << "</td>";
+        out << "</tr>";
+    }
     out << "  </tbody>\n";
     out << "</table>\n";
 }
 
-void web_app::forms_demo(web::page& p)
+void web_app::stopwatch(web::page& p)
 {
-    ostream& out = p.output_stream();
-    out << "<form action=\"/formsresult\">";
-
-    out << "<label for=\"FirstName\">First name:</label>";
-    out << "<input type=\"text\" name=\"FirstName\" class=\"form-control\" value=\"Robert\"/>";
-    out << "<br>";
-
-    out << "<label for=\"LastName\">Last name:</label>";
-    out << "<input type=\"text\" name=\"LastName\" class=\"form-control\" value=\"Kimball\"/>";
-    out << "<br>";
-
-    out << "<input type=\"submit\" value=\"submit\" />";
-
-    out << R"(<a href="/files/test1.zip">test1.zip</a><br>)";
-    out << "      <form action=\"/test/uploadfile\" method=\"POST\" ";
-    out << "      enctype=\"multipart/form-data\" action=\"_URL_\">\n";
-    out << "File: <input type=\"file\" name=\"file\" size=\"50\"><br>\n";
-    out << "      <input type=\"submit\" value=\"Upload\">\n";
-    out << "      </form><br>\n";
-}
-
-void web_app::forms_response(web::page& p)
-{
-    ostream& out = p.output_stream();
-    for (auto arg : p.args())
-    {
-        out << "<span>" << arg.first << " = " << arg.second << "</span>";
-        out << "<br>";
-    }
 }
 
 void web_app::page_404(web::page& p)
@@ -184,31 +153,10 @@ void web_app::process_page_request(web::page& p, const string& url)
         auto mc = bind(&web_app::home_page, this, placeholders::_1);
         p.master_page_string(master_page, "$content", mc);
     }
-    else if (url == "/forms")
+    else if (url == "/stopwatch")
     {
-        auto mc = bind(&web_app::forms_demo, this, placeholders::_1);
+        auto mc = bind(&web_app::stopwatch, this, placeholders::_1);
         p.master_page_string(master_page, "$content", mc);
-    }
-    else if (url == "/formsresult")
-    {
-        auto mc = bind(&web_app::forms_response, this, placeholders::_1);
-        p.master_page_string(master_page, "$content", mc);
-    }
-    else if (url == "/files/test1.zip")
-    {
-        p.page_ok();
-        p.send_file("c:\\test.rar");
-    }
-    else if (url == "/test/uploadfile")
-    {
-        //        cout << "Reading " << p.content_length() << " bytes\n";
-        //        for (int i = 0; i < p.content_length(); i++)
-        //        {
-        //            p.connection().read();
-        //        }
-        //        cout << "Done reading\n";
-        //        p.page_ok();
-        //        out << "Upload " << p.content_length() << " bytes complete\n";
     }
     else
     {

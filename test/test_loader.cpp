@@ -358,19 +358,149 @@ TEST(loader, test)
             break;
         }
     }
-
-    //    all_errors = [];
-
-    //    for(auto data : valid_set)  // since d2 created with "once"
-    //    {
-    //        //all_errors.append(calc_batch_error(data))
-    //    }
-
-    // now we've accumulated for the entire set:  (maybe a bit too much) Suppose 100 data, and batch_size 75
-
-    //    len(all_errors.size()) == 150
-    //    epoch_errors = all_errors[:len(d2)]
-
-    //    valid_set.reset();
-    //    sleep(2);
 }
+
+// TEST(loader, imagenet)
+// {
+//     int    height        = 224;
+//     int    width         = 224;
+//     size_t batch_size    = 128;
+//     std::string manifest_root = "/mnt/e/imagenet/I1K_ingested/i1k-extracted/";
+//     std::string manifest      = manifest_root + "train-index.tsv";
+
+//     nlohmann::json js = {{"type", "image,label"},
+//                             {"manifest_root", manifest_root},
+//                             {"manifest_filename", manifest},
+//                             {"batch_size", batch_size},
+//                             {"iteration_mode", "INFINITE"},
+//                             {"cache_directory", "/mnt/c/aeon_cache"},
+//                             {"single_thread", false},
+//                             {"image",
+//                             {{"height", height},
+//                             {"width", width},
+//                             {"channel_major", false},
+//                             {"flip_enable", true}}},
+//                             {"label", {{"binary", false}}}};
+
+//     std::chrono::high_resolution_clock timer;
+//     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
+//     std::chrono::time_point<std::chrono::high_resolution_clock> zero_time;
+//     try
+//     {
+//         auto train_set = nervana::loader{js};
+
+//         size_t total_batch = ceil((float)train_set.record_count() / (float)batch_size);
+//         size_t current_batch = 0;
+//         const size_t batches_per_output = 10;
+//         for (const nervana::fixed_buffer_map& x : train_set)
+//         {
+//             (void)x;
+//             if (++current_batch % batches_per_output == 0)
+//             {
+//                 auto last_time = start_time;
+//                 start_time = timer.now();
+//                 float ms_time =
+//                     std::chrono::duration_cast<std::chrono::milliseconds>(start_time - last_time)
+//                         .count();
+//                 float sec_time = ms_time / 1000.;
+//                 std::cout << "batch " << current_batch << " of " << total_batch;
+//                 if (last_time != zero_time)
+//                 {
+//                     std::cout << " time " << ms_time;
+//                     std::cout << " " << (float)batches_per_output / sec_time << " batches/s";
+//                 }
+//                 std::cout << std::endl;
+//             }
+//         }
+//     }
+//     catch(std::exception& err)
+//     {
+//         std::cout << "error processing dataset" << std::endl;
+//         std::cout << err.what() << std::endl;
+//     }
+// }
+
+// TEST(loader, decode_jpeg)
+// {
+//     stopwatch timer;
+//     std::string manifest_root = "/scratch/bob/I1K_ingested/i1k-extracted/";
+//     std::string manifest_path = manifest_root + "train-index.tsv";
+
+//     manifest_file manifest{manifest_path, false, manifest_root};
+
+//     vector<vector<string>>* block = nullptr;
+//     size_t count = 0;
+//     size_t mod = 10000;
+//     timer.start();
+//     for (block = manifest.next(); block != nullptr; block = manifest.next())
+//     {
+//         for (const vector<string>& record : *block)
+//         {
+//             count++;
+//             const string& image_path = record[0];
+//             cv::Mat image = cv::imread(image_path);
+//             if (count % mod == 0)
+//             {
+//                 auto time = (float)timer.get_milliseconds() / 1000.;
+//                 cout << time << endl;
+//                 cout << count << " images/second " << ((float)count/time) << endl;
+//             }
+//         }
+//     }
+// }
+
+// TEST(loader, load_jpeg)
+// {
+//     stopwatch timer;
+//     std::string manifest_root = "/scratch/bob/I1K_ingested/i1k-extracted/";
+//     std::string manifest_path = manifest_root + "train-index.tsv";
+
+//     manifest_file manifest{manifest_path, false, manifest_root};
+
+//     vector<vector<string>>* block = nullptr;
+//     size_t count = 0;
+//     size_t mod = 10000;
+//     timer.start();
+//     for (block = manifest.next(); block != nullptr; block = manifest.next())
+//     {
+//         for (const vector<string>& record : *block)
+//         {
+//             count++;
+//             const string& image_path = record[0];
+//             auto data = file_util::read_file_contents(image_path);
+//             if (count % mod == 0)
+//             {
+//                 auto time = (float)timer.get_milliseconds() / 1000.;
+//                 cout << count << " images/second " << ((float)count/time) << endl;
+//             }
+//         }
+//     }
+// }
+
+// TEST(loader, load_block_manager)
+// {
+//     stopwatch timer;
+//     std::string manifest_root = "/scratch/bob/I1K_ingested/i1k-extracted/";
+//     std::string manifest_path = manifest_root + "train-index.tsv";
+//     string cache_directory = "/scratch/bob/aeon_cache";
+//     bool shuffle = false;
+//     size_t block_size = 5000;
+
+//     manifest_file manifest{manifest_path, false, manifest_root};
+
+//     block_loader_file loader{&manifest, block_size};
+
+//     block_manager manager{&loader, 5000, cache_directory, shuffle};
+
+//     encoded_record_list* records;
+//     timer.start();
+//     float count = 0;
+//     while((records = manager.next()) != nullptr)
+//     {
+//         timer.stop();
+//         count = records->size();
+//         float time = timer.get_milliseconds()/1000.;
+//         cout << "images/second " << count / time << endl;
+//         timer.start();
+//     }
+// }

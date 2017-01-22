@@ -30,6 +30,7 @@
 #include "async_manager.hpp"
 #include "buffer_batch.hpp"
 #include "batch_iterator.hpp"
+#include "batch_decoder.hpp"
 #include "block_loader_file.hpp"
 #include "block_manager.hpp"
 #include "log.hpp"
@@ -85,33 +86,6 @@ private:
         ADD_SCALAR(iteration_mode_count, mode::OPTIONAL)};
 
     void validate();
-};
-
-class nervana::batch_decoder : public async_manager<encoded_record_list, fixed_buffer_map>
-{
-public:
-    batch_decoder(batch_iterator*                            b_itor,
-                  size_t                                     batch_size,
-                  bool                                       single_thread,
-                  bool                                       pinned,
-                  const std::shared_ptr<provider_interface>& prov);
-
-    virtual ~batch_decoder();
-
-    virtual size_t            record_count() const override { return m_batch_size; }
-    virtual size_t            elements_per_record() const override { return m_number_elements_out; }
-    virtual fixed_buffer_map* filler() override;
-
-private:
-    void work(int id, encoded_record_list* in_buf, fixed_buffer_map* out_buf);
-
-    std::vector<std::shared_ptr<provider_interface>> m_providers;
-    size_t                                           m_batch_size;
-    size_t                                           m_number_elements_in;
-    size_t                                           m_number_elements_out;
-    int                                              m_items_per_thread;
-    std::vector<int>                                 m_start_inds;
-    std::vector<int>                                 m_end_inds;
 };
 
 class nervana::loader

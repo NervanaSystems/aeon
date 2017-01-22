@@ -61,7 +61,7 @@ class integer_batcher : public async_manager<int, minibatch>
 {
 public:
     integer_batcher(data_source* d)
-        : async_manager<int, minibatch>(d)
+        : async_manager<int, minibatch>(d, "test")
     {
     }
 

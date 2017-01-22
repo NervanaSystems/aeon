@@ -53,6 +53,16 @@ public:
         return async_manager<std::vector<std::vector<std::string>>, encoded_record_list>::next();
     }
 
+    async_state get_state() const override
+    {
+        return async_manager<std::vector<std::vector<std::string>>, encoded_record_list>::get_state();
+    }
+
+    const std::string& get_name() const override
+    {
+        return async_manager<std::vector<std::vector<std::string>>, encoded_record_list>::get_name();
+    }
+
 private:
     size_t         m_block_size;
     size_t         m_block_count;

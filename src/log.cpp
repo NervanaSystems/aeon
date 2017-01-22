@@ -118,5 +118,6 @@ nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const
 
 nervana::log_helper::~log_helper()
 {
-    logger::log_item(_stream.str());
+    cout << _stream.str() << endl;
+    // logger::log_item(_stream.str());
 }

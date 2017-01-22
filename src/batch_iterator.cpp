@@ -19,7 +19,7 @@
 using namespace nervana;
 
 batch_iterator::batch_iterator(block_manager* blkl, size_t batch_size)
-    : async_manager<encoded_record_list, encoded_record_list>(blkl)
+    : async_manager<encoded_record_list, encoded_record_list>(blkl, "batch_iterator")
     , m_block_manager(*blkl)
     , m_batch_size(batch_size)
 {
@@ -28,14 +28,18 @@ batch_iterator::batch_iterator(block_manager* blkl, size_t batch_size)
 
 encoded_record_list* batch_iterator::filler()
 {
+    m_state                 = async_state::wait_for_buffer;
     encoded_record_list* rc = get_pending_buffer();
+    m_state                 = async_state::processing;
 
     rc->clear();
 
     // This is for the first pass
     if (m_input_ptr == nullptr)
     {
+        m_state     = async_state::fetching_data;
         m_input_ptr = m_source->next();
+        m_state     = async_state::processing;
     }
 
     size_t remainder = m_batch_size;
@@ -64,19 +68,12 @@ encoded_record_list* batch_iterator::filler()
 
         if (remainder > 0 || m_input_ptr->size() == 0)
         {
+            m_state     = async_state::fetching_data;
             m_input_ptr = m_source->next();
+            m_state     = async_state::processing;
         }
     }
 
-    //    for (size_t item = 0; item < rc->size(); ++item)
-    //    {
-    //        const encoded_record& record = rc->record(item);
-    //        for (size_t element_number=0; element_number<record.size(); element_number++)
-    //        {
-    //            std::string element = vector2string(record.element(element_number));
-    //            INFO << "got element " << element;
-    //        }
-    //    }
-
+    m_state = async_state::idle;
     return rc;
 }

@@ -31,7 +31,7 @@ nervana::block_manager::block_manager(block_loader_source* file_loader,
                                       size_t               block_size,
                                       const string&        cache_root,
                                       bool                 enable_shuffle)
-    : async_manager<encoded_record_list, encoded_record_list>{file_loader}
+    : async_manager<encoded_record_list, encoded_record_list>{file_loader, "block_manager"}
     , m_file_loader{*file_loader}
     , m_block_size{m_file_loader.block_size()}
     , m_block_count{m_file_loader.block_count()}
@@ -55,19 +55,15 @@ nervana::block_manager::block_manager(block_loader_source* file_loader,
         ss << hex << setw(8) << setfill('0') << m_source_uid;
         m_cache_dir = file_util::path_join(m_cache_root, ss.str());
 
-        if (file_util::exists(m_cache_dir))
-        {
-            if (!check_if_complete(m_cache_dir))
-            {
-                throw runtime_error("dataset cache in process, try later");
-            }
-        }
-        else
+        if (file_util::exists(m_cache_dir) == false)
         {
             file_util::make_directory(m_cache_dir);
+        }
+        if (!check_if_complete(m_cache_dir))
+        {
             if (!take_ownership(m_cache_dir, m_cache_lock))
             {
-                throw runtime_error("dataset cache error taking ownership");
+                throw runtime_error("dataset cache in process, try later");
             }
         }
     }
@@ -75,7 +71,9 @@ nervana::block_manager::block_manager(block_loader_source* file_loader,
 
 nervana::encoded_record_list* block_manager::filler()
 {
+    m_state                    = async_state::wait_for_buffer;
     encoded_record_list* rc    = get_pending_buffer();
+    m_state                    = async_state::processing;
     encoded_record_list* input = nullptr;
 
     rc->clear();
@@ -110,7 +108,9 @@ nervana::encoded_record_list* block_manager::filler()
         else
         {
             m_cache_miss++;
+            m_state = async_state::fetching_data;
             input = m_source->next();
+            m_state = async_state::processing;
             if (input == nullptr)
             {
                 rc = nullptr;
@@ -139,7 +139,9 @@ nervana::encoded_record_list* block_manager::filler()
     else
     {
         // The non-cache path
-        input = m_source->next();
+        m_state = async_state::fetching_data;
+        input   = m_source->next();
+        m_state = async_state::processing;
 
         if (input != nullptr)
         {
@@ -164,6 +166,7 @@ nervana::encoded_record_list* block_manager::filler()
         rc = nullptr;
     }
 
+    m_state = async_state::idle;
     return rc;
 }
 

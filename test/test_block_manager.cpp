@@ -173,7 +173,8 @@ TEST(block_manager, build_cache)
         EXPECT_TRUE(file_util::exists(cache_block_path));
     }
 
-    EXPECT_EQ(block_count, manager.m_cache_hit);
+    // prefetch might make hits more than block_count
+    EXPECT_LE(block_count, manager.m_cache_hit);
     EXPECT_EQ(block_count, manager.m_cache_miss);
 
     file_util::remove_directory(cache_root);
@@ -225,7 +226,7 @@ TEST(block_manager, reuse_cache)
                 record_number = (record_number + 1) % record_count;
             }
         }
-        ASSERT_EQ(0, manager.m_cache_hit);
+        // because of prefetch the hit count might not be zero here
         ASSERT_EQ(block_count, manager.m_cache_miss);
     }
 
@@ -256,7 +257,6 @@ TEST(block_manager, reuse_cache)
                 record_number = (record_number + 1) % record_count;
             }
         }
-        EXPECT_EQ(block_count, manager.m_cache_hit);
         EXPECT_EQ(0, manager.m_cache_miss);
     }
 

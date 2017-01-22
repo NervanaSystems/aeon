@@ -165,17 +165,6 @@ void manifest_file::initialize(std::istream&      stream,
                 }
             }
 
-            if (!root.empty())
-            {
-                for (int i = 0; i < element_list.size(); i++)
-                {
-                    if (m_element_types[i] == element_t::FILE)
-                    {
-                        element_list[i] = file_util::path_join(root, element_list[i]);
-                    }
-                }
-            }
-
             if (line_number == 0)
             {
                 previous_element_count = element_list.size();
@@ -209,6 +198,33 @@ void manifest_file::initialize(std::istream&      stream,
     }
 
     m_record_count = record_list.size();
+
+    // At this point the manifest is complete and ready to use
+    // compute the crc now because we are going to add the manifest_root
+    // to the records
+    for (const vector<string>& record : record_list)
+    {
+        for (const string& s : record)
+        {
+            m_crc_engine.Update((const uint8_t*)s.data(), s.size());
+        }
+    }
+    m_crc_engine.TruncatedFinal((uint8_t*)&m_computed_crc, sizeof(m_computed_crc));
+
+    if (!root.empty())
+    {
+        for (size_t record_number = 0; record_number < record_list.size(); record_number++)
+        {
+            for (int i = 0; i < m_element_types.size(); i++)
+            {
+
+                if (m_element_types[i] == element_t::FILE)
+                {
+                    record_list[record_number][i] = file_util::path_join(root, record_list[record_number][i]);
+                }
+            }
+        }
+    }
 
     // now that we have a list of all records, create blocks
     std::vector<block_info> block_list = generate_block_list(m_record_count, block_size);
@@ -257,7 +273,6 @@ void manifest_file::generate_subset(vector<vector<string>>& record_list, float s
 {
     if (subset_fraction < 1.0)
     {
-        m_crc_computed = false;
         std::bernoulli_distribution distribution(subset_fraction);
         std::default_random_engine  generator(get_global_random_seed());
         vector<record>              tmp;
@@ -281,21 +296,6 @@ void manifest_file::generate_subset(vector<vector<string>>& record_list, float s
 
 uint32_t manifest_file::get_crc()
 {
-    if (m_crc_computed == false)
-    {
-        for (auto block : m_block_list)
-        {
-            for (auto rec : block)
-            {
-                for (const string& s : rec)
-                {
-                    m_crc_engine.Update((const uint8_t*)s.data(), s.size());
-                }
-            }
-        }
-        m_crc_engine.TruncatedFinal((uint8_t*)&m_computed_crc, sizeof(m_computed_crc));
-        m_crc_computed = true;
-    }
     return m_computed_crc;
 }
 

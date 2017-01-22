@@ -23,9 +23,13 @@
 #include <opencv2/core/core.hpp>
 #include <sox.h>
 #include <thread>
+#include <chrono>
 
 namespace nervana
 {
+    class stopwatch;
+    extern std::map<std::string, stopwatch*> stopwatch_statistics;
+
     enum class endian
     {
         LITTLE,
@@ -136,4 +140,105 @@ namespace nervana
 
     std::vector<char> string2vector(const std::string& s);
     std::string vector2string(const std::vector<char>& s);
+
+    class stopwatch
+    {
+    public:
+        stopwatch() {}
+        stopwatch(const std::string& name)
+            : m_name{name}
+        {
+            stopwatch_statistics.insert({m_name, this});
+        }
+
+        ~stopwatch()
+        {
+            if (m_name.size() > 0)
+            {
+                stopwatch_statistics.find(m_name);
+            }
+        }
+
+        void start()
+        {
+            if (m_active == false)
+            {
+                m_total_count++;
+                m_active     = true;
+                m_start_time = m_clock.now();
+            }
+        }
+        
+        void stop()
+        {
+            if (m_active == true)
+            {
+                auto end_time = m_clock.now();
+                m_last_time = end_time - m_start_time;
+                m_total_time += m_last_time;
+                m_active = false;
+            }
+        }
+
+        size_t get_call_count() const
+        {
+            return m_total_count;
+        }
+
+        size_t get_seconds() const
+        {
+            return get_nanoseconds() / 1e9;
+        }
+
+        size_t get_milliseconds() const
+        {
+            return get_nanoseconds() / 1e6;
+        }
+
+        size_t get_microseconds() const
+        {
+            return get_nanoseconds() / 1e3;
+        }
+
+        size_t get_nanoseconds() const
+        {
+            if (m_active)
+            {
+                return (m_clock.now() - m_start_time).count();
+            }
+            else
+            {
+                return m_last_time.count();                
+            }
+        }
+
+        size_t get_total_seconds() const
+        {
+            return get_total_nanoseconds() / 1e9;
+        }
+
+        size_t get_total_milliseconds() const
+        {
+            return get_total_nanoseconds() / 1e6;
+        }
+
+        size_t get_total_microseconds() const
+        {
+            return get_total_nanoseconds() / 1e3;
+        }
+
+        size_t get_total_nanoseconds() const
+        {
+            return m_total_time.count();
+        }
+
+    private:
+        std::chrono::high_resolution_clock                          m_clock;
+        std::chrono::time_point<std::chrono::high_resolution_clock> m_start_time;
+        bool                                                        m_active = false;
+        std::chrono::nanoseconds                                    m_total_time = std::chrono::high_resolution_clock::duration::zero();
+        std::chrono::nanoseconds                                    m_last_time;
+        size_t                                                      m_total_count = 0;
+        std::string                                                 m_name;
+    };
 }

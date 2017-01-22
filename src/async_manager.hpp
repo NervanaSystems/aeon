@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <functional>
 #include <future>
+#include <map>
 #include "log.hpp"
 
 namespace nervana
@@ -34,7 +35,25 @@ namespace nervana
     class async_manager_source;
     template <typename INPUT, typename OUTPUT>
     class async_manager;
+    class async_manager_info;
+
+    enum class async_state
+    {
+        idle,
+        wait_for_buffer,
+        fetching_data,
+        processing
+    };
+    extern std::vector<async_manager_info*> async_manager_status;
 }
+
+class nervana::async_manager_info
+{
+public:
+    virtual ~async_manager_info() {}
+    virtual async_state get_state() const = 0;
+    virtual const std::string& get_name() const  = 0;
+};
 
 template <typename OUTPUT>
 class nervana::async_manager_source
@@ -51,13 +70,18 @@ public:
 };
 
 template <typename INPUT, typename OUTPUT>
-class nervana::async_manager : public nervana::async_manager_source<OUTPUT>
+class nervana::async_manager
+    : public nervana::async_manager_source<OUTPUT>
+    , public async_manager_info
 {
 public:
-    async_manager(async_manager_source<INPUT>* source)
+    async_manager(async_manager_source<INPUT>* source, const std::string& name)
         : m_source(source)
+        , m_state{async_state::idle}
+        , m_name{name}
     {
         // Make the container pair?  Currently letting child handle it in filler()
+        async_manager_status.push_back(this);
     }
 
     OUTPUT* next() override
@@ -68,7 +92,7 @@ public:
         {
             m_first = false;
             // Just run this one in blocking mode
-            m_pending_result = std::async(&nervana::async_manager<INPUT, OUTPUT>::filler, this);
+            m_pending_result = std::async(std::launch::async, &nervana::async_manager<INPUT, OUTPUT>::filler, this);
         }
         result = m_pending_result.get();
         if (result != nullptr)
@@ -76,7 +100,7 @@ public:
             swap();
 
             // Now kick off this one in async
-            m_pending_result = std::async(&nervana::async_manager<INPUT, OUTPUT>::filler, this);
+            m_pending_result = std::async(std::launch::async, &nervana::async_manager<INPUT, OUTPUT>::filler, this);
         }
         return result;
     }
@@ -101,6 +125,16 @@ public:
         }
     }
 
+    async_state get_state() const override
+    {
+        return m_state;
+    }
+
+    const std::string& get_name() const override
+    {
+        return m_name;
+    }
+
 protected:
     async_manager(const async_manager&) = delete;
     void swap()
@@ -118,4 +152,7 @@ protected:
     std::future<OUTPUT*>         m_pending_result;
     bool                         m_first{true};
     async_manager_source<INPUT>* m_source;
+
+    async_state m_state = async_state::idle;
+    std::string m_name;
 };

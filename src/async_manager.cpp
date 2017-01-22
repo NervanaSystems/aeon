@@ -13,22 +13,6 @@
  limitations under the License.
 */
 
-#pragma once
+#include "async_manager.hpp"
 
-#include "web_server.hpp"
-
-class web_app
-{
-public:
-    web_app();
-    ~web_app();
-    static void start();
-
-    void home_page(web::page& p);
-    void stopwatch(web::page& p);
-    void page_404(web::page& p);
-    void process_page_request(web::page& p, const std::string& url);
-
-private:
-    web::server web_server;
-};
+std::vector<nervana::async_manager_info*> nervana::async_manager_status;
