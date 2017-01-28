@@ -23,6 +23,7 @@
 #include "util.hpp"
 
 #include "noise_clips.hpp"
+#include "augment_audio.hpp"
 
 class noise_clips;
 
@@ -34,31 +35,11 @@ namespace nervana
         class params;
         class decoded;
 
-        // goes from config -> params
-        class param_factory;
-
         class extractor;
         class transformer;
         class loader;
     }
 }
-
-class nervana::audio::params : public interface::params
-{
-    friend class audio::param_factory;
-
-public:
-    void dump(std::ostream& = std::cout);
-
-    bool     add_noise;
-    uint32_t noise_index;
-    float    noise_level;
-    float    noise_offset_fraction;
-    float    time_scale_fraction;
-
-private:
-    params() {}
-};
 
 /**
 * \brief Configuration for audio ETL
@@ -80,6 +61,7 @@ private:
 class nervana::audio::config : public interface::config
 {
 public:
+    std::string name;
     // We will use the following suffixes for units:
     // _tn for samples, _ms for milliseconds, _ss for seconds, _hz for freq in hz
 
@@ -234,6 +216,7 @@ private:
         ADD_SCALAR(max_duration, mode::REQUIRED),
         ADD_SCALAR(frame_stride, mode::REQUIRED),
         ADD_SCALAR(frame_length, mode::REQUIRED),
+        ADD_SCALAR(name, mode::OPTIONAL),
         ADD_SCALAR(num_cepstra, mode::OPTIONAL),
         ADD_SCALAR(num_filters, mode::OPTIONAL),
         ADD_SCALAR(output_type,
@@ -284,22 +267,6 @@ private:
     }
 };
 
-class nervana::audio::param_factory : public interface::param_factory<audio::decoded, audio::params>
-{
-public:
-    param_factory(audio::config& cfg)
-        : _cfg{cfg}
-    {
-        _dre.seed(get_global_random_seed());
-    }
-    ~param_factory() {}
-    std::shared_ptr<audio::params> make_params(std::shared_ptr<const audio::decoded> input);
-
-private:
-    audio::config&             _cfg;
-    std::default_random_engine _dre{0};
-};
-
 class nervana::audio::decoded : public interface::decoded_media
 {
 public:
@@ -327,12 +294,12 @@ public:
 private:
 };
 
-class nervana::audio::transformer : public interface::transformer<audio::decoded, audio::params>
+class nervana::audio::transformer : public interface::transformer<audio::decoded, augment::audio::params>
 {
 public:
     transformer(const audio::config& config);
     ~transformer();
-    std::shared_ptr<audio::decoded> transform(std::shared_ptr<audio::params>,
+    std::shared_ptr<audio::decoded> transform(std::shared_ptr<augment::audio::params>,
                                               std::shared_ptr<audio::decoded>) override;
 
 private:

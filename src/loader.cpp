@@ -24,6 +24,7 @@
 
 #include "loader.hpp"
 #include "log.hpp"
+#include "web_app.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -86,9 +87,15 @@ loader::loader(nlohmann::json& config_json)
     initialize(config_json);
 }
 
+loader::~loader()
+{
+    debug_web_app.deregister_loader(this);
+}
+
 void loader::initialize(nlohmann::json& config_json)
 {
     string        config_string = config_json.dump();
+    m_current_config = config_json;
     loader_config lcfg(config_json);
     m_batch_size = lcfg.batch_size;
 
@@ -123,7 +130,7 @@ void loader::initialize(nlohmann::json& config_json)
     m_block_loader = make_shared<block_loader_file>(m_manifest.get(), lcfg.block_size);
 
     m_block_manager = make_shared<block_manager>(
-        m_block_loader.get(), lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_every_epoch);
+        m_block_loader.get(), lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_enable);
 
     m_batch_iterator = make_shared<batch_iterator>(m_block_manager.get(), lcfg.batch_size);
 
@@ -136,6 +143,8 @@ void loader::initialize(nlohmann::json& config_json)
                                            m_provider);
 
     m_output_buffer_ptr = m_decoder->next();
+
+    debug_web_app.register_loader(this);
 }
 
 const vector<string>& loader::get_buffer_names() const

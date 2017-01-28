@@ -51,6 +51,7 @@ public:
     bool pack_for_ctc = false;
     /** Output data type. Currently only uint8_t is supported */
     std::string output_type{"uint8_t"};
+    std::string name;
 
     config(nlohmann::json js)
     {
@@ -82,6 +83,7 @@ private:
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_SCALAR(max_length, mode::REQUIRED),
         ADD_SCALAR(alphabet, mode::REQUIRED),
+        ADD_SCALAR(name, mode::OPTIONAL),
         ADD_SCALAR(unknown_value, mode::OPTIONAL),
         ADD_SCALAR(pack_for_ctc, mode::OPTIONAL),
         ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) {

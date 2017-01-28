@@ -60,8 +60,10 @@ TEST(video, extract_transform)
         // transform
         video::transformer transformer = video::transformer(config);
 
-        image::param_factory factory(config.frame);
-        auto                 params = factory.make_params(decoded_vid);
+        nlohmann::json aug;
+        augment::image::param_factory factory(aug);
+        auto image_size = decoded_vid->get_image_size();
+        auto                 params = factory.make_params(image_size.width, image_size.height, config.frame.width, config.frame.height);
 
         params->output_size  = cv::Size2i(width / 2, height / 2);
         auto transformed_vid = transformer.transform(params, decoded_vid);
@@ -90,12 +92,14 @@ TEST(video, image_transform)
     decoded_image->add(mat_image);
 
     nlohmann::json js = {{"width", width}, {"height", height}};
+    nlohmann::json aug;
     image::config  config(js);
 
     image::transformer _imageTransformer(config);
 
-    image::param_factory factory(config);
-    auto                 imageParams = factory.make_params(decoded_image);
+    augment::image::param_factory factory(aug);
+    auto image_size = decoded_image->get_image_size();
+    auto                 imageParams = factory.make_params(image_size.width, image_size.height, config.width, config.height);
     imageParams->output_size         = cv::Size2i(width / 2, height / 2);
 
     _imageTransformer.transform(imageParams, decoded_image);

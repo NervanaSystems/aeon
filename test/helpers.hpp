@@ -48,7 +48,7 @@ private:
 class image_params_builder
 {
 public:
-    image_params_builder(std::shared_ptr<nervana::image::params> _obj) { obj = _obj; }
+    image_params_builder(std::shared_ptr<nervana::augment::image::params> _obj) { obj = _obj; }
     image_params_builder& cropbox(int x, int y, int w, int h)
     {
         obj->cropbox = cv::Rect(x, y, w, h);
@@ -95,7 +95,7 @@ public:
         return *this;
     }
 
-    operator std::shared_ptr<nervana::image::params>() const { return obj; }
+    operator std::shared_ptr<nervana::augment::image::params>() const { return obj; }
 private:
-    std::shared_ptr<nervana::image::params> obj;
+    std::shared_ptr<nervana::augment::image::params> obj;
 };

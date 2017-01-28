@@ -17,6 +17,7 @@
 
 #include "image.hpp"
 #include "util.hpp"
+#include "log.hpp"
 
 using namespace nervana;
 using namespace std;
@@ -224,23 +225,12 @@ void image::photometric::cbsjitter(
         /****************************
         *  BRIGHTNESS & SATURATION  *
         *****************************/
-        cv::Mat hsv;
-        cv::cvtColor(inout, hsv, CV_BGR2HSV);
-        if (brightness != 1.0 || saturation != 1.0)
-        {
-            hsv = hsv.mul(cv::Scalar(1.0, saturation, brightness));
-        }
-        if (hue != 0)
-        {
-            hue /= 2; // hue is 0-360, but opencv used 0-180 to fit in a byte.
-            uint8_t* p = hsv.data;
-            for (int i = 0; i < hsv.size().area(); i++)
-            {
-                *p = (*p + hue) % 180;
-                p += 3;
-            }
-        }
-        cv::cvtColor(hsv, inout, CV_HSV2BGR);
+        // float data[] = {0.114, 0.587, 0.299};   // NTSC
+        float data[] = {0.0820, 0.6094, 0.3086};
+        const cv::Mat GSCL(3, 1, CV_32FC1, data); 
+        cv::Mat satmtx = brightness * (saturation * cv::Mat::eye(3, 3, CV_32FC1) +
+                                (1 - saturation) * cv::Mat::ones(3, 1, CV_32FC1) * GSCL.t());
+        cv::transform(inout, inout, satmtx);
     }
 
     if (contrast != 1.0)
@@ -254,3 +244,79 @@ void image::photometric::cbsjitter(
         dst_img.convertTo(inout, CV_8UC3);
     }
 }
+
+// void image::photometric::cbs(cv::Mat& inout, float contrast, float brightness, float saturation)
+// {
+//     /****************************
+//     *  BRIGHTNESS & SATURATION  *
+//     *****************************/
+    
+//     const cv::Mat GSCL(3, 1, CV_32FC1, {0.114, 0.587, 0.299});
+//     cv::Mat satmtx = brightness * (saturation * cv::Mat::eye(3, 3, CV_32FC1) +
+//                             (1 - saturation) * cv::Mat::ones(3, 1, CV_32FC1) * GSCL.t());
+//     cv::transform(inout, inout, satmtx);
+
+//     INFO << "\n" << satmtx;
+
+//     /*************
+//     *  CONTRAST  *
+//     **************/
+//     Mat gray_mean;
+//     cv::cvtColor(Mat(1, 1, CV_32FC3, cv::mean(inout)), gray_mean, CV_BGR2GRAY);
+//     inout = contrast * inout + (1 - contrast) * gray_mean.at<Scalar_<float>>(0, 0);
+// }
+
+// void image::photometric::transform_hsv(cv::Mat& inout, const float hue, const float saturation, const float brightness )
+// {
+//     cv::Mat hsv;
+//     cv::cvtColor(inout, hsv, CV_BGR2HSV);
+//     if (brightness != 1.0 || saturation != 1.0)
+//     {
+//         hsv = hsv.mul(cv::Scalar(1.0, saturation, brightness));
+//     }
+//     if (hue != 0)
+//     {
+//         hue /= 2; // hue is 0-360, but opencv used 0-180 to fit in a byte.
+//         uint8_t* p = hsv.data;
+//         for (int i = 0; i < hsv.size().area(); i++)
+//         {
+//             *p = (*p + hue) % 180;
+//             p += 3;
+//         }
+//     }
+//     cv::cvtColor(hsv, inout, CV_HSV2BGR);
+// }
+
+// void image::photometric::transform_hsv(cv::Mat& image, const float h_gain, const float s_gain, const float v_gain )
+// {
+//     const float VSU = v_gain*s_gain*cos(h_gain*M_PI/180);
+//     const float VSW = v_gain*s_gain*sin(h_gain*M_PI/180);
+
+//     INFO << "hue " << h_gain;
+//     INFO << "sat " << s_gain;
+//     INFO << "val " << v_gain;
+
+//     uint8_t* p = image.data;
+//     for (int i = 0; i < image.size().area(); i++)
+//     {
+//         uint8_t& b = p[0];
+//         uint8_t& g = p[1];
+//         uint8_t& r = p[2];
+
+//         float tr   = (.299*v_gain+.701*VSU+.168*VSW)*(float)r
+//             + (.587*v_gain-.587*VSU+.330*VSW)*(float)g
+//             + (.114*v_gain-.114*VSU-.497*VSW)*(float)b;
+//         float tg   = (.299*v_gain-.299*VSU-.328*VSW)*(float)r
+//             + (.587*v_gain+.413*VSU+.035*VSW)*(float)g
+//             + (.114*v_gain-.114*VSU+.292*VSW)*(float)b;
+//         float tb   = (.299*v_gain-.300*VSU+1.25*VSW)*(float)r
+//             + (.587*v_gain-.588*VSU-1.05*VSW)*(float)g
+//             + (.114*v_gain+.886*VSU-.203*VSW)*(float)b;
+
+//         r = (uint8_t)min<int>((tr+0.5), 255);
+//         g = (uint8_t)min<int>((tg+0.5), 255);
+//         b = (uint8_t)min<int>((tb+0.5), 255);
+
+//         p += 3;
+//     }
+// }

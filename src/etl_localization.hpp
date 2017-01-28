@@ -95,8 +95,8 @@ class nervana::localization::config : public nervana::interface::config
 {
 public:
     size_t             rois_per_image = 256;
-    size_t             output_height; // copied from image config
-    size_t             output_width;  // copied from image config
+    size_t             height;
+    size_t             width;
     size_t             base_size      = 16;
     float              scaling_factor = 1.0 / 16.;
     std::vector<float> ratios         = {0.5, 1, 2};
@@ -106,22 +106,26 @@ public:
     float  foreground_fraction = 0.5; // at most, positive anchors are 0.5 of the total rois
     size_t max_gt_boxes        = 64;
     std::vector<std::string> class_names;
-    float                    fixed_scaling_factor;
+    std::string name;
 
     // Derived values
     size_t output_buffer_size;
     std::unordered_map<std::string, int> class_name_map;
 
-    config(nlohmann::json js, const image::config& iconfig);
+    config(nlohmann::json js);
 
     size_t total_anchors() const
     {
-        return ratios.size() * scales.size() * int(std::floor(output_height * scaling_factor)) *
-               int(std::floor(output_width * scaling_factor));
+        return ratios.size() * scales.size() * int(std::floor(height * scaling_factor)) *
+               int(std::floor(width * scaling_factor));
     }
 
 private:
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+        ADD_SCALAR(height, mode::REQUIRED),
+        ADD_SCALAR(width, mode::REQUIRED),
+        ADD_SCALAR(class_names, mode::REQUIRED),
+        ADD_SCALAR(name, mode::OPTIONAL),
         ADD_SCALAR(rois_per_image, mode::OPTIONAL),
         ADD_SCALAR(base_size, mode::OPTIONAL),
         ADD_SCALAR(scaling_factor, mode::OPTIONAL),
@@ -131,8 +135,7 @@ private:
         ADD_SCALAR(positive_overlap, mode::OPTIONAL, [](float v) { return v >= 0.0 && v <= 1.0; }),
         ADD_SCALAR(
             foreground_fraction, mode::OPTIONAL, [](float v) { return v >= 0.0 && v <= 1.0; }),
-        ADD_SCALAR(max_gt_boxes, mode::OPTIONAL),
-        ADD_SCALAR(class_names, mode::REQUIRED)};
+        ADD_SCALAR(max_gt_boxes, mode::OPTIONAL)};
 
     config() {}
     void validate();
@@ -175,14 +178,14 @@ private:
 };
 
 class nervana::localization::transformer
-    : public interface::transformer<localization::decoded, image::params>
+    : public interface::transformer<localization::decoded, augment::image::params>
 {
 public:
-    transformer(const localization::config&);
+    transformer(const localization::config&, float fixed_scaling_factor);
 
     virtual ~transformer() {}
     std::shared_ptr<localization::decoded>
-        transform(std::shared_ptr<image::params>         txs,
+        transform(std::shared_ptr<augment::image::params>         txs,
                   std::shared_ptr<localization::decoded> mp) override;
 
 private:
@@ -196,6 +199,7 @@ private:
     const localization::config& cfg;
     std::minstd_rand0           random;
     const std::vector<box>      all_anchors;
+    float                       m_fixed_scaling_factor;
 };
 
 class nervana::localization::loader : public interface::loader<localization::decoded>

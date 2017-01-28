@@ -474,3 +474,16 @@ TEST(util, stopwatch)
 
     EXPECT_GT(t1.get_total_microseconds(), t1.get_microseconds());
 }
+
+TEST(util, trim)
+{
+    EXPECT_STREQ("test", trim("test").c_str());
+    EXPECT_STREQ("test", trim(" test").c_str());
+    EXPECT_STREQ("test", trim("test ").c_str());
+    EXPECT_STREQ("test", trim(" test ").c_str());
+    EXPECT_STREQ("test", trim("           test            ").c_str());
+    EXPECT_STREQ("test", trim("\ttest").c_str());
+    EXPECT_STREQ("test", trim("test\t").c_str());
+    EXPECT_STREQ("test", trim("\ttest\t").c_str());
+    EXPECT_STREQ("test", trim(" \t test \t ").c_str());
+}

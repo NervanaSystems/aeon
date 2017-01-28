@@ -12,8 +12,11 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-#include "buffer_batch.hpp"
+
 #include <algorithm>
+
+#include "buffer_batch.hpp"
+#include "log.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -21,28 +24,25 @@ using namespace nervana;
 buffer_fixed_size_elements::buffer_fixed_size_elements(const shape_type& shp_tp,
                                                        size_t            batch_size,
                                                        bool              pinned)
-    : m_pinned{pinned}
-    , m_shape_type{shp_tp}
+    : m_shape_type{shp_tp}
+    , m_size{m_shape_type.get_byte_size() * batch_size}
+    , m_batch_size{batch_size}
+    , m_stride{m_shape_type.get_byte_size()}
+    , m_pinned{pinned}
 {
-    m_size       = m_shape_type.get_byte_size() * batch_size;
-    m_batch_size = batch_size;
-    m_stride     = m_shape_type.get_byte_size();
-#if HAS_GPU
-    if (m_pinned)
-    {
-        CUresult status = cuMemAllocHost((void**)&m_data, m_size);
-        if (status != CUDA_SUCCESS)
-        {
-            throw std::bad_alloc();
-        }
-    }
-    else
-    {
-        m_data = new char[m_size];
-    }
-#else
-    m_data = new char[m_size];
-#endif
+    allocate();
+}
+
+buffer_fixed_size_elements::buffer_fixed_size_elements(const buffer_fixed_size_elements& rhs)
+    : m_data{nullptr}
+    , m_shape_type{rhs.m_shape_type}
+    , m_size{rhs.m_size}
+    , m_batch_size{rhs.m_batch_size}
+    , m_stride{rhs.m_stride}
+    , m_pinned{rhs.m_pinned}
+{
+    allocate();
+    memcpy(m_data, rhs.m_data, m_size);
 }
 
 char* buffer_fixed_size_elements::get_item(size_t index)
@@ -55,17 +55,34 @@ char* buffer_fixed_size_elements::get_item(size_t index)
     return &m_data[offset];
 }
 
-cv::Mat buffer_fixed_size_elements::get_item_as_mat(size_t index)
+cv::Mat buffer_fixed_size_elements::get_item_as_mat(size_t index, bool channel_major) const
 {
     std::vector<int> sizes;
+    size_t           channels;
     for (auto& d : m_shape_type.get_shape())
     {
         sizes.push_back(static_cast<int>(d));
     }
     int ndims = static_cast<int>(sizes.size());
 
+    if (channel_major)
+    {
+    }
+    else
+    {
+        ndims -= 1;
+        channels = sizes.back();
+        sizes.pop_back();
+    }
+
+    // INFO << channels;
+    // INFO << ndims;
+    // INFO << join(sizes, ", ");
+
     cv::Mat ret(
-        ndims, &sizes[0], m_shape_type.get_otype().get_cv_type(), (void*)&m_data[index * m_stride]);
+        ndims,
+        &sizes[0], CV_MAKETYPE(m_shape_type.get_otype().get_cv_type(), channels),
+        (void*)&m_data[index * m_stride]);
     return ret;
 }
 
@@ -79,11 +96,8 @@ const char* buffer_fixed_size_elements::get_item(size_t index) const
     return &m_data[offset];
 }
 
-void buffer_fixed_size_elements::allocate(const shape_type& shp_tp, size_t batch_size, bool pinned)
+void buffer_fixed_size_elements::allocate()
 {
-    m_size       = m_shape_type.get_byte_size() * batch_size;
-    m_batch_size = batch_size;
-    m_stride     = m_shape_type.get_byte_size();
 #if HAS_GPU
     if (m_pinned)
     {

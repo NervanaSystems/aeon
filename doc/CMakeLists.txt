@@ -43,7 +43,17 @@ if (NOT BREATHE_FOUND)
 endif ()
 
 if (REQUIRED_PACKAGES_FOUND)
-	file(COPY source DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+#	file(COPY source DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+	file(GLOB_RECURSE files "source/*")
+	string(LENGTH ${CMAKE_CURRENT_SOURCE_DIR} DIR_LEN)
+	foreach(SOURCE ${files})
+		string(SUBSTRING ${SOURCE} ${DIR_LEN} -1 FILENAME)
+		set(TARGET "${CMAKE_CURRENT_BINARY_DIR}${FILENAME}")
+		configure_file(${SOURCE} ${TARGET} COPYONLY)
+		# message(${SOURCE})
+		# message(${TARGET})
+	endforeach()
+
 	configure_file(doxygen.conf.in ${CMAKE_CURRENT_BINARY_DIR}/doxygen.conf)
 	configure_file(source/conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/source/conf.py)
 
@@ -77,10 +87,6 @@ if (REQUIRED_PACKAGES_FOUND)
 	set(ALLSPHINXOPTS -d ${BUILDDIR}/doctrees ${PAPEROPT_${PAPER}} ${SPHINXOPTS} ${CMAKE_CURRENT_BINARY_DIR}/source)
 	# # the i18n builder cannot share the environment and doctrees with the others
 	# I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
-
-	message("BUILDDIR ${BUILDDIR}")
-	message("ALLSPHINXOPTS ${ALLSPHINXOPTS}")
-	message("SPHINXENVCMD ${SPHINXENVCMD}")
 
 	add_custom_target(doxygen
 		COMMAND mkdir -p ${BUILDDIR}/doxy

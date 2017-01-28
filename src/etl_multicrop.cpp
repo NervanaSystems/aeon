@@ -26,23 +26,28 @@ using cv::Point2f;
 multicrop::config::config(nlohmann::json js)
     : crop_config(js["crop_config"])
 {
+    INFO << "\n" << js.dump(4);
     if (js.is_null())
     {
         throw std::runtime_error("missing multicrop config in json config");
     }
 
+    INFO;
     for (auto& info : config_list)
     {
         info->parse(js);
     }
 
+    INFO;
     verify_config("multicrop", config_list, js);
+    INFO;
 
     if (crop_config.flip_enable)
     {
         orientations.push_back(true);
     }
 
+    INFO;
     // shape is going to be different from crop_config because of multiple images
     shape_t multicrop_shape = crop_config.get_shape_type().get_shape();
     auto axes_names = crop_config.get_shape_type().get_names();
@@ -52,7 +57,9 @@ multicrop::config::config(nlohmann::json js)
     multicrop_shape.insert(multicrop_shape.begin(), num_views);
     add_shape_type(multicrop_shape, axes_names, crop_config.output_type);
 
+    INFO;
     validate();
+    INFO;
 }
 
 void multicrop::config::validate()
@@ -86,7 +93,7 @@ multicrop::transformer::transformer(const multicrop::config& cfg)
 }
 
 shared_ptr<image::decoded>
-    multicrop::transformer::transform(shared_ptr<image::params>  crop_settings,
+    multicrop::transformer::transform(shared_ptr<augment::image::params>  crop_settings,
                                       shared_ptr<image::decoded> input)
 {
     cv::Size2i in_size      = input->get_image_size();

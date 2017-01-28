@@ -26,7 +26,7 @@
 
 #define private public
 
-#include "provider_image_pixelmask.hpp"
+#include "etl_pixel_mask.hpp"
 #include "json.hpp"
 #include "helpers.hpp"
 #include "provider_factory.hpp"
@@ -80,16 +80,18 @@ TEST(pixel_mask, scale_up)
     ASSERT_TRUE(verify_image(test_image));
 
     nlohmann::json js = {{"width", 256}, {"height", 256}};
+    nlohmann::json aug;
     image::config  cfg(js);
 
     pixel_mask::extractor   extractor{cfg};
     pixel_mask::transformer transformer{cfg};
-    image::loader           loader{cfg};
-    image::param_factory    factory{cfg};
+    image::loader           loader{cfg, false};
+    augment::image::param_factory    factory{aug};
 
     auto extracted = extractor.extract((const char*)test_data.data(), test_data.size());
-    image_params_builder       builder(factory.make_params(extracted));
-    shared_ptr<image::params>  params_ptr  = builder.output_size(300, 300);
+    auto image_size = extracted->get_image_size();
+    image_params_builder       builder(factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height));
+    shared_ptr<augment::image::params>  params_ptr  = builder.output_size(300, 300);
     shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
     cv::Mat                    tximg       = transformed->get_image(0);
     cv::imwrite("tx_pixel_mask_scale_up.png", tximg);
@@ -104,16 +106,18 @@ TEST(pixel_mask, scale_down)
     ASSERT_TRUE(verify_image(test_image));
 
     nlohmann::json js = {{"width", 256}, {"height", 256}};
+    nlohmann::json aug;
     image::config  cfg(js);
 
     pixel_mask::extractor   extractor{cfg};
     pixel_mask::transformer transformer{cfg};
-    image::loader           loader{cfg};
-    image::param_factory    factory{cfg};
+    image::loader           loader{cfg, false};
+    augment::image::param_factory    factory{aug};
 
     auto extracted = extractor.extract((const char*)test_data.data(), test_data.size());
-    image_params_builder       builder(factory.make_params(extracted));
-    shared_ptr<image::params>  params_ptr  = builder.output_size(100, 100);
+    auto image_size = extracted->get_image_size();
+    image_params_builder       builder(factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height));
+    shared_ptr<augment::image::params>  params_ptr  = builder.output_size(100, 100);
     shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
     cv::Mat                    tximg       = transformed->get_image(0);
     cv::imwrite("tx_pixel_mask_scale_down.png", tximg);
@@ -128,16 +132,18 @@ TEST(pixel_mask, rotate)
     ASSERT_TRUE(verify_image(test_image));
 
     nlohmann::json js = {{"width", 256}, {"height", 256}};
+    nlohmann::json aug;
     image::config  cfg(js);
 
     pixel_mask::extractor   extractor{cfg};
     pixel_mask::transformer transformer{cfg};
-    image::loader           loader{cfg};
-    image::param_factory    factory{cfg};
+    image::loader           loader{cfg, false};
+    augment::image::param_factory    factory{aug};
 
     auto extracted = extractor.extract((const char*)test_data.data(), test_data.size());
-    image_params_builder       builder(factory.make_params(extracted));
-    shared_ptr<image::params>  params_ptr  = builder.angle(45);
+    auto image_size = extracted->get_image_size();
+    image_params_builder       builder(factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height));
+    shared_ptr<augment::image::params>  params_ptr  = builder.angle(45);
     shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
     cv::Mat                    tximg       = transformed->get_image(0);
     cv::imwrite("tx_pixel_mask_rotate.png", tximg);
@@ -165,16 +171,18 @@ TEST(pixel_mask, load_int)
 
     nlohmann::json js = {
         {"width", 256}, {"height", 256}, {"output_type", "int32_t"}, {"channels", 1}};
+    nlohmann::json aug;
     image::config cfg(js);
 
     pixel_mask::extractor   extractor{cfg};
     pixel_mask::transformer transformer{cfg};
-    image::loader           loader{cfg};
-    image::param_factory    factory{cfg};
+    image::loader           loader{cfg, false};
+    augment::image::param_factory    factory{aug};
 
     auto extracted = extractor.extract((const char*)test_data.data(), test_data.size());
-    image_params_builder       builder(factory.make_params(extracted));
-    shared_ptr<image::params>  params_ptr  = builder;
+    auto image_size = extracted->get_image_size();
+    image_params_builder       builder(factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height));
+    shared_ptr<augment::image::params>  params_ptr  = builder;
     shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
     cv::Mat                    tximg       = transformed->get_image(0);
 

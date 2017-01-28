@@ -31,17 +31,6 @@ image::config::config(nlohmann::json js)
     }
     verify_config("image", config_list, js);
 
-    // Now fill in derived
-    if (flip_enable)
-    {
-        flip_distribution = bernoulli_distribution{0.5};
-    }
-
-    if (!center)
-    {
-        crop_offset = uniform_real_distribution<float>{0.0f, 1.0f};
-    }
-
     if (channel_major)
     {
         add_shape_type({channels, height, width}, {"channels", "height", "width"}, output_type);
@@ -56,10 +45,6 @@ image::config::config(nlohmann::json js)
 
 void image::config::validate()
 {
-    if (crop_offset.param().a() > crop_offset.param().b())
-    {
-        throw std::invalid_argument("invalid crop_offset");
-    }
     if (width <= 0)
     {
         throw std::invalid_argument("invalid width");
@@ -68,21 +53,6 @@ void image::config::validate()
     {
         throw std::invalid_argument("invalid height");
     }
-}
-
-void image::params::dump(ostream& ostr)
-{
-    ostr << "cropbox             " << cropbox << "\n";
-    ostr << "output_size         " << output_size << "\n";
-    ostr << "angle               " << angle << "\n";
-    ostr << "flip                " << flip << "\n";
-    ostr << "lighting            " << join(lighting, ", ") << "\n";
-    ostr << "color_noise_std     " << color_noise_std << "\n";
-    ostr << "contrast            " << contrast << "\n";
-    ostr << "brightness          " << brightness << "\n";
-    ostr << "saturation          " << saturation << "\n";
-    ostr << "hue                 " << hue << "\n";
-    ostr << "debug_deterministic " << debug_deterministic << "\n";
 }
 
 /* Extract */
@@ -134,7 +104,7 @@ image::transformer::transformer(const image::config&)
 {
 }
 
-shared_ptr<image::decoded> image::transformer::transform(shared_ptr<image::params>  img_xform,
+shared_ptr<image::decoded> image::transformer::transform(shared_ptr<augment::image::params>  img_xform,
                                                          shared_ptr<image::decoded> img)
 {
     vector<cv::Mat> finalImageList;
@@ -151,9 +121,10 @@ shared_ptr<image::decoded> image::transformer::transform(shared_ptr<image::param
     return rc;
 }
 
-cv::Mat image::transformer::transform_single_image(shared_ptr<image::params> img_xform,
+cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::params> img_xform,
                                                    cv::Mat&                  single_img)
 {
+    // img_xform->dump(cout);
     cv::Mat rotatedImage;
     image::rotate(single_img, rotatedImage, img_xform->angle);
     cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
@@ -177,76 +148,9 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<image::params> img
     return *finalImage;
 }
 
-shared_ptr<image::params> image::param_factory::make_params(shared_ptr<const decoded> input)
-{
-    // Must use this method for creating a shared_ptr rather than make_shared
-    // since the params default ctor is private and factory is friend
-    // make_shared is not friend :(
-    auto settings = shared_ptr<image::params>(new image::params());
-
-    settings->output_size = cv::Size2i(_cfg.width, _cfg.height);
-
-    settings->angle = _cfg.angle(_dre);
-    settings->flip  = _cfg.flip_distribution(_dre);
-
-    if (!_cfg.crop_enable)
-    {
-        cv::Size2f size   = input->get_image_size();
-        settings->cropbox = cv::Rect(cv::Point2f(0, 0), size);
-        float image_scale;
-        if (_cfg.fixed_scaling_factor > 0)
-        {
-            image_scale = _cfg.fixed_scaling_factor;
-        }
-        else
-        {
-            image_scale = image::calculate_scale(size, _cfg.width, _cfg.height);
-        }
-        //        settings->output_size = size * image_scale;
-        size                         = size * image_scale;
-        settings->output_size.width  = nervana::unbiased_round(size.width);
-        settings->output_size.height = nervana::unbiased_round(size.height);
-    }
-    else
-    {
-        cv::Size2f in_size = input->get_image_size();
-
-        float      scale                 = _cfg.scale(_dre);
-        float      horizontal_distortion = _cfg.horizontal_distortion(_dre);
-        cv::Size2f out_shape(_cfg.width * horizontal_distortion, _cfg.height);
-
-        cv::Size2f cropbox_size = image::cropbox_max_proportional(in_size, out_shape);
-        if (_cfg.do_area_scale)
-        {
-            cropbox_size = image::cropbox_area_scale(in_size, cropbox_size, scale);
-        }
-        else
-        {
-            cropbox_size = image::cropbox_linear_scale(cropbox_size, scale);
-        }
-
-        float c_off_x = _cfg.crop_offset(_dre);
-        float c_off_y = _cfg.crop_offset(_dre);
-
-        cv::Point2f cropbox_origin = image::cropbox_shift(in_size, cropbox_size, c_off_x, c_off_y);
-        settings->cropbox          = cv::Rect(cropbox_origin, cropbox_size);
-    }
-
-    if (_cfg.lighting.stddev() != 0)
-    {
-        for (int i = 0; i < 3; i++)
-        {
-            settings->lighting.push_back(_cfg.lighting(_dre));
-        }
-        settings->color_noise_std = _cfg.lighting.stddev();
-    }
-
-    return settings;
-}
-
-image::loader::loader(const image::config& cfg)
+image::loader::loader(const image::config& cfg, bool fixed_aspect_ratio)
     : m_channel_major{cfg.channel_major}
-    , m_fixed_aspect_ratio{cfg.fixed_aspect_ratio}
+    , m_fixed_aspect_ratio{fixed_aspect_ratio}
     , m_stype{cfg.get_shape_type()}
     , m_channels{cfg.channels}
 {

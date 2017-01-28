@@ -37,7 +37,7 @@ Data format
 
 As mentioned above, users interact with the dataloader by providing two items:
 
-1. Manifest file, a comma-separated file (*.csv).
+1. Manifest file, a tab-separated file (*.tsv).
 2. Configuration parameters, as a python dictionary.
 
 Operations such as generating training/testing splits, or balancing labels for imbalanced datasets should be implemented outside of the dataloader by the user during **ingest** to create the appropriate manifest files. Several example ingest scripts are in the neon repository.
@@ -45,29 +45,64 @@ Operations such as generating training/testing splits, or balancing labels for i
 Manifest file
 -------------
 
-The manifest file provides the dataloader with an input and target pair. The
-manifest file should contain one record per line,
+The manifest file contains UTF-8 text lines. Each line is one of header, comment, or record.
+
+Header
+^^^^^^
+A header line contains encoding details for each element in a record line.
+The header line starts with a '@' character and one tab separated encoding field per record element.
+A header line must be located prior to any record lines.
+Elements in the header are one of FILE, BINARY, STRING, ASCII_INT, or ASCII_FLOAT.
+
+FILE
+~~~~
+An absolute or relative path. Relative paths work in conjunction with the *manifest_root* keyword.
+
+BINARY
+~~~~~~
+Base64 encoded text.
+
+STRING
+~~~~~~
+Literal string.
+
+ASCII_INT
+~~~~~~~~~
+A text integer that is converted to a 4 byte binary value.
+
+ASCII_FLOAT
+~~~~~~~~~~~
+A text floating point number that is converted to a 4 byte float value.
+
+Comment
+^^^^^^^
+A comment is a line that starts with the '#' character
+
+Record
+^^^^^^
+A record is any non-blank line that is not a header or comment.
 
 .. code-block:: bash
-
-    <path_to_input_1>,<path_to_target_1>
-    <path_to_input_2>,<path_to_target_2>
+    
+    <record_1_element_1>[tab]<record_1_element_2>
+    <record_2_element_1>[tab]<record_2_element_2>
     ...
-    <path_to_input_N>,<path_to_target_N>
+    <record_N_element_1>[tab]<record_N_element_2>
 
 In the image classification case,
 
 .. code-block:: bash
 
-    /image_dir/faces/naveen_rao.jpg,0.txt
-    /image_dir/faces/arjun_bansal.jpg,0.txt
-    /image_dir/faces/amir_khosrowshahi.jpg,0.txt
-    /image_dir/fruits/apple.jpg,1.txt
-    /image_dir/fruits/pear.jpg,1.txt
-    /image_dir/animals/lion.jpg,2.txt
-    /image_dir/animals/tiger.jpg,2.txt
+    @FILE[tab]ASCII_INT
+    /image_dir/faces/naveen_rao.jpg[tab]0
+    /image_dir/faces/arjun_bansal.jpg[tab]0
+    /image_dir/faces/amir_khosrowshahi.jpg[tab]0
+    /image_dir/fruits/apple.jpg[tab]1
+    /image_dir/fruits/pear.jpg[tab]1
+    /image_dir/animals/lion.jpg[tab]2
+    /image_dir/animals/tiger.jpg[tab]2
     ...
-    /image_dir/vehicles/toyota.jpg,3.txt
+    /image_dir/vehicles/toyota.jpg[tab]3
 
 Note that above, the target labels should be text files with a single label.
 
@@ -75,9 +110,10 @@ For audio transcription, paths to target transcriptions are included:
 
 .. code-block:: bash
 
-    audio_sample_1.wav,audio_transcript_1.txt
-    audio_sample_2.wav,audio_transcript_2.txt
-    audio_sample_3.wav,audio_transcript_3.txt
+    @FILE[tab]FILE
+    audio_sample_1.wav[tab]audio_transcript_1.txt
+    audio_sample_2.wav[tab]audio_transcript_2.txt
+    audio_sample_3.wav[tab]audio_transcript_3.txt
 
 For example formats of different modalities and problems, see the image, audio, and video sections.
 
@@ -88,26 +124,32 @@ The dataloader configuration consists of a base loader config, then individual c
 
 .. code-block:: python
 
-    image_config = dict(height=224, width=224)
-    label_config = dict(binary=True)
-    config = dict(type="image,label",
-                  image=image_config,
-                  label=label_config,
+    image_config = dict(type="image", height=224, width=224)
+    label_config = dict(type="label", binary=True)
+    augmentation_config = dict(type="image", flip_enable=True)
+    config = dict(etl=(image_config, label_config),
+                  augment=(augmentation_config),
                   manifest_filename='train.csv',
                   minibatch_size=128)
 
 Importantly, the ``type`` key indicates to the dataloader which input data type to expect, and the ``image`` and ``label`` keys correspond to additional configuration dictionaries. The dataloader currently supports:
 
-- image classification (``type="image,label"``),
-- image segmentation (``"image,pixelmask"``),
-- image localization (``"image,localization"``),
-- image bounding box (``"image,boundingbox"``),
-- stereo depthmap (``"stereo_image,blob"``),
-- video classification (``"video,label"``),
-- audio classification (``"audio,label"``), and
-- audio transcription (``"audio,transcription``").
+.. csv-table::
+   :header: "Name", "Augmentation", "Description"
+   :widths: 20, 10, 50
+   :escape: ~
+   :delim: |
 
-For inference, types that provide the input only (e.g. ``type="image"``) are also supported.
+   image|image|
+   label||
+   audio|audio|
+   localization|image|
+   pixelmask|image|
+   boundingbox|image|
+   blob||
+   video|image|
+   char_map||
+   label_map||
 
 aeon is designed to be modular and developer-friendly, so its relatively easy to write your own dataloader type and register it with the dataloader. For more information, see our Developer Guide.
 
@@ -119,17 +161,21 @@ The possible base loader configurations are the following (configurations withou
    :escape: ~
    :delim: |
 
-   type (string)| *Required* | Provider type (e.g. "image, label").
    manifest_filename (string)| *Required* | Path to the manifest file.
-   minibatch_size (int)| *Required* | Minibatch size. In neon, typically accesible via ``be.bsz``.
+   manifest_root (string)| ~"~" |
+   batch_size (int)| *Required* | Batch size. In neon, typically accesible via ``be.bsz``.
    manifest_root (string) | ~"~" | If provided, ``manifest_root`` is prepended to all manifest items with relative paths, while manifest items with absolute paths are left untouched. 
    cache_directory (string)| ~"~" | If provided, the dataloader will cache the data into ``*.cpio`` files for fast disk reads.
-   macrobatch_size (int)| 0 | Size of the macrobatch archive files.
    subset_fraction (float)| 1.0 | Fraction of the dataset to iterate over. Useful when testing code on smaller data samples.
-   shuffle_every_epoch (bool) | False | Shuffles the dataset order for every epoch
-   shuffle_manifest (bool)| False | Shuffles the manifest file once at start.
+   shuffle_enable (bool) | False | Shuffles the dataset order for every epoch
+   shuffle_manifest (bool) | False | Shuffles manifest file contents
    single_thread (bool)| False | Execute on a single thread
+   pinned (bool)| False |
    random_seed (int)| 0 | Set the random seed.
+   iteration_mode||
+   iteration_mode_count||
+   etl||
+   augmentation||
 
 Example python usage
 --------------------
@@ -138,11 +184,11 @@ While aeon can be used within a purely C++ environment, we have included a pytho
 
 .. code-block:: python
 
-    image_config = dict(height=224, width=224, flip_enable=True)
-    label_config = dict(binary=False)
-    config = dict(type="image,label",
-                  image=image_config,
-                  label=label_config,
+    image_config = dict(type="image", height=224, width=224)
+    label_config = dict(type="label", binary=True)
+    augmentation_config = dict(type="image", flip_enable=True)
+    config = dict(etl=(image_config, label_config),
+                  augment=(augmentation_config),
                   manifest_filename='train.csv',
                   minibatch_size=128)
 

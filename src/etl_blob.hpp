@@ -37,6 +37,7 @@ class nervana::blob::config : public interface::config
 public:
     std::string output_type{"float"};
     size_t      output_count;
+    std::string name;
 
     config(nlohmann::json js)
     {
@@ -53,6 +54,7 @@ private:
     config() {}
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_SCALAR(output_count, mode::REQUIRED),
+        ADD_SCALAR(name, mode::OPTIONAL),
         ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) {
             return output_type::is_valid_type(v);
         })};

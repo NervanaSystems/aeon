@@ -36,22 +36,26 @@ using namespace nervana;
 
 TEST(provider, empty_config)
 {
+    nlohmann::json image = {{"type", "image"},
+                           {"height", 1},
+                           {"width", 1}};
+    nlohmann::json label = {{"type", "label"}};
     nlohmann::json js = {
-        {"type", "image,label"},
-        {"image",
-         {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
-    };
+                         {"etl", {image, label}}
+                         };
 
     nervana::provider_factory::create(js);
 }
 
 TEST(provider, image)
 {
+    nlohmann::json image = {{"type", "image"},
+                           {"height", 128},
+                           {"width", 128}};
+    nlohmann::json label = {{"type", "label"}, {"binary", true}};
     nlohmann::json js = {
-        {"type", "image,label"},
-        {"image",
-         {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
-        {"label", {{"binary", true}}}};
+                         {"etl", {image, label}}
+                         };
 
     auto media   = nervana::provider_factory::create(js);
     auto oshapes = media->get_output_shapes();
@@ -101,17 +105,14 @@ TEST(provider, argtype)
     {
         string cfgString = R"(
             {
-                "height": 30,
-                "width" : 30,
-                "angle" : [-20, 20],
-                "scale" : [0.2, 0.8],
-                "lighting" : [0.0, 0.1],
-                "horizontal_distortion" : [0.75, 1.33],
-                "flip_enable" : false
+                "height" : 30,
+                "width" : 30
             }
         )";
 
-        image::config itpj(nlohmann::json::parse(cfgString));
+        nlohmann::json js = nlohmann::json::parse(cfgString);
+        nlohmann::json aug;
+        image::config itpj(js);
 
         // output the fixed parameters
         EXPECT_EQ(30, itpj.height);
@@ -119,21 +120,34 @@ TEST(provider, argtype)
 
         // output the random parameters
         default_random_engine r_eng(0);
-        image::param_factory  img_prm_maker(itpj);
+        augment::image::param_factory  img_prm_maker(aug);
         auto                  imgt = make_shared<image::transformer>(itpj);
 
         auto input_img_ptr = make_shared<image::decoded>(cv::Mat(256, 320, CV_8UC3));
 
-        auto its = img_prm_maker.make_params(input_img_ptr);
+        auto image_size = input_img_ptr->get_image_size();
+        auto its = img_prm_maker.make_params(image_size.width, image_size.height, itpj.width, itpj.height);
     }
 }
 
 TEST(provider, blob)
 {
+    const int width = 480;
+    const int height = 360;
+    nlohmann::json image1 = {{"type", "image"},
+                            {"name", "left"},
+                            {"channel_major", false},
+                            {"height", height},
+                            {"width", width}};
+    nlohmann::json image2 = {{"type", "image"},
+                            {"name", "right"},
+                            {"channel_major", false},
+                            {"height", height},
+                            {"width", width}};
+    nlohmann::json blob = {{"type", "blob"}, {"output_type", "float"}, {"output_count", width * height}};
     nlohmann::json js = {
-        {"type", "stereo_image,blob"},
-        {"stereo_image", {{"height", 360}, {"width", 480}, {"channel_major", false}}},
-        {"blob", {{"output_type", "float"}, {"output_count", 480 * 360}}}};
+                         {"etl", {image1, image2, blob}}
+                         };
 
     vector<char> input_left  = file_util::read_file_contents(CURDIR "/test_data/img_2112_70.jpg");
     vector<char> input_right = file_util::read_file_contents(CURDIR "/test_data/img_2112_70.jpg");
@@ -144,13 +158,13 @@ TEST(provider, blob)
     cv::Size        image_size = mat.size();
     cv::Mat         flipped;
     cv::flip(mat, flipped, 1);
-    cv::imwrite("left.jpg", flipped);
     cv::imencode(".jpg", flipped, tmp);
     input_left.clear();
     input_left.insert(input_left.begin(), tmp.begin(), tmp.end());
 
     // generate blob data, same size as image
-    vector<float> target_data{480 * 360};
+    vector<float> target_data{width * height};
+    target_data.resize(width * height);
     iota(target_data.begin(), target_data.end(), 0);
     vector<char> target_cdata;
     char*        p = (char*)target_data.data();
@@ -161,16 +175,18 @@ TEST(provider, blob)
 
     // setup input and output buffers
     auto media   = nervana::provider_factory::create(js);
+    ASSERT_NE(nullptr, media);
     auto oshapes = media->get_output_shapes();
 
-    ASSERT_EQ(360, int(js["stereo_image"]["height"]));
-    ASSERT_EQ(480, int(js["stereo_image"]["width"]));
-    ASSERT_EQ(360 * 480, int(js["blob"]["output_count"]));
-    ASSERT_EQ(3, oshapes.size());
+    auto buf_names = media->get_buffer_names();
+    ASSERT_EQ(3, buf_names.size());
+    ASSERT_NE(find(buf_names.begin(), buf_names.end(), "left.image"), buf_names.end());
+    ASSERT_NE(find(buf_names.begin(), buf_names.end(), "right.image"), buf_names.end());
+    ASSERT_NE(find(buf_names.begin(), buf_names.end(), "blob"), buf_names.end());
 
-    size_t left_size  = media->get_output_shape("image_left").get_byte_size();
-    size_t right_size = media->get_output_shape("image_right").get_byte_size();
-    size_t blob_size  = media->get_output_shape("depthmap").get_byte_size();
+    size_t left_size  = media->get_output_shape("left.image").get_byte_size();
+    size_t right_size = media->get_output_shape("right.image").get_byte_size();
+    size_t blob_size  = media->get_output_shape("blob").get_byte_size();
     ASSERT_EQ(image_size.area() * 3, left_size);
     ASSERT_EQ(image_size.area() * 3, right_size);
     ASSERT_EQ(480 * 360 * sizeof(float), blob_size);
@@ -189,15 +205,15 @@ TEST(provider, blob)
     // call the provider
     media->provide(0, in_buf, out_buf);
 
-    cv::Mat output_left{image_size, CV_8UC3, out_buf["image_left"]->data()};
+    cv::Mat output_left{image_size, CV_8UC3, out_buf["left.image"]->data()};
     cv::imwrite("output_left.jpg", output_left);
     EXPECT_EQ(image_size, output_left.size());
 
-    cv::Mat output_right{image_size, CV_8UC3, out_buf["image_right"]->data()};
+    cv::Mat output_right{image_size, CV_8UC3, out_buf["right.image"]->data()};
     cv::imwrite("output_right.jpg", output_right);
     EXPECT_EQ(image_size, output_right.size());
 
-    char* fp = out_buf["depthmap"]->data();
+    char* fp = out_buf["blob"]->data();
     for (int i = 0; i < target_data.size(); i++)
     {
         ASSERT_FLOAT_EQ(target_data[i], unpack<float>(&fp[i*sizeof(float)]));

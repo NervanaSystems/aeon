@@ -98,9 +98,9 @@ cv::Mat
     return image;
 }
 
-shared_ptr<image::params> make_params(int width, int height)
+shared_ptr<augment::image::params> make_params(int width, int height)
 {
-    shared_ptr<image::params> iparam = make_shared<image::params>();
+    shared_ptr<augment::image::params> iparam = make_shared<augment::image::params>();
     iparam->cropbox                  = cv::Rect(0, 0, width, height);
     iparam->output_size              = cv::Size(width, height);
     return iparam;
@@ -204,7 +204,7 @@ TEST(boundingbox, bbox)
     EXPECT_EQ(7, boxes[2].label);
 
     boundingbox::transformer  transform(cfg);
-    shared_ptr<image::params> iparam = make_params(256, 256);
+    shared_ptr<augment::image::params> iparam = make_params(256, 256);
     auto                      tx     = transform.transform(iparam, decoded);
 }
 
@@ -241,7 +241,7 @@ TEST(boundingbox, crop)
     ASSERT_EQ(8, boxes.size());
 
     boundingbox::transformer  transform(cfg);
-    shared_ptr<image::params> iparam = make_params(256, 256);
+    shared_ptr<augment::image::params> iparam = make_params(256, 256);
     iparam->cropbox                  = cv::Rect(35, 35, 40, 40);
 
     auto d = draw(256, 256, decoded->boxes(), iparam->cropbox);
@@ -298,7 +298,7 @@ TEST(boundingbox, rescale)
     ASSERT_EQ(8, boxes.size());
 
     boundingbox::transformer  transform(cfg);
-    shared_ptr<image::params> iparam    = make_params(256, 256);
+    shared_ptr<augment::image::params> iparam    = make_params(256, 256);
     iparam->output_size                 = cv::Size(512, 1024);
     auto                     tx_decoded = transform.transform(iparam, decoded);
     vector<boundingbox::box> tx_boxes   = tx_decoded->boxes();
@@ -347,7 +347,7 @@ TEST(boundingbox, flip)
     ASSERT_EQ(8, boxes.size());
 
     boundingbox::transformer  transform(cfg);
-    shared_ptr<image::params> iparam    = make_params(256, 256);
+    shared_ptr<augment::image::params> iparam    = make_params(256, 256);
     iparam->flip                        = 1;
     auto                     tx_decoded = transform.transform(iparam, decoded);
     vector<boundingbox::box> tx_boxes   = tx_decoded->boxes();
@@ -395,7 +395,7 @@ TEST(boundingbox, crop_flip)
     ASSERT_EQ(8, boxes.size());
 
     boundingbox::transformer  transform(cfg);
-    shared_ptr<image::params> iparam    = make_params(256, 256);
+    shared_ptr<augment::image::params> iparam    = make_params(256, 256);
     iparam->cropbox                     = cv::Rect(35, 35, 40, 40);
     iparam->output_size                 = cv::Size(256, 256);
     iparam->flip                        = 1;
@@ -431,7 +431,7 @@ TEST(boundingbox, angle)
     ASSERT_EQ(1, boxes.size());
 
     boundingbox::transformer  transform(cfg);
-    shared_ptr<image::params> iparam = make_params(256, 256);
+    shared_ptr<augment::image::params> iparam = make_params(256, 256);
     iparam->angle                    = 5;
     auto tx_decoded                  = transform.transform(iparam, decoded);
     EXPECT_EQ(nullptr, tx_decoded.get());

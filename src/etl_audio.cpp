@@ -18,19 +18,6 @@
 using namespace std;
 using namespace nervana;
 
-shared_ptr<audio::params> audio::param_factory::make_params(std::shared_ptr<const decoded>)
-{
-    auto audio_stgs = shared_ptr<audio::params>(new audio::params());
-
-    audio_stgs->add_noise             = _cfg.add_noise(_dre);
-    audio_stgs->noise_index           = _cfg.noise_index(_dre);
-    audio_stgs->noise_level           = _cfg.noise_level(_dre);
-    audio_stgs->noise_offset_fraction = _cfg.noise_offset_fraction(_dre);
-    audio_stgs->time_scale_fraction   = _cfg.time_scale_fraction(_dre);
-
-    return audio_stgs;
-}
-
 /** \brief Extract audio data from a wav file using sox */
 std::shared_ptr<audio::decoded> audio::extractor::extract(const void* item, size_t itemSize)
 {
@@ -64,7 +51,7 @@ audio::transformer::~transformer()
 * 5. Optionally time-warp (controlled by time_scale_fraction)
 */
 std::shared_ptr<audio::decoded>
-    audio::transformer::transform(std::shared_ptr<audio::params>  params,
+    audio::transformer::transform(std::shared_ptr<augment::audio::params>  params,
                                   std::shared_ptr<audio::decoded> decoded)
 {
     cv::Mat& samples_mat = decoded->get_time_data();

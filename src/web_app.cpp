@@ -15,33 +15,32 @@
 
 #include <iostream>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include "web_app.hpp"
 #include "async_manager.hpp"
 #include "util.hpp"
+#include "base64.hpp"
 
 using namespace std;
 
-// class web_starter
-// {
-// public:
-//     web_starter()
-//     {
-//         cout << __FILE__ << " " << __LINE__ << " web_starter" << endl;
-//     }
-//     virtual ~web_starter()
-//     {
-//         cout << __FILE__ << " " << __LINE__ << " ~web_starter" << endl;
-//     }
-// };
+web_app debug_web_app{};
 
-// static web_starter w_starter;
+void web_app::register_loader(nervana::loader* l)
+{
+    m_loader_list.push_back(l);
+}
 
-// void web_app::start()
-// {
-//     cout << __FILE__ << " " << __LINE__ << " test" << endl;
-// }
-
-static web_app s_web_app{};
+void web_app::deregister_loader(const nervana::loader* l)
+{
+    auto f = find(m_loader_list.begin(), m_loader_list.end(), l);
+    if (f != m_loader_list.end())
+    {
+        m_loader_list.erase(f);
+    }
+}
 
 static string master_page = R"(
     <html>
@@ -70,7 +69,7 @@ static string master_page = R"(
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Aeon Stats <span class="caret"></span></a>
                   <ul class="dropdown-menu">
-                    <li><a href="/stopwatch">Stopwatch</a></li>
+                    <li><a href="/loader">Loader</a></li>
                   </ul>
                 </li>
               </ul>
@@ -136,6 +135,42 @@ void web_app::stopwatch(web::page& p)
 {
 }
 
+void web_app::loader(web::page& p)
+{
+    ostream& out = p.output_stream();
+
+    for (nervana::loader* current_loader : m_loader_list)
+    {
+        auto config = current_loader->get_current_config();
+        out << "<pre>";
+        out << config.dump(4);
+        out << "</pre>";
+
+        // Fetch next output buffer
+        const nervana::fixed_buffer_map& fixed_buffer = *(current_loader->get_current_iter());
+        const nervana::buffer_fixed_size_elements* buffer_ptr = fixed_buffer["image"];
+        if (buffer_ptr)
+        {
+            // explicit copy the data
+            nervana::buffer_fixed_size_elements image_buffer{*buffer_ptr};
+            out << "<div class=\"container\">";
+            for (size_t i = 0; i < image_buffer.get_item_count(); i++)
+            {
+                cv::Mat mat = image_buffer.get_item_as_mat(i);
+                vector<uint8_t> encoded;
+                imencode(".jpg", mat, encoded);
+                vector<char> b64 = nervana::base64::encode((const char*)encoded.data(), encoded.size());
+                out << "\n<img src=\"data:image/jpg;base64,";
+                p.raw_send(b64.data(), b64.size());
+                out << "\" style=\"padding-top:5px\"";
+                out << "class=\"image col-lg-3\" ";
+                out << "/>";
+            }
+            out << "</div>";
+        }
+    }
+}
+
 void web_app::page_404(web::page& p)
 {
     ostream& out = p.output_stream();
@@ -156,6 +191,11 @@ void web_app::process_page_request(web::page& p, const string& url)
     else if (url == "/stopwatch")
     {
         auto mc = bind(&web_app::stopwatch, this, placeholders::_1);
+        p.master_page_string(master_page, "$content", mc);
+    }
+    else if (url == "/loader")
+    {
+        auto mc = bind(&web_app::loader, this, placeholders::_1);
         p.master_page_string(master_page, "$content", mc);
     }
     else

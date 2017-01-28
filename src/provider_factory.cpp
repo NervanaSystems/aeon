@@ -14,17 +14,7 @@
 */
 
 #include "provider_factory.hpp"
-#include "provider_image_boundingbox.hpp"
-#include "provider_image_classifier.hpp"
-#include "provider_image_localization.hpp"
-#include "provider_image_only.hpp"
-#include "provider_image_pixelmask.hpp"
-#include "provider_audio_classifier.hpp"
-#include "provider_audio_only.hpp"
-#include "provider_audio_transcriber.hpp"
-#include "provider_video_classifier.hpp"
-#include "provider_video_only.hpp"
-#include "provider_image_stereo.hpp"
+#include "provider_custom.hpp"
 #include "log.hpp"
 #include <sstream>
 
@@ -33,63 +23,29 @@ using namespace std;
 shared_ptr<nervana::provider_interface> nervana::provider_factory::create(nlohmann::json configJs)
 {
     shared_ptr<nervana::provider_interface> rc;
-    if (!configJs["type"].is_string())
-    {
-        throw std::invalid_argument("must have a property 'type' with type string.");
-    }
-    std::string mediaType = configJs["type"];
 
-    if (mediaType == "image,label")
+    provider_config cc{configJs};
+
+    for (auto j : cc.augmentation)
     {
-        rc = make_shared<image_classifier>(configJs);
+        auto val = j.find("type");
+        if (val == j.end())
+        {
+            throw std::invalid_argument("augmentation missing 'type'");
+        }
     }
-    else if (mediaType == "image")
+
+    nlohmann::json aug_config;
+    if (cc.augmentation.size() > 0)
     {
-        rc = make_shared<image_only>(configJs);
+        aug_config = cc.augmentation[0];
     }
-    else if (mediaType == "audio,transcription")
-    {
-        rc = make_shared<audio_transcriber>(configJs);
-    }
-    else if (mediaType == "audio,label")
-    {
-        rc = make_shared<audio_classifier>(configJs);
-    }
-    else if (mediaType == "audio")
-    {
-        rc = make_shared<audio_only>(configJs);
-    }
-    else if (mediaType == "image,localization")
-    {
-        rc = make_shared<image_localization>(configJs);
-    }
-    else if (mediaType == "image,pixelmask")
-    {
-        rc = make_shared<image_pixelmask>(configJs);
-    }
-    else if (mediaType == "image,boundingbox")
-    {
-        rc = make_shared<image_boundingbox>(configJs);
-    }
-    else if (mediaType == "stereo_image,blob")
-    {
-        rc = make_shared<image_stereo_blob>(configJs);
-    }
-    else if (mediaType == "video,label")
-    {
-        rc = make_shared<video_classifier>(configJs);
-    }
-    else if (mediaType == "video")
-    {
-        rc = make_shared<video_only>(configJs);
-    }
-    else
-    {
-        rc = nullptr;
-        stringstream ss;
-        ss << "provider type '" << mediaType << "' is not supported.";
-        throw std::runtime_error(ss.str());
-    }
+    // else
+    // {
+    //     aug_config = nlohmann::json::object();
+    // }
+    rc = make_shared<custom_provider::provider_base>(configJs, cc.etl, aug_config);
+
     return rc;
 }
 

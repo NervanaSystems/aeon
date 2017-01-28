@@ -21,6 +21,7 @@
 namespace nervana
 {
     class provider_factory;
+    class provider_config;
 }
 
 class nervana::provider_factory
@@ -31,4 +32,24 @@ public:
     static std::shared_ptr<nervana::provider_interface> create(nlohmann::json configJs);
     static std::shared_ptr<nervana::provider_interface>
         clone(const std::shared_ptr<nervana::provider_interface>& r);
+};
+
+class nervana::provider_config : public nervana::interface::config
+{
+public:
+    provider_config(nlohmann::json js)
+    {
+        for (auto& info : config_list)
+        {
+            info->parse(js);
+        }
+    }
+
+    std::vector<nlohmann::json> etl;
+    std::vector<nlohmann::json> augmentation;
+
+private:
+    std::vector<std::shared_ptr<nervana::interface::config_info_interface>> config_list = {
+        ADD_OBJECT(etl, mode::REQUIRED),
+        ADD_OBJECT(augmentation, mode::OPTIONAL)};
 };

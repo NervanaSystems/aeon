@@ -17,9 +17,12 @@
 
 #include <memory>
 #include <cstddef>
+
 #include "util.hpp"
 #include "interface.hpp"
 #include "buffer_batch.hpp"
+#include "augment_image.hpp"
+#include "augment_audio.hpp"
 
 namespace nervana
 {

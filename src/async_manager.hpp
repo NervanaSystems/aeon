@@ -94,7 +94,14 @@ public:
             // Just run this one in blocking mode
             m_pending_result = std::async(std::launch::async, &nervana::async_manager<INPUT, OUTPUT>::filler, this);
         }
-        result = m_pending_result.get();
+        try
+        {
+            result = m_pending_result.get();
+        }
+        catch(std::exception& e)
+        {
+            INFO << e.what();
+        }
         if (result != nullptr)
         {
             swap();

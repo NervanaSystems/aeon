@@ -51,24 +51,24 @@ public:
     std::string manifest_root;
     int         batch_size;
 
-    std::string type;
     std::string cache_directory      = "";
     int         block_size           = 0;
     float       subset_fraction      = 1.0;
-    bool        shuffle_every_epoch  = false;
+    bool        shuffle_enable       = false;
     bool        shuffle_manifest     = false;
     bool        single_thread        = false;
     bool        pinned               = false;
     int         random_seed          = 0;
     std::string iteration_mode       = "ONCE";
     int         iteration_mode_count = 0;
+    std::vector<nlohmann::json> etl;
+    std::vector<nlohmann::json> augmentation;
 
     loader_config(nlohmann::json js);
 
 private:
     loader_config() {}
     std::vector<std::shared_ptr<nervana::interface::config_info_interface>> config_list = {
-        ADD_SCALAR(type, mode::REQUIRED),
         ADD_SCALAR(manifest_filename, mode::REQUIRED),
         ADD_SCALAR(manifest_root, mode::OPTIONAL),
         ADD_SCALAR(batch_size, mode::REQUIRED),
@@ -77,13 +77,15 @@ private:
         ADD_SCALAR(subset_fraction,
                    mode::OPTIONAL,
                    [](decltype(subset_fraction) v) { return v <= 1.0 && v >= 0.0; }),
-        ADD_SCALAR(shuffle_every_epoch, mode::OPTIONAL),
+        ADD_SCALAR(shuffle_enable, mode::OPTIONAL),
         ADD_SCALAR(shuffle_manifest, mode::OPTIONAL),
         ADD_SCALAR(single_thread, mode::OPTIONAL),
         ADD_SCALAR(pinned, mode::OPTIONAL),
         ADD_SCALAR(random_seed, mode::OPTIONAL),
         ADD_SCALAR(iteration_mode, mode::OPTIONAL),
-        ADD_SCALAR(iteration_mode_count, mode::OPTIONAL)};
+        ADD_SCALAR(iteration_mode_count, mode::OPTIONAL),
+        ADD_OBJECT(etl, mode::REQUIRED),
+        ADD_OBJECT(augmentation, mode::OPTIONAL)};
 
     void validate();
 };
@@ -100,6 +102,8 @@ public:
 
     loader(const std::string&);
     loader(nlohmann::json&);
+
+    ~loader();
 
     const std::vector<std::string>& get_buffer_names() const;
     const std::map<std::string, shape_type>& get_names_and_shapes() const;
@@ -155,6 +159,11 @@ public:
         m_position          = 0;
     }
 
+    nlohmann::json get_current_config() const
+    {
+        return m_current_config;
+    }
+
 private:
     loader() = delete;
     void initialize(nlohmann::json& config_json);
@@ -175,4 +184,5 @@ private:
     size_t                              m_batch_count_value;
     size_t                              m_position{0};
     fixed_buffer_map*                   m_output_buffer_ptr{nullptr};
+    nlohmann::json                      m_current_config;
 };

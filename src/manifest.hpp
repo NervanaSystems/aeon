@@ -42,11 +42,6 @@ namespace nervana
 
         void set_block_load_sequence(const std::vector<std::pair<size_t, size_t>>& seq)
         {
-            //            INFO << "block load sequence set";
-            //            for (auto s : seq)
-            //            {
-            //                INFO << "\t" << s.first << ", " << s.second << ", " << s.first + s.second;
-            //            }
             m_block_load_sequence = seq;
         }
 

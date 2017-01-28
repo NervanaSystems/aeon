@@ -154,10 +154,12 @@ public:
 
     virtual ~buffer_fixed_size_elements();
 
-    virtual void allocate(const shape_type& shp_tp, size_t batch_size, bool pinned = false);
+    explicit buffer_fixed_size_elements(const buffer_fixed_size_elements&);
+
+    virtual void allocate();
     const char* get_item(size_t index) const;
     char* get_item(size_t index);
-    cv::Mat get_item_as_mat(size_t index);
+    cv::Mat get_item_as_mat(size_t index, bool channel_major=false) const;
     char*             data() const { return m_data; }
     size_t            get_item_count() const { return m_size / m_stride; }
     size_t            size() const { return m_size; }
@@ -166,11 +168,11 @@ protected:
     buffer_fixed_size_elements() = delete;
 
     char*      m_data{nullptr};
+    shape_type m_shape_type;
     size_t     m_size{0};
     size_t     m_batch_size{0};
     size_t     m_stride{0};
     bool       m_pinned{false};
-    shape_type m_shape_type;
 };
 
 class nervana::fixed_buffer_map
@@ -186,6 +188,11 @@ public:
             add_item(sz.first, sz.second, batch_size, pinned);
         }
     }
+
+    // explicit fixed_buffer_map(const fixed_buffer_map& rhs)
+    // {
+
+    // }
 
     void add_item(const std::string& name,
                   const shape_type&  shp_tp,
@@ -219,6 +226,8 @@ public:
 
     size_t size() const { return m_data.size(); }
 private:
+    fixed_buffer_map(const fixed_buffer_map&) = delete;
+
     // these must be defined because fixed_buffer_map[0] is resolved to call the string method
     const buffer_fixed_size_elements* operator[](int) const = delete;
     buffer_fixed_size_elements* operator[](int)             = delete;

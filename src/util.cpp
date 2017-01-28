@@ -79,7 +79,26 @@ std::string nervana::to_lower(const std::string& s)
     return rc;
 }
 
-vector<string> nervana::split(const string& src, char delimiter)
+string nervana::trim(const string& s)
+{
+    string rc = s;
+    // trim trailing spaces
+    size_t pos = rc.find_last_not_of(" \t");
+    if (string::npos != pos)
+    {
+        rc = rc.substr(0, pos + 1);
+    }
+
+    // trim leading spaces
+    pos = rc.find_first_not_of(" \t");
+    if (string::npos != pos)
+    {
+        rc = rc.substr(pos);
+    }
+    return rc;
+}
+
+vector<string> nervana::split(const string& src, char delimiter, bool do_trim)
 {
     size_t         pos;
     string         token;
@@ -89,11 +108,19 @@ vector<string> nervana::split(const string& src, char delimiter)
     {
         token = src.substr(start, pos - start);
         start = pos + 1;
+        if (do_trim)
+        {
+            token = trim(token);
+        }
         rc.push_back(token);
     }
     if (start <= src.size())
     {
         token = src.substr(start);
+        if (do_trim)
+        {
+            token = trim(token);
+        }
         rc.push_back(token);
     }
     return rc;

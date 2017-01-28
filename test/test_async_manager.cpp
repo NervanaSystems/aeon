@@ -107,23 +107,3 @@ TEST(async_manager, source)
     EXPECT_EQ(nullptr, datagen.next());
     EXPECT_EQ(nullptr, datagen.next());
 }
-
-TEST(async_manager, two_layer)
-{
-    data_source     datagen(19, 0);
-    integer_batcher layer_1(&datagen);
-
-    for (int i = 0; i < 10; i++)
-    {
-        auto data_ptr = layer_1.next();
-        if (data_ptr)
-        {
-            const minibatch& data = *data_ptr;
-            cout << "data[0]=" << data[0] << ", data[1]=" << data[1] << endl;
-        }
-        else
-        {
-            cout << "nullptr" << endl;
-        }
-    }
-}

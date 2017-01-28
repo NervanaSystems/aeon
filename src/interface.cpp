@@ -23,7 +23,7 @@ using namespace nervana;
 using namespace std;
 using namespace nlohmann;
 
-void interface::config::verify_config(
+void json_configurable::verify_config(
     const std::string&                                          location,
     const vector<shared_ptr<interface::config_info_interface>>& config,
     nlohmann::json                                              js) const
@@ -64,8 +64,11 @@ void interface::config::verify_config(
                     }
                 }
                 stringstream ss;
-                ss << "key '" << key << "'"
-                   << " not found, did you mean '" << suggestion << "'";
+                ss << "key '" << key << "' not found";
+                if (distance < key.size()/2)
+                {
+                    ss << ", did you mean '" << suggestion << "'";
+                }
                 throw invalid_argument(ss.str());
             }
         }
@@ -156,4 +159,9 @@ std::string nervana::dump_default(const std::bernoulli_distribution& v)
     stringstream ss;
     ss << "{" << v.p() << "}";
     return ss.str();
+}
+
+std::string nervana::dump_default(std::vector<nlohmann::json> v)
+{
+    return "unimplemented";
 }

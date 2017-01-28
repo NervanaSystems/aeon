@@ -158,20 +158,24 @@ void web_server()
 
 extern "C" int main(int argc, char** argv)
 {
-    //    struct sigaction sigIntHandler;
-    //    sigIntHandler.sa_handler = exit_func;
-    //    sigemptyset(&sigIntHandler.sa_mask);
-    //    sigIntHandler.sa_flags = 0;
-    //    sigaction(SIGINT, &sigIntHandler, NULL);
-
-    //    web_server();
-    //    return 0;
+    cout << "OpenCV version : " << CV_VERSION << endl;
     mock_nds_server server;
+
+    const char* exclude = "--gtest_filter=-benchmark.*";
+    vector<char*> argv_vector;
+    argv_vector.push_back(argv[0]);
+    argv_vector.push_back((char*)exclude);
+    for (int i=1; i<argc; i++)
+    {
+        argv_vector.push_back(argv[i]);
+    }
+    argc++;
+
 
     CreateImageDataset();
     test_cache_directory = nervana::file_util::make_temp_directory();
 
-    ::testing::InitGoogleTest(&argc, argv);
+    ::testing::InitGoogleTest(&argc, argv_vector.data());
     int rc = RUN_ALL_TESTS();
 
     nervana::file_util::remove_directory(test_cache_directory);

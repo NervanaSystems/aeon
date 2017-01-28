@@ -22,16 +22,14 @@
 #include "interface.hpp"
 #include "image.hpp"
 #include "util.hpp"
+#include "augment_image.hpp"
 
 namespace nervana
 {
     namespace image
     {
         class config;
-        class params;
         class decoded;
-
-        class param_factory; // goes from config -> params
 
         class extractor;
         class transformer;
@@ -47,29 +45,6 @@ namespace nervana
         class config; // Forward decl for friending
     }
 }
-
-class nervana::image::params : public nervana::interface::params
-{
-    friend class image::param_factory;
-
-public:
-    void dump(std::ostream& = std::cout);
-
-    cv::Rect           cropbox;
-    cv::Size2i         output_size;
-    int                angle = 0;
-    bool               flip  = false;
-    std::vector<float> lighting; // pixelwise random values
-    float              color_noise_std     = 0;
-    float              contrast            = 1.0;
-    float              brightness          = 1.0;
-    float              saturation          = 1.0;
-    int                hue                 = 0;
-    bool               debug_deterministic = false;
-
-private:
-    params() {}
-};
 
 /**
  * \brief Configuration for image ETL
@@ -87,42 +62,10 @@ public:
     uint32_t    width;
     std::string output_type{"uint8_t"};
 
-    bool     do_area_scale        = false;
     bool     channel_major        = true;
-    bool     crop_enable          = true;
-    bool     fixed_aspect_ratio   = false;
     uint32_t channels             = 3;
-    float    fixed_scaling_factor = -1;
 
-    /** Scale the crop box (width, height) */
-    std::uniform_real_distribution<float> scale{1.0f, 1.0f};
-
-    /** Rotate the image (rho, phi) */
-    std::uniform_int_distribution<int> angle{0, 0};
-
-    /** Adjust lighting */
-    std::normal_distribution<float> lighting{0.0f, 0.0f};
-
-    /** Adjust aspect ratio */
-    std::uniform_real_distribution<float> horizontal_distortion{1.0f, 1.0f};
-
-    /** Adjust contrast */
-    std::uniform_real_distribution<float> contrast{1.0f, 1.0f};
-
-    /** Adjust brightness */
-    std::uniform_real_distribution<float> brightness{1.0f, 1.0f};
-
-    /** Adjust saturation */
-    std::uniform_real_distribution<float> saturation{1.0f, 1.0f};
-
-    /** Rotate hue in degrees. Valid values are [0-360] */
-    std::uniform_int_distribution<int> hue{0, 0};
-
-    /** Offset from center for the crop */
-    std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
-
-    /** Flip the image left to right */
-    std::bernoulli_distribution flip_distribution{0};
+    std::string name;
 
     config(nlohmann::json js);
 
@@ -134,38 +77,17 @@ public:
     config() {}
 
 private:
-    std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+    std::vector<std::shared_ptr<interface::config_info_interface>> config_list =
+    {
         ADD_SCALAR(height, mode::REQUIRED),
         ADD_SCALAR(width, mode::REQUIRED),
-        ADD_DISTRIBUTION(scale,
-                         mode::OPTIONAL,
-                         [](const std::uniform_real_distribution<float>& v) {
-                             return v.a() >= 0 && v.a() <= 1 && v.b() >= 0 && v.b() <= 1 &&
-                                    v.a() <= v.b();
-                         }),
-        ADD_DISTRIBUTION(angle, mode::OPTIONAL, [](decltype(angle) v) { return v.a() <= v.b(); }),
-        ADD_DISTRIBUTION(lighting, mode::OPTIONAL),
-        ADD_DISTRIBUTION(horizontal_distortion,
-                         mode::OPTIONAL,
-                         [](decltype(horizontal_distortion) v) { return v.a() <= v.b(); }),
-        ADD_SCALAR(flip_enable, mode::OPTIONAL),
-        ADD_SCALAR(center, mode::OPTIONAL),
-        ADD_SCALAR(output_type,
-                   mode::OPTIONAL,
-                   [](const std::string& v) { return output_type::is_valid_type(v); }),
-        ADD_SCALAR(do_area_scale, mode::OPTIONAL),
+        ADD_SCALAR(name, mode::OPTIONAL),
         ADD_SCALAR(channel_major, mode::OPTIONAL),
         ADD_SCALAR(channels, mode::OPTIONAL, [](uint32_t v) { return v == 1 || v == 3; }),
-        ADD_SCALAR(crop_enable, mode::OPTIONAL),
-        ADD_SCALAR(fixed_aspect_ratio, mode::OPTIONAL),
-        ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL),
-        ADD_DISTRIBUTION(
-            contrast, mode::OPTIONAL, [](decltype(contrast) v) { return v.a() <= v.b(); }),
-        ADD_DISTRIBUTION(
-            brightness, mode::OPTIONAL, [](decltype(brightness) v) { return v.a() <= v.b(); }),
-        ADD_DISTRIBUTION(
-            saturation, mode::OPTIONAL, [](decltype(saturation) v) { return v.a() <= v.b(); }),
-        ADD_DISTRIBUTION(hue, mode::OPTIONAL, [](decltype(hue) v) { return v.a() <= v.b(); })};
+        ADD_SCALAR(output_type,
+                   mode::OPTIONAL,
+                   [](const std::string& v) { return output_type::is_valid_type(v); })
+    };
 
     void validate();
 
@@ -173,28 +95,11 @@ private:
     bool center      = true;
 };
 
-class nervana::image::param_factory : public interface::param_factory<image::decoded, image::params>
-{
-public:
-    param_factory(image::config& cfg)
-        : _cfg{cfg}
-        , _dre{0}
-    {
-        _dre.seed(get_global_random_seed());
-    }
-    virtual ~param_factory() {}
-    std::shared_ptr<image::params> make_params(std::shared_ptr<const image::decoded> input);
-
-private:
-    image::config&             _cfg;
-    std::default_random_engine _dre;
-};
-
 // ===============================================================================================
 // Decoded
 // ===============================================================================================
 
-class nervana::image::decoded : public interface::decoded_media
+class nervana::image::decoded : public interface::decoded_image
 {
 public:
     decoded() {}
@@ -220,6 +125,10 @@ public:
     size_t                 get_size() const
     {
         return get_image_size().area() * get_image_channels() * get_image_count();
+    }
+    cv::Size2i image_size() const override
+    {
+        return _images[0].size();
     }
 
 protected:
@@ -248,15 +157,15 @@ private:
     int _color_mode;
 };
 
-class nervana::image::transformer : public interface::transformer<image::decoded, image::params>
+class nervana::image::transformer : public interface::transformer<image::decoded, augment::image::params>
 {
 public:
     transformer(const image::config&);
     ~transformer() {}
-    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params>,
+    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<augment::image::params>,
                                                       std::shared_ptr<image::decoded>) override;
 
-    cv::Mat transform_single_image(std::shared_ptr<image::params>, cv::Mat&);
+    cv::Mat transform_single_image(std::shared_ptr<augment::image::params>, cv::Mat&);
 
 private:
     image::photometric photo;
@@ -265,7 +174,7 @@ private:
 class nervana::image::loader : public interface::loader<image::decoded>
 {
 public:
-    loader(const image::config& cfg);
+    loader(const image::config& cfg, bool fixed_aspect_ratio);
     ~loader() {}
     virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) override;
 

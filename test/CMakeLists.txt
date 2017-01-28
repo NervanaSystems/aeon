@@ -5,6 +5,7 @@ set (SRC
     manifest_builder.cpp
     test_async_manager.cpp
     test_audio.cpp
+    test_augmentation.cpp
     test_base64.cpp
     test_bbox.cpp
     test_block_loader_file.cpp
@@ -29,6 +30,7 @@ set (SRC
     test_types.cpp
     test_util.cpp
     test_video.cpp
+    test_raw_image.cpp
 )
 
 find_package(GTest)
@@ -38,7 +40,7 @@ if (GTEST_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
 
     add_executable(test ${SRC})
-    target_link_libraries(test aeon pthread sox ${CURL_LIBRARIES} ${GTEST_LIBRARIES} opencv_imgproc opencv_highgui opencv_core ${PYTHON_LIBRARIES})
+    target_link_libraries(test aeon pthread sox ${CURL_LIBRARIES} ${GTEST_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
     add_dependencies(test aeon)
 else()
     message("gtest not found, skipping unit tests")

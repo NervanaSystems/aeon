@@ -17,6 +17,8 @@
 #include <string>
 #include <sstream>
 #include <random>
+#include <iostream>
+#include <ios>
 
 #include "gtest/gtest.h"
 
@@ -25,6 +27,7 @@
 #include "loader.hpp"
 #include "manifest_builder.hpp"
 #include "gen_image.hpp"
+#include "file_util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -39,7 +42,7 @@ static string create_manifest_file(size_t record_count, size_t width, size_t hei
     return manifest_filename;
 }
 
-TEST(loader, iteration_mode)
+TEST(loader, syntax)
 {
     int    height        = 32;
     int    width         = 32;
@@ -47,86 +50,28 @@ TEST(loader, iteration_mode)
     string manifest_root = string(CURDIR) + "/test_data";
     string manifest      = manifest_root + "/manifest.csv";
 
-    {
-        nlohmann::json js = {{"type", "image,label"},
-                             {"manifest_root", manifest_root},
-                             {"manifest_filename", manifest},
-                             {"batch_size", batch_size},
-                             {"iteration_mode", "INFINITE"},
-                             {"image",
-                              {{"height", height},
-                               {"width", width},
-                               {"channel_major", false},
-                               {"flip_enable", true}}},
-                             {"label", {{"binary", false}}}};
+    nlohmann::json image = {{"type", "image"},
+                           {"name", "image1"},
+                           {"height", height},
+                           {"width", width},
+                           {"channel_major", false}};
+    nlohmann::json label = {{"type", "label"},
+                           {"name", "label1"},
+                           {"binary", false}};
+    nlohmann::json augmentation = {{"type", "image"},
+                            {"height", height},
+                            {"width", width},
+                            {"flip_enable", true}};
+    nlohmann::json js = {
+                         {"manifest_root", manifest_root},
+                         {"manifest_filename", manifest},
+                         {"batch_size", batch_size},
+                         {"iteration_mode", "INFINITE"},
+                         {"etl", {image, label}},
+                         {"augmentation", {augmentation}}
+                         };
 
-        auto train_set = loader{js};
-    }
-
-    {
-        nlohmann::json js = {{"type", "image,label"},
-                             {"manifest_filename", manifest},
-                             {"manifest_root", manifest_root},
-                             {"batch_size", batch_size},
-                             {"iteration_mode", "ONCE"},
-                             {"image",
-                              {{"height", height},
-                               {"width", width},
-                               {"channel_major", false},
-                               {"flip_enable", true}}},
-                             {"label", {{"binary", false}}}};
-
-        auto train_set = loader{js};
-    }
-
-    {
-        nlohmann::json js = {{"type", "image,label"},
-                             {"manifest_filename", manifest},
-                             {"manifest_root", manifest_root},
-                             {"batch_size", batch_size},
-                             {"iteration_mode", "COUNT"},
-                             {"iteration_mode_count", 1000},
-                             {"image",
-                              {{"height", height},
-                               {"width", width},
-                               {"channel_major", false},
-                               {"flip_enable", true}}},
-                             {"label", {{"binary", false}}}};
-
-        auto train_set = loader{js};
-    }
-
-    {
-        nlohmann::json js = {{"type", "image,label"},
-                             {"manifest_filename", manifest},
-                             {"manifest_root", manifest_root},
-                             {"batch_size", batch_size},
-                             {"iteration_mode", "COUNT"},
-                             {"image",
-                              {{"height", height},
-                               {"width", width},
-                               {"channel_major", false},
-                               {"flip_enable", true}}},
-                             {"label", {{"binary", false}}}};
-
-        EXPECT_THROW(loader{js}, std::invalid_argument);
-    }
-
-    {
-        nlohmann::json js = {{"type", "image,label"},
-                             {"manifest_filename", manifest},
-                             {"manifest_root", manifest_root},
-                             {"batch_size", batch_size},
-                             {"iteration_mode", "BLAH"},
-                             {"image",
-                              {{"height", height},
-                               {"width", width},
-                               {"channel_major", false},
-                               {"flip_enable", true}}},
-                             {"label", {{"binary", false}}}};
-
-        EXPECT_THROW(loader{js}, std::invalid_argument);
-    }
+    auto train_set = loader{js};
 }
 
 TEST(loader, iterator)
@@ -136,13 +81,24 @@ TEST(loader, iterator)
     size_t         batch_size        = 1;
     size_t         record_count      = 10;
     string         manifest_filename = create_manifest_file(record_count, width, height);
-    nlohmann::json js                = {
-        {"type", "image,label"},
-        {"manifest_filename", manifest_filename},
-        {"batch_size", batch_size},
-        {"image",
-         {{"height", height}, {"width", width}, {"channel_major", false}, {"flip_enable", true}}},
-        {"label", {{"binary", false}}}};
+
+    nlohmann::json image = {{"type", "image"},
+                           {"name", "image1"},
+                           {"height", height},
+                           {"width", width},
+                           {"channel_major", false}};
+    nlohmann::json label = {{"type", "label"},
+                           {"name", "label1"},
+                           {"binary", false}};
+    nlohmann::json augmentation = {{"type", "image"},
+                            {"flip_enable", true}};
+    nlohmann::json js = {
+                         {"manifest_filename", manifest_filename},
+                         {"batch_size", batch_size},
+                         {"iteration_mode", "ONCE"},
+                         {"etl", {image, label}},
+                         {"augmentation", {augmentation}}
+                         };
 
     loader train_set{js};
 
@@ -173,14 +129,24 @@ TEST(loader, once)
     size_t         batch_size        = 2;
     size_t         record_count      = 10;
     string         manifest_filename = create_manifest_file(record_count, width, height);
-    nlohmann::json js                = {
-        {"type", "image,label"},
-        {"manifest_filename", manifest_filename},
-        {"batch_size", batch_size},
-        {"iteration_mode", "ONCE"},
-        {"image",
-         {{"height", height}, {"width", width}, {"channel_major", false}, {"flip_enable", true}}},
-        {"label", {{"binary", false}}}};
+
+    nlohmann::json image = {{"type", "image"},
+                           {"name", "image1"},
+                           {"height", height},
+                           {"width", width},
+                           {"channel_major", false}};
+    nlohmann::json label = {{"type", "label"},
+                           {"name", "label1"},
+                           {"binary", false}};
+    nlohmann::json augmentation = {{"type", "image"},
+                            {"flip_enable", true}};
+    nlohmann::json js = {
+                         {"manifest_filename", manifest_filename},
+                         {"batch_size", batch_size},
+                         {"iteration_mode", "ONCE"},
+                         {"etl", {image, label}},
+                         {"augmentation", {augmentation}}
+                         };
 
     loader train_set{js};
 
@@ -201,15 +167,25 @@ TEST(loader, count)
     size_t         batch_size        = 1;
     size_t         record_count      = 10;
     string         manifest_filename = create_manifest_file(record_count, width, height);
-    nlohmann::json js                = {
-        {"type", "image,label"},
-        {"manifest_filename", manifest_filename},
-        {"batch_size", batch_size},
-        {"iteration_mode", "COUNT"},
-        {"iteration_mode_count", 4},
-        {"image",
-         {{"height", height}, {"width", width}, {"channel_major", false}, {"flip_enable", true}}},
-        {"label", {{"binary", false}}}};
+
+    nlohmann::json image = {{"type", "image"},
+                           {"name", "image1"},
+                           {"height", height},
+                           {"width", width},
+                           {"channel_major", false}};
+    nlohmann::json label = {{"type", "label"},
+                           {"name", "label1"},
+                           {"binary", false}};
+    nlohmann::json augmentation = {{"type", "image"},
+                            {"flip_enable", true}};
+    nlohmann::json js = {
+                         {"manifest_filename", manifest_filename},
+                         {"batch_size", batch_size},
+                         {"iteration_mode", "COUNT"},
+                         {"iteration_mode_count", 4},
+                         {"etl", {image, label}},
+                         {"augmentation", {augmentation}}
+                         };
 
     int expected_iterations = 4;
 
@@ -233,14 +209,24 @@ TEST(loader, infinite)
     size_t         batch_size        = 1;
     size_t         record_count      = 10;
     string         manifest_filename = create_manifest_file(record_count, width, height);
-    nlohmann::json js                = {
-        {"type", "image,label"},
-        {"manifest_filename", manifest_filename},
-        {"batch_size", batch_size},
-        {"iteration_mode", "INFINITE"},
-        {"image",
-         {{"height", height}, {"width", width}, {"channel_major", false}, {"flip_enable", true}}},
-        {"label", {{"binary", false}}}};
+
+    nlohmann::json image = {{"type", "image"},
+                           {"name", "image1"},
+                           {"height", height},
+                           {"width", width},
+                           {"channel_major", false}};
+    nlohmann::json label = {{"type", "label"},
+                           {"name", "label1"},
+                           {"binary", false}};
+    nlohmann::json augmentation = {{"type", "image"},
+                            {"flip_enable", true}};
+    nlohmann::json js = {
+                         {"manifest_filename", manifest_filename},
+                         {"batch_size", batch_size},
+                         {"iteration_mode", "INFINITE"},
+                         {"etl", {image, label}},
+                         {"augmentation", {augmentation}}
+                         };
 
     loader train_set{js};
 
@@ -267,16 +253,26 @@ TEST(loader, cache)
     size_t         block_size        = 300;
     string         cache_root        = file_util::get_temp_directory();
     string         manifest_filename = create_manifest_file(record_count, width, height);
-    nlohmann::json js                = {
-        {"type", "image,label"},
-        {"manifest_filename", manifest_filename},
-        {"batch_size", batch_size},
-        {"block_size", block_size},
-        {"cache_directory", cache_root},
-        {"iteration_mode", "INFINITE"},
-        {"image",
-         {{"height", height}, {"width", width}, {"channel_major", false}, {"flip_enable", true}}},
-        {"label", {{"binary", false}}}};
+
+    nlohmann::json image = {{"type", "image"},
+                           {"name", "image1"},
+                           {"height", height},
+                           {"width", width},
+                           {"channel_major", false}};
+    nlohmann::json label = {{"type", "label"},
+                           {"name", "label1"},
+                           {"binary", false}};
+    nlohmann::json augmentation = {{"type", "image"},
+                            {"flip_enable", true}};
+    nlohmann::json js = {
+                         {"manifest_filename", manifest_filename},
+                         {"batch_size", batch_size},
+                         {"block_size", block_size},
+                         {"cache_directory", cache_root},
+                         {"iteration_mode", "INFINITE"},
+                         {"etl", {image, label}},
+                         {"augmentation", {augmentation}}
+                         };
 
     loader train_set{js};
 
@@ -302,14 +298,22 @@ TEST(loader, test)
     size_t         record_count      = 1003;
     size_t         block_size        = 300;
     string         manifest_filename = create_manifest_file(record_count, width, height);
-    nlohmann::json js                = {
-        {"type", "image,label"},
-        {"manifest_filename", manifest_filename},
-        {"batch_size", batch_size},
-        {"block_size", block_size},
-        {"image",
-         {{"height", height}, {"width", width}, {"channel_major", false}, {"flip_enable", true}}},
-        {"label", {{"binary", false}}}};
+
+    nlohmann::json js_image = {{"type", "image"},
+                           {"height", height},
+                           {"width", width},
+                           {"channel_major", false}};
+    nlohmann::json label = {{"type", "label"},
+                           {"binary", false}};
+    nlohmann::json augmentation = {{"type", "image"},
+                            {"flip_enable", true}};
+    nlohmann::json js = {
+                         {"manifest_filename", manifest_filename},
+                         {"batch_size", batch_size},
+                         {"block_size", block_size},
+                         {"etl", {js_image, label}},
+                         {"augmentation", {augmentation}}
+                         };
 
     loader train_set{js};
 
@@ -331,15 +335,9 @@ TEST(loader, test)
 
     int count       = 0;
     int expected_id = 0;
-    for (const fixed_buffer_map& data :
-         train_set) // if d1 created with infinite, this will just keep going
+    for (const fixed_buffer_map& data : train_set)
     {
         ASSERT_EQ(2, data.size());
-        //        model_fit_one_iter(data);
-        //        data['image'], data['label'];  // for image, label provider
-        //        if(error < thresh) {
-        //            break;
-        //        }
         const buffer_fixed_size_elements* image_buffer_ptr = data["image"];
         ASSERT_NE(nullptr, image_buffer_ptr);
         const buffer_fixed_size_elements& image_buffer = *image_buffer_ptr;
@@ -360,147 +358,285 @@ TEST(loader, test)
     }
 }
 
-// TEST(loader, imagenet)
-// {
-//     int    height        = 224;
-//     int    width         = 224;
-//     size_t batch_size    = 128;
-//     std::string manifest_root = "/mnt/e/imagenet/I1K_ingested/i1k-extracted/";
-//     std::string manifest      = manifest_root + "train-index.tsv";
+TEST(loader, custom_provider)
+{
+    int            height            = 16;
+    int            width             = 16;
+    size_t         batch_size        = 32;
+    size_t         record_count      = 1003;
+    string         manifest = create_manifest_file(record_count, width, height);
 
-//     nlohmann::json js = {{"type", "image,label"},
-//                             {"manifest_root", manifest_root},
-//                             {"manifest_filename", manifest},
-//                             {"batch_size", batch_size},
-//                             {"iteration_mode", "INFINITE"},
-//                             {"cache_directory", "/mnt/c/aeon_cache"},
-//                             {"single_thread", false},
-//                             {"image",
-//                             {{"height", height},
-//                             {"width", width},
-//                             {"channel_major", false},
-//                             {"flip_enable", true}}},
-//                             {"label", {{"binary", false}}}};
+    nlohmann::json image_config = {{"type", "image"},
+                           {"height", height},
+                           {"width", width},
+                           {"channel_major", false}};
+    nlohmann::json label_config = {{"type", "label"},
+                            {"binary", false}};
+    nlohmann::json augmentation = {{"height", height},
+                            {"width", width},
+                            {"type", "image"},
+                            {"flip_enable", true}};
+    nlohmann::json js = {
+                         {"single_thread", true},
+                         {"manifest_filename", manifest},
+                         {"batch_size", batch_size},
+                         {"iteration_mode", "INFINITE"},
+                         {"etl", {image_config, label_config}},
+                         {"augmentation", {augmentation}}};
 
-//     std::chrono::high_resolution_clock timer;
-//     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
-//     std::chrono::time_point<std::chrono::high_resolution_clock> zero_time;
-//     try
-//     {
-//         auto train_set = nervana::loader{js};
+    loader train_set{js};
 
-//         size_t total_batch = ceil((float)train_set.record_count() / (float)batch_size);
-//         size_t current_batch = 0;
-//         const size_t batches_per_output = 10;
-//         for (const nervana::fixed_buffer_map& x : train_set)
-//         {
-//             (void)x;
-//             if (++current_batch % batches_per_output == 0)
-//             {
-//                 auto last_time = start_time;
-//                 start_time = timer.now();
-//                 float ms_time =
-//                     std::chrono::duration_cast<std::chrono::milliseconds>(start_time - last_time)
-//                         .count();
-//                 float sec_time = ms_time / 1000.;
-//                 std::cout << "batch " << current_batch << " of " << total_batch;
-//                 if (last_time != zero_time)
-//                 {
-//                     std::cout << " time " << ms_time;
-//                     std::cout << " " << (float)batches_per_output / sec_time << " batches/s";
-//                 }
-//                 std::cout << std::endl;
-//             }
-//         }
-//     }
-//     catch(std::exception& err)
-//     {
-//         std::cout << "error processing dataset" << std::endl;
-//         std::cout << err.what() << std::endl;
-//     }
-// }
+    auto buf_names = train_set.get_buffer_names();
+    EXPECT_EQ(2, buf_names.size());
+    EXPECT_NE(find(buf_names.begin(), buf_names.end(), "image"), buf_names.end());
+    EXPECT_NE(find(buf_names.begin(), buf_names.end(), "label"), buf_names.end());
 
-// TEST(loader, decode_jpeg)
-// {
-//     stopwatch timer;
-//     std::string manifest_root = "/scratch/bob/I1K_ingested/i1k-extracted/";
-//     std::string manifest_path = manifest_root + "train-index.tsv";
+    auto image_shape = train_set.get_shape("image");
+    auto label_shape = train_set.get_shape("label");
 
-//     manifest_file manifest{manifest_path, false, manifest_root};
+    ASSERT_EQ(3, image_shape.size());
+    EXPECT_EQ(height, image_shape[0]);
+    EXPECT_EQ(width, image_shape[1]);
+    EXPECT_EQ(3, image_shape[2]);
 
-//     vector<vector<string>>* block = nullptr;
-//     size_t count = 0;
-//     size_t mod = 10000;
-//     timer.start();
-//     for (block = manifest.next(); block != nullptr; block = manifest.next())
-//     {
-//         for (const vector<string>& record : *block)
-//         {
-//             count++;
-//             const string& image_path = record[0];
-//             cv::Mat image = cv::imread(image_path);
-//             if (count % mod == 0)
-//             {
-//                 auto time = (float)timer.get_milliseconds() / 1000.;
-//                 cout << time << endl;
-//                 cout << count << " images/second " << ((float)count/time) << endl;
-//             }
-//         }
-//     }
-// }
+    ASSERT_EQ(1, label_shape.size());
+    EXPECT_EQ(1, label_shape[0]);
 
-// TEST(loader, load_jpeg)
-// {
-//     stopwatch timer;
-//     std::string manifest_root = "/scratch/bob/I1K_ingested/i1k-extracted/";
-//     std::string manifest_path = manifest_root + "train-index.tsv";
+    int count       = 0;
+    int expected_id = 0;
+    for (const fixed_buffer_map& data : train_set)
+    {
+        ASSERT_EQ(2, data.size());
+        const buffer_fixed_size_elements* image_buffer_ptr = data["image"];
+        ASSERT_NE(nullptr, image_buffer_ptr);
+        const buffer_fixed_size_elements& image_buffer = *image_buffer_ptr;
+        for (int i = 0; i < batch_size; i++)
+        {
+            const char* image_data = image_buffer.get_item(i);
+            cv::Mat     image{height, width, CV_8UC3, (char*)image_data};
+            int         actual_id = embedded_id_image::read_embedded_id(image);
+            // INFO << "train_loop " << expected_id << "," << actual_id;
+            ASSERT_EQ(expected_id % record_count, actual_id);
+            expected_id++;
+        }
 
-//     manifest_file manifest{manifest_path, false, manifest_root};
+        if (count++ == 8)
+        {
+            break;
+        }
+    }
+}
 
-//     vector<vector<string>>* block = nullptr;
-//     size_t count = 0;
-//     size_t mod = 10000;
-//     timer.start();
-//     for (block = manifest.next(); block != nullptr; block = manifest.next())
-//     {
-//         for (const vector<string>& record : *block)
-//         {
-//             count++;
-//             const string& image_path = record[0];
-//             auto data = file_util::read_file_contents(image_path);
-//             if (count % mod == 0)
-//             {
-//                 auto time = (float)timer.get_milliseconds() / 1000.;
-//                 cout << count << " images/second " << ((float)count/time) << endl;
-//             }
-//         }
-//     }
-// }
+TEST(benchmark, imagenet)
+{
+    char* manifest_root = getenv("TEST_IMAGENET_ROOT");
+    char* cache_root    = getenv("TEST_IMAGENET_CACHE");
 
-// TEST(loader, load_block_manager)
-// {
-//     stopwatch timer;
-//     std::string manifest_root = "/scratch/bob/I1K_ingested/i1k-extracted/";
-//     std::string manifest_path = manifest_root + "train-index.tsv";
-//     string cache_directory = "/scratch/bob/aeon_cache";
-//     bool shuffle = false;
-//     size_t block_size = 5000;
+    if (!manifest_root)
+    {
+        cout << "Environment vars TEST_IMAGENET_ROOT not found\n";
+    }
+    else
+    {
+        int    height        = 224;
+        int    width         = 224;
+        size_t batch_size    = 128;
+        string manifest      = file_util::path_join(manifest_root, "train-index.tsv");
 
-//     manifest_file manifest{manifest_path, false, manifest_root};
+        nlohmann::json js = {{"type", "image,label"},
+                                {"manifest_root", manifest_root},
+                                {"manifest_filename", manifest},
+                                {"batch_size", batch_size},
+                                {"iteration_mode", "INFINITE"},
+                                {"cache_directory", cache_root},
+                                {"single_thread", false},
+                                {"image",
+                                    {{"height", height},
+                                    {"width", width},
+                                    {"channel_major", false},
+                                    // {"angle", {-90, 90}},
+                                    {"scale", {0.5, 1.0}},
+                                    // {"hue", {-360, 360}},
+                                    {"saturation", {0.5, 2.0}},
+                                    {"contrast", {0.5, 1.0}},
+                                    {"brightness", {0.5, 1.0}},
+                                    {"flip_enable", true}}
+                                },
+                                {"label", {{"binary", false}}}};
 
-//     block_loader_file loader{&manifest, block_size};
+        chrono::high_resolution_clock timer;
+        chrono::time_point<chrono::high_resolution_clock> start_time;
+        chrono::time_point<chrono::high_resolution_clock> zero_time;
+        chrono::time_point<chrono::high_resolution_clock> total_time;
+        try
+        {
+            auto train_set = nervana::loader{js};
 
-//     block_manager manager{&loader, 5000, cache_directory, shuffle};
+            size_t total_batch = ceil((float)train_set.record_count() / (float)batch_size);
+            size_t current_batch = 0;
+            const size_t batches_per_output = 10;
+            total_time = timer.now();
+            for (const nervana::fixed_buffer_map& x : train_set)
+            {
+                (void)x;
+                if (++current_batch % batches_per_output == 0)
+                {
+                    auto last_time = start_time;
+                    start_time = timer.now();
+                    float ms_time =
+                        chrono::duration_cast<chrono::milliseconds>(start_time - last_time)
+                            .count();
+                    float sec_time = ms_time / 1000.;
+                    cout << "batch " << current_batch << " of " << total_batch;
+                    if (last_time != zero_time)
+                    {
+                        cout << " time " << ms_time;
+                        cout << " " << (float)batches_per_output / sec_time << " batches/s";
+                    float t_time =
+                        chrono::duration_cast<chrono::milliseconds>(start_time - total_time)
+                            .count() / 1000.;
+                        cout << "\t\taverage " << (float)current_batch / t_time << " batches/s";
+                    }
+                    cout << endl;
+                }
 
-//     encoded_record_list* records;
-//     timer.start();
-//     float count = 0;
-//     while((records = manager.next()) != nullptr)
-//     {
-//         timer.stop();
-//         count = records->size();
-//         float time = timer.get_milliseconds()/1000.;
-//         cout << "images/second " << count / time << endl;
-//         timer.start();
-//     }
-// }
+                // if (current_batch == 30) break;
+            }
+        }
+        catch(exception& err)
+        {
+            cout << "error processing dataset" << endl;
+            cout << err.what() << endl;
+        }
+    }
+}
+
+TEST(benchmark, decode_jpeg)
+{
+    stopwatch timer;
+    size_t manifest_size = 10000;
+    string image_path = file_util::path_join(CURDIR, "test_data/img_2112_70.jpg");
+
+    vector<char> image_data = file_util::read_file_contents(image_path);
+    timer.start();
+    for (size_t i=0; i<manifest_size; i++)
+    {
+        cv::Mat output_img;
+        cv::Mat input_img(1, image_data.size(), CV_8UC3, image_data.data());
+        cv::imdecode(input_img, CV_8UC3, &output_img);
+    }
+    auto time = (float)timer.get_milliseconds() / 1000.;
+    cout << ((float)manifest_size/time) << " images/second " << endl;
+}
+
+TEST(benchmark, read_jpeg)
+{
+    stopwatch timer;
+
+    size_t manifest_size = 10000;
+    string image_path = file_util::path_join(CURDIR, "test_data/img_2112_70.jpg");
+    stringstream manifest_stream;
+    for (size_t i=0; i<manifest_size; i++)
+    {
+        manifest_stream << image_path << "\n";
+    }
+    manifest_file manifest{manifest_stream, false};
+
+    vector<vector<string>>* block = nullptr;
+    size_t count = 0;
+    size_t mod = 10000;
+    timer.start();
+    for (block = manifest.next(); block != nullptr; block = manifest.next())
+    {
+        for (const vector<string>& record : *block)
+        {
+            count++;
+            vector<char> image_data = file_util::read_file_contents(record[0]);
+            cv::Mat output_img;
+            cv::Mat input_img(1, image_data.size(), CV_8UC3, image_data.data());
+            cv::imdecode(input_img, CV_8UC3, &output_img);
+            if (count % mod == 0)
+            {
+                auto time = (float)timer.get_milliseconds() / 1000.;
+                cout << ((float)count/time) << " images/second " << endl;
+            }
+        }
+    }
+}
+
+TEST(benchmark, load_jpeg)
+{
+    stopwatch timer;
+
+    size_t manifest_size = 10000;
+    string image_path = file_util::path_join(CURDIR, "test_data/img_2112_70.jpg");
+
+    timer.start();
+    for (size_t i=0; i<manifest_size; i++)
+    {
+        auto data = file_util::read_file_contents(image_path);
+    }
+    auto time = (float)timer.get_milliseconds() / 1000.;
+    cout << "images/second " << ((float)manifest_size/time) << endl;
+}
+
+TEST(benchmark, load_jpeg_manifest)
+{
+    stopwatch timer;
+
+    size_t manifest_size = 10000;
+    string image_path = file_util::path_join(CURDIR, "test_data/img_2112_70.jpg");
+    stringstream manifest_stream;
+    for (size_t i=0; i<manifest_size; i++)
+    {
+        manifest_stream << image_path << "\n";
+    }
+    manifest_file manifest{manifest_stream, false};
+
+    vector<vector<string>>* block = nullptr;
+    timer.start();
+    for (block = manifest.next(); block != nullptr; block = manifest.next())
+    {
+        for (const vector<string>& record : *block)
+        {
+            auto data = file_util::read_file_contents(record[0]);
+        }
+    }
+    auto time = (float)timer.get_milliseconds() / 1000.;
+    cout << "images/second " << ((float)manifest_size/time) << endl;
+}
+
+TEST(benchmark, load_block_manager)
+{
+    stopwatch timer;
+    string cache_directory = "/scratch/bob/aeon_cache";
+    bool shuffle = false;
+    size_t block_size = 5000;
+
+    size_t manifest_size = 30000;
+    string image_path = file_util::path_join(CURDIR, "test_data/img_2112_70.jpg");
+    stringstream manifest_stream;
+    for (size_t i=0; i<manifest_size; i++)
+    {
+        manifest_stream << image_path << "\n";
+    }
+    manifest_file manifest{manifest_stream, false};
+
+    block_loader_file loader{&manifest, block_size};
+
+    block_manager manager{&loader, 5000, cache_directory, shuffle};
+
+    encoded_record_list* records;
+    timer.start();
+    float count = 0;
+    size_t iterations = (manifest_size / block_size) * 3;
+    for (size_t i=0; i<iterations; i++)
+    {
+        records = manager.next();
+        timer.stop();
+        count = records->size();
+        float time = timer.get_microseconds()/1000000.;
+        cout << "count=" << count << ", time=" << time << " images/second " << count / time << endl;
+        timer.start();
+    }
+}

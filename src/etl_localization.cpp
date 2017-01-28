@@ -19,10 +19,7 @@
 using namespace std;
 using namespace nervana;
 
-localization::config::config(nlohmann::json js, const image::config& iconfig)
-    : output_height{iconfig.height}
-    , output_width{iconfig.width}
-    , fixed_scaling_factor{iconfig.fixed_scaling_factor}
+localization::config::config(nlohmann::json js)
 {
     if (js.is_null())
     {
@@ -35,10 +32,10 @@ localization::config::config(nlohmann::json js, const image::config& iconfig)
     }
     verify_config("localization", config_list, js);
 
-    if (iconfig.angle.a() != 0 || iconfig.angle.b() != 0)
-    {
-        throw std::invalid_argument("localization does not support angle");
-    }
+    // if (iconfig.angle.a() != 0 || iconfig.angle.b() != 0)
+    // {
+    //     throw std::invalid_argument("localization does not support angle");
+    // }
 
     // # For training, the RPN needs:
     // # 0. bounding box target coordinates
@@ -88,25 +85,26 @@ localization::extractor::extractor(const localization::config& cfg)
 {
 }
 
-localization::transformer::transformer(const localization::config& _cfg)
+localization::transformer::transformer(const localization::config& _cfg, float fixed_scaling_factor)
     : cfg{_cfg}
     , all_anchors{anchor::generate(_cfg)}
+    , m_fixed_scaling_factor{fixed_scaling_factor}
 {
 }
 
 shared_ptr<localization::decoded>
-    localization::transformer::transform(shared_ptr<image::params>         settings,
+    localization::transformer::transform(shared_ptr<augment::image::params> settings,
                                          shared_ptr<localization::decoded> mp)
 {
     cv::Size input_size = settings->cropbox.size();
     float    im_scale;
-    if (cfg.fixed_scaling_factor > 0)
+    if (m_fixed_scaling_factor > 0)
     {
-        im_scale = cfg.fixed_scaling_factor;
+        im_scale = m_fixed_scaling_factor;
     }
     else
     {
-        im_scale = image::calculate_scale(input_size, cfg.output_width, cfg.output_height);
+        im_scale = image::calculate_scale(input_size, cfg.width, cfg.height);
     }
 
     cv::Size im_size{mp->width(), mp->height()};
@@ -428,8 +426,8 @@ void localization::loader::load(const vector<void*>&                   buf_list,
 
 vector<box> localization::anchor::generate(const localization::config& cfg)
 {
-    int conv_size_x = int(std::floor(cfg.output_width * cfg.scaling_factor));
-    int conv_size_y = int(std::floor(cfg.output_height * cfg.scaling_factor));
+    int conv_size_x = int(std::floor(cfg.width * cfg.scaling_factor));
+    int conv_size_y = int(std::floor(cfg.height * cfg.scaling_factor));
 
     vector<box>      anchors = generate_anchors(cfg.base_size, cfg.ratios, cfg.scales);
     std::vector<box> all_anchors;

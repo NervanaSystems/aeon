@@ -37,6 +37,8 @@ class nervana::label::config : public interface::config
 public:
     bool        binary = false;
     std::string output_type{"uint32_t"};
+    std::string type;
+    std::string name;
 
     config(nlohmann::json js)
     {
@@ -52,7 +54,9 @@ public:
 private:
     config() {}
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
+        ADD_SCALAR(name, mode::OPTIONAL),
         ADD_SCALAR(binary, mode::OPTIONAL),
+        ADD_SCALAR(type, mode::OPTIONAL),
         ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) {
             return output_type::is_valid_type(v);
         })};

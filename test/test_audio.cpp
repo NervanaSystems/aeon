@@ -110,6 +110,11 @@ TEST(audio, transform)
             "num_filters": 64
         }
     )"_json;
+    auto js_aug = R"(
+        {
+            "type": "audio"
+        }
+    )"_json;
 
     float              sine_freq = 400;
     int16_t            sine_ampl = 500;
@@ -127,10 +132,10 @@ TEST(audio, transform)
 
     audio::extractor     extractor;
     audio::transformer   _audioTransformer(config);
-    audio::param_factory factory(config);
+    augment::audio::param_factory factory(js_aug);
 
     auto decoded_audio = extractor.extract(databuf, bufsize);
-    auto audioParams   = factory.make_params(decoded_audio);
+    auto audioParams   = factory.make_params();
 
     _audioTransformer.transform(audioParams, decoded_audio);
     auto shape = config.get_shape_type();
@@ -172,6 +177,11 @@ TEST(audio, transform2)
             "sample_freq_hz": 16000
         }
     )"_json;
+    auto js_aug = R"(
+        {
+            "type": "audio"
+        }
+    )"_json;
 
     float              sine_freq = 400;
     int16_t            sine_ampl = 500;
@@ -189,10 +199,10 @@ TEST(audio, transform2)
 
     audio::extractor     extractor;
     audio::transformer   _audioTransformer(config);
-    audio::param_factory factory(config);
+    augment::audio::param_factory factory(js_aug);
 
     auto decoded_audio = extractor.extract(databuf, bufsize);
-    auto audioParams   = factory.make_params(decoded_audio);
+    auto audioParams   = factory.make_params();
 
     _audioTransformer.transform(audioParams, decoded_audio);
     auto shape = config.get_shape_type();
@@ -214,6 +224,11 @@ TEST(audio, samples_out)
             "sample_freq_hz": 16000
         }
     )"_json;
+    auto js_aug = R"(
+        {
+            "type": "audio"
+        }
+    )"_json;
 
     float              sine_freq = 400;
     int16_t            sine_ampl = 500;
@@ -233,9 +248,9 @@ TEST(audio, samples_out)
     audio::extractor     extractor;
     audio::transformer   _audioTransformer(config);
     audio::loader        _audioLoader(config);
-    audio::param_factory factory(config);
+    augment::audio::param_factory factory(js_aug);
     auto                 decoded_audio = extractor.extract(databuf, bufsize);
-    auto                 audioParams   = factory.make_params(decoded_audio);
+    auto                 audioParams   = factory.make_params();
 
     cv::Mat output_samples(1, config.max_duration_tn, CV_16SC1);
     auto    xformed_audio = _audioTransformer.transform(audioParams, decoded_audio);

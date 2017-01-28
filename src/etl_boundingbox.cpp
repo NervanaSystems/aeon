@@ -92,9 +92,9 @@ void boundingbox::extractor::extract(const void*                            data
     {
         throw invalid_argument("'depth' missing from metadata");
     }
-    rc->_height = image_size["height"];
-    rc->_width  = image_size["width"];
-    rc->_depth  = image_size["depth"];
+    rc->m_height = image_size["height"];
+    rc->m_width  = image_size["width"];
+    rc->m_depth  = image_size["depth"];
     for (auto object : object_list)
     {
         auto bndbox = object["bndbox"];
@@ -124,9 +124,13 @@ void boundingbox::extractor::extract(const void*                            data
         b.ymax = bndbox["ymax"];
         b.ymin = bndbox["ymin"];
         if (!object["difficult"].is_null())
+        {
             b.difficult = object["difficult"];
+        }
         if (!object["truncated"].is_null())
+        {
             b.truncated = object["truncated"];
+        }
         string name     = object["name"];
         auto   found    = label_map.find(name);
         if (found == label_map.end())
@@ -140,7 +144,7 @@ void boundingbox::extractor::extract(const void*                            data
         {
             b.label = found->second;
         }
-        rc->_boxes.push_back(b);
+        rc->m_boxes.push_back(b);
     }
 }
 
@@ -237,7 +241,7 @@ vector<boundingbox::box>
 }
 
 shared_ptr<boundingbox::decoded>
-    boundingbox::transformer::transform(shared_ptr<image::params>        pptr,
+    boundingbox::transformer::transform(shared_ptr<augment::image::params>        pptr,
                                         shared_ptr<boundingbox::decoded> boxes)
 {
     if (pptr->angle != 0)
@@ -249,7 +253,7 @@ shared_ptr<boundingbox::decoded>
     float x_scale                         = (float)(pptr->output_size.width) / (float)(crop.width);
     float y_scale = (float)(pptr->output_size.height) / (float)(crop.height);
 
-    rc->_boxes = transform_box(boxes->boxes(), crop, pptr->flip, x_scale, y_scale);
+    rc->m_boxes = transform_box(boxes->boxes(), crop, pptr->flip, x_scale, y_scale);
 
     return rc;
 }

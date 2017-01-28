@@ -64,6 +64,7 @@ public:
     size_t                   max_bbox_count;
     std::vector<std::string> class_names;
     std::string              output_type = "float";
+    std::string name;
 
     std::unordered_map<std::string, int> label_map;
 
@@ -75,6 +76,7 @@ private:
         ADD_SCALAR(width, mode::REQUIRED),
         ADD_SCALAR(max_bbox_count, mode::REQUIRED),
         ADD_SCALAR(class_names, mode::REQUIRED),
+        ADD_SCALAR(name, mode::OPTIONAL),
         ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) {
             return output_type::is_valid_type(v);
         })};
@@ -83,7 +85,7 @@ private:
     void validate();
 };
 
-class nervana::boundingbox::decoded : public interface::decoded_media
+class nervana::boundingbox::decoded : public interface::decoded_image
 {
     friend class transformer;
     friend class extractor;
@@ -94,15 +96,21 @@ public:
                  size_t      size,
                  const std::unordered_map<std::string, int>& label_map);
     virtual ~decoded() {}
-    const std::vector<boundingbox::box>& boxes() const { return _boxes; }
-    int                                  width() const { return _width; }
-    int                                  height() const { return _height; }
-    int                                  depth() const { return _depth; }
+    const std::vector<boundingbox::box>& boxes() const { return m_boxes; }
+    int                                  width() const { return m_width; }
+    int                                  height() const { return m_height; }
+    int                                  depth() const { return m_depth; }
+
+    cv::Size2i image_size() const override
+    {
+        return cv::Size2i(m_width, m_height);
+    }
+
 private:
-    std::vector<boundingbox::box> _boxes;
-    int                           _width;
-    int                           _height;
-    int                           _depth;
+    std::vector<boundingbox::box> m_boxes;
+    int                           m_width;
+    int                           m_height;
+    int                           m_depth;
 };
 
 class nervana::boundingbox::extractor
@@ -120,13 +128,13 @@ private:
 };
 
 class nervana::boundingbox::transformer
-    : public nervana::interface::transformer<nervana::boundingbox::decoded, nervana::image::params>
+    : public nervana::interface::transformer<nervana::boundingbox::decoded, augment::image::params>
 {
 public:
     transformer(const boundingbox::config&);
     virtual ~transformer() {}
     virtual std::shared_ptr<boundingbox::decoded>
-        transform(std::shared_ptr<image::params>, std::shared_ptr<boundingbox::decoded>) override;
+        transform(std::shared_ptr<augment::image::params>, std::shared_ptr<boundingbox::decoded>) override;
 
     static std::vector<boundingbox::box> transform_box(const std::vector<boundingbox::box>& b,
                                                        const cv::Rect&                      crop,

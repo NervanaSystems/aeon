@@ -13,6 +13,8 @@ set(CMAKE_CXX_COMPILER "clang++")
 set(CMAKE_CXX_FLAGS "-O3 -std=c++11")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=return-type")
+
 # whitelist errors here
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++98-compat")
@@ -43,6 +45,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+# opecv_ts is for testing opencv. if it is left in the lib list then we get an error when
+# the unit test exits.
+list(REMOVE_ITEM OpenCV_LIBRARIES opencv_ts)
+
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
@@ -61,6 +67,7 @@ if (PYTHONLIBS_FOUND)
     endif(NUMPY_FOUND)
 else()
     message("Python not found, Python interface not included")
+    set(PYTHON_LIBRARIES "")
 endif (PYTHONLIBS_FOUND)
 
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)

@@ -26,6 +26,7 @@ batch_decoder::batch_decoder(batch_iterator*                            b_itor,
                              const std::shared_ptr<provider_interface>& prov)
     : async_manager<encoded_record_list, fixed_buffer_map>(b_itor, "batch_decoder")
     , m_batch_size(batch_size)
+    , m_active_count{0}
 {
     // Note:  all we need are single_thread, batch_size, pinned + the provider template
     //        can we just use copy constructor instead?
@@ -46,15 +47,22 @@ batch_decoder::batch_decoder(batch_iterator*                            b_itor,
 
     for (int i = 0; i < nthreads; i++)
     {
-        m_providers.push_back(nervana::provider_factory::clone(prov));
-        m_start_inds.push_back(i * m_items_per_thread);
+        int start = i * m_items_per_thread;
         int record_count =
             i == nthreads - 1 ? (batch_size - i * m_items_per_thread) : m_items_per_thread;
-        m_end_inds.push_back(m_start_inds[i] + record_count);
+        int end = start + record_count;
+        m_decode_thread_info.push_back(make_shared<decode_thread_info>(
+            i,
+            start,
+            end,
+            prov,
+            m_work_complete_event,
+            m_active_count
+        ));
     }
 
-    auto oshapes         = m_providers[0]->get_output_shapes();
-    m_number_elements_in = m_providers[0]->get_input_count();
+    auto oshapes         = prov->get_output_shapes();
+    m_number_elements_in = prov->get_input_count();
 
     // Allocate the space in the output buffers
     for (unsigned int k = 0; k < 2; ++k)
@@ -85,47 +93,14 @@ fixed_buffer_map* batch_decoder::filler()
     }
     else
     {
-        std::vector<std::thread> provider_threads;
-        try
+        m_active_count = m_decode_thread_info.size();
+        for (int id = 0; id < m_decode_thread_info.size(); ++id)
         {
-            for (int id = 0; id < m_providers.size(); ++id)
-            {
-                provider_threads.emplace_back(&batch_decoder::work, this, id, inputs, outputs);
-            }
-
-            for (auto& t : provider_threads)
-            {
-                t.join();
-            }
-            // Now perform any potentially necessary whole-batch operation
-            m_providers[0]->post_process(*outputs);
+            m_decode_thread_info[id]->set_buffers(inputs, outputs);
         }
-        catch (std::exception&)
-        {
-            outputs = nullptr;
-        }
+        m_work_complete_event.wait();
     }
 
     m_state = async_state::idle;
     return outputs;
-}
-
-void batch_decoder::work(int id, encoded_record_list* in_buf, fixed_buffer_map* out_buf)
-{
-    // Thread function.
-    // No locking required because threads write into non-overlapping regions.
-    try
-    {
-        affirm(in_buf->size() != 0, "input buffer pool is empty.");
-
-        for (int item_idx = m_start_inds[id]; item_idx < m_end_inds[id]; item_idx++)
-        {
-            m_providers[id]->provide(item_idx, *in_buf, *out_buf);
-        }
-    }
-    catch (std::exception& e)
-    {
-        cout << "decode_thread_pool exception: " << e.what() << endl;
-        // m_buffer_pool_decoded->write_exception(std::current_exception());
-    }
 }

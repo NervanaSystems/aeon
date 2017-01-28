@@ -34,6 +34,7 @@ class nervana::video::config : public interface::config
 public:
     uint32_t               max_frame_count;
     nervana::image::config frame;
+    std::string name;
 
     config(nlohmann::json js)
         : frame(js["frame"])
@@ -58,7 +59,9 @@ public:
 private:
     config() {}
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
-        ADD_SCALAR(max_frame_count, mode::REQUIRED), ADD_IGNORE(frame)};
+        ADD_SCALAR(max_frame_count, mode::REQUIRED),
+        ADD_SCALAR(name, mode::OPTIONAL),
+        ADD_IGNORE(frame)};
 };
 
 class nervana::video::extractor : public interface::extractor<image::decoded>
@@ -74,13 +77,13 @@ private:
 };
 
 // simple wrapper around image::transformer for now
-class nervana::video::transformer : public interface::transformer<image::decoded, image::params>
+class nervana::video::transformer : public interface::transformer<image::decoded, augment::image::params>
 {
 public:
     transformer(const video::config&);
     transformer(const transformer&) = default;
     virtual ~transformer() {}
-    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<image::params>,
+    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<augment::image::params>,
                                                       std::shared_ptr<image::decoded>) override;
 
 protected:

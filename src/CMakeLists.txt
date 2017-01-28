@@ -1,5 +1,7 @@
 set (SRC
     async_manager.cpp
+    augment_audio.cpp
+    augment_image.cpp
     avi.cpp
     base64.cpp
     batch_decoder.cpp
@@ -9,7 +11,6 @@ set (SRC
     block_loader_nds.cpp
     block_manager.cpp
     box.cpp
-    bstream.cpp
     buffer_batch.cpp
     cap_mjpeg_decoder.cpp
     cpio.cpp
@@ -32,24 +33,15 @@ set (SRC
     manifest_file.cpp
     manifest_nds.cpp
     noise_clips.cpp
-    provider_audio_classifier.cpp
-    provider_audio_only.cpp
-    provider_audio_transcriber.cpp
+    provider_custom.cpp
     provider_factory.cpp
-    provider_image_boundingbox.cpp
-    provider_image_classifier.cpp
-    provider_image_localization.cpp
-    provider_image_only.cpp
-    provider_image_pixelmask.cpp
-    provider_image_stereo.cpp
-    provider_video_classifier.cpp
-    provider_video_only.cpp
     specgram.cpp
-    tiff.cpp
     util.cpp
     wav_data.cpp
     web_app.cpp
     web_server.cpp
+    event.cpp
+    raw_image.cpp
 )
 
 file(GLOB DEPLOY_HEADERS_ABS *.hpp)

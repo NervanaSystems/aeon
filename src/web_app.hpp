@@ -16,6 +16,7 @@
 #pragma once
 
 #include "web_server.hpp"
+#include "loader.hpp"
 
 class web_app
 {
@@ -26,9 +27,16 @@ public:
 
     void home_page(web::page& p);
     void stopwatch(web::page& p);
+    void loader(web::page& p);
     void page_404(web::page& p);
     void process_page_request(web::page& p, const std::string& url);
 
+    void register_loader(nervana::loader*);
+    void deregister_loader(const nervana::loader*);
+
 private:
     web::server web_server;
+    std::vector<nervana::loader*>     m_loader_list; 
 };
+
+extern web_app debug_web_app;
