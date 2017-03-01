@@ -25,7 +25,7 @@ unit tests.
 In Ubuntu::
 
   sudo apt-get install libgtest-dev
-  cd /usr/lib/gtest
+  cd /usr/src/gtest
   sudo cmake .  sudo make
   sudo mv libg* /usr/local/lib/
 
