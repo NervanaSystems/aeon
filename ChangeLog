@@ -1,5 +1,8 @@
 # ChangeLog
 
+## v0.2.7 (2017-03-02)
+* Bug fix for clean termination
+
 ## v0.2.6 (2016-11-16)
 * Bug fix for clean termination
 
