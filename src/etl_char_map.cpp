@@ -18,16 +18,47 @@
 using namespace std;
 using namespace nervana;
 
+nervana::char_map::config::config(nlohmann::json js)
+{
+    if (js.is_null())
+    {
+        throw std::runtime_error("missing char_map config in json config");
+    }
+
+    for (auto& info : config_list)
+    {
+        info->parse(js);
+    }
+    verify_config("char_map", config_list, js);
+
+    // Now fill in derived (pack_for_ctc passed as indicator whether to interpret
+    // output shape as flattened across batch size)
+    add_shape_type({1, max_length}, {"character", "sequence"}, output_type, pack_for_ctc);
+
+    // set locale to operate on UTF8 input characters
+    std::setlocale(LC_CTYPE, "");
+
+    uint32_t index = 0;
+    walphabet      = to_wstring(alphabet);
+    for (auto c : walphabet)
+    {
+        _cmap.insert({std::towupper(c), index++});
+    }
+
+    validate();
+}
+
 std::shared_ptr<char_map::decoded> char_map::extractor::extract(const void* in_array, size_t in_sz)
 {
-    uint32_t        nvalid = std::min((uint32_t)in_sz, _max_length);
-    string          transcript((const char*)in_array, nvalid);
-    vector<uint8_t> char_ints((vector<uint8_t>::size_type)_max_length, (uint8_t)0);
+    uint32_t         nvalid = std::min((uint32_t)in_sz, _max_length);
+    string           transcript((const char*)in_array);
+    wstring          wtranscript = to_wstring(transcript, nvalid);
+    vector<uint32_t> char_ints(_max_length, 0);
 
     uint32_t j = 0;
     for (uint32_t i = 0; i < nvalid; i++)
     {
-        auto l = _cmap.find(std::toupper(transcript[i]));
+        auto l = _cmap.find(std::towupper(wtranscript[i]));
         if (l == _cmap.end())
         {
             if (_unknown_value > 0)
@@ -48,7 +79,7 @@ std::shared_ptr<char_map::decoded> char_map::extractor::extract(const void* in_a
 
 void char_map::loader::load(const vector<void*>& outlist, std::shared_ptr<char_map::decoded> dc)
 {
-    char* outbuf = (char*)outlist[0];
+    wchar_t* outbuf = (wchar_t*)outlist[0];
     for (auto c : dc->get_data())
     {
         *(outbuf++) = c;

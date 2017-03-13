@@ -31,6 +31,8 @@ namespace nervana
         class extractor;
         class loader;
         class config;
+
+        using cmap_t = std::unordered_map<wchar_t, uint32_t>;
     }
 }
 
@@ -44,41 +46,20 @@ public:
     uint32_t max_length;
     /** Character map alphabet */
     std::string alphabet;
+    /** Same alphabet in wchar_t */
+    std::wstring walphabet;
     /** Integer value to give to unknown characters. 0 causes them to be
     * discarded.*/
-    uint8_t unknown_value = 0;
+    uint32_t unknown_value = 0;
     /** Pack the output buffer for use in CTC. This places them end to end */
     bool pack_for_ctc = false;
     /** Output data type. Currently only uint8_t is supported */
     std::string output_type{"uint8_t"};
     std::string name;
 
-    config(nlohmann::json js)
-    {
-        if (js.is_null())
-        {
-            throw std::runtime_error("missing char_map config in json config");
-        }
+    config(nlohmann::json js);
 
-        for (auto& info : config_list)
-        {
-            info->parse(js);
-        }
-        verify_config("char_map", config_list, js);
-
-        // Now fill in derived (pack_for_ctc passed as indicator whether to interpret
-        // output shape as flattened across batch size)
-        add_shape_type({1, max_length}, {"character", "sequence"}, output_type, pack_for_ctc);
-
-        uint8_t index = 0;
-        for (auto c : alphabet)
-        {
-            _cmap.insert({std::toupper(c), index++});
-        }
-        validate();
-    }
-
-    const std::unordered_map<char, uint8_t>& get_cmap() const { return _cmap; }
+    const cmap_t& get_cmap() const { return _cmap; }
 private:
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_SCALAR(max_length, mode::REQUIRED),
@@ -89,7 +70,7 @@ private:
         ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) {
             return output_type::is_valid_type(v);
         })};
-    std::unordered_map<char, uint8_t> _cmap;
+    cmap_t _cmap;
 
     config() {}
     void validate()
@@ -98,19 +79,20 @@ private:
         {
             throw std::runtime_error("Invalid load type for char map " + output_type);
         }
-        if (!unique_chars(alphabet))
+        if (!unique_chars(walphabet))
         {
             throw std::runtime_error("alphabet does not consist of unique chars " + alphabet);
         }
         if (unknown_value > 0 && unknown_value < alphabet.size())
         {
-            throw std::runtime_error("unknown_value should be >= alphabet length and <= 255");
+            throw std::runtime_error(
+                "unknown_value should be >= alphabet length and <= 4294967295");
         }
     }
 
-    bool unique_chars(std::string test_string)
+    bool unique_chars(std::wstring test_string)
     {
-        if (test_string.size() > UINT8_MAX)
+        if (test_string.size() > UINT32_MAX)
         {
             return false;
         }
@@ -131,18 +113,18 @@ private:
 class nervana::char_map::decoded : public interface::decoded_media
 {
 public:
-    decoded(std::vector<uint8_t> char_ints, uint32_t nvalid)
+    decoded(std::vector<uint32_t> char_ints, uint32_t nvalid)
         : _labels{char_ints}
         , _nvalid{nvalid}
     {
     }
 
     virtual ~decoded() {}
-    std::vector<uint8_t> get_data() const { return _labels; }
-    uint32_t             get_length() const { return _nvalid; }
+    std::vector<uint32_t> get_data() const { return _labels; }
+    uint32_t              get_length() const { return _nvalid; }
 private:
-    std::vector<uint8_t> _labels;
-    uint32_t             _nvalid;
+    std::vector<uint32_t> _labels;
+    uint32_t              _nvalid;
 };
 
 class nervana::char_map::extractor : public interface::extractor<char_map::decoded>
@@ -156,12 +138,14 @@ public:
     }
 
     virtual ~extractor() {}
-    virtual std::shared_ptr<char_map::decoded> extract(const void*, size_t) override;
+    // in_array is transcription in UTF-8
+    // in_sz is max size of transcription in unicode characters
+    virtual std::shared_ptr<char_map::decoded> extract(const void* in_array, size_t in_sz) override;
 
 private:
-    const std::unordered_map<char, uint8_t>& _cmap; // This comes from config
+    const cmap_t& _cmap; // This comes from config
     uint32_t      _max_length;
-    const uint8_t _unknown_value;
+    const uint32_t _unknown_value;
 };
 
 class nervana::char_map::loader : public interface::loader<char_map::decoded>

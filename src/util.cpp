@@ -126,6 +126,20 @@ vector<string> nervana::split(const string& src, char delimiter, bool do_trim)
     return rc;
 }
 
+std::wstring nervana::to_wstring(const string& s, size_t max_size)
+{
+    max_size = std::min(s.size(), max_size);
+    std::shared_ptr<wchar_t> buffer(new wchar_t[max_size], std::default_delete<wchar_t[]>());
+    size_t                   size = std::mbstowcs(buffer.get(), s.c_str(), max_size);
+
+    return wstring(buffer.get(), size);
+}
+
+size_t nervana::wstring_length(const string& s)
+{
+    return std::mbstowcs(NULL, s.c_str(), s.size());
+}
+
 int nervana::LevenshteinDistance(const string& s, const string& t)
 {
     // degenerate cases

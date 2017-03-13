@@ -36,9 +36,10 @@ TEST(char_map, bad)
 TEST(char_map, test)
 {
     {
-        string  alphabet   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()";
-        string  transcript = "The quick brown fox jumps over the lazy dog";
-        uint8_t max_length = transcript.size() + 5;
+        string  alphabet        = "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()ąćŁŻź𐍈✓ß";
+        string  transcript      = "The quick brown fox jumps over the lazy dog. Żołądź 𐍈✓";
+        size_t  transcript_size = wstring_length(transcript);
+        uint8_t max_length      = transcript_size + 5;
 
         nlohmann::json js = {
             {"alphabet", alphabet}, {"max_length", max_length}, {"unknown_value", 0}};
@@ -47,15 +48,17 @@ TEST(char_map, test)
         char_map::loader    loader(cfg);
 
         // Ensure cmap is set up properly
-        std::unordered_map<char, uint8_t> data = cfg.get_cmap();
+        std::unordered_map<wchar_t, uint32_t> data = cfg.get_cmap();
         EXPECT_EQ(2, data['C']);
         EXPECT_EQ(26, data[' ']);
+        EXPECT_EQ(36, data[L'𐍈']);
 
         // Make sure mapping is correct and extra characters are mapped to 0
         {
-            vector<int> expected = {19, 7,  4,  26, 16, 20, 8,  2,  10, 26, 1,  17, 14, 22, 13, 26,
-                                    5,  14, 23, 26, 9,  20, 12, 15, 18, 26, 14, 21, 4,  17, 26, 19,
-                                    7,  4,  26, 11, 0,  25, 24, 26, 3,  14, 6,  0,  0,  0,  0,  0};
+            vector<int> expected = {19, 7,  4,  26, 16, 20, 8,  2,  10, 26, 1,  17, 14, 22, 13,
+                                    26, 5,  14, 23, 26, 9,  20, 12, 15, 18, 26, 14, 21, 4,  17,
+                                    26, 19, 7,  4,  26, 11, 0,  25, 24, 26, 3,  14, 6,  27, 26,
+                                    34, 14, 33, 31, 3,  35, 26, 36, 37, 0,  0,  0,  0,  0};
             auto decoded = extractor.extract(&transcript[0], transcript.size());
             // decoded exists
             ASSERT_NE(nullptr, decoded);
@@ -71,7 +74,7 @@ TEST(char_map, test)
         // handle mapping of unknown characters
         {
             // Skip unknown characters
-            string unknown   = "The0:3 ?q!uick brown";
+            string unknown   = "The0:3 ☭q!uick brown";
             string discarded = "The quick brown";
             auto   unk_dec   = extractor.extract(&unknown[0], unknown.size());
             auto   exp_dec   = extractor.extract(&discarded[0], discarded.size());
@@ -96,24 +99,25 @@ TEST(char_map, test)
         }
 
         // Now check max length truncation
-        vector<char> _outbuf(max_length);
-        char*        outbuf = _outbuf.data();
+        vector<wchar_t> _outbuf(max_length);
+        wchar_t*        outbuf = _outbuf.data();
         {
             string long_str =
-                "This is a really long transcript that should overflow the buffer at the letter e "
+                "This is a really long transcript that should overflow the ßuffer at the letter ß "
                 "in overflow";
-            auto decoded = extractor.extract(&long_str[0], long_str.size());
+            size_t long_str_size = wstring_length(long_str);
+            auto   decoded       = extractor.extract(&long_str[0], long_str_size);
             loader.load({outbuf}, decoded);
 
-            ASSERT_EQ(outbuf[max_length - 1], 4);
+            ASSERT_EQ(outbuf[max_length - 1], 38);
         }
 
         // Check zero padding
         {
-            string short_str = "now";
+            string short_str = "now✓";
             auto   decoded   = extractor.extract(&short_str[0], short_str.size());
             loader.load({outbuf}, decoded);
-            for (int i = 3; i < max_length; i++)
+            for (int i = 4; i < max_length; i++)
             {
                 ASSERT_EQ(outbuf[i], 0);
             }

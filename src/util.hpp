@@ -85,6 +85,9 @@ namespace nervana
     std::string trim(const std::string& s);
     std::vector<std::string> split(const std::string& s, char delimiter, bool trim = false);
 
+    std::wstring to_wstring(const std::string& s, size_t max_size = SIZE_MAX);
+    size_t wstring_length(const std::string& s);
+
     size_t unbiased_round(float f);
     int LevenshteinDistance(const std::string& s1, const std::string& s2);
 

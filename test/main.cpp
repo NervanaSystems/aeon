@@ -158,6 +158,8 @@ void web_server()
 
 extern "C" int main(int argc, char** argv)
 {
+    std::setlocale(LC_CTYPE, "");
+
     cout << "OpenCV version : " << CV_VERSION << endl;
     mock_nds_server server;
 
