@@ -53,8 +53,8 @@ public:
     uint32_t unknown_value = 0;
     /** Pack the output buffer for use in CTC. This places them end to end */
     bool pack_for_ctc = false;
-    /** Output data type. Currently only uint8_t is supported */
-    std::string output_type{"uint8_t"};
+    /** Output data type */
+    std::string output_type{"uint32_t"};
     std::string name;
 
     config(nlohmann::json js);
@@ -75,7 +75,7 @@ private:
     config() {}
     void validate()
     {
-        if (output_type != "uint8_t")
+        if (output_type != "uint32_t")
         {
             throw std::runtime_error("Invalid load type for char map " + output_type);
         }

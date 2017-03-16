@@ -34,28 +34,25 @@ extern gen_image image_dataset;
 using namespace std;
 using namespace nervana;
 
+namespace
+{
+    encoded_record create_transcript_record(const string& transcript, int label);
+}
+
 TEST(provider, empty_config)
 {
-    nlohmann::json image = {{"type", "image"},
-                           {"height", 1},
-                           {"width", 1}};
+    nlohmann::json image = {{"type", "image"}, {"height", 1}, {"width", 1}};
     nlohmann::json label = {{"type", "label"}};
-    nlohmann::json js = {
-                         {"etl", {image, label}}
-                         };
+    nlohmann::json js    = {{"etl", {image, label}}};
 
     nervana::provider_factory::create(js);
 }
 
 TEST(provider, image)
 {
-    nlohmann::json image = {{"type", "image"},
-                           {"height", 128},
-                           {"width", 128}};
+    nlohmann::json image = {{"type", "image"}, {"height", 128}, {"width", 128}};
     nlohmann::json label = {{"type", "label"}, {"binary", true}};
-    nlohmann::json js = {
-                         {"etl", {image, label}}
-                         };
+    nlohmann::json js    = {{"etl", {image, label}}};
 
     auto media   = nervana::provider_factory::create(js);
     auto oshapes = media->get_output_shapes();
@@ -112,42 +109,42 @@ TEST(provider, argtype)
 
         nlohmann::json js = nlohmann::json::parse(cfgString);
         nlohmann::json aug;
-        image::config itpj(js);
+        image::config  itpj(js);
 
         // output the fixed parameters
         EXPECT_EQ(30, itpj.height);
         EXPECT_EQ(30, itpj.width);
 
         // output the random parameters
-        default_random_engine r_eng(0);
-        augment::image::param_factory  img_prm_maker(aug);
-        auto                  imgt = make_shared<image::transformer>(itpj);
+        default_random_engine         r_eng(0);
+        augment::image::param_factory img_prm_maker(aug);
+        auto                          imgt = make_shared<image::transformer>(itpj);
 
         auto input_img_ptr = make_shared<image::decoded>(cv::Mat(256, 320, CV_8UC3));
 
         auto image_size = input_img_ptr->get_image_size();
-        auto its = img_prm_maker.make_params(image_size.width, image_size.height, itpj.width, itpj.height);
+        auto its =
+            img_prm_maker.make_params(image_size.width, image_size.height, itpj.width, itpj.height);
     }
 }
 
 TEST(provider, blob)
 {
-    const int width = 480;
-    const int height = 360;
+    const int      width  = 480;
+    const int      height = 360;
     nlohmann::json image1 = {{"type", "image"},
-                            {"name", "left"},
-                            {"channel_major", false},
-                            {"height", height},
-                            {"width", width}};
+                             {"name", "left"},
+                             {"channel_major", false},
+                             {"height", height},
+                             {"width", width}};
     nlohmann::json image2 = {{"type", "image"},
-                            {"name", "right"},
-                            {"channel_major", false},
-                            {"height", height},
-                            {"width", width}};
-    nlohmann::json blob = {{"type", "blob"}, {"output_type", "float"}, {"output_count", width * height}};
-    nlohmann::json js = {
-                         {"etl", {image1, image2, blob}}
-                         };
+                             {"name", "right"},
+                             {"channel_major", false},
+                             {"height", height},
+                             {"width", width}};
+    nlohmann::json blob = {
+        {"type", "blob"}, {"output_type", "float"}, {"output_count", width * height}};
+    nlohmann::json js = {{"etl", {image1, image2, blob}}};
 
     vector<char> input_left  = file_util::read_file_contents(CURDIR "/test_data/img_2112_70.jpg");
     vector<char> input_right = file_util::read_file_contents(CURDIR "/test_data/img_2112_70.jpg");
@@ -174,7 +171,7 @@ TEST(provider, blob)
     }
 
     // setup input and output buffers
-    auto media   = nervana::provider_factory::create(js);
+    auto media = nervana::provider_factory::create(js);
     ASSERT_NE(nullptr, media);
     auto oshapes = media->get_output_shapes();
 
@@ -216,6 +213,59 @@ TEST(provider, blob)
     char* fp = out_buf["blob"]->data();
     for (int i = 0; i < target_data.size(); i++)
     {
-        ASSERT_FLOAT_EQ(target_data[i], unpack<float>(&fp[i*sizeof(float)]));
+        ASSERT_FLOAT_EQ(target_data[i], unpack<float>(&fp[i * sizeof(float)]));
+    }
+}
+
+TEST(provider, char_map)
+{
+    string alphabet    = "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()敏捷的棕色狐狸跳過了懶狗";
+    string transcript1 = "The quick brown fox jumps over the lazy dog";
+    string transcript2 = "敏捷的棕色狐狸跳過了懶狗";
+    size_t max_length  = 100;
+    size_t batch_size  = 128;
+
+    nlohmann::json char_map = {{"type", "char_map"},
+                               {"alphabet", alphabet},
+                               {"max_length", max_length},
+                               {"unknown_value", 255}};
+    nlohmann::json label = {{"type", "label"}, {"binary", true}};
+    nlohmann::json js    = {{"etl", {char_map, label}}};
+
+    auto media   = nervana::provider_factory::create(js);
+    auto oshapes = media->get_output_shapes();
+
+    fixed_buffer_map out_buf(oshapes, batch_size);
+
+    encoded_record_list in_buf;
+    encoded_record      record1 = create_transcript_record(transcript1, 0);
+    encoded_record      record2 = create_transcript_record(transcript2, 1);
+    for (int i = 0; i < batch_size; i++)
+    {
+        in_buf.add_record(i % 2 ? record2 : record1);
+    }
+
+    for (int i = 0; i < batch_size; i++)
+    {
+        media->provide(i, in_buf, out_buf);
+    }
+
+    for (int i = 0; i < batch_size; i++)
+    {
+        int target_value = unpack<int>(out_buf["label"]->get_item(i));
+        EXPECT_EQ(i % 2, target_value);
+    }
+}
+
+namespace
+{
+    encoded_record create_transcript_record(const string& transcript, int label)
+    {
+        encoded_record record;
+        size_t         max_size = transcript.size();
+        record.add_element(static_cast<const void*>(transcript.c_str()), max_size);
+        record.add_element(&label, 4);
+
+        return record;
     }
 }

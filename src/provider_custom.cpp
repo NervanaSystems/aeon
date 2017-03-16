@@ -20,15 +20,15 @@
 using namespace std;
 using namespace nervana;
 
-custom_provider::provider_base::provider_base(nlohmann::json js,
-    const std::vector<nlohmann::json>& etl,
-    nlohmann::json augmentation)
+custom_provider::provider_base::provider_base(nlohmann::json                     js,
+                                              const std::vector<nlohmann::json>& etl,
+                                              nlohmann::json                     augmentation)
     : provider_interface(js, etl.size())
 {
     for (nlohmann::json j : etl)
     {
         string type;
-        auto val = j.find("type");
+        auto   val = j.find("type");
         if (val != j.end())
         {
             type = val->get<string>();
@@ -109,13 +109,12 @@ custom_provider::provider_base::provider_base(nlohmann::json js,
     }
 }
 
-void custom_provider::provider_base::provide(
-    int idx,
-    nervana::encoded_record_list& in_buf,
-    nervana::fixed_buffer_map& out_buf)
+void custom_provider::provider_base::provide(int                           idx,
+                                             nervana::encoded_record_list& in_buf,
+                                             nervana::fixed_buffer_map&    out_buf)
 {
     augmentation aug;
-    int index = 0;
+    int          index = 0;
     for (const shared_ptr<custom_provider::interface>& provider : m_providers)
     {
         provider->provide(idx, in_buf.record(idx).element(index++), out_buf, aug);
@@ -158,12 +157,12 @@ custom_provider::image::image(nlohmann::json js, nlohmann::json aug)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::image::provide(int idx,
-    const std::vector<char>& datum_in,
-    nervana::fixed_buffer_map& out_buf,
-    augmentation& aug)
+void custom_provider::image::provide(int                        idx,
+                                     const std::vector<char>&   datum_in,
+                                     nervana::fixed_buffer_map& out_buf,
+                                     augmentation&              aug)
 {
-    char*         datum_out = out_buf[m_buffer_name]->get_item(idx);
+    char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
     if (datum_in.size() == 0)
     {
@@ -177,8 +176,8 @@ void custom_provider::image::provide(int idx,
     auto input_size = decoded->get_image_size();
     if (aug.m_image_augmentations == nullptr)
     {
-        aug.m_image_augmentations = m_augmentation_factory.make_params(input_size.width, input_size.height,
-            m_config.width, m_config.height);
+        aug.m_image_augmentations = m_augmentation_factory.make_params(
+            input_size.width, input_size.height, m_config.width, m_config.height);
     }
     m_loader.load({datum_out}, m_transformer.transform(aug.m_image_augmentations, decoded));
 }
@@ -197,10 +196,10 @@ custom_provider::label::label(nlohmann::json js)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::label::provide(int idx,
-    const vector<char>& datum_in,
-    nervana::fixed_buffer_map& out_buf,
-    augmentation& aug)
+void custom_provider::label::provide(int                        idx,
+                                     const vector<char>&        datum_in,
+                                     nervana::fixed_buffer_map& out_buf,
+                                     augmentation&              aug)
 {
     char* target_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -231,15 +230,15 @@ custom_provider::audio::audio(nlohmann::json js, nlohmann::json aug)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::audio::provide(int idx,
-    const std::vector<char>& datum_in,
-    nervana::fixed_buffer_map& out_buf,
-    augmentation& aug)
+void custom_provider::audio::provide(int                        idx,
+                                     const std::vector<char>&   datum_in,
+                                     nervana::fixed_buffer_map& out_buf,
+                                     augmentation&              aug)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
     // Process audio data
-    auto decoded    = m_extractor.extract(datum_in.data(), datum_in.size());
+    auto decoded = m_extractor.extract(datum_in.data(), datum_in.size());
     shared_ptr<augment::audio::params> params;
     if (aug.m_audio_augmentations)
     {
@@ -247,7 +246,7 @@ void custom_provider::audio::provide(int idx,
     }
     else
     {
-        params = m_augmentation_factory.make_params();
+        params                    = m_augmentation_factory.make_params();
         aug.m_audio_augmentations = params;
     }
     m_loader.load({datum_out}, m_transformer.transform(params, decoded));
@@ -288,10 +287,10 @@ custom_provider::localization::localization(nlohmann::json js, nlohmann::json au
     m_output_shapes.insert({m_difficult_flag_buffer_name, os[9]});
 }
 
-void custom_provider::localization::provide(int idx,
-    const std::vector<char>& datum_in,
-    nervana::fixed_buffer_map& out_buf,
-    augmentation& aug)
+void custom_provider::localization::provide(int                        idx,
+                                            const std::vector<char>&   datum_in,
+                                            nervana::fixed_buffer_map& out_buf,
+                                            augmentation&              aug)
 {
     vector<void*> output_list = {out_buf[m_bbtargets_buffer_name]->get_item(idx),
                                  out_buf[m_bbtargets_mask_buffer_name]->get_item(idx),
@@ -317,9 +316,9 @@ void custom_provider::localization::provide(int idx,
         if (aug.m_image_augmentations == nullptr)
         {
             INFO << "make params";
-            auto input_size = decoded->input_image_size;
-            aug.m_image_augmentations = m_augmentation_factory.make_params(input_size.width, input_size.height,
-                m_config.width, m_config.height);
+            auto input_size           = decoded->input_image_size;
+            aug.m_image_augmentations = m_augmentation_factory.make_params(
+                input_size.width, input_size.height, m_config.width, m_config.height);
         }
         m_loader.load(output_list, m_transformer.transform(aug.m_image_augmentations, decoded));
     }
@@ -341,10 +340,10 @@ custom_provider::pixelmask::pixelmask(nlohmann::json js, nlohmann::json aug)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::pixelmask::provide(int idx,
-    const std::vector<char>& datum_in,
-    nervana::fixed_buffer_map& out_buf,
-    augmentation& aug)
+void custom_provider::pixelmask::provide(int                        idx,
+                                         const std::vector<char>&   datum_in,
+                                         nervana::fixed_buffer_map& out_buf,
+                                         augmentation&              aug)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -364,8 +363,8 @@ void custom_provider::pixelmask::provide(int idx,
     }
     else
     {
-        params = m_augmentation_factory.make_params(input_size.width, input_size.height,
-            m_config.width, m_config.height);
+        params = m_augmentation_factory.make_params(
+            input_size.width, input_size.height, m_config.width, m_config.height);
         aug.m_image_augmentations = params;
     }
     m_loader.load({datum_out}, m_transformer.transform(params, decoded));
@@ -387,10 +386,10 @@ custom_provider::boundingbox::boundingbox(nlohmann::json js, nlohmann::json aug)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::boundingbox::provide(int idx,
-    const std::vector<char>& datum_in,
-    nervana::fixed_buffer_map& out_buf,
-    augmentation& aug)
+void custom_provider::boundingbox::provide(int                        idx,
+                                           const std::vector<char>&   datum_in,
+                                           nervana::fixed_buffer_map& out_buf,
+                                           augmentation&              aug)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -410,8 +409,8 @@ void custom_provider::boundingbox::provide(int idx,
     }
     else
     {
-        params = m_augmentation_factory.make_params(input_size.width, input_size.height,
-            m_config.width, m_config.height);
+        params = m_augmentation_factory.make_params(
+            input_size.width, input_size.height, m_config.width, m_config.height);
         aug.m_image_augmentations = params;
     }
     m_loader.load({datum_out}, m_transformer.transform(params, decoded));
@@ -431,10 +430,10 @@ custom_provider::blob::blob(nlohmann::json js)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::blob::provide(int idx,
-    const std::vector<char>& datum_in,
-    nervana::fixed_buffer_map& out_buf,
-    augmentation&)
+void custom_provider::blob::provide(int                        idx,
+                                    const std::vector<char>&   datum_in,
+                                    nervana::fixed_buffer_map& out_buf,
+                                    augmentation&)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -445,7 +444,7 @@ void custom_provider::blob::provide(int idx,
         throw std::runtime_error(ss.str());
     }
 
-    auto decoded    = m_extractor.extract(datum_in.data(), datum_in.size());
+    auto decoded = m_extractor.extract(datum_in.data(), datum_in.size());
     m_loader.load({datum_out}, decoded);
 }
 
@@ -465,12 +464,12 @@ custom_provider::video::video(nlohmann::json js, nlohmann::json aug)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::video::provide(int idx,
-    const std::vector<char>& datum_in,
-    nervana::fixed_buffer_map& out_buf,
-    augmentation& aug)
+void custom_provider::video::provide(int                        idx,
+                                     const std::vector<char>&   datum_in,
+                                     nervana::fixed_buffer_map& out_buf,
+                                     augmentation&              aug)
 {
-    char*         datum_out = out_buf[m_buffer_name]->get_item(idx);
+    char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
     if (datum_in.size() == 0)
     {
@@ -488,8 +487,8 @@ void custom_provider::video::provide(int idx,
     }
     else
     {
-        params = m_augmentation_factory.make_params(image_size.width, image_size.height,
-            m_config.frame.width, m_config.frame.height);
+        params = m_augmentation_factory.make_params(
+            image_size.width, image_size.height, m_config.frame.width, m_config.frame.height);
         aug.m_image_augmentations = params;
     }
     m_loader.load({datum_out}, m_transformer.transform(params, decoded));
@@ -509,10 +508,10 @@ custom_provider::char_map::char_map(nlohmann::json js)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::char_map::provide(int idx,
-    const std::vector<char>& datum_in,
-    nervana::fixed_buffer_map& out_buf,
-    augmentation&)
+void custom_provider::char_map::provide(int                        idx,
+                                        const std::vector<char>&   datum_in,
+                                        nervana::fixed_buffer_map& out_buf,
+                                        augmentation&)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -523,7 +522,8 @@ void custom_provider::char_map::provide(int idx,
         throw std::runtime_error(ss.str());
     }
 
-    auto decoded    = m_extractor.extract(datum_in.data(), datum_in.size());
+    size_t datum_in_size = wstring_length(string(datum_in.data(), datum_in.size()));
+    auto   decoded       = m_extractor.extract(datum_in.data(), datum_in_size);
     m_loader.load({datum_out}, decoded);
 }
 
@@ -541,10 +541,10 @@ custom_provider::label_map::label_map(nlohmann::json js)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::label_map::provide(int idx,
-    const std::vector<char>& datum_in,
-    nervana::fixed_buffer_map& out_buf,
-    augmentation&)
+void custom_provider::label_map::provide(int                        idx,
+                                         const std::vector<char>&   datum_in,
+                                         nervana::fixed_buffer_map& out_buf,
+                                         augmentation&)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -555,11 +555,10 @@ void custom_provider::label_map::provide(int idx,
         throw std::runtime_error(ss.str());
     }
 
-    auto decoded    = m_extractor.extract(datum_in.data(), datum_in.size());
+    auto decoded = m_extractor.extract(datum_in.data(), datum_in.size());
     m_loader.load({datum_out}, decoded);
 }
 
 //=================================================================================================
 // multicrop
 //=================================================================================================
-
