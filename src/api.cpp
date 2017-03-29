@@ -166,57 +166,6 @@ static std::string py23_string_to_string(PyObject* py_str)
     return ss.str();
 }
 
-static std::string dictionary_to_string(PyObject* dict)
-{
-    PyObject*         _key;
-    PyObject*         _value;
-    Py_ssize_t        pos = 0;
-    std::stringstream ss;
-
-    ss << "{";
-    bool first = true;
-    while (PyDict_Next(dict, &pos, &_key, &_value))
-    {
-        /* do something interesting with the values... */
-        if (first)
-        {
-            first = false;
-        }
-        else
-        {
-            ss << ", ";
-        }
-
-        std::string key = py23_string_to_string(_key);
-        std::string value;
-        if (PyDict_Check(_value))
-        {
-            value = dictionary_to_string(_value);
-        }
-        else
-        {
-            if (PyUnicode_Check(_value) || PyBytes_Check(_value))
-            {
-                value = py23_string_to_string(_value);
-                value = "\"" + value + "\"";
-            }
-            else if (PyBool_Check(_value))
-            {
-                value = (PyObject_IsTrue(_value) ? "true" : "false");
-            }
-            else
-            {
-                PyObject* objectsRepresentation = PyObject_Repr(_value);
-                value                           = py23_string_to_string(objectsRepresentation);
-                Py_XDECREF(objectsRepresentation);
-            }
-        }
-        ss << "\"" << key << "\": " << value;
-    }
-    ss << "}";
-    return ss.str();
-}
-
 static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf)
 {
     std::vector<npy_intp> dims;
@@ -267,7 +216,7 @@ static PyObject* Dataloader_new(PyTypeObject* type, PyObject* args, PyObject* kw
 
     if (rc)
     {
-        std::string    dict_string = dictionary_to_string(dict);
+        std::string dict_string = py23_string_to_string(dict);
         nlohmann::json json_config = nlohmann::json::parse(dict_string);
 #ifdef AEON_DEBUG
         INFO << " config " << json_config.dump(4);

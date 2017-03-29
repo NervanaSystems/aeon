@@ -1,9 +1,9 @@
 import os
 from aeon import Dataloader
-
+import json
 
 pdir = os.path.dirname(os.path.abspath(__file__))
-manifest_root = os.path.join(pdir, '..', 'loader', 'test', 'test_data')
+manifest_root = os.path.join(pdir, '..', '..', 'test', 'test_data')
 
 manifest_file = os.path.join(manifest_root, 'manifest.csv')
 cache_root = ""
@@ -14,17 +14,20 @@ cfg = {
            'batch_size': 20,
            'block_size': 40,
            'cache_directory': cache_root,
-           'type': 'image,label',
-           'image': {'height': 28,
-                     'width': 28,
-                     'channels': 1},
-           'label': {'binary': False}
+           'etl': [
+               {'type': 'image',
+                'height': 28,
+                'width': 28,
+                'channels': 1},
+               {'type': 'label',
+                'binary': False}
+           ]
         }
 
-d1 = Dataloader(config=cfg)
+d1 = Dataloader(config=json.dumps(cfg))
 print("d1 length {0}".format(len(d1)))
 
-shapes = d1.shapes()
+shapes = d1.axes_info
 
 print("shapes {}".format(shapes))
 
