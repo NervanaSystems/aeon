@@ -315,6 +315,7 @@ private:
     nervana::char_map::extractor m_extractor;
     nervana::char_map::loader    m_loader;
     const std::string            m_buffer_name;
+    const std::string            m_length_name;
 };
 
 //=================================================================================================

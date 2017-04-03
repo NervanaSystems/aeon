@@ -82,6 +82,79 @@ TEST(provider, audio_classify)
     }
 }
 
+
+TEST(provider, transcript_length_check)
+{
+    uint32_t       max_length = 15;
+    nlohmann::json js_transcript    = {
+        {"type", "char_map"},
+        {"alphabet", "abcdefgß "},
+        {"max_length", max_length},
+        {"emit_length", true}};
+
+    nlohmann::json js = {{"etl", {js_transcript}}};
+
+    auto media   = nervana::provider_factory::create(js);
+    auto oshapes = media->get_output_shapes();
+    auto buf_names = media->get_buffer_names();
+
+    // Ensure that we have two output buffers (an extra one for the transcript length since emit_length == true)
+    ASSERT_EQ(2, buf_names.size());
+    ASSERT_NE(find(buf_names.begin(), buf_names.end(), "char_map"), buf_names.end());
+    ASSERT_NE(find(buf_names.begin(), buf_names.end(), "length"), buf_names.end());
+
+    size_t batch_size = 4;
+
+    fixed_buffer_map    out_buf(oshapes, batch_size);
+    encoded_record_list bp;
+    std::vector<string> transcripts{"abcß", "ßßad", "abcabc", "ddefggf"};
+    std::vector<uint32_t> expected_lengths{4, 4, 6, 7};
+    std::vector<std::vector<uint32_t>> expected_encodings{
+        {0, 1, 2, 7},
+        {7, 7, 0, 3},
+        {0, 1, 2, 0, 1, 2},
+        {3, 3, 4, 5, 6, 6, 5}
+    };
+    for (auto&& s : transcripts)
+    {
+        encoded_record record;
+        record.add_element(s.data(), s.length());
+        bp.add_record(record);
+    }
+
+    EXPECT_EQ(bp.size(), batch_size);
+
+    for (int i = 0; i < batch_size; i++)
+    {
+        media->provide(i, bp, out_buf);
+    }
+
+    // Check that the lengths are emitted as expected
+    for (int i = 0; i < batch_size; i++)
+    {
+        uint32_t target_length = unpack<uint32_t>(out_buf["length"]->get_item(i));
+        EXPECT_EQ(target_length, expected_lengths[i]);
+    }
+
+    for (int i = 0; i < batch_size; i++)
+    {
+        uint32_t* loaded_transcript = (uint32_t*) out_buf["char_map"]->get_item(i);
+
+        for (uint32_t j = 0; j < max_length; ++j)
+        {
+            if (j < expected_encodings[i].size())
+            {
+                EXPECT_EQ(loaded_transcript[j], expected_encodings[i][j]);
+            }
+            else
+            {
+                EXPECT_EQ(loaded_transcript[j], 0);
+            }
+
+        }
+    }
+}
+
 #warning this needs to be fixed
 // TEST(provider, audio_transcript)
 // {

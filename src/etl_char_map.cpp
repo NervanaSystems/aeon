@@ -31,9 +31,13 @@ nervana::char_map::config::config(nlohmann::json js)
     }
     verify_config("char_map", config_list, js);
 
-    // Now fill in derived (pack_for_ctc passed as indicator whether to interpret
-    // output shape as flattened across batch size)
-    add_shape_type({1, max_length}, {"character", "sequence"}, output_type, pack_for_ctc);
+    // Now fill in derived
+    add_shape_type({1, max_length}, {"character", "sequence"}, output_type);
+
+    if (emit_length)
+    {
+        add_shape_type({1}, "uint32_t");
+    }
 
     // set locale to operate on UTF8 input characters
     std::setlocale(LC_CTYPE, "");
@@ -83,5 +87,10 @@ void char_map::loader::load(const vector<void*>& outlist, std::shared_ptr<char_m
     for (auto c : dc->get_data())
     {
         *(outbuf++) = c;
+    }
+    if (_emit_length)
+    {
+        uint32_t* length_buf = (uint32_t*)outlist[1];
+        *length_buf          = dc->get_length();
     }
 }

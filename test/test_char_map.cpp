@@ -33,6 +33,42 @@ TEST(char_map, bad)
     EXPECT_THROW(char_map::config cfg{js}, std::runtime_error);
 }
 
+TEST(char_map, emit_length_check)
+{
+    uint32_t       max_length = 15;
+    nlohmann::json js         = {
+        {"alphabet", "abcdefg "}, {"max_length", max_length}, {"emit_length", true}};
+    char_map::config    cfg{js};
+    char_map::extractor extractor(cfg);
+    char_map::loader    loader(cfg);
+
+    {
+        string      transcript = "cab a dabba";
+        vector<int> expected   = {2, 0, 1, 7, 0, 7, 3, 0, 1, 1, 0};
+
+        vector<uint32_t> _outbuf0(max_length);
+        vector<uint32_t> _outbuf1(1);
+
+        uint32_t* outbuf0 = _outbuf0.data();
+        uint32_t* outbuf1 = _outbuf1.data();
+
+        auto decoded = extractor.extract(&transcript[0], transcript.size());
+        loader.load({outbuf0, outbuf1}, decoded);
+        for (int i = 0; i < max_length; i++)
+        {
+            if (i < expected.size())
+            {
+                EXPECT_EQ(outbuf0[i], expected[i]) << "at index " << i;
+            }
+            else
+            {
+                EXPECT_EQ(outbuf0[i], 0);
+            }
+        }
+        EXPECT_EQ(outbuf1[0], transcript.size());
+    }
+}
+
 TEST(char_map, test)
 {
     {

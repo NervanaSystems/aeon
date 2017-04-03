@@ -51,8 +51,8 @@ public:
     /** Integer value to give to unknown characters. 0 causes them to be
     * discarded.*/
     uint32_t unknown_value = 0;
-    /** Pack the output buffer for use in CTC. This places them end to end */
-    bool pack_for_ctc = false;
+    /** Whether to also output the number of valid characters per record */
+    bool emit_length = false;
     /** Output data type */
     std::string output_type{"uint32_t"};
     std::string name;
@@ -66,7 +66,7 @@ private:
         ADD_SCALAR(alphabet, mode::REQUIRED),
         ADD_SCALAR(name, mode::OPTIONAL),
         ADD_SCALAR(unknown_value, mode::OPTIONAL),
-        ADD_SCALAR(pack_for_ctc, mode::OPTIONAL),
+        ADD_SCALAR(emit_length, mode::OPTIONAL),
         ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) {
             return output_type::is_valid_type(v);
         })};
@@ -143,17 +143,21 @@ public:
     virtual std::shared_ptr<char_map::decoded> extract(const void* in_array, size_t in_sz) override;
 
 private:
-    const cmap_t& _cmap; // This comes from config
-    uint32_t      _max_length;
+    const cmap_t&  _cmap; // This comes from config
+    uint32_t       _max_length;
     const uint32_t _unknown_value;
 };
 
 class nervana::char_map::loader : public interface::loader<char_map::decoded>
 {
 public:
-    loader(const char_map::config& cfg) {}
+    loader(const char_map::config& cfg)
+        : _emit_length(cfg.emit_length)
+    {
+    }
     virtual ~loader() {}
     virtual void load(const std::vector<void*>&, std::shared_ptr<char_map::decoded>) override;
 
 private:
+    const bool _emit_length;
 };

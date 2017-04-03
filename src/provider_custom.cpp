@@ -504,8 +504,14 @@ custom_provider::char_map::char_map(nlohmann::json js)
     , m_extractor{m_config}
     , m_loader{m_config}
     , m_buffer_name{create_name(m_config.name, "char_map")}
+    , m_length_name{create_name(m_config.name, "length")}
 {
-    m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
+    auto os = m_config.get_shape_type_list();
+    m_output_shapes.insert({m_buffer_name, os[0]});
+    if (m_config.emit_length)
+    {
+        m_output_shapes.insert({m_length_name, os[1]});
+    }
 }
 
 void custom_provider::char_map::provide(int                        idx,
@@ -524,7 +530,15 @@ void custom_provider::char_map::provide(int                        idx,
 
     size_t datum_in_size = wstring_length(string(datum_in.data(), datum_in.size()));
     auto   decoded       = m_extractor.extract(datum_in.data(), datum_in_size);
-    m_loader.load({datum_out}, decoded);
+    if (m_config.emit_length)
+    {
+        char* length_out = out_buf[m_length_name]->get_item(idx);
+        m_loader.load({datum_out, length_out}, decoded);
+    }
+    else
+    {
+        m_loader.load({datum_out}, decoded);
+    }
 }
 
 //=================================================================================================
