@@ -40,6 +40,7 @@ namespace nervana
 class nervana::augment::image::params
 {
     friend class nervana::augment::image::param_factory;
+
 public:
     friend std::ostream& operator<<(std::ostream& out, const params& obj)
     {
@@ -77,12 +78,15 @@ class nervana::augment::image::param_factory : public json_configurable
 {
 public:
     param_factory(nlohmann::json config);
-    std::shared_ptr<params> make_params(size_t input_width, size_t input_height, size_t output_width, size_t output_height);
+    std::shared_ptr<params> make_params(size_t input_width,
+                                        size_t input_height,
+                                        size_t output_width,
+                                        size_t output_height);
 
-    bool     do_area_scale        = false;
-    bool     crop_enable          = true;
-    bool     fixed_aspect_ratio   = false;
-    float    fixed_scaling_factor = -1;
+    bool  do_area_scale        = false;
+    bool  crop_enable          = true;
+    bool  fixed_aspect_ratio   = false;
+    float fixed_scaling_factor = -1;
 
     /** Scale the crop box (width, height) */
     std::uniform_real_distribution<float> scale{1.0f, 1.0f};

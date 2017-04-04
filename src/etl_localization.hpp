@@ -106,7 +106,7 @@ public:
     float  foreground_fraction = 0.5; // at most, positive anchors are 0.5 of the total rois
     size_t max_gt_boxes        = 64;
     std::vector<std::string> class_names;
-    std::string name;
+    std::string              name;
 
     // Derived values
     size_t output_buffer_size;
@@ -185,8 +185,8 @@ public:
 
     virtual ~transformer() {}
     std::shared_ptr<localization::decoded>
-        transform(std::shared_ptr<augment::image::params>         txs,
-                  std::shared_ptr<localization::decoded> mp) override;
+        transform(std::shared_ptr<augment::image::params> txs,
+                  std::shared_ptr<localization::decoded>  mp) override;
 
 private:
     transformer() = delete;

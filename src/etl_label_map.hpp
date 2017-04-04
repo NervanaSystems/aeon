@@ -48,7 +48,7 @@ public:
     std::string              output_type = "uint32_t";
     std::vector<std::string> class_names;
     int                      max_classes = 100;
-    std::string name;
+    std::string              name;
 
     config(nlohmann::json js);
     virtual ~config() {}

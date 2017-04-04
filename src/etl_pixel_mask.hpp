@@ -53,8 +53,8 @@ class nervana::pixel_mask::transformer
 public:
     transformer(const image::config&);
     ~transformer();
-    std::shared_ptr<image::decoded> transform(std::shared_ptr<augment::image::params>  txs,
-                                              std::shared_ptr<image::decoded> mp) override;
+    std::shared_ptr<image::decoded> transform(std::shared_ptr<augment::image::params> txs,
+                                              std::shared_ptr<image::decoded>         mp) override;
 };
 
 //-------------------------------------------------------------------------

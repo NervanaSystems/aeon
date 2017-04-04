@@ -65,7 +65,7 @@ void json_configurable::verify_config(
                 }
                 stringstream ss;
                 ss << "key '" << key << "' not found";
-                if (distance < key.size()/2)
+                if (distance < key.size() / 2)
                 {
                     ss << ", did you mean '" << suggestion << "'";
                 }

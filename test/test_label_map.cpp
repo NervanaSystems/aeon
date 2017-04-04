@@ -96,14 +96,14 @@ TEST(label_map, test)
             loader.load({buffer.data()}, decoded);
 
             char* data_p = buffer.data();
-            int  i      = 0;
+            int   i      = 0;
             for (; i < expected.size(); i++)
             {
-                EXPECT_EQ(expected[i], unpack<int32_t>(&data_p[i*sizeof(int32_t)]));
+                EXPECT_EQ(expected[i], unpack<int32_t>(&data_p[i * sizeof(int32_t)]));
             }
             for (; i < cfg.max_label_count(); i++)
             {
-                EXPECT_EQ(0, unpack<int32_t>(&data_p[i*sizeof(int32_t)]));
+                EXPECT_EQ(0, unpack<int32_t>(&data_p[i * sizeof(int32_t)]));
             }
             // check for overrun
             for (i *= 4; i < buffer_size; i++)

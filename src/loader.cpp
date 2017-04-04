@@ -94,8 +94,8 @@ loader::~loader()
 
 void loader::initialize(nlohmann::json& config_json)
 {
-    string        config_string = config_json.dump();
-    m_current_config = config_json;
+    string config_string = config_json.dump();
+    m_current_config     = config_json;
     loader_config lcfg(config_json);
     m_batch_size = lcfg.batch_size;
 
@@ -115,11 +115,11 @@ void loader::initialize(nlohmann::json& config_json)
     m_batch_count_value = (m_manifest->record_count() + m_batch_size - 1) / m_batch_size;
     if (lcfg.iteration_mode == "ONCE")
     {
-        m_batch_mode        = BatchMode::ONCE;
+        m_batch_mode = BatchMode::ONCE;
     }
     else if (lcfg.iteration_mode == "INFINITE")
     {
-        m_batch_mode        = BatchMode::INFINITE;
+        m_batch_mode = BatchMode::INFINITE;
     }
     else if (lcfg.iteration_mode == "COUNT")
     {

@@ -37,7 +37,7 @@ public:
     // Required config variables
     std::vector<float>     crop_scales;
     nervana::image::config crop_config;
-    std::string name;
+    std::string            name;
 
     // Optional config variables
     int crop_count = 5;
@@ -60,7 +60,8 @@ private:
     void validate();
 };
 
-class nervana::multicrop::transformer : public interface::transformer<image::decoded, augment::image::params>
+class nervana::multicrop::transformer
+    : public interface::transformer<image::decoded, augment::image::params>
 {
 public:
     transformer(const multicrop::config& cfg);

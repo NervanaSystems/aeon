@@ -159,7 +159,7 @@ public:
     virtual void allocate();
     const char* get_item(size_t index) const;
     char* get_item(size_t index);
-    cv::Mat get_item_as_mat(size_t index, bool channel_major=false) const;
+    cv::Mat get_item_as_mat(size_t index, bool channel_major = false) const;
     char*             data() const { return m_data; }
     size_t            get_item_count() const { return m_size / m_stride; }
     size_t            size() const { return m_size; }

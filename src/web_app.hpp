@@ -35,8 +35,8 @@ public:
     void deregister_loader(const nervana::loader*);
 
 private:
-    web::server web_server;
-    std::vector<nervana::loader*>     m_loader_list; 
+    web::server                   web_server;
+    std::vector<nervana::loader*> m_loader_list;
 };
 
 extern web_app debug_web_app;

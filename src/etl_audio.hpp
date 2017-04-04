@@ -294,7 +294,8 @@ public:
 private:
 };
 
-class nervana::audio::transformer : public interface::transformer<audio::decoded, augment::audio::params>
+class nervana::audio::transformer
+    : public interface::transformer<audio::decoded, augment::audio::params>
 {
 public:
     transformer(const audio::config& config);

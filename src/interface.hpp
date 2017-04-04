@@ -110,7 +110,6 @@ public:
     std::make_shared<nervana::interface::config_info<decltype(var)>>(                              \
         var, #var, mode, parse_object<decltype(var)>, ##__VA_ARGS__)
 
-
     template <typename T, typename S>
     static void set_dist_params(T& dist, S& params)
     {
@@ -155,16 +154,16 @@ public:
     }
 
     template <typename T>
-    static void parse_object(T&                   value,
-                            const std::string&    key,
-                            const nlohmann::json& js,
-                            mode                  required = mode::OPTIONAL)
+    static void parse_object(T&                    value,
+                             const std::string&    key,
+                             const nlohmann::json& js,
+                             mode                  required = mode::OPTIONAL)
     {
         auto val = js.find(key);
         if (val != js.end())
         {
             auto obj = js[key];
-            value = obj.get<std::vector<nlohmann::json>>();
+            value    = obj.get<std::vector<nlohmann::json>>();
         }
         else if (required == mode::REQUIRED)
         {
@@ -211,9 +210,10 @@ public:
                         const std::string&         output_type_,
                         const bool                 flatten_all_dims_ = false)
     {
-        m_shape_type_list.emplace_back(shape_, nervana::output_type{output_type_}, flatten_all_dims_);
+        m_shape_type_list.emplace_back(
+            shape_, nervana::output_type{output_type_}, flatten_all_dims_);
     }
-    
+
     void add_shape_type(const std::vector<size_t>&  shape_,
                         const nervana::output_type& output_type_,
                         const bool                  flatten_all_dims_ = false)
@@ -221,15 +221,14 @@ public:
         m_shape_type_list.emplace_back(shape_, output_type_, flatten_all_dims_);
     }
 
-    void add_shape_type(const std::vector<size_t>&  shape_,
-                        const std::vector<std::string>&  names_,
-                        const nervana::output_type& output_type_,
-                        const bool                  flatten_all_dims_ = false)
+    void add_shape_type(const std::vector<size_t>&      shape_,
+                        const std::vector<std::string>& names_,
+                        const nervana::output_type&     output_type_,
+                        const bool                      flatten_all_dims_ = false)
     {
         m_shape_type_list.emplace_back(shape_, output_type_, flatten_all_dims_);
         m_shape_type_list.back().set_names(names_);
     }
-
 
 private:
     std::vector<nervana::shape_type> m_shape_type_list;
@@ -281,10 +280,7 @@ public:
     {
     }
 
-    virtual ~config_info()
-    {
-    }
-
+    virtual ~config_info() {}
     const std::string& name() const override { return m_variable_name; }
     bool required() const override { return m_parse_mode == interface::config::mode::REQUIRED; }
     std::string type() const override { return type_name<T>(); }

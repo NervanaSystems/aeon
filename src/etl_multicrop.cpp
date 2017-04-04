@@ -50,7 +50,7 @@ multicrop::config::config(nlohmann::json js)
     INFO;
     // shape is going to be different from crop_config because of multiple images
     shape_t multicrop_shape = crop_config.get_shape_type().get_shape();
-    auto axes_names = crop_config.get_shape_type().get_names();
+    auto    axes_names      = crop_config.get_shape_type().get_names();
     axes_names.insert(axes_names.begin(), "views");
 
     uint32_t num_views = crop_count * crop_scales.size() * (crop_config.flip_enable ? 2 : 1);
@@ -93,8 +93,8 @@ multicrop::transformer::transformer(const multicrop::config& cfg)
 }
 
 shared_ptr<image::decoded>
-    multicrop::transformer::transform(shared_ptr<augment::image::params>  crop_settings,
-                                      shared_ptr<image::decoded> input)
+    multicrop::transformer::transform(shared_ptr<augment::image::params> crop_settings,
+                                      shared_ptr<image::decoded>         input)
 {
     cv::Size2i in_size      = input->get_image_size();
     auto       cropbox_size = image::cropbox_max_proportional(in_size, crop_settings->output_size);

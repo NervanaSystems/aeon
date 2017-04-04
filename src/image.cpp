@@ -226,10 +226,10 @@ void image::photometric::cbsjitter(
         *  BRIGHTNESS & SATURATION  *
         *****************************/
         // float data[] = {0.114, 0.587, 0.299};   // NTSC
-        float data[] = {0.0820, 0.6094, 0.3086};
-        const cv::Mat GSCL(3, 1, CV_32FC1, data); 
-        cv::Mat satmtx = brightness * (saturation * cv::Mat::eye(3, 3, CV_32FC1) +
-                                (1 - saturation) * cv::Mat::ones(3, 1, CV_32FC1) * GSCL.t());
+        float         data[] = {0.0820, 0.6094, 0.3086};
+        const cv::Mat GSCL(3, 1, CV_32FC1, data);
+        cv::Mat       satmtx = brightness * (saturation * cv::Mat::eye(3, 3, CV_32FC1) +
+                                       (1 - saturation) * cv::Mat::ones(3, 1, CV_32FC1) * GSCL.t());
         cv::transform(inout, inout, satmtx);
     }
 
@@ -250,7 +250,7 @@ void image::photometric::cbsjitter(
 //     /****************************
 //     *  BRIGHTNESS & SATURATION  *
 //     *****************************/
-    
+
 //     const cv::Mat GSCL(3, 1, CV_32FC1, {0.114, 0.587, 0.299});
 //     cv::Mat satmtx = brightness * (saturation * cv::Mat::eye(3, 3, CV_32FC1) +
 //                             (1 - saturation) * cv::Mat::ones(3, 1, CV_32FC1) * GSCL.t());

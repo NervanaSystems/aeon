@@ -51,8 +51,10 @@ namespace nervana
             static void lighting(cv::Mat& inout, std::vector<float>, float color_noise_std);
             static void cbsjitter(
                 cv::Mat& inout, float contrast, float brightness, float saturation, int hue = 0);
-            static void transform_hsv(
-                cv::Mat& image, const float h_gain, const float s_gain, const float v_gain );
+            static void transform_hsv(cv::Mat&    image,
+                                      const float h_gain,
+                                      const float s_gain,
+                                      const float v_gain);
 
             // These are the eigenvectors of the pixelwise covariance matrix
             static const float   _CPCA[3][3];

@@ -50,6 +50,5 @@ public:
 
 private:
     std::vector<std::shared_ptr<nervana::interface::config_info_interface>> config_list = {
-        ADD_OBJECT(etl, mode::REQUIRED),
-        ADD_OBJECT(augmentation, mode::OPTIONAL)};
+        ADD_OBJECT(etl, mode::REQUIRED), ADD_OBJECT(augmentation, mode::OPTIONAL)};
 };

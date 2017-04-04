@@ -39,7 +39,6 @@ public:
     }
 
     virtual ~provider_interface() {}
-
     virtual void provide(int                           idx,
                          nervana::encoded_record_list& in_buf,
                          nervana::fixed_buffer_map&    out_buf) = 0;

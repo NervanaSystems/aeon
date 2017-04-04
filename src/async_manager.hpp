@@ -51,7 +51,7 @@ class nervana::async_manager_info
 {
 public:
     virtual ~async_manager_info() {}
-    virtual async_state get_state() const = 0;
+    virtual async_state        get_state() const = 0;
     virtual const std::string& get_name() const  = 0;
 };
 
@@ -70,9 +70,8 @@ public:
 };
 
 template <typename INPUT, typename OUTPUT>
-class nervana::async_manager
-    : public nervana::async_manager_source<OUTPUT>
-    , public async_manager_info
+class nervana::async_manager : public nervana::async_manager_source<OUTPUT>,
+                               public async_manager_info
 {
 public:
     async_manager(async_manager_source<INPUT>* source, const std::string& name)
@@ -92,13 +91,14 @@ public:
         {
             m_first = false;
             // Just run this one in blocking mode
-            m_pending_result = std::async(std::launch::async, &nervana::async_manager<INPUT, OUTPUT>::filler, this);
+            m_pending_result = std::async(
+                std::launch::async, &nervana::async_manager<INPUT, OUTPUT>::filler, this);
         }
         try
         {
             result = m_pending_result.get();
         }
-        catch(std::exception& e)
+        catch (std::exception& e)
         {
             INFO << e.what();
         }
@@ -107,7 +107,8 @@ public:
             swap();
 
             // Now kick off this one in async
-            m_pending_result = std::async(std::launch::async, &nervana::async_manager<INPUT, OUTPUT>::filler, this);
+            m_pending_result = std::async(
+                std::launch::async, &nervana::async_manager<INPUT, OUTPUT>::filler, this);
         }
         return result;
     }
@@ -132,16 +133,8 @@ public:
         }
     }
 
-    async_state get_state() const override
-    {
-        return m_state;
-    }
-
-    const std::string& get_name() const override
-    {
-        return m_name;
-    }
-
+    async_state        get_state() const override { return m_state; }
+    const std::string& get_name() const override { return m_name; }
 protected:
     async_manager(const async_manager&) = delete;
     void swap()

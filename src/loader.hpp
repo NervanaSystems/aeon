@@ -51,16 +51,16 @@ public:
     std::string manifest_root;
     int         batch_size;
 
-    std::string cache_directory      = "";
-    int         block_size           = 0;
-    float       subset_fraction      = 1.0;
-    bool        shuffle_enable       = false;
-    bool        shuffle_manifest     = false;
-    bool        single_thread        = false;
-    bool        pinned               = false;
-    int         random_seed          = 0;
-    std::string iteration_mode       = "ONCE";
-    int         iteration_mode_count = 0;
+    std::string                 cache_directory      = "";
+    int                         block_size           = 0;
+    float                       subset_fraction      = 1.0;
+    bool                        shuffle_enable       = false;
+    bool                        shuffle_manifest     = false;
+    bool                        single_thread        = false;
+    bool                        pinned               = false;
+    int                         random_seed          = 0;
+    std::string                 iteration_mode       = "ONCE";
+    int                         iteration_mode_count = 0;
     std::vector<nlohmann::json> etl;
     std::vector<nlohmann::json> augmentation;
 
@@ -111,7 +111,6 @@ public:
 
     int record_count() { return m_manifest->record_count(); }
     int batch_size() { return m_batch_size; }
-
     // member typedefs provided through inheriting from std::iterator
     class iterator : public std::iterator<std::input_iterator_tag, // iterator_category
                                           fixed_buffer_map         // value_type
@@ -159,11 +158,7 @@ public:
         m_position          = 0;
     }
 
-    nlohmann::json get_current_config() const
-    {
-        return m_current_config;
-    }
-
+    nlohmann::json get_current_config() const { return m_current_config; }
 private:
     loader() = delete;
     void initialize(nlohmann::json& config_json);

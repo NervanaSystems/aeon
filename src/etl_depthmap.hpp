@@ -47,13 +47,14 @@ private:
 // Transform
 //-------------------------------------------------------------------------
 
-class nervana::depthmap::transformer : public interface::transformer<image::decoded, augment::image::params>
+class nervana::depthmap::transformer
+    : public interface::transformer<image::decoded, augment::image::params>
 {
 public:
     transformer(const image::config&);
     ~transformer();
-    std::shared_ptr<image::decoded> transform(std::shared_ptr<augment::image::params>  txs,
-                                              std::shared_ptr<image::decoded> mp) override;
+    std::shared_ptr<image::decoded> transform(std::shared_ptr<augment::image::params> txs,
+                                              std::shared_ptr<image::decoded>         mp) override;
 };
 
 //-------------------------------------------------------------------------

@@ -30,7 +30,8 @@ using namespace std;
 using namespace nervana;
 
 block_loader_file::block_loader_file(manifest_file* manifest, size_t block_size)
-    : async_manager<std::vector<std::vector<std::string>>, encoded_record_list>{manifest, "block_loader_file"}
+    : async_manager<std::vector<std::vector<std::string>>, encoded_record_list>{manifest,
+                                                                                "block_loader_file"}
     , m_block_size(block_size)
     , m_record_count{manifest->record_count()}
     , m_manifest(*manifest)

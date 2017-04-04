@@ -58,8 +58,8 @@ depthmap::transformer::~transformer()
 }
 
 std::shared_ptr<image::decoded>
-    depthmap::transformer::transform(std::shared_ptr<augment::image::params>  img_xform,
-                                     std::shared_ptr<image::decoded> image_list)
+    depthmap::transformer::transform(std::shared_ptr<augment::image::params> img_xform,
+                                     std::shared_ptr<image::decoded>         image_list)
 {
     if (image_list->get_image_count() != 1)
         throw invalid_argument("depthmap transform only supports a single image");

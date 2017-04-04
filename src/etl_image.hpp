@@ -62,8 +62,8 @@ public:
     uint32_t    width;
     std::string output_type{"uint8_t"};
 
-    bool     channel_major        = true;
-    uint32_t channels             = 3;
+    bool     channel_major = true;
+    uint32_t channels      = 3;
 
     std::string name;
 
@@ -73,21 +73,18 @@ public:
     {
         return config_list;
     }
-   
-    config() {}
 
+    config() {}
 private:
-    std::vector<std::shared_ptr<interface::config_info_interface>> config_list =
-    {
+    std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_SCALAR(height, mode::REQUIRED),
         ADD_SCALAR(width, mode::REQUIRED),
         ADD_SCALAR(name, mode::OPTIONAL),
         ADD_SCALAR(channel_major, mode::OPTIONAL),
         ADD_SCALAR(channels, mode::OPTIONAL, [](uint32_t v) { return v == 1 || v == 3; }),
-        ADD_SCALAR(output_type,
-                   mode::OPTIONAL,
-                   [](const std::string& v) { return output_type::is_valid_type(v); })
-    };
+        ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) {
+            return output_type::is_valid_type(v);
+        })};
 
     void validate();
 
@@ -126,11 +123,7 @@ public:
     {
         return get_image_size().area() * get_image_channels() * get_image_count();
     }
-    cv::Size2i image_size() const override
-    {
-        return _images[0].size();
-    }
-
+    cv::Size2i image_size() const override { return _images[0].size(); }
 protected:
     bool all_images_are_same_size()
     {
@@ -157,7 +150,8 @@ private:
     int _color_mode;
 };
 
-class nervana::image::transformer : public interface::transformer<image::decoded, augment::image::params>
+class nervana::image::transformer
+    : public interface::transformer<image::decoded, augment::image::params>
 {
 public:
     transformer(const image::config&);

@@ -109,7 +109,7 @@ nervana::encoded_record_list* block_manager::filler()
         {
             m_cache_miss++;
             m_state = async_state::fetching_data;
-            input = m_source->next();
+            input   = m_source->next();
             m_state = async_state::processing;
             if (input == nullptr)
             {

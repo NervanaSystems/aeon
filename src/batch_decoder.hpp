@@ -31,7 +31,12 @@ namespace nervana
 class nervana::decode_thread_info
 {
 public:
-    decode_thread_info(int id, int start, int end, const std::shared_ptr<provider_interface>& prov, event& done, std::atomic<size_t>& active)
+    decode_thread_info(int                                        id,
+                       int                                        start,
+                       int                                        end,
+                       const std::shared_ptr<provider_interface>& prov,
+                       event&                                     done,
+                       std::atomic<size_t>&                       active)
         : m_id{id}
         , m_start_index{start}
         , m_end_index{end}
@@ -47,7 +52,7 @@ public:
 
     void set_buffers(encoded_record_list* in, fixed_buffer_map* out)
     {
-        m_in_buf = in;
+        m_in_buf  = in;
         m_out_buf = out;
         m_waiting_for_work_event.notify();
     }
@@ -74,7 +79,7 @@ public:
 private:
     void thread_entry()
     {
-        while(m_thread_active)
+        while (m_thread_active)
         {
             m_waiting_for_work_event.wait();
             if (m_thread_active)
@@ -114,12 +119,12 @@ public:
     }
 
 private:
-    size_t                                           m_batch_size;
-    size_t                                           m_number_elements_in;
-    size_t                                           m_number_elements_out;
-    int                                              m_items_per_thread;
+    size_t m_batch_size;
+    size_t m_number_elements_in;
+    size_t m_number_elements_out;
+    int    m_items_per_thread;
 
-    std::function<void(const fixed_buffer_map*)>     m_info_handler;
+    std::function<void(const fixed_buffer_map*)> m_info_handler;
 
     std::vector<std::shared_ptr<decode_thread_info>> m_decode_thread_info;
     event                                            m_work_complete_event;

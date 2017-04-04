@@ -64,7 +64,7 @@ public:
     size_t                   max_bbox_count;
     std::vector<std::string> class_names;
     std::string              output_type = "float";
-    std::string name;
+    std::string              name;
 
     std::unordered_map<std::string, int> label_map;
 
@@ -100,12 +100,7 @@ public:
     int                                  width() const { return m_width; }
     int                                  height() const { return m_height; }
     int                                  depth() const { return m_depth; }
-
-    cv::Size2i image_size() const override
-    {
-        return cv::Size2i(m_width, m_height);
-    }
-
+    cv::Size2i image_size() const override { return cv::Size2i(m_width, m_height); }
 private:
     std::vector<boundingbox::box> m_boxes;
     int                           m_width;
@@ -134,7 +129,8 @@ public:
     transformer(const boundingbox::config&);
     virtual ~transformer() {}
     virtual std::shared_ptr<boundingbox::decoded>
-        transform(std::shared_ptr<augment::image::params>, std::shared_ptr<boundingbox::decoded>) override;
+        transform(std::shared_ptr<augment::image::params>,
+                  std::shared_ptr<boundingbox::decoded>) override;
 
     static std::vector<boundingbox::box> transform_box(const std::vector<boundingbox::box>& b,
                                                        const cv::Rect&                      crop,

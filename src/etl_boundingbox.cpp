@@ -131,8 +131,8 @@ void boundingbox::extractor::extract(const void*                            data
         {
             b.truncated = object["truncated"];
         }
-        string name     = object["name"];
-        auto   found    = label_map.find(name);
+        string name  = object["name"];
+        auto   found = label_map.find(name);
         if (found == label_map.end())
         {
             // did not find the label in the ctor supplied label list
@@ -241,8 +241,8 @@ vector<boundingbox::box>
 }
 
 shared_ptr<boundingbox::decoded>
-    boundingbox::transformer::transform(shared_ptr<augment::image::params>        pptr,
-                                        shared_ptr<boundingbox::decoded> boxes)
+    boundingbox::transformer::transform(shared_ptr<augment::image::params> pptr,
+                                        shared_ptr<boundingbox::decoded>   boxes)
 {
     if (pptr->angle != 0)
     {

@@ -55,12 +55,14 @@ public:
 
     async_state get_state() const override
     {
-        return async_manager<std::vector<std::vector<std::string>>, encoded_record_list>::get_state();
+        return async_manager<std::vector<std::vector<std::string>>,
+                             encoded_record_list>::get_state();
     }
 
     const std::string& get_name() const override
     {
-        return async_manager<std::vector<std::vector<std::string>>, encoded_record_list>::get_name();
+        return async_manager<std::vector<std::vector<std::string>>,
+                             encoded_record_list>::get_name();
     }
 
 private:

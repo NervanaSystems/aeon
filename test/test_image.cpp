@@ -178,9 +178,7 @@ TEST(image, missing_config_arg)
 
 TEST(image, config)
 {
-    nlohmann::json js = {{"height", 30},
-                         {"width", 30},
-                         {"channels", 3}};
+    nlohmann::json js = {{"height", 30}, {"width", 30}, {"channels", 3}};
 
     image::config config(js);
     EXPECT_EQ(30, config.height);
@@ -247,9 +245,11 @@ TEST(image, transform_crop)
 
     augment::image::param_factory factory(aug);
 
-    auto image_size = decoded->get_image_size();
-    image_params_builder      builder(factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height));
-    shared_ptr<augment::image::params> params_ptr = builder.cropbox(100, 150, 20, 30).output_size(20, 30);
+    auto                 image_size = decoded->get_image_size();
+    image_params_builder builder(
+        factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height));
+    shared_ptr<augment::image::params> params_ptr =
+        builder.cropbox(100, 150, 20, 30).output_size(20, 30);
 
     image::transformer         trans{cfg};
     shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
@@ -278,8 +278,9 @@ TEST(image, transform_flip)
 
     augment::image::param_factory factory(aug);
 
-    auto image_size = decoded->get_image_size();
-    image_params_builder      builder(factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height));
+    auto                 image_size = decoded->get_image_size();
+    image_params_builder builder(
+        factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height));
     shared_ptr<augment::image::params> params_ptr =
         builder.cropbox(100, 150, 20, 20).output_size(20, 20).flip(true);
 
@@ -391,14 +392,14 @@ TEST(image, convert_nosplit)
     loader.load({output_image.data}, decoded);
 
     //    cv::imwrite("image_convert_nosplit.png", output_image);
-    int      index = 0;
+    int index = 0;
     for (int row = 0; row < output_image.rows; row++)
     {
         for (int col = 0; col < output_image.cols; col++)
         {
-            ASSERT_EQ(50, unpack<int32_t>(output_image.data, sizeof(int32_t)*index++));  // b
-            ASSERT_EQ(100, unpack<int32_t>(output_image.data, sizeof(int32_t)*index++)); // g
-            ASSERT_EQ(200, unpack<int32_t>(output_image.data, sizeof(int32_t)*index++)); // r
+            ASSERT_EQ(50, unpack<int32_t>(output_image.data, sizeof(int32_t) * index++));  // b
+            ASSERT_EQ(100, unpack<int32_t>(output_image.data, sizeof(int32_t) * index++)); // g
+            ASSERT_EQ(200, unpack<int32_t>(output_image.data, sizeof(int32_t) * index++)); // r
         }
     }
 }
@@ -426,14 +427,15 @@ TEST(image, convert_split)
     loader.load({output_image.data}, decoded);
 
     //    cv::imwrite("image_convert_split.png", output_image);
-    int      index = 0;
+    int index = 0;
     for (int ch = 0; ch < 3; ch++)
     {
         for (int row = 0; row < input_image.rows; row++)
         {
             for (int col = 0; col < input_image.cols; col++)
             {
-                ASSERT_EQ(50 * (ch + 1),  unpack<int32_t>(output_image.data, sizeof(int32_t)*index++));
+                ASSERT_EQ(50 * (ch + 1),
+                          unpack<int32_t>(output_image.data, sizeof(int32_t) * index++));
             }
         }
     }
@@ -453,7 +455,7 @@ TEST(DISABLED_image, multi_crop)
 
     // Just center crop
     {
-        auto                      jsstring = R"(
+        auto           jsstring = R"(
             {
                 "crop_config": {"width": 224,
                                 "height": 224,
@@ -463,13 +465,13 @@ TEST(DISABLED_image, multi_crop)
                 "crop_count": 1
             }
         )";
-        nlohmann::json aug = {{"width", 256}, {"height", 256}};
-        auto                      js       = nlohmann::json::parse(jsstring);
+        nlohmann::json aug      = {{"width", 256}, {"height", 256}};
+        auto           js       = nlohmann::json::parse(jsstring);
         INFO << "\n" << js.dump(4);
         multicrop::config mc_config(js);
         INFO << "\n" << js["crop_config"].dump(4);
-        augment::image::param_factory      factory(js["crop_config"]);
-        auto image_size = decoded->get_image_size();
+        augment::image::param_factory factory(js["crop_config"]);
+        auto                          image_size = decoded->get_image_size();
         INFO << cfg.width;
         INFO << cfg.height;
         INFO << image_size.width;
@@ -506,11 +508,12 @@ TEST(DISABLED_image, multi_crop)
             }
         )";
 
-        auto                      js = nlohmann::json::parse(jsstring);
-        multicrop::config         mc_config(js);
+        auto                               js = nlohmann::json::parse(jsstring);
+        multicrop::config                  mc_config(js);
         augment::image::param_factory      factory(js["crop_config"]);
-        auto image_size = decoded->get_image_size();
-        shared_ptr<augment::image::params> params_ptr = factory.make_params(image_size.width, image_size.height, 224, 224);
+        auto                               image_size = decoded->get_image_size();
+        shared_ptr<augment::image::params> params_ptr =
+            factory.make_params(image_size.width, image_size.height, 224, 224);
 
         multicrop::transformer     trans{mc_config};
         shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
@@ -544,11 +547,12 @@ TEST(DISABLED_image, multi_crop)
         using namespace cv;
         using idxPt = std::pair<int, Point2i>;
 
-        auto                      js = nlohmann::json::parse(jsstring);
-        multicrop::config         mc_config(js);
+        auto                               js = nlohmann::json::parse(jsstring);
+        multicrop::config                  mc_config(js);
         augment::image::param_factory      factory(js["crop_config"]);
-        auto image_size = decoded->get_image_size();
-        shared_ptr<augment::image::params> params_ptr = factory.make_params(image_size.width, image_size.height, 112, 112);
+        auto                               image_size = decoded->get_image_size();
+        shared_ptr<augment::image::params> params_ptr =
+            factory.make_params(image_size.width, image_size.height, 112, 112);
 
         multicrop::transformer     trans{mc_config};
         shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
@@ -639,23 +643,20 @@ TEST(image, transform)
         int            height   = 128;
         int            width    = 256;
         int            channels = 3;
-        nlohmann::json js       = {{"height", height},
-                             {"width", width},
-                             {"channels", channels},
-                             {"channel_major", false}};
-        nlohmann::json aug       = {{"type", "image"},
-                             {"flip_enable", false}};
-                             
+        nlohmann::json js       = {
+            {"height", height}, {"width", width}, {"channels", channels}, {"channel_major", false}};
+        nlohmann::json aug = {{"type", "image"}, {"flip_enable", false}};
 
-        image::config        cfg{js};
-        image::extractor     extractor{cfg};
-        image::transformer   transformer{cfg};
-        image::loader        loader{cfg, false};
+        image::config                 cfg{js};
+        image::extractor              extractor{cfg};
+        image::transformer            transformer{cfg};
+        image::loader                 loader{cfg, false};
         augment::image::param_factory factory(aug);
 
-        auto decoded     = extractor.extract(image_data.data(), image_data.size());
+        auto decoded    = extractor.extract(image_data.data(), image_data.size());
         auto image_size = decoded->get_image_size();
-        auto params      = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+        auto params =
+            factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
         auto transformed = transformer.transform(params, decoded);
 
         cv::Mat output_image(height, width, CV_8UC(channels));
@@ -667,24 +668,22 @@ TEST(image, transform)
         int            height   = 128;
         int            width    = 256;
         int            channels = 3;
-        nlohmann::json js       = {{"height", height},
-                             {"width", width},
-                             {"channels", channels},
-                             {"channel_major", false}};
-        nlohmann::json aug       = {{"type", "image"},
-                             {"flip_enable", false}};
+        nlohmann::json js       = {
+            {"height", height}, {"width", width}, {"channels", channels}, {"channel_major", false}};
+        nlohmann::json aug = {{"type", "image"}, {"flip_enable", false}};
 
-        image::config        cfg{js};
-        image::extractor     extractor{cfg};
-        image::transformer   transformer{cfg};
-        image::loader        loader{cfg, false};
+        image::config                 cfg{js};
+        image::extractor              extractor{cfg};
+        image::transformer            transformer{cfg};
+        image::loader                 loader{cfg, false};
         augment::image::param_factory factory(aug);
 
         auto decoded = extractor.extract(image_data.data(), image_data.size());
 
-        auto image_size = decoded->get_image_size();
-        shared_ptr<augment::image::params> params = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-        params->flip                     = true;
+        auto                               image_size = decoded->get_image_size();
+        shared_ptr<augment::image::params> params =
+            factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+        params->flip = true;
 
         auto transformed = transformer.transform(params, decoded);
 
@@ -697,26 +696,25 @@ TEST(image, transform)
         int            height   = 128;
         int            width    = 256;
         int            channels = 3;
-        nlohmann::json js       = {{"height", height},
-                             {"width", width},
-                             {"channels", channels},
-                             {"channel_major", false}};
-        nlohmann::json aug       = {{"type", "image"},
-                             {"horizontal_distortion", {2, 2}},
-                             {"scale", {0.5, 0.5}},
-                             {"flip_enable", false}};
+        nlohmann::json js       = {
+            {"height", height}, {"width", width}, {"channels", channels}, {"channel_major", false}};
+        nlohmann::json aug = {{"type", "image"},
+                              {"horizontal_distortion", {2, 2}},
+                              {"scale", {0.5, 0.5}},
+                              {"flip_enable", false}};
 
-        image::config        cfg{js};
-        image::extractor     extractor{cfg};
-        image::transformer   transformer{cfg};
-        image::loader        loader{cfg, false};
+        image::config                 cfg{js};
+        image::extractor              extractor{cfg};
+        image::transformer            transformer{cfg};
+        image::loader                 loader{cfg, false};
         augment::image::param_factory factory(aug);
 
         auto decoded = extractor.extract(image_data.data(), image_data.size());
 
-        auto image_size = decoded->get_image_size();
-        shared_ptr<augment::image::params> params = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-        params->flip                     = false;
+        auto                               image_size = decoded->get_image_size();
+        shared_ptr<augment::image::params> params =
+            factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+        params->flip = false;
 
         auto transformed = transformer.transform(params, decoded);
 
@@ -732,7 +730,7 @@ TEST(image, config_bad_scale)
     int            height   = 128;
     int            width    = 256;
     int            channels = 3;
-    nlohmann::json js       = {{"type", "image"}, 
+    nlohmann::json js       = {{"type", "image"},
                          {"height", height},
                          {"width", width},
                          {"channels", channels},
@@ -755,53 +753,52 @@ TEST(image, area_scale)
         int            height   = 128;
         int            width    = 256;
         int            channels = 3;
-        nlohmann::json js       = {{"height", height},
-                             {"width", width},
-                             {"channels", channels},
-                             {"channel_major", false}};
-        nlohmann::json aug       = {{"type", "image"},
-                             {"do_area_scale", true},
-                             {"flip_enable", false}};
+        nlohmann::json js       = {
+            {"height", height}, {"width", width}, {"channels", channels}, {"channel_major", false}};
+        nlohmann::json aug = {{"type", "image"}, {"do_area_scale", true}, {"flip_enable", false}};
 
         {
-            image::config        cfg{js};
-            image::extractor     extractor{cfg};
+            image::config                 cfg{js};
+            image::extractor              extractor{cfg};
             augment::image::param_factory factory(aug);
 
             auto decoded      = extractor.extract(image_data.data(), image_data.size());
             source_image_area = decoded->get_image_size().area();
 
-            auto image_size = decoded->get_image_size();
-            shared_ptr<augment::image::params> params = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-            max_cropbox_area                 = params->cropbox.area();
-            max_cropbox_ratio                = max_cropbox_area / source_image_area;
+            auto                               image_size = decoded->get_image_size();
+            shared_ptr<augment::image::params> params =
+                factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+            max_cropbox_area  = params->cropbox.area();
+            max_cropbox_ratio = max_cropbox_area / source_image_area;
         }
         {
             aug["scale"] = {0.3, 0.3};
-            image::config        cfg{js};
-            image::extractor     extractor{cfg};
+            image::config                 cfg{js};
+            image::extractor              extractor{cfg};
             augment::image::param_factory factory(aug);
 
             auto decoded = extractor.extract(image_data.data(), image_data.size());
 
-            auto image_size = decoded->get_image_size();
-            shared_ptr<augment::image::params> params        = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-            float                     cropbox_area  = params->cropbox.area();
-            float                     cropbox_ratio = cropbox_area / source_image_area;
+            auto                               image_size = decoded->get_image_size();
+            shared_ptr<augment::image::params> params =
+                factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+            float cropbox_area  = params->cropbox.area();
+            float cropbox_ratio = cropbox_area / source_image_area;
             EXPECT_NEAR(0.3, cropbox_ratio, 0.0001);
         }
         {
             aug["scale"] = {0.8, 0.8};
-            image::config        cfg{js};
-            image::extractor     extractor{cfg};
+            image::config                 cfg{js};
+            image::extractor              extractor{cfg};
             augment::image::param_factory factory(aug);
 
             auto decoded = extractor.extract(image_data.data(), image_data.size());
 
-            auto image_size = decoded->get_image_size();
-            shared_ptr<augment::image::params> params        = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-            float                     cropbox_area  = params->cropbox.area();
-            float                     cropbox_ratio = cropbox_area / source_image_area;
+            auto                               image_size = decoded->get_image_size();
+            shared_ptr<augment::image::params> params =
+                factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+            float cropbox_area  = params->cropbox.area();
+            float cropbox_ratio = cropbox_area / source_image_area;
             EXPECT_FLOAT_EQ(max_cropbox_ratio, cropbox_ratio);
         }
     }
@@ -833,12 +830,8 @@ TEST(image, var_resize)
     vector<unsigned char> img;
     cv::imencode(".png", mat, img);
 
-    nlohmann::json jsConfig = {{"width", 400},
-                               {"height", 400},
-                               {"channels", 3}};
-    nlohmann::json aug       = {{"type", "image"},
-                               {"fixed_aspect_ratio", true},
-                               {"crop_enable", false}};
+    nlohmann::json jsConfig = {{"width", 400}, {"height", 400}, {"channels", 3}};
+    nlohmann::json aug = {{"type", "image"}, {"fixed_aspect_ratio", true}, {"crop_enable", false}};
 
     image::config config_ptr{jsConfig};
 
@@ -852,8 +845,9 @@ TEST(image, var_resize)
     }
 
     augment::image::param_factory      factory(aug);
-    auto image_size = decoded->get_image_size();
-    shared_ptr<augment::image::params> params_ptr = factory.make_params(image_size.width, image_size.height, config_ptr.width, config_ptr.height);
+    auto                               image_size = decoded->get_image_size();
+    shared_ptr<augment::image::params> params_ptr = factory.make_params(
+        image_size.width, image_size.height, config_ptr.width, config_ptr.height);
 
     image::transformer         trans{config_ptr};
     shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
@@ -869,13 +863,11 @@ TEST(image, var_resize_fixed_scale)
     vector<unsigned char> img;
     cv::imencode(".png", mat, img);
 
-    nlohmann::json jsConfig = {{"width", 400},
-                               {"height", 400},
-                               {"channels", 3}};
+    nlohmann::json jsConfig = {{"width", 400}, {"height", 400}, {"channels", 3}};
     nlohmann::json aug      = {{"type", "image"},
-                               {"fixed_aspect_ratio", true},
-                               {"crop_enable", false},
-                               {"fixed_scaling_factor", 1.0}};
+                          {"fixed_aspect_ratio", true},
+                          {"crop_enable", false},
+                          {"fixed_scaling_factor", 1.0}};
 
     image::config config_ptr{jsConfig};
 
@@ -889,8 +881,9 @@ TEST(image, var_resize_fixed_scale)
     }
 
     augment::image::param_factory      factory(aug);
-    auto image_size = decoded->get_image_size();
-    shared_ptr<augment::image::params> params_ptr = factory.make_params(image_size.width, image_size.height, config_ptr.width, config_ptr.height);
+    auto                               image_size = decoded->get_image_size();
+    shared_ptr<augment::image::params> params_ptr = factory.make_params(
+        image_size.width, image_size.height, config_ptr.width, config_ptr.height);
 
     image::transformer         trans{config_ptr};
     shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
@@ -905,24 +898,21 @@ TEST(image, var_transform_flip)
     auto                  indexed = generate_indexed_image();
     vector<unsigned char> img;
     cv::imencode(".png", indexed, img);
-    nlohmann::json jsConfig = {{"width", 256},
-                               {"height", 256},
-                               {"channels", 3}};
-    nlohmann::json aug      = {{"type", "image"},
-                               {"fixed_aspect_ratio", true},
-                               {"crop_enable", false}};
+    nlohmann::json jsConfig = {{"width", 256}, {"height", 256}, {"channels", 3}};
+    nlohmann::json aug = {{"type", "image"}, {"fixed_aspect_ratio", true}, {"crop_enable", false}};
 
     image::config config_ptr{jsConfig};
 
     image::extractor           ext{config_ptr};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
 
-    std::default_random_engine dre;
-    augment::image::param_factory       factory(aug);
+    std::default_random_engine    dre;
+    augment::image::param_factory factory(aug);
 
-    auto image_size = decoded->get_image_size();
-    shared_ptr<augment::image::params> params_ptr = factory.make_params(image_size.width, image_size.height, config_ptr.width, config_ptr.height);
-    params_ptr->flip                     = true;
+    auto                               image_size = decoded->get_image_size();
+    shared_ptr<augment::image::params> params_ptr = factory.make_params(
+        image_size.width, image_size.height, config_ptr.width, config_ptr.height);
+    params_ptr->flip = true;
 
     image::transformer         trans{config_ptr};
     shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
@@ -971,7 +961,7 @@ bool test_contrast_image(cv::Mat m, float v1, float v2, float v3)
     {
         INFO << m.at<cv::Vec3b>(0, 0);
         INFO << m.at<cv::Vec3b>(128, 0);
-        INFO << m.at<cv::Vec3b>(256, 0);    
+        INFO << m.at<cv::Vec3b>(256, 0);
     }
 
     return rc;
@@ -1128,7 +1118,7 @@ bool test_saturation(cv::Mat m, vector<float> v1, vector<float> v2, vector<float
     {
         INFO << m.at<cv::Vec3b>(0, 0);
         INFO << m.at<cv::Vec3b>(128, 0);
-        INFO << m.at<cv::Vec3b>(256, 0);    
+        INFO << m.at<cv::Vec3b>(256, 0);
     }
 
     return rc;
@@ -1181,7 +1171,7 @@ TEST(DISABLED_photometric, saturation)
         image::photometric::cbsjitter(mat, 1.0, 1.0, 1.0);
         cv::imwrite("saturation_1_0.png", mat);
         EXPECT_TRUE(test_saturation(mat, {128, 0, 0}, {0, 128, 0}, {0, 0, 128}));
-    } 
+    }
 
     {
         cv::Mat mat = source.clone();
@@ -1273,7 +1263,7 @@ TEST(DISABLED_photometric, hue)
     }
 
     {
-        for (int i = 0; i <= 180; i += 45/2)
+        for (int i = 0; i <= 180; i += 45 / 2)
         {
             cv::Mat mat = source.clone();
             image::photometric::cbsjitter(mat, 1.0, 1.0, 1.0, i);

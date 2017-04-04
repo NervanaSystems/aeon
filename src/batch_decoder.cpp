@@ -52,13 +52,7 @@ batch_decoder::batch_decoder(batch_iterator*                            b_itor,
             i == nthreads - 1 ? (batch_size - i * m_items_per_thread) : m_items_per_thread;
         int end = start + record_count;
         m_decode_thread_info.push_back(make_shared<decode_thread_info>(
-            i,
-            start,
-            end,
-            prov,
-            m_work_complete_event,
-            m_active_count
-        ));
+            i, start, end, prov, m_work_complete_event, m_active_count));
     }
 
     auto oshapes         = prov->get_output_shapes();
@@ -81,11 +75,11 @@ batch_decoder::~batch_decoder()
 
 fixed_buffer_map* batch_decoder::filler()
 {
-    m_state                      = async_state::wait_for_buffer;
-    fixed_buffer_map*    outputs = get_pending_buffer();
-    m_state                      = async_state::fetching_data;
-    encoded_record_list* inputs  = m_source->next();
-    m_state                      = async_state::processing;
+    m_state                     = async_state::wait_for_buffer;
+    fixed_buffer_map* outputs   = get_pending_buffer();
+    m_state                     = async_state::fetching_data;
+    encoded_record_list* inputs = m_source->next();
+    m_state                     = async_state::processing;
 
     if (inputs == nullptr)
     {

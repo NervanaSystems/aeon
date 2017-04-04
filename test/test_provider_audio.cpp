@@ -31,14 +31,13 @@ using namespace nervana;
 
 TEST(provider, audio_classify)
 {
-    nlohmann::json js_label = {{"type", "label"},
-                           {"binary", true}};
+    nlohmann::json js_label = {{"type", "label"}, {"binary", true}};
     nlohmann::json js_audio = {{"type", "audio"},
-                           {"max_duration", "2000 milliseconds"},
-                           {"frame_length", "1024 samples"},
-                           {"frame_stride", "256 samples"},
-                           {"sample_freq_hz", 44100},
-                           {"feature_type", "specgram"}};
+                               {"max_duration", "2000 milliseconds"},
+                               {"frame_length", "1024 samples"},
+                               {"frame_stride", "256 samples"},
+                               {"sample_freq_hz", 44100},
+                               {"feature_type", "specgram"}};
     nlohmann::json js = {{"etl", {js_audio, js_label}}};
 
     auto media   = nervana::provider_factory::create(js);
@@ -82,20 +81,18 @@ TEST(provider, audio_classify)
     }
 }
 
-
 TEST(provider, transcript_length_check)
 {
-    uint32_t       max_length = 15;
-    nlohmann::json js_transcript    = {
-        {"type", "char_map"},
-        {"alphabet", "abcdefgß "},
-        {"max_length", max_length},
-        {"emit_length", true}};
+    uint32_t       max_length    = 15;
+    nlohmann::json js_transcript = {{"type", "char_map"},
+                                    {"alphabet", "abcdefgß "},
+                                    {"max_length", max_length},
+                                    {"emit_length", true}};
 
     nlohmann::json js = {{"etl", {js_transcript}}};
 
-    auto media   = nervana::provider_factory::create(js);
-    auto oshapes = media->get_output_shapes();
+    auto media     = nervana::provider_factory::create(js);
+    auto oshapes   = media->get_output_shapes();
     auto buf_names = media->get_buffer_names();
 
     // Ensure that we have two output buffers (an extra one for the transcript length since emit_length == true)
@@ -105,16 +102,12 @@ TEST(provider, transcript_length_check)
 
     size_t batch_size = 4;
 
-    fixed_buffer_map    out_buf(oshapes, batch_size);
-    encoded_record_list bp;
-    std::vector<string> transcripts{"abcß", "ßßad", "abcabc", "ddefggf"};
-    std::vector<uint32_t> expected_lengths{4, 4, 6, 7};
+    fixed_buffer_map                   out_buf(oshapes, batch_size);
+    encoded_record_list                bp;
+    std::vector<string>                transcripts{"abcß", "ßßad", "abcabc", "ddefggf"};
+    std::vector<uint32_t>              expected_lengths{4, 4, 6, 7};
     std::vector<std::vector<uint32_t>> expected_encodings{
-        {0, 1, 2, 7},
-        {7, 7, 0, 3},
-        {0, 1, 2, 0, 1, 2},
-        {3, 3, 4, 5, 6, 6, 5}
-    };
+        {0, 1, 2, 7}, {7, 7, 0, 3}, {0, 1, 2, 0, 1, 2}, {3, 3, 4, 5, 6, 6, 5}};
     for (auto&& s : transcripts)
     {
         encoded_record record;
@@ -138,7 +131,7 @@ TEST(provider, transcript_length_check)
 
     for (int i = 0; i < batch_size; i++)
     {
-        uint32_t* loaded_transcript = (uint32_t*) out_buf["char_map"]->get_item(i);
+        uint32_t* loaded_transcript = (uint32_t*)out_buf["char_map"]->get_item(i);
 
         for (uint32_t j = 0; j < max_length; ++j)
         {
@@ -150,7 +143,6 @@ TEST(provider, transcript_length_check)
             {
                 EXPECT_EQ(loaded_transcript[j], 0);
             }
-
         }
     }
 }

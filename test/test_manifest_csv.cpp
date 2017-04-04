@@ -444,7 +444,7 @@ TEST(manifest, ascii_int)
     {
         for (int i = 0; i < image_files.size(); i++)
         {
-            ss << image_files[i] << "\t" << count*2+i << "\n";
+            ss << image_files[i] << "\t" << count * 2 + i << "\n";
         }
     }
 
@@ -465,9 +465,9 @@ TEST(manifest, ascii_int)
         ASSERT_EQ(block_size, buffer->size());
         for (int j = 0; j < buffer->size(); j++)
         {
-            encoded_record record   = buffer->record(j);
-            auto           idata    = record.element(0);
-            int32_t        tdata    = unpack<int32_t>(record.element(1).data());
+            encoded_record record = buffer->record(j);
+            auto           idata  = record.element(0);
+            int32_t        tdata  = unpack<int32_t>(record.element(1).data());
             EXPECT_EQ(tdata, index);
             index++;
         }
@@ -487,7 +487,7 @@ TEST(manifest, ascii_float)
     {
         for (int i = 0; i < image_files.size(); i++)
         {
-            ss << image_files[i] << "\t" << (float)(count*2+i)/10. << "\n";
+            ss << image_files[i] << "\t" << (float)(count * 2 + i) / 10. << "\n";
         }
     }
 
@@ -511,7 +511,7 @@ TEST(manifest, ascii_float)
             encoded_record record   = buffer->record(j);
             auto           idata    = record.element(0);
             float          tdata    = unpack<float>(record.element(1).data());
-            float expected = (float)index/10.;
+            float          expected = (float)index / 10.;
             EXPECT_EQ(tdata, expected);
             index++;
         }
@@ -630,27 +630,25 @@ TEST(manifest, crc_root_dir)
 {
     stringstream ss;
     ss << manifest_file::get_metadata_char();
-    ss << manifest_file::get_file_type_id() << manifest_file::get_delimiter() << manifest_file::get_string_type_id() << "\n";
-    for (size_t i=0; i<100; i++)
+    ss << manifest_file::get_file_type_id() << manifest_file::get_delimiter()
+       << manifest_file::get_string_type_id() << "\n";
+    for (size_t i = 0; i < 100; i++)
     {
-        ss << "relative/path/image" << i << ".jpg" << manifest_file::get_delimiter() << i << "\n"; 
+        ss << "relative/path/image" << i << ".jpg" << manifest_file::get_delimiter() << i << "\n";
     }
 
     uint32_t manifest1_crc;
     uint32_t manifest2_crc;
 
-    float  subset_fraction  = 1.0;
-    int    block_size       = 4;
-    bool   shuffle_manifest = false;
+    float subset_fraction  = 1.0;
+    int   block_size       = 4;
+    bool  shuffle_manifest = false;
 
     {
         stringstream tmp{ss.str()};
-        string manifest_root = "/root1/";
-        auto manifest = make_shared<nervana::manifest_file>(tmp,
-                                                            shuffle_manifest,
-                                                            manifest_root,
-                                                            subset_fraction,
-                                                            block_size);
+        string       manifest_root = "/root1/";
+        auto         manifest      = make_shared<nervana::manifest_file>(
+            tmp, shuffle_manifest, manifest_root, subset_fraction, block_size);
 
         ASSERT_NE(nullptr, manifest);
 
@@ -659,12 +657,9 @@ TEST(manifest, crc_root_dir)
 
     {
         stringstream tmp{ss.str()};
-        string manifest_root = "/root2/";
-        auto manifest = make_shared<nervana::manifest_file>(tmp,
-                                                            shuffle_manifest,
-                                                            manifest_root,
-                                                            subset_fraction,
-                                                            block_size);
+        string       manifest_root = "/root2/";
+        auto         manifest      = make_shared<nervana::manifest_file>(
+            tmp, shuffle_manifest, manifest_root, subset_fraction, block_size);
 
         ASSERT_NE(nullptr, manifest);
 
@@ -676,43 +671,48 @@ TEST(manifest, crc_root_dir)
 
 TEST(benchmark, manifest)
 {
-   string manifest_filename = file_util::tmp_filename();
-   string cache_root = "/this/is/supposed/to/be/long/so/we/make/it/so/";
-   cout << "tmp manifest file " << manifest_filename << endl;
+    string manifest_filename = file_util::tmp_filename();
+    string cache_root        = "/this/is/supposed/to/be/long/so/we/make/it/so/";
+    cout << "tmp manifest file " << manifest_filename << endl;
 
-   chrono::high_resolution_clock timer;
+    chrono::high_resolution_clock timer;
 
-   // Generate a manifest file
-   {
-       auto startTime = timer.now();
-       ofstream mfile(manifest_filename);
-       for(int i=0; i<10e6; i++)
-       {
-           mfile << cache_root << "image_" << i << ".jpg,";
-           mfile << cache_root << "target_" << i << ".txt\n";
-       }
-       auto endTime = timer.now();
-       cout << "create manifest " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" <<
-       endl;
-   }
+    // Generate a manifest file
+    {
+        auto     startTime = timer.now();
+        ofstream mfile(manifest_filename);
+        for (int i = 0; i < 10e6; i++)
+        {
+            mfile << cache_root << "image_" << i << ".jpg,";
+            mfile << cache_root << "target_" << i << ".txt\n";
+        }
+        auto endTime = timer.now();
+        cout << "create manifest "
+             << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count() << " ms"
+             << endl;
+    }
 
-   // Parse the manifest file
-   shared_ptr<manifest_file> manifest;
-   {
-       auto startTime = timer.now();
-       manifest = make_shared<manifest_file>(manifest_filename, false);
-       auto endTime = timer.now();
-       cout << "load manifest " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" << endl;
-   }
+    // Parse the manifest file
+    shared_ptr<manifest_file> manifest;
+    {
+        auto startTime = timer.now();
+        manifest       = make_shared<manifest_file>(manifest_filename, false);
+        auto endTime   = timer.now();
+        cout << "load manifest "
+             << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count() << " ms"
+             << endl;
+    }
 
-   // compute the CRC
-   {
-       auto startTime = timer.now();
-       uint32_t crc = manifest->get_crc();
-       auto endTime = timer.now();
-       cout << "manifest crc 0x" << setfill('0') << setw(8) << hex << crc << dec << endl;
-       cout << "crc time " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" << endl;
-   }
+    // compute the CRC
+    {
+        auto     startTime = timer.now();
+        uint32_t crc       = manifest->get_crc();
+        auto     endTime   = timer.now();
+        cout << "manifest crc 0x" << setfill('0') << setw(8) << hex << crc << dec << endl;
+        cout << "crc time "
+             << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count() << " ms"
+             << endl;
+    }
 
-   remove(manifest_filename.c_str());
+    remove(manifest_filename.c_str());
 }

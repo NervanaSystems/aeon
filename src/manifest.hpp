@@ -36,7 +36,6 @@ namespace nervana
 
         manifest() {}
         virtual ~manifest() {}
-
         virtual std::string cache_id() = 0;
         virtual std::string version()  = 0;
 

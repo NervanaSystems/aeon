@@ -45,9 +45,9 @@ TEST(wav, compare)
     bool     all_eq      = true;
     for (int i = 0; i < num_samples; i++)
     {
-        size_t   offset = i * sizeof(int16_t);
+        size_t  offset = i * sizeof(int16_t);
         int16_t waddr  = unpack<int16_t>(wav.get_raw_data()[0] + offset);
-        int16_t  dval   = extracted_wav.at<int16_t>(i, 0);
+        int16_t dval   = extracted_wav.at<int16_t>(i, 0);
         if (waddr != dval)
         {
             all_eq = false;
@@ -100,7 +100,7 @@ TEST(audio, specgram)
 
 TEST(audio, transform)
 {
-    auto js = R"(
+    auto js     = R"(
         {
             "max_duration": "2000 milliseconds",
             "frame_length": "1024 samples",
@@ -130,8 +130,8 @@ TEST(audio, transform)
 
     audio::config config(js);
 
-    audio::extractor     extractor;
-    audio::transformer   _audioTransformer(config);
+    audio::extractor              extractor;
+    audio::transformer            _audioTransformer(config);
     augment::audio::param_factory factory(js_aug);
 
     auto decoded_audio = extractor.extract(databuf, bufsize);
@@ -169,7 +169,7 @@ TEST(wav, read)
 
 TEST(audio, transform2)
 {
-    auto js = R"(
+    auto js     = R"(
         {
             "max_duration": "3 seconds",
             "frame_length": "256 samples",
@@ -197,8 +197,8 @@ TEST(audio, transform2)
 
     audio::config config(js);
 
-    audio::extractor     extractor;
-    audio::transformer   _audioTransformer(config);
+    audio::extractor              extractor;
+    audio::transformer            _audioTransformer(config);
     augment::audio::param_factory factory(js_aug);
 
     auto decoded_audio = extractor.extract(databuf, bufsize);
@@ -214,7 +214,7 @@ TEST(audio, transform2)
 
 TEST(audio, samples_out)
 {
-    auto js = R"(
+    auto js     = R"(
         {
             "feature_type": "samples",
             "output_type": "int16_t",
@@ -245,12 +245,12 @@ TEST(audio, samples_out)
 
     audio::config config(js);
 
-    audio::extractor     extractor;
-    audio::transformer   _audioTransformer(config);
-    audio::loader        _audioLoader(config);
+    audio::extractor              extractor;
+    audio::transformer            _audioTransformer(config);
+    audio::loader                 _audioLoader(config);
     augment::audio::param_factory factory(js_aug);
-    auto                 decoded_audio = extractor.extract(databuf, bufsize);
-    auto                 audioParams   = factory.make_params();
+    auto                          decoded_audio = extractor.extract(databuf, bufsize);
+    auto                          audioParams   = factory.make_params();
 
     cv::Mat output_samples(1, config.max_duration_tn, CV_16SC1);
     auto    xformed_audio = _audioTransformer.transform(audioParams, decoded_audio);
@@ -267,7 +267,7 @@ TEST(audio, samples_out)
 
     for (int i = 0; i < wav_samples; i++)
     {
-        size_t   offset = i * sizeof(int16_t);
+        size_t  offset = i * sizeof(int16_t);
         int16_t waddr  = unpack<int16_t>(wav.get_raw_data()[0] + offset);
         if (waddr != output_samples.at<int16_t>(0, i))
         {

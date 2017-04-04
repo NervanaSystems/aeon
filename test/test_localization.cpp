@@ -72,22 +72,20 @@ vector<uint8_t> make_image_from_metadata(const std::string& metadata)
 
 TEST(DISABLED_localization, example)
 {
-    int height = 1000;
-    int width = 1000;
-    int batch_size = 1;
-    float fixed_scaling_factor = 1.6;
-    std::string manifest_root = "/test_data";
-    std::string manifest      = "localization_manifest.tsv";
-    std::vector<std::string> class_names = {"bicycle", "person"};
+    int                      height               = 1000;
+    int                      width                = 1000;
+    int                      batch_size           = 1;
+    float                    fixed_scaling_factor = 1.6;
+    std::string              manifest_root        = "/test_data";
+    std::string              manifest             = "localization_manifest.tsv";
+    std::vector<std::string> class_names          = {"bicycle", "person"};
 
-    nlohmann::json js_image = {{"type", "image"},
-                               {"height", height},
-                               {"width", width},
-                               {"channel_major", false}};
+    nlohmann::json js_image = {
+        {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
     nlohmann::json js_local = {{"type", "localization"},
                                {"height", height},
-                               {"width", width}, 
-                               {"max_gt_boxes", 64}, 
+                               {"width", width},
+                               {"max_gt_boxes", 64},
                                {"class_names", class_names}};
     nlohmann::json js_aug = {{"type", "image"},
                              {"fixed_aspect_ratio", true},
@@ -136,20 +134,16 @@ TEST(localization, generate_anchors)
     // subtract 1 from the expected vector as it was generated with 1's based matlab
     //    expected -= 1;
 
-    int height = 1000;
-    int width = 1000;
-    nlohmann::json js_image = {{"width", width},
-                               {"height", height}, 
-                               {"channels", 3}};
-    nlohmann::json js_aug = {{"type", "image"},
+    int            height   = 1000;
+    int            width    = 1000;
+    nlohmann::json js_image = {{"width", width}, {"height", height}, {"channels", 3}};
+    nlohmann::json js_aug   = {{"type", "image"},
                              {"flip_enable", false},
                              {"crop_enable", false},
                              {"fixed_aspect_ratio", true},
                              {"fixed_scaling_factor", 1.6}};
-    nlohmann::json js_loc = {{"width", width},
-                             {"height", height},
-                             {"class_names", label_list},
-                             {"max_gt_boxes", 64}};
+    nlohmann::json js_loc = {
+        {"width", width}, {"height", height}, {"class_names", label_list}, {"max_gt_boxes", 64}};
 
     localization::config cfg{js_loc};
 
@@ -205,16 +199,14 @@ void plot(const vector<box>& list, const string& prefix)
 
 void plot(const string& path)
 {
-    string                    prefix = path.substr(path.size() - 11, 6) + "-";
-    string                    data   = read_file(path);
-    int width = 1000;
-    int height = 1000;
-    nlohmann::json js_loc = {{"width", width},
-                            {"height", height},
-                            {"class_names", label_list},
-                            {"max_gt_boxes", 64}};
+    string         prefix = path.substr(path.size() - 11, 6) + "-";
+    string         data   = read_file(path);
+    int            width  = 1000;
+    int            height = 1000;
+    nlohmann::json js_loc = {
+        {"width", width}, {"height", height}, {"class_names", label_list}, {"max_gt_boxes", 64}};
 
-    localization::config cfg{js_loc};
+    localization::config      cfg{js_loc};
     localization::extractor   extractor{cfg};
     localization::transformer transformer{cfg, -1};
     auto                      extracted_metadata = extractor.extract(&data[0], data.size());
@@ -309,7 +301,8 @@ void plot(const string& path)
 
 TEST(localization, config)
 {
-    nlohmann::json js  = {{"height", 300}, {"width", 400}, {"class_names", label_list}, {"max_gt_boxes", 100}};
+    nlohmann::json js = {
+        {"height", 300}, {"width", 400}, {"class_names", label_list}, {"max_gt_boxes", 100}};
 
     EXPECT_NO_THROW(localization::config cfg(js));
 }
@@ -317,39 +310,39 @@ TEST(localization, config)
 // not sure how we want to handle this error with new augmentation system
 TEST(DISABLED_localization, config_rotate)
 {
-    nlohmann::json js = {{"height", 300}, {"width", 400}, {"class_names", label_list}, {"max_gt_boxes", 100}};
+    nlohmann::json js = {
+        {"height", 300}, {"width", 400}, {"class_names", label_list}, {"max_gt_boxes", 100}};
 
     EXPECT_THROW(localization::config cfg(js), std::invalid_argument);
 }
 
 TEST(localization, sample_anchors)
 {
-    string                    data         = read_file(CURDIR "/test_data/006637.json");
-    int height = 1000;
-    int width = 1000;
+    string         data     = read_file(CURDIR "/test_data/006637.json");
+    int            height   = 1000;
+    int            width    = 1000;
     nlohmann::json js_image = {{"width", width}, {"height", height}, {"channels", 3}};
-    nlohmann::json js_loc = {{"width", width},
-                            {"height", height},
-                            {"class_names", label_list},
-                            {"max_gt_boxes", 64}};
+    nlohmann::json js_loc   = {
+        {"width", width}, {"height", height}, {"class_names", label_list}, {"max_gt_boxes", 64}};
     nlohmann::json js_aug = {{"type", "image"},
-                               {"flip_enable", false},
-                               {"crop_enable", false},
-                               {"fixed_aspect_ratio", true},
-                               {"fixed_scaling_factor", 1.6}};
-    image::config image_config{js_image};
-    localization::config cfg{js_loc};
+                             {"flip_enable", false},
+                             {"crop_enable", false},
+                             {"fixed_aspect_ratio", true},
+                             {"fixed_scaling_factor", 1.6}};
+    image::config                 image_config{js_image};
+    localization::config          cfg{js_loc};
     augment::image::param_factory factory(js_aug);
-    localization::extractor   extractor{cfg};
-    localization::transformer transformer{cfg, factory.fixed_scaling_factor};
-    auto                      extracted_metadata = extractor.extract(&data[0], data.size());
+    localization::extractor       extractor{cfg};
+    localization::transformer     transformer{cfg, factory.fixed_scaling_factor};
+    auto                          extracted_metadata = extractor.extract(&data[0], data.size());
     ASSERT_NE(nullptr, extracted_metadata);
 
-    vector<unsigned char>      img = make_image_from_metadata(data);
-    image::extractor           ext{image_config};
-    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
-    auto image_size = decoded->get_image_size();
-    shared_ptr<augment::image::params>  params = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+    vector<unsigned char>              img = make_image_from_metadata(data);
+    image::extractor                   ext{image_config};
+    shared_ptr<image::decoded>         decoded    = ext.extract((char*)&img[0], img.size());
+    auto                               image_size = decoded->get_image_size();
+    shared_ptr<augment::image::params> params =
+        factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
 
     auto transformed_metadata = transformer.transform(params, extracted_metadata);
     ASSERT_NE(nullptr, transformed_metadata);
@@ -383,28 +376,27 @@ TEST(localization, transform_scale)
 {
     string          metadata   = read_file(CURDIR "/test_data/006637.json");
     vector<uint8_t> image_data = make_image_from_metadata(metadata);
-    int width = 600;
-    int height = 600;
-    nlohmann::json js_image = {{"width", width}, {"height", height}, {"channels", 3}};
-    nlohmann::json js_loc = {{"width", width},
-                            {"height", height},
-                            {"class_names", label_list},
-                            {"max_gt_boxes", 64}};
+    int             width      = 600;
+    int             height     = 600;
+    nlohmann::json  js_image   = {{"width", width}, {"height", height}, {"channels", 3}};
+    nlohmann::json  js_loc     = {
+        {"width", width}, {"height", height}, {"class_names", label_list}, {"max_gt_boxes", 64}};
     nlohmann::json js_aug = {{"type", "image"},
-                               {"flip_enable", false},
-                               {"crop_enable", false},
-                               {"fixed_aspect_ratio", true},
-                               {"fixed_scaling_factor", 1.6}};
+                             {"flip_enable", false},
+                             {"crop_enable", false},
+                             {"fixed_aspect_ratio", true},
+                             {"fixed_scaling_factor", 1.6}};
 
-    image::config image_config{js_image};
-    localization::config cfg{js_loc};
+    image::config                 image_config{js_image};
+    localization::config          cfg{js_loc};
     augment::image::param_factory factory{js_aug};
-    image::extractor           image_extractor{image_config};
-    shared_ptr<image::decoded> image_decoded =
+    image::extractor              image_extractor{image_config};
+    shared_ptr<image::decoded>    image_decoded =
         image_extractor.extract((const char*)image_data.data(), image_data.size());
-    auto image_size = image_decoded->get_image_size();
-    shared_ptr<augment::image::params> params = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-    params->debug_deterministic      = true;
+    auto                               image_size = image_decoded->get_image_size();
+    shared_ptr<augment::image::params> params =
+        factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+    params->debug_deterministic = true;
 
     localization::extractor   extractor{cfg};
     localization::transformer transformer{cfg, factory.fixed_scaling_factor};
@@ -433,30 +425,29 @@ TEST(localization, transform_flip)
 {
     string          metadata   = read_file(CURDIR "/test_data/006637.json");
     vector<uint8_t> image_data = make_image_from_metadata(metadata);
-    int width = 1000;
-    int height = 1000;
-    nlohmann::json js_image = {{"width", width}, {"height", height}, {"channels", 3}};
-    nlohmann::json js_loc = {{"width", width},
-                             {"height", height},
-                             {"class_names", label_list},
-                             {"max_gt_boxes", 64}};
+    int             width      = 1000;
+    int             height     = 1000;
+    nlohmann::json  js_image   = {{"width", width}, {"height", height}, {"channels", 3}};
+    nlohmann::json  js_loc     = {
+        {"width", width}, {"height", height}, {"class_names", label_list}, {"max_gt_boxes", 64}};
     nlohmann::json js_aug = {{"type", "image"},
                              {"flip_enable", false},
                              {"crop_enable", false},
                              {"fixed_aspect_ratio", true},
                              {"fixed_scaling_factor", 1.6}};
 
-    image::config image_config{js_image};
-    localization::config cfg{js_loc};
+    image::config                 image_config{js_image};
+    localization::config          cfg{js_loc};
     augment::image::param_factory factory{js_aug};
-    image::extractor image_extractor{image_config};
+    image::extractor              image_extractor{image_config};
 
     shared_ptr<image::decoded> image_decoded =
         image_extractor.extract((const char*)image_data.data(), image_data.size());
-    auto image_size = image_decoded->get_image_size();
-    shared_ptr<augment::image::params> params = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-    params->debug_deterministic      = true;
-    params->flip                     = 1;
+    auto                               image_size = image_decoded->get_image_size();
+    shared_ptr<augment::image::params> params =
+        factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+    params->debug_deterministic = true;
+    params->flip                = 1;
 
     localization::extractor   extractor{cfg};
     localization::transformer transformer{cfg, factory.fixed_scaling_factor};
@@ -526,27 +517,26 @@ TEST(localization, transform_crop)
     {
         string          data            = read_file(CURDIR "/test_data/006637.json");
         vector<uint8_t> test_image_data = make_image_from_metadata(data);
-        int width = 600;
-        int height = 600;
+        int             width           = 600;
+        int             height          = 600;
 
         nlohmann::json js_image = {{"width", width}, {"height", height}, {"channels", 3}};
-        nlohmann::json js_loc = {{"width", width},
-                                {"height", height},
-                                {"class_names", label_list},
-                                {"max_gt_boxes", 64}};
-        nlohmann::json js_aug = {{"type", "image"},
-                                {"flip_enable", false},
-                                {"scale", {0.8, 0.8}}};
+        nlohmann::json js_loc   = {{"width", width},
+                                 {"height", height},
+                                 {"class_names", label_list},
+                                 {"max_gt_boxes", 64}};
+        nlohmann::json js_aug = {{"type", "image"}, {"flip_enable", false}, {"scale", {0.8, 0.8}}};
 
-        image::config image_config{js_image};
-        localization::config cfg{js_loc};
+        image::config                 image_config{js_image};
+        localization::config          cfg{js_loc};
         augment::image::param_factory factory{js_aug};
-        image::extractor image_extractor{image_config};
+        image::extractor              image_extractor{image_config};
 
         shared_ptr<image::decoded> image_decoded =
             image_extractor.extract((const char*)test_image_data.data(), test_image_data.size());
-        auto image_size = image_decoded->get_image_size();
-        shared_ptr<augment::image::params> params = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+        auto                               image_size = image_decoded->get_image_size();
+        shared_ptr<augment::image::params> params =
+            factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
 
         localization::extractor   extractor{cfg};
         localization::transformer transformer{cfg, factory.fixed_scaling_factor};
@@ -568,27 +558,26 @@ TEST(localization, transform_crop)
     {
         string          data            = read_file(CURDIR "/test_data/006637.json");
         vector<uint8_t> test_image_data = make_image_from_metadata(data);
-        int width = 600;
-        int height = 600;
+        int             width           = 600;
+        int             height          = 600;
 
         nlohmann::json js_image = {{"width", width}, {"height", height}, {"channels", 3}};
-        nlohmann::json js_loc = {{"width", width},
-                                {"height", height},
-                                {"class_names", label_list},
-                                {"max_gt_boxes", 64}};
-        nlohmann::json js_aug = {{"type", "image"},
-                                {"flip_enable", false},
-                                {"scale", {0.2, 0.2}}};
+        nlohmann::json js_loc   = {{"width", width},
+                                 {"height", height},
+                                 {"class_names", label_list},
+                                 {"max_gt_boxes", 64}};
+        nlohmann::json js_aug = {{"type", "image"}, {"flip_enable", false}, {"scale", {0.2, 0.2}}};
 
-        image::config image_config{js_image};
-        localization::config cfg{js_loc};
+        image::config                 image_config{js_image};
+        localization::config          cfg{js_loc};
         augment::image::param_factory factory{js_aug};
-        image::extractor image_extractor{image_config};
+        image::extractor              image_extractor{image_config};
 
         shared_ptr<image::decoded> image_decoded =
             image_extractor.extract((const char*)test_image_data.data(), test_image_data.size());
-        auto image_size = image_decoded->get_image_size();
-        shared_ptr<augment::image::params> params = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+        auto                               image_size = image_decoded->get_image_size();
+        shared_ptr<augment::image::params> params =
+            factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
 
         localization::extractor   extractor{cfg};
         localization::transformer transformer{cfg, factory.fixed_scaling_factor};
@@ -958,21 +947,19 @@ TEST(localization, loader)
         59099, 59120, 59161, 59182, 59244, 62573, 62574, 62635, 62636, 62697, 62698, 62759, 62760,
         62821, 62822, 62883, 63155, 63156};
 
-    string                    data         = read_file(CURDIR "/test_data/006637.json");
-    int width = 1000;
-    int height = 1000;
+    string         data     = read_file(CURDIR "/test_data/006637.json");
+    int            width    = 1000;
+    int            height   = 1000;
     nlohmann::json js_image = {{"width", width}, {"height", height}, {"channels", 3}};
-    nlohmann::json js_loc = {{"width", width},
-                            {"height", height},
-                            {"class_names", label_list},
-                            {"max_gt_boxes", 64}};
+    nlohmann::json js_loc   = {
+        {"width", width}, {"height", height}, {"class_names", label_list}, {"max_gt_boxes", 64}};
     nlohmann::json js_aug = {{"type", "image"},
-                               {"flip_enable", false},
-                               {"crop_enable", false},
-                               {"fixed_aspect_ratio", true},
-                               {"fixed_scaling_factor", 1.6}};
-    image::config image_config{js_image};
-    localization::config cfg{js_loc};
+                             {"flip_enable", false},
+                             {"crop_enable", false},
+                             {"fixed_aspect_ratio", true},
+                             {"fixed_scaling_factor", 1.6}};
+    image::config                 image_config{js_image};
+    localization::config          cfg{js_loc};
     augment::image::param_factory factory(js_aug);
 
     localization::extractor   extractor{cfg};
@@ -981,12 +968,13 @@ TEST(localization, loader)
     auto                      extract_data = extractor.extract(&data[0], data.size());
     ASSERT_NE(nullptr, extract_data);
 
-    vector<unsigned char>      img = make_image_from_metadata(data);
-    image::extractor           ext{image_config};
-    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
-    auto image_size = decoded->get_image_size();
-    shared_ptr<augment::image::params>  params = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-    params->debug_deterministic       = true;
+    vector<unsigned char>              img = make_image_from_metadata(data);
+    image::extractor                   ext{image_config};
+    shared_ptr<image::decoded>         decoded    = ext.extract((char*)&img[0], img.size());
+    auto                               image_size = decoded->get_image_size();
+    shared_ptr<augment::image::params> params =
+        factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+    params->debug_deterministic = true;
 
     shared_ptr<localization::decoded> transformed_data =
         transformer.transform(params, extract_data);
@@ -1155,20 +1143,16 @@ TEST(localization, loader)
 
 TEST(localization, loader_zero_gt_boxes)
 {
-    string data = read_file(CURDIR "/test_data/006637.json");
-    int width = 1000;
-    int height = 1000;
+    string data   = read_file(CURDIR "/test_data/006637.json");
+    int    width  = 1000;
+    int    height = 1000;
 
     nlohmann::json js_image = {{"width", width}, {"height", height}, {"channels", 3}};
-    nlohmann::json js_loc = {{"width", width},
-                             {"height", height},
-                             {"class_names", label_list},
-                             {"max_gt_boxes", 64}};
-    nlohmann::json js_aug = {{"type", "image"},
-                             {"flip_enable", false},
-                             {"scale", {0.1, 0.1}}};
-    image::config image_config{js_image};
-    localization::config cfg{js_loc};
+    nlohmann::json js_loc   = {
+        {"width", width}, {"height", height}, {"class_names", label_list}, {"max_gt_boxes", 64}};
+    nlohmann::json js_aug = {{"type", "image"}, {"flip_enable", false}, {"scale", {0.1, 0.1}}};
+    image::config  image_config{js_image};
+    localization::config          cfg{js_loc};
     augment::image::param_factory factory(js_aug);
 
     localization::extractor   extractor{cfg};
@@ -1177,14 +1161,15 @@ TEST(localization, loader_zero_gt_boxes)
     auto                      extract_data = extractor.extract(&data[0], data.size());
     ASSERT_NE(nullptr, extract_data);
 
-    vector<unsigned char>      img = make_image_from_metadata(data);
-    image::extractor           ext{image_config};
-    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
-    auto image_size = decoded->get_image_size();
-    shared_ptr<augment::image::params>  params = factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-    params->debug_deterministic       = true;
-    params->cropbox.x                 = 0;
-    params->cropbox.y                 = 0;
+    vector<unsigned char>              img = make_image_from_metadata(data);
+    image::extractor                   ext{image_config};
+    shared_ptr<image::decoded>         decoded    = ext.extract((char*)&img[0], img.size());
+    auto                               image_size = decoded->get_image_size();
+    shared_ptr<augment::image::params> params =
+        factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+    params->debug_deterministic = true;
+    params->cropbox.x           = 0;
+    params->cropbox.y           = 0;
 
     shared_ptr<localization::decoded> transformed_data =
         transformer.transform(params, extract_data);
@@ -1317,28 +1302,23 @@ TEST(localization, compute_targets)
 
 TEST(localization, provider)
 {
-    int height = 1000;
-    int width = 1000;
+    int   height               = 1000;
+    int   width                = 1000;
     float fixed_scaling_factor = 1.6;
 
-    nlohmann::json js_image = {{"type", "image"},
-                               {"height", height},
-                               {"width", width},
-                               {"channel_major", false}};
+    nlohmann::json js_image = {
+        {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
     nlohmann::json js_local = {{"type", "localization"},
                                {"height", height},
-                               {"width", width}, 
-                               {"max_gt_boxes", 64}, 
+                               {"width", width},
+                               {"max_gt_boxes", 64},
                                {"class_names", {"bicycle", "person"}}};
     nlohmann::json augmentation = {{"type", "image"},
                                    {"fixed_aspect_ratio", true},
                                    {"fixed_scaling_factor", fixed_scaling_factor},
                                    {"crop_enable", false},
                                    {"flip_enable", true}};
-    nlohmann::json js = {
-                         {"etl", {js_image, js_local}},
-                         {"augmentation", {augmentation}}
-                         };
+    nlohmann::json js = {{"etl", {js_image, js_local}}, {"augmentation", {augmentation}}};
 
     shared_ptr<provider_interface> media   = provider_factory::create(js);
     auto                           oshapes = media->get_output_shapes();
@@ -1370,9 +1350,9 @@ TEST(localization, provider)
 
     media->provide(0, in_buf, out_buf);
 
-    int     output_width    = image_shape.get_shape()[0];
-    int     output_height   = image_shape.get_shape()[1];
-    int     channels = image_shape.get_shape()[2];
+    int     output_width  = image_shape.get_shape()[0];
+    int     output_height = image_shape.get_shape()[1];
+    int     channels      = image_shape.get_shape()[2];
     cv::Mat result(output_height, output_width, CV_8UC(channels), out_buf["image"]->get_item(0));
     //    cv::imwrite("localization_provider_source.png", image);
     //    cv::imwrite("localization_provider.png", result);
@@ -1401,28 +1381,23 @@ TEST(localization, provider)
 
 TEST(localization, provider_channel_major)
 {
-    int height = 1000;
-    int width = 1000;
+    int   height               = 1000;
+    int   width                = 1000;
     float fixed_scaling_factor = 1.6;
 
-
-     nlohmann::json js_image = {{"type", "image"},
-                           {"height", height},
-                           {"width", width},
-                           {"channel_major", true}};
+    nlohmann::json js_image = {
+        {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", true}};
     nlohmann::json js_loc = {{"type", "localization"},
-                           {"height", height},
-                           {"width", width}, 
-                           {"max_gt_boxes", 64}, 
-                           {"class_names", {"bicycle", "person"}}};
+                             {"height", height},
+                             {"width", width},
+                             {"max_gt_boxes", 64},
+                             {"class_names", {"bicycle", "person"}}};
     nlohmann::json js_aug = {{"type", "image"},
-                            {"crop_enable", false},
-                            {"fixed_aspect_ratio", true},
-                            {"fixed_scaling_factor", fixed_scaling_factor}, 
-                            {"flip_enable", true}};
-     nlohmann::json js = {
-                         {"etl", {js_image, js_loc}},
-                         {"augmentation", {js_aug}}};
+                             {"crop_enable", false},
+                             {"fixed_aspect_ratio", true},
+                             {"fixed_scaling_factor", fixed_scaling_factor},
+                             {"flip_enable", true}};
+    nlohmann::json js = {{"etl", {js_image, js_loc}}, {"augmentation", {js_aug}}};
 
     auto media   = provider_factory::create(js);
     auto oshapes = media->get_output_shapes();

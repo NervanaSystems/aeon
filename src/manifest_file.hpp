@@ -69,9 +69,9 @@ public:
     std::vector<std::vector<std::string>>* next() override;
     void                                   reset() override;
 
-    size_t block_count() const { return m_block_list.size(); }
-    size_t record_count() const override { return m_record_count; }
-    size_t elements_per_record() const override { return m_element_types.size(); }
+    size_t   block_count() const { return m_block_list.size(); }
+    size_t   record_count() const override { return m_record_count; }
+    size_t   elements_per_record() const override { return m_element_types.size(); }
     uint32_t get_crc();
 
     static char                   get_delimiter() { return m_delimiter_char; }

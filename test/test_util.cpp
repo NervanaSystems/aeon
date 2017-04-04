@@ -46,7 +46,7 @@
 using namespace std;
 using namespace nervana;
 
-template<typename T>
+template <typename T>
 static T setup(initializer_list<uint8_t> data)
 {
     T        rc;
@@ -130,7 +130,7 @@ TEST(util, pack_le)
 {
     {
         uint32_t actual;
-        auto expected = setup<uint32_t>({1, 0, 0, 0});
+        auto     expected = setup<uint32_t>({1, 0, 0, 0});
         pack<uint32_t>(&actual, 1);
         EXPECT_EQ(expected, actual);
     }

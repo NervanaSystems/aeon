@@ -104,8 +104,9 @@ image::transformer::transformer(const image::config&)
 {
 }
 
-shared_ptr<image::decoded> image::transformer::transform(shared_ptr<augment::image::params>  img_xform,
-                                                         shared_ptr<image::decoded> img)
+shared_ptr<image::decoded>
+    image::transformer::transform(shared_ptr<augment::image::params> img_xform,
+                                  shared_ptr<image::decoded>         img)
 {
     vector<cv::Mat> finalImageList;
     for (int i = 0; i < img->get_image_count(); i++)
@@ -122,7 +123,7 @@ shared_ptr<image::decoded> image::transformer::transform(shared_ptr<augment::ima
 }
 
 cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::params> img_xform,
-                                                   cv::Mat&                  single_img)
+                                                   cv::Mat&                           single_img)
 {
     // img_xform->dump(cout);
     cv::Mat rotatedImage;

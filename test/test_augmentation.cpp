@@ -59,4 +59,3 @@ TEST(image_augmentation, config)
 
     EXPECT_FLOAT_EQ(0.0, config.flip_distribution.p());
 }
-

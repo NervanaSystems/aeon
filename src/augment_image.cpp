@@ -57,7 +57,10 @@ augment::image::param_factory::param_factory(nlohmann::json js)
     }
 }
 
-shared_ptr<augment::image::params> augment::image::param_factory::make_params(size_t input_width, size_t input_height, size_t output_width, size_t output_height)
+shared_ptr<augment::image::params> augment::image::param_factory::make_params(size_t input_width,
+                                                                              size_t input_height,
+                                                                              size_t output_width,
+                                                                              size_t output_height)
 {
     // Must use this method for creating a shared_ptr rather than make_shared
     // since the params default ctor is private and factory is friend
@@ -66,14 +69,14 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
 
     settings->output_size = cv::Size2i(output_width, output_height);
 
-    settings->angle = angle(m_dre);
-    settings->flip  = flip_distribution(m_dre);
-    settings->hue   = hue(m_dre);
-    settings->contrast = contrast(m_dre);
+    settings->angle      = angle(m_dre);
+    settings->flip       = flip_distribution(m_dre);
+    settings->hue        = hue(m_dre);
+    settings->contrast   = contrast(m_dre);
     settings->brightness = brightness(m_dre);
     settings->saturation = saturation(m_dre);
 
-    cv::Size2f input_size   = cv::Size(input_width, input_height);
+    cv::Size2f input_size = cv::Size(input_width, input_height);
     if (!crop_enable)
     {
         settings->cropbox = cv::Rect(cv::Point2f(0, 0), input_size);
@@ -92,14 +95,15 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
     }
     else
     {
-        float      image_scale                 = scale(m_dre);
+        float      image_scale            = scale(m_dre);
         float      _horizontal_distortion = horizontal_distortion(m_dre);
         cv::Size2f out_shape(output_width * _horizontal_distortion, output_height);
 
         cv::Size2f cropbox_size = nervana::image::cropbox_max_proportional(input_size, out_shape);
         if (do_area_scale)
         {
-            cropbox_size = nervana::image::cropbox_area_scale(input_size, cropbox_size, image_scale);
+            cropbox_size =
+                nervana::image::cropbox_area_scale(input_size, cropbox_size, image_scale);
         }
         else
         {
@@ -109,8 +113,9 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
         float c_off_x = crop_offset(m_dre);
         float c_off_y = crop_offset(m_dre);
 
-        cv::Point2f cropbox_origin = nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
-        settings->cropbox          = cv::Rect(cropbox_origin, cropbox_size);
+        cv::Point2f cropbox_origin =
+            nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
+        settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
     }
 
     if (lighting.stddev() != 0)

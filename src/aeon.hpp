@@ -13,7 +13,7 @@
  limitations under the License.
 */
 
-#pragma once 
+#pragma once
 
 #include "loader.hpp"
 #include "etl_image.hpp"

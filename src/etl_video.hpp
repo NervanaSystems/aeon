@@ -34,7 +34,7 @@ class nervana::video::config : public interface::config
 public:
     uint32_t               max_frame_count;
     nervana::image::config frame;
-    std::string name;
+    std::string            name;
 
     config(nlohmann::json js)
         : frame(js["frame"])
@@ -77,7 +77,8 @@ private:
 };
 
 // simple wrapper around image::transformer for now
-class nervana::video::transformer : public interface::transformer<image::decoded, augment::image::params>
+class nervana::video::transformer
+    : public interface::transformer<image::decoded, augment::image::params>
 {
 public:
     transformer(const video::config&);

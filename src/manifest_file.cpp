@@ -217,10 +217,10 @@ void manifest_file::initialize(std::istream&      stream,
         {
             for (int i = 0; i < m_element_types.size(); i++)
             {
-
                 if (m_element_types[i] == element_t::FILE)
                 {
-                    record_list[record_number][i] = file_util::path_join(root, record_list[record_number][i]);
+                    record_list[record_number][i] =
+                        file_util::path_join(root, record_list[record_number][i]);
                 }
             }
         }

@@ -163,16 +163,15 @@ extern "C" int main(int argc, char** argv)
     cout << "OpenCV version : " << CV_VERSION << endl;
     mock_nds_server server;
 
-    const char* exclude = "--gtest_filter=-benchmark.*";
+    const char*   exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
     argv_vector.push_back(argv[0]);
     argv_vector.push_back((char*)exclude);
-    for (int i=1; i<argc; i++)
+    for (int i = 1; i < argc; i++)
     {
         argv_vector.push_back(argv[i]);
     }
     argc++;
-
 
     CreateImageDataset();
     test_cache_directory = nervana::file_util::make_temp_directory();

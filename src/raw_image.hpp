@@ -36,7 +36,7 @@ public:
     void write(std::ostream& out_stream);
 
     static raw_image from_cvmat(cv::Mat&);
-    cv::Mat   to_cvmat();
+    cv::Mat          to_cvmat();
 
     size_t size() const;
 

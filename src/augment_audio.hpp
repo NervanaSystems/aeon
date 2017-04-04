@@ -40,11 +40,11 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const params& obj)
     {
         out << "add_noise               " << obj.add_noise << "\n";
-        out << "noise_index             " << obj.noise_index << "\n";   
-        out << "noise_level             " << obj.noise_level << "\n";    
-        out << "noise_offset_fraction   " << obj.noise_offset_fraction << "\n";         
-        out << "time_scale_fraction     " << obj.time_scale_fraction << "\n";     
-        return out;   
+        out << "noise_index             " << obj.noise_index << "\n";
+        out << "noise_level             " << obj.noise_level << "\n";
+        out << "noise_offset_fraction   " << obj.noise_offset_fraction << "\n";
+        out << "time_scale_fraction     " << obj.time_scale_fraction << "\n";
+        return out;
     }
 
     bool     add_noise;
@@ -79,7 +79,7 @@ public:
 
 private:
     std::default_random_engine m_random{0};
-    float add_noise_probability = 0.0f;
+    float                      add_noise_probability = 0.0f;
 
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         // ADD_SCALAR(type, mode::REQUIRED, [](const std::string& s) { return s == "audio"; }),
@@ -97,13 +97,9 @@ private:
         // ADD_SCALAR(noise_root, mode::OPTIONAL),
         ADD_SCALAR(add_noise_probability, mode::OPTIONAL),
 
-
-
-
         ADD_DISTRIBUTION(time_scale_fraction,
                          mode::OPTIONAL,
                          [](decltype(time_scale_fraction) v) { return v.a() <= v.b(); }),
         ADD_DISTRIBUTION(
-            noise_level, mode::OPTIONAL, [](decltype(noise_level) v) { return v.a() <= v.b(); })
-    };
+            noise_level, mode::OPTIONAL, [](decltype(noise_level) v) { return v.a() <= v.b(); })};
 };

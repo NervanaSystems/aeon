@@ -57,12 +57,11 @@ static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf);
 
 typedef struct
 {
-    PyObject_HEAD
-    PyObject* ndata;
-    PyObject* batch_size;
-    PyObject* axes_info;
-    loader*  m_loader;
-    uint32_t m_i;
+    PyObject_HEAD PyObject* ndata;
+    PyObject*               batch_size;
+    PyObject*               axes_info;
+    loader*                 m_loader;
+    uint32_t                m_i;
 } aeon_Dataloader;
 
 static PyMethodDef aeon_methods[] = {{"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
@@ -104,7 +103,6 @@ static PyObject* Dataloader_iternext(PyObject* self)
                 ERR << "Error building shape string";
                 PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
             }
-
         }
         DL_get_loader(self)->get_current_iter()++;
     }
@@ -125,17 +123,16 @@ static Py_ssize_t aeon_Dataloader_length(PyObject* self)
     return DL_get_loader(self)->record_count();
 }
 
-static PySequenceMethods Dataloader_sequence_methods = {
-    aeon_Dataloader_length, /* sq_length */
-    0,                      /* sq_length */
-    0,                      /* sq_concat */
-    0,                      /* sq_repeat */
-    0,                      /* sq_item */
-    0,                      /* sq_ass_item */
-    0,                      /* sq_contains */
-    0,                      /* sq_inplace_concat */
-    0,                      /* sq_inplace_repeat */
-    0                       /* sq_inplace_repeat */};
+static PySequenceMethods Dataloader_sequence_methods = {aeon_Dataloader_length, /* sq_length */
+                                                        0,                      /* sq_length */
+                                                        0,                      /* sq_concat */
+                                                        0,                      /* sq_repeat */
+                                                        0,                      /* sq_item */
+                                                        0,                      /* sq_ass_item */
+                                                        0,                      /* sq_contains */
+                                                        0, /* sq_inplace_concat */
+                                                        0, /* sq_inplace_repeat */
+                                                        0 /* sq_inplace_repeat */};
 
 /* This function handles py2 and py3 independent unpacking of string object (bytes or unicode)
  * as an ascii std::string
@@ -252,7 +249,8 @@ static PyObject* Dataloader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                     Py_DECREF(tmp_length);
                 }
 
-                int set_status = PyDict_SetItemString(self->axes_info, datum_name.c_str(), py_axis_dict);
+                int set_status =
+                    PyDict_SetItemString(self->axes_info, datum_name.c_str(), py_axis_dict);
                 Py_DECREF(py_axis_dict);
 
                 if (set_status < 0)
@@ -262,7 +260,6 @@ static PyObject* Dataloader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                     return NULL;
                 }
             }
-
         }
         catch (std::exception& e)
         {
@@ -303,7 +300,7 @@ static PyMemberDef Dataloader_members[] = {
     {"ndata", T_OBJECT_EX, offsetof(aeon_Dataloader, ndata), 0, "number of records in dataset"},
     {"batch_size", T_OBJECT_EX, offsetof(aeon_Dataloader, batch_size), 0, "mini-batch size"},
     {"axes_info", T_OBJECT_EX, offsetof(aeon_Dataloader, axes_info), 0, "axes names and lengths"},
-    {NULL, NULL, 0, 0, NULL}  /* Sentinel */
+    {NULL, NULL, 0, 0, NULL} /* Sentinel */
 };
 
 static PyTypeObject aeon_DataloaderType = {
@@ -312,52 +309,52 @@ static PyTypeObject aeon_DataloaderType = {
 #else
     PyObject_HEAD_INIT(NULL) 0,
 #endif
-        "aeon.Dataloader",                     /*tp_name*/
-    sizeof(aeon_Dataloader),                   /*tp_basicsize*/
-    0,                                         /*tp_itemsize*/
-    (destructor)Dataloader_dealloc,            /*tp_dealloc*/
-    0,                                         /*tp_print*/
-    0,                                         /*tp_getattr*/
-    0,                                         /*tp_setattr*/
-    0,                                         /*tp_compare*/
-    0,                                         /*tp_repr*/
-    0,                                         /*tp_as_number*/
-    &Dataloader_sequence_methods,              /*tp_as_sequence*/
-    0,                                         /*tp_as_mapping*/
-    0,                                         /*tp_hash */
-    0,                                         /*tp_call*/
-    0,                                         /*tp_str*/
-    0,                                         /*tp_getattro*/
-    0,                                         /*tp_setattro*/
-    0,                                         /*tp_as_buffer*/
+        "aeon.Dataloader",                                           /*tp_name*/
+    sizeof(aeon_Dataloader),                                         /*tp_basicsize*/
+    0,                                                               /*tp_itemsize*/
+    (destructor)Dataloader_dealloc,                                  /*tp_dealloc*/
+    0,                                                               /*tp_print*/
+    0,                                                               /*tp_getattr*/
+    0,                                                               /*tp_setattr*/
+    0,                                                               /*tp_compare*/
+    0,                                                               /*tp_repr*/
+    0,                                                               /*tp_as_number*/
+    &Dataloader_sequence_methods,                                    /*tp_as_sequence*/
+    0,                                                               /*tp_as_mapping*/
+    0,                                                               /*tp_hash */
+    0,                                                               /*tp_call*/
+    0,                                                               /*tp_str*/
+    0,                                                               /*tp_getattro*/
+    0,                                                               /*tp_setattro*/
+    0,                                                               /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_ITER, /*tp_flags*/
-    "Internal myiter iterator object.",        /* tp_doc */
-    0,                                         /* tp_traverse */
-    0,                                         /* tp_clear */
-    0,                                         /* tp_richcompare */
-    0,                                         /* tp_weaklistoffset */
-    Dataloader_iter,                           /* tp_iter */
-    Dataloader_iternext,                       /* tp_iternext */
-    Dataloader_methods,                        /* tp_methods */
-    Dataloader_members,                        /* tp_members */
-    0,                                         /* tp_getset */
-    0,                                         /* tp_base */
-    0,                                         /* tp_dict */
-    0,                                         /* tp_descr_get */
-    0,                                         /* tp_descr_set */
-    0,                                         /* tp_dictoffset */
-    (initproc)Dataloader_init,                 /* tp_init */
-    0,                                         /* tp_alloc */
-    Dataloader_new,                            /* tp_new */
-    0,                                         /* tp_free */
-    0,                                         /* tp_is_gc */
-    0,                                         /* tp_bases */
-    0,                                         /* tp_mro */
-    0,                                         /* tp_cache */
-    0,                                         /* tp_subclasses */
-    0,                                         /* tp_weaklist */
-    0,                                         /* tp_del */
-    0                                          /* tp_version_tag */
+    "Internal myiter iterator object.",                              /* tp_doc */
+    0,                                                               /* tp_traverse */
+    0,                                                               /* tp_clear */
+    0,                                                               /* tp_richcompare */
+    0,                                                               /* tp_weaklistoffset */
+    Dataloader_iter,                                                 /* tp_iter */
+    Dataloader_iternext,                                             /* tp_iternext */
+    Dataloader_methods,                                              /* tp_methods */
+    Dataloader_members,                                              /* tp_members */
+    0,                                                               /* tp_getset */
+    0,                                                               /* tp_base */
+    0,                                                               /* tp_dict */
+    0,                                                               /* tp_descr_get */
+    0,                                                               /* tp_descr_set */
+    0,                                                               /* tp_dictoffset */
+    (initproc)Dataloader_init,                                       /* tp_init */
+    0,                                                               /* tp_alloc */
+    Dataloader_new,                                                  /* tp_new */
+    0,                                                               /* tp_free */
+    0,                                                               /* tp_is_gc */
+    0,                                                               /* tp_bases */
+    0,                                                               /* tp_mro */
+    0,                                                               /* tp_cache */
+    0,                                                               /* tp_subclasses */
+    0,                                                               /* tp_weaklist */
+    0,                                                               /* tp_del */
+    0                                                                /* tp_version_tag */
 };
 
 #ifdef IS_PY3K

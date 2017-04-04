@@ -62,7 +62,7 @@ void raw_image::read(istream& f)
         auto tokens = split(line, ':', true);
         if (tokens.size() == 2)
         {
-            string tag = tokens[0];
+            string tag   = tokens[0];
             string value = tokens[1];
             if (tag == "width")
             {
@@ -126,15 +126,15 @@ raw_image raw_image::from_cvmat(cv::Mat& mat)
     rc.m_bitwidth = mat.elemSize1() * 8;
 
     size_t size = rc.m_width * rc.m_height * rc.m_channels * (rc.m_bitwidth / 8);
-    rc.m_data = shared_ptr<char>(new char[size], std::default_delete<char[]>());
+    rc.m_data   = shared_ptr<char>(new char[size], std::default_delete<char[]>());
     memcpy(&*rc.m_data, mat.data, size);
 
     return rc;
 }
 
-cv::Mat   raw_image::to_cvmat()
+cv::Mat raw_image::to_cvmat()
 {
-    int     type = 0;
+    int type = 0;
 
     if (m_is_float)
     {
@@ -149,7 +149,7 @@ cv::Mat   raw_image::to_cvmat()
     {
         switch (m_bitwidth)
         {
-        case 8: type = CV_MAKETYPE(CV_8U, m_channels); break;
+        case 8: type  = CV_MAKETYPE(CV_8U, m_channels); break;
         case 16: type = CV_MAKETYPE(CV_16U, m_channels); break;
         default: break;
         }

@@ -45,7 +45,7 @@ TEST(raw_image, write_read)
     string file = "raw.bin";
 
     {
-        auto   mat  = generate_indexed_image();
+        auto mat = generate_indexed_image();
         auto raw = raw_image::from_cvmat(mat);
         raw.write(file);
     }

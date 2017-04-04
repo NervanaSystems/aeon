@@ -51,8 +51,8 @@ audio::transformer::~transformer()
 * 5. Optionally time-warp (controlled by time_scale_fraction)
 */
 std::shared_ptr<audio::decoded>
-    audio::transformer::transform(std::shared_ptr<augment::audio::params>  params,
-                                  std::shared_ptr<audio::decoded> decoded)
+    audio::transformer::transform(std::shared_ptr<augment::audio::params> params,
+                                  std::shared_ptr<audio::decoded>         decoded)
 {
     cv::Mat& samples_mat = decoded->get_time_data();
     _noisemaker->addNoise(samples_mat,

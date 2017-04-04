@@ -58,8 +58,8 @@ pixel_mask::transformer::~transformer()
 }
 
 std::shared_ptr<image::decoded>
-    pixel_mask::transformer::transform(std::shared_ptr<augment::image::params>  img_xform,
-                                       std::shared_ptr<image::decoded> image_list)
+    pixel_mask::transformer::transform(std::shared_ptr<augment::image::params> img_xform,
+                                       std::shared_ptr<image::decoded>         image_list)
 {
     if (image_list->get_image_count() != 1)
         throw invalid_argument("pixel_mask transform only supports a single image");

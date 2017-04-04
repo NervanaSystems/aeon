@@ -94,7 +94,7 @@ localization::transformer::transformer(const localization::config& _cfg, float f
 
 shared_ptr<localization::decoded>
     localization::transformer::transform(shared_ptr<augment::image::params> settings,
-                                         shared_ptr<localization::decoded> mp)
+                                         shared_ptr<localization::decoded>  mp)
 {
     cv::Size input_size = settings->cropbox.size();
     float    im_scale;

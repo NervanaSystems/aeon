@@ -156,10 +156,11 @@ void web_app::loader(web::page& p)
             out << "<div class=\"container\">";
             for (size_t i = 0; i < image_buffer.get_item_count(); i++)
             {
-                cv::Mat mat = image_buffer.get_item_as_mat(i);
+                cv::Mat         mat = image_buffer.get_item_as_mat(i);
                 vector<uint8_t> encoded;
                 imencode(".jpg", mat, encoded);
-                vector<char> b64 = nervana::base64::encode((const char*)encoded.data(), encoded.size());
+                vector<char> b64 =
+                    nervana::base64::encode((const char*)encoded.data(), encoded.size());
                 out << "\n<img src=\"data:image/jpg;base64,";
                 p.raw_send(b64.data(), b64.size());
                 out << "\" style=\"padding-top:5px\"";

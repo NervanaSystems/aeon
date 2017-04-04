@@ -23,23 +23,17 @@ using namespace nervana;
 
 TEST(config, loader)
 {
-    int    height        = 32;
-    int    width         = 32;
+    int height = 32;
+    int width  = 32;
 
     // config is valid
     nlohmann::json image = {{"type", "image"},
-                           {"name", "image1"},
-                           {"height", height},
-                           {"width", width},
-                           {"channel_major", false}};
-    nlohmann::json label = {{"type", "label"},
-                           {"name", "label1"},
-                           {"binary", false}};
-    nlohmann::json js = {
-                         {"manifest_filename", "blah"},
-                         {"batch_size", 1},
-                         {"etl", {image, label}}
-                         };
+                            {"name", "image1"},
+                            {"height", height},
+                            {"width", width},
+                            {"channel_major", false}};
+    nlohmann::json label = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
+    nlohmann::json js = {{"manifest_filename", "blah"}, {"batch_size", 1}, {"etl", {image, label}}};
 
     loader_config cfg{js};
     // EXPECT_NO_THROW(loader_config cfg{js});
