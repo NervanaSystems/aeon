@@ -1,16 +1,32 @@
 # ChangeLog
 
+
+## v1.0.0 (2017-04-07)
+* Internal Changes
+   * No longer rely upon a python backend for initiating transfers to device (all prepared data now remains on host)
+   * Use of async_manager class to manage all double-buffered workflow
+   * Removal of support for post-processing of a decoded and loaded batch (was only used for packing transcripts)
+* Enhancements
+   * Modular providers supported by mixing and matching etl components
+   * Direct c++ interface to loader as an iterator
+   * Python loader implemented via python c-api
+   * Unicode support for char_map
+
+
 ## v0.2.7 (2017-03-02)
 * Bug fix for clean termination
 
+
 ## v0.2.6 (2016-11-16)
 * Bug fix for clean termination
+
 
 ## v0.2.5 (2016-11-15)
 * General code cleanup
 * Add prefetch to double-buffer reads for NDS and file block reading
 * Add class to manage python gil state
 * Fix compilation on centos 7
+
 
 ## v0.2.4 (2016-11-02)
 * Bug fix for subset sampling of manifest files when block size is small
@@ -23,6 +39,7 @@
 * Add configurable unkown value for character mapping ETL pipeline
     * Associated unit tests
 
+
 ## v0.2.3 (2016-10-18)
 * Add noise_root path option for relative noise index files
 * Bug fix for filterbank shaping
@@ -30,7 +47,6 @@
 
 
 ## v0.2.2 (2016-10-13)
-
 * Add manifest_root path option for cvs manifest files
 * Bug fixes for python 3 compatibility
     * Retain reference count on python backend object
@@ -38,7 +54,6 @@
 
 
 ## v0.2.1 (2016-10-07)
-
 * Localization improvements
     * Bug fix: Handle >64 ground truth bounding boxes
 * Image improvements
