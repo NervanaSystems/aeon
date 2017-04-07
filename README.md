@@ -18,9 +18,9 @@ First grab aeon's dependencies:
 
     sudo dnf install opencv-devel clang libcurl-devel sox-devel
 
-For CentOS 7, the version of Clang available in the EPEL repository is too old 
-to understand the GCC flags that the Python extension build system imposes, so 
-we build the latest version of Clang from source (after first installing it's 
+For CentOS 7, the version of Clang available in the EPEL repository is too old
+to understand the GCC flags that the Python extension build system imposes, so
+we build the latest version of Clang from source (after first installing it's
 high and low level build systems)::
 
     sudo -i
@@ -49,9 +49,10 @@ high and low level build systems)::
     cmake -G "Ninja" -DCMAKE_BUILD_TYPE=release /llvm-3.9.0.src
     ninja && ninja install
 
-### To install aeon:
+### To install aeon rc1:
 
-    pip install git+https://github.com/NervanaSystems/aeon.git
+    git clone https://github.com/NervanaSystems/aeon.git --depth 1 --single-branch --branch rc1-master
+    mkdir -p aeon/build && cd $_ && cmake .. && pip install .
 
 Note: if installing system wide (as opposed to within a virtual environment) you may need to run `sudo`.
 

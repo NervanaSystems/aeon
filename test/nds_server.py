@@ -4,7 +4,7 @@ from flask import Flask, send_file, request, abort
 import logging
 
 log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+log.setLevel(logging.DEBUG)
 
 app = Flask(__name__)
 

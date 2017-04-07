@@ -49,9 +49,31 @@ bug reports at aeon_issues_ .
    :maxdepth: 0
    :caption: Media
 
-   etl_image
-   etl_video
-   etl_audio
+   provider_image
+   provider_label
+   provider_audio
+   provider_localization
+   provider_pixelmask
+   provider_boundingbox
+   provider_blob
+   provider_video
+   provider_charmap
+   provider_labelmap
+
+.. toctree::
+   :hidden:
+   :maxdepth: 0
+   :caption: Augmentation
+
+   augment_image
+   augment_audio
+
+.. toctree::
+   :hidden:
+   :maxdepth: 0
+   :caption: Config Examples
+
+   config_examples
 
 .. toctree::
    :hidden:
