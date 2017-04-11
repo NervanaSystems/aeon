@@ -22,9 +22,8 @@ Nervana aeon
 
 aeon_ is Nervana_ ’s project to enable fast and flexible access to data when
 training your neon_ neural network models. You probably want to get started
-with :doc:`installation <getting_started>` then on to the `user guide 
-<user_guide>` followed by the more detailed :doc:`dataLoader <dataloader>` 
-documentation and `developer's guide <developer_guide>`.
+with :doc:`installation <getting_started>` then on to the `user guide
+<user_guide>` followed by the more detailed `developer's guide <developer_guide>`.
 
 This project is evolving quickly, so feel free to send us feature requests and
 bug reports at aeon_issues_ .

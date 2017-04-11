@@ -22,7 +22,6 @@ set (SRC
     etl_image.cpp
     etl_label_map.cpp
     etl_localization.cpp
-    etl_multicrop.cpp
     etl_pixel_mask.cpp
     etl_video.cpp
     file_util.cpp

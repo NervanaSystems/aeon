@@ -16,11 +16,11 @@
 Classification
 ==============
 
-For classification the manifest file should provide a path to the file, as well as to a file containing the label. For example:
+For classification, the manifest file should be a tab separated list providing a path to the file as well as a label index. For example:
 
 .. code-block:: bash
 
-    @FILE   ASCII_INT 
+    @FILE   ASCII_INT
     faces/naveen_rao.jpg 0
     faces/arjun_bansal.jpg   0
     faces/amir_khosrowshahi.jpg  0
@@ -71,11 +71,11 @@ The manifest file contains paths to the input image, as well as the target image
 .. code-block:: bash
 
     @FILE   FILE
-    image_dir/img1.jpg mask_dir/mask1.png
-    image_dir/img2.jpg mask_dir/mask2.png
-    image_dir/img3.jpg mask_dir/mask3.png
+    image_dir/img1.jpg  mask_dir/mask1.png
+    image_dir/img2.jpg  mask_dir/mask2.png
+    image_dir/img3.jpg  mask_dir/mask3.png
     ...
-    image_dir/imgN.jpg mask_dir/maskN.png
+    image_dir/imgN.jpg  mask_dir/maskN.png
 
 Note that the target image should have a single channel only. If there are multiple channels, only the first channel from the target will be used. The image parameters are the same as above, and the pixelmask has zero configurations. Transformations such as photometric or lighting are applied to the input image only, and not applied to the pixel mask. The same cropping, flipping, and rotation settings are applied to both the image and the mask.
 
@@ -167,8 +167,8 @@ Here is a c++ configuration example::
                                {"channel_major", false}};
     nlohmann::json js_local = {{"type", "localization"},
                                {"height", height},
-                               {"width", width}, 
-                               {"max_gt_boxes", 64}, 
+                               {"width", width},
+                               {"max_gt_boxes", 64},
                                {"class_names", class_names}};
     nlohmann::json js_aug = {{"type", "image"},
                              {"fixed_aspect_ratio", true},

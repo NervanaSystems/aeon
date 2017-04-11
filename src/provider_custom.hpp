@@ -29,7 +29,6 @@
 #include "etl_depthmap.hpp"
 #include "etl_label_map.hpp"
 #include "etl_localization.hpp"
-#include "etl_multicrop.hpp"
 #include "etl_pixel_mask.hpp"
 #include "etl_video.hpp"
 #include "augment_image.hpp"

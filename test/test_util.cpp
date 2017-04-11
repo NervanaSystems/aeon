@@ -38,7 +38,6 @@
 #include "etl_label.hpp"
 #include "etl_label_map.hpp"
 #include "etl_localization.hpp"
-#include "etl_multicrop.hpp"
 #include "etl_pixel_mask.hpp"
 #include "etl_video.hpp"
 #include "loader.hpp"
@@ -328,7 +327,6 @@ TEST(util, param_dump)
     DUMP_CONFIG(label);
     DUMP_CONFIG(label_map);
     DUMP_CONFIG(localization);
-    DUMP_CONFIG(multicrop);
     DUMP_CONFIG(video);
     {
         loader_config cfg;

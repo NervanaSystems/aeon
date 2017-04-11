@@ -150,6 +150,17 @@ TEST(boundingbox, extractor)
         EXPECT_FALSE(b.difficult);
         EXPECT_FALSE(b.truncated);
         EXPECT_EQ(0, b.label);
+
+        auto c = b * 2.0;
+        EXPECT_EQ(b.xmax * 2.0, c.xmax);
+
+        cv::Size2i ref(500, 375);
+        EXPECT_EQ(ref, decoded->image_size());
+
+        EXPECT_EQ(3, decoded->depth());
+        std::stringstream ss;
+        ss << b;
+        EXPECT_EQ(ss.str(), "[41 x 206 from (324, 109)] label=0");
     }
     {
         string                 data = read_file(CURDIR "/test_data/009952.json");
@@ -160,6 +171,14 @@ TEST(boundingbox, extractor)
         auto boxes = decoded->boxes();
         ASSERT_EQ(1, boxes.size());
     }
+}
+
+TEST(boundingbox, operator_mult)
+{
+    nervana::box a(1.0, 2.0, 3.0, 4.0);
+    auto b = a * 4.0;
+    EXPECT_EQ(4, b.x());
+    EXPECT_EQ(8, b.y());
 }
 
 TEST(boundingbox, extractor_error)
