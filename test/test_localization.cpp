@@ -1313,12 +1313,12 @@ TEST(localization, provider)
                                {"width", width},
                                {"max_gt_boxes", 64},
                                {"class_names", {"bicycle", "person"}}};
-    nlohmann::json augmentation = {{"type", "image"},
-                                   {"fixed_aspect_ratio", true},
-                                   {"fixed_scaling_factor", fixed_scaling_factor},
-                                   {"crop_enable", false},
-                                   {"flip_enable", true}};
-    nlohmann::json js = {{"etl", {js_image, js_local}}, {"augmentation", {augmentation}}};
+    nlohmann::json augmentation = {{{"type", "image"},
+                                    {"fixed_aspect_ratio", true},
+                                    {"fixed_scaling_factor", fixed_scaling_factor},
+                                    {"crop_enable", false},
+                                    {"flip_enable", true}}};
+    nlohmann::json js = {{"etl", {js_image, js_local}}, {"augmentation", augmentation}};
 
     shared_ptr<provider_interface> media   = provider_factory::create(js);
     auto                           oshapes = media->get_output_shapes();
@@ -1392,12 +1392,12 @@ TEST(localization, provider_channel_major)
                              {"width", width},
                              {"max_gt_boxes", 64},
                              {"class_names", {"bicycle", "person"}}};
-    nlohmann::json js_aug = {{"type", "image"},
-                             {"crop_enable", false},
-                             {"fixed_aspect_ratio", true},
-                             {"fixed_scaling_factor", fixed_scaling_factor},
-                             {"flip_enable", true}};
-    nlohmann::json js = {{"etl", {js_image, js_loc}}, {"augmentation", {js_aug}}};
+    nlohmann::json js_aug = {{{"type", "image"},
+                              {"crop_enable", false},
+                              {"fixed_aspect_ratio", true},
+                              {"fixed_scaling_factor", fixed_scaling_factor},
+                              {"flip_enable", true}}};
+    nlohmann::json js = {{"etl", {js_image, js_loc}}, {"augmentation", js_aug}};
 
     auto media   = provider_factory::create(js);
     auto oshapes = media->get_output_shapes();

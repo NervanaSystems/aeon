@@ -84,12 +84,12 @@ TEST(provider, audio_classify)
 TEST(provider, transcript_length_check)
 {
     uint32_t       max_length    = 15;
-    nlohmann::json js_transcript = {{"type", "char_map"},
-                                    {"alphabet", "abcdefgß "},
-                                    {"max_length", max_length},
-                                    {"emit_length", true}};
+    nlohmann::json js_transcript = {{{"type", "char_map"},
+                                     {"alphabet", "abcdefgß "},
+                                     {"max_length", max_length},
+                                     {"emit_length", true}}};
 
-    nlohmann::json js = {{"etl", {js_transcript}}};
+    nlohmann::json js = {{"etl", js_transcript}};
 
     auto media     = nervana::provider_factory::create(js);
     auto oshapes   = media->get_output_shapes();

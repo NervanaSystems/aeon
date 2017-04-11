@@ -57,13 +57,13 @@ TEST(loader, syntax)
                             {"channel_major", false}};
     nlohmann::json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
     nlohmann::json augmentation = {
-        {"type", "image"}, {"height", height}, {"width", width}, {"flip_enable", true}};
+        {{"type", "image"}, {"height", height}, {"width", width}, {"flip_enable", true}}};
     nlohmann::json js = {{"manifest_root", manifest_root},
                          {"manifest_filename", manifest},
                          {"batch_size", batch_size},
                          {"iteration_mode", "INFINITE"},
                          {"etl", {image, label}},
-                         {"augmentation", {augmentation}}};
+                         {"augmentation", augmentation}};
 
     auto train_set = loader{js};
 }
@@ -82,12 +82,12 @@ TEST(loader, iterator)
                             {"width", width},
                             {"channel_major", false}};
     nlohmann::json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
-    nlohmann::json augmentation = {{"type", "image"}, {"flip_enable", true}};
+    nlohmann::json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
     nlohmann::json js           = {{"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
                          {"iteration_mode", "ONCE"},
                          {"etl", {image, label}},
-                         {"augmentation", {augmentation}}};
+                         {"augmentation", augmentation}};
 
     loader train_set{js};
 
@@ -125,12 +125,12 @@ TEST(loader, once)
                             {"width", width},
                             {"channel_major", false}};
     nlohmann::json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
-    nlohmann::json augmentation = {{"type", "image"}, {"flip_enable", true}};
+    nlohmann::json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
     nlohmann::json js           = {{"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
                          {"iteration_mode", "ONCE"},
                          {"etl", {image, label}},
-                         {"augmentation", {augmentation}}};
+                         {"augmentation", augmentation}};
 
     loader train_set{js};
 
@@ -158,13 +158,13 @@ TEST(loader, count)
                             {"width", width},
                             {"channel_major", false}};
     nlohmann::json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
-    nlohmann::json augmentation = {{"type", "image"}, {"flip_enable", true}};
+    nlohmann::json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
     nlohmann::json js           = {{"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
                          {"iteration_mode", "COUNT"},
                          {"iteration_mode_count", 4},
                          {"etl", {image, label}},
-                         {"augmentation", {augmentation}}};
+                         {"augmentation", augmentation}};
 
     int expected_iterations = 4;
 
@@ -195,12 +195,12 @@ TEST(loader, infinite)
                             {"width", width},
                             {"channel_major", false}};
     nlohmann::json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
-    nlohmann::json augmentation = {{"type", "image"}, {"flip_enable", true}};
+    nlohmann::json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
     nlohmann::json js           = {{"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
                          {"iteration_mode", "INFINITE"},
                          {"etl", {image, label}},
-                         {"augmentation", {augmentation}}};
+                         {"augmentation", augmentation}};
 
     loader train_set{js};
 
@@ -234,14 +234,14 @@ TEST(loader, cache)
                             {"width", width},
                             {"channel_major", false}};
     nlohmann::json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
-    nlohmann::json augmentation = {{"type", "image"}, {"flip_enable", true}};
+    nlohmann::json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
     nlohmann::json js           = {{"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
                          {"block_size", block_size},
                          {"cache_directory", cache_root},
                          {"iteration_mode", "INFINITE"},
                          {"etl", {image, label}},
-                         {"augmentation", {augmentation}}};
+                         {"augmentation", augmentation}};
 
     loader train_set{js};
 
@@ -271,12 +271,12 @@ TEST(loader, test)
     nlohmann::json js_image = {
         {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
     nlohmann::json label        = {{"type", "label"}, {"binary", false}};
-    nlohmann::json augmentation = {{"type", "image"}, {"flip_enable", true}};
+    nlohmann::json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
     nlohmann::json js           = {{"manifest_filename", manifest_filename},
                          {"batch_size", batch_size},
                          {"block_size", block_size},
                          {"etl", {js_image, label}},
-                         {"augmentation", {augmentation}}};
+                         {"augmentation", augmentation}};
 
     loader train_set{js};
 
@@ -333,13 +333,13 @@ TEST(loader, custom_provider)
         {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
     nlohmann::json label_config = {{"type", "label"}, {"binary", false}};
     nlohmann::json augmentation = {
-        {"height", height}, {"width", width}, {"type", "image"}, {"flip_enable", true}};
+        {{"height", height}, {"width", width}, {"type", "image"}, {"flip_enable", true}}};
     nlohmann::json js = {{"single_thread", true},
                          {"manifest_filename", manifest},
                          {"batch_size", batch_size},
                          {"iteration_mode", "INFINITE"},
                          {"etl", {image_config, label_config}},
-                         {"augmentation", {augmentation}}};
+                         {"augmentation", augmentation}};
 
     loader train_set{js};
 
