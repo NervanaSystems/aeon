@@ -2,9 +2,10 @@ import os
 import sys
 from distutils.core import setup, Extension
 from distutils.sysconfig import get_python_inc
-import subprocess
-if sys.version_info[0] < 3:
-    import commands
+# Python 2 and 3
+from future import standard_library
+standard_library.install_aliases()
+from subprocess import getoutput, getstatusoutput
 import numpy
 
 # Parallel build from http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
@@ -29,34 +30,21 @@ lib_dirs = ""
 libs = ""
 include_dirs = ""
 
-if sys.version_info[0] < 3:
-    status, tmp = commands.getstatusoutput("pkg-config --cflags opencv")
-else:
-    status, tmp = subprocess.getstatusoutput("pkg-config --cflags opencv")
+status, tmp = getstatusoutput("pkg-config --cflags opencv")
 if status != 0:
     print("required package 'opencv' not found")
     exit()
 include_dirs += tmp
-if sys.version_info[0] < 3:
-    lib_dirs += commands.getoutput("pkg-config --libs-only-L opencv")
-    libs += commands.getoutput("pkg-config --libs-only-l opencv")
+lib_dirs += getoutput("pkg-config --libs-only-L opencv")
+libs += getoutput("pkg-config --libs-only-l opencv")
 
-    status, tmp = commands.getstatusoutput("pkg-config --cflags sox")
-else:
-    lib_dirs += subprocess.getoutput("pkg-config --libs-only-L opencv")
-    libs += subprocess.getoutput("pkg-config --libs-only-l opencv")
-
-    status, tmp = subprocess.getstatusoutput("pkg-config --cflags sox")
+status, tmp = getstatusoutput("pkg-config --cflags sox")
 if status != 0:
     print("required package 'sox' not found")
     exit()
 include_dirs += tmp
-if sys.version_info[0] < 3:
-    lib_dirs += commands.getoutput("pkg-config --libs-only-L sox")
-    libs += commands.getoutput("pkg-config --libs-only-l sox")
-else:
-    lib_dirs += subprocess.getoutput("pkg-config --libs-only-L sox")
-    libs += subprocess.getoutput("pkg-config --libs-only-l sox")
+lib_dirs += getoutput("pkg-config --libs-only-L sox")
+libs += getoutput("pkg-config --libs-only-l sox")
 libs += ' -lcurl'
 
 os.environ["CC"] = "clang++"
