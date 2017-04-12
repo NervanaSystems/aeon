@@ -53,8 +53,6 @@ find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
 set(Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4)
-set(PYTHON_LIBRARY "\\usr\\lib\\python2.7")
-set(PYTHON_INCLUDE_DIRS "\\usr\\include\\python2.7")
 find_package(PythonLibs)
 find_package(PythonInterp)
  
