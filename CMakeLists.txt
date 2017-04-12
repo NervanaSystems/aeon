@@ -52,6 +52,7 @@ list(REMOVE_ITEM OpenCV_LIBRARIES opencv_ts)
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
+set(Python_ADDITIONAL_VERSIONS 3.4)
 find_package(PythonLibs)
 find_package(PythonInterp)
  

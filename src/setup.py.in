@@ -3,7 +3,8 @@ import sys
 from distutils.core import setup, Extension
 from distutils.sysconfig import get_python_inc
 import subprocess
-import commands
+if sys.version_info[0] < 3:
+    import commands
 import numpy
 
 # Parallel build from http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
@@ -28,21 +29,34 @@ lib_dirs = ""
 libs = ""
 include_dirs = ""
 
-status, tmp = commands.getstatusoutput("pkg-config --cflags opencv")
+if sys.version_info[0] < 3:
+    status, tmp = commands.getstatusoutput("pkg-config --cflags opencv")
+else:
+    status, tmp = subprocess.getstatusoutput("pkg-config --cflags opencv")
 if status != 0:
     print("required package 'opencv' not found")
     exit()
 include_dirs += tmp
-lib_dirs += commands.getoutput("pkg-config --libs-only-L opencv")
-libs += commands.getoutput("pkg-config --libs-only-l opencv")
+if sys.version_info[0] < 3:
+    lib_dirs += commands.getoutput("pkg-config --libs-only-L opencv")
+    libs += commands.getoutput("pkg-config --libs-only-l opencv")
 
-status, tmp = commands.getstatusoutput("pkg-config --cflags sox")
+    status, tmp = commands.getstatusoutput("pkg-config --cflags sox")
+else:
+    lib_dirs += subprocess.getoutput("pkg-config --libs-only-L opencv")
+    libs += subprocess.getoutput("pkg-config --libs-only-l opencv")
+
+    status, tmp = subprocess.getstatusoutput("pkg-config --cflags sox")
 if status != 0:
     print("required package 'sox' not found")
     exit()
 include_dirs += tmp
-lib_dirs += commands.getoutput("pkg-config --libs-only-L sox")
-libs += commands.getoutput("pkg-config --libs-only-l sox")
+if sys.version_info[0] < 3:
+    lib_dirs += commands.getoutput("pkg-config --libs-only-L sox")
+    libs += commands.getoutput("pkg-config --libs-only-l sox")
+else:
+    lib_dirs += subprocess.getoutput("pkg-config --libs-only-L sox")
+    libs += subprocess.getoutput("pkg-config --libs-only-l sox")
 libs += ' -lcurl'
 
 os.environ["CC"] = "clang++"
