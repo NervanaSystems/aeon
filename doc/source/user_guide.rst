@@ -60,7 +60,7 @@ An absolute or relative path. Relative paths work in conjunction with the *manif
 
 BINARY
 ~~~~~~
-Base64 encoded text.
+Base64 encoded text.  Useful for including images inline with the manifest file.
 
 STRING
 ~~~~~~
@@ -124,13 +124,26 @@ The dataloader configuration consists of a base loader config, then individual c
 
 .. code-block:: python
 
-    image_config = dict(type="image", height=224, width=224)
-    label_config = dict(type="label", binary=True)
-    augmentation_config = dict(type="image", flip_enable=True)
-    config = dict(etl=(image_config, label_config),
-                  augment=(augmentation_config),
-                  manifest_filename='train.csv',
-                  minibatch_size=128)
+    import json
+    from aeon import Dataloader
+
+    image_config =        {"type": "image",
+                           "height": 224,
+                           "width": 224}
+
+    label_config =        {"type": "label",
+                           "binary": True}
+
+    augmentation_config = {"type": "image",
+                           "flip_enable": True}
+
+    aeon_config = {"manifest_filename": "train.tsv",
+                   "etl": (image_config, label_config),
+                   "augment": (augmentation_config),
+                   "batch_size": 128}
+
+    train_set = Dataloader(json.dumps(aeon_config))
+
 
 Importantly, the ``type`` key indicates to the dataloader which input data type to expect, and the ``image`` and ``label`` keys correspond to additional configuration dictionaries. The dataloader currently supports:
 
@@ -184,22 +197,29 @@ While aeon can be used within a purely C++ environment, we have included a pytho
 
 .. code-block:: python
 
-    image_config = dict(type="image", height=224, width=224)
-    label_config = dict(type="label", binary=True)
-    augmentation_config = dict(type="image", flip_enable=True)
-    config = dict(etl=(image_config, label_config),
-                  augment=(augmentation_config),
-                  manifest_filename='train.csv',
-                  minibatch_size=128)
+    image_config =        {"type": "image",
+                           "height": 224,
+                           "width": 224}
+
+    label_config =        {"type": "label",
+                           "binary": True}
+
+    augmentation_config = {"type": "image",
+                           "flip_enable": True}
+
+    aeon_config = {"manifest_filename": "train.tsv",
+                   "etl": (image_config, label_config),
+                   "augment": (augmentation_config),
+                   "batch_size": 128}
+
 
 The above configuration will, for each image, take a random crop of 224x224 pixels, and perform a horizontal flip with probability 0.5. We then generate our dataloader:
 
 .. code-block:: python
 
+    import json
     from aeon import DataLoader
-    from neon.backends import gen_backend
 
-    be = gen_backend(backend='gpu')
-    train = DataLoader(config, be)
+    train_set = Dataloader(json.dumps(aeon_config))
 
 The backend argument above from neon tells the dataloader where to place the buffers to provision to the model.

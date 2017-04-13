@@ -16,16 +16,16 @@
 boundingbox
 ===========
 
-The object localization provider (``type=localization``) is designed to work with the Faster-RCNN model. The manifest should include paths to both the image but also the bounding box annotations:
+The ``boundingbox`` provider module is designed to produce simple bounding boxes from a set of input annotations.  For provision of more complex information, see the ``localization`` provider module, which uses the same input source type as ``boundingbox``, but generates additional buffers that are appropriate for training protocols needed for Faster-RCNN.
 
-.. code-block:: bash
+Input data used to provision bounding box output buffers can be provided via the manifest file as pointers to json annotation files::
 
-    /image_dir/image0001.jpg    /annotations/0001.json
-    /image_dir/image0002.jpg    /annotations/0002.json
-    /image_dir/image0003.jpg    /annotations/0003.json
+    @FILE
+    /annotations/0001.json
+    /annotations/0002.json
+    /annotations/0003.json
 
-Each annotation is in the JSON format, which should have the main field "object" containing the bounding box, class, and difficulty of each object in the image. For example:
-
+Note that one would typically not use a ``boundingbox`` provider in isolation, but would pair it with an image file that the annotation is referring to.  The image information is omitted here.  Each annotation is in the JSON format, which should have the main field "object" containing the bounding box, class, and difficulty of each object in the image. For example:
 
 .. code-block:: bash
 
@@ -71,13 +71,13 @@ The dataloader generates on-the-fly the anchor targets required for training neo
    name (string) | ~"~" | Name prepended to the output buffer name
    output_type (string)| ~"uint8_t~"| Output data type.
 
-This provider creates a set of eleven buffers that are consumed by the Faster-RCNN model. Defining ``A`` as the number of anchor boxes that tile the final convolutional feature map, and ``N`` as the ``max_gt_boxes`` parameter, we have the provisioned buffers in this order:
+This provider creates a set of eleven buffers that are consumed by the Faster-RCNN model. Defining ``A`` as the number of anchor boxes that tile the final convolutional feature map, ``M`` as the ``max_gt_boxes`` parameter, and ``N`` as the batch size, we have the following provisioned buffer:
 
 .. csv-table::
    :header: "Buffer Name", "Shape", "Description"
    :widths: 20, 10, 45
    :delim: |
 
-   boundingbox | (N * 4, 1) | Ground truth bounding box coordinates. Boxes are padded into a larger buffer.
+   boundingbox | (N, M * 4) | Ground truth bounding box coordinates. Boxes are padded into a larger buffer.
 
 For Faster-RCNN, we handle variable image sizes by padding an image into a fixed canvas to pass to the network. The image configuration is used as above with the added flags ``crop_enable`` set to False and ```fixed_aspect_ratio``` set to True. These settings place the largest possible image in the output canvas in the upper left corner. Note that the ``angle`` transformation is not supported.

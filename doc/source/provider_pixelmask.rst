@@ -23,7 +23,7 @@ For segmentation problems (``type=pixelmask``), the input is an image, and the t
 The manifest file contains paths to the input image, as well as the target image:
 
 .. code-block:: bash
-
+    @FILE    FILE
     /image_dir/img1.jpg /mask_dir/mask1.png
     /image_dir/img2.jpg /mask_dir/mask2.png
     /image_dir/img3.jpg /mask_dir/mask3.png
@@ -52,4 +52,4 @@ The buffers provisioned to the model are:
    :delim: |
    :escape: ~
 
-   pixelmask | ``(H*W, N)`` | Target pixel image.
+   pixelmask | ``(N, H, W)`` | Target pixel image.

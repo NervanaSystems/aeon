@@ -19,7 +19,7 @@ Getting Started
 Installation
 ------------
 
-First, if you haven't already, install neon_. Then grab aeon's dependencies:
+First grab aeon's dependencies:
 
 Ubuntu::
 
@@ -38,9 +38,9 @@ Fedora::
 
   sudo dnf install opencv-devel clang libcurl-devel sox-devel
 
-For CentOS 7, the version of Clang available in the EPEL repository is too old 
-to understand the GCC flags that the Python extension build system imposes, so 
-we build the latest version of Clang from source (after first installing it's 
+For CentOS 7, the version of Clang available in the EPEL repository is too old
+to understand the GCC flags that the Python extension build system imposes, so
+we build the latest version of Clang from source (after first installing it's
 high and low level build systems)::
 
     yum -y install libcurl-devel gcc gcc-c++ make pkgconfig opencv-devel git \
@@ -72,16 +72,15 @@ high and low level build systems)::
     cmake -G "Ninja" -DCMAKE_BUILD_TYPE=release /llvm-3.9.0.src
     ninja && ninja install
 
-Then install aeon under your neon virtualenv::
+Then build the aeon libraries::
 
   git clone https://github.com/NervanaSystems/aeon.git
-  cd aeon
-  python setup.py install
+  mkdir build_aeon && cd $_ && make ../aeon && make -j
 
-If your neon is installed system wide, you can instead install aeon system wide
-as well using :code:`sudo python setup.py install`.
+To install the python bindings, *after* the library has been built, run the following from the ``build_aeon`` directory::
+  pip install .
+
 
 Now continue on to the :doc:`user_guide` to get started using aeon. Or to the
 :doc:`developer_guide` to developing custom loaders/transformers.
 
-.. _neon: https://github.com/NervanaSystems/neon

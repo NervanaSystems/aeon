@@ -24,7 +24,7 @@ The complete table of configuration parameters is shown below:
    :delim: |
    :escape: ~
 
-   class_names | *Required* | 
+   class_names | *Required* |
    name (string) | ~"~" | Name prepended to the output buffer name
    output_type (string)| ~"uint8_t~"| Output data type.
    max_classes (uint) | 100 | Maximum number of classes in output buffer
@@ -37,4 +37,4 @@ The buffers provisioned to the model are:
    :delim: |
    :escape: ~
 
-   label_map | ``(1, N)`` | Class label for each example. Note that this buffer is not in one-hot format.
+   label_map | ``(N)`` | Class label for each example. Note that this buffer is not in one-hot format.

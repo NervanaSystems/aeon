@@ -16,7 +16,7 @@
 image
 =====
 
-For image inputs, the dataloader has providers for classification, segmentation, and localization tasks. We support any image format that can be decoded with OpenCV.
+For image provision module is used for image classification, segmentation, and localization tasks. We support any image format that can be decoded with OpenCV.
 
 The complete table of configuration parameters is shown below:
 
@@ -42,4 +42,4 @@ The buffers provisioned to the model are:
    :delim: |
    :escape: ~
 
-   image | ``(C*H*W, N)`` | Transfomed image, where ``C = channels``, ``H = height``, ``W = width``, and ``N = bsz`` (the batch size).
+   image | ``(N, C, H, W)`` or ``(N, H, W, C)``| Extracted and transformed image, where ``C = channels``, ``H = height``, ``W = width``, and ``N = bsz`` (the batch size).  Layout is dependent on whether ``channel_major`` mode is true or not

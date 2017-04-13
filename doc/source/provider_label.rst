@@ -38,4 +38,4 @@ The buffers provisioned to the model are:
    :delim: |
    :escape: ~
 
-   label | ``(1, N)`` | Class label for each example. Note that this buffer is not in one-hot format.
+   label | ``(N)`` | Class label for each example. Note that this buffer is not in one-hot format.

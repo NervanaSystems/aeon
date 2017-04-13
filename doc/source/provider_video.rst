@@ -35,7 +35,7 @@ Breaking this command down:
   - ``-an`` disables the audio stream
   - ``-vf scale=171:128`` scales the video frames to 171 by 128 pixels
   - ``-framerate 25`` sets the output framerate to 25 frames per second
-  - ``c:v mjpeg`` sets the output video codec to MJPEG
+  - ``-c:v mjpeg`` sets the output video codec to MJPEG
   - ``-q:v 3`` sets the output codec compression quality
   - ``-f segment ...`` splits video into equal length segments. See the
     `ffmpeg documentation
@@ -49,32 +49,16 @@ particular model in neon.
 Once preprocessing is complete, a sample manifest CSV file must be created with
 the absolute paths of the videos and the classification labels. For example::
 
-  /video_dir/video1_location.avi,/labels/target_1.txt
-  /video_dir/video2_location.avi,/labels/target_1.txt
-  /video_dir/video3_location.avi,/labels/target_4.txt
-  /video_dir/video4_location.avi,/labels/target_2.txt
+  @FILE   ASCII_INT
+  /video_dir/video1_location.avi  1
+  /video_dir/video2_location.avi  1
+  /video_dir/video3_location.avi  4
+  /video_dir/video4_location.avi  2
 
 Where the first column contains absolute paths to the preprocessed MJPEG videos
-and the second column contains absolute paths to label files. The label files
-in this case contain a single ASCII number indicating the correct class label
-of this training example.
+and the second column contains numbers corresponding to a class label.
 
-Next in our model training python script, we create a ``DataLoader`` config
-dictionary as described in the :doc:`user guide <user_guide>` but with an
-appropriate entry for video options:
-
-.. code-block:: python
-
-    config = dict(type="video,label",
-                  video={'max_frame_count': 16,
-                         'frame': {'height': 112,
-                                   'width': 112,
-                                   'scale': [0.875, 0.875]}},
-                  label={'binary': False},
-                  manifest_filename='train.csv',
-                  minibatch_size=128)
-
-The two current possible options for video configuration are:
+The configuration options for the video etl module are:
 
 .. csv-table::
    :header: "Name", "Default", "Description"
@@ -86,20 +70,48 @@ The two current possible options for video configuration are:
    frame (object) | *Required* | An :doc:`Image configuration <image_etl>` for each frame extracted from the video.
    name (string) | ~"~" | Name prepended to the output buffer name
 
+The output buffer provisioned to the model from the video module is described below:
+
+.. csv-table::
+   :header: "Buffer Name", "Shape", "Description"
+   :widths: 20, 10, 45
+   :delim: |
+   :escape: ~
+
+   video | ``(N, C, D, H, W)`` | Where ``N`` is the batch size, ``C`` is the channel count, ``D`` is the number of frames, ``H`` is the height of each frame, ``W`` is the width of each frame.
+
+
+Next in our model training python script, we create a ``DataLoader`` config
+dictionary as described in the :doc:`user guide <user_guide>` but with an
+appropriate entry for video options:
+
+.. code-block:: python
+
+    video_config = {"type": "video",
+                    "max_frame_count": 16,
+                    "frame": {"height": 112,
+                              "width": 112}}
+    label_config = {"type": "label",
+                    "binary": False}
+
+    augmentation_config = {"type": "image",
+                           "scale": [0.875, 0.875]}
+
+    aeon_config = {"manifest_filename": "train.csv",
+                   "etl": (video_config, label_config),
+                   "augmentation": (augmentation_config),
+                   "batch_size": 128}
+
+
 The last step is to then create the Python ``DataLoader`` object specifying a
 set of transforms to apply to the input data.
 
 .. code-block:: python
 
-    from neon.data.dataloader_transformers import OneHot, TypeCast
+    import json
     from aeon import DataLoader
-    # config is defined in the code above
-    model = ... # neon.models.Model object
-    dl = DataLoader(config, model.be)
-    dl = OneHot(dl, index=1, nclasses=101)
-    dl = TypeCast(dl, index=0, dtype=np.float32)
-    # ...
-    model.fit(dl, optimizer=opt, num_epochs=args.epochs, cost=cost, callbacks=callbacks)
+
+    train_set = DataLoader(aeon_config)
 
 Again, for the full example consult the complete `neon C3D example`_ in the
 neon repository.

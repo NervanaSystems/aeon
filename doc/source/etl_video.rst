@@ -72,7 +72,7 @@ appropriate entry for video options:
                                    'scale': [0.875, 0.875]}},
                   label={'binary': False},
                   manifest_filename='train.csv',
-                  minibatch_size=128)
+                  atch_size=128)
 
 The two current possible options for video configuration are:
 
@@ -90,15 +90,11 @@ set of transforms to apply to the input data.
 
 .. code-block:: python
 
-    from neon.data.dataloader_transformers import OneHot, TypeCast
+    import json
     from aeon import DataLoader
     # config is defined in the code above
-    model = ... # neon.models.Model object
-    dl = DataLoader(config, model.be)
-    dl = OneHot(dl, index=1, nclasses=101)
-    dl = TypeCast(dl, index=0, dtype=np.float32)
-    # ...
-    model.fit(dl, optimizer=opt, num_epochs=args.epochs, cost=cost, callbacks=callbacks)
+    dl = DataLoader(json.dumps(config))
+
 
 Again, for the full example consult the complete `neon C3D example`_ in the
 neon repository.

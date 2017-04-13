@@ -46,7 +46,7 @@ bug reports at aeon_issues_ .
 .. toctree::
    :hidden:
    :maxdepth: 0
-   :caption: Media
+   :caption: ETL Modules
 
    provider_image
    provider_label

@@ -16,10 +16,10 @@
 localization
 ============
 
-The object localization provider (``type=localization``) is designed to work with the Faster-RCNN model. The manifest should include paths to both the image but also the bounding box annotations:
+The object localization provider module (``type=localization``) is designed to work with the Faster-RCNN model. The manifest should include paths to both the image but also the bounding box annotations:
 
 .. code-block:: bash
-
+    @FILE   FILE
     /image_dir/image0001.jpg    /annotations/0001.json
     /image_dir/image0002.jpg    /annotations/0002.json
     /image_dir/image0003.jpg    /annotations/0003.json
@@ -79,22 +79,22 @@ The dataloader generates on-the-fly the anchor targets required for training neo
    output_type (string) | ~"float~" | Output data type.
    max_gt_boxes (long) | 64 | Maximum number of ground truth boxes in dataset. Used to buffer the ground truth boxes.
 
-This provider creates a set of eleven buffers that are consumed by the Faster-RCNN model. Defining ``A`` as the number of anchor boxes that tile the final convolutional feature map, and ``N`` as the ``max_gt_boxes`` parameter, we have the provisioned buffers in this order:
+This provider creates a set of eleven buffers that are consumed by the Faster-RCNN model. Defining ``A`` as the number of anchor boxes that tile the final convolutional feature map,  ``M`` as the ``max_gt_boxes`` parameter, and ``N`` as the batch_size, we have the provisioned buffers in this order:
 
 .. csv-table::
    :header: "Buffer Name", "Shape", "Description"
    :widths: 20, 10, 45
    :delim: |
 
-   bb_targets | (4 * A, 1) | Bounding box regressions for the region proposal network
-   bb_targets_mask | (4 * A, 1) | Bounding box target masks. Only positive labels have non-zero elements.
-   labels | (2 * A, 1) | Target positive/negative labels for the region proposal network.
-   labels_mask | (2 * A, 1) | Mask for the labels buffer. Includes ``rois_per_image`` non-zero elements.
-   im_shape | (2, 1) | Shape of the input image.
-   gt_boxes | (N * 4, 1) | Ground truth bounding box coordinates, already scaled by ``im_scale``. Boxes are padded into a larger buffer.
-   num_gt_boxes | (1, 1) | Number of ground truth bounding boxes.
-   gt_classes | (N, 1) | Class label for each ground truth box.
-   im_scale | (1, 1) | Scaling factor that was applied to the image.
-   is_difficult | (N, 1) | Indicates if each ground truth box has the difficult property.
+   bb_targets | (N, 4 * A, 1) | Bounding box regressions for the region proposal network
+   bb_targets_mask | (N, 4 * A, 1) | Bounding box target masks. Only positive labels have non-zero elements.
+   labels | (N, 2 * A, 1) | Target positive/negative labels for the region proposal network.
+   labels_mask | (N, 2 * A, 1) | Mask for the labels buffer. Includes ``rois_per_image`` non-zero elements.
+   im_shape | (N, 2, 1) | Shape of the input image.
+   gt_boxes | (N, M * 4, 1) | Ground truth bounding box coordinates, already scaled by ``im_scale``. Boxes are padded into a larger buffer.
+   num_gt_boxes | (N, 1) | Number of ground truth bounding boxes.
+   gt_classes | (N, M) | Class label for each ground truth box.
+   im_scale | (N) | Scaling factor that was applied to the image.
+   is_difficult | (N, M) | Indicates if each ground truth box has the difficult property.
 
 For Faster-RCNN, we handle variable image sizes by padding an image into a fixed canvas to pass to the network. The image configuration is used as above with the added flags ``crop_enable`` set to False and ```fixed_aspect_ratio``` set to True. These settings place the largest possible image in the output canvas in the upper left corner. Note that the ``angle`` transformation is not supported.
