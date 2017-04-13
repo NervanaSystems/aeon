@@ -49,9 +49,31 @@ high and low level build systems)::
     cmake -G "Ninja" -DCMAKE_BUILD_TYPE=release /llvm-3.9.0.src
     ninja && ninja install
 
-### To install aeon rc1:
 
-    git clone https://github.com/NervanaSystems/aeon.git --depth 1 --single-branch --branch rc1-master
+## Unit test dependencies
+
+Unit tests in aeon depend on [gtest](https://github.com/google/googletest):
+
+### Ubuntu:
+
+    sudo apt-get install libgtest-dev
+    cd /usr/src/gtest
+    sudo cmake .  sudo make
+    sudo mv libg* /usr/local/lib/
+
+### OSX:
+
+    brew install cmake
+    git clone https://github.com/google/googletest.git
+    cd googletest
+    cmake .
+    make -j
+    make install
+
+
+### To install aeon:
+
+    git clone https://github.com/NervanaSystems/aeon.git
     mkdir -p aeon/build && cd $_ && cmake .. && pip install .
 
 Note: if installing system wide (as opposed to within a virtual environment) you may need to run `sudo`.
