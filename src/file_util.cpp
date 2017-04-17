@@ -144,12 +144,37 @@ std::string nervana::file_util::get_temp_directory()
 
 vector<char> nervana::file_util::read_file_contents(const string& path)
 {
-    ifstream file(path, ios::binary);
-    if (!file)
+    size_t file_size = get_file_size(path);
+    vector<char> data;
+    data.reserve(file_size);
+    data.resize(file_size);
+
+    FILE* f = fopen(path.c_str(), "rb");
+    if (f)
+    {
+        char* p = data.data();
+        int remainder = file_size;
+        size_t offset = 0;
+        while (remainder > 0)
+        {
+            int rc = fread(&p[offset], 1, remainder, f);
+            if (rc >= 0)
+            {
+                offset += rc;
+                remainder -= rc;
+            }
+            else
+            {
+                fclose(f);
+                throw std::runtime_error("error reading file '" + path + "'");
+            }
+        }
+        fclose(f);
+    }
+    else
     {
         throw std::runtime_error("error opening file '" + path + "'");
     }
-    vector<char> data((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
     return data;
 }
 

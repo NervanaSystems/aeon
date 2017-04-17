@@ -400,25 +400,27 @@ TEST(benchmark, imagenet)
         size_t batch_size = 128;
         string manifest   = file_util::path_join(manifest_root, "train-index.tsv");
 
-        nlohmann::json js = {{"type", "image,label"},
-                             {"manifest_root", manifest_root},
-                             {"manifest_filename", manifest},
-                             {"batch_size", batch_size},
-                             {"iteration_mode", "INFINITE"},
-                             {"cache_directory", cache_root},
-                             {"single_thread", false},
-                             {"image",
-                              {{"height", height},
-                               {"width", width},
-                               {"channel_major", false},
-                               // {"angle", {-90, 90}},
-                               {"scale", {0.5, 1.0}},
-                               // {"hue", {-360, 360}},
-                               {"saturation", {0.5, 2.0}},
-                               {"contrast", {0.5, 1.0}},
-                               {"brightness", {0.5, 1.0}},
-                               {"flip_enable", true}}},
-                             {"label", {{"binary", false}}}};
+        nlohmann::json image_config = {{"type", "image"},
+                                       {"height", height},
+                                       {"width", width},
+                                       {"channel_major", false}};
+        nlohmann::json label_config = {{"type", "label"},
+                                       {"binary", false}};
+        nlohmann::json aug_config = {{"type", "image"},
+                                     {"scale", {0.5, 1.0}},
+                                     {"saturation", {0.5, 2.0}},
+                                     {"contrast", {0.5, 1.0}},
+                                     {"brightness", {0.5, 1.0}},
+                                     {"flip_enable", true}};
+        nlohmann::json config = {{"manifest_root", manifest_root},
+                                 {"manifest_filename", manifest},
+                                 {"batch_size", batch_size},
+                                 {"iteration_mode", "INFINITE"},
+                                 {"cache_directory", cache_root},
+                                 {"single_thread", false},
+                                 {"web_server_port", 8086},
+                                 {"etl", {image_config, label_config}},
+                                 {"augmentation", {aug_config}}};
 
         chrono::high_resolution_clock                     timer;
         chrono::time_point<chrono::high_resolution_clock> start_time;
@@ -426,7 +428,7 @@ TEST(benchmark, imagenet)
         chrono::time_point<chrono::high_resolution_clock> total_time;
         try
         {
-            auto train_set = nervana::loader{js};
+            auto train_set = nervana::loader{config};
 
             size_t       total_batch   = ceil((float)train_set.record_count() / (float)batch_size);
             size_t       current_batch = 0;

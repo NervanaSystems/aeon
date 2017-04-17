@@ -16,14 +16,17 @@
 #pragma once
 
 #include "web_server.hpp"
-#include "loader.hpp"
+
+namespace nervana
+{
+    class loader;
+}
 
 class web_app
 {
 public:
-    web_app();
+    web_app(uint16_t port);
     ~web_app();
-    static void start();
 
     void home_page(web::page& p);
     void stopwatch(web::page& p);
@@ -38,5 +41,3 @@ private:
     web::server                   web_server;
     std::vector<nervana::loader*> m_loader_list;
 };
-
-extern web_app debug_web_app;

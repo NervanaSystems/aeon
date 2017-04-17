@@ -35,6 +35,7 @@
 #include "block_manager.hpp"
 #include "log.hpp"
 #include "util.hpp"
+#include "web_app.hpp"
 
 namespace nervana
 {
@@ -61,6 +62,7 @@ public:
     int                         random_seed          = 0;
     std::string                 iteration_mode       = "ONCE";
     int                         iteration_mode_count = 0;
+    uint16_t                    web_server_port = 0;
     std::vector<nlohmann::json> etl;
     std::vector<nlohmann::json> augmentation;
 
@@ -84,6 +86,7 @@ private:
         ADD_SCALAR(random_seed, mode::OPTIONAL),
         ADD_SCALAR(iteration_mode, mode::OPTIONAL),
         ADD_SCALAR(iteration_mode_count, mode::OPTIONAL),
+        ADD_SCALAR(web_server_port, mode::OPTIONAL),
         ADD_OBJECT(etl, mode::REQUIRED),
         ADD_OBJECT(augmentation, mode::OPTIONAL)};
 
@@ -180,4 +183,5 @@ private:
     size_t                              m_position{0};
     fixed_buffer_map*                   m_output_buffer_ptr{nullptr};
     nlohmann::json                      m_current_config;
+    std::shared_ptr<web_app>            m_debug_web_app;
 };

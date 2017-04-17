@@ -89,7 +89,10 @@ loader::loader(nlohmann::json& config_json)
 
 loader::~loader()
 {
-    debug_web_app.deregister_loader(this);
+    if (m_debug_web_app)
+    {
+        m_debug_web_app->deregister_loader(this);
+    }
 }
 
 void loader::initialize(nlohmann::json& config_json)
@@ -144,7 +147,11 @@ void loader::initialize(nlohmann::json& config_json)
 
     m_output_buffer_ptr = m_decoder->next();
 
-    debug_web_app.register_loader(this);
+    if (lcfg.web_server_port != 0)
+    {
+        m_debug_web_app = make_shared<web_app>(lcfg.web_server_port);
+        m_debug_web_app->register_loader(this);
+    }
 }
 
 const vector<string>& loader::get_buffer_names() const
