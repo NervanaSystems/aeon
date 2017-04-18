@@ -44,11 +44,11 @@ Transcription provisioning can be configured using the following parameters:
    :delim: |
    :escape: ~
 
-   alphabet (string)| *Required* | A string of symbols to be included in the target output
+   alphabet (string)| *Required* | A string of symbols to be included in the target output (utf-8 input is supported)
    max_length (uint32_t) | *Required* | Maximum number of symbols in a target
-   unknown_value (uint8_t) | 0 | Integer value to give to unknown characters. 0 causes them to be discarded. Value should be between ``len(alphabet)`` and 255.
+   unknown_value (uint32_t) | 0 | Integer value to give to unknown characters. 0 causes them to be discarded.
    emit_length (bool) | False | Produce a buffer indicating the length of the input string
-   output_type (string) | ~"uint8_t~" | transcript data type
+   output_type (string) | ~"uint32_t~" | transcript data type
 
 .. code-block:: python
 
@@ -70,4 +70,4 @@ The buffers provisioned to the model are then:
     :escape: ~
 
     char_map | ``(N, C)`` | Transcripts, where ``C = max transcript length``.
-    length | ``(N)`` | Length of each transcript (``uint_8``).  Only produced if ``emit_length`` is true in the configuration.
+    length | ``(N)`` | Length of each transcript (``uint32_t``).  Only produced if ``emit_length`` is true in the configuration.

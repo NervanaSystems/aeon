@@ -25,7 +25,7 @@ aeon performs a series of customizable transformations on the audio before provi
 
 1. Probabilistically add noise to raw audio waveform (with the probability controlled by the ``add_noise_probability`` parameter). Noise is chosen from a random file in ``noise_index_file`` and added at a random offset and scaling (controlled by the ``noise_level`` parameter).  Noise addition happens only in the time domain (as opposed to the spectral domain).
 
-2. If ``time_scale_fraction`` has been set to a pair of values ``(tmin, tmax)``, then the spectral frames will be randomly squeezed or stretched in the time domain according to a random value chosen uniformly from the interval between ``tmin`` and ``tmax``.  For example
+2. If ``time_scale_fraction`` has been set to a pair of values ``(tmin, tmax)``, then the spectral frames will be randomly squeezed or stretched in the time domain according to a random value chosen uniformly from the interval between ``tmin`` and ``tmax``.  For example:
 
 .. csv-table::
    :header: "Parameter", "Default", "Description"

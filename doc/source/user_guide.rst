@@ -120,7 +120,7 @@ For example formats of different modalities and problems, see the image, audio, 
 Configuration
 -------------
 
-The dataloader configuration consists of a base loader config, then individual configs for the different modalities.  These configs are captured by a json structure, which can be created via a dictionary in python. For example,
+The dataloader configuration consists of a base loader configuration, then individual configurations for the different modalities. These configurations are captured by a json structure, which can be created via a dictionary in python. For example,
 
 .. code-block:: python
 
@@ -137,10 +137,10 @@ The dataloader configuration consists of a base loader config, then individual c
     augmentation_config = {"type": "image",
                            "flip_enable": True}
 
-    aeon_config = {"manifest_filename": "train.tsv",
-                   "etl": (image_config, label_config),
-                   "augment": (augmentation_config),
-                   "batch_size": 128}
+    aeon_config =         {"manifest_filename": "train.tsv",
+                           "etl": (image_config, label_config),
+                           "augment": (augmentation_config),
+                           "batch_size": 128}
 
     train_set = Dataloader(json.dumps(aeon_config))
 

@@ -72,7 +72,7 @@ appropriate entry for video options:
                                    'scale': [0.875, 0.875]}},
                   label={'binary': False},
                   manifest_filename='train.csv',
-                  atch_size=128)
+                  batch_size=128)
 
 The two current possible options for video configuration are:
 
