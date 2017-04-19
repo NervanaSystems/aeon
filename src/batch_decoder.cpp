@@ -21,29 +21,39 @@ using namespace nervana;
 
 batch_decoder::batch_decoder(batch_iterator*                            b_itor,
                              size_t                                     batch_size,
-                             bool                                       single_thread,
+                             uint32_t                                   thread_count,
                              bool                                       pinned,
                              const std::shared_ptr<provider_interface>& prov)
     : async_manager<encoded_record_list, fixed_buffer_map>(b_itor, "batch_decoder")
     , m_batch_size(batch_size)
     , m_active_count{0}
 {
-    // Note:  all we need are single_thread, batch_size, pinned + the provider template
+    // Note:  all we need are thread_count, batch_size, pinned + the provider template
     //        can we just use copy constructor instead?
     int nthreads = 1;
 
-    if (!single_thread)
+    if (thread_count == 0)  // automatically determine number of threads
     {
         int itemsPerThread = (batch_size - 1) / thread::hardware_concurrency() + 1;
         nthreads           = std::min((batch_size - 1) / itemsPerThread + 1, batch_size);
     }
+    else
+    {
+        // don't return more threads than we can get
+        nthreads = std::min(thread::hardware_concurrency(), thread_count);
 
-    m_items_per_thread = (batch_size - 1) / nthreads + 1;
+        // don't return more threads than items per batch
+        nthreads = std::min((int) batch_size, nthreads);
+
+        // TODO: log info message if nthreads != thread_count
+    }
 
     if (nthreads <= 0)
     {
         throw std::invalid_argument("Number of threads must be > 0");
     }
+
+    m_items_per_thread = (batch_size - 1) / nthreads + 1;
 
     for (int i = 0; i < nthreads; i++)
     {

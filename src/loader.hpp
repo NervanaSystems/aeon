@@ -57,9 +57,9 @@ public:
     float                       subset_fraction      = 1.0;
     bool                        shuffle_enable       = false;
     bool                        shuffle_manifest     = false;
-    bool                        single_thread        = false;
     bool                        pinned               = false;
     int                         random_seed          = 0;
+    uint32_t                    decode_thread_count  = 0;
     std::string                 iteration_mode       = "ONCE";
     int                         iteration_mode_count = 0;
     uint16_t                    web_server_port = 0;
@@ -81,7 +81,7 @@ private:
                    [](decltype(subset_fraction) v) { return v <= 1.0 && v >= 0.0; }),
         ADD_SCALAR(shuffle_enable, mode::OPTIONAL),
         ADD_SCALAR(shuffle_manifest, mode::OPTIONAL),
-        ADD_SCALAR(single_thread, mode::OPTIONAL),
+        ADD_SCALAR(decode_thread_count, mode::OPTIONAL),
         ADD_SCALAR(pinned, mode::OPTIONAL),
         ADD_SCALAR(random_seed, mode::OPTIONAL),
         ADD_SCALAR(iteration_mode, mode::OPTIONAL),

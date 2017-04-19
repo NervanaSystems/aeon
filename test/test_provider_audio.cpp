@@ -131,17 +131,17 @@ TEST(provider, transcript_length_check)
 
     for (int i = 0; i < batch_size; i++)
     {
-        uint32_t* loaded_transcript = (uint32_t*)out_buf["char_map"]->get_item(i);
-
         for (uint32_t j = 0; j < max_length; ++j)
         {
+            uint32_t loaded_transcript_j =
+                unpack<uint32_t>(out_buf["char_map"]->get_item(i), j * sizeof(uint32_t));
             if (j < expected_encodings[i].size())
             {
-                EXPECT_EQ(loaded_transcript[j], expected_encodings[i][j]);
+                EXPECT_EQ(loaded_transcript_j, expected_encodings[i][j]);
             }
             else
             {
-                EXPECT_EQ(loaded_transcript[j], 0);
+                EXPECT_EQ(loaded_transcript_j, 0);
             }
         }
     }

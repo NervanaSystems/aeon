@@ -141,7 +141,7 @@ void loader::initialize(nlohmann::json& config_json)
 
     m_decoder = make_shared<batch_decoder>(m_batch_iterator.get(),
                                            static_cast<size_t>(lcfg.batch_size),
-                                           lcfg.single_thread,
+                                           lcfg.decode_thread_count,
                                            lcfg.pinned,
                                            m_provider);
 

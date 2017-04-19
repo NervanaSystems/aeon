@@ -334,7 +334,7 @@ TEST(loader, custom_provider)
     nlohmann::json label_config = {{"type", "label"}, {"binary", false}};
     nlohmann::json augmentation = {
         {{"height", height}, {"width", width}, {"type", "image"}, {"flip_enable", true}}};
-    nlohmann::json js = {{"single_thread", true},
+    nlohmann::json js = {{"decode_thread_count", 1},
                          {"manifest_filename", manifest},
                          {"batch_size", batch_size},
                          {"iteration_mode", "INFINITE"},
@@ -417,7 +417,7 @@ TEST(benchmark, imagenet)
                                  {"batch_size", batch_size},
                                  {"iteration_mode", "INFINITE"},
                                  {"cache_directory", cache_root},
-                                 {"single_thread", false},
+                                 {"decode_thread_count", 0},
                                  {"web_server_port", 8086},
                                  {"etl", {image_config, label_config}},
                                  {"augmentation", {aug_config}}};
