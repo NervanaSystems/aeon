@@ -81,7 +81,7 @@ TEST(util, unpack_le)
     //     EXPECT_EQ(0,actual);
     // }
     {
-        char data[] = {0, 0, 0, 1};
+        char data[] = {0, 0, 0, 1, 0};
         int  actual = unpack<int>(data, 1);
         EXPECT_EQ(0x00010000, actual);
     }
