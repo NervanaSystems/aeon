@@ -26,7 +26,7 @@ high and low level build systems)::
     sudo -i
     # Build CMake
     cd $BUILDROOT
-    curl -O https://cmake.org/files/v3.6/cmake-3.6.1.tar.gz
+    wget https://cmake.org/files/v3.6/cmake-3.6.1.tar.gz
     tar xf cmake-3.6.1.tar.gz
     rm cmake-3.6.1.tar.gz
     cd cmake-3.6.1
@@ -34,19 +34,19 @@ high and low level build systems)::
 
     # Build Ninja
     cd $BUILDROOT
-    git clone git://github.com/ninja-build/ninja.git && cd ninja
+    git clone https://github.com/ninja-build/ninja.git && cd ninja
     ./configure.py --bootstrap && cp ninja /usr/local/bin
 
     # Build LLVM + Clang
     cd $BUILDROOT && rm -rf /ninja
-    curl -O http://llvm.org/releases/3.9.0/llvm-3.9.0.src.tar.xz
+    wget http://llvm.org/releases/3.9.0/llvm-3.9.0.src.tar.xz
     tar xf llvm-3.9.0.src.tar.xz && rm llvm-3.9.0.src.tar.xz
     cd llvm-3.9.0.src/tools
-    curl -O http://llvm.org/releases/3.9.0/cfe-3.9.0.src.tar.xz
+    wget http://llvm.org/releases/3.9.0/cfe-3.9.0.src.tar.xz
     tar xf cfe-3.9.0.src.tar.xz && rm cfe-3.9.0.src.tar.xz
     mkdir $BUILDROOT/llvmbuild
     cd $BUILDROOT/llvmbuild
-    cmake -G "Ninja" -DCMAKE_BUILD_TYPE=release /llvm-3.9.0.src
+    cmake -G "Ninja" -DCMAKE_BUILD_TYPE=release ../llvm-3.9.0.src
     ninja && ninja install
 
 
