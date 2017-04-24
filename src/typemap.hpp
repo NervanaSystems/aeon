@@ -75,21 +75,33 @@ public:
     {
         return all_outputs.find(s) != all_outputs.end();
     }
-    std::string m_tp_name;
-    int         m_np_type;
-    int         m_cv_type;
-    size_t      m_size;
+
+    bool operator==(const output_type& other) const
+    {
+        if (m_size == other.m_size && m_cv_type == other.m_cv_type &&
+            m_np_type == other.m_np_type && m_tp_name == other.m_tp_name)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    bool operator!=(const output_type& other) const { return !(*this == other); }
+    std::string                        m_tp_name;
+    int                                m_np_type;
+    int                                m_cv_type;
+    size_t                             m_size;
 };
 
 class nervana::shape_type
 {
 public:
-    shape_type(const std::vector<size_t>& shape,
-               const output_type&         otype,
-               const bool                 flatten = false)
+    shape_type(const std::vector<size_t>& shape, const output_type& otype)
         : m_shape{shape}
         , m_otype{otype}
-        , m_flatten_with_batch_size{flatten}
     {
         m_byte_size = static_cast<size_t>(m_otype.get_size() * get_element_count());
     }
@@ -101,7 +113,6 @@ public:
     size_t                     get_byte_size() const { return m_byte_size; }
     const std::vector<size_t>& get_shape() const { return m_shape; }
     const output_type&         get_otype() const { return m_otype; }
-    bool                       flatten_all_dims() const { return m_flatten_with_batch_size; }
     void set_names(const std::vector<std::string>& names)
     {
         if (m_shape.size() != names.size())
@@ -132,10 +143,23 @@ public:
         }
     }
 
+    bool operator==(const shape_type& other) const
+    {
+        if (m_byte_size == other.m_byte_size && m_otype == other.m_otype &&
+            m_shape == other.m_shape && m_names == other.m_names)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    bool operator!=(const shape_type& other) const { return !(*this == other); }
 private:
     std::vector<size_t>      m_shape;
     output_type              m_otype;
     size_t                   m_byte_size;
-    bool                     m_flatten_with_batch_size;
     std::vector<std::string> m_names;
 };

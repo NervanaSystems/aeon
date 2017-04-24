@@ -29,9 +29,47 @@ using namespace nervana;
 TEST(typemap, numpy)
 {
     {
-        // auto opt = all_outputs.find("int8_t");
-        // ASSERT_NE(opt, all_outputs.end());
         output_type opt{"int8_t"};
         EXPECT_EQ(CV_8S, opt.get_cv_type());
+    }
+}
+
+TEST(typemap, otype_equal)
+{
+    {
+        output_type opt1{"int32_t"};
+        output_type opt2{"int32_t"};
+        EXPECT_EQ(opt1, opt2);
+    }
+}
+
+TEST(typemap, shapetype_equal)
+{
+    {
+        shape_type s1{{1, 2, 3}, {"int32_t"}};
+        shape_type s2{{1, 2, 3}, {"int32_t"}};
+        EXPECT_EQ(s1, s2);
+
+        std::vector<std::string> axis_names{"dim1", "dim2", "dim3"};
+        s1.set_names(axis_names);
+        s2.set_names(axis_names);
+        EXPECT_EQ(s1, s2);
+    }
+}
+
+TEST(typemap, shapetype_not_equal)
+{
+    {
+        shape_type s1{{1, 2, 3}, {"int32_t"}};
+        shape_type s2{{1, 2, 4}, {"int32_t"}};
+        shape_type s3{{1, 2, 3}, {"int8_t"}};
+        shape_type s4{{1, 2, 3}, {"int32_t"}};
+
+        std::vector<std::string> axis_names{"dim1", "dim2", "dim3"};
+        s4.set_names(axis_names);
+
+        EXPECT_NE(s1, s2);
+        EXPECT_NE(s1, s3);
+        EXPECT_NE(s1, s4);
     }
 }

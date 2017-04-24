@@ -207,26 +207,22 @@ public:
     }
 
     void add_shape_type(const std::vector<size_t>& shape_,
-                        const std::string&         output_type_,
-                        const bool                 flatten_all_dims_ = false)
+                        const std::string&         output_type_)
     {
-        m_shape_type_list.emplace_back(
-            shape_, nervana::output_type{output_type_}, flatten_all_dims_);
+        m_shape_type_list.emplace_back(shape_, nervana::output_type{output_type_});
     }
 
     void add_shape_type(const std::vector<size_t>&  shape_,
-                        const nervana::output_type& output_type_,
-                        const bool                  flatten_all_dims_ = false)
+                        const nervana::output_type& output_type_)
     {
-        m_shape_type_list.emplace_back(shape_, output_type_, flatten_all_dims_);
+        m_shape_type_list.emplace_back(shape_, output_type_);
     }
 
     void add_shape_type(const std::vector<size_t>&      shape_,
                         const std::vector<std::string>& names_,
-                        const nervana::output_type&     output_type_,
-                        const bool                      flatten_all_dims_ = false)
+                        const nervana::output_type&     output_type_)
     {
-        m_shape_type_list.emplace_back(shape_, output_type_, flatten_all_dims_);
+        m_shape_type_list.emplace_back(shape_, output_type_);
         m_shape_type_list.back().set_names(names_);
     }
 
