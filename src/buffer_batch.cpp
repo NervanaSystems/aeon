@@ -67,6 +67,7 @@ cv::Mat buffer_fixed_size_elements::get_item_as_mat(size_t index, bool channel_m
 
     if (channel_major)
     {
+        channels = sizes[0];
     }
     else
     {
@@ -74,10 +75,6 @@ cv::Mat buffer_fixed_size_elements::get_item_as_mat(size_t index, bool channel_m
         channels = sizes.back();
         sizes.pop_back();
     }
-
-    // INFO << channels;
-    // INFO << ndims;
-    // INFO << join(sizes, ", ");
 
     cv::Mat ret(ndims,
                 &sizes[0],

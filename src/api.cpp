@@ -29,6 +29,12 @@ extern "C" {
 #define IS_PY3K
 #endif
 
+#ifdef Py_TPFLAGS_HAVE_FINALIZE
+#define PYOBJ_TAIL_INIT NULL
+#else
+#define PYOBJ_TAIL_INIT
+#endif
+
 #define DL_get_loader(v) (((aeon_Dataloader*)(v))->m_loader)
 
 struct aeon_state
@@ -354,7 +360,8 @@ static PyTypeObject aeon_DataloaderType = {
     0,                                                               /* tp_subclasses */
     0,                                                               /* tp_weaklist */
     0,                                                               /* tp_del */
-    0                                                                /* tp_version_tag */
+    0,                                                               /* tp_version_tag */
+    PYOBJ_TAIL_INIT                                                  /* tp_finalize */
 };
 
 #ifdef IS_PY3K

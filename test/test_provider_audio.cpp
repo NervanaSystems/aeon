@@ -147,104 +147,87 @@ TEST(provider, transcript_length_check)
     }
 }
 
-#warning this needs to be fixed
-// TEST(provider, audio_transcript)
-// {
-//     nlohmann::json js = {{"type", "audio,transcription"},
-//                          {"audio",
-//                           {{"max_duration", "2000 milliseconds"},
-//                            {"frame_length", "1024 samples"},
-//                            {"frame_stride", "256 samples"},
-//                            {"sample_freq_hz", 44100},
-//                            {"feature_type", "specgram"}}},
-//                          {"transcription",
-//                           {{"alphabet", "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()"},
-//                            {"pack_for_ctc", true},
-//                            {"max_length", 50}}}};
 
-//     // Create the config
-//     auto media = dynamic_pointer_cast<audio_transcriber>(nervana::provider_factory::create(js));
+TEST(provider, audio_transcript)
+{
+    nlohmann::json js_audio = {{"type", "audio"},
+                               {"max_duration", "2000 milliseconds"},
+                               {"frame_length", "1024 samples"},
+                               {"frame_stride", "256 samples"},
+                               {"sample_freq_hz", 44100},
+                               {"feature_type", "specgram"}};
+    std::string alphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()");
 
-//     // Get the character map
-//     auto cmap = media->get_cmap();
+    nlohmann::json js_transcript = {{"type", "char_map"},
+                                     {"alphabet", alphabet},
+                                     {"max_length", 50},
+                                     {"emit_length", true}};
+    nlohmann::json js = {{"etl", {js_audio, js_transcript}}};
 
-//     size_t batch_size = 128;
+    // Create the config
+    auto media     = nervana::provider_factory::create(js);
 
-//     // Generate a simple sine wav
-//     float              sine_freq = 400;
-//     int16_t            sine_ampl = 500;
-//     sinewave_generator sg{sine_freq, sine_ampl};
-//     int                wav_len_sec = 4, sample_freq = 44100;
-//     bool               stereo = false;
+    // Create the character map that should be in the provider
+    std::unordered_map<wchar_t, uint32_t> cmap;
+    uint32_t idx = 0;
+    std::wstring w_alphabet = to_wstring(alphabet);
+    for (auto& c: w_alphabet)
+    {
+        cmap.insert({std::towupper(c), idx++});
+    }
 
-//     wav_data     wav(sg, wav_len_sec, sample_freq, stereo);
-//     vector<char> buf(wav_data::HEADER_SIZE + wav.nbytes());
-//     wav.write_to_buffer(&buf[0], buf.size());
+    // Generate a simple sine wav
+    wav_data     wav(sinewave_generator(400, 500), 4, 44100, false);
+    vector<char> buf(wav_data::HEADER_SIZE + wav.nbytes());
+    wav.write_to_buffer(&buf[0], buf.size());
 
-//     // Generate alternating fake transcripts
-//     vector<string> tr{"The quick brown fox jumped over the lazy dog",
-//                       "A much more interesting sentence."};
-//     vector<char> tr0_char(tr[0].begin(), tr[0].end());
-//     vector<char> tr1_char(tr[1].begin(), tr[1].end());
+    // Generate alternating fake transcripts
+    vector<string> tr{"The quick brown fox jumped over the lazy dog",
+                      "A much more interesting sentence."};
+    vector<char> tr0_char(tr[0].begin(), tr[0].end());
+    vector<char> tr1_char(tr[1].begin(), tr[1].end());
 
-//     // Create the input buffer
-//     encoded_record_list bp;
-//     for (int i = 0; i < batch_size; i++)
-//     {
-//         encoded_record record;
-//         record.add_element(buf);
-//         record.add_element(((i % 2) == 0 ? tr0_char : tr1_char));
-//         bp.add_record(record);
-//     }
-//     EXPECT_EQ(bp.size(), batch_size);
-//     EXPECT_EQ(bp.size(), batch_size);
+    // Create the input buffer
+    size_t batch_size = 128;
+    encoded_record_list bp;
+    for (int i = 0; i < batch_size; i++)
+    {
+        encoded_record record;
+        record.add_element(buf);
+        record.add_element(((i % 2) == 0 ? tr0_char : tr1_char));
+        bp.add_record(record);
+    }
+    EXPECT_EQ(bp.size(), batch_size);
+    EXPECT_EQ(bp.size(), batch_size);
 
-//     // Generate output buffers using shapes from the provider
-//     auto             oshapes = media->get_output_shapes();
-//     fixed_buffer_map out_buf(oshapes, batch_size);
+    // Generate output buffers using shapes from the provider
+    auto             oshapes = media->get_output_shapes();
+    fixed_buffer_map out_buf(oshapes, batch_size);
 
-//     // Call the provider
-//     for (int i = 0; i < batch_size; i++)
-//     {
-//         media->provide(i, bp, out_buf);
-//     }
+    // Call the provider
+    for (int i = 0; i < batch_size; i++)
+    {
+        media->provide(i, bp, out_buf);
+    }
 
-//     // Check target sequences against their source string
-//     for (int i = 0; i < batch_size; i++)
-//     {
-//         char* target_out  = out_buf["transcription"]->get_item(i);
-//         auto  orig_string = tr[i % 2];
-//         for (auto c : orig_string)
-//         {
-//             ASSERT_EQ(unpack<uint8_t>(target_out++), cmap[std::toupper(c)]);
-//         }
-//     }
+    // Check target sequences against their source string
+    for (int i = 0; i < batch_size; i++)
+    {
+        auto  orig_string = tr[i % 2];
+        int j = 0;
+        for (auto c : orig_string)
+        {
+            uint32_t loaded_transcript_j = unpack<uint32_t>(out_buf["char_map"]->get_item(i), j);
+            ASSERT_EQ(loaded_transcript_j, cmap[std::towupper(c)]);
+            j += sizeof(uint32_t);
 
-//     // Check the transcript lengths match source string length
-//     for (int i = 0; i < batch_size; i++)
-//     {
-//         ASSERT_EQ(unpack<uint32_t>(out_buf["trans_length"]->get_item(i)), tr[i % 2].length());
-//     }
+        }
+    }
 
-//     for (int i = 0; i < batch_size; i++)
-//     {
-//         ASSERT_EQ(unpack<uint32_t>(out_buf["valid_pct"]->get_item(i)), 100);
-//     }
+    // Check the transcript lengths match source string length
+    for (int i = 0; i < batch_size; i++)
+    {
+        ASSERT_EQ(unpack<uint32_t>(out_buf["length"]->get_item(i)), tr[i % 2].length());
+    }
 
-//     // Do the packing
-//     media->post_process(out_buf);
-//     string   combined_string = tr[0] + tr[1];
-//     uint32_t packed_length   = combined_string.size() * batch_size / 2;
-
-//     // Check that target sequence contains abutted vals corresponding to original strings
-//     char* target_ptr = out_buf["transcription"]->data();
-//     for (int i = 0; i < packed_length; i++)
-//     {
-//         char c = combined_string[i % combined_string.size()];
-//         ASSERT_EQ(unpack<uint8_t>(target_ptr++), cmap[std::toupper(c)]);
-//     }
-//     for (int i = packed_length; i < out_buf["transcription"]->size(); i++)
-//     {
-//         ASSERT_EQ(0, *(target_ptr++));
-//     }
-// }
+}
