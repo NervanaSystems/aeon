@@ -78,15 +78,8 @@ public:
 
     bool operator==(const output_type& other) const
     {
-        if (m_size == other.m_size && m_cv_type == other.m_cv_type &&
-            m_np_type == other.m_np_type && m_tp_name == other.m_tp_name)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return (m_size == other.m_size && m_cv_type == other.m_cv_type &&
+                m_np_type == other.m_np_type && m_tp_name == other.m_tp_name);
     }
 
     bool operator!=(const output_type& other) const { return !(*this == other); }
@@ -145,15 +138,8 @@ public:
 
     bool operator==(const shape_type& other) const
     {
-        if (m_byte_size == other.m_byte_size && m_otype == other.m_otype &&
-            m_shape == other.m_shape && m_names == other.m_names)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return (m_byte_size == other.m_byte_size && m_otype == other.m_otype &&
+                m_shape == other.m_shape && m_names == other.m_names);
     }
 
     bool operator!=(const shape_type& other) const { return !(*this == other); }
