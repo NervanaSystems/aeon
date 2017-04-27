@@ -44,7 +44,7 @@ if status != 0:
     exit()
 include_dirs += tmp
 lib_dirs += getoutput("pkg-config --libs-only-L sox")
-libs += getoutput("pkg-config --libs-only-l sox")
+libs += ' ' + getoutput("pkg-config --libs-only-l sox")
 libs += ' -lcurl'
 
 os.environ["CC"] = "clang++"
