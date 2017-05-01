@@ -35,6 +35,7 @@ set (SRC
     provider_custom.cpp
     provider_factory.cpp
     specgram.cpp
+    typemap.cpp
     util.cpp
     wav_data.cpp
     web_app.cpp
