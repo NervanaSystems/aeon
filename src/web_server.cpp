@@ -574,7 +574,7 @@ web::tcp::connection::connection(uint16_t port)
     serv_addr.sin_family      = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port        = htons(port);
-    if (bind(m_socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
+    if (::bind(m_socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
     {
         stringstream ss;
         ss << "error binding to port " << port;

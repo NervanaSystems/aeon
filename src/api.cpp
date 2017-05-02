@@ -303,9 +303,9 @@ static PyMethodDef Dataloader_methods[] = {
 };
 
 static PyMemberDef Dataloader_members[] = {
-    {"ndata", T_OBJECT_EX, offsetof(aeon_Dataloader, ndata), 0, "number of records in dataset"},
-    {"batch_size", T_OBJECT_EX, offsetof(aeon_Dataloader, batch_size), 0, "mini-batch size"},
-    {"axes_info", T_OBJECT_EX, offsetof(aeon_Dataloader, axes_info), 0, "axes names and lengths"},
+    {(char*)"ndata", T_OBJECT_EX, offsetof(aeon_Dataloader, ndata), 0, (char*)"number of records in dataset"},
+    {(char*)"batch_size", T_OBJECT_EX, offsetof(aeon_Dataloader, batch_size), 0, (char*)"mini-batch size"},
+    {(char*)"axes_info", T_OBJECT_EX, offsetof(aeon_Dataloader, axes_info), 0, (char*)"axes names and lengths"},
     {NULL, NULL, 0, 0, NULL} /* Sentinel */
 };
 

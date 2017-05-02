@@ -63,8 +63,8 @@ public:
     virtual ~manifest_file() {}
     typedef std::vector<std::string> record;
 
-    std::string cache_id();
-    std::string version();
+    std::string cache_id() override;
+    std::string version() override;
 
     std::vector<std::vector<std::string>>* next() override;
     void                                   reset() override;

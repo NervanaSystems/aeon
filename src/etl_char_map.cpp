@@ -40,7 +40,7 @@ nervana::char_map::config::config(nlohmann::json js)
     }
 
     // set locale to operate on UTF8 input characters
-    std::setlocale(LC_CTYPE, "");
+    setlocale(LC_CTYPE, "");
 
     uint32_t index = 0;
     walphabet      = to_wstring(alphabet);
