@@ -37,6 +37,7 @@
 #include "block_loader_file.hpp"
 #include "base64.hpp"
 #include "gen_image.hpp"
+#include "loader.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -667,6 +668,28 @@ TEST(manifest, crc_root_dir)
     }
 
     EXPECT_EQ(manifest1_crc, manifest2_crc);
+}
+
+TEST(manifest, comma)
+{
+    string manifest_file = "tmp_manifest.tsv";
+    {
+        int    height     = 224;
+        int    width      = 224;
+        size_t batch_size = 128;
+        nlohmann::json image_config = {{"type", "image"},
+                                       {"height", height},
+                                       {"width", width},
+                                       {"channel_major", false}};
+        nlohmann::json label_config = {{"type", "label"},
+                                       {"binary", false}};
+        nlohmann::json config = {{"manifest_filename", manifest_file},
+                                 {"batch_size", batch_size},
+                                 {"iteration_mode", "INFINITE"},
+                                 {"etl", {image_config, label_config}}};
+
+        auto train_set = nervana::loader{config};
+    }
 }
 
 TEST(benchmark, manifest)

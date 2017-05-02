@@ -97,6 +97,11 @@ fixed_buffer_map* batch_decoder::filler()
     }
     else
     {
+        for(const encoded_record& record : *inputs)
+        {
+            record.rethrow_if_exception();
+        }
+
         m_active_count = m_decode_thread_info.size();
         for (int id = 0; id < m_decode_thread_info.size(); ++id)
         {
