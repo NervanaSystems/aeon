@@ -688,7 +688,7 @@ TEST(manifest, comma)
                                  {"iteration_mode", "INFINITE"},
                                  {"etl", {image_config, label_config}}};
 
-        auto train_set = nervana::loader{config};
+        EXPECT_THROW(nervana::loader{config}, std::runtime_error);
     }
 }
 

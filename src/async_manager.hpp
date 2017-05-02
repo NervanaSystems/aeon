@@ -94,14 +94,7 @@ public:
             m_pending_result = std::async(
                 std::launch::async, &nervana::async_manager<INPUT, OUTPUT>::filler, this);
         }
-        try
-        {
-            result = m_pending_result.get();
-        }
-        catch (std::exception& e)
-        {
-            INFO << e.what();
-        }
+        result = m_pending_result.get();
         if (result != nullptr)
         {
             swap();
