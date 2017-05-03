@@ -42,11 +42,27 @@ TEST(config, loader)
 TEST(config, throws)
 {
     // config is missing a required parameter
-    nlohmann::json js = {
-        {"type", "image,label"},
-        {"batch_size", 128},
-        {"image",
-         {{"height", 128}, {"width", 128}, {"channel_major", false}, {"flip_enable", true}}},
-    };
+
+    int    height        = 32;
+    int    width         = 32;
+    size_t batch_size    = 1;
+    string manifest_root = string(CURDIR) + "/test_data";
+    string manifest      = manifest_root + "/manifest.csv";
+    nlohmann::json image = {{"type", "image"},
+                            {"name", "image1"},
+                            {"height", height},
+                            {"width", width},
+                            {"channel_major", false}};
+    nlohmann::json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
+    nlohmann::json augmentation = {
+        {{"type", "image"}, {"height", height}, {"width", width}, {"flip_enable", true}}};
+    nlohmann::json js = {{"manifest_root", manifest_root},
+                         {"manifest_filename", manifest},
+                         {"batch_size", batch_size},
+                         {"type", "image,label"},
+                         {"iteration_mode", "INFINITE"},
+                         {"etl", {image, label}},
+                         {"augmentation", augmentation}};
+
     EXPECT_THROW(loader_config cfg{js}, invalid_argument);
 }

@@ -29,59 +29,79 @@ void json_configurable::verify_config(
     nlohmann::json                                              js) const
 {
     vector<string>          ignore_list;
-    json::parser_callback_t cb = [&](int depth, json::parse_event_t event, json& parsed) {
-        if (event == json::parse_event_t::key && depth == 1)
+    string error_key;
+    string suggestion;
+    int    distance = numeric_limits<int>::max();
+
+    json::parser_callback_t cb = [&](int depth, json::parse_event_t event, json& parsed)
+    {
+        if (depth == 1)
         {
-            string key   = parsed;
-            bool   found = false;
-            for (auto item : config)
+            switch(event)
             {
-                if (item->name() == key)
-                {
-                    found = true;
-                    break;
-                }
-            }
-            for (const string& s : ignore_list)
+            case json::parse_event_t::key:
             {
-                if (key == s)
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
-            {
-                int    distance = numeric_limits<int>::max();
-                string suggestion;
+                string key   = parsed;
+                bool   found = false;
                 for (auto item : config)
                 {
-                    int test = LevenshteinDistance(item->name(), key);
-                    if (test < distance)
+                    if (item->name() == key)
                     {
-                        distance   = test;
-                        suggestion = item->name();
+                        found = true;
+                        break;
                     }
                 }
-                stringstream ss;
-                ss << "key '" << key << "' not found";
-                if (distance < key.size() / 2)
+                for (const string& s : ignore_list)
                 {
-                    ss << ", did you mean '" << suggestion << "'";
+                    if (key == s)
+                    {
+                        found = true;
+                        break;
+                    }
                 }
-                throw invalid_argument(ss.str());
+                if (!found)
+                {
+                    for (auto item : config)
+                    {
+                        int test = LevenshteinDistance(item->name(), key);
+                        if (test < distance)
+                        {
+                            distance   = test;
+                            suggestion = item->name();
+                        }
+                    }
+                    error_key = key;
+                }
+                break;
+            }
+            case json::parse_event_t::value:
+            {
+                if (error_key.size() > 0)
+                {
+                    stringstream ss;
+                    ss << "config element {" << error_key << ": " << parsed << "} is not understood";
+                    if (distance < error_key.size() / 2)
+                    {
+                        ss << ", did you mean '" << suggestion << "'";
+                    }
+                    throw invalid_argument(ss.str());
+                }
+                break;
+            }
+            default:
+                break;
             }
         }
         return true;
     };
 
     // type is required only for the top-level config
-    auto obj = js.find("type");
-    if (obj != js.end())
-    {
-        string type = obj.value();
-        ignore_list = split(type, ',');
-    }
+    // auto obj = js.find("type");
+    // if (obj != js.end())
+    // {
+    //     string type = obj.value();
+    //     ignore_list = split(type, ',');
+    // }
 
     string text;
     try
