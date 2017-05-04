@@ -91,8 +91,8 @@ public:
         return rc;
     }
 
-    size_t record_count() const { return 100; }
-    size_t elements_per_record() const { return 1; }
+    size_t record_count() const override { return 100; }
+    size_t elements_per_record() const override { return 1; }
 };
 
 TEST(async_manager, source)
