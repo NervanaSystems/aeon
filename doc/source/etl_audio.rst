@@ -82,20 +82,24 @@ The complete table of configuration parameters is shown below:
     noise_level (tuple(float, float))| (0.0, 0.5) | How much noise to add (a value of 1 would be 0 dB SNR). Each clip applies its own value chosen randomly from with the given bounds.
     add_noise_probability (float)| 0.0 | Probability of adding noise
     time_scale_fraction (tuple(float, float))| (1.0, 1.0) | Scale factor for simple linear time-warping. Each clip applies its own value chosen randomly from with the given bounds.
+    emit_length (bool) | False | Produce a buffer indicating the length of the audio output buffer
     output_type (string)| ~"uint8_t~"| Output data type. If feature_type = "samples" then this should be "int16" or "float". Otherwise it should stay at "uint8_t".
 
 You can configure the audio processing pipeline from python using a dictionary like the following:
 
 .. code-block:: python
 
-    audio_config = dict(sample_freq_hz=16000,
-                        max_duration="3 seconds",
-                        frame_length="256 samples",
-                        frame_stride="128 samples",
-                        window_type="hann",
-                        noise_index_file="/path/to/noise_index_file",
-                        add_noise_probability=0.5,
-                        noise_level=(0.5, 1.0))
+    audio_config = {"type": "audio",
+                    "sample_freq_hz": 16000,
+                    "max_duration": "3 seconds",
+                    "frame_length": "256 samples",
+                    "frame_stride": "128 samples",
+                    "noise_index_file": "/path/to/noise_index_file",
+                    "window_type": "hann"}
+
+    augmentation_config = {"type": "audio",
+                           "add_noise_probability": 0.5,
+                           "noise_level": (0.5, 1.0)}
 
 When providing audio only, the buffers provisioned to the model are:
 
@@ -105,7 +109,8 @@ When providing audio only, the buffers provisioned to the model are:
    :delim: |
    :escape: ~
 
-   0 | Audio | ``(F*T, N)`` | Transfomed audio, where ``F = number of bands``, ``T = max timepoints``, and ``N = bsz`` (the batch size).
+   0 | audio | ``(F*T, N)`` | Transfomed audio, where ``F = number of bands``, ``T = max timepoints``, and ``N = bsz`` (the batch size).
+   1 | audio_length | ``(N)`` | Length of audio buffer in ``output_type`` units.  Only produced if ``emit_length`` is true in the configuration.
 
 Classification
 --------------
@@ -141,8 +146,9 @@ The buffers provisioned to the model are then:
   :delim: |
   :escape: ~
 
-   0 | Audio | ``(F*T, N)`` | Transfomed audio, where ``F = number of bands``, ``T = max timepoints``, and ``N = bsz`` (the batch size).
-   1 | Labels | ``(1, N)`` | Class label for each example. Note that this buffer is not in one-hot format.
+   0 | audio | ``(F*T, N)`` | Transfomed audio, where ``F = number of bands``, ``T = max timepoints``, and ``N = bsz`` (the batch size).
+   1 | audio_length | ``(N)`` | Length of audio buffer in ``output_type`` units.  Only produced if ``emit_length`` is true in the configuration.
+   2 | label | ``(1, N)`` | Class label for each example. Note that this buffer is not in one-hot format.
 
 Transcription
 -------------
@@ -163,11 +169,11 @@ Transcription provisioning can be configured using the following parameters:
    :delim: |
    :escape: ~
 
-   alphabet (string)| *Required* | A string of symbols to be included in the target output
+   alphabet (string)| *Required* | A string of symbols to be included in the target output (utf-8 input is supported)
    max_length (uint32_t) | *Required* | Maximum number of symbols in a target
-   unknown_value (uint8_t) | 0 | Integer value to give to unknown characters. 0 causes them to be discarded. Value should be between ``len(alphabet)`` and 255.
-   pack_for_ctc (bool) | False | Packs the output buffer to be passed to the `warp CTC`_ objective function
-   output_type (string) | ~"uint8_t~" | transcript data type
+   unknown_value (uint32_t) | 0 | Integer value to give to unknown characters. 0 causes them to be discarded.
+   emit_length (bool) | False | Produce a buffer indicating the length of the input string
+   output_type (string) | ~"uint32_t~" | transcript data type
 
 .. code-block:: python
 

@@ -70,4 +70,4 @@ The buffers provisioned to the model are then:
     :escape: ~
 
     char_map | ``(N, C)`` | Transcripts, where ``C = max transcript length``.
-    length | ``(N)`` | Length of each transcript (``uint32_t``).  Only produced if ``emit_length`` is true in the configuration.
+    char_map_length | ``(N)`` | Length of each transcript (``uint32_t``).  Only produced if ``emit_length`` is true in the configuration.

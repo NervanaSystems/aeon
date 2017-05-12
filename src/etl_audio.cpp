@@ -128,4 +128,10 @@ void audio::loader::load(const vector<void*>& outbuf, shared_ptr<audio::decoded>
     cv::Mat dst(_cfg.freq_steps, _cfg.time_steps, cv_type, (void*)outbuf[0]);
     cv::transpose(padded_frames, dst);
     cv::flip(dst, dst, 0);
+
+    if (_cfg.emit_length)
+    {
+        uint32_t* length_buf = (uint32_t*)outbuf[1];
+        *length_buf          = input->size();
+    }
 }

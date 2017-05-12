@@ -98,7 +98,7 @@ TEST(provider, transcript_length_check)
     // Ensure that we have two output buffers (an extra one for the transcript length since emit_length == true)
     ASSERT_EQ(2, buf_names.size());
     ASSERT_NE(find(buf_names.begin(), buf_names.end(), "char_map"), buf_names.end());
-    ASSERT_NE(find(buf_names.begin(), buf_names.end(), "length"), buf_names.end());
+    ASSERT_NE(find(buf_names.begin(), buf_names.end(), "char_map_length"), buf_names.end());
 
     size_t batch_size = 4;
 
@@ -125,7 +125,7 @@ TEST(provider, transcript_length_check)
     // Check that the lengths are emitted as expected
     for (int i = 0; i < batch_size; i++)
     {
-        uint32_t target_length = unpack<uint32_t>(out_buf["length"]->get_item(i));
+        uint32_t target_length = unpack<uint32_t>(out_buf["char_map_length"]->get_item(i));
         EXPECT_EQ(target_length, expected_lengths[i]);
     }
 
@@ -147,7 +147,6 @@ TEST(provider, transcript_length_check)
     }
 }
 
-
 TEST(provider, audio_transcript)
 {
     nlohmann::json js_audio = {{"type", "audio"},
@@ -155,23 +154,22 @@ TEST(provider, audio_transcript)
                                {"frame_length", "1024 samples"},
                                {"frame_stride", "256 samples"},
                                {"sample_freq_hz", 44100},
-                               {"feature_type", "specgram"}};
+                               {"feature_type", "specgram"},
+                               {"emit_length", true}};
     std::string alphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()");
 
-    nlohmann::json js_transcript = {{"type", "char_map"},
-                                     {"alphabet", alphabet},
-                                     {"max_length", 50},
-                                     {"emit_length", true}};
+    nlohmann::json js_transcript = {
+        {"type", "char_map"}, {"alphabet", alphabet}, {"max_length", 50}, {"emit_length", true}};
     nlohmann::json js = {{"etl", {js_audio, js_transcript}}};
 
     // Create the config
-    auto media     = nervana::provider_factory::create(js);
+    auto media = nervana::provider_factory::create(js);
 
     // Create the character map that should be in the provider
     std::unordered_map<wchar_t, uint32_t> cmap;
-    uint32_t idx = 0;
+    uint32_t     idx        = 0;
     std::wstring w_alphabet = to_wstring(alphabet);
-    for (auto& c: w_alphabet)
+    for (auto& c : w_alphabet)
     {
         cmap.insert({std::towupper(c), idx++});
     }
@@ -188,7 +186,7 @@ TEST(provider, audio_transcript)
     vector<char> tr1_char(tr[1].begin(), tr[1].end());
 
     // Create the input buffer
-    size_t batch_size = 128;
+    size_t              batch_size = 128;
     encoded_record_list bp;
     for (int i = 0; i < batch_size; i++)
     {
@@ -197,7 +195,6 @@ TEST(provider, audio_transcript)
         record.add_element(((i % 2) == 0 ? tr0_char : tr1_char));
         bp.add_record(record);
     }
-    EXPECT_EQ(bp.size(), batch_size);
     EXPECT_EQ(bp.size(), batch_size);
 
     // Generate output buffers using shapes from the provider
@@ -213,21 +210,20 @@ TEST(provider, audio_transcript)
     // Check target sequences against their source string
     for (int i = 0; i < batch_size; i++)
     {
-        auto  orig_string = tr[i % 2];
-        int j = 0;
+        auto orig_string = tr[i % 2];
+        int  j           = 0;
         for (auto c : orig_string)
         {
             uint32_t loaded_transcript_j = unpack<uint32_t>(out_buf["char_map"]->get_item(i), j);
             ASSERT_EQ(loaded_transcript_j, cmap[std::towupper(c)]);
             j += sizeof(uint32_t);
-
         }
     }
 
-    // Check the transcript lengths match source string length
+    // Check the audio and transcript lengths match source string length
     for (int i = 0; i < batch_size; i++)
     {
-        ASSERT_EQ(unpack<uint32_t>(out_buf["length"]->get_item(i)), tr[i % 2].length());
+        ASSERT_EQ(unpack<uint32_t>(out_buf["audio_length"]->get_item(i)), wav.nsamples());
+        ASSERT_EQ(unpack<uint32_t>(out_buf["char_map_length"]->get_item(i)), tr[i % 2].length());
     }
-
 }

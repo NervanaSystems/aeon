@@ -169,6 +169,7 @@ private:
     nervana::audio::loader        m_loader;
     augment::audio::param_factory m_augmentation_factory;
     const std::string             m_buffer_name;
+    const std::string             m_length_name;
 };
 
 //=================================================================================================

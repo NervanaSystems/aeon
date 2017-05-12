@@ -226,8 +226,14 @@ custom_provider::audio::audio(nlohmann::json js, nlohmann::json aug)
     , m_loader{m_config}
     , m_augmentation_factory{aug}
     , m_buffer_name{create_name(m_config.name, "audio")}
+    , m_length_name{create_name(m_config.name, "audio_length")}
 {
-    m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
+    auto os = m_config.get_shape_type_list();
+    m_output_shapes.insert({m_buffer_name, os[0]});
+    if (m_config.emit_length)
+    {
+        m_output_shapes.insert({m_length_name, os[1]});
+    }
 }
 
 void custom_provider::audio::provide(int                        idx,
@@ -249,7 +255,16 @@ void custom_provider::audio::provide(int                        idx,
         params                    = m_augmentation_factory.make_params();
         aug.m_audio_augmentations = params;
     }
-    m_loader.load({datum_out}, m_transformer.transform(params, decoded));
+    auto transformed = m_transformer.transform(params, decoded);
+    if (m_config.emit_length)
+    {
+        char* length_out = out_buf[m_length_name]->get_item(idx);
+        m_loader.load({datum_out, length_out}, transformed);
+    }
+    else
+    {
+        m_loader.load({datum_out}, transformed);
+    }
 }
 
 //=================================================================================================
@@ -504,7 +519,7 @@ custom_provider::char_map::char_map(nlohmann::json js)
     , m_extractor{m_config}
     , m_loader{m_config}
     , m_buffer_name{create_name(m_config.name, "char_map")}
-    , m_length_name{create_name(m_config.name, "length")}
+    , m_length_name{create_name(m_config.name, "char_map_length")}
 {
     auto os = m_config.get_shape_type_list();
     m_output_shapes.insert({m_buffer_name, os[0]});

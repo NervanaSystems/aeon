@@ -281,6 +281,79 @@ TEST(audio, samples_out)
     delete[] databuf;
 }
 
+TEST(audio, emit_length)
+{
+    auto js     = R"(
+        {
+            "feature_type": "samples",
+            "output_type": "int16_t",
+            "max_duration": "3 seconds",
+            "frame_length": "1 samples",
+            "frame_stride": "1 samples",
+            "sample_freq_hz": 16000,
+            "emit_length": true
+        }
+    )"_json;
+    auto js_aug = R"(
+        {
+            "type": "audio"
+        }
+    )"_json;
+
+    float              sine_freq = 400;
+    int16_t            sine_ampl = 500;
+    sinewave_generator sg{sine_freq, sine_ampl};
+    int                wav_len_sec = 2, sample_freq = 16000;
+    int                wav_samples = wav_len_sec * sample_freq;
+    bool               stereo      = false;
+
+    wav_data wav(sg, wav_len_sec, sample_freq, stereo);
+    uint32_t bufsize = wav_data::HEADER_SIZE + wav.nbytes();
+    char*    databuf = new char[bufsize];
+
+    wav.write_to_buffer(databuf, bufsize);
+
+    audio::config config(js);
+
+    audio::extractor              extractor;
+    audio::transformer            _audioTransformer(config);
+    audio::loader                 _audioLoader(config);
+    augment::audio::param_factory factory(js_aug);
+    auto                          decoded_audio = extractor.extract(databuf, bufsize);
+    auto                          audioParams   = factory.make_params();
+
+    cv::Mat          output_samples(1, config.max_duration_tn, CV_16SC1);
+    vector<uint32_t> output_length(1);
+    auto             xformed_audio = _audioTransformer.transform(audioParams, decoded_audio);
+
+    auto shape = config.get_shape_type();
+    ASSERT_EQ(shape.get_shape()[0], 1);
+    ASSERT_EQ(shape.get_shape()[1], 1);
+    ASSERT_EQ(shape.get_shape()[2], config.max_duration_tn);
+    ASSERT_EQ(decoded_audio->get_freq_data().rows, wav_samples);
+
+    _audioLoader.load({output_samples.data, output_length.data()}, decoded_audio);
+
+    EXPECT_EQ(output_length[0], wav.nsamples());
+
+    bool all_eq = true;
+
+    for (int i = 0; i < wav_samples; i++)
+    {
+        size_t  offset = i * sizeof(int16_t);
+        int16_t waddr  = unpack<int16_t>(wav.get_raw_data()[0] + offset);
+        if (waddr != output_samples.at<int16_t>(0, i))
+        {
+            all_eq = false;
+            break;
+        }
+    }
+
+    ASSERT_EQ(all_eq, true);
+
+    delete[] databuf;
+}
+
 TEST(etl, sox_use)
 {
     sinewave_generator sg{400, 500};

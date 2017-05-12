@@ -117,6 +117,9 @@ public:
     /** Offset from start of noise file */
     std::uniform_real_distribution<float> noise_offset_fraction{0.0f, 1.0f};
 
+    /** Whether to also output length of the buffer */
+    bool emit_length = false;
+
     /** \brief Parses the configuration JSON
     */
     config(nlohmann::json js)
@@ -177,6 +180,11 @@ public:
 
         add_noise = std::bernoulli_distribution{add_noise_probability};
         add_shape_type({1, freq_steps, time_steps}, {"channels", "frequency", "time"}, output_type);
+        if (emit_length)
+        {
+            add_shape_type({1}, "uint32_t");
+        }
+
         validate();
     }
 
@@ -234,6 +242,7 @@ private:
         // ADD_DISTRIBUTION(noise_index, mode::OPTIONAL),
         ADD_DISTRIBUTION(
             noise_level, mode::OPTIONAL, [](decltype(noise_level) v) { return v.a() <= v.b(); }),
+        ADD_SCALAR(emit_length, mode::OPTIONAL),
     };
 
     void parse_samples_or_seconds(const std::string& unit, float& ms, uint32_t& tn)
