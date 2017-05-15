@@ -48,6 +48,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-double-promotion")
 
 find_package(OpenCV REQUIRED)
+if(OpenCV_VERSION VERSION_LESS "2.4.8")
+  message(FATAL_ERROR "ERROR: Can't find OpenCV 2.4.8+")
+endif()
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # opecv_ts is for testing opencv. if it is left in the lib list then we get an error when
