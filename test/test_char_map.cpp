@@ -89,19 +89,20 @@ TEST(char_map, test)
         EXPECT_EQ(26, data[' ']);
         EXPECT_EQ(36, data[L'𐍈']);
 
-        // Make sure mapping is correct and extra characters are mapped to 0
+        // Make sure mapping is correct
         {
-            vector<int> expected = {19, 7,  4,  26, 16, 20, 8,  2,  10, 26, 1,  17, 14, 22, 13,
-                                    26, 5,  14, 23, 26, 9,  20, 12, 15, 18, 26, 14, 21, 4,  17,
-                                    26, 19, 7,  4,  26, 11, 0,  25, 24, 26, 3,  14, 6,  27, 26,
-                                    34, 14, 33, 31, 3,  35, 26, 36, 37, 0,  0,  0,  0,  0};
-            auto decoded = extractor.extract(&transcript[0], transcript.size());
+            vector<int> expected = {19, 7,  4,  26, 16, 20, 8,  2,  10, 26, 1,  17, 14, 22,
+                                    13, 26, 5,  14, 23, 26, 9,  20, 12, 15, 18, 26, 14, 21,
+                                    4,  17, 26, 19, 7,  4,  26, 11, 0,  25, 24, 26, 3,  14,
+                                    6,  27, 26, 34, 14, 33, 31, 3,  35, 26, 36, 37};
+            auto decoded = extractor.extract(&transcript[0], transcript_size);
             // decoded exists
             ASSERT_NE(nullptr, decoded);
             // has the right length
-            EXPECT_EQ(expected.size(), max_length);
+            ASSERT_EQ(expected.size(), transcript_size);
+            EXPECT_EQ(decoded->get_length(), transcript_size);
             // and the right values
-            for (int i = 0; i < expected.size(); i++)
+            for (int i = 0; i < decoded->get_length(); i++)
             {
                 EXPECT_EQ(expected[i], decoded->get_data()[i]) << "at index " << i;
             }

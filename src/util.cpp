@@ -27,6 +27,10 @@ using namespace std;
 
 map<string, nervana::stopwatch*> nervana::stopwatch_statistics;
 
+static string multibyte_conversion_error_message =
+    "multibyte to wide characters conversion error (it's possible that locale LC_CTYPE environment "
+    "variable needs to be set to some UTF-8 variant)";
+
 void nervana::dump(ostream& out, const void* _data, size_t _size)
 {
     auto           flags = out.flags();
@@ -131,13 +135,22 @@ std::wstring nervana::to_wstring(const string& s, size_t max_size)
     max_size = std::min(s.size(), max_size);
     std::shared_ptr<wchar_t> buffer(new wchar_t[max_size], std::default_delete<wchar_t[]>());
     size_t                   size = std::mbstowcs(buffer.get(), s.c_str(), max_size);
+    if (static_cast<int>(size) == -1)
+    {
+        throw runtime_error(multibyte_conversion_error_message);
+    }
 
     return wstring(buffer.get(), size);
 }
 
 size_t nervana::wstring_length(const string& s)
 {
-    return std::mbstowcs(NULL, s.c_str(), s.size());
+    size_t size = std::mbstowcs(NULL, s.c_str(), s.size());
+    if (static_cast<int>(size) == -1)
+    {
+        throw runtime_error(multibyte_conversion_error_message);
+    }
+    return size;
 }
 
 int nervana::LevenshteinDistance(const string& s, const string& t)
