@@ -1,3 +1,7 @@
+# gtest warnings
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-shift-sign-overflow")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-noreturn")
+
 set (SRC
     gen_image.cpp
     helpers.cpp
@@ -32,16 +36,8 @@ set (SRC
     test_video.cpp
     test_raw_image.cpp
 )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
 
-find_package(GTest)
-if (GTEST_FOUND)
-    include_directories(SYSTEM ${GTEST_INCLUDE_DIR})
-
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
-
-    add_executable(test ${SRC})
-    target_link_libraries(test aeon pthread sox ${CURL_LIBRARIES} ${GTEST_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
-    add_dependencies(test aeon)
-else()
-    message("gtest not found, skipping unit tests")
-endif(GTEST_FOUND)
+add_executable(test ${SRC})
+target_link_libraries(test aeon pthread sox ${CURL_LIBRARIES} gtest ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
+add_dependencies(test aeon)

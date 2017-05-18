@@ -1,4 +1,8 @@
 cmake_minimum_required (VERSION 2.8.11)
+
+# Set this flag before project definition to avoid using other compiler by gtest
+set(CMAKE_CXX_COMPILER "clang++")
+
 project (aeon)
 
 set(AEON_VERSION 1.0.0)
@@ -9,7 +13,6 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-set(CMAKE_CXX_COMPILER "clang++")
 set(CMAKE_CXX_FLAGS "-O3 -std=c++11")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
@@ -81,6 +84,10 @@ endif (PYTHONLIBS_FOUND)
 
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 
+include_directories(BEFORE gtest/include)
+set(BUILD_SHARED_LIBS off)
+add_subdirectory(gtest)
+set(BUILD_SHARED_LIBS on)
 add_subdirectory(src)
 include_directories(src)
 add_subdirectory(test)
