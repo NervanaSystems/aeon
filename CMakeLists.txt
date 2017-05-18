@@ -93,4 +93,4 @@ include_directories(src)
 add_subdirectory(test)
 add_subdirectory(examples)
 add_subdirectory(doc)
-
+include(clang-format.cmake)
