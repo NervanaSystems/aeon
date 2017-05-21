@@ -152,6 +152,8 @@ void loader::initialize(nlohmann::json& config_json)
         m_debug_web_app = make_shared<web_app>(lcfg.web_server_port);
         m_debug_web_app->register_loader(this);
     }
+
+    m_current_iter.m_empty_buffer.add_items(get_names_and_shapes(), (size_t)batch_size());
 }
 
 const vector<string>& loader::get_buffer_names() const
@@ -214,7 +216,18 @@ bool loader::iterator::positional_end() const
 
 const fixed_buffer_map& loader::iterator::operator*() const
 {
-    return *(m_current_loader.m_output_buffer_ptr);
+    const fixed_buffer_map* rc = nullptr;
+
+    if (m_current_loader.m_output_buffer_ptr)
+    {
+        rc = m_current_loader.m_output_buffer_ptr;
+    }
+    else
+    {
+       rc = &m_empty_buffer;
+    }
+
+    return *rc;
 }
 
 void loader::increment_position()

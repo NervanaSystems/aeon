@@ -185,16 +185,18 @@ public:
                      size_t batch_size,
                      bool   pinned = false)
     {
-        for (auto sz : write_sizes)
-        {
-            add_item(sz.first, sz.second, batch_size, pinned);
-        }
+        add_items(write_sizes, batch_size, pinned);
     }
 
-    // explicit fixed_buffer_map(const fixed_buffer_map& rhs)
-    // {
-
-    // }
+    void add_items(const std::map<std::string, shape_type>& write_sizes,
+                     size_t batch_size,
+                     bool   pinned = false)
+    {
+         for (auto sz : write_sizes)
+         {
+             add_item(sz.first, sz.second, batch_size, pinned);
+         }
+     }
 
     void add_item(const std::string& name,
                   const shape_type&  shp_tp,
