@@ -125,7 +125,7 @@ The dataloader configuration consists of a base loader configuration, then indiv
 .. code-block:: python
 
     import json
-    from aeon import Dataloader
+    from aeon import DataLoader
 
     image_config =        {"type": "image",
                            "height": 224,
@@ -142,7 +142,7 @@ The dataloader configuration consists of a base loader configuration, then indiv
                            "augment": (augmentation_config),
                            "batch_size": 128}
 
-    train_set = Dataloader(json.dumps(aeon_config))
+    train_set = DataLoader(json.dumps(aeon_config))
 
 
 Importantly, the ``type`` key indicates to the dataloader which input data type to expect, and the ``image`` and ``label`` keys correspond to additional configuration dictionaries. The dataloader currently supports:
@@ -220,6 +220,6 @@ The above configuration will, for each image, take a random crop of 224x224 pixe
     import json
     from aeon import DataLoader
 
-    train_set = Dataloader(json.dumps(aeon_config))
+    train_set = DataLoader(json.dumps(aeon_config))
 
 The backend argument above from neon tells the dataloader where to place the buffers to provision to the model.
