@@ -13,7 +13,16 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-set(CMAKE_CXX_FLAGS "-O3 -std=c++11")
+option(COVERAGE "make code coverage" OFF)
+
+if(COVERAGE)
+  set(CMAKE_CXX_FLAGS "-O0 -g --coverage")
+  set(LCOVERAGE "--coverage")
+else(COVERAGE)
+  set(CMAKE_CXX_FLAGS "-O3")
+endif(COVERAGE)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=return-type")
@@ -94,3 +103,4 @@ add_subdirectory(test)
 add_subdirectory(examples)
 add_subdirectory(doc)
 include(clang-format.cmake)
+include(coverage.cmake)
