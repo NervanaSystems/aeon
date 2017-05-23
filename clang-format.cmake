@@ -10,5 +10,5 @@ list(REMOVE_ITEM STYLE_SRC "${PROJECT_SOURCE_DIR}/src/json.hpp")
 
 add_custom_target(
 	style
-	COMMAND /usr/bin/clang-format -style=file
+	COMMAND clang-format -style=file
 	-i ${STYLE_SRC})
