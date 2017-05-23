@@ -50,26 +50,21 @@ high and low level build systems)::
     ninja && ninja install
 
 
-## Unit test dependencies
+## Code coverage
 
-Unit tests in aeon depend on [gtest](https://github.com/google/googletest):
+    Code coverage in aeon depend on llvm-cov and lcov.
+    raport will be generated in html-coverage-raport/index.html
 
-### Ubuntu:
+    Example:
 
-    sudo apt-get install libgtest-dev
-    cd /usr/src/gtest
-    sudo cmake .  sudo make
-    sudo mv libg* /usr/local/lib/
-
-### OSX:
-
-    brew install cmake
-    git clone https://github.com/google/googletest.git
-    cd googletest
-    cmake .
-    make -j
-    make install
-
+    sudo apt-get install llvm lcov
+    mkdir build
+    cd build
+    # COVERAGE flag must be set to generate coverage raport
+    cmake .. -DCOVERAGE=ON
+    # If you want to generate raport when unit test fail: make -i coverage
+    make coverage
+    links html-coverage-raport/index.html
 
 ### To install aeon:
 
