@@ -35,7 +35,7 @@ extern "C" {
 #define PYOBJ_TAIL_INIT
 #endif
 
-#define DL_get_loader(v) (((aeon_Dataloader*)(v))->m_loader)
+#define DL_get_loader(v) (((aeon_DataLoader*)(v))->m_loader)
 
 struct aeon_state
 {
@@ -68,25 +68,25 @@ typedef struct
     PyObject*               axes_info;
     loader*                 m_loader;
     uint32_t                m_i;
-} aeon_Dataloader;
+} aeon_DataLoader;
 
 static PyMethodDef aeon_methods[] = {{"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
                                      {NULL, NULL, NULL, NULL}};
 
-static PyObject* Dataloader_iter(PyObject* self)
+static PyObject* DataLoader_iter(PyObject* self)
 {
 #ifdef AEON_DEBUG
-    INFO << " aeon_Dataloader_iter";
+    INFO << " aeon_DataLoader_iter";
 #endif
     Py_INCREF(self);
     DL_get_loader(self)->reset();
     return self;
 }
 
-static PyObject* Dataloader_iternext(PyObject* self)
+static PyObject* DataLoader_iternext(PyObject* self)
 {
 #ifdef AEON_DEBUG
-    INFO << " aeon_Dataloader_iternext";
+    INFO << " aeon_DataLoader_iternext";
 #endif
     PyObject* result = NULL;
     if (DL_get_loader(self)->get_current_iter() != DL_get_loader(self)->get_end_iter())
@@ -121,15 +121,15 @@ static PyObject* Dataloader_iternext(PyObject* self)
     return result;
 }
 
-static Py_ssize_t aeon_Dataloader_length(PyObject* self)
+static Py_ssize_t aeon_DataLoader_length(PyObject* self)
 {
 #ifdef AEON_DEBUG
-    INFO << " aeon_Dataloader_length " << DL_get_loader(self)->record_count();
+    INFO << " aeon_DataLoader_length " << DL_get_loader(self)->record_count();
 #endif
     return DL_get_loader(self)->record_count();
 }
 
-static PySequenceMethods Dataloader_sequence_methods = {aeon_Dataloader_length, /* sq_length */
+static PySequenceMethods DataLoader_sequence_methods = {aeon_DataLoader_length, /* sq_length */
                                                         0,                      /* sq_length */
                                                         0,                      /* sq_concat */
                                                         0,                      /* sq_repeat */
@@ -190,10 +190,10 @@ static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf)
     return p_array;
 }
 
-static void Dataloader_dealloc(aeon_Dataloader* self)
+static void DataLoader_dealloc(aeon_DataLoader* self)
 {
 #ifdef AEON_DEBUG
-    INFO << " Dataloader_dealloc";
+    INFO << " DataLoader_dealloc";
 #endif
     if (self->m_loader != nullptr)
     {
@@ -205,12 +205,12 @@ static void Dataloader_dealloc(aeon_Dataloader* self)
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
-static PyObject* Dataloader_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
+static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
 #ifdef AEON_DEBUG
-    INFO << " Dataloader_new";
+    INFO << " DataLoader_new";
 #endif
-    aeon_Dataloader* self = nullptr;
+    aeon_DataLoader* self = nullptr;
 
     static const char* keyword_list[] = {"config", nullptr};
 
@@ -224,7 +224,7 @@ static PyObject* Dataloader_new(PyTypeObject* type, PyObject* args, PyObject* kw
 #ifdef AEON_DEBUG
         INFO << " config " << json_config.dump(4);
 #endif
-        self = (aeon_Dataloader*)type->tp_alloc(type, 0);
+        self = (aeon_DataLoader*)type->tp_alloc(type, 0);
         if (!self)
         {
             return NULL;
@@ -281,7 +281,7 @@ static PyObject* Dataloader_new(PyTypeObject* type, PyObject* args, PyObject* kw
     return (PyObject*)self;
 }
 
-static int Dataloader_init(aeon_Dataloader* self, PyObject* args, PyObject* kwds)
+static int DataLoader_init(aeon_DataLoader* self, PyObject* args, PyObject* kwds)
 {
     return 0;
 }
@@ -295,37 +295,37 @@ static PyObject* aeon_reset(PyObject* self, PyObject*)
     return Py_None;
 }
 
-static PyMethodDef Dataloader_methods[] = {
-    //    {"Dataloader",  aeon_myiter, METH_VARARGS, "Iterate from i=0 while i<m."},
+static PyMethodDef DataLoader_methods[] = {
+    //    {"DataLoader",  aeon_myiter, METH_VARARGS, "Iterate from i=0 while i<m."},
     // {"shapes", aeon_shapes, METH_NOARGS, "Get output shapes"},
     {"reset", aeon_reset, METH_NOARGS, "Reset iterator"},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
-static PyMemberDef Dataloader_members[] = {
-    {(char*)"ndata", T_OBJECT_EX, offsetof(aeon_Dataloader, ndata), 0, (char*)"number of records in dataset"},
-    {(char*)"batch_size", T_OBJECT_EX, offsetof(aeon_Dataloader, batch_size), 0, (char*)"mini-batch size"},
-    {(char*)"axes_info", T_OBJECT_EX, offsetof(aeon_Dataloader, axes_info), 0, (char*)"axes names and lengths"},
+static PyMemberDef DataLoader_members[] = {
+    {(char*)"ndata", T_OBJECT_EX, offsetof(aeon_DataLoader, ndata), 0, (char*)"number of records in dataset"},
+    {(char*)"batch_size", T_OBJECT_EX, offsetof(aeon_DataLoader, batch_size), 0, (char*)"mini-batch size"},
+    {(char*)"axes_info", T_OBJECT_EX, offsetof(aeon_DataLoader, axes_info), 0, (char*)"axes names and lengths"},
     {NULL, NULL, 0, 0, NULL} /* Sentinel */
 };
 
-static PyTypeObject aeon_DataloaderType = {
+static PyTypeObject aeon_DataLoaderType = {
 #ifdef IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL) 0,
 #endif
-        "aeon.Dataloader",                                           /*tp_name*/
-    sizeof(aeon_Dataloader),                                         /*tp_basicsize*/
+        "aeon.DataLoader",                                           /*tp_name*/
+    sizeof(aeon_DataLoader),                                         /*tp_basicsize*/
     0,                                                               /*tp_itemsize*/
-    (destructor)Dataloader_dealloc,                                  /*tp_dealloc*/
+    (destructor)DataLoader_dealloc,                                  /*tp_dealloc*/
     0,                                                               /*tp_print*/
     0,                                                               /*tp_getattr*/
     0,                                                               /*tp_setattr*/
     0,                                                               /*tp_compare*/
     0,                                                               /*tp_repr*/
     0,                                                               /*tp_as_number*/
-    &Dataloader_sequence_methods,                                    /*tp_as_sequence*/
+    &DataLoader_sequence_methods,                                    /*tp_as_sequence*/
     0,                                                               /*tp_as_mapping*/
     0,                                                               /*tp_hash */
     0,                                                               /*tp_call*/
@@ -339,19 +339,19 @@ static PyTypeObject aeon_DataloaderType = {
     0,                                                               /* tp_clear */
     0,                                                               /* tp_richcompare */
     0,                                                               /* tp_weaklistoffset */
-    Dataloader_iter,                                                 /* tp_iter */
-    Dataloader_iternext,                                             /* tp_iternext */
-    Dataloader_methods,                                              /* tp_methods */
-    Dataloader_members,                                              /* tp_members */
+    DataLoader_iter,                                                 /* tp_iter */
+    DataLoader_iternext,                                             /* tp_iternext */
+    DataLoader_methods,                                              /* tp_methods */
+    DataLoader_members,                                              /* tp_members */
     0,                                                               /* tp_getset */
     0,                                                               /* tp_base */
     0,                                                               /* tp_dict */
     0,                                                               /* tp_descr_get */
     0,                                                               /* tp_descr_set */
     0,                                                               /* tp_dictoffset */
-    (initproc)Dataloader_init,                                       /* tp_init */
+    (initproc)DataLoader_init,                                       /* tp_init */
     0,                                                               /* tp_alloc */
-    Dataloader_new,                                                  /* tp_new */
+    DataLoader_new,                                                  /* tp_new */
     0,                                                               /* tp_free */
     0,                                                               /* tp_is_gc */
     0,                                                               /* tp_bases */
@@ -378,7 +378,7 @@ static int aeon_clear(PyObject* m)
 
 static struct PyModuleDef aeonmodule = {PyModuleDef_HEAD_INIT,
                                         "aeon",
-                                        "Dataloader containing module",
+                                        "DataLoader containing module",
                                         sizeof(struct aeon_state),
                                         aeon_methods,
                                         NULL,
@@ -396,7 +396,7 @@ PyMODINIT_FUNC initaeon(void)
 #endif
 
     PyObject* m;
-    if (PyType_Ready(&aeon_DataloaderType) < 0)
+    if (PyType_Ready(&aeon_DataLoaderType) < 0)
     {
         INITERROR;
     }
@@ -409,15 +409,15 @@ PyMODINIT_FUNC initaeon(void)
 #ifdef IS_PY3K
     m = PyModule_Create(&aeonmodule);
 #else
-    m = Py_InitModule3("aeon", aeon_methods, "Dataloader containing module");
+    m = Py_InitModule3("aeon", aeon_methods, "DataLoader containing module");
 #endif
     if (m == NULL)
     {
         INITERROR;
     }
 
-    Py_INCREF(&aeon_DataloaderType);
-    PyModule_AddObject(m, "Dataloader", (PyObject*)&aeon_DataloaderType);
+    Py_INCREF(&aeon_DataLoaderType);
+    PyModule_AddObject(m, "DataLoader", (PyObject*)&aeon_DataLoaderType);
 
 #ifdef IS_PY3K
     return m;

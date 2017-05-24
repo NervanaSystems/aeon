@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-from aeon import Dataloader
+from aeon import DataLoader
 import json
 
 pdir = os.path.dirname(os.path.abspath(__file__))
@@ -25,7 +25,7 @@ cfg = {
            ]
         }
 
-d1 = Dataloader(config=json.dumps(cfg))
+d1 = DataLoader(config=json.dumps(cfg))
 print("d1 length {0}".format(len(d1)))
 
 shapes = d1.axes_info
