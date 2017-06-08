@@ -28,7 +28,7 @@ namespace nervana
     typedef uint32_t source_uid_t;
 }
 
-class nervana::block_loader_source : public async_manager_source<encoded_record_list>
+class nervana::block_loader_source : public virtual async_manager_source<encoded_record_list>
 {
 public:
     virtual ~block_loader_source() {}

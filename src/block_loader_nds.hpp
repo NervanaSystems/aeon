@@ -41,7 +41,6 @@ public:
     virtual ~block_loader_nds() { finalize(); }
     encoded_record_list* filler() override;
 
-    void                 reset() override { m_manifest.reset(); }
     size_t               record_count() const override { return m_record_count; }
     size_t               block_size() const override { return m_block_size; }
     size_t               block_count() const override { return m_block_count; }
