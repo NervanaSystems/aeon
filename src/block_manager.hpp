@@ -69,7 +69,7 @@ private:
     std::string          m_cache_dir;
     bool                 m_shuffle_enabled;
     source_uid_t         m_source_uid;
-    int                  m_cache_lock;
+    int                  m_cache_lock = -1;
     size_t               m_cache_hit  = 0;
     size_t               m_cache_miss = 0;
     std::vector<size_t>  m_block_load_sequence;

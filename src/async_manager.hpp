@@ -70,7 +70,7 @@ public:
 };
 
 template <typename INPUT, typename OUTPUT>
-class nervana::async_manager : public nervana::async_manager_source<OUTPUT>,
+class nervana::async_manager : public virtual nervana::async_manager_source<OUTPUT>,
                                public async_manager_info
 {
 public:

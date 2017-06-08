@@ -119,7 +119,7 @@ TEST(util, unpack_be)
         EXPECT_EQ(0x01000000, actual);
     }
     {
-        char data[] = {1, 0, 0, 0};
+        char data[] = {1, 0, 0, 0, 0};
         int  actual = unpack<int>(data, 1, endian::BIG);
         EXPECT_EQ(0, actual);
     }
