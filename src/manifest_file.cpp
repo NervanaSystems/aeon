@@ -93,8 +93,8 @@ void manifest_file::initialize(std::istream&      stream,
                                float              subset_fraction)
 {
     // parse istream is and load the entire thing into m_record_list
-    size_t                 previous_element_count = 0;
-    size_t                 line_number            = 0;
+    size_t                 element_count = 0;
+    size_t                 line_number   = 0;
     string                 line;
     vector<vector<string>> record_list;
 
@@ -148,6 +148,7 @@ void manifest_file::initialize(std::istream&      stream,
                     throw std::invalid_argument(ss.str());
                 }
             }
+            element_count = m_element_types.size();
         }
         else if (line[0] == m_comment_char)
         {
@@ -163,29 +164,24 @@ void manifest_file::initialize(std::istream&      stream,
                 {
                     m_element_types.push_back(element_t::FILE);
                 }
+                element_count = element_list.size();
             }
 
-            if (line_number == 0)
-            {
-                previous_element_count = element_list.size();
-            }
-
-            if (element_list.size() != previous_element_count)
+            if (element_list.size() != element_count)
             {
                 ostringstream ss;
                 ss << "at line: " << line_number;
-                ss << ", manifest file has a line with differing number of files (";
-                ss << element_list.size() << ") vs (" << previous_element_count << "): ";
+                ss << ", manifest file has a line with differing number of elements (";
+                ss << element_list.size() << ") vs (" << element_count << "): ";
 
                 std::copy(element_list.begin(),
                           element_list.end(),
                           ostream_iterator<std::string>(ss, " "));
                 throw std::runtime_error(ss.str());
             }
-            previous_element_count = element_list.size();
             record_list.push_back(element_list);
-            line_number++;
         }
+        line_number++;
     }
 
     affirm(subset_fraction > 0.0 && subset_fraction <= 1.0,

@@ -283,6 +283,43 @@ TEST(manifest, file_implicit)
     }
 }
 
+TEST(manifest, wrong_elements_number)
+{
+    string image_file = "flowers.jpg";
+
+    stringstream ss;
+    ss << "@FILE"
+       << "\t"
+       << "FILE"
+       << "\n";
+
+    ss << image_file << "\n";
+
+    size_t block_size = 1;
+
+    EXPECT_THROW(manifest_file manifest(ss, false, test_data_directory, 1.0, block_size),
+                 std::runtime_error);
+}
+
+TEST(manifest, changing_elements_number)
+{
+    string image_file  = "flowers.jpg";
+    string target_file = "1.txt";
+
+    stringstream ss;
+    ss << "@FILE"
+       << "\t"
+       << "FILE"
+       << "\n";
+
+    ss << image_file << "\t" << target_file << "\n";
+    ss << image_file << "\n";
+
+    size_t block_size = 2;
+
+    EXPECT_THROW(manifest_file manifest(ss, false, test_data_directory, 1.0, block_size),
+                 std::runtime_error);
+}
 TEST(manifest, file_explicit)
 {
     vector<string> image_files  = {"flowers.jpg", "img_2112_70.jpg"};
@@ -674,16 +711,13 @@ TEST(manifest, comma)
 {
     string manifest_file = "tmp_manifest.tsv";
     {
-        int    height     = 224;
-        int    width      = 224;
-        size_t batch_size = 128;
-        nlohmann::json image_config = {{"type", "image"},
-                                       {"height", height},
-                                       {"width", width},
-                                       {"channel_major", false}};
-        nlohmann::json label_config = {{"type", "label"},
-                                       {"binary", false}};
-        nlohmann::json config = {{"manifest_filename", manifest_file},
+        int            height       = 224;
+        int            width        = 224;
+        size_t         batch_size   = 128;
+        nlohmann::json image_config = {
+            {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
+        nlohmann::json label_config = {{"type", "label"}, {"binary", false}};
+        nlohmann::json config       = {{"manifest_filename", manifest_file},
                                  {"batch_size", batch_size},
                                  {"iteration_mode", "INFINITE"},
                                  {"etl", {image_config, label_config}}};

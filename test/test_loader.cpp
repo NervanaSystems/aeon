@@ -400,18 +400,15 @@ TEST(benchmark, imagenet)
         size_t batch_size = 128;
         string manifest   = file_util::path_join(manifest_root, "train-index.tsv");
 
-        nlohmann::json image_config = {{"type", "image"},
-                                       {"height", height},
-                                       {"width", width},
-                                       {"channel_major", false}};
-        nlohmann::json label_config = {{"type", "label"},
-                                       {"binary", false}};
-        nlohmann::json aug_config = {{"type", "image"},
-                                     {"scale", {0.5, 1.0}},
-                                     {"saturation", {0.5, 2.0}},
-                                     {"contrast", {0.5, 1.0}},
-                                     {"brightness", {0.5, 1.0}},
-                                     {"flip_enable", true}};
+        nlohmann::json image_config = {
+            {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
+        nlohmann::json label_config = {{"type", "label"}, {"binary", false}};
+        auto           aug_config   = vector<nlohmann::json>{{{"type", "image"},
+                                           {"scale", {0.5, 1.0}},
+                                           {"saturation", {0.5, 2.0}},
+                                           {"contrast", {0.5, 1.0}},
+                                           {"brightness", {0.5, 1.0}},
+                                           {"flip_enable", true}}};
         nlohmann::json config = {{"manifest_root", manifest_root},
                                  {"manifest_filename", manifest},
                                  {"batch_size", batch_size},
@@ -420,7 +417,7 @@ TEST(benchmark, imagenet)
                                  {"decode_thread_count", 0},
                                  {"web_server_port", 8086},
                                  {"etl", {image_config, label_config}},
-                                 {"augmentation", {aug_config}}};
+                                 {"augmentation", aug_config}};
 
         chrono::high_resolution_clock                     timer;
         chrono::time_point<chrono::high_resolution_clock> start_time;
