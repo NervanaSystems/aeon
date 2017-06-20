@@ -283,7 +283,16 @@ public:
     std::string get_default_value() const override { return dump_default(m_default_value); }
     void parse(nlohmann::json js) override
     {
-        m_parse_function(m_target_variable, m_variable_name, js, m_parse_mode);
+        try
+        {
+            m_parse_function(m_target_variable, m_variable_name, js, m_parse_mode);
+        }
+        catch(const std::exception& ex)
+        {
+            std::stringstream ss;
+            ss << "error when parsing field \"" << m_variable_name << "\": " << ex.what();
+            throw std::invalid_argument(ss.str());
+        }
         if (!m_validate_function(m_target_variable))
         {
             std::stringstream ss;
