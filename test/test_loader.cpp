@@ -422,6 +422,7 @@ TEST(benchmark, imagenet)
         chrono::high_resolution_clock                     timer;
         chrono::time_point<chrono::high_resolution_clock> start_time;
         chrono::time_point<chrono::high_resolution_clock> zero_time;
+        chrono::milliseconds                              total_time{0};
         try
         {
             auto train_set = nervana::loader{config};
@@ -429,7 +430,6 @@ TEST(benchmark, imagenet)
             size_t       total_batch   = ceil((float)train_set.record_count() / (float)batch_size);
             size_t       current_batch = 0;
             const size_t batches_per_output = 10;
-            int64_t              total_time = 0;
             for (const nervana::fixed_buffer_map& x : train_set)
             {
                 (void)x;
@@ -445,8 +445,8 @@ TEST(benchmark, imagenet)
                     {
                         cout << " time " << ms_time;
                         cout << " " << (float)batches_per_output / sec_time << " batches/s";
-                        total_time += chrono::duration_cast<chrono::milliseconds>(start_time - last_time).count();
-                        cout << "\t\taverage " << (float)(current_batch - batches_per_output) / (total_time / 1000.0f) << " batches/s";
+                        total_time += chrono::duration_cast<chrono::milliseconds>(start_time - last_time);
+                        cout << "\t\taverage " << (float)(current_batch - batches_per_output) / (total_time.count() / 1000.0f) << " batches/s";
                     }
                     cout << endl;
                 }
