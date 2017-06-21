@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <fstream>
 #include <exception>
+#include <random>
 
 #include "block_manager.hpp"
 #include "file_util.hpp"
@@ -102,6 +103,11 @@ nervana::encoded_record_list* block_manager::filler()
                         record.add_element(e);
                     }
                     rc->add_record(record);
+                }
+                if (m_shuffle_enabled)
+                {
+                    std::random_device rd;
+                    rc->shuffle(rd());
                 }
             }
         }
