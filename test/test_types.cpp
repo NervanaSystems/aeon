@@ -112,6 +112,7 @@ TEST(typemap, shapetype_serialize)
         EXPECT_EQ(js["names"][2], js2["names"][2]);
         EXPECT_EQ(js["otype"]["cv_type"], js2["otype"]["cv_type"]);
         EXPECT_EQ(js["otype"]["name"], js2["otype"]["name"]);
+        EXPECT_EQ(js["otype"]["np_type"], js2["otype"]["np_type"]);
         EXPECT_EQ(js["otype"]["size"], js2["otype"]["size"]);
         EXPECT_EQ(js["shape"], js2["shape"]);
     }
