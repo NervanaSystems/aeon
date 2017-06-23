@@ -66,6 +66,7 @@ typedef struct
     PyObject_HEAD PyObject* ndata;
     PyObject*               batch_size;
     PyObject*               axes_info;
+    PyObject*               config;
     loader*                 m_loader;
     uint32_t                m_i;
 } aeon_DataLoader;
@@ -202,6 +203,7 @@ static void DataLoader_dealloc(aeon_DataLoader* self)
     Py_XDECREF(self->ndata);
     Py_XDECREF(self->batch_size);
     Py_XDECREF(self->axes_info);
+    Py_XDECREF(self->config);
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
@@ -219,8 +221,20 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
 
     if (rc)
     {
-        std::string dict_string = py23_string_to_string(dict);
-        nlohmann::json json_config = nlohmann::json::parse(dict_string);
+        std::string    dict_string = py23_string_to_string(dict);
+        nlohmann::json json_config;
+        try
+        {
+            json_config = nlohmann::json::parse(dict_string);
+        }
+        catch(const std::exception& e)
+        {
+            std::stringstream ss;
+            ss << "Unable to parse config: " << e.what();
+            ERR << ss.str();
+            PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
+            return NULL;
+        }
 #ifdef AEON_DEBUG
         INFO << " config " << json_config.dump(4);
 #endif
@@ -237,6 +251,7 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             self->ndata      = Py_BuildValue("i", self->m_loader->record_count());
             self->batch_size = Py_BuildValue("i", self->m_loader->batch_size());
             self->axes_info  = PyDict_New();
+            self->config     = PyString_FromString(dict_string.c_str());
 
             auto name_shape_list = self->m_loader->get_names_and_shapes();
 
@@ -303,9 +318,26 @@ static PyMethodDef DataLoader_methods[] = {
 };
 
 static PyMemberDef DataLoader_members[] = {
-    {(char*)"ndata", T_OBJECT_EX, offsetof(aeon_DataLoader, ndata), 0, (char*)"number of records in dataset"},
-    {(char*)"batch_size", T_OBJECT_EX, offsetof(aeon_DataLoader, batch_size), 0, (char*)"mini-batch size"},
-    {(char*)"axes_info", T_OBJECT_EX, offsetof(aeon_DataLoader, axes_info), 0, (char*)"axes names and lengths"},
+    {(char*)"ndata",
+     T_OBJECT_EX,
+     offsetof(aeon_DataLoader, ndata),
+     0,
+     (char*)"number of records in dataset"},
+    {(char*)"batch_size",
+     T_OBJECT_EX,
+     offsetof(aeon_DataLoader, batch_size),
+     0,
+     (char*)"batch size"},
+    {(char*)"axes_info",
+     T_OBJECT_EX,
+     offsetof(aeon_DataLoader, axes_info),
+     0,
+     (char*)"axes names and lengths"},
+    {(char*)"config",
+     T_OBJECT_EX,
+     offsetof(aeon_DataLoader, config),
+     0,
+     (char*)"config passed to DataLoader object"},
     {NULL, NULL, 0, 0, NULL} /* Sentinel */
 };
 
