@@ -6,13 +6,13 @@ set(SRC
     manifest_builder.cpp
     gen_image.cpp)
 
-include_directories("${CMAKE_SOURCE_DIR}/src" "${CPPREST_BUILD}/include")
+include_directories("${CMAKE_SOURCE_DIR}/src" "/usr/include/cpprest")
 
 find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
 find_package(OpenSSL 1.0.0 REQUIRED)
 
 add_library(cpprest SHARED IMPORTED)
-set_property(TARGET cpprest PROPERTY IMPORTED_LOCATION "${CPPREST_BUILD}/lib/libcpprest.so")
+set_property(TARGET cpprest PROPERTY IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libcpprest.so")
 
 add_executable(aeon-server ${SRC})
 add_dependencies(aeon-server aeon)

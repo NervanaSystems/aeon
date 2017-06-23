@@ -26,11 +26,6 @@ struct default_config
                                    {"block_size", block_size},
                                    {"etl", {js_image, label}},
                                    {"augmentation", augmentation}};
-    
-    default_config()
-    {
-
-    }
 };
 
 class aeon_server
@@ -52,8 +47,11 @@ private:
 
     void handle_get(http_request message);
 
-    experimental::listener::http_listener m_listener;   
+    experimental::listener::http_listener m_listener;
     std::map<size_t, std::shared_ptr<nervana::loader>> m_aeon_clients;
+    default_config config;
+
+    std::hash<std::shared_ptr<nervana::loader>> m_hash_fn;
 };
 
 aeon_server::aeon_server(utility::string_t url) : m_listener(url)
@@ -63,22 +61,17 @@ aeon_server::aeon_server(utility::string_t url) : m_listener(url)
 
 void aeon_server::handle_get(http_request message)
 {
-    auto queries = uri::split_query(uri::decode(message.relative_uri().query()));
+    std::cout << "Message received" << std::endl;
 
-    auto it = queries.find("idx");
+    std::shared_ptr<nervana::loader> loader = std::make_shared<nervana::loader>(config.js);
+    size_t idx = m_hash_fn(loader);
 
-    if (it != std::end(queries)) {
-        //do next
-    }
-    else
-    {
-        
-        size_t h = std::hash<std::shared_ptr<nervana::loader>>(
-    }
-    for (auto q : queries)
-    {
-        std::cout << q.first << " " << q.second << std::endl;
-    }
+    std::cout << "Hash " << idx << std::endl;
+    m_aeon_clients[idx] = loader;
+
+    web::json::value json_idx = web::json::value::object();
+    json_idx["idx"] = web::json::value::number(idx);
+    message.reply(status_codes::OK, json_idx);
 }
 
 std::shared_ptr<aeon_server> initialize(const utility::string_t& address)
