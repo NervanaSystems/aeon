@@ -251,7 +251,7 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             self->ndata      = Py_BuildValue("i", self->m_loader->record_count());
             self->batch_size = Py_BuildValue("i", self->m_loader->batch_size());
             self->axes_info  = PyDict_New();
-            self->config     = PyString_FromString(dict_string.c_str());
+            self->config     = PyBytes_FromStringAndSize(dict_string.c_str(), dict_string.size());
 
             auto name_shape_list = self->m_loader->get_names_and_shapes();
 
