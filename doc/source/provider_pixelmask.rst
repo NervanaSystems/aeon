@@ -23,10 +23,10 @@ For segmentation problems (``type=pixelmask``), the input is an image, and the t
 The manifest file contains paths to the input image, as well as the target image:
 
 .. code-block:: bash
-    @FILE    FILE
-    /image_dir/img1.jpg /mask_dir/mask1.png
-    /image_dir/img2.jpg /mask_dir/mask2.png
-    /image_dir/img3.jpg /mask_dir/mask3.png
+    @FILE	FILE
+    /image_dir/img1.jpg	/mask_dir/mask1.png
+    /image_dir/img2.jpg	/mask_dir/mask2.png
+    /image_dir/img3.jpg	/mask_dir/mask3.png
     .
 
 Note that the target image should have a single channel only. If there are multiple channels, only the first channel from the target will be used. The image parameters are the same as above, and the pixelmask has zero configurations. Transformations such as photometric or lighting are applied to the input image only, and not applied to the pixel mask. The same cropping, flipping, and rotation settings are applied to both the image and the mask.

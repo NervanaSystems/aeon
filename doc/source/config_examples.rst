@@ -20,16 +20,16 @@ For classification, the manifest file should be a tab separated list providing a
 
 .. code-block:: bash
 
-    @FILE   ASCII_INT
-    faces/naveen_rao.jpg 0
-    faces/arjun_bansal.jpg   0
-    faces/amir_khosrowshahi.jpg  0
-    fruits/apple.jpg 1
-    fruits/pear.jpg  1
-    animals/lion.jpg 2
-    animals/tiger.jpg    2
+    @FILE	ASCII_INT
+    faces/naveen_rao.jpg	0
+    faces/arjun_bansal.jpg	0
+    faces/amir_khosrowshahi.jpg	0
+    fruits/apple.jpg	1
+    fruits/pear.jpg	1
+    animals/lion.jpg	2
+    animals/tiger.jpg	2
     ...
-    vehicles/toyota.jpg  3
+    vehicles/toyota.jpg	3
 
 The label should contain a single integer between ``(0, num_classes-1)``.
 
@@ -70,12 +70,12 @@ The manifest file contains paths to the input image, as well as the target image
 
 .. code-block:: bash
 
-    @FILE   FILE
-    image_dir/img1.jpg  mask_dir/mask1.png
-    image_dir/img2.jpg  mask_dir/mask2.png
-    image_dir/img3.jpg  mask_dir/mask3.png
+    @FILE	FILE
+    image_dir/img1.jpg	mask_dir/mask1.png
+    image_dir/img2.jpg	mask_dir/mask2.png
+    image_dir/img3.jpg	mask_dir/mask3.png
     ...
-    image_dir/imgN.jpg  mask_dir/maskN.png
+    image_dir/imgN.jpg	mask_dir/maskN.png
 
 Note that the target image should have a single channel only. If there are multiple channels, only the first channel from the target will be used. The image parameters are the same as above, and the pixelmask has zero configurations. Transformations such as photometric or lighting are applied to the input image only, and not applied to the pixel mask. The same cropping, flipping, and rotation settings are applied to both the image and the mask.
 
@@ -112,12 +112,12 @@ The object localization provider (``type=image,localization``) is designed to wo
 
 .. code-block:: bash
 
-    @FILE   FILE
-    image_dir/image0001.jpg    annotations/0001.json
-    image_dir/image0002.jpg    annotations/0002.json
-    image_dir/image0003.jpg    annotations/0003.json
+    @FILE	FILE
+    image_dir/image0001.jpg	annotations/0001.json
+    image_dir/image0002.jpg	annotations/0002.json
+    image_dir/image0003.jpg	annotations/0003.json
     ...
-    image_dir/imageN.jpg    annotations/N.json
+    image_dir/imageN.jpg	annotations/N.json
 
 Each annotation is in the JSON format, which should have the main field "object" containing the bounding box, class, and difficulty of each object in the image. For example:
 

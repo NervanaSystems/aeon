@@ -159,10 +159,9 @@ void manifest_file::initialize(std::istream&      stream,
             vector<string> element_list = split(line, m_delimiter_char);
             if (m_element_types.empty())
             {
-                // No element type metadata found
-                // Element types must be defined before any data
                 ostringstream ss;
                 ss << "metadata must be defined before any data at line " << line_number;
+                ERR << ss.str();
                 throw std::invalid_argument(ss.str());
             }
 

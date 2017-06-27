@@ -53,6 +53,7 @@ A header line contains encoding details for each element in a record line.
 The header line starts with a '@' character and one tab separated encoding field per record element.
 A header line must be located prior to any record lines.
 Elements in the header are one of FILE, BINARY, STRING, ASCII_INT, or ASCII_FLOAT.
+Header line is required.
 
 FILE
 ~~~~

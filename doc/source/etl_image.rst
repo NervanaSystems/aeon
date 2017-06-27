@@ -70,15 +70,16 @@ For classification (``type="image,label"``), the manifest file should provide a 
 
 .. code-block:: bash
 
-    /image_dir/faces/naveen_rao.jpg,/classes/0.txt
-    /image_dir/faces/arjun_bansal.jpg,/classes/0.txt
-    /image_dir/faces/amir_khosrowshahi.jpg,/classes/0.txt
-    /image_dir/fruits/apple.jpg,/classes/1.txt
-    /image_dir/fruits/pear.jpg,/classes/1.txt
-    /image_dir/animals/lion.jpg,/classes/2.txt
-    /image_dir/animals/tiger.jpg,/classes/2.txt
+    @FILE	FILE
+    /image_dir/faces/naveen_rao.jpg	/classes/0.txt
+    /image_dir/faces/arjun_bansal.jpg	/classes/0.txt
+    /image_dir/faces/amir_khosrowshahi.jpg	/classes/0.txt
+    /image_dir/fruits/apple.jpg	/classes/1.txt
+    /image_dir/fruits/pear.jpg	/classes/1.txt
+    /image_dir/animals/lion.jpg	/classes/2.txt
+    /image_dir/animals/tiger.jpg	/classes/2.txt
     ...
-    /image_dir/vehicles/toyota.jpg,/classes/3.txt
+    /image_dir/vehicles/toyota.jpg	/classes/3.txt
 
 The label text files should contain a single integer between ``(0, num_classes-1)``.
 
@@ -115,9 +116,10 @@ The manifest file contains paths to the input image, as well as the target image
 
 .. code-block:: bash
 
-    /image_dir/img1.jpg,/mask_dir/mask1.png
-    /image_dir/img2.jpg,/mask_dir/mask2.png
-    /image_dir/img3.jpg,/mask_dir/mask3.png
+    @FILE	FILE
+    /image_dir/img1.jpg	/mask_dir/mask1.png
+    /image_dir/img2.jpg	/mask_dir/mask2.png
+    /image_dir/img3.jpg	/mask_dir/mask3.png
     .
 
 Note that the target image should have a single channel only. If there are multiple channels, only the first channel from the target will be used. The image parameters are the same as above, and the pixelmask has zero configurations. Transformations such as photometric or lighting are applied to the input image only, and not applied to the pixel mask. The same cropping, flipping, and rotation settings are applied to both the image and the mask.
@@ -140,9 +142,10 @@ The object localization provider (``type=image,localization``) is designed to wo
 
 .. code-block:: bash
 
-    /image_dir/image0001.jpg,/annotations/0001.json
-    /image_dir/image0002.jpg,/annotations/0002.json
-    /image_dir/image0003.jpg,/annotations/0003.json
+    @FILE	FILE
+    /image_dir/image0001.jpg	/annotations/0001.json
+    /image_dir/image0002.jpg	/annotations/0002.json
+    /image_dir/image0003.jpg	/annotations/0003.json
 
 Each annotation is in the JSON format, which should have the main field "object" containing the bounding box, class, and difficulty of each object in the image. For example:
 

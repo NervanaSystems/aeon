@@ -49,11 +49,11 @@ particular model in neon.
 Once preprocessing is complete, a sample manifest CSV file must be created with
 the absolute paths of the videos and the classification labels. For example::
 
-  @FILE   ASCII_INT
-  /video_dir/video1_location.avi  1
-  /video_dir/video2_location.avi  1
-  /video_dir/video3_location.avi  4
-  /video_dir/video4_location.avi  2
+  @FILE	ASCII_INT
+  /video_dir/video1_location.avi	1
+  /video_dir/video2_location.avi	1
+  /video_dir/video3_location.avi	4
+  /video_dir/video4_location.avi	2
 
 Where the first column contains absolute paths to the preprocessed MJPEG videos
 and the second column contains numbers corresponding to a class label.

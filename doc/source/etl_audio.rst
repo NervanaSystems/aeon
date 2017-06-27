@@ -28,6 +28,7 @@ From there, the user should create a manifest file that specifies paths to both 
 
 .. code-block:: bash
 
+    @FILE
     audio_sample_1.wav
     audio_sample_2.wav
     audio_sample_3.wav
@@ -118,12 +119,13 @@ Audio classification (``type="audio,label"``) works just like image classificati
 
 .. code-block:: bash
 
-    /audio_dir/cars/sample_1.wav,/classes/0.txt
-    /audio_dir/cars/sample_2.wav,/classes/0.txt
-    /audio_dir/cars/sample_3.wav,/classes/0.txt
-    /audio_dir/trains/sample_1.wav,/classes/1.txt
-    /audio_dir/trains/sample_2.wav,/classes/1.txt
-    /audio_dir/trains/sample_3.wav,/classes/1.txt
+    @FILE	FILE
+    /audio_dir/cars/sample_1.wav	/classes/0.txt
+    /audio_dir/cars/sample_2.wav	/classes/0.txt
+    /audio_dir/cars/sample_3.wav	/classes/0.txt
+    /audio_dir/trains/sample_1.wav	/classes/1.txt
+    /audio_dir/trains/sample_2.wav	/classes/1.txt
+    /audio_dir/trains/sample_3.wav	/classes/1.txt
 
 The label text files should contain a single integer between ``(0, num_classes-1)``.
 
@@ -155,9 +157,10 @@ Transcription
 Speech transcription (``type="audio,transcription"``) is a common task where continuous audio is mapped to a sequence of symbols (e.g. characters or phonemes).
 .. code-block:: bash
 
-    audio_sample_1.wav,audio_transcript_1.txt
-    audio_sample_2.wav,audio_transcript_2.txt
-    audio_sample_3.wav,audio_transcript_3.txt
+    @FILE	FILE
+    audio_sample_1.wav	audio_transcript_1.txt
+    audio_sample_2.wav	audio_transcript_2.txt
+    audio_sample_3.wav	audio_transcript_3.txt
 
 where each transcript file should contain a sequence of symbols for the target transcription. All characters provided in the transcript file, including special characters like newlines, are provisioned to the model.
 

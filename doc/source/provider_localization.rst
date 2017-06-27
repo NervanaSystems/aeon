@@ -19,10 +19,10 @@ localization
 The object localization provider module (``type=localization``) is designed to work with the Faster-RCNN model. The manifest should include paths to both the image but also the bounding box annotations:
 
 .. code-block:: bash
-    @FILE   FILE
-    /image_dir/image0001.jpg    /annotations/0001.json
-    /image_dir/image0002.jpg    /annotations/0002.json
-    /image_dir/image0003.jpg    /annotations/0003.json
+    @FIL	EFILE
+    /image_dir/image0001.jpg	/annotations/0001.json
+    /image_dir/image0002.jpg	/annotations/0002.json
+    /image_dir/image0003.jpg	/annotations/0003.json
 
 Each annotation is in the JSON format, which should have the main field "object" containing the bounding box, class, and difficulty of each object in the image. For example:
 
