@@ -159,6 +159,7 @@ TEST(manifest, root_path)
     string manifest_file = "tmp_manifest.csv";
     {
         ofstream f(manifest_file);
+        f << "@FILE\tFILE\n";
         for (int i = 0; i < 10; i++)
         {
             f << "/t1/image" << i << ".png" << manifest_file::get_delimiter();
@@ -183,6 +184,7 @@ TEST(manifest, root_path)
     }
     {
         ofstream f(manifest_file);
+        f << "@FILE\tFILE\n";
         for (int i = 0; i < 10; i++)
         {
             f << "/t1/image" << i << ".png" << manifest_file::get_delimiter();
@@ -207,6 +209,7 @@ TEST(manifest, root_path)
     }
     {
         ofstream f(manifest_file);
+        f << "@FILE\tFILE\n";
         for (int i = 0; i < 10; i++)
         {
             f << "t1/image" << i << ".png" << manifest_file::get_delimiter();
@@ -261,26 +264,7 @@ TEST(manifest, file_implicit)
     }
 
     size_t        block_size = 16;
-    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
-
-    block_loader_file bload{&manifest, block_size};
-
-    for (int i = 0; i < 2; i++)
-    {
-        encoded_record_list* buffer = bload.filler();
-        ASSERT_NE(nullptr, buffer);
-        ASSERT_EQ(block_size, buffer->size());
-        for (int j = 0; j < buffer->size(); j++)
-        {
-            encoded_record record = buffer->record(j);
-            auto           idata  = record.element(0);
-            auto           tdata  = record.element(1);
-            string         target{tdata.data(), tdata.size()};
-            // INFO << target;
-            // int value = stod(target);
-            // EXPECT_EQ(j%2+1, value);
-        }
-    }
+    EXPECT_THROW(manifest_file(ss, false, test_data_directory, 1.0, block_size), std::invalid_argument);
 }
 
 TEST(manifest, wrong_elements_number)
@@ -568,6 +552,7 @@ public:
         manifest_filename = file_util::path_join(source_directory, "manifest.csv");
         file_list.push_back(manifest_filename);
         ofstream mfile(manifest_filename);
+        mfile << "@FILE\tFILE\n";
         for (size_t i = 0; i < count; i++)
         {
             cv::Mat image  = embedded_id_image::generate_image(rows, cols, i);
