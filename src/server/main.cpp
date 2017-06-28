@@ -4,28 +4,48 @@
 
 #include "json.hpp"
 #include "loader.hpp"
+#include "manifest_builder.hpp"
+#include "gen_image.hpp"
 
 using namespace web::http;
 
+static std::string create_manifest_file(size_t record_count, size_t width, size_t height)
+{
+    std::string           manifest_filename = nervana::file_util::tmp_filename();
+    manifest_builder mb;
+    auto&    ms = mb.record_count(record_count).image_width(width).image_height(height).create();
+    std::ofstream f(manifest_filename);
+    f << ms.str();
+    return manifest_filename;
+}
+
 struct default_config
 {
-    const int    height            = 16;
-    const int    width             = 16;
-    const size_t batch_size        = 32;
-    const size_t record_count      = 1003;
-    const size_t block_size        = 300;
+    size_t height            = 16;
+    size_t width             = 16;
+    size_t batch_size        = 32;
+    size_t record_count      = 1003;
+    size_t block_size        = 300;
     
     std::string manifest_filename;
 
-    const nlohmann::json js_image = {
+    nlohmann::json js_image = {
             {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
-    const nlohmann::json label        = {{"type", "label"}, {"binary", false}};
-    const nlohmann::json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
-    nlohmann::json js           = {{"manifest_filename", "dupa.txt"},
-                                   {"batch_size", batch_size},
-                                   {"block_size", block_size},
-                                   {"etl", {js_image, label}},
-                                   {"augmentation", augmentation}};
+    nlohmann::json label        = {{"type", "label"}, {"binary", false}};
+    nlohmann::json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
+
+    nlohmann::json js;
+
+    default_config()
+    {
+        manifest_filename = create_manifest_file(record_count, width, height);
+
+        js = {{"manifest_filename", manifest_filename},
+              {"batch_size", batch_size},
+              {"block_size", block_size},
+              {"etl", {js_image, label}},
+              {"augmentation", augmentation}};
+    }
 };
 
 class aeon_server
@@ -44,7 +64,6 @@ public:
     }
 
 private:
-
     void handle_get(http_request message);
 
     experimental::listener::http_listener m_listener;
@@ -63,15 +82,19 @@ void aeon_server::handle_get(http_request message)
 {
     std::cout << "Message received" << std::endl;
 
-    std::shared_ptr<nervana::loader> loader = std::make_shared<nervana::loader>(config.js);
-    size_t idx = m_hash_fn(loader);
+    try {
+        std::shared_ptr<nervana::loader> loader = std::make_shared<nervana::loader>(config.js);
+        size_t idx = m_hash_fn(loader);
 
-    std::cout << "Hash " << idx << std::endl;
-    m_aeon_clients[idx] = loader;
+        m_aeon_clients[idx] = loader;
 
-    web::json::value json_idx = web::json::value::object();
-    json_idx["idx"] = web::json::value::number(idx);
-    message.reply(status_codes::OK, json_idx);
+        web::json::value json_idx = web::json::value::object();
+        json_idx["idx"] = web::json::value::number(idx);
+        message.reply(status_codes::OK, json_idx);
+    } catch (std::exception& e) {
+        std::cout << e.what();
+    }
+
 }
 
 std::shared_ptr<aeon_server> initialize(const utility::string_t& address)

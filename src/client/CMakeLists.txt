@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 2.8.11)
-project(aeon-server)
+project(aeon-client)
 
 set(SRC
-    main.cpp
-    manifest_builder.cpp
-    gen_image.cpp)
+    main.cpp)
 
 #include_directories("${CMAKE_SOURCE_DIR}/src" "/usr/include/cpprest")
 include_directories("${CMAKE_SOURCE_DIR}/src" "/home/tpatejko/installs/casablanca/lib.debug/include")
@@ -16,9 +14,9 @@ add_library(cpprest SHARED IMPORTED)
 # set_property(TARGET cpprest PROPERTY IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libcpprest.so")
 set_property(TARGET cpprest PROPERTY IMPORTED_LOCATION "/home/tpatejko/installs/casablanca/lib.debug/lib/libcpprest.so")
 
-add_executable(aeon-server ${SRC})
-add_dependencies(aeon-server aeon)
-target_link_libraries(aeon-server
+add_executable(aeon-client ${SRC})
+add_dependencies(aeon-client aeon)
+target_link_libraries(aeon-client
     aeon
     pthread
     sox

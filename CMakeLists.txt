@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8.11)
 
 # Set this flag before project definition to avoid using other compiler by gtest
-set(CMAKE_CXX_COMPILER "clang++-4.0")
+set(CMAKE_CXX_COMPILER "clang++")
 
 project (aeon)
 
@@ -126,6 +126,7 @@ add_subdirectory(gtest)
 set(BUILD_SHARED_LIBS on)
 add_subdirectory(src)
 add_subdirectory(src/server)
+add_subdirectory(src/client)
 include_directories(src)
 add_subdirectory(test)
 add_subdirectory(examples)
