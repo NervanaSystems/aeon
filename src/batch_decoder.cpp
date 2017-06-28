@@ -15,6 +15,7 @@
 
 #include "batch_decoder.hpp"
 #include "provider_factory.hpp"
+#include "batch_iterator.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -26,45 +27,9 @@ batch_decoder::batch_decoder(batch_iterator*                            b_itor,
                              const std::shared_ptr<provider_interface>& prov)
     : async_manager<encoded_record_list, fixed_buffer_map>(b_itor, "batch_decoder")
     , m_batch_size(batch_size)
-    , m_active_count{0}
+    , m_provider(prov)
+    , m_thread_pool(this, thread_count, batch_size)
 {
-    // Note:  all we need are thread_count, batch_size, pinned + the provider template
-    //        can we just use copy constructor instead?
-    int nthreads = 1;
-
-    if (thread_count == 0)  // automatically determine number of threads
-    {
-        int itemsPerThread = (batch_size - 1) / thread::hardware_concurrency() + 1;
-        nthreads           = std::min((batch_size - 1) / itemsPerThread + 1, batch_size);
-    }
-    else
-    {
-        // don't return more threads than we can get
-        nthreads = std::min(thread::hardware_concurrency(), thread_count);
-
-        // don't return more threads than items per batch
-        nthreads = std::min((int) batch_size, nthreads);
-
-        // TODO: log info message if nthreads != thread_count
-    }
-
-    if (nthreads <= 0)
-    {
-        throw std::invalid_argument("Number of threads must be > 0");
-    }
-
-    m_items_per_thread = (batch_size - 1) / nthreads + 1;
-
-    for (int i = 0; i < nthreads; i++)
-    {
-        int start = i * m_items_per_thread;
-        int record_count =
-            i == nthreads - 1 ? (batch_size - i * m_items_per_thread) : m_items_per_thread;
-        int end = start + record_count;
-        m_decode_thread_info.push_back(make_shared<decode_thread_info>(
-            i, start, end, prov, m_work_complete_event, m_active_count));
-    }
-
     auto oshapes         = prov->get_output_shapes();
     m_number_elements_in = prov->get_input_count();
 
@@ -101,15 +66,11 @@ fixed_buffer_map* batch_decoder::filler()
         {
             record.rethrow_if_exception();
         }
-
-        m_active_count = m_decode_thread_info.size();
-        for (int id = 0; id < m_decode_thread_info.size(); ++id)
-        {
-            m_decode_thread_info[id]->set_buffers(inputs, outputs);
-        }
-        m_work_complete_event.wait();
-    }
-
+        m_inputs = inputs;
+        m_outputs = outputs;
+        m_thread_pool.run();
+    }   
     m_state = async_state::idle;
     return outputs;
 }
+

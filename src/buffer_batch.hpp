@@ -165,6 +165,7 @@ public:
     char*             data() const { return m_data; }
     size_t            get_item_count() const { return m_size / m_stride; }
     size_t            size() const { return m_size; }
+    size_t            get_stride() const {return m_stride;}
     const shape_type& get_shape_type() const { return m_shape_type; }
 protected:
     buffer_fixed_size_elements() = delete;
@@ -227,7 +228,9 @@ public:
         auto it = m_data.find(name);
         return (it == m_data.end() ? nullptr : it->second);
     }
-
+    
+    void copy(fixed_buffer_map& src, size_t src_index, size_t dst_index, size_t count);
+ 
     size_t size() const { return m_data.size(); }
 private:
     fixed_buffer_map(const fixed_buffer_map&) = delete;

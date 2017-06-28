@@ -18,6 +18,7 @@
 #include "manifest_file.hpp"
 #include "block_loader_file.hpp"
 #include "batch_iterator.hpp"
+#include "block_manager.hpp"
 #include "manifest_builder.hpp"
 #include "file_util.hpp"
 #include "log.hpp"
