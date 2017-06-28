@@ -11,10 +11,11 @@ private:
 
 public:
     aeon_client(uint64_t idx, const client::http_client& client);
+    void next();
 };
 
 
-aeon_client::aeon_client(uint64_t idx, const client::http_client& client) 
+aeon_client::aeon_client(uint64_t idx, const client::http_client& client)
     : m_idx(idx)
     , m_client(client)
 {
@@ -57,12 +58,12 @@ int main()
     address.append(port);
 
     http::uri uri = http::uri(address);
-    
+
     std::shared_ptr<aeon_client> client = create_client(uri);
 
     while (true)
     {
-        
+
     }
 
     return 0;
