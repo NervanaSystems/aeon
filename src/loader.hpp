@@ -41,6 +41,7 @@
 namespace nervana
 {
     class loader_config;
+    class loader_interface;
     class loader;
     class dataset_builder;
     class batch_decoder;
@@ -103,7 +104,7 @@ private:
     void validate();
 };
 
-class nervana::loader
+class nervana::loader_interface
 {
 public:
     enum class BatchMode
@@ -113,75 +114,103 @@ public:
         COUNT
     };
 
-    loader(const std::string&);
-    loader(nlohmann::json&);
-
-    ~loader();
-
-    const std::vector<std::string>& get_buffer_names() const;
-    const std::vector<std::pair<std::string, shape_type>>& get_names_and_shapes() const;
-    const shape_t& get_shape(const std::string& name) const;
-
-    int record_count()
-    {
-        return m_manifest_nds ? m_manifest_nds->record_count() : m_manifest_file->record_count();
-    }
-    int batch_size() { return m_batch_size; }
-    // member typedefs provided through inheriting from std::iterator
     class iterator : public std::iterator<std::input_iterator_tag, // iterator_category
                                           fixed_buffer_map         // value_type
-                                          // long,                     // difference_type
-                                          // const fixed_buffer_map*,  // pointer
-                                          // fixed_buffer_map          // reference
                                           >
     {
+        friend class loader_interface;
         friend class loader;
 
     public:
-        explicit iterator(loader& ld, bool is_end);
+        explicit iterator(loader_interface& ld, bool is_end);
         iterator(const iterator&);
-        ~iterator() {}
-        iterator& operator++(); // {num = TO >= FROM ? num + 1: num - 1; return *this;}
+        ~iterator(){}
+        iterator& operator++();
         iterator& operator++(int);
-        bool operator==(const iterator& other) const; // {return num == other.num;}
-        bool operator!=(const iterator& other) const; // {return !(*this == other);}
-        const fixed_buffer_map& operator*() const;    // {return num;}
-        const size_t& position() const { return m_current_loader.m_position; }
+        bool operator==(const iterator& other) const;
+        bool operator!=(const iterator& other) const;
+        const fixed_buffer_map& operator*() const;
+        const size_t& position() const { return m_current_loader.position(); }
         bool          positional_end() const;
 
     private:
         iterator() = delete;
 
-        loader&          m_current_loader;
+        loader_interface&          m_current_loader;
         const bool       m_is_end;
         fixed_buffer_map m_empty_buffer;
     };
 
-    // Note that these are returning COPIES
-    iterator begin()
+    // member typedefs provided through inheriting from std::iterator
+    virtual ~loader_interface() {}
+
+    virtual const std::vector<std::string>& get_buffer_names() const = 0;
+    virtual const std::map<std::string, shape_type>& get_names_and_shapes() const = 0;
+    virtual const shape_t& get_shape(const std::string& name) const = 0;
+
+    virtual int record_count() = 0;
+    virtual int batch_size()   = 0;
+    virtual size_t batch_count()   = 0;
+
+    virtual iterator begin()            = 0;
+    virtual iterator end()              = 0;
+    virtual iterator& get_current_iter() = 0;
+    virtual iterator& get_end_iter() = 0;
+
+    virtual const fixed_buffer_map* get_output_buffer() const = 0;
+    virtual const size_t& position() = 0;
+    virtual void           reset()                    = 0;
+    virtual nlohmann::json get_current_config() const = 0;
+
+protected:
+    virtual void increment_position() = 0;
+};
+
+class nervana::loader : public nervana::loader_interface
+{
+public:
+    loader(const std::string&);
+    loader(nlohmann::json&);
+
+    ~loader() override;
+
+    const std::vector<std::string>& get_buffer_names() const override;
+    const std::map<std::string, shape_type>& get_names_and_shapes() const override;
+    const shape_t& get_shape(const std::string& name) const override;
+
+    int record_count() override
+    {
+        return m_manifest_nds ? m_manifest_nds->record_count() : m_manifest_file->record_count();
+    }
+    int batch_size() override { return m_batch_size; }
+    size_t batch_count() override { return m_batch_count_value; }
+
+    iterator begin() override
     {
         reset();
         return m_current_iter;
     }
 
-    iterator end() { return m_end_iter; }
+    iterator end() override { return m_end_iter; }
     // These are returning references
-    iterator& get_current_iter() { return m_current_iter; }
-    iterator& get_end_iter() { return m_end_iter; }
-    void      reset()
+    iterator& get_current_iter() override { return m_current_iter; }
+    iterator& get_end_iter() override { return m_end_iter; }
+    const fixed_buffer_map* get_output_buffer() const override { return m_output_buffer_ptr; }
+    const size_t& position() override { return m_position; }
+    void        reset() override
     {
         m_final_stage->reset();
         m_output_buffer_ptr = m_final_stage->next();
         m_position          = 0;
     }
 
-    nlohmann::json get_current_config() const { return m_current_config; }
+    nlohmann::json get_current_config() const override { return m_current_config; }
 private:
     loader() = delete;
     void initialize(nlohmann::json& config_json);
-    void increment_position();
+    void increment_position() override;
 
-    friend class nervana::loader::iterator;
+    friend class nervana::loader_interface::iterator;
 
     iterator                                                m_current_iter;
     iterator                                                m_end_iter;

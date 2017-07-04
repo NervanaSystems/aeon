@@ -202,53 +202,63 @@ const shape_t& loader::get_shape(const string& name) const
     return m_provider->get_output_shape(name).get_shape();
 }
 
-loader::iterator::iterator(loader& ld, bool is_end)
+loader_interface::iterator::iterator(loader_interface& ld, bool is_end)
     : m_current_loader(ld)
     , m_is_end{is_end}
 {
 }
 
-loader::iterator::iterator(const iterator& other)
+loader_interface::iterator::iterator(const iterator& other)
     : m_current_loader{other.m_current_loader}
     , m_is_end{other.m_is_end}
 {
 }
 
-loader::iterator& loader::iterator::operator++()
+loader_interface::iterator& loader_interface::iterator::operator++()
 {
     m_current_loader.increment_position();
     return *this;
 }
 
-loader::iterator& loader::iterator::operator++(int)
+loader_interface::iterator& loader_interface::iterator::operator++(int)
 {
     iterator& rc = *this;
     ++rc;
     return rc;
 }
 
-bool loader::iterator::operator==(const iterator& other) const
+bool loader_interface::iterator::operator==(const iterator& other) const
 {
     bool res = &m_current_loader == &other.m_current_loader;
     res &= (other.m_is_end && positional_end()) || (m_is_end && other.positional_end());
     return res;
 }
 
-bool loader::iterator::operator!=(const iterator& other) const
+bool loader_interface::iterator::operator!=(const iterator& other) const
 {
     return !(*this == other);
 }
 
 // Whether or not this strictly positional iterator has reached the end
-bool loader::iterator::positional_end() const
+bool loader_interface::iterator::positional_end() const
 {
-    return !m_is_end && (position() >= m_current_loader.m_batch_count_value);
+    return !m_is_end && (position() >= m_current_loader.batch_count());
 }
 
-const fixed_buffer_map& loader::iterator::operator*() const
+const fixed_buffer_map& loader_interface::iterator::operator*() const
 {
-    return m_current_loader.m_output_buffer_ptr ? *m_current_loader.m_output_buffer_ptr
-                                                : m_empty_buffer;
+    const fixed_buffer_map* rc = nullptr;
+
+    if (m_current_loader.get_output_buffer())
+    {
+        rc = m_current_loader.get_output_buffer();
+    }
+    else
+    {
+       rc = &m_empty_buffer;
+    }
+
+    return *rc;
 }
 
 void loader::increment_position()
