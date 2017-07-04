@@ -1,5 +1,6 @@
 import tempfile
 
+import json
 import numpy as np
 from PIL import Image as PILImage
 import random
@@ -48,7 +49,7 @@ def random_manifest(num_lines, invalid_image_index=None):
         atexit.register(delete_temps)
 
     manifest = tempfile.NamedTemporaryFile(mode='w')
-
+    manifest.write("@FILE\tFILE\n")
     # generate a manifest of filenames with an invalid image on the 3rd line
     for i in range(num_lines):
         img_filename = tempfile.mkstemp(suffix='.jpg')[1]
@@ -62,20 +63,16 @@ def random_manifest(num_lines, invalid_image_index=None):
         temp_files.append(img_filename)
         temp_files.append(target_filename)
 
-        manifest.write("{},{}\n".format(img_filename, target_filename))
+        manifest.write("{}\t{}\n".format(img_filename, target_filename))
+        with open(target_filename, 'w') as t:
+            t.write(str(random.randint(0, 3)))
     manifest.flush()
 
     return manifest
 
 
-def generic_config(manifest_name):
-    return {
-        'manifest_filename': manifest_name,
-        'minibatch_size': 2,
-        'image': {
-            'height': 2,
-            'width': 2,
-        },
-        'label': {'binary': True},
-        'type': 'image,label',
-    }
+def generic_config(manifest_name, batch_size):
+    return json.dumps({"manifest_filename": manifest_name,
+        "batch_size": batch_size,
+        "etl": [{"type": "image","height": 2,"width": 2}, {"type": "label", "binary": False}]
+        })
