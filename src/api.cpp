@@ -23,6 +23,13 @@
 using namespace nervana;
 using namespace std;
 
+using nlohmann::json;
+
+namespace
+{
+    loader* create_loader(const json& config);
+}
+
 extern "C" {
 
 #if PY_MAJOR_VERSION >= 3
@@ -250,7 +257,7 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
 
         try
         {
-            self->m_loader          = new loader(json_config);
+            self->m_loader   = create_loader(json_config);
             self->m_i               = 0;
             self->m_first_iteration = true;
             self->ndata             = Py_BuildValue("i", self->m_loader->record_count());
@@ -490,4 +497,14 @@ PyMODINIT_FUNC initaeon(void)
     return m;
 #endif
 }
+}
+
+namespace
+{
+    loader* create_loader(const json& config)
+    {
+        loader_factory factory;
+        unique_ptr<loader> loader_ptr = factory.get_loader(config);
+        return loader_ptr.release();
+    }
 }
