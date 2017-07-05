@@ -41,9 +41,9 @@
 namespace nervana
 {
     class loader_config;
-    class loader_interface;
-    class loader_factory;
     class loader;
+    class loader_factory;
+    class loader_local;
     class dataset_builder;
     class batch_decoder;
 }
@@ -105,7 +105,8 @@ private:
     void validate();
 };
 
-class nervana::loader_interface
+// this is interface for loaders
+class nervana::loader
 {
 public:
     enum class BatchMode
@@ -119,11 +120,10 @@ public:
                                           fixed_buffer_map         // value_type
                                           >
     {
-        friend class loader_interface;
-        friend class loader;
+        friend class loader_local;
 
     public:
-        explicit iterator(loader_interface& ld, bool is_end);
+        explicit iterator(loader& ld, bool is_end);
         iterator(const iterator&);
         ~iterator(){}
         iterator& operator++();
@@ -137,13 +137,12 @@ public:
     private:
         iterator() = delete;
 
-        loader_interface&          m_current_loader;
+        loader&          m_current_loader;
         const bool       m_is_end;
         fixed_buffer_map m_empty_buffer;
     };
 
-    // member typedefs provided through inheriting from std::iterator
-    virtual ~loader_interface() {}
+    virtual ~loader() {}
 
     virtual const std::vector<std::string>& get_buffer_names() const = 0;
     virtual const std::map<std::string, shape_type>& get_names_and_shapes() const = 0;
@@ -170,16 +169,20 @@ protected:
 class nervana::loader_factory
 {
 public:
-    std::unique_ptr<loader_interface> get_loader(const std::string& config);
+    std::unique_ptr<loader> get_loader(const std::string& config);
+    std::unique_ptr<loader> get_loader(const nlohmann::json& config);
+
+private:
+    bool remote_version(const nlohmann::json& config);
 };
 
-class nervana::loader : public nervana::loader_interface
+class nervana::loader_local : public nervana::loader
 {
 public:
-    loader(const std::string&);
-    loader(nlohmann::json&);
+    loader_local(const std::string&);
+    loader_local(const nlohmann::json&);
 
-    ~loader() override;
+    ~loader_local() override;
 
     const std::vector<std::string>& get_buffer_names() const override;
     const std::map<std::string, shape_type>& get_names_and_shapes() const override;
@@ -213,11 +216,11 @@ public:
 
     nlohmann::json get_current_config() const override { return m_current_config; }
 private:
-    loader() = delete;
-    void initialize(nlohmann::json& config_json);
-    void increment_position() override;
+    friend class nervana::loader::iterator;
 
-    friend class nervana::loader_interface::iterator;
+    loader_local() = delete;
+    void initialize(const nlohmann::json& config_json);
+    void increment_position() override;
 
     iterator                                                m_current_iter;
     iterator                                                m_end_iter;

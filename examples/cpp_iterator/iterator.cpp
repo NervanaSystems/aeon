@@ -51,5 +51,6 @@ int main(int argc, char** argv)
                          {"etl", {image_config, label_config}},
                          {"augmentation", {{aug_config}}}};
 
-    auto train_set = nervana::loader{config};
+    nervana::loader_factory factory;
+    auto train_set = factory.get_loader( config );
 }

@@ -63,7 +63,8 @@ TEST(loader, syntax)
                {"etl", {image, label}},
                {"augmentation", augmentation}};
 
-    auto train_set = loader{js};
+    loader_factory factory;
+    auto train_set = factory.get_loader(js);
 }
 
 TEST(loader, iterator)
@@ -87,10 +88,11 @@ TEST(loader, iterator)
                {"etl", {image, label}},
                {"augmentation", augmentation}};
 
-    loader train_set{js};
+    loader_factory factory;
+    auto train_set = factory.get_loader(js);
 
-    auto begin = train_set.begin();
-    auto end   = train_set.end();
+    auto begin = train_set->begin();
+    auto end   = train_set->end();
 
     EXPECT_NE(begin, end);
     EXPECT_EQ(0, begin.position());
@@ -130,10 +132,11 @@ TEST(loader, once)
                {"etl", {image, label}},
                {"augmentation", augmentation}};
 
-    loader train_set{js};
+    loader_factory factory;
+    auto train_set = factory.get_loader(js);
 
     int count = 0;
-    for (const fixed_buffer_map& data : train_set)
+    for (const fixed_buffer_map& data : *train_set)
     {
         (void)data; // silence compiler warning
         ASSERT_NE(count, record_count);
@@ -166,11 +169,12 @@ TEST(loader, count)
 
     int expected_iterations = 4;
 
-    loader train_set{js};
+    loader_factory factory;
+    auto train_set = factory.get_loader(js);
 
     int count = 0;
-    ASSERT_EQ(expected_iterations, train_set.m_batch_count_value);
-    for (const fixed_buffer_map& data : train_set)
+    ASSERT_EQ(expected_iterations, train_set->batch_count());
+    for (const fixed_buffer_map& data : *train_set)
     {
         (void)data; // silence compiler warning
         ASSERT_NE(count, record_count);
@@ -200,11 +204,12 @@ TEST(loader, infinite)
                {"etl", {image, label}},
                {"augmentation", augmentation}};
 
-    loader train_set{js};
+    loader_factory factory;
+    auto train_set = factory.get_loader(js);
 
     int count               = 0;
     int expected_iterations = record_count * 3;
-    for (const fixed_buffer_map& data : train_set)
+    for (const fixed_buffer_map& data : *train_set)
     {
         (void)data; // silence compiler warning
         count++;
@@ -241,11 +246,12 @@ TEST(loader, cache)
                {"etl", {image, label}},
                {"augmentation", augmentation}};
 
-    loader train_set{js};
+    loader_factory factory;
+    auto train_set = factory.get_loader(js);
 
     int count               = 0;
     int expected_iterations = record_count * 3;
-    for (const fixed_buffer_map& data : train_set)
+    for (const fixed_buffer_map& data : *train_set)
     {
         (void)data; // silence compiler warning
         count++;
@@ -276,15 +282,16 @@ TEST(loader, test)
                {"etl", {js_image, label}},
                {"augmentation", augmentation}};
 
-    loader train_set{js};
+    loader_factory factory;
+    auto train_set = factory.get_loader(js);
 
-    auto buf_names = train_set.get_buffer_names();
+    auto buf_names = train_set->get_buffer_names();
     EXPECT_EQ(2, buf_names.size());
     EXPECT_NE(find(buf_names.begin(), buf_names.end(), "image"), buf_names.end());
     EXPECT_NE(find(buf_names.begin(), buf_names.end(), "label"), buf_names.end());
 
-    auto image_shape = train_set.get_shape("image");
-    auto label_shape = train_set.get_shape("label");
+    auto image_shape = train_set->get_shape("image");
+    auto label_shape = train_set->get_shape("label");
 
     ASSERT_EQ(3, image_shape.size());
     EXPECT_EQ(height, image_shape[0]);
@@ -296,7 +303,7 @@ TEST(loader, test)
 
     int count       = 0;
     int expected_id = 0;
-    for (const fixed_buffer_map& data : train_set)
+    for (const fixed_buffer_map& data : *train_set)
     {
         ASSERT_EQ(2, data.size());
         const buffer_fixed_size_elements* image_buffer_ptr = data["image"];
@@ -339,15 +346,16 @@ TEST(loader, provider)
                {"etl", {image_config, label_config}},
                {"augmentation", augmentation}};
 
-    loader train_set{js};
+    loader_factory factory;
+    auto train_set = factory.get_loader(js);
 
-    auto buf_names = train_set.get_buffer_names();
+    auto buf_names = train_set->get_buffer_names();
     EXPECT_EQ(2, buf_names.size());
     EXPECT_NE(find(buf_names.begin(), buf_names.end(), "image"), buf_names.end());
     EXPECT_NE(find(buf_names.begin(), buf_names.end(), "label"), buf_names.end());
 
-    auto image_shape = train_set.get_shape("image");
-    auto label_shape = train_set.get_shape("label");
+    auto image_shape = train_set->get_shape("image");
+    auto label_shape = train_set->get_shape("label");
 
     ASSERT_EQ(3, image_shape.size());
     EXPECT_EQ(height, image_shape[0]);
@@ -359,7 +367,7 @@ TEST(loader, provider)
 
     int count       = 0;
     int expected_id = 0;
-    for (const fixed_buffer_map& data : train_set)
+    for (const fixed_buffer_map& data : *train_set)
     {
         ASSERT_EQ(2, data.size());
         const buffer_fixed_size_elements* image_buffer_ptr = data["image"];
@@ -453,8 +461,8 @@ TEST(loader, loader_factory_no_server)
     json config_json = create_some_config_with_manifest();
     string config = config_json.dump();
 
-    unique_ptr<loader_interface> ptr = factory.get_loader(config);
-    ASSERT_TRUE(dynamic_cast<loader*>(ptr.get()) != 0);
+    unique_ptr<loader> ptr = factory.get_loader(config);
+    ASSERT_TRUE(dynamic_cast<loader_local*>(ptr.get()) != 0);
 
     //unique_ptr<loader_interface> ptr2 = factory.get_loader(config);
     //ASSERT_TRUE(dynamic_cast<loader_remote*>(ptr2.get()) == 0);
@@ -467,8 +475,8 @@ TEST(loader, loader_factory_server)
     config_json["server"] = {{"ip", "127.0.0.1"}, {"port", "34568"}};
     string config = config_json.dump();
 
-    unique_ptr<loader_interface> ptr = factory.get_loader(config);
-    ASSERT_TRUE(dynamic_cast<loader*>(ptr.get()) == 0);
+    unique_ptr<loader> ptr = factory.get_loader(config);
+    ASSERT_TRUE(dynamic_cast<loader_local*>(ptr.get()) == 0);
 
     //unique_ptr<loader_interface> ptr2 = factory.get_loader(config);
     //ASSERT_TRUE(dynamic_cast<loader_local*>(ptr2.get()) == 0);
@@ -515,12 +523,13 @@ TEST(benchmark, imagenet)
         chrono::milliseconds                              total_time{0};
         try
         {
-            auto train_set = nervana::loader{config};
+            loader_factory factory;
+            auto train_set = factory.get_loader(config);
 
-            size_t       total_batch   = ceil((float)train_set.record_count() / (float)batch_size);
+            size_t       total_batch   = ceil((float)train_set->record_count() / (float)batch_size);
             size_t       current_batch = 0;
             const size_t batches_per_output = 10;
-            for (const nervana::fixed_buffer_map& x : train_set)
+            for (const nervana::fixed_buffer_map& x : *train_set)
             {
                 (void)x;
                 if (++current_batch % batches_per_output == 0)

@@ -93,7 +93,8 @@ TEST(DISABLED_localization_rcnn, example)
                              {"etl", {js_image, js_local}},
                              {"augmentation", {js_aug}}};
 
-    auto train_set = nervana::loader{config};
+    loader_factory factory;
+    auto train_set = factory.get_loader(config);
 }
 
 TEST(localization_rcnn, generate_anchors)

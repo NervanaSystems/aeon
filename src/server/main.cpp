@@ -62,7 +62,7 @@ void aeon_server::handle_get(http_request message)
 
     try
     {
-        std::shared_ptr<nervana::loader> loader = std::make_shared<nervana::loader>(config.js);
+        std::shared_ptr<nervana::loader> loader = std::make_shared<nervana::loader_local>(config.js);
         size_t                           idx    = m_hash_fn(loader);
 
         m_aeon_clients[idx] = loader;

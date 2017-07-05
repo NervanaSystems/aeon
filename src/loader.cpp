@@ -74,7 +74,7 @@ void loader_config::validate()
     }
 }
 
-loader::loader(const std::string& config_string)
+loader_local::loader_local(const std::string& config_string)
     : m_current_iter(*this, false)
     , m_end_iter(*this, true)
 {
@@ -82,14 +82,14 @@ loader::loader(const std::string& config_string)
     initialize(tmp);
 }
 
-loader::loader(json& config_json)
+loader_local::loader_local(const json& config_json)
     : m_current_iter(*this, false)
     , m_end_iter(*this, true)
 {
     initialize(config_json);
 }
 
-loader::~loader()
+loader_local::~loader_local()
 {
     if (m_debug_web_app)
     {
@@ -97,7 +97,7 @@ loader::~loader()
     }
 }
 
-void loader::initialize(json& config_json)
+void loader_local::initialize(const json& config_json)
 {
     string config_string = config_json.dump();
     m_current_config     = config_json;
@@ -189,65 +189,65 @@ void loader::initialize(json& config_json)
     m_current_iter.m_empty_buffer.add_items(get_names_and_shapes(), (size_t)batch_size());
 }
 
-const vector<string>& loader::get_buffer_names() const
+const vector<string>& loader_local::get_buffer_names() const
 {
     return m_provider->get_buffer_names();
 }
 
-const vector<pair<string, shape_type>>& loader::get_names_and_shapes() const
+const map<string, shape_type>& loader_local::get_names_and_shapes() const
 {
     return m_provider->get_output_shapes();
 }
 
-const shape_t& loader::get_shape(const string& name) const
+const shape_t& loader_local::get_shape(const string& name) const
 {
     return m_provider->get_output_shape(name).get_shape();
 }
 
-loader_interface::iterator::iterator(loader_interface& ld, bool is_end)
+loader::iterator::iterator(loader& ld, bool is_end)
     : m_current_loader(ld)
     , m_is_end{is_end}
 {
 }
 
-loader_interface::iterator::iterator(const iterator& other)
+loader::iterator::iterator(const iterator& other)
     : m_current_loader{other.m_current_loader}
     , m_is_end{other.m_is_end}
 {
 }
 
-loader_interface::iterator& loader_interface::iterator::operator++()
+loader::iterator& loader::iterator::operator++()
 {
     m_current_loader.increment_position();
     return *this;
 }
 
-loader_interface::iterator& loader_interface::iterator::operator++(int)
+loader::iterator& loader::iterator::operator++(int)
 {
     iterator& rc = *this;
     ++rc;
     return rc;
 }
 
-bool loader_interface::iterator::operator==(const iterator& other) const
+bool loader::iterator::operator==(const iterator& other) const
 {
     bool res = &m_current_loader == &other.m_current_loader;
     res &= (other.m_is_end && positional_end()) || (m_is_end && other.positional_end());
     return res;
 }
 
-bool loader_interface::iterator::operator!=(const iterator& other) const
+bool loader::iterator::operator!=(const iterator& other) const
 {
     return !(*this == other);
 }
 
 // Whether or not this strictly positional iterator has reached the end
-bool loader_interface::iterator::positional_end() const
+bool loader::iterator::positional_end() const
 {
     return !m_is_end && (position() >= m_current_loader.batch_count());
 }
 
-const fixed_buffer_map& loader_interface::iterator::operator*() const
+const fixed_buffer_map& loader::iterator::operator*() const
 {
     const fixed_buffer_map* rc = nullptr;
 
@@ -263,7 +263,7 @@ const fixed_buffer_map& loader_interface::iterator::operator*() const
     return *rc;
 }
 
-void loader::increment_position()
+void loader_local::increment_position()
 {
     m_output_buffer_ptr = m_final_stage->next();
     m_position++;
@@ -275,17 +275,36 @@ void loader::increment_position()
     }
 }
 
-std::unique_ptr<loader_interface> loader_factory::get_loader(const std::string& config)
+std::unique_ptr<loader> loader_factory::get_loader(const std::string& config)
 {
     json parsed_config = json::parse(config);
+    if(remote_version(parsed_config))
+    {
+        ERR << "remote loader is not implemented yet";
+        return nullptr;
+    }
+    return make_unique<loader_local>(parsed_config);
+}
+
+std::unique_ptr<loader> loader_factory::get_loader(const json& config)
+{
+    if(remote_version(config))
+    {
+        ERR << "remote loader is not implemented yet";
+        return nullptr;
+    }
+    return make_unique<loader_local>(config);
+}
+
+bool loader_factory::remote_version(const json& config)
+{
     try
     {
-        parsed_config.at("server");
+        config.at("server");
     }
     catch (std::out_of_range)
     {
-        return make_unique<loader>(config);
+        return false;
     }
-    ERR << "remote loader is not implemented yet";
-    return nullptr;
+    return true;
 }

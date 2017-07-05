@@ -719,7 +719,8 @@ TEST(manifest, comma)
                                  {"iteration_mode", "INFINITE"},
                                  {"etl", {image_config, label_config}}};
 
-        EXPECT_THROW(nervana::loader{config}, std::runtime_error);
+        loader_factory factory;
+        EXPECT_THROW(factory.get_loader(config), std::runtime_error);
     }
 }
 
