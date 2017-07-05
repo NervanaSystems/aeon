@@ -42,6 +42,7 @@ namespace nervana
 {
     class loader_config;
     class loader_interface;
+    class loader_factory;
     class loader;
     class dataset_builder;
     class batch_decoder;
@@ -166,6 +167,12 @@ protected:
     virtual void increment_position() = 0;
 };
 
+class nervana::loader_factory
+{
+public:
+    std::unique_ptr<loader_interface> get_loader(const std::string& config);
+};
+
 class nervana::loader : public nervana::loader_interface
 {
 public:
@@ -222,13 +229,13 @@ private:
     std::shared_ptr<provider_interface>                     m_provider;
     std::shared_ptr<batch_decoder>                          m_decoder;
     std::shared_ptr<async_manager_source<fixed_buffer_map>> m_final_stage;
-    int                                                     m_batch_size;
-    BatchMode                                               m_batch_mode;
-    size_t                                                  m_batch_count_value;
-    size_t                                                  m_position{0};
-    fixed_buffer_map*                                       m_output_buffer_ptr{nullptr};
-    nlohmann::json                                          m_current_config;
-    std::shared_ptr<web_app>                                m_debug_web_app;
+    int                                 m_batch_size;
+    BatchMode                           m_batch_mode;
+    size_t                              m_batch_count_value;
+    size_t                              m_position{0};
+    fixed_buffer_map*                   m_output_buffer_ptr{nullptr};
+    nlohmann::json                      m_current_config;
+    std::shared_ptr<web_app>            m_debug_web_app;
 
     // How many times we should increase input data size for decoder
     const int m_input_multiplier = 8;

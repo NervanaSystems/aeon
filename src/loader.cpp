@@ -30,7 +30,9 @@
 using namespace std;
 using namespace nervana;
 
-loader_config::loader_config(nlohmann::json js)
+using nlohmann::json;
+
+loader_config::loader_config(json js)
 {
     if (js.is_null())
     {
@@ -76,11 +78,11 @@ loader::loader(const std::string& config_string)
     : m_current_iter(*this, false)
     , m_end_iter(*this, true)
 {
-    auto tmp = nlohmann::json::parse(config_string);
+    auto tmp = json::parse(config_string);
     initialize(tmp);
 }
 
-loader::loader(nlohmann::json& config_json)
+loader::loader(json& config_json)
     : m_current_iter(*this, false)
     , m_end_iter(*this, true)
 {
@@ -95,7 +97,7 @@ loader::~loader()
     }
 }
 
-void loader::initialize(nlohmann::json& config_json)
+void loader::initialize(json& config_json)
 {
     string config_string = config_json.dump();
     m_current_config     = config_json;
@@ -255,7 +257,7 @@ const fixed_buffer_map& loader_interface::iterator::operator*() const
     }
     else
     {
-       rc = &m_empty_buffer;
+        rc = &m_empty_buffer;
     }
 
     return *rc;
@@ -271,4 +273,19 @@ void loader::increment_position()
     {
         m_position = 0;
     }
+}
+
+std::unique_ptr<loader_interface> loader_factory::get_loader(const std::string& config)
+{
+    json parsed_config = json::parse(config);
+    try
+    {
+        parsed_config.at("server");
+    }
+    catch (std::out_of_range)
+    {
+        return make_unique<loader>(config);
+    }
+    ERR << "remote loader is not implemented yet";
+    return nullptr;
 }
