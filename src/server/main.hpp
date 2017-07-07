@@ -42,14 +42,3 @@ private:
     std::hash<std::shared_ptr<nervana::loader>> m_hash_fn;
 };
 
-std::shared_ptr<aeon_server> initialize(const utility::string_t& address);
-
-void shutdown(std::shared_ptr<aeon_server> server);
-
-class tpatejko
-{
-    std::shared_ptr<aeon_server> server;
-public:
-    tpatejko();
-    ~tpatejko();
-};

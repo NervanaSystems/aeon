@@ -16,6 +16,7 @@
 #include "pidfile.h"
 #include "utils.h"
 #include "main.hpp"
+#include "aeonsvc.hpp"
 
 /* Global timestamp value. It shell be used to update a timestamp field of block
    device structure. See block.h for details. */
@@ -182,7 +183,7 @@ int main(int argc, char *argv[]) {
     exit(STATUS_ONEXIT_ERROR);
 
   log_info("aeon service has been started...");
-  tpatejko tp;
+  start_deamon();
 
   while (terminate == 0) {
     timestamp = time(NULL);

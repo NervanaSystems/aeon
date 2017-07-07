@@ -8,6 +8,8 @@
 #include "manifest_builder.hpp"
 #include "gen_image.hpp"
 
+#include "aeonsvc.hpp"
+
 using namespace web::http;
 
 static std::string create_manifest_file(size_t record_count, size_t width, size_t height)
@@ -52,9 +54,10 @@ pplx::task<void> aeon_server::close()
 aeon_server::aeon_server(utility::string_t url)
     : m_listener(url)
 {
-    m_listener.support(methods::GET,
-                       std::bind(&aeon_server::handle_get, this, std::placeholders::_1));
+    m_listener.support(methods::GET, std::bind(&aeon_server::handle_get, this, std::placeholders::_1));
 }
+
+
 
 void aeon_server::handle_get(http_request message)
 {
@@ -77,35 +80,27 @@ void aeon_server::handle_get(http_request message)
     }
 }
 
-std::shared_ptr<aeon_server> initialize(const utility::string_t& address)
+struct shutdown_deamon
 {
-    uri_builder uri(address);
-    uri.append_path(U("aeon"));
+    void operator()(aeon_server* server)
+    {
+        server->close().wait();
+    }
+};
 
-    auto                         addr   = uri.to_uri().to_string();
-    std::shared_ptr<aeon_server> server = std::make_shared<aeon_server>(addr);
-    server->open().wait();
-
-    std::cout << "Address " << addr << std::endl;
-
-    return server;
-}
-
-void shutdown(std::shared_ptr<aeon_server> server)
-{
-    server->close().wait();
-}
-
-tpatejko::tpatejko()
+void start_deamon()
 {
     utility::string_t port = U("34568");
+    utility::string_t http_addr = U("http://127.0.0.1:");
+    utility::string_t path = U("aeon");
 
-    utility::string_t address = U("http://127.0.0.1:");
-    address.append(port);
+    http_addr.append(port);
+    uri_builder uri(http_addr);
+    uri.append_path(path);
 
-    server = initialize(address);
+    auto addr = uri.to_uri().to_string();
+
+    static std::unique_ptr<aeon_server, shutdown_deamon> server (new aeon_server(addr));
+    server->open().wait();
 }
-tpatejko::~tpatejko()
-{
-    shutdown(server);
-}
+
