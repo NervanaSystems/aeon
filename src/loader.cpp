@@ -189,17 +189,17 @@ void loader_local::initialize(const json& config_json)
     m_current_iter.m_empty_buffer.add_items(get_names_and_shapes(), (size_t)batch_size());
 }
 
-const vector<string>& loader_local::get_buffer_names() const
+vector<string> loader_local::get_buffer_names() const
 {
     return m_provider->get_buffer_names();
 }
 
-const map<string, shape_type>& loader_local::get_names_and_shapes() const
+map<string, shape_type> loader_local::get_names_and_shapes() const
 {
     return m_provider->get_output_shapes();
 }
 
-const shape_t& loader_local::get_shape(const string& name) const
+shape_t loader_local::get_shape(const string& name) const
 {
     return m_provider->get_output_shape(name).get_shape();
 }
