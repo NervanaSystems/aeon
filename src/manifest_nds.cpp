@@ -70,6 +70,7 @@ void network_client::get(const string& url, stringstream& stream)
     curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, callback);
     curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
+    curl_easy_setopt(m_curl, CURLOPT_NOPROXY, "127.0.0.1,localhost");
 
     // Perform the request, res will get the return code
     CURLcode res = curl_easy_perform(m_curl);
