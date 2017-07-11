@@ -15,24 +15,21 @@
 
 #pragma once
 
-#include <string>
-#include <map>
+#include "http_connector.hpp"
 
 namespace nervana
 {
-    struct http_response
-    {
-        int status_code;
-        std::string response;
-    };
-
-    using http_query_t = std::map<std::string, std::string>;
-
-    class http_client
+    class curl_connector final : public http_connector
     {
     public:
-        virtual ~http_client() {}
-        virtual http_response get(const std::string& url, const http_query_t& query) = 0;
-        virtual http_response post(const std::string& url, const std::string& body) = 0;
+        explicit curl_connector(const std::string& ip, unsigned int port);
+        curl_connector() = delete;
+
+        http_response get(const std::string& url, const http_query_t& query) override;
+        http_response post(const std::string& url, const std::string& body) override;
+
+    private:
+        std::string m_ip;
+        unsigned int m_port;
     };
 }

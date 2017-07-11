@@ -13,23 +13,24 @@
  limitations under the License.
 */
 
-#pragma once
+#include "curl_connector.hpp"
 
-#include "http_client.hpp"
+using std::string;
 
 namespace nervana
 {
-    class curl_client final : public http_client
+    curl_connector::curl_connector(const string& ip, unsigned int port)
+        : m_ip(ip), m_port(port)
     {
-    public:
-        explicit curl_client(const std::string& ip, unsigned int port);
-        curl_client() = delete;
+    }
 
-        http_response get(const std::string& url, const http_query_t& query) override;
-        http_response post(const std::string& url, const std::string& body) override;
+    http_response curl_connector::get(const std::string& url, const http_query_t& query)
+    {
+        return http_response();
+    }
 
-    private:
-        std::string m_ip;
-        unsigned int m_port;
-    };
+    http_response curl_connector::post(const std::string& url, const std::string& body)
+    {
+        return http_response();
+    }
 }

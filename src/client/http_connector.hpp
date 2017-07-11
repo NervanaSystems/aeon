@@ -13,16 +13,26 @@
  limitations under the License.
 */
 
-#include "service_client.hpp"
+#pragma once
 
-using std::map;
-using std::string;
+#include <string>
+#include <map>
 
-string nervana::to_string(service_status_type type)
+namespace nervana
 {
-    static map<service_status_type, string> status_map = {
-        { service_status_type::SUCCESS, "SUCCESS"},
-        { service_status_type::END_OF_DATASET, "END_OF_DATASET"}
+    struct http_response
+    {
+        int status_code;
+        std::string response;
     };
-    return status_map[type];
+
+    using http_query_t = std::map<std::string, std::string>;
+
+    class http_connector
+    {
+    public:
+        virtual ~http_connector() {}
+        virtual http_response get(const std::string& url, const http_query_t& query) = 0;
+        virtual http_response post(const std::string& url, const std::string& body) = 0;
+    };
 }

@@ -13,24 +13,16 @@
  limitations under the License.
 */
 
-#include "curl_client.hpp"
+#include "service.hpp"
 
+using std::map;
 using std::string;
 
-namespace nervana
+string nervana::to_string(service_status_type type)
 {
-    curl_client::curl_client(const string& ip, unsigned int port)
-        : m_ip(ip), m_port(port)
-    {
-    }
-
-    http_response curl_client::get(const std::string& url, const http_query_t& query)
-    {
-        return http_response();
-    }
-
-    http_response curl_client::post(const std::string& url, const std::string& body)
-    {
-        return http_response();
-    }
+    static map<service_status_type, string> status_map = {
+        { service_status_type::SUCCESS, "SUCCESS"},
+        { service_status_type::END_OF_DATASET, "END_OF_DATASET"}
+    };
+    return status_map[type];
 }

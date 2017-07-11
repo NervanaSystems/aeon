@@ -18,6 +18,7 @@
 #include <string>
 
 #include "../buffer_batch.hpp"
+#include "http_connector.hpp"
 
 namespace nervana
 {
@@ -32,8 +33,8 @@ namespace nervana
     class service_status
     {
     public:
-        bool           success() { return type == service_status_type::SUCCESS; }
-        bool           failure() { return type != service_status_type::SUCCESS; }
+        bool                success() { return type == service_status_type::SUCCESS; }
+        bool                failure() { return type != service_status_type::SUCCESS; }
         service_status_type type;
         std::string         description;
     };
@@ -50,17 +51,39 @@ namespace nervana
 
     using names_and_shapes = std::map<std::string, shape_type>;
 
-    class service_client
+    class next_response
     {
     public:
-        virtual ~service_client() {}
+        fixed_buffer_map* data;
+        int               position;
+    };
+
+    class service
+    {
+    public:
+        virtual ~service() {}
         virtual unsigned long                      create_session()       = 0;
         virtual service_response<names_and_shapes> get_names_and_shapes() = 0;
-        virtual service_response<fixed_buffer_map> next()                 = 0;
-        virtual service_status             reset()                = 0;
+        virtual service_response<next_response>    next()                 = 0;
+        virtual service_status                     reset()                = 0;
 
         virtual service_response<int> record_count() = 0;
         virtual service_response<int> batch_size()   = 0;
         virtual service_response<int> batch_count()  = 0;
+    };
+
+    class service_connector final : public service
+    {
+    public:
+        service_connector(std::shared_ptr<http_connector> http);
+
+        unsigned long                   create_session() override;
+        service_response<next_response> next() override;
+        service_status                  reset() override;
+
+        service_response<names_and_shapes> get_names_and_shapes() override;
+        service_response<int>              record_count() override;
+        service_response<int>              batch_size() override;
+        service_response<int>              batch_count() override;
     };
 }

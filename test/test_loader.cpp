@@ -496,7 +496,7 @@ TEST(benchmark, imagenet)
         int    height     = 224;
         int    width      = 224;
         size_t batch_size = 128;
-        string manifest   = file_util::path_join(manifest_root, "train-index.tsv");
+        string manifest   = file_util::path_join(manifest_root, "train-index.csv");
 
         json image_config = {
             {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};

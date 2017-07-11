@@ -46,9 +46,9 @@ set (SRC
     web_server.cpp
     event.cpp
     raw_image.cpp
-    client/curl_client.cpp
+    client/curl_connector.cpp
     client/loader_remote.cpp
-    client/service_client.cpp
+    client/service.cpp
 )
 
 file(GLOB DEPLOY_HEADERS_ABS *.hpp)
