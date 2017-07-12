@@ -15,7 +15,6 @@
 #include "status.h"
 #include "pidfile.h"
 #include "utils.h"
-#include "main.hpp"
 #include "aeonsvc.hpp"
 
 /* Global timestamp value. It shell be used to update a timestamp field of block

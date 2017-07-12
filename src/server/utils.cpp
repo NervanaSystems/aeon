@@ -277,7 +277,7 @@ int log_open(const char *path)
 {
 	if (s_log)
 		log_close();
-	char *t = rindex(path, PATH_DELIM);
+	char *t = (char*)rindex(path, PATH_DELIM);
 	if (t)
 		*t = '\0';
 	int status = _mkdir(path);

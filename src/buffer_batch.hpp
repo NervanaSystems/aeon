@@ -220,7 +220,7 @@ public:
         }
     }
 
-    const std::vector<std::string>& get_names() { return m_names; }
+    const std::vector<std::string>& get_names() const { return m_names; }
     const buffer_fixed_size_elements* operator[](const std::string& name) const
     {
         auto it = std::find_if(m_data.begin(), m_data.end(), [&](decltype(*m_data.begin())& v) {
