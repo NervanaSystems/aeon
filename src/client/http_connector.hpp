@@ -20,10 +20,18 @@
 
 namespace nervana
 {
-    struct http_response
+    class http_response
     {
-        int status_code;
-        std::string response;
+    public:
+        http_response(int status_code, const std::string& response)
+            : m_status_code(status_code)
+        , m_response(response)
+        {
+        }
+
+    private:
+        int         m_status_code;
+        std::string m_response;
     };
 
     using http_query_t = std::map<std::string, std::string>;
@@ -33,6 +41,6 @@ namespace nervana
     public:
         virtual ~http_connector() {}
         virtual http_response get(const std::string& url, const http_query_t& query) = 0;
-        virtual http_response post(const std::string& url, const std::string& body) = 0;
+        virtual http_response post(const std::string& url, const std::string& body)  = 0;
     };
 }

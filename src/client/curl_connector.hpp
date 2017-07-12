@@ -16,20 +16,29 @@
 #pragma once
 
 #include "http_connector.hpp"
+#include <curl/curl.h>
+#include <curl/easy.h>
+#include <curl/curlbuild.h>
 
 namespace nervana
 {
     class curl_connector final : public http_connector
     {
     public:
-        explicit curl_connector(const std::string& ip, unsigned int port);
+        explicit curl_connector(const std::string& address, unsigned int port);
         curl_connector() = delete;
+        ~curl_connector();
 
-        http_response get(const std::string& url, const http_query_t& query) override;
-        http_response post(const std::string& url, const std::string& body) override;
+        http_response get(const std::string& endpoint, const http_query_t& query) override;
+        http_response post(const std::string& endpoint, const std::string& body) override;
 
     private:
-        std::string m_ip;
-        unsigned int m_port;
+        static size_t callback(void* ptr, size_t size, size_t nmemb, void* stream);
+
+        std::string url_with_query(const std::string& url, const nervana::http_query_t& query);
+        std::string escape(const std::string& value);
+
+        std::string m_address;
+        CURL* m_curl;
     };
 }
