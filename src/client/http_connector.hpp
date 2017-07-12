@@ -20,18 +20,16 @@
 
 namespace nervana
 {
-    class http_response
+    struct http_response
     {
-    public:
-        http_response(int status_code, const std::string& response)
-            : m_status_code(status_code)
-        , m_response(response)
+        http_response(int _code, const std::string& _data)
+            : code(_code)
+            , data(_data)
         {
         }
 
-    private:
-        int         m_status_code;
-        std::string m_response;
+        int         code;
+        std::string data;
     };
 
     using http_query_t = std::map<std::string, std::string>;

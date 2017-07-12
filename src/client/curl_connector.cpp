@@ -16,6 +16,7 @@
 #include <sstream>
 
 #include "curl_connector.hpp"
+#include "../log.hpp"
 
 using std::string;
 using std::stringstream;
@@ -61,6 +62,7 @@ namespace nervana
         curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, callback);
         curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
 
+        INFO << "[GET] " << url;
         // Perform the request, res will get the return code
         CURLcode res = curl_easy_perform(m_curl);
 
@@ -95,6 +97,7 @@ namespace nervana
         curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
         curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, body.c_str());
 
+        INFO << "[POST] " << url;
         // Perform the request, res will get the return code
         CURLcode res = curl_easy_perform(m_curl);
 
@@ -129,6 +132,8 @@ namespace nervana
 
     string curl_connector::url_with_query(const string& url, const nervana::http_query_t& query)
     {
+        if(query.empty())
+            return url;
         stringstream ss;
         ss << url << "?";
         bool first = true;
@@ -161,12 +166,16 @@ namespace
     string address_with_port(const string& address, int port)
     {
         int size = address.size();
+        stringstream ss;
         if (size > 0 && address[size - 1] == '/')
         {
-            address.substr(0, size - 1);
+            ss << address.substr(0, size - 1);
         }
-        stringstream ss;
-        ss << address << ":" << port;
+        else
+        {
+            ss << address;
+        }
+        ss << ":" << port;
         return ss.str();
     }
 
