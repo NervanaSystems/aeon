@@ -23,7 +23,7 @@ using std::stringstream;
 
 namespace
 {
-    string address_with_port(const std::string& address, int port);
+    string address_with_port(const string& address, int port);
     string create_url(const string& address, const string& endpoint);
 }
 
@@ -59,7 +59,7 @@ namespace nervana
         string url = create_url(m_address, endpoint);
         url        = url_with_query(url, query);
         curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, callback);
+        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
 
         INFO << "[GET] " << url;
@@ -90,12 +90,17 @@ namespace nervana
         // given a url, make an HTTP GET request and fill stream with
         // the body of the response
         stringstream stream;
+        stringstream read_stream;
+        read_stream.write(body.c_str(), body.size());
 
         string url = create_url(m_address, endpoint);
         curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, callback);
+        curl_easy_setopt(m_curl, CURLOPT_POST, 1L);
+        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
-        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, body.c_str());
+        curl_easy_setopt(m_curl, CURLOPT_READFUNCTION, read_callback);
+        curl_easy_setopt(m_curl, CURLOPT_READDATA, &read_stream);
+        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, body.size());
 
         INFO << "[POST] " << url;
         // Perform the request, res will get the return code
@@ -120,7 +125,44 @@ namespace nervana
         return http_response(http_code, stream.str());
     }
 
-    size_t curl_connector::callback(void* ptr, size_t size, size_t nmemb, void* stream)
+    http_response curl_connector::post(const string& endpoint, const http_query_t& query)
+    {
+        // given a url, make an HTTP GET request and fill stream with
+        // the body of the response
+        stringstream stream;
+        string query_string = query_to_string(query);
+
+        string url = create_url(m_address, endpoint);
+        curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
+        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, query_string.c_str());
+        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, query_string.size());
+
+        INFO << "[POST] " << url;
+        // Perform the request, res will get the return code
+        CURLcode res = curl_easy_perform(m_curl);
+
+        // Check for errors
+        long http_code = 0;
+        curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &http_code);
+        if (res != CURLE_OK)
+        {
+            stringstream ss;
+            ss << "HTTP POST on \n'" << url << "' failed. ";
+            ss << "status code: " << http_code;
+            if (res != CURLE_OK)
+            {
+                ss << " curl return: " << curl_easy_strerror(res);
+            }
+
+            throw std::runtime_error(ss.str());
+        }
+
+        return http_response(http_code, stream.str());
+    }
+
+    size_t curl_connector::write_callback(void* ptr, size_t size, size_t nmemb, void* stream)
     {
         stringstream& ss = *(stringstream*)stream;
         // callback used by curl.  writes data from ptr into the
@@ -130,12 +172,26 @@ namespace nervana
         return size * nmemb;
     }
 
+    size_t curl_connector::read_callback(void* ptr, size_t size, size_t nmemb, void* stream)
+    {
+        stringstream& ss = *(stringstream*)stream;
+        if(size*nmemb < 1 || ss.eof())
+            return 0;
+
+        ss.read(static_cast<char*>(ptr), 1);
+        return 1;
+    }
+
     string curl_connector::url_with_query(const string& url, const nervana::http_query_t& query)
     {
         if(query.empty())
             return url;
+        return url + "?" + query_to_string(query);
+    }
+
+    string curl_connector::query_to_string(const http_query_t& query)
+    {
         stringstream ss;
-        ss << url << "?";
         bool first = true;
         for (const auto& item : query)
         {
@@ -148,7 +204,7 @@ namespace nervana
         return ss.str();
     }
 
-    std::string curl_connector::escape(const std::string& value)
+    string curl_connector::escape(const string& value)
     {
         char* output = curl_easy_escape(m_curl, value.c_str(), value.size());
         if (!output)

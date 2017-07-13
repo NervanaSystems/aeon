@@ -31,11 +31,16 @@ namespace nervana
 
         http_response get(const std::string& endpoint, const http_query_t& query = http_query_t()) override;
         http_response post(const std::string& endpoint, const std::string& body = "") override;
+        http_response post(const std::string& endpoint, const http_query_t& query) override;
 
     private:
-        static size_t callback(void* ptr, size_t size, size_t nmemb, void* stream);
+        // used for retrieving response body
+        static size_t write_callback(void* ptr, size_t size, size_t nmemb, void* stream);
+        // used for sending body
+        static size_t read_callback(void* ptr, size_t size, size_t nmemb, void* stream);
 
         std::string url_with_query(const std::string& url, const nervana::http_query_t& query);
+        std::string query_to_string(const http_query_t& query);
         std::string escape(const std::string& value);
 
         std::string m_address;
