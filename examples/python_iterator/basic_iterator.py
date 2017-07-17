@@ -25,7 +25,7 @@ cfg = {
            ]
         }
 
-d1 = DataLoader(config=json.dumps(cfg))
+d1 = DataLoader(config=cfg)
 print("d1 length {0}".format(len(d1)))
 
 shapes = d1.axes_info

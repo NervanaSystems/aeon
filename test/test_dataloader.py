@@ -1,15 +1,15 @@
 import tempfile
-
 import numpy as np
 from PIL import Image as PILImage
 import random
 import struct
 import pytest
-import json
 import os
 import math
+import glob
+import json 
 
-from aeon import DataLoader
+from aeon import DataLoader, dict2json
 from mock_data import random_manifest, generic_config, invalid_image
 
 batch_size = 2
@@ -18,9 +18,7 @@ def test_loader_invalid_config_type():
     manifest = random_manifest(10)
     config = generic_config(manifest.name, batch_size)
 
-    cfg = json.loads(config)
-    cfg["etl"][0]["type"] = 'invalid type name'
-    config = json.dumps(cfg)
+    config["etl"][0]["type"] = 'invalid type name'
 
     with pytest.raises(RuntimeError) as ex:
         dl = DataLoader(config)
@@ -32,9 +30,7 @@ def test_loader_missing_config_field():
     manifest = random_manifest(10)
     config = generic_config(manifest.name, batch_size)
 
-    cfg = json.loads(config)
-    del cfg['etl'][0]["height"]
-    config = json.dumps(cfg)
+    del config['etl'][0]["height"]
 
     with pytest.raises(RuntimeError) as ex:
         dl = DataLoader(config)
@@ -122,6 +118,72 @@ def test_loader_reset():
     assert len(list(iter(dl))) == math.ceil(10./batch_size)
     dl.reset()
     assert len(list(iter(dl))) == math.ceil(10./batch_size)
+
+
+def test_loader_json_parser_fail():
+    files = glob.glob("./json/fail*.json")
+
+    for f in files:
+        print f
+        with open(f) as json_file:
+            json_string = json_file.read()
+
+        try:
+            config = json.loads(json_string)
+        except ValueError:
+            continue
+
+        json_string = '{"config": %s}' % json_string
+        config = json.loads(json_string)
+        with pytest.raises(RuntimeError) as ex:
+            dl = DataLoader(config)
+        assert 'Required Argument' in str(ex) 
+
+def test_loader_json_parser_pass():
+    files = glob.glob("./json/pass*.json")
+
+    for f in files:
+        with open(f) as json_file:
+            json_string = json_file.read()
+            # config must be a dict so make sure it is a dict
+            json_string = '{"config": %s}' % json_string
+        config = json.loads(json_string)
+        with pytest.raises(RuntimeError) as ex:
+            dl = DataLoader(config)
+        assert 'Required Argument' in str(ex) 
+
+def test_parser_dump_pass():
+    files = glob.glob("./json/pass*.json")
+
+    for f in files:
+        with open(f) as json_file:
+            json_string = json_file.read()
+        config = json.loads(json_string)
+        # it should not throw exception unless config is not a dictionary
+        if isinstance(config, dict):
+            config2 = json.loads(dict2json(config))
+            assert (config == config2)
+        else:
+            with pytest.raises(RuntimeError) as ex:
+                dict2json(config)
+            assert("can only take dictionary" in str(ex))
+
+
+def test_parser_dump_fail():
+    files = glob.glob("./json/fail*.json")
+
+    for f in files:
+        with open(f) as json_file:
+            json_string = json_file.read()
+        try:
+            config = json.loads(json_string)
+        except ValueError:
+            continue
+
+        with pytest.raises(RuntimeError) as ex:
+            dict2json(config)
+        assert("can only take dictionary" in str(ex))
+
 
 if __name__ == '__main__':
     pytest.main()

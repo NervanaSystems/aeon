@@ -1,6 +1,5 @@
 import tempfile
 
-import json
 import numpy as np
 from PIL import Image as PILImage
 import random
@@ -72,7 +71,7 @@ def random_manifest(num_lines, invalid_image_index=None):
 
 
 def generic_config(manifest_name, batch_size):
-    return json.dumps({"manifest_filename": manifest_name,
+    return {"manifest_filename": manifest_name,
         "batch_size": batch_size,
         "etl": [{"type": "image","height": 2,"width": 2}, {"type": "label", "binary": False}]
-        })
+        }

@@ -15,7 +15,6 @@
 
 #include <iostream>
 #include <sstream>
-// #include <memory>
 
 #include "api.hpp"
 #include <numpy/arrayobject.h>
@@ -59,6 +58,159 @@ static PyObject* error_out(PyObject* m)
     return NULL;
 }
 
+/* This function handles py2 and py3 independent unpacking of string object (bytes or unicode)
+ * as an ascii std::string
+ */
+static std::string py23_string_to_string(PyObject* py_str)
+{
+    PyObject*         s = NULL;
+    std::stringstream ss;
+
+    if (PyUnicode_Check(py_str))
+    {
+        s = PyUnicode_AsUTF8String(py_str);
+    }
+    else if (PyBytes_Check(py_str))
+    {
+        s = PyObject_Bytes(py_str);
+    }
+    else
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Unexpected key type");
+    }
+
+    if (s != NULL)
+    {
+        ss << PyBytes_AsString(s);
+        Py_XDECREF(s);
+    }
+    return ss.str();
+}
+
+/* This class handles python dictionary conversion to nlohman::json object.
+ */
+class JsonParser
+{
+private:
+    enum Type
+    {
+        Bool,
+        Int,
+        Float,
+        List,
+        Dict,
+        String,
+        None
+    };
+
+    Type recognize(PyObject* object)
+    {
+        if (PyBool_Check(object))
+            return Type::Bool;
+        else if (PyFloat_Check(object))
+            return Type::Float;
+        else if (PyNumber_Check(object))
+            return Type::Int;
+        else if (PyList_Check(object))
+            return Type::List;
+        else if (PyMapping_Check(object))
+            return Type::Dict;
+        else if (PySequence_Check(object))
+            return Type::String;
+        else if (object == Py_None)
+            return Type::None;
+        else
+        {
+            std::stringstream ss;
+            ss << "Unexpected type in config dictionary:" << std::endl
+               << "Value: " << py23_string_to_string(PyObject_Repr(object)) << std::endl
+               << "Type: " << py23_string_to_string(PyObject_Repr(PyObject_Type(object)))
+               << std::endl;
+            throw std::invalid_argument(ss.str());
+        }
+    }
+
+    nlohmann::json parse_list(PyObject* list)
+    {
+        nervana::affirm(PyList_Check(list), "Input argument must be list.");
+        auto arr = nlohmann::json::array();
+        for (Py_ssize_t i = 0; i < PyList_Size(list); i++)
+        {
+            PyObject* value = PyList_GetItem(list, i);
+
+            switch (recognize(value))
+            {
+            case Type::Bool: arr.push_back((bool)(value == Py_True)); break;
+            case Type::Int: arr.push_back((int)PyLong_AsLong(value)); break;
+            case Type::Float: arr.push_back((float)PyFloat_AsDouble(value)); break;
+            case Type::List: arr.push_back(parse_list(value)); break;
+            case Type::Dict:
+            {
+                auto json = nlohmann::json::object();
+                parse_dict(value, json);
+                arr.push_back(json);
+                break;
+            }
+            case Type::String: arr.push_back(py23_string_to_string(value)); break;
+            case Type::None: arr.push_back(nullptr); break;
+            default:
+                throw std::runtime_error("Unexpected return value from recognize function.");
+                break;
+            }
+        }
+        return arr;
+    }
+
+    void parse_dict(PyObject* dict, nlohmann::json& json)
+    {
+        nervana::affirm(PyDict_Check(dict), "Input argument must be dictionary.");
+        PyObject * key, *value;
+        Py_ssize_t pos = 0;
+
+        while (PyDict_Next(dict, &pos, &key, &value))
+        {
+            std::string str_key = py23_string_to_string(key);
+
+            switch (recognize(value))
+            {
+            case Type::Bool: json[str_key]  = (bool)(value == Py_True); break;
+            case Type::Int: json[str_key]   = (int)PyLong_AsLong(value); break;
+            case Type::Float: json[str_key] = (float)PyFloat_AsDouble(value); break;
+            case Type::List: json[str_key]  = parse_list(value); break;
+            case Type::Dict: parse_dict(value, json[str_key]); break;
+            case Type::String: json[str_key] = py23_string_to_string(value); break;
+            case Type::None: json[str_key]   = nullptr; break;
+            }
+        }
+    }
+
+public:
+    nlohmann::json parse(PyObject* dictionary)
+    {
+        if (!PyDict_Check(dictionary))
+            throw std::invalid_argument("JsonParser::parse() can only take dictionary");
+        auto json = nlohmann::json::object();
+        parse_dict(dictionary, json);
+        return json;
+    }
+};
+
+/*
+ * This method dums dictionary to a json string
+ */
+static PyObject* dict2json(PyObject* self, PyObject* dictionary)
+{
+    try
+    {
+        return PyBytes_FromString(JsonParser().parse(dictionary).dump().c_str());
+    }
+    catch (std::exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    }
+}
+
 static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf);
 
 typedef struct
@@ -71,8 +223,10 @@ typedef struct
     uint32_t                m_i;
 } aeon_DataLoader;
 
-static PyMethodDef aeon_methods[] = {{"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
-                                     {NULL, NULL, NULL, NULL}};
+static PyMethodDef aeon_methods[] = {
+    {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
+    {"dict2json", (PyCFunction)dict2json, METH_O, "Dump dict to json string"},
+    {NULL, NULL, NULL, NULL}};
 
 static PyObject* DataLoader_iter(PyObject* self)
 {
@@ -141,34 +295,6 @@ static PySequenceMethods DataLoader_sequence_methods = {aeon_DataLoader_length, 
                                                         0, /* sq_inplace_repeat */
                                                         0 /* sq_inplace_repeat */};
 
-/* This function handles py2 and py3 independent unpacking of string object (bytes or unicode)
- * as an ascii std::string
- */
-static std::string py23_string_to_string(PyObject* py_str)
-{
-    PyObject*         s = NULL;
-    std::stringstream ss;
-
-    if (PyUnicode_Check(py_str))
-    {
-        s = PyUnicode_AsUTF8String(py_str);
-    }
-    else if (PyBytes_Check(py_str))
-    {
-        s = PyObject_Bytes(py_str);
-    }
-    else
-    {
-        PyErr_SetString(PyExc_RuntimeError, "Unexpected key type");
-    }
-
-    if (s != NULL)
-    {
-        ss << PyBytes_AsString(s);
-        Py_XDECREF(s);
-    }
-    return ss.str();
-}
 
 static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf)
 {
@@ -217,17 +343,16 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
     static const char* keyword_list[] = {"config", nullptr};
 
     PyObject* dict;
-    auto rc = PyArg_ParseTupleAndKeywords(args, kwds, "O", const_cast<char**>(keyword_list), &dict);
-
+    auto      rc = PyArg_ParseTupleAndKeywords(
+        args, kwds, "O!", const_cast<char**>(keyword_list), &PyDict_Type, &dict);
+    nlohmann::json json_config;
     if (rc)
     {
-        std::string    dict_string = py23_string_to_string(dict);
-        nlohmann::json json_config;
         try
         {
-            json_config = nlohmann::json::parse(dict_string);
+            json_config = JsonParser().parse(dict);
         }
-        catch(const std::exception& e)
+        catch (const std::exception& e)
         {
             std::stringstream ss;
             ss << "Unable to parse config: " << e.what();
@@ -251,7 +376,7 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             self->ndata      = Py_BuildValue("i", self->m_loader->record_count());
             self->batch_size = Py_BuildValue("i", self->m_loader->batch_size());
             self->axes_info  = PyDict_New();
-            self->config     = PyBytes_FromStringAndSize(dict_string.c_str(), dict_string.size());
+            self->config     = PyDict_Copy(dict);
 
             auto name_shape_list = self->m_loader->get_names_and_shapes();
 
@@ -287,7 +412,8 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             // Some kind of problem with creating the internal loader object
             ERR << "Unable to create internal loader object";
             std::stringstream ss;
-            ss << "Unable to create internal loader object: " << e.what();
+            ss << "Unable to create internal loader object: " << e.what() << endl;
+            ss << "config is: " << json_config << endl;
             PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
             return NULL;
         }
