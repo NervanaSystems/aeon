@@ -20,6 +20,13 @@
 
 namespace nervana
 {
+    namespace http
+    {
+        const int status_ok = 200;
+        const int status_created = 201;
+        const int status_accepted = 202;
+    }
+
     struct http_response
     {
         http_response(int _code, const std::string& _data)
@@ -27,6 +34,7 @@ namespace nervana
             , data(_data)
         {
         }
+        http_response() = delete;
 
         int         code;
         std::string data;
@@ -38,8 +46,8 @@ namespace nervana
     {
     public:
         virtual ~http_connector() {}
-        virtual http_response get(const std::string& url, const http_query_t& query) = 0;
-        virtual http_response post(const std::string& url, const std::string& body)  = 0;
+        virtual http_response get(const std::string& url, const http_query_t& query = http_query_t()) = 0;
+        virtual http_response post(const std::string& url, const std::string& body = "")  = 0;
         virtual http_response post(const std::string& endpoint, const http_query_t& query) = 0;
     };
 }

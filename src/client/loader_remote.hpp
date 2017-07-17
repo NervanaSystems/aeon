@@ -50,21 +50,23 @@ namespace nervana
         void initialize();
         void handle_response_failure(const service_status& status);
 
+        void create_session();
         void retrieve_names_and_shapes();
         void retrieve_record_count();
         void retrieve_batch_size();
         void retrieve_batch_count();
         void retrieve_next_batch();
 
-        nlohmann::json                  m_config;
+        nlohmann::json           m_config;
+        std::string              m_session_id;
         std::shared_ptr<service> m_service;
-        iterator                        m_current_iter;
-        iterator                        m_end_iter;
-        fixed_buffer_map*               m_output_buffer_ptr;
-        names_and_shapes                m_names_and_shapes;
-        int                             m_record_count;
-        int                             m_batch_size;
-        int                             m_batch_count;
-        size_t                          m_position{0};
+        iterator                 m_current_iter;
+        iterator                 m_end_iter;
+        fixed_buffer_map*        m_output_buffer_ptr;
+        names_and_shapes         m_names_and_shapes;
+        int                      m_record_count;
+        int                      m_batch_size;
+        int                      m_batch_count;
+        size_t                   m_position{0};
     };
 }

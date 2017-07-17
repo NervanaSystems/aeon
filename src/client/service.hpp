@@ -25,14 +25,36 @@ namespace nervana
     enum class service_status_type
     {
         SUCCESS,
-        END_OF_DATASET
+        END_OF_DATASET,
+        UNDEFINED
     };
 
-    std::string to_string(service_status_type);
+    std::string         to_string(service_status_type);
+    service_status_type service_status_type_from_string(const std::string& status);
 
     class service_status
     {
     public:
+        service_status(service_status_type _type, const std::string& _description)
+            : type(_type)
+            , description(_description)
+        {
+        }
+        service_status(const nlohmann::json& json);
+        service_status()
+            : type(service_status_type::UNDEFINED)
+        {
+        }
+
+        void assert_success()
+        {
+            if (!success())
+            {
+                throw std::runtime_error("service responded without success: " + to_string());
+            }
+        }
+
+        std::string         to_string() const;
         bool                success() { return type == service_status_type::SUCCESS; }
         bool                failure() { return type != service_status_type::SUCCESS; }
         service_status_type type;
@@ -43,6 +65,12 @@ namespace nervana
     class service_response
     {
     public:
+        service_response() {}
+        service_response(service_status _status, const T& _data)
+            : status(_status)
+            , data(_data)
+        {
+        }
         bool           success() { return status.success(); }
         bool           failure() { return status.failure(); }
         service_status status;
@@ -62,28 +90,38 @@ namespace nervana
     {
     public:
         virtual ~service() {}
-        virtual unsigned long                      create_session()       = 0;
-        virtual service_response<names_and_shapes> get_names_and_shapes() = 0;
-        virtual service_response<next_response>    next()                 = 0;
-        virtual service_status                     reset()                = 0;
+        virtual service_response<std::string> create_session(const std::string& config)        = 0;
+        virtual service_response<names_and_shapes> get_names_and_shapes(const std::string& id) = 0;
+        virtual service_response<next_response> next(const std::string& id)                    = 0;
+        virtual service_status reset(const std::string& id)                                    = 0;
 
-        virtual service_response<int> record_count() = 0;
-        virtual service_response<int> batch_size()   = 0;
-        virtual service_response<int> batch_count()  = 0;
+        virtual service_response<int> record_count(const std::string& id) = 0;
+        virtual service_response<int> batch_size(const std::string& id)   = 0;
+        virtual service_response<int> batch_count(const std::string& id)  = 0;
     };
 
     class service_connector final : public service
     {
     public:
         service_connector(std::shared_ptr<http_connector> http);
+        service_connector() = delete;
 
-        unsigned long                   create_session() override;
-        service_response<next_response> next() override;
-        service_status                  reset() override;
+        service_response<std::string> create_session(const std::string& config) override;
+        service_response<next_response> next(const std::string& id) override;
+        service_status reset(const std::string& id) override;
 
-        service_response<names_and_shapes> get_names_and_shapes() override;
-        service_response<int>              record_count() override;
-        service_response<int>              batch_size() override;
-        service_response<int>              batch_count() override;
+        service_response<names_and_shapes> get_names_and_shapes(const std::string& id) override;
+        service_response<int> record_count(const std::string& id) override;
+        service_response<int> batch_size(const std::string& id) override;
+        service_response<int> batch_count(const std::string& id) override;
+
+    private:
+        void handle_request_failure(const http_response& response);
+        service_response<int> handle_single_int_response(http_response response, const std::string& field_name);
+        void extract_status_and_json(const std::string& input,
+                                     service_status&    status,
+                                     nlohmann::json&    output_json);
+
+        std::shared_ptr<http_connector> m_http;
     };
 }

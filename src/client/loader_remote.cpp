@@ -16,6 +16,8 @@
 #include "loader_remote.hpp"
 
 using nlohmann::json;
+using std::exception;
+using std::runtime_error;
 using std::map;
 using std::shared_ptr;
 using std::string;
@@ -46,6 +48,8 @@ nervana::loader_remote::loader_remote(shared_ptr<service> client, const nlohmann
 
 void nervana::loader_remote::initialize()
 {
+    create_session();
+
     retrieve_names_and_shapes();
     retrieve_record_count();
     retrieve_batch_size();
@@ -53,6 +57,20 @@ void nervana::loader_remote::initialize()
     retrieve_next_batch();
 
     m_current_iter.m_empty_buffer.add_items(m_names_and_shapes, (size_t)batch_size());
+}
+
+void nervana::loader_remote::create_session()
+{
+    try
+    {
+        auto response = m_service->create_session(m_config);
+        response.status.assert_success();
+        m_session_id = response.data;
+    }
+    catch(const exception& ex)
+    {
+        throw runtime_error(string("cannot create service session: ") + ex.what());
+    }
 }
 
 vector<string> nervana::loader_remote::get_buffer_names() const
@@ -78,7 +96,7 @@ shape_t nervana::loader_remote::get_shape(const string& name) const {
 
 void nervana::loader_remote::retrieve_record_count()
 {
-    auto response = m_service->get_names_and_shapes();
+    auto response = m_service->get_names_and_shapes(m_session_id);
     if(!response.success())
     {
         handle_response_failure(response.status);
@@ -89,7 +107,7 @@ void nervana::loader_remote::retrieve_record_count()
 
 void nervana::loader_remote::retrieve_names_and_shapes()
 {
-    auto response = m_service->record_count();
+    auto response = m_service->record_count(m_session_id);
     if(!response.success())
     {
         handle_response_failure(response.status);
@@ -100,7 +118,7 @@ void nervana::loader_remote::retrieve_names_and_shapes()
 
 void nervana::loader_remote::retrieve_batch_size()
 {
-    auto response = m_service->batch_size();
+    auto response = m_service->batch_size(m_session_id);
     if(!response.success())
     {
         handle_response_failure(response.status);
@@ -111,7 +129,7 @@ void nervana::loader_remote::retrieve_batch_size()
 
 void nervana::loader_remote::retrieve_batch_count()
 {
-    auto response = m_service->batch_count();
+    auto response = m_service->batch_count(m_session_id);
     if(!response.success())
     {
         handle_response_failure(response.status);
@@ -122,7 +140,7 @@ void nervana::loader_remote::retrieve_batch_count()
 
 void nervana::loader_remote::retrieve_next_batch()
 {
-    auto response = m_service->next();
+    auto response = m_service->next(m_session_id);
     if(!response.success())
     {
         handle_response_failure(response.status);
@@ -140,7 +158,7 @@ nervana::loader::iterator nervana::loader_remote::begin()
 
 void nervana::loader_remote::reset()
 {
-    auto status = m_service->reset();
+    auto status = m_service->reset(m_session_id);
     if(!status.success())
     {
         handle_response_failure(status);
