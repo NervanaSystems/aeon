@@ -32,6 +32,7 @@ set (SRC
     test_pixel_mask.cpp
     test_provider_audio.cpp
     test_provider.cpp
+    test_service.cpp
     test_specgram.cpp
     test_types.cpp
     test_util.cpp
