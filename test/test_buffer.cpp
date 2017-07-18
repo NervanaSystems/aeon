@@ -18,6 +18,9 @@
 #include "buffer_batch.hpp"
 #include "helpers.hpp"
 #include "log.hpp"
+#include "file_util.hpp"
+#include "provider_factory.hpp"
+#include "provider_interface.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -100,5 +103,62 @@ TEST(buffer, read_exception)
     catch (std::exception& e)
     {
         ASSERT_STREQ("expect me", e.what());
+    }
+}
+
+TEST(buffer, serialization)
+{
+    int        height     = 24;
+    int        width      = 24;
+    size_t     batch_size = 8;
+    const bool pinned     = false;
+
+    using nlohmann::json;
+    json image_config = {
+        {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
+    json label_config = {{"type", "label"}, {"binary", false}};
+    json config = {{"manifest_root", ""},
+                   {"manifest_filename", ""},
+                   {"batch_size", batch_size},
+                   {"iteration_mode", "INFINITE"},
+                   {"cache_directory", ""},
+                   {"decode_thread_count", 0},
+                   {"etl", {image_config, label_config}}};
+
+    shared_ptr<nervana::provider_interface> provider = provider_factory::create(config);
+
+    // generate fixed_buffer_map sample
+    nervana::fixed_buffer_map fbm(provider->get_output_shapes(), batch_size, pinned);
+
+    std::minstd_rand0 rand_items(0);
+    for (auto name : fbm.get_names())
+    {
+        for (int i = 0; i < fbm[name]->size(); i++)
+            fbm[name]->data()[i] = rand_items() % 100 + 32;
+    }
+
+    // serialize
+    stringstream ss;
+    ss << fbm;
+
+    // deserialize
+    nervana::fixed_buffer_map fbm_restored;
+    ss >> fbm_restored;
+
+    // compare buffers
+    fbm_restored.get_names();
+    ASSERT_EQ(fbm_restored.get_names().size(), fbm.get_names().size());
+
+    for (int i = 0; i < fbm.get_names().size(); i++)
+    {
+        ASSERT_EQ(fbm_restored.get_names()[i], fbm.get_names()[i]);
+    }
+
+    for (auto name : fbm.get_names())
+    {
+        ASSERT_EQ(fbm[name]->size(), fbm_restored[name]->size());
+        EXPECT_TRUE(0 ==
+                    std::memcmp(fbm[name]->data(), fbm_restored[name]->data(), fbm[name]->size()));
+        EXPECT_TRUE(fbm[name]->get_shape_type() == fbm_restored[name]->get_shape_type());
     }
 }

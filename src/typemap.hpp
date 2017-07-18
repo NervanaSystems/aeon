@@ -194,6 +194,9 @@ public:
         }
     }
 
+    std::ostream& serialize(std::ostream& out) const;
+    std::istream& deserialize(std::istream& in);
+
 private:
     std::vector<size_t>      m_shape;
     output_type              m_otype;
@@ -206,3 +209,6 @@ private:
     static const std::string m_byte_size_json_name;
     static const std::string m_names_json_name;
 };
+
+std::ostream& operator<<(std::ostream& out, const nervana::shape_type& obj);
+std::istream& operator>>(std::istream& in, nervana::shape_type& obj);

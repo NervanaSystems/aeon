@@ -72,6 +72,31 @@ buffer_fixed_size_elements::buffer_fixed_size_elements(const buffer_fixed_size_e
     memcpy(m_data, rhs.m_data, m_size);
 }
 
+buffer_fixed_size_elements::buffer_fixed_size_elements(buffer_fixed_size_elements&& other)
+    : buffer_fixed_size_elements()
+{
+    swap(*this, other);
+}
+
+buffer_fixed_size_elements& buffer_fixed_size_elements::
+    operator=(buffer_fixed_size_elements&& other)
+{
+    swap(*this, other);
+    return *this;
+}
+
+void buffer_fixed_size_elements::swap(buffer_fixed_size_elements& first,
+                                      buffer_fixed_size_elements& second)
+{
+    using std::swap;
+    swap(first.m_data, second.m_data);
+    swap(first.m_shape_type, second.m_shape_type);
+    swap(first.m_size, second.m_size);
+    swap(first.m_batch_size, second.m_batch_size);
+    swap(first.m_stride, second.m_stride);
+    swap(first.m_pinned, second.m_pinned);
+}
+
 char* buffer_fixed_size_elements::get_item(size_t index)
 {
     size_t offset = index * m_stride;
@@ -235,4 +260,94 @@ void fixed_buffer_map::copy(fixed_buffer_map& src,
         else
             memcpy(p_dst, p_src, count * src_fbm->get_stride());
     }
+}
+
+std::ostream& buffer_fixed_size_elements::serialize(std::ostream& out) const
+{
+    const char separator = ',';
+    out << m_shape_type;
+    out << m_batch_size << separator;
+    out << m_pinned << separator;
+    out.write(m_data, m_size);
+    return out;
+}
+std::istream& buffer_fixed_size_elements::deserialize(std::istream& in)
+{
+    char       separator;
+    shape_type shape_type_tmp;
+    size_t     batch_size;
+    size_t     pinned;
+
+    in >> shape_type_tmp;
+    in >> batch_size >> separator;
+    in >> pinned >> separator;
+
+    buffer_fixed_size_elements tmp(shape_type_tmp, batch_size, pinned);
+
+    in.read(tmp.data(), tmp.size());
+    std::swap(*this, tmp);
+
+    return in;
+}
+
+std::ostream& operator<<(std::ostream& out, const nervana::buffer_fixed_size_elements& obj)
+{
+    return obj.serialize(out);
+}
+std::istream& operator>>(std::istream& in, nervana::buffer_fixed_size_elements& obj)
+{
+    return obj.deserialize(in);
+}
+
+std::ostream& fixed_buffer_map::serialize(std::ostream& out) const
+{
+    const char separator[] = ",";
+    out << m_data.size() << separator;
+    for (auto data : m_data)
+    {
+        out << data.first.size() << separator;
+        out << data.first << separator;
+        out << *data.second;
+    }
+
+    return out;
+}
+
+std::istream& fixed_buffer_map::deserialize(std::istream& in)
+{
+    for (auto buf : m_data)
+        delete buf.second;
+    m_data.clear();
+    m_names.clear();
+
+    char   separator;
+    size_t count;
+    in >> count >> separator;
+    for (int i = 0; i < count; i++)
+    {
+        size_t size;
+        in >> size >> separator;
+        vector<char> tmp(size);
+        in.read(tmp.data(), size);
+        in >> separator;
+
+        string name;
+        name.assign(tmp.data(), size);
+
+        buffer_fixed_size_elements* fse = new buffer_fixed_size_elements();
+        in >> *fse;
+
+        m_data[name] = fse;
+        m_names.push_back(name);
+    }
+    return in;
+}
+
+std::ostream& operator<<(std::ostream& out, const nervana::fixed_buffer_map& obj)
+{
+    return obj.serialize(out);
+}
+std::istream& operator>>(std::istream& in, nervana::fixed_buffer_map& obj)
+{
+    return obj.deserialize(in);
 }

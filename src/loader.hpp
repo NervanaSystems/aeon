@@ -145,7 +145,7 @@ public:
 
     virtual ~loader() {}
     virtual std::vector<std::string> get_buffer_names() const = 0;
-    virtual std::map<std::string, shape_type> get_names_and_shapes() const = 0;
+    virtual const std::vector<std::pair<std::string, shape_type>>& get_names_and_shapes() const = 0;
     virtual shape_t get_shape(const std::string& name) const = 0;
 
     virtual int record_count() const = 0;

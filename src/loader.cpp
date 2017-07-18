@@ -194,7 +194,7 @@ vector<string> loader_local::get_buffer_names() const
     return m_provider->get_buffer_names();
 }
 
-map<string, shape_type> loader_local::get_names_and_shapes() const
+const vector<pair<string, shape_type>>& loader_local::get_names_and_shapes() const
 {
     return m_provider->get_output_shapes();
 }

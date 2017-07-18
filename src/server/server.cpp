@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <sstream>
 
 #include "server.hpp"
 #include "json.hpp"
@@ -149,23 +150,14 @@ void aeon_server::handle_get(http_request message)
     
     auto& data = it->next();
 
-    std::vector<web::json::value> values;
-
-    for (auto name : data.get_names())
-    {
-        auto elements = data[name];
-
-        web::json::value value = web::json::value::object();
-        value[keywords::name] = web::json::value::string(name);
-
-        std::vector<char> encoded_data = nervana::base64::encode(elements->data(), elements->size());
-        value[keywords::data] = web::json::value::string(std::string(std::begin(encoded_data), std::end(encoded_data)));
-
-        values.push_back(value);
-    }
-
-    message.reply(status_codes::OK, web::json::value::array(values));
-
+    std::stringstream ss;
+    ss << data;
+    
+    std::vector<char> encoded_data = nervana::base64::encode(ss.str().data(), ss.str().size());
+    web::json::value value = web::json::value::object();
+    value[keywords::data] = web::json::value::string(std::string(encoded_data.begin(), encoded_data.end()));
+    
+    message.reply(status_codes::OK, value);
 }
 
 struct shutdown_deamon
@@ -190,5 +182,9 @@ void start_deamon()
 
     static std::unique_ptr<aeon_server, shutdown_deamon> server (new aeon_server(addr));
     server->open().wait();
+#ifdef RUN_AS_APPLICATION
+    std::string line;
+    std::getline(std::cin, line);
+#endif
 }
 
