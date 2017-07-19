@@ -46,8 +46,8 @@ namespace nervana
     {
     public:
         virtual ~http_connector() {}
-        virtual http_response get(const std::string& url, const http_query_t& query = http_query_t()) = 0;
-        virtual http_response post(const std::string& url, const std::string& body = "")  = 0;
+        virtual http_response get(const std::string& endpoint, const http_query_t& query = http_query_t()) = 0;
+        virtual http_response post(const std::string& endpoint, const std::string& body = "")  = 0;
         virtual http_response post(const std::string& endpoint, const http_query_t& query) = 0;
     };
 }

@@ -43,6 +43,7 @@ string nervana::to_string(service_status_type type)
 {
     static map<service_status_type, string> status_map = {
         {service_status_type::SUCCESS, "SUCCESS"},
+        {service_status_type::FAILURE, "FAILURE"},
         {service_status_type::END_OF_DATASET, "END_OF_DATASET"},
         {service_status_type::UNDEFINED, "UNDEFINED"}};
     return status_map[type];
@@ -52,6 +53,7 @@ service_status_type nervana::service_status_type_from_string(const string& input
 {
     static map<string, service_status_type> status_map = {
         {"SUCCESS", service_status_type::SUCCESS},
+        {"FAILURE", service_status_type::FAILURE},
         {"END_OF_DATASET", service_status_type::END_OF_DATASET},
         {"UNDEFINED", service_status_type::UNDEFINED}};
     if (status_map.find(input) == status_map.end())
@@ -63,15 +65,32 @@ service_status_type nervana::service_status_type_from_string(const string& input
 
 nervana::service_status::service_status(const json& input)
 {
+    string type_str;
     try
     {
-        string type_str = input.at("type");
-        type            = service_status_type_from_string(type_str);
-        description     = input.at("description");
+        type_str = input.at("type");
+    }
+    catch (const exception&)
+    {
+        throw invalid_argument("cannot parse service_status: no 'type' field provided");
+    }
+
+    try
+    {
+        type = service_status_type_from_string(type_str);
     }
     catch (const exception& ex)
     {
         throw invalid_argument(string("cannot parse service_status: ") + ex.what());
+    }
+
+    try
+    {
+        description = input.at("description");
+    }
+    catch (const exception&) // it's ok to not have description
+    {
+        description = "";
     }
 }
 
@@ -93,7 +112,7 @@ service_response<string> nervana::service_connector::create_session(const std::s
     http_response response = m_http->post(full_endpoint(""), config);
     if (response.code != http::status_accepted && response.code != http::status_created)
     {
-        throw runtime_error("wrong http code " + std::to_string(response.code));
+        throw runtime_error("wrong http status code " + std::to_string(response.code));
     }
 
     service_status status;
@@ -117,7 +136,7 @@ service_response<nervana::next_response> nervana::service_connector::next(const 
     http_response response = m_http->get(full_endpoint(id + "/next"));
     if (response.code != http::status_ok)
     {
-        throw runtime_error("wrong http code " + std::to_string(response.code));
+        throw runtime_error("wrong http status code " + std::to_string(response.code));
     }
     service_status status;
     json           json_response;
@@ -134,7 +153,7 @@ service_status nervana::service_connector::reset(const string& id)
     http_response response = m_http->get(full_endpoint(id + "/reset"));
     if (response.code != http::status_ok)
     {
-        throw runtime_error("wrong http code " + std::to_string(response.code));
+        throw runtime_error("wrong http status code " + std::to_string(response.code));
     }
     service_status status;
     json           json_response;
@@ -148,7 +167,7 @@ service_response<names_and_shapes>
     http_response response = m_http->get(full_endpoint(id + "/names_and_shapes"));
     if (response.code != http::status_ok)
     {
-        throw runtime_error("wrong http code " + std::to_string(response.code));
+        throw runtime_error("wrong http status code " + std::to_string(response.code));
     }
     service_status status;
     json           json_response;
@@ -178,12 +197,13 @@ service_response<int> nervana::service_connector::batch_count(const string& id)
     return handle_single_int_response(response, "batch_count");
 }
 
-service_response<int> nervana::service_connector::handle_single_int_response(http_response response,
-                                                          const string& field_name)
+service_response<int>
+    nervana::service_connector::handle_single_int_response(http_response response,
+                                                           const string& field_name)
 {
     if (response.code != http::status_ok)
     {
-        throw runtime_error("wrong http code " + std::to_string(response.code));
+        throw runtime_error("wrong http status code " + std::to_string(response.code));
     }
     service_status status;
     json           json_response;
@@ -197,8 +217,8 @@ service_response<int> nervana::service_connector::handle_single_int_response(htt
 }
 
 void nervana::service_connector::extract_status_and_json(const string&   input,
-                                             service_status& status,
-                                             json& output_json)
+                                                         service_status& status,
+                                                         json&           output_json)
 {
     json input_json;
     try
@@ -210,34 +230,39 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
         throw runtime_error(string("cannot parse json: ") + ex.what());
     }
 
+    json status_json;
     try
     {
-        status = service_status(input_json.at("status"));
+        status_json = input_json.at("status");
     }
-    catch (const exception& ex)
+    catch (const exception&)
     {
         throw runtime_error("service response does not contain status field");
     }
+    status = service_status(status_json);
+
     try
     {
         output_json = input_json.at("data");
     }
-    catch (const exception& ex)
+    catch (const exception&)
     {
-        throw runtime_error("service response does not contain data field");
+        // no data was provided
+        output_json = json({});
     }
 }
 
 namespace
 {
     string full_endpoint(const string& resource) { return endpoint_prefix + resource; }
+
     string get_string_field(const json& input, const string& key, const service_status& status)
     {
         try
         {
             return input.at(key);
         }
-        catch (const std::exception& ex)
+        catch (const std::exception&)
         {
             throw std::runtime_error("response body does not contain string field '" + key + "': " +
                                      status.to_string());
@@ -251,7 +276,7 @@ namespace
         {
             field = input.at(key);
         }
-        catch (const std::exception& ex)
+        catch (const std::exception&)
         {
             throw std::runtime_error("response body does not contain number field '" + key + "': " +
                                      status.to_string());
@@ -262,8 +287,8 @@ namespace
         }
         catch (const std::exception& ex)
         {
-            throw std::runtime_error("cannot convert field '" + key + "' to integer: " +
-                                     status.to_string());
+            throw std::runtime_error("cannot convert field '" + key + "' to integer: " + ex.what() +
+                                     "; status: " + status.to_string());
         }
     }
 }

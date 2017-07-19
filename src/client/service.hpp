@@ -25,6 +25,7 @@ namespace nervana
     enum class service_status_type
     {
         SUCCESS,
+        FAILURE,
         END_OF_DATASET,
         UNDEFINED
     };
