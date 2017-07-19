@@ -53,16 +53,16 @@ high and low level build systems)::
 ## Code coverage
 
     Code coverage in aeon depends on llvm-cov and lcov.
-    Raport will be generated in html-coverage-raport/index.html
+    Report will be generated in html-coverage-report/index.html
 
     Example:
 
     sudo apt-get install llvm lcov
     mkdir build
     cd build
-    # COVERAGE flag must be set to generate coverage raport
+    # COVERAGE flag must be set to generate coverage report
     cmake .. -DCOVERAGE=ON
-    # If you want to generate raport when unit test fails: make -i coverage
+    # If you want to generate report when unit test fails: make -i coverage
     make coverage
 
 ### To install aeon:
