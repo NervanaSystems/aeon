@@ -23,6 +23,8 @@
 #include <memory>
 
 #include "loader.hpp"
+#include "client/loader_remote.hpp"
+#include "client/curl_connector.hpp"
 #include "log.hpp"
 #include "web_app.hpp"
 #include "manifest_nds.hpp"
@@ -278,20 +280,36 @@ void loader_local::increment_position()
 std::unique_ptr<loader> loader_factory::get_loader(const std::string& config)
 {
     json parsed_config = json::parse(config);
-    if(remote_version(parsed_config))
-    {
-        ERR << "remote loader is not implemented yet";
-        return nullptr;
-    }
-    return make_unique<loader_local>(parsed_config);
+    return get_loader(parsed_config);
 }
 
 std::unique_ptr<loader> loader_factory::get_loader(const json& config)
 {
-    if(remote_version(config))
+    if (remote_version(config))
     {
-        ERR << "remote loader is not implemented yet";
-        return nullptr;
+        string address;
+        int    port;
+        try
+        {
+            address = config["server"]["address"];
+        }
+        catch (const exception& ex)
+        {
+            throw invalid_argument(string("cannot parse 'address' field from 'service' object: ") +
+                                   ex.what());
+        }
+        try
+        {
+            port = config["server"]["port"];
+        }
+        catch (const exception& ex)
+        {
+            throw invalid_argument(string("cannot parse 'port' field from 'service' object: ") +
+                                   ex.what());
+        }
+        shared_ptr<http_connector> my_http_connector = make_shared<curl_connector>(address, port);
+        shared_ptr<service>        my_service = make_shared<service_connector>(my_http_connector);
+        return make_unique<loader_remote>(my_service, config);
     }
     return make_unique<loader_local>(config);
 }
@@ -306,5 +324,24 @@ bool loader_factory::remote_version(const json& config)
     {
         return false;
     }
+
+    try
+    {
+        config.at("server").at("address");
+    }
+    catch (json::out_of_range)
+    {
+        throw invalid_argument("no 'address' field in 'server' object in config");
+    }
+
+    try
+    {
+        config.at("server").at("port");
+    }
+    catch (json::out_of_range)
+    {
+        throw invalid_argument("no 'port' field in 'server' object in config");
+    }
+
     return true;
 }

@@ -22,8 +22,10 @@ namespace nervana
 {
     class loader_remote final : public loader
     {
-        loader_remote(std::shared_ptr<service> client, const std::string&);
-        loader_remote(std::shared_ptr<service> client, const nlohmann::json&);
+    public:
+        loader_remote() = delete;
+        explicit loader_remote(std::shared_ptr<service> client, const std::string&);
+        explicit loader_remote(std::shared_ptr<service> client, const nlohmann::json&);
 
         ~loader_remote() override {}
         std::map<std::string, shape_type> get_names_and_shapes() const override

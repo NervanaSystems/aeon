@@ -255,7 +255,6 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
 namespace
 {
     string full_endpoint(const string& resource) { return endpoint_prefix + resource; }
-
     string get_string_field(const json& input, const string& key, const service_status& status)
     {
         try

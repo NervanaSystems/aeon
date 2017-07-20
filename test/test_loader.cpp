@@ -25,6 +25,7 @@
 #define private public
 
 #include "loader.hpp"
+#include "client/loader_remote.hpp"
 #include "manifest_builder.hpp"
 #include "gen_image.hpp"
 #include "file_util.hpp"
@@ -64,7 +65,7 @@ TEST(loader, syntax)
                {"augmentation", augmentation}};
 
     loader_factory factory;
-    auto train_set = factory.get_loader(js);
+    auto           train_set = factory.get_loader(js);
 }
 
 TEST(loader, iterator)
@@ -89,7 +90,7 @@ TEST(loader, iterator)
                {"augmentation", augmentation}};
 
     loader_factory factory;
-    auto train_set = factory.get_loader(js);
+    auto           train_set = factory.get_loader(js);
 
     auto begin = train_set->begin();
     auto end   = train_set->end();
@@ -133,7 +134,7 @@ TEST(loader, once)
                {"augmentation", augmentation}};
 
     loader_factory factory;
-    auto train_set = factory.get_loader(js);
+    auto           train_set = factory.get_loader(js);
 
     int count = 0;
     for (const fixed_buffer_map& data : *train_set)
@@ -170,7 +171,7 @@ TEST(loader, count)
     int expected_iterations = 4;
 
     loader_factory factory;
-    auto train_set = factory.get_loader(js);
+    auto           train_set = factory.get_loader(js);
 
     int count = 0;
     ASSERT_EQ(expected_iterations, train_set->batch_count());
@@ -205,7 +206,7 @@ TEST(loader, infinite)
                {"augmentation", augmentation}};
 
     loader_factory factory;
-    auto train_set = factory.get_loader(js);
+    auto           train_set = factory.get_loader(js);
 
     int count               = 0;
     int expected_iterations = record_count * 3;
@@ -247,7 +248,7 @@ TEST(loader, cache)
                {"augmentation", augmentation}};
 
     loader_factory factory;
-    auto train_set = factory.get_loader(js);
+    auto           train_set = factory.get_loader(js);
 
     int count               = 0;
     int expected_iterations = record_count * 3;
@@ -283,7 +284,7 @@ TEST(loader, test)
                {"augmentation", augmentation}};
 
     loader_factory factory;
-    auto train_set = factory.get_loader(js);
+    auto           train_set = factory.get_loader(js);
 
     auto buf_names = train_set->get_buffer_names();
     EXPECT_EQ(2, buf_names.size());
@@ -347,7 +348,7 @@ TEST(loader, provider)
                {"augmentation", augmentation}};
 
     loader_factory factory;
-    auto train_set = factory.get_loader(js);
+    auto           train_set = factory.get_loader(js);
 
     auto buf_names = train_set->get_buffer_names();
     EXPECT_EQ(2, buf_names.size());
@@ -458,27 +459,30 @@ TEST(loader, deterministic)
 TEST(loader, loader_factory_no_server)
 {
     loader_factory factory;
-    json config_json = create_some_config_with_manifest();
-    string config = config_json.dump();
+    json           config_json = create_some_config_with_manifest();
+    string         config      = config_json.dump();
 
     unique_ptr<loader> ptr = factory.get_loader(config);
     ASSERT_TRUE(dynamic_cast<loader_local*>(ptr.get()) != 0);
 
-    //unique_ptr<loader_interface> ptr2 = factory.get_loader(config);
-    //ASSERT_TRUE(dynamic_cast<loader_remote*>(ptr2.get()) == 0);
+    unique_ptr<loader> ptr2 = factory.get_loader(config);
+    ASSERT_TRUE(dynamic_cast<loader_remote*>(ptr2.get()) == 0);
 }
 
 TEST(loader, loader_factory_server)
 {
     loader_factory factory;
-    json config_json = create_some_config_with_manifest();
-    config_json["server"] = {{"ip", "127.0.0.1"}, {"port", "34568"}};
-    string config = config_json.dump();
+    json           config_json = create_some_config_with_manifest();
+    config_json["server"]      = {{"address", "127.0.0.1"}, {"port", 34568}};
 
-    unique_ptr<loader> ptr = factory.get_loader(config);
-    ASSERT_TRUE(dynamic_cast<loader_local*>(ptr.get()) == 0);
+    // there is no server running, so we expect exception
+    EXPECT_THROW(unique_ptr<loader> ptr = factory.get_loader(config_json), std::runtime_error);
 
-    //unique_ptr<loader_interface> ptr2 = factory.get_loader(config);
+    // unomment lines below when server will be available to use in testing
+    //unique_ptr<loader> ptr = factory.get_loader(config_json);
+    //ASSERT_TRUE(dynamic_cast<loader_local*>(ptr.get()) != 0);
+
+    //unique_ptr<loader> ptr2 = factory.get_loader(config_json);
     //ASSERT_TRUE(dynamic_cast<loader_local*>(ptr2.get()) == 0);
 }
 
@@ -524,7 +528,7 @@ TEST(benchmark, imagenet)
         try
         {
             loader_factory factory;
-            auto train_set = factory.get_loader(config);
+            auto           train_set = factory.get_loader(config);
 
             size_t       total_batch   = ceil((float)train_set->record_count() / (float)batch_size);
             size_t       current_batch = 0;

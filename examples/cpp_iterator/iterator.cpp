@@ -3,22 +3,32 @@
 
 #include "aeon.hpp"
 
-std::string generate_manifest_file(size_t record_count)
+using nlohmann::json;
+using std::cout;
+using std::endl;
+using std::shared_ptr;
+using std::string;
+
+using nervana::loader;
+using nervana::loader_factory;
+using nervana::manifest_file;
+
+string generate_manifest_file(size_t record_count)
 {
-    std::string manifest_name = "manifest.txt";
+    string manifest_name = "manifest.txt";
     const char* image_files[] = {"flowers.jpg", "img_2112_70.jpg"};
     std::ofstream f(manifest_name);
     if (f)
     {
-        f << nervana::manifest_file::get_metadata_char();
-        f << nervana::manifest_file::get_file_type_id();
-        f << nervana::manifest_file::get_delimiter();
-        f << nervana::manifest_file::get_string_type_id();
+        f << manifest_file::get_metadata_char();
+        f << manifest_file::get_file_type_id();
+        f << manifest_file::get_delimiter();
+        f << manifest_file::get_string_type_id();
         f << "\n";
         for (size_t i=0; i<record_count; i++)
         {
             f << image_files[i % 2];
-            f << nervana::manifest_file::get_delimiter();
+            f << manifest_file::get_delimiter();
             f << std::to_string(i % 2);
             f << "\n";
         }
@@ -28,29 +38,38 @@ std::string generate_manifest_file(size_t record_count)
 
 int main(int argc, char** argv)
 {
-    std::cout << "hello world" << std::endl;
-
     int    height        = 32;
     int    width         = 32;
-    size_t batch_size    = 1;
-    std::string manifest_root = "";
-    std::string manifest      = generate_manifest_file(20);
+    size_t batch_size    = 4;
+    string manifest_root = "./";
+    string manifest      = generate_manifest_file(20);
 
-    nlohmann::json image_config = {{"type", "image"},
+    json image_config = {{"type", "image"},
                                {"height", height},
                                {"width", width},
                                {"channel_major", false}};
-    nlohmann::json label_config = {{"type", "label"},
+    json label_config = {{"type", "label"},
                                {"binary", false}};
-    nlohmann::json aug_config = {{"type", "image"},
-                             {"flip_enable", true}};
-    nlohmann::json config = {{"manifest_root", manifest_root},
+    json aug_config = {{{"type", "image"},
+                             {"flip_enable", true}}};
+    json config = {{"manifest_root", manifest_root},
                          {"manifest_filename", manifest},
                          {"batch_size", batch_size},
-                         {"iteration_mode", "INFINITE"},
+                         {"iteration_mode", "ONCE"},
                          {"etl", {image_config, label_config}},
-                         {"augmentation", {{aug_config}}}};
+                         {"augmentation", aug_config}};
 
-    nervana::loader_factory factory;
-    auto train_set = factory.get_loader( config );
+    loader_factory factory;
+    shared_ptr<loader> train_set = factory.get_loader( config );
+
+    cout << "batch size: " << train_set->batch_size() << endl;
+    cout << "batch count: " << train_set->batch_count() << endl;
+    cout << "record count: " << train_set->record_count() << endl;
+
+    int batch_no = 0;
+    for(const auto& batch : *train_set)
+    {
+        cout << "\tbatch " << batch_no << " [number of elements: " << batch.size() << "]" << endl;
+        batch_no++;
+    }
 }
