@@ -12,6 +12,8 @@
 #include "aeonsvc.hpp"
 
 using namespace web::http;
+using nlohmann::json;
+using namespace std;
 
 namespace keywords
 {
@@ -53,16 +55,32 @@ default_config::default_config()
           {"augmentation", augmentation}};
 }
 
-agents_database::agents_database(const nlohmann::json& config)
-    : m_config(config)
+uint32_t loader_manager::register_agent(const nlohmann::json& config)
 {
-    m_dataloader = std::make_shared<nervana::loader_local>(m_config);
-    m_id = get_dataset_seed();
+    lock_guard<mutex> lg(m_mutex);
+    
+    if (m_loaders.size() >= max_loader_number - 1)
+        throw std::runtime_error("the number of loaders exceeded");
+    
+    uint32_t id;
+    while( m_loaders.find(id = (m_id_generator() % max_loader_number)) != m_loaders.end())
+    {};
+    
+    id = 1;
+    m_loaders[id] = std::make_unique<nervana::loader_local>(config);
+    
+    return id;
 }
 
-const nervana::fixed_buffer_map& agents_database::next()
+const nervana::fixed_buffer_map& loader_manager::next(uint32_t id)
 {
-    return *m_dataloader->get_current_iter();
+    auto it = m_loaders.find(id);
+    if (it == m_loaders.end())
+        throw invalid_argument("loader doesn't exist");
+    
+    auto& loader = *it->second;
+    loader.get_current_iter()++;
+    return *loader.get_current_iter();
 }
 
 aeon_server::aeon_server(utility::string_t url)
@@ -105,15 +123,25 @@ void aeon_server::handle_post(http_request message)
         throw std::invalid_argument("Incorrect dataset keyword");
     }
 
-    agents_database ds(m_config.js);
-
-    m_datasets.push_back(ds);
-
-    uint64_t idx = ds.get_id();
-
-    web::json::value json_idx = web::json::value::object();
-    json_idx[keywords::id]           = web::json::value::number(idx);
-    message.reply(status_codes::OK, json_idx);
+    web::json::value   reply_json  = web::json::value::object();
+    
+    uint32_t id = 0;
+    try
+    {
+        id = m_loader_manager.register_agent(m_config.js);
+    }
+    catch (exception& ex)
+    {
+        reply_json["status"]["type"]        = web::json::value::string("FAILURE");
+        reply_json["status"]["description"] = web::json::value::string(ex.what());
+        message.reply(status_codes::Accepted, reply_json);
+        return;
+    }
+    
+    reply_json["status"]["type"] = web::json::value::string("SUCCESS");
+    reply_json["data"]["id"]     = web::json::value::string(to_string(id));
+    //reply_json["data"]["id"]     = web::json::value::number(id);
+    message.reply(status_codes::Accepted, reply_json);
 }
 
 void aeon_server::handle_get(http_request message)
@@ -140,18 +168,10 @@ void aeon_server::handle_get(http_request message)
         throw std::invalid_argument("Incorrect dataset keyword");
     }
 
-    uint64_t id = std::stoull(json_id);
-    auto it = std::find_if(m_datasets.begin(), m_datasets.end(), [id] (auto& a) -> bool { return a.get_id() == id; });
-
-    if (it == m_datasets.end()) 
-    {
-        throw std::invalid_argument("Incorrect id value in message");
-    }
+    uint32_t id = std::stoull(json_id);
     
-    auto& data = it->next();
-
     std::stringstream ss;
-    ss << data;
+    ss << m_loader_manager.next(id);
     
     std::vector<char> encoded_data = nervana::base64::encode(ss.str().data(), ss.str().size());
     web::json::value value = web::json::value::object();
@@ -168,11 +188,12 @@ struct shutdown_deamon
     }
 };
 
+#define RUN_AS_APPLICATION
 void start_deamon()
 {
     utility::string_t port = U("34568");
     utility::string_t http_addr = U("http://127.0.0.1:");
-    utility::string_t path = U("aeon");
+    utility::string_t path = U("api");
 
     http_addr.append(port);
     uri_builder uri(http_addr);

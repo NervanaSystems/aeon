@@ -4,6 +4,7 @@
 #include <memory>
 #include <chrono>
 #include <random>
+#include <mutex>
 
 #include <cpprest/http_listener.h>
 
@@ -29,27 +30,17 @@ struct default_config
     default_config();
 };
 
-static uint64_t get_dataset_seed()
-{
-    static uint64_t seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-    static std::mt19937 m_id_generator(seed);
-
-    return m_id_generator();
-}
-
-class agents_database
+class loader_manager
 {
 public:
-    agents_database(const nlohmann::json& config);
-    uint64_t get_id() { return m_id; }
-
-    const nervana::fixed_buffer_map& next();
-
+    loader_manager():m_id_generator(std::random_device{}()){}
+    uint32_t register_agent(const nlohmann::json& config);
+    const nervana::fixed_buffer_map& next(uint32_t id);
 private:
-    uint64_t m_id;
-    nlohmann::json m_config;
-
-    std::shared_ptr<nervana::loader_local> m_dataloader;
+    const uint32_t max_loader_number = 1000;
+    std::mt19937 m_id_generator;
+    std::mutex m_mutex;
+    std::map<uint32_t, std::unique_ptr<nervana::loader_local> > m_loaders;
 };
 
 class aeon_server
@@ -67,6 +58,6 @@ private:
     web::http::experimental::listener::http_listener m_listener;
     default_config m_config;
 
-    std::vector<agents_database> m_datasets;
+    loader_manager m_loader_manager;
 };
 
