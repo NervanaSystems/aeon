@@ -22,9 +22,37 @@ namespace nervana
 {
     namespace http
     {
-        const int status_ok = 200;
-        const int status_created = 201;
+        const int status_ok       = 200;
+        const int status_created  = 201;
         const int status_accepted = 202;
+
+        inline std::string merge_http_paths(const std::string& first, const std::string& second)
+        {
+            auto   first_size  = first.size();
+            auto   second_size = second.size();
+            if(second_size == 0)
+            {
+                return first;
+            }
+            std::string result        = "";
+            if (first_size > 0 && first[first_size - 1] == '/')
+            {
+                result = first;
+            }
+            else
+            {
+                result = first + "/";
+            }
+            if (second_size > 0 && second[0] == '/')
+            {
+                result += second.substr(1, second_size - 1);
+            }
+            else
+            {
+                result += second;
+            }
+            return result;
+        }
     }
 
     struct http_response
@@ -46,8 +74,9 @@ namespace nervana
     {
     public:
         virtual ~http_connector() {}
-        virtual http_response get(const std::string& endpoint, const http_query_t& query = http_query_t()) = 0;
-        virtual http_response post(const std::string& endpoint, const std::string& body = "")  = 0;
-        virtual http_response post(const std::string& endpoint, const http_query_t& query) = 0;
+        virtual http_response get(const std::string&  endpoint,
+                                  const http_query_t& query = http_query_t()) = 0;
+        virtual http_response post(const std::string& endpoint, const std::string& body = "") = 0;
+        virtual http_response post(const std::string& endpoint, const http_query_t& query)    = 0;
     };
 }

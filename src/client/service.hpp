@@ -83,6 +83,34 @@ namespace nervana
     class next_response
     {
     public:
+        next_response()
+            : data(nullptr)
+            , position(-1)
+        {
+        }
+        next_response(int _position, fixed_buffer_map* buffer_map)
+            : data(buffer_map)
+            , position(_position)
+        {
+        }
+
+        bool operator==(const next_response& other)
+        {
+            bool result = position == other.position;
+
+            // use serialzation to compare instances - this may not work if serialization results are not repeatable
+            if (data == nullptr)
+            {
+                return &(other.data) == nullptr;
+            }
+            std::ostringstream this_serialized, other_serialized;
+            data->serialize(this_serialized);
+            other.data->serialize(other_serialized);
+            result &= this_serialized.str() == other_serialized.str();
+
+            return result;
+        }
+
         fixed_buffer_map* data;
         int               position;
     };
@@ -118,11 +146,13 @@ namespace nervana
 
     private:
         void handle_request_failure(const http_response& response);
-        service_response<int> handle_single_int_response(http_response response, const std::string& field_name);
+        service_response<int> handle_single_int_response(http_response      response,
+                                                         const std::string& field_name);
         void extract_status_and_json(const std::string& input,
                                      service_status&    status,
                                      nlohmann::json&    output_json);
 
         std::shared_ptr<http_connector> m_http;
+        fixed_buffer_map                m_buffer_map;
     };
 }

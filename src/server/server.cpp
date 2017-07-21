@@ -19,7 +19,7 @@ namespace keywords
 {
     static const std::string next = "next";
     static const std::string dataset = "dataset";
-    static const std::string version = "v1";
+    static const std::string version = "api/v1";
 
     static const std::string id = "id";
     static const std::string data = "data";
@@ -101,6 +101,7 @@ pplx::task<void> aeon_server::close()
 
 void aeon_server::handle_post(http_request message)
 {
+    std::cout<<"POST!"<<std::endl;
     auto path = web::uri::split_path(web::uri::decode(message.relative_uri().path()));
 
     //Path should have format v1/dataset

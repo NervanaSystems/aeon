@@ -21,10 +21,11 @@
 using std::string;
 using std::stringstream;
 
+using nervana::http::merge_http_paths;
+
 namespace
 {
     string address_with_port(const string& address, int port);
-    string create_url(const string& address, const string& endpoint);
 }
 
 namespace nervana
@@ -56,7 +57,7 @@ namespace nervana
         // the body of the response
         stringstream stream;
 
-        string url = create_url(m_address, endpoint);
+        string url = merge_http_paths(m_address, endpoint);
         url        = url_with_query(url, query);
         curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_callback);
@@ -93,7 +94,7 @@ namespace nervana
         stringstream read_stream;
         read_stream.write(body.c_str(), body.size());
 
-        string url = create_url(m_address, endpoint);
+        string url = merge_http_paths(m_address, endpoint);
         curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(m_curl, CURLOPT_POST, 1L);
         curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_callback);
@@ -132,7 +133,7 @@ namespace nervana
         stringstream stream;
         string query_string = query_to_string(query);
 
-        string url = create_url(m_address, endpoint);
+        string url = merge_http_paths(m_address, endpoint);
         curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
@@ -235,27 +236,4 @@ namespace
         return ss.str();
     }
 
-    string create_url(const string& address, const string& endpoint)
-    {
-        auto   address_size  = address.size();
-        auto   endpoint_size = endpoint.size();
-        string result        = "";
-        if (address_size > 0 && address[address_size - 1] == '/')
-        {
-            result = address;
-        }
-        else
-        {
-            result = address + "/";
-        }
-        if (endpoint_size > 0 && endpoint[0] == '/')
-        {
-            result += endpoint.substr(1, endpoint_size - 1);
-        }
-        else
-        {
-            result += endpoint;
-        }
-        return result;
-    }
 }

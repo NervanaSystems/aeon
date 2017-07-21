@@ -14,14 +14,17 @@
 */
 
 #include "service.hpp"
+#include "../base64.hpp"
 
 using nlohmann::json;
 using std::exception;
+using std::istringstream;
 using std::invalid_argument;
 using std::map;
 using std::runtime_error;
 using std::string;
 
+using nervana::base64;
 using nervana::names_and_shapes;
 using nervana::service_status_type;
 using nervana::service_response;
@@ -145,7 +148,33 @@ service_response<nervana::next_response> nervana::service_connector::next(const 
     {
         return service_response<next_response>(status, next_response());
     }
-    return service_response<next_response>(status, next_response());
+
+    int position = get_int_field(json_response, "position", status);
+
+    string encoded_buffer_map;
+    try
+    {
+        encoded_buffer_map = json_response.at("fixed_buffer_map");
+    }
+    catch (const exception&)
+    {
+        throw runtime_error("no field 'fixed_buffer_map' in 'data' object of service response");
+    }
+
+    std::vector<char> serialized_buffer_map =
+        base64::decode(encoded_buffer_map.c_str(), encoded_buffer_map.size());
+
+    try
+    {
+        istringstream stream(string(serialized_buffer_map.begin(), serialized_buffer_map.end()));
+        m_buffer_map.deserialize(stream);
+    }
+    catch (const exception& ex)
+    {
+        throw runtime_error(string("cannot deserialize fixed_buffer_map: ") + ex.what());
+    }
+
+    return service_response<next_response>(status, next_response(position, &m_buffer_map));
 }
 
 service_status nervana::service_connector::reset(const string& id)
@@ -254,7 +283,11 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
 
 namespace
 {
-    string full_endpoint(const string& resource) { return endpoint_prefix + resource; }
+    string full_endpoint(const string& resource)
+    {
+        return nervana::http::merge_http_paths(endpoint_prefix, resource);
+    }
+
     string get_string_field(const json& input, const string& key, const service_status& status)
     {
         try

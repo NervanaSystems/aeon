@@ -121,6 +121,7 @@ static void _aeonsvc_setup_signals(void) {
   sigprocmask(SIG_UNBLOCK, &sigset, NULL);
 }
 
+#define RUN_AS_APPLICATION
 int main(int argc, char *argv[]) {
 #ifdef RUN_AS_APPLICATION
    start_deamon();
