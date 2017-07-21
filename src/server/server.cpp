@@ -66,7 +66,6 @@ uint32_t loader_manager::register_agent(const nlohmann::json& config)
     while( m_loaders.find(id = (m_id_generator() % max_loader_number)) != m_loaders.end())
     {};
     
-    id = 1;
     m_loaders[id] = std::make_unique<nervana::loader_local>(config);
     
     return id;
@@ -188,7 +187,6 @@ struct shutdown_deamon
     }
 };
 
-#define RUN_AS_APPLICATION
 void start_deamon()
 {
     utility::string_t port = U("34568");
@@ -203,9 +201,5 @@ void start_deamon()
 
     static std::unique_ptr<aeon_server, shutdown_deamon> server (new aeon_server(addr));
     server->open().wait();
-#ifdef RUN_AS_APPLICATION
-    std::string line;
-    std::getline(std::cin, line);
-#endif
 }
 

@@ -124,6 +124,8 @@ static void _aeonsvc_setup_signals(void) {
 int main(int argc, char *argv[]) {
 #ifdef RUN_AS_APPLICATION
    start_deamon();
+   while(true)
+        getchar();
 #else
   verbose = VERB_ALL;
   printf("%s\n", "launching aeon service...");
