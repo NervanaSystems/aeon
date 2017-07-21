@@ -161,4 +161,15 @@ TEST(buffer, serialization)
                     std::memcmp(fbm[name]->data(), fbm_restored[name]->data(), fbm[name]->size()));
         EXPECT_TRUE(fbm[name]->get_shape_type() == fbm_restored[name]->get_shape_type());
     }
+
+    // /////////////////////////////////////////////////////////
+    stringstream ss_spahes;
+    ss_spahes << provider->get_output_shapes();
+
+    std::map<std::string, nervana::shape_type> shapes_restored;
+    ss_spahes >> shapes_restored;
+    for (auto shape:provider->get_output_shapes())
+    {
+        ASSERT_EQ(shape.second, shapes_restored[shape.first]);
+    }
 }

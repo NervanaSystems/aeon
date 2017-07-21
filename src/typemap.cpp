@@ -26,6 +26,7 @@ const std::string nervana::shape_type::m_byte_size_json_name = "byte_size";
 const std::string nervana::shape_type::m_names_json_name     = "names";
 
 using namespace nervana;
+using nlohmann::json;
 
 std::ostream& shape_type::serialize(std::ostream& out) const
 {
@@ -50,4 +51,24 @@ std::ostream& operator<<(std::ostream& out, const nervana::shape_type& obj)
 std::istream& operator>>(std::istream& in, nervana::shape_type& obj)
 {
     return obj.deserialize(in);
+}
+
+std::ostream& operator<<(std::ostream& out, const std::map<std::string, nervana::shape_type>& obj)
+{
+    json json_out;
+    for (auto el: obj)
+        to_json(json_out[el.first], el.second);
+
+    out << json_out;
+    return out;
+}
+std::istream& operator>>(std::istream& in, std::map<std::string, nervana::shape_type>& obj)
+{
+    json json_in;
+    in >> json_in;
+
+    for (json::iterator it = json_in.begin(); it != json_in.end(); ++it)
+        from_json(it.value(), obj[it.key()]);
+
+    return in;
 }
