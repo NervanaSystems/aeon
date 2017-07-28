@@ -13,21 +13,22 @@
  limitations under the License.
 */
 
+#include <numeric>
+
 #include "gtest/gtest.h"
-#include "gen_image.hpp"
 
-#include "provider_factory.hpp"
-
-#include "etl_image.hpp"
-#include "etl_boundingbox.hpp"
-#include "etl_label_map.hpp"
-#include "json.hpp"
 #include "cpio.hpp"
-#include "util.hpp"
+#include "etl_boundingbox.hpp"
+#include "etl_image.hpp"
+#include "etl_label_map.hpp"
 #include "file_util.hpp"
-#include "provider_factory.hpp"
-#include "loader.hpp"
+#include "gen_image.hpp"
 #include "helpers.hpp"
+#include "json.hpp"
+#include "loader.hpp"
+#include "provider_factory.hpp"
+#include "provider_factory.hpp"
+#include "util.hpp"
 
 extern gen_image image_dataset;
 

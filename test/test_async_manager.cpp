@@ -13,9 +13,10 @@
  limitations under the License.
 */
 
-#include <vector>
-#include <array>
 #include <algorithm>
+#include <array>
+#include <numeric>
+#include <vector>
 
 #include "gtest/gtest.h"
 

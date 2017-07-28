@@ -14,6 +14,7 @@
 */
 
 #include <fstream>
+#include <numeric>
 #include <sstream>
 
 #include <curl/curl.h>

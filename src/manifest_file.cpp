@@ -16,12 +16,13 @@
 #include <sys/stat.h>
 
 #include <algorithm>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
-#include <fstream>
-#include <string>
+#include <numeric>
 #include <sstream>
-#include <iomanip>
+#include <string>
 
 #include "manifest_file.hpp"
 #include "util.hpp"

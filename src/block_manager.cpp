@@ -13,9 +13,10 @@
  limitations under the License.
 */
 
-#include <iomanip>
-#include <fstream>
 #include <exception>
+#include <fstream>
+#include <iomanip>
+#include <numeric>
 #include <random>
 
 #include "block_manager.hpp"
