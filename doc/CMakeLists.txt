@@ -75,8 +75,8 @@ if (REQUIRED_PACKAGES_FOUND)
 	# endif
 	# SPHINXCMD     = `which ${SPHINXBUILD}`
 	set(SPHINXCMD ${SPHINX_EXECUTABLE})
-	# SPHINXENVCMD  = env -i ${SPHINXCMD}
-	set(SPHINXENVCMD env -i ${SPHINXCMD})
+	# SPHINXENVCMD  = env ${SPHINXCMD}
+	set(SPHINXENVCMD env ${SPHINXCMD})
 
 	# # Internal variables.
 	# PAPEROPT_a4     = -D latex_paper_size=a4
