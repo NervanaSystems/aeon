@@ -7,7 +7,7 @@ import pytest
 import os
 import math
 import glob
-import json 
+import json
 
 from aeon import DataLoader, dict2json
 from mock_data import random_manifest, generic_config, invalid_image
@@ -168,7 +168,6 @@ def test_parser_dump_pass():
                 dict2json(config)
             assert("can only take dictionary" in str(ex))
 
-
 def test_parser_dump_fail():
     files = glob.glob("./json/fail*.json")
 
@@ -184,6 +183,23 @@ def test_parser_dump_fail():
             dict2json(config)
         assert("can only take dictionary" in str(ex))
 
+def test_parse_json_dict_list_pass():
+    test_dir = os.path.dirname(os.path.realpath(__file__)) + '/test_data/'
+
+    config = {'batch_size': 16, 'manifest_root': test_dir, 'manifest_filename': test_dir + 'manifest.csv',
+        'etl': [{'type': 'image', 'width': 32, 'height': 32}, {'type': 'label', 'binary': False}]}
+
+    dl = DataLoader(config)
+    assert (dl.config["etl"][0]["type"] == 'image' and dl.config["etl"][1]["type"] == 'label')
+
+def test_parse_json_dict_tuple_pass():
+    test_dir = os.path.dirname(os.path.realpath(__file__)) + '/test_data/'
+
+    config = {'batch_size': 16, 'manifest_root': test_dir, 'manifest_filename': test_dir + 'manifest.csv',
+        'etl': ({'type': 'image', 'width': 32, 'height': 32}, {'type': 'label', 'binary': False})}
+
+    dl = DataLoader(config)
+    assert (dl.config["etl"][0]["type"] == 'image' and dl.config["etl"][1]["type"] == 'label')
 
 if __name__ == '__main__':
     pytest.main()
