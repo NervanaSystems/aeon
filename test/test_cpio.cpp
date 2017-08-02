@@ -28,7 +28,7 @@
 using namespace std;
 using namespace nervana;
 
-#warning put a better test here later
+// TODO put a better test here later
 TEST(cpio, read_canonical)
 {
     ifstream f(string(CURDIR) + "/test_data/test.cpio", istream::binary);
