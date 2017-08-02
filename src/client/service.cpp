@@ -19,6 +19,7 @@
 using nlohmann::json;
 using std::exception;
 using std::istringstream;
+using std::ostringstream;
 using std::invalid_argument;
 using std::map;
 using std::runtime_error;
@@ -205,7 +206,31 @@ service_response<names_and_shapes>
     {
         return service_response<names_and_shapes>(status, names_and_shapes());
     }
-    return service_response<names_and_shapes>(status, names_and_shapes());
+
+    string encoded_nas;
+    try
+    {
+        encoded_nas = json_response.at("names_and_shapes");
+    }
+    catch (const exception&)
+    {
+        throw runtime_error("no field 'names_and_shapes' in 'data' object of service response");
+    }
+
+    std::vector<char> serialized_nas =
+        base64::decode(encoded_nas.c_str(), encoded_nas.size());
+
+    names_and_shapes nas;
+    try
+    {
+        istringstream stream(string(serialized_nas.begin(), serialized_nas.end()));
+        stream >> nas;
+    }
+    catch (const exception& ex)
+    {
+        throw runtime_error(string("cannot deserialize names_and_shapes: ") + ex.what());
+    }
+    return service_response<names_and_shapes>(status, nas);
 }
 
 service_response<int> nervana::service_connector::record_count(const string& id)

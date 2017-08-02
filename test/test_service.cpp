@@ -33,6 +33,7 @@ namespace
     const string session_id = "3";
 
     fixed_buffer_map& get_fixed_buffer_map();
+    names_and_shapes  get_names_and_shapes();
 }
 
 class mock_http_connector : public http_connector
@@ -194,7 +195,7 @@ TEST(service_connector, next)
         service_connector connector(mock);
 
         fixed_buffer_map& buffer_map = get_fixed_buffer_map();
-        stringstream     serialized_buffer_map;
+        stringstream      serialized_buffer_map;
         buffer_map.serialize(serialized_buffer_map);
         std::vector<char> encoded_buffer_map = nervana::base64::encode(
             serialized_buffer_map.str().data(), serialized_buffer_map.str().size());
@@ -255,17 +256,23 @@ TEST(service_connector, names_and_shapes)
         auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
         service_connector connector(mock);
 
+        map<string, shape_type> nas = get_names_and_shapes();
+        stringstream serialized_nas;
+        serialized_nas << nas;
+        std::vector<char> encoded_nas =
+            nervana::base64::encode(serialized_nas.str().data(), serialized_nas.str().size());
+
         json expected_json;
-        expected_json["status"]["type"]     = "SUCCESS";
-        expected_json["data"]["names_and_shapes"] = "";
-        auto   expected_response            = http_response(http::status_ok, expected_json.dump());
-        string endpoint                     = "/api/v1/dataset/" + session_id + "/names_and_shaped";
+        expected_json["status"]["type"]           = "SUCCESS";
+        expected_json["data"]["names_and_shapes"] = string(encoded_nas.begin(), encoded_nas.end());
+        auto   expected_response = http_response(http::status_ok, expected_json.dump());
+        string endpoint          = "/api/v1/dataset/" + session_id + "/names_and_shapes";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
         service_response<names_and_shapes> response = connector.get_names_and_shapes(session_id);
 
         EXPECT_EQ(response.status.type, service_status_type::SUCCESS);
-        //EXPECT_EQ(response.data, 64);
+        EXPECT_EQ(response.data, nas);
     }
 
     // status type is not success
@@ -296,5 +303,15 @@ namespace
         size_t                  batch_size = 1;
         static fixed_buffer_map result(write_sizes, batch_size);
         return result;
+    }
+
+    names_and_shapes get_names_and_shapes()
+    {
+        names_and_shapes nas;
+        shape_type       s1{{1, 2}, {"int8_t"}};
+        shape_type       s2{{1, 2, 3, 4, 5}, {"int32_t"}};
+        nas["s1"] = s1;
+        nas["s2"] = s2;
+        return nas;
     }
 }

@@ -48,6 +48,7 @@ std::ostream& operator<<(std::ostream& out, const nervana::shape_type& obj)
 {
     return obj.serialize(out);
 }
+
 std::istream& operator>>(std::istream& in, nervana::shape_type& obj)
 {
     return obj.deserialize(in);
@@ -56,12 +57,13 @@ std::istream& operator>>(std::istream& in, nervana::shape_type& obj)
 std::ostream& operator<<(std::ostream& out, const std::map<std::string, nervana::shape_type>& obj)
 {
     json json_out;
-    for (auto el: obj)
+    for (auto el : obj)
         to_json(json_out[el.first], el.second);
 
     out << json_out;
     return out;
 }
+
 std::istream& operator>>(std::istream& in, std::map<std::string, nervana::shape_type>& obj)
 {
     json json_in;
