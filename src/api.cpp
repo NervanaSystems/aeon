@@ -85,6 +85,7 @@ typedef struct
     PyObject*               config;
     loader*                 m_loader;
     uint32_t                m_i;
+    bool                    m_first_iteration;
 } aeon_DataLoader;
 
 static PyMethodDef aeon_methods[] = {
@@ -99,6 +100,7 @@ static PyObject* DataLoader_iter(PyObject* self)
 #endif
     Py_INCREF(self);
     DL_get_loader(self)->reset();
+    ((aeon_DataLoader*)(self))->m_first_iteration = true;
     return self;
 }
 
@@ -108,6 +110,12 @@ static PyObject* DataLoader_iternext(PyObject* self)
     INFO << " aeon_DataLoader_iternext";
 #endif
     PyObject* result = NULL;
+
+    if (!((aeon_DataLoader*)(self))->m_first_iteration)
+        DL_get_loader(self)->get_current_iter()++;
+    else
+        ((aeon_DataLoader*)(self))->m_first_iteration = false;
+
     if (DL_get_loader(self)->get_current_iter() != DL_get_loader(self)->get_end_iter())
     {
         // d will be const fixed_buffer_map&
@@ -129,7 +137,6 @@ static PyObject* DataLoader_iternext(PyObject* self)
                 PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
             }
         }
-        DL_get_loader(self)->get_current_iter()++;
     }
     else
     {
@@ -236,12 +243,13 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
 
         try
         {
-            self->m_loader   = new loader(json_config);
-            self->m_i        = 0;
-            self->ndata      = Py_BuildValue("i", self->m_loader->record_count());
-            self->batch_size = Py_BuildValue("i", self->m_loader->batch_size());
-            self->axes_info  = PyDict_New();
-            self->config     = PyDict_Copy(dict);
+            self->m_loader          = new loader(json_config);
+            self->m_i               = 0;
+            self->m_first_iteration = true;
+            self->ndata             = Py_BuildValue("i", self->m_loader->record_count());
+            self->batch_size        = Py_BuildValue("i", self->m_loader->batch_size());
+            self->axes_info         = PyDict_New();
+            self->config            = PyDict_Copy(dict);
 
             auto name_shape_list = self->m_loader->get_names_and_shapes();
 
