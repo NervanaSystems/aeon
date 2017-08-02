@@ -7,7 +7,7 @@ if(NOT PYTHON_EXECUTABLE)
 endif()
 
 if(PYTHON_EXECUTABLE)
-    execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+    execute_process(COMMAND "python" "-c"
         "import numpy as n; print(n.get_include());"
         RESULT_VARIABLE NUMPY_RESULT
         OUTPUT_VARIABLE NUMPY_INCLUDE_DIRS
