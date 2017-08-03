@@ -134,22 +134,25 @@ void loader::initialize(nlohmann::json& config_json)
 
     m_block_manager = make_shared<block_manager>(
         m_block_loader.get(), lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_enable);
-    
+
     m_provider = provider_factory::create(config_json);
-    
-    if (lcfg.batch_size > std::thread::hardware_concurrency() * m_increase_input_size_coefficient )
+
+    unsigned int threads_num = lcfg.decode_thread_count != 0 ? lcfg.decode_thread_count
+                                                             : std::thread::hardware_concurrency();
+
+    if (lcfg.batch_size > threads_num * m_increase_input_size_coefficient)
     {
         m_batch_iterator = make_shared<batch_iterator>(m_block_manager.get(), lcfg.batch_size);
-        m_final_stage = make_shared<batch_decoder>(m_batch_iterator.get(),
-                                           static_cast<size_t>(lcfg.batch_size),
-                                           lcfg.decode_thread_count,
-                                           lcfg.pinned,
-                                           m_provider);
+        m_final_stage    = make_shared<batch_decoder>(m_batch_iterator.get(),
+                                                   static_cast<size_t>(lcfg.batch_size),
+                                                   lcfg.decode_thread_count,
+                                                   lcfg.pinned,
+                                                   m_provider);
     }
     else
     {
-        const int decode_size = std::thread::hardware_concurrency() * m_input_multiplier;
-        m_batch_iterator = make_shared<batch_iterator>(m_block_manager.get(), decode_size);
+        const int decode_size = threads_num * m_input_multiplier;
+        m_batch_iterator      = make_shared<batch_iterator>(m_block_manager.get(), decode_size);
 
         m_decoder = make_shared<batch_decoder>(m_batch_iterator.get(),
                                                     decode_size,
@@ -159,7 +162,7 @@ void loader::initialize(nlohmann::json& config_json)
 
         m_final_stage = make_shared<batch_iterator_fbm>(m_decoder.get(), lcfg.batch_size, m_provider);
     }
-  
+
     m_output_buffer_ptr = m_final_stage->next();
 
     if (lcfg.web_server_port != 0)
@@ -231,18 +234,8 @@ bool loader::iterator::positional_end() const
 
 const fixed_buffer_map& loader::iterator::operator*() const
 {
-    const fixed_buffer_map* rc = nullptr;
-
-    if (m_current_loader.m_output_buffer_ptr)
-    {
-        rc = m_current_loader.m_output_buffer_ptr;
-    }
-    else
-    {
-       rc = &m_empty_buffer;
-    }
-
-    return *rc;
+    return m_current_loader.m_output_buffer_ptr ? *m_current_loader.m_output_buffer_ptr
+                                                : m_empty_buffer;
 }
 
 void loader::increment_position()
