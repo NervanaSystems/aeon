@@ -97,24 +97,24 @@ shape_t nervana::loader_remote::get_shape(const string& name) const
 
 void nervana::loader_remote::retrieve_record_count()
 {
-    auto response = m_service->get_names_and_shapes(m_session_id);
+    auto response = m_service->record_count(m_session_id);
     if (!response.success())
     {
         handle_response_failure(response.status);
         return;
     }
-    m_names_and_shapes = response.data;
+    m_record_count = response.data;
 }
 
 void nervana::loader_remote::retrieve_names_and_shapes()
 {
-    auto response = m_service->record_count(m_session_id);
+    auto response = m_service->get_names_and_shapes(m_session_id);
     if (!response.success())
     {
         handle_response_failure(response.status);
         m_record_count = -1;
     }
-    m_record_count = response.data;
+    m_names_and_shapes = response.data;
 }
 
 void nervana::loader_remote::retrieve_batch_size()

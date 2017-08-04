@@ -44,6 +44,5 @@ namespace nervana
         std::string escape(const std::string& value);
 
         std::string m_address;
-        CURL* m_curl;
     };
 }

@@ -17,11 +17,11 @@ using namespace std;
 
 namespace keywords
 {
-    static const std::string next = "next";
+    static const std::string next    = "next";
     static const std::string dataset = "dataset";
-    static const std::string version = "api/v1";
+    static const std::string version = "v1";
 
-    static const std::string id = "id";
+    static const std::string id   = "id";
     static const std::string data = "data";
     static const std::string name = "name";
 }
@@ -58,16 +58,19 @@ default_config::default_config()
 uint32_t loader_manager::register_agent(const nlohmann::json& config)
 {
     lock_guard<mutex> lg(m_mutex);
-    
+
     if (m_loaders.size() >= max_loader_number - 1)
         throw std::runtime_error("the number of loaders exceeded");
-    
+
     uint32_t id;
-    while( m_loaders.find(id = (m_id_generator() % max_loader_number)) != m_loaders.end())
-    {};
-    
+    while (m_loaders.find(id = (m_id_generator() % max_loader_number)) != m_loaders.end())
+    {
+    };
+
     m_loaders[id] = std::make_unique<nervana::loader_local>(config);
-    
+
+    INFO << "Created new session " << id;
+
     return id;
 }
 
@@ -76,7 +79,7 @@ const nervana::fixed_buffer_map& loader_manager::next(uint32_t id)
     auto it = m_loaders.find(id);
     if (it == m_loaders.end())
         throw invalid_argument("loader doesn't exist");
-    
+
     auto& loader = *it->second;
     loader.get_current_iter()++;
     return *loader.get_current_iter();
@@ -85,8 +88,10 @@ const nervana::fixed_buffer_map& loader_manager::next(uint32_t id)
 aeon_server::aeon_server(utility::string_t url)
     : m_listener(url)
 {
-    m_listener.support(methods::POST, std::bind(&aeon_server::handle_post, this, std::placeholders::_1));
-    m_listener.support(methods::GET, std::bind(&aeon_server::handle_get, this, std::placeholders::_1));
+    m_listener.support(methods::POST,
+                       std::bind(&aeon_server::handle_post, this, std::placeholders::_1));
+    m_listener.support(methods::GET,
+                       std::bind(&aeon_server::handle_get, this, std::placeholders::_1));
 }
 
 pplx::task<void> aeon_server::open()
@@ -101,7 +106,7 @@ pplx::task<void> aeon_server::close()
 
 void aeon_server::handle_post(http_request message)
 {
-    std::cout<<"POST!"<<std::endl;
+    std::cout << "POST!" << std::endl;
     auto path = web::uri::split_path(web::uri::decode(message.relative_uri().path()));
 
     //Path should have format v1/dataset
@@ -110,10 +115,10 @@ void aeon_server::handle_post(http_request message)
         throw std::invalid_argument("Incorrect number of elements in path");
     }
 
-    utility::string_t ver = path[0];
+    utility::string_t ver        = path[0];
     utility::string_t dataset_kw = path[1];
 
-    if (ver != keywords::version) 
+    if (ver != keywords::version)
     {
         throw std::invalid_argument("Incorrect version value");
     }
@@ -123,8 +128,8 @@ void aeon_server::handle_post(http_request message)
         throw std::invalid_argument("Incorrect dataset keyword");
     }
 
-    web::json::value   reply_json  = web::json::value::object();
-    
+    web::json::value reply_json = web::json::value::object();
+
     uint32_t id = 0;
     try
     {
@@ -137,15 +142,15 @@ void aeon_server::handle_post(http_request message)
         message.reply(status_codes::Accepted, reply_json);
         return;
     }
-    
+
     reply_json["status"]["type"] = web::json::value::string("SUCCESS");
     reply_json["data"]["id"]     = web::json::value::string(to_string(id));
-    //reply_json["data"]["id"]     = web::json::value::number(id);
     message.reply(status_codes::Accepted, reply_json);
 }
 
 void aeon_server::handle_get(http_request message)
 {
+    std::cout << "GET!" << std::endl;
     auto path = web::uri::split_path(web::uri::decode(message.relative_uri().path()));
 
     //Path should have format v1/next/<id>
@@ -154,13 +159,19 @@ void aeon_server::handle_get(http_request message)
         throw std::invalid_argument("Incorrect number of elements in path");
     }
 
-    utility::string_t ver = path[0];
-    utility::string_t next_kw = path[1];
+    utility::string_t ver     = path[0];
+    utility::string_t dataset     = path[0];
     utility::string_t json_id = path[2];
+    utility::string_t next_kw = path[3];
 
-    if (ver != keywords::version) 
+    if (ver != keywords::version)
     {
         throw std::invalid_argument("Incorrect version value");
+    }
+
+    if (dataset != keywords::dataset)
+    {
+        throw std::invalid_argument("Incorrect dataset value");
     }
 
     if (next_kw != keywords::next)
@@ -169,30 +180,28 @@ void aeon_server::handle_get(http_request message)
     }
 
     uint32_t id = std::stoull(json_id);
-    
+
     std::stringstream ss;
     ss << m_loader_manager.next(id);
-    
+
     std::vector<char> encoded_data = nervana::base64::encode(ss.str().data(), ss.str().size());
-    web::json::value value = web::json::value::object();
-    value[keywords::data] = web::json::value::string(std::string(encoded_data.begin(), encoded_data.end()));
-    
+    web::json::value  value        = web::json::value::object();
+    value[keywords::data] =
+        web::json::value::string(std::string(encoded_data.begin(), encoded_data.end()));
+
     message.reply(status_codes::OK, value);
 }
 
 struct shutdown_deamon
 {
-    void operator()(aeon_server* server)
-    {
-        server->close().wait();
-    }
+    void operator()(aeon_server* server) { server->close().wait(); }
 };
 
 void start_deamon()
 {
-    utility::string_t port = U("34568");
+    utility::string_t port      = U("34568");
     utility::string_t http_addr = U("http://127.0.0.1:");
-    utility::string_t path = U("api");
+    utility::string_t path      = U("api");
 
     http_addr.append(port);
     uri_builder uri(http_addr);
@@ -200,7 +209,6 @@ void start_deamon()
 
     auto addr = uri.to_uri().to_string();
 
-    static std::unique_ptr<aeon_server, shutdown_deamon> server (new aeon_server(addr));
+    static std::unique_ptr<aeon_server, shutdown_deamon> server(new aeon_server(addr));
     server->open().wait();
 }
-

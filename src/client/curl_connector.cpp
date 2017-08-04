@@ -38,38 +38,39 @@ namespace nervana
         curl_global_init(CURL_GLOBAL_ALL);
 
         // reuse curl connection across requests
-        m_curl = curl_easy_init();
-        if (NULL == m_curl)
-        {
-            throw std::runtime_error("curl init error");
-        }
     }
 
     curl_connector::~curl_connector()
     {
-        curl_easy_cleanup(m_curl);
         curl_global_cleanup();
     }
 
     http_response curl_connector::get(const string& endpoint, const http_query_t& query)
     {
+        CURL* curl_handle = curl_easy_init();
+        if (NULL == curl_handle)
+        {
+            throw std::runtime_error("curl init error");
+        }
+
         // given a url, make an HTTP GET request and fill stream with
         // the body of the response
         stringstream stream;
 
         string url = merge_http_paths(m_address, endpoint);
         url        = url_with_query(url, query);
-        curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_callback);
-        curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
+        curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &stream);
+        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
 
         INFO << "[GET] " << url;
         // Perform the request, res will get the return code
-        CURLcode res = curl_easy_perform(m_curl);
+        CURLcode res = curl_easy_perform(curl_handle);
 
         // Check for errors
         long http_code = 0;
-        curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &http_code);
+        curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
         if (res != CURLE_OK)
         {
             stringstream ss;
@@ -83,11 +84,19 @@ namespace nervana
             throw std::runtime_error(ss.str());
         }
 
+        curl_easy_cleanup(curl_handle);
+
         return http_response(http_code, stream.str());
     }
 
     http_response curl_connector::post(const string& endpoint, const string& body)
     {
+        CURL* curl_handle = curl_easy_init();
+        if (NULL == curl_handle)
+        {
+            throw std::runtime_error("curl init error");
+        }
+
         // given a url, make an HTTP GET request and fill stream with
         // the body of the response
         stringstream stream;
@@ -95,21 +104,22 @@ namespace nervana
         read_stream.write(body.c_str(), body.size());
 
         string url = merge_http_paths(m_address, endpoint);
-        curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(m_curl, CURLOPT_POST, 1L);
-        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_callback);
-        curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
-        curl_easy_setopt(m_curl, CURLOPT_READFUNCTION, read_callback);
-        curl_easy_setopt(m_curl, CURLOPT_READDATA, &read_stream);
-        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, body.size());
+        curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl_handle, CURLOPT_POST, 1L);
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &stream);
+        curl_easy_setopt(curl_handle, CURLOPT_READFUNCTION, read_callback);
+        curl_easy_setopt(curl_handle, CURLOPT_READDATA, &read_stream);
+        curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, body.size());
+        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
 
         INFO << "[POST] " << url;
         // Perform the request, res will get the return code
-        CURLcode res = curl_easy_perform(m_curl);
+        CURLcode res = curl_easy_perform(curl_handle);
 
         // Check for errors
         long http_code = 0;
-        curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &http_code);
+        curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
         if (res != CURLE_OK)
         {
             stringstream ss;
@@ -122,31 +132,40 @@ namespace nervana
 
             throw std::runtime_error(ss.str());
         }
+
+        curl_easy_cleanup(curl_handle);
 
         return http_response(http_code, stream.str());
     }
 
     http_response curl_connector::post(const string& endpoint, const http_query_t& query)
     {
+        CURL* curl_handle = curl_easy_init();
+        if (NULL == curl_handle)
+        {
+            throw std::runtime_error("curl init error");
+        }
+
         // given a url, make an HTTP GET request and fill stream with
         // the body of the response
         stringstream stream;
         string query_string = query_to_string(query);
 
         string url = merge_http_paths(m_address, endpoint);
-        curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_callback);
-        curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &stream);
-        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, query_string.c_str());
-        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, query_string.size());
+        curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &stream);
+        curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, query_string.c_str());
+        curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, query_string.size());
+        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
 
         INFO << "[POST] " << url;
         // Perform the request, res will get the return code
-        CURLcode res = curl_easy_perform(m_curl);
+        CURLcode res = curl_easy_perform(curl_handle);
 
         // Check for errors
         long http_code = 0;
-        curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &http_code);
+        curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
         if (res != CURLE_OK)
         {
             stringstream ss;
@@ -159,6 +178,8 @@ namespace nervana
 
             throw std::runtime_error(ss.str());
         }
+
+        curl_easy_cleanup(curl_handle);
 
         return http_response(http_code, stream.str());
     }
@@ -207,13 +228,20 @@ namespace nervana
 
     string curl_connector::escape(const string& value)
     {
-        char* output = curl_easy_escape(m_curl, value.c_str(), value.size());
+        CURL* curl_handle = curl_easy_init();
+        if (NULL == curl_handle)
+        {
+            throw std::runtime_error("curl init error");
+        }
+
+        char* output = curl_easy_escape(curl_handle, value.c_str(), value.size());
         if (!output)
         {
             throw std::runtime_error("could not escape string: " + value);
         }
         string result{output};
         curl_free(output);
+        curl_easy_cleanup(curl_handle);
         return result;
     }
 }

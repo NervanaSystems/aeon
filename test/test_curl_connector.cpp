@@ -155,6 +155,27 @@ TEST(curl_connector, post_query)
     }
 }
 
+TEST(curl_connector, post_and_get)
+{
+    web::server          server;
+    page_request_handler fn = process_page_request;
+    server.register_page_handler(fn);
+    server.start(test_port);
+    auto connector = curl_connector(test_address + "/", test_port);
+
+    string        post_body = "this is body of post request";
+    http_response response  = connector.post(post_page_endpoint, post_body);
+    EXPECT_EQ(response.code, 200);
+    EXPECT_EQ(response.data, post_body);
+
+    response = connector.post(not_existing_endpoint);
+    EXPECT_EQ(response.code, 404);
+
+    response = connector.get("");
+    EXPECT_EQ(response.code, 200);
+    EXPECT_EQ(response.data, index_page);
+}
+
 namespace
 {
     void process_page_request(web::page& p, const string& url)
