@@ -48,7 +48,17 @@ nervana::loader_remote::loader_remote(shared_ptr<service> client, const nlohmann
 
 void nervana::loader_remote::initialize()
 {
-    create_session();
+    try
+    {
+        m_session_id = m_config["server"]["session_id"];
+    }
+    catch (const std::exception&)
+    {
+    }
+    if (m_session_id.empty())
+    {
+        create_session();
+    }
 
     retrieve_names_and_shapes();
     retrieve_record_count();
@@ -147,8 +157,13 @@ void nervana::loader_remote::retrieve_next_batch()
         handle_response_failure(response.status);
     }
     const next_response& next = response.data;
-    m_position                = next.position;
-    m_output_buffer_ptr       = next.data;
+    //TODO: is END_OF_DATASET required?
+    if (response.status == service_status_type::END_OF_DATASET)
+    {
+        m_position = m_batch_count;
+    }
+    m_position          = next.position;
+    m_output_buffer_ptr = next.data;
 }
 
 nervana::loader::iterator nervana::loader_remote::begin()

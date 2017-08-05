@@ -153,6 +153,7 @@ namespace nervana
                                      nlohmann::json&    output_json);
 
         std::shared_ptr<http_connector> m_http;
+        //TODO add double-buffering!
         fixed_buffer_map                m_buffer_map;
     };
 }
