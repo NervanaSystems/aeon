@@ -259,12 +259,10 @@ TEST(service_connector, names_and_shapes)
         map<string, shape_type> nas = get_names_and_shapes();
         stringstream serialized_nas;
         serialized_nas << nas;
-        std::vector<char> encoded_nas =
-            nervana::base64::encode(serialized_nas.str().data(), serialized_nas.str().size());
 
         json expected_json;
         expected_json["status"]["type"]           = "SUCCESS";
-        expected_json["data"]["names_and_shapes"] = string(encoded_nas.begin(), encoded_nas.end());
+        expected_json["data"]["names_and_shapes"] = serialized_nas.str();
         auto   expected_response = http_response(http::status_ok, expected_json.dump());
         string endpoint          = "/api/v1/dataset/" + session_id + "/names_and_shapes";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));

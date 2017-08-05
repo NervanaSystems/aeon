@@ -94,7 +94,7 @@ pplx::task<void> aeon_server::close()
 
 void aeon_server::handle_post(http_request message)
 {
-    std::cout << "POST!" << std::endl;
+    INFO << "[POST] " << message.relative_uri().path();
     message.reply(status_codes::Accepted,
                   m_server_parser.post(web::uri::decode(message.relative_uri().path())));
 }
@@ -103,8 +103,8 @@ void aeon_server::handle_post(http_request message)
 
 void aeon_server::handle_get(http_request message)
 {
-    std::cout << "GET!" << std::endl;
-    message.reply(status_codes::Accepted,
+    INFO << "[GET] " << message.relative_uri().path();
+    message.reply(status_codes::OK,
                   m_server_parser.get(web::uri::decode(message.relative_uri().path())));
 }
 
@@ -220,6 +220,7 @@ web::json::value server_parser::next(uint32_t id)
     web::json::value response_json = web::json::value::object();
 
     response_json["status"]["type"]           = web::json::value::string("SUCCESS");
+    //TODO it cannot be hardcoded
     response_json["data"]["position"]         = web::json::value::string("0");
     response_json["data"]["fixed_buffer_map"] = web::json::value::string(srv.next(id));
     return response_json;
@@ -239,7 +240,7 @@ web::json::value server_parser::batch_count(uint32_t id)
     web::json::value response_json = web::json::value::object();
 
     response_json["status"]["type"]     = web::json::value::string("SUCCESS");
-    response_json["data"]["batch_cout"] = web::json::value::string(srv.batch_count(id));
+    response_json["data"]["batch_count"] = web::json::value::string(srv.batch_count(id));
     return response_json;
 }
 

@@ -207,23 +207,20 @@ service_response<names_and_shapes>
         return service_response<names_and_shapes>(status, names_and_shapes());
     }
 
-    string encoded_nas;
+    string serialized_nas;
     try
     {
-        encoded_nas = json_response.at("names_and_shapes");
+        serialized_nas = json_response.at("names_and_shapes");
     }
     catch (const exception&)
     {
         throw runtime_error("no field 'names_and_shapes' in 'data' object of service response");
     }
 
-    std::vector<char> serialized_nas =
-        base64::decode(encoded_nas.c_str(), encoded_nas.size());
-
     names_and_shapes nas;
     try
     {
-        istringstream stream(string(serialized_nas.begin(), serialized_nas.end()));
+        istringstream stream(serialized_nas);
         stream >> nas;
     }
     catch (const exception& ex)
