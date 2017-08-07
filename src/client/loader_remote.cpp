@@ -65,8 +65,6 @@ void nervana::loader_remote::initialize()
     retrieve_batch_size();
     retrieve_batch_count();
     retrieve_next_batch();
-
-    m_current_iter.m_empty_buffer.add_items(m_names_and_shapes, (size_t)batch_size());
 }
 
 void nervana::loader_remote::create_session()
@@ -158,7 +156,7 @@ void nervana::loader_remote::retrieve_next_batch()
     }
     const next_response& next = response.data;
     //TODO: is END_OF_DATASET required?
-    if (response.status == service_status_type::END_OF_DATASET)
+    if (response.status.type == service_status_type::END_OF_DATASET)
     {
         m_position = m_batch_count;
     }
@@ -179,7 +177,7 @@ void nervana::loader_remote::reset()
     {
         handle_response_failure(status);
     }
-    retrieve_next_batch();
+    retrieve_next_batch(); // TODO: remove this
 }
 
 void nervana::loader_remote::increment_position()

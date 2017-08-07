@@ -187,8 +187,6 @@ void loader_local::initialize(const json& config_json)
         m_debug_web_app = make_shared<web_app>(lcfg.web_server_port);
         m_debug_web_app->register_loader(this);
     }
-
-    m_current_iter.m_empty_buffer.add_items(get_names_and_shapes(), (size_t)batch_size());
 }
 
 vector<string> loader_local::get_buffer_names() const
@@ -251,18 +249,10 @@ bool loader::iterator::positional_end() const
 
 const fixed_buffer_map& loader::iterator::operator*() const
 {
-    const fixed_buffer_map* rc = nullptr;
-
     if (m_current_loader.get_output_buffer())
-    {
-        rc = m_current_loader.get_output_buffer();
-    }
+        return *m_current_loader.get_output_buffer();
     else
-    {
-        rc = &m_empty_buffer;
-    }
-
-    return *rc;
+        throw std::runtime_error("empty buffer");
 }
 
 void loader_local::increment_position()

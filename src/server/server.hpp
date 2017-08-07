@@ -52,11 +52,13 @@ namespace nervana
     class server_message_process
     {
     public:
-        std::string register_agent();
+        std::string register_agent(nlohmann::json config);
 
-        std::string next(uint32_t id);
+        bool        next(uint32_t id);
+        std::string data(uint32_t id);
+        std::string position(uint32_t id);
         std::string batch_size(uint32_t id);
-        std::string reset(uint32_t id);
+        void        reset(uint32_t id);
         std::string names_and_shapes(uint32_t id);
         std::string batch_count(uint32_t id);
         std::string record_count(uint32_t id);
@@ -70,7 +72,7 @@ namespace nervana
     {
     public:
         server_parser();
-        web::json::value post(std::string msg);
+        web::json::value post(std::string msg, std::string msg_body);
         web::json::value get(std::string msg);
 
     private:

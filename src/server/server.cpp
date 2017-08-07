@@ -96,10 +96,9 @@ void aeon_server::handle_post(http_request message)
 {
     INFO << "[POST] " << message.relative_uri().path();
     message.reply(status_codes::Accepted,
-                  m_server_parser.post(web::uri::decode(message.relative_uri().path())));
+                  m_server_parser.post(web::uri::decode(message.relative_uri().path()),
+                                       message.extract_string().get()));
 }
-
-// /////////////////////////////////////////////////////////////////////////////
 
 void aeon_server::handle_get(http_request message)
 {
@@ -108,25 +107,36 @@ void aeon_server::handle_get(http_request message)
                   m_server_parser.get(web::uri::decode(message.relative_uri().path())));
 }
 
-string server_message_process::next(uint32_t id)
+// /////////////////////////////////////////////////////////////////////////////
+
+bool server_message_process::next(uint32_t id)
+{
+    m_loader_manager.loader(id).get_current_iter()++;
+    return !m_loader_manager.loader(id).get_current_iter().positional_end();
+    //m_loader_manager.loader(id).get_current_iter() == m_loader_manager.loader(id).get_end_iter();
+};
+
+string server_message_process::data(uint32_t id)
 {
     std::stringstream ss;
-    m_loader_manager.loader(id).get_current_iter()++;
     ss << *m_loader_manager.loader(id).get_current_iter();
-
     std::vector<char> encoded_data = nervana::base64::encode(ss.str().data(), ss.str().size());
     return std::string(encoded_data.begin(), encoded_data.end());
-};
+}
+
+string server_message_process::position(uint32_t id)
+{
+    return to_string(m_loader_manager.loader(id).position());
+}
 
 string server_message_process::batch_size(uint32_t id)
 {
     return to_string(m_loader_manager.loader(id).batch_size());
 };
 
-string server_message_process::reset(uint32_t id)
+void server_message_process::reset(uint32_t id)
 {
     m_loader_manager.loader(id).reset();
-    return string("");
 };
 
 string server_message_process::names_and_shapes(uint32_t id)
@@ -146,9 +156,9 @@ string server_message_process::record_count(uint32_t id)
     return to_string(m_loader_manager.loader(id).record_count());
 }
 
-std::string server_message_process::register_agent()
+std::string server_message_process::register_agent(nlohmann::json config)
 {
-    return to_string(m_loader_manager.register_agent(m_config.js));
+    return to_string(m_loader_manager.register_agent(config));
 }
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -165,7 +175,7 @@ server_parser::server_parser()
     REGISTER_SRV_FUNCTION(record_count);
 }
 
-web::json::value server_parser::post(std::string msg)
+web::json::value server_parser::post(std::string msg, std::string msg_body)
 {
     try
     {
@@ -173,7 +183,8 @@ web::json::value server_parser::post(std::string msg)
             throw std::invalid_argument("Invalid prefix");
         web::json::value reply_json  = web::json::value::object();
         reply_json["status"]["type"] = web::json::value::string("SUCCESS");
-        reply_json["data"]["id"]     = web::json::value::string(srv.register_agent());
+        reply_json["data"]["id"] =
+            web::json::value::string(srv.register_agent(json::parse(msg_body)));
         return reply_json;
     }
     catch (exception& ex)
@@ -219,10 +230,17 @@ web::json::value server_parser::next(uint32_t id)
 {
     web::json::value response_json = web::json::value::object();
 
-    response_json["status"]["type"]           = web::json::value::string("SUCCESS");
-    //TODO it cannot be hardcoded
-    response_json["data"]["position"]         = web::json::value::string("0");
-    response_json["data"]["fixed_buffer_map"] = web::json::value::string(srv.next(id));
+    if (srv.next(id))
+    {
+        response_json["status"]["type"]           = web::json::value::string("SUCCESS");
+        response_json["data"]["position"]         = web::json::value::string(srv.position(id));
+        response_json["data"]["fixed_buffer_map"] = web::json::value::string(srv.data(id));
+    }
+    else
+    {
+        response_json["status"]["type"] = web::json::value::string("END_OF_DATASET");
+    }
+
     return response_json;
 }
 
@@ -239,7 +257,7 @@ web::json::value server_parser::batch_count(uint32_t id)
 {
     web::json::value response_json = web::json::value::object();
 
-    response_json["status"]["type"]     = web::json::value::string("SUCCESS");
+    response_json["status"]["type"]      = web::json::value::string("SUCCESS");
     response_json["data"]["batch_count"] = web::json::value::string(srv.batch_count(id));
     return response_json;
 }

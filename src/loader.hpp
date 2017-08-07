@@ -140,7 +140,6 @@ public:
 
         loader&          m_current_loader;
         const bool       m_is_end;
-        fixed_buffer_map m_empty_buffer;
     };
 
     virtual ~loader() {}

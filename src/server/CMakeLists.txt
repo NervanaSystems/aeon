@@ -15,7 +15,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src" "/usr/include/cpprest")
 find_package(OpenSSL 1.0.0 REQUIRED)
 
 add_library(cpprest SHARED IMPORTED)
-set_property(TARGET cpprest PROPERTY IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libcpprest.so")
+set_property(TARGET cpprest PROPERTY IMPORTED_LOCATION "/usr/local/lib/libcpprest.so")
 
 add_executable(aeon-server ${SRC})
 add_dependencies(aeon-server aeon)
