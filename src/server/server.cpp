@@ -58,14 +58,24 @@ uint32_t loader_manager::register_agent(const nlohmann::json& config)
     {
     };
 
-    m_loaders[id] = std::make_unique<nervana::loader_local>(config);
+    m_loaders[id] = std::make_unique<nervana::loader_adapter>(config);
 
     INFO << "Created new session " << id;
 
     return id;
 }
 
-nervana::loader_local& loader_manager::loader(uint32_t id)
+void loader_manager::unregister_agent(uint32_t id)
+{
+    lock_guard<mutex> lg(m_mutex);
+
+    auto it = m_loaders.find(id);
+    if (it == m_loaders.end())
+        throw invalid_argument("loader doesn't exist");
+    m_loaders.erase(it);
+}
+
+nervana::loader_adapter& loader_manager::loader(uint32_t id)
 {
     auto it = m_loaders.find(id);
     if (it == m_loaders.end())
@@ -108,56 +118,50 @@ void aeon_server::handle_get(http_request message)
 }
 
 // /////////////////////////////////////////////////////////////////////////////
-
-bool server_message_process::next(uint32_t id)
+bool loader_adapter::next()
 {
-    m_loader_manager.loader(id).get_current_iter()++;
-    return !m_loader_manager.loader(id).get_current_iter().positional_end();
+    m_loader.get_current_iter()++;
+    return !m_loader.get_current_iter().positional_end();
 };
 
-string server_message_process::data(uint32_t id)
+string loader_adapter::data()
 {
     std::stringstream ss;
-    ss << *m_loader_manager.loader(id).get_current_iter();
+    ss << *m_loader.get_current_iter();
     std::vector<char> encoded_data = nervana::base64::encode(ss.str().data(), ss.str().size());
     return std::string(encoded_data.begin(), encoded_data.end());
 }
 
-string server_message_process::position(uint32_t id)
+string loader_adapter::position()
 {
-    return to_string(m_loader_manager.loader(id).position());
+    return to_string(m_loader.position());
 }
 
-string server_message_process::batch_size(uint32_t id)
+string loader_adapter::batch_size()
 {
-    return to_string(m_loader_manager.loader(id).batch_size());
+    return to_string(m_loader.batch_size());
 };
 
-void server_message_process::reset(uint32_t id)
+void loader_adapter::reset()
 {
-    m_loader_manager.loader(id).reset();
+    m_loader.reset();
 };
 
-string server_message_process::names_and_shapes(uint32_t id)
+string loader_adapter::names_and_shapes()
 {
     std::stringstream ss;
-    ss << m_loader_manager.loader(id).get_names_and_shapes();
+    ss << m_loader.get_names_and_shapes();
     return string(ss.str());
 };
 
-string server_message_process::batch_count(uint32_t id)
+string loader_adapter::batch_count()
 {
-    return to_string(m_loader_manager.loader(id).batch_count());
+    return to_string(m_loader.batch_count());
 }
 
-string server_message_process::record_count(uint32_t id)
+string loader_adapter::record_count()
 {
-    return to_string(m_loader_manager.loader(id).record_count());
-}
-
-std::string server_message_process::register_agent(nlohmann::json config)
-{
-    return to_string(m_loader_manager.register_agent(config));
+    return to_string(m_loader.record_count());
 }
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -182,8 +186,8 @@ web::json::value server_parser::post(std::string msg, std::string msg_body)
             throw std::invalid_argument("Invalid prefix");
         web::json::value reply_json  = web::json::value::object();
         reply_json["status"]["type"] = web::json::value::string("SUCCESS");
-        reply_json["data"]["id"] =
-            web::json::value::string(srv.register_agent(json::parse(msg_body)));
+        reply_json["data"]["id"]     = web::json::value::string(
+            to_string(m_loader_manager.register_agent(json::parse(msg_body))));
         return reply_json;
     }
     catch (exception& ex)
@@ -210,11 +214,18 @@ web::json::value server_parser::get(std::string msg)
 
         int dataset_id = std::stoi(path[0]);
 
-        auto it = process_func.find(path[1]);
-        if (it == process_func.end())
-            throw std::invalid_argument("Invalid command");
+        if (path[1] == "close")
+        {
+            return close(dataset_id);
+        }
         else
-            return (this->*it->second)(dataset_id);
+        {
+            auto it = process_func.find(path[1]);
+            if (it == process_func.end())
+                throw std::invalid_argument("Invalid command");
+            else
+                return (this->*it->second)(m_loader_manager.loader(dataset_id));
+        }
     }
     catch (exception& ex)
     {
@@ -225,15 +236,15 @@ web::json::value server_parser::get(std::string msg)
     }
 }
 
-web::json::value server_parser::next(uint32_t id)
+web::json::value server_parser::next(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
 
-    if (srv.next(id))
+    if (loader.next())
     {
         response_json["status"]["type"]           = web::json::value::string("SUCCESS");
-        response_json["data"]["position"]         = web::json::value::string(srv.position(id));
-        response_json["data"]["fixed_buffer_map"] = web::json::value::string(srv.data(id));
+        response_json["data"]["position"]         = web::json::value::string(loader.position());
+        response_json["data"]["fixed_buffer_map"] = web::json::value::string(loader.data());
     }
     else
     {
@@ -243,51 +254,59 @@ web::json::value server_parser::next(uint32_t id)
     return response_json;
 }
 
-web::json::value server_parser::reset(uint32_t id)
+web::json::value server_parser::reset(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
 
-    srv.reset(id);
+    loader.reset();
 
     response_json["status"]["type"]           = web::json::value::string("SUCCESS");
-    response_json["data"]["fixed_buffer_map"] = web::json::value::string(srv.data(id));
+    response_json["data"]["fixed_buffer_map"] = web::json::value::string(loader.data());
 
     return response_json;
 }
 
-web::json::value server_parser::batch_size(uint32_t id)
+web::json::value server_parser::batch_size(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
 
     response_json["status"]["type"]     = web::json::value::string("SUCCESS");
-    response_json["data"]["batch_size"] = web::json::value::string(srv.batch_size(id));
+    response_json["data"]["batch_size"] = web::json::value::string(loader.batch_size());
     return response_json;
 }
 
-web::json::value server_parser::batch_count(uint32_t id)
+web::json::value server_parser::batch_count(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
 
     response_json["status"]["type"]      = web::json::value::string("SUCCESS");
-    response_json["data"]["batch_count"] = web::json::value::string(srv.batch_count(id));
+    response_json["data"]["batch_count"] = web::json::value::string(loader.batch_count());
     return response_json;
 }
 
-web::json::value server_parser::record_count(uint32_t id)
+web::json::value server_parser::record_count(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
 
     response_json["status"]["type"]       = web::json::value::string("SUCCESS");
-    response_json["data"]["record_count"] = web::json::value::string(srv.record_count(id));
+    response_json["data"]["record_count"] = web::json::value::string(loader.record_count());
     return response_json;
 }
 
-web::json::value server_parser::names_and_shapes(uint32_t id)
+web::json::value server_parser::names_and_shapes(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
 
     response_json["status"]["type"]           = web::json::value::string("SUCCESS");
-    response_json["data"]["names_and_shapes"] = web::json::value::string(srv.names_and_shapes(id));
+    response_json["data"]["names_and_shapes"] = web::json::value::string(loader.names_and_shapes());
+    return response_json;
+}
+
+web::json::value server_parser::close(uint32_t id)
+{
+    m_loader_manager.unregister_agent(id);
+    web::json::value response_json  = web::json::value::object();
+    response_json["status"]["type"] = web::json::value::string("SUCCESS");
     return response_json;
 }
 

@@ -32,6 +32,26 @@ namespace nervana
         default_config();
     };
 
+    class loader_adapter
+    {
+    public:
+        loader_adapter(const nlohmann::json& config)
+            : m_loader(config)
+        {
+        }
+        void        reset();
+        bool        next();
+        std::string data();
+        std::string position();
+        std::string batch_size();
+        std::string names_and_shapes();
+        std::string batch_count();
+        std::string record_count();
+
+    private:
+        nervana::loader_local m_loader;
+    };
+
     class loader_manager
     {
     public:
@@ -40,32 +60,14 @@ namespace nervana
         {
         }
         uint32_t register_agent(const nlohmann::json& config);
-        nervana::loader_local& loader(uint32_t id);
+        void                     unregister_agent(uint32_t);
+        nervana::loader_adapter& loader(uint32_t id);
 
     private:
         const uint32_t max_loader_number = 1000;
         std::mt19937   m_id_generator;
         std::mutex     m_mutex;
-        std::map<uint32_t, std::unique_ptr<nervana::loader_local>> m_loaders;
-    };
-
-    class server_message_process
-    {
-    public:
-        std::string register_agent(nlohmann::json config);
-
-        bool        next(uint32_t id);
-        std::string data(uint32_t id);
-        std::string position(uint32_t id);
-        std::string batch_size(uint32_t id);
-        void        reset(uint32_t id);
-        std::string names_and_shapes(uint32_t id);
-        std::string batch_count(uint32_t id);
-        std::string record_count(uint32_t id);
-
-    private:
-        loader_manager m_loader_manager;
-        default_config m_config;
+        std::map<uint32_t, std::unique_ptr<nervana::loader_adapter>> m_loaders;
     };
 
     class server_parser
@@ -78,16 +80,18 @@ namespace nervana
     private:
         const std::string version         = "v1";
         const std::string endpoint_prefix = "/" + version + "/dataset";
-        typedef web::json::value (server_parser::*msg_process_func_t)(uint32_t);
+        typedef web::json::value (server_parser::*msg_process_func_t)(loader_adapter&);
         std::map<std::string, server_parser::msg_process_func_t> process_func;
-        server_message_process srv;
 
-        web::json::value next(uint32_t id);
-        web::json::value batch_size(uint32_t id);
-        web::json::value reset(uint32_t id);
-        web::json::value names_and_shapes(uint32_t id);
-        web::json::value batch_count(uint32_t id);
-        web::json::value record_count(uint32_t id);
+        loader_manager m_loader_manager;
+
+        web::json::value next(loader_adapter& loader);
+        web::json::value batch_size(loader_adapter& loader);
+        web::json::value reset(loader_adapter& loader);
+        web::json::value names_and_shapes(loader_adapter& loader);
+        web::json::value batch_count(loader_adapter& loader);
+        web::json::value record_count(loader_adapter& loader);
+        web::json::value close(uint32_t id);
     };
 
     class aeon_server
