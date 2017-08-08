@@ -113,7 +113,6 @@ bool server_message_process::next(uint32_t id)
 {
     m_loader_manager.loader(id).get_current_iter()++;
     return !m_loader_manager.loader(id).get_current_iter().positional_end();
-    //m_loader_manager.loader(id).get_current_iter() == m_loader_manager.loader(id).get_end_iter();
 };
 
 string server_message_process::data(uint32_t id)
@@ -244,6 +243,18 @@ web::json::value server_parser::next(uint32_t id)
     return response_json;
 }
 
+web::json::value server_parser::reset(uint32_t id)
+{
+    web::json::value response_json = web::json::value::object();
+
+    srv.reset(id);
+
+    response_json["status"]["type"]           = web::json::value::string("SUCCESS");
+    response_json["data"]["fixed_buffer_map"] = web::json::value::string(srv.data(id));
+
+    return response_json;
+}
+
 web::json::value server_parser::batch_size(uint32_t id)
 {
     web::json::value response_json = web::json::value::object();
@@ -268,15 +279,6 @@ web::json::value server_parser::record_count(uint32_t id)
 
     response_json["status"]["type"]       = web::json::value::string("SUCCESS");
     response_json["data"]["record_count"] = web::json::value::string(srv.record_count(id));
-    return response_json;
-}
-
-web::json::value server_parser::reset(uint32_t id)
-{
-    web::json::value response_json = web::json::value::object();
-
-    response_json["status"]["type"] = web::json::value::string("SUCCESS");
-    srv.reset(id);
     return response_json;
 }
 
