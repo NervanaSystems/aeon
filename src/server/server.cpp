@@ -28,7 +28,7 @@ uint32_t loader_manager::register_agent(const nlohmann::json& config)
     {
     };
 
-    m_loaders[id] = std::make_unique<nervana::loader_adapter>(config);
+    m_loaders[id] = std::unique_ptr<nervana::loader_adapter>(new nervana::loader_adapter(config));
 
     INFO << "Created new session " << id;
 
@@ -62,7 +62,7 @@ aeon_server::aeon_server(std::string http_addr)
 
     auto addr = uri.to_uri().to_string();
     
-    m_listener = make_unique<web::http::experimental::listener::http_listener>(addr);
+    m_listener = unique_ptr<web::http::experimental::listener::http_listener>(new web::http::experimental::listener::http_listener(addr));
     
     m_listener->support(methods::POST,
                        std::bind(&aeon_server::handle_post, this, std::placeholders::_1));

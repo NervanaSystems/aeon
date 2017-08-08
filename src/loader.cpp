@@ -299,9 +299,9 @@ std::unique_ptr<loader> loader_factory::get_loader(const json& config)
         }
         shared_ptr<http_connector> my_http_connector = make_shared<curl_connector>(address, port);
         shared_ptr<service>        my_service = make_shared<service_connector>(my_http_connector);
-        return make_unique<loader_remote>(my_service, config);
+        return unique_ptr<loader_remote>(new loader_remote(my_service, config));
     }
-    return make_unique<loader_local>(config);
+    return unique_ptr<loader_local>(new loader_local(config));
 }
 
 bool loader_factory::remote_version(const json& config)
