@@ -478,7 +478,7 @@ TEST(loader, loader_factory_server)
     // there is no server running, so we expect exception
     EXPECT_THROW(unique_ptr<loader> ptr = factory.get_loader(config_json), std::runtime_error);
 
-    // unomment lines below when server will be available to use in testing
+    // uncomment lines below when server will be available to use in testing
     //unique_ptr<loader> ptr = factory.get_loader(config_json);
     //ASSERT_TRUE(dynamic_cast<loader_local*>(ptr.get()) != 0);
 

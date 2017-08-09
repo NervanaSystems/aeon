@@ -159,15 +159,25 @@ TEST(service_connector, reset)
         auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
         service_connector connector(mock);
 
+        fixed_buffer_map& buffer_map = get_fixed_buffer_map();
+        stringstream      serialized_buffer_map;
+        buffer_map.serialize(serialized_buffer_map);
+        std::vector<char> encoded_buffer_map = nervana::base64::encode(
+            serialized_buffer_map.str().data(), serialized_buffer_map.str().size());
+
         json expected_json;
         expected_json["status"]["type"] = "SUCCESS";
-        auto   expected_response        = http_response(http::status_ok, expected_json.dump());
-        string endpoint                 = "/api/v1/dataset/" + session_id + "/reset";
+        expected_json["data"]["fixed_buffer_map"] =
+            string(encoded_buffer_map.begin(), encoded_buffer_map.end());
+        auto   expected_next_response = next_response(&buffer_map);
+        auto   expected_response      = http_response(http::status_ok, expected_json.dump());
+        string endpoint               = "/api/v1/dataset/" + session_id + "/reset";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        service_status response = connector.reset(session_id);
+        service_response<next_response> response = connector.reset(session_id);
 
-        EXPECT_EQ(response.type, service_status_type::SUCCESS);
+        EXPECT_EQ(response.status.type, service_status_type::SUCCESS);
+        EXPECT_TRUE(response.data == expected_next_response);
     }
 
     // status type is not success
@@ -181,9 +191,9 @@ TEST(service_connector, reset)
         string endpoint                 = "/api/v1/dataset/" + session_id + "/reset";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        service_status response = connector.reset(session_id);
+        service_response<next_response> response = connector.reset(session_id);
 
-        EXPECT_EQ(response.type, service_status_type::FAILURE);
+        EXPECT_EQ(response.status.type, service_status_type::FAILURE);
     }
 }
 
@@ -201,11 +211,10 @@ TEST(service_connector, next)
             serialized_buffer_map.str().data(), serialized_buffer_map.str().size());
 
         json expected_json;
-        expected_json["status"]["type"]   = "SUCCESS";
-        expected_json["data"]["position"] = "2";
+        expected_json["status"]["type"] = "SUCCESS";
         expected_json["data"]["fixed_buffer_map"] =
             string(encoded_buffer_map.begin(), encoded_buffer_map.end());
-        auto   expected_next_response = next_response(2, &buffer_map);
+        auto   expected_next_response = next_response(&buffer_map);
         auto   expected_response      = http_response(http::status_ok, expected_json.dump());
         string endpoint               = "/api/v1/dataset/" + session_id + "/next";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
@@ -233,20 +242,20 @@ TEST(service_connector, next)
     }
 
     // batch_size has improper value
-    /*{*/
-    //auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
-    //service_connector connector(mock);
+    {
+        auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
+        service_connector connector(mock);
 
-    //json expected_json;
-    //expected_json["status"]["type"]        = "SUCCESS";
-    //expected_json["status"]["description"] = "some description";
-    //expected_json["data"]["batch_size"]    = "";
-    //auto   expected_response = http_response(http::status_ok, expected_json.dump());
-    //string endpoint          = "/api/v1/dataset/" + session_id + "/batch_size";
-    //EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
+        json expected_json;
+        expected_json["status"]["type"]        = "SUCCESS";
+        expected_json["status"]["description"] = "some description";
+        expected_json["data"]["batch_size"]    = "";
+        auto   expected_response = http_response(http::status_ok, expected_json.dump());
+        string endpoint          = "/api/v1/dataset/" + session_id + "/batch_size";
+        EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-    //ASSERT_THROW(connector.batch_size(session_id), std::runtime_error);
-    /*}*/
+        ASSERT_THROW(connector.batch_size(session_id), std::runtime_error);
+    }
 }
 
 TEST(service_connector, names_and_shapes)

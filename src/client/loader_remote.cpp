@@ -64,7 +64,6 @@ void nervana::loader_remote::initialize()
     retrieve_record_count();
     retrieve_batch_size();
     retrieve_batch_count();
-    retrieve_next_batch();
 }
 
 void nervana::loader_remote::create_session()
@@ -162,8 +161,7 @@ void nervana::loader_remote::retrieve_next_batch()
         }
     }
     const next_response& next = response.data;
-    m_position          = next.position;
-    m_output_buffer_ptr = next.data;
+    m_output_buffer_ptr       = next.data;
 }
 
 nervana::loader::iterator nervana::loader_remote::begin()
@@ -174,12 +172,13 @@ nervana::loader::iterator nervana::loader_remote::begin()
 
 void nervana::loader_remote::reset()
 {
-    auto status = m_service->reset(m_session_id);
-    if (!status.success())
+    auto response = m_service->reset(m_session_id);
+    if (!response.status.success())
     {
-        handle_response_failure(status);
+        handle_response_failure(response.status);
     }
-    retrieve_next_batch(); // TODO: remove this
+    const next_response& next = response.data;
+    m_output_buffer_ptr       = next.data;
 }
 
 void nervana::loader_remote::increment_position()

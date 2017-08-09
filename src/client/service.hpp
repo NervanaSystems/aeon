@@ -86,19 +86,15 @@ namespace nervana
     public:
         next_response()
             : data(nullptr)
-            , position(-1)
         {
         }
-        next_response(int _position, fixed_buffer_map* buffer_map)
+        next_response(fixed_buffer_map* buffer_map)
             : data(buffer_map)
-            , position(_position)
         {
         }
 
         bool operator==(const next_response& other)
         {
-            bool result = position == other.position;
-
             // use serialzation to compare instances - this may not work if serialization results are not repeatable
             if (data == nullptr)
             {
@@ -107,9 +103,7 @@ namespace nervana
             std::ostringstream this_serialized, other_serialized;
             data->serialize(this_serialized);
             other.data->serialize(other_serialized);
-            result &= this_serialized.str() == other_serialized.str();
-
-            return result;
+            return this_serialized.str() == other_serialized.str();
         }
 
         fixed_buffer_map* data;
@@ -121,10 +115,10 @@ namespace nervana
     public:
         virtual ~service() {}
         virtual service_response<std::string> create_session(const std::string& config)        = 0;
-        virtual service_status close_session(const std::string& id)                                    = 0;
+        virtual service_status close_session(const std::string& id)                            = 0;
         virtual service_response<names_and_shapes> get_names_and_shapes(const std::string& id) = 0;
         virtual service_response<next_response> next(const std::string& id)                    = 0;
-        virtual service_status reset(const std::string& id)                                    = 0;
+        virtual service_response<next_response> reset(const std::string& id)                   = 0;
 
         virtual service_response<int> record_count(const std::string& id) = 0;
         virtual service_response<int> batch_size(const std::string& id)   = 0;
@@ -140,7 +134,7 @@ namespace nervana
         service_response<std::string> create_session(const std::string& config) override;
         service_status close_session(const std::string& id) override;
         service_response<next_response> next(const std::string& id) override;
-        service_status reset(const std::string& id) override;
+        service_response<next_response> reset(const std::string& id) override;
 
         service_response<names_and_shapes> get_names_and_shapes(const std::string& id) override;
         service_response<int> record_count(const std::string& id) override;
@@ -148,6 +142,8 @@ namespace nervana
         service_response<int> batch_count(const std::string& id) override;
 
     private:
+        service_response<next_response> process_data_json(const std::string& data);
+
         void handle_request_failure(const http_response& response);
         service_response<int> handle_single_int_response(http_response      response,
                                                          const std::string& field_name);

@@ -160,15 +160,28 @@ service_response<nervana::next_response> nervana::service_connector::next(const 
     {
         throw runtime_error("wrong http status code " + std::to_string(response.code));
     }
+    return process_data_json(response.data);
+}
+
+service_response<nervana::next_response> nervana::service_connector::reset(const string& id)
+{
+    http_response response = m_http->get(full_endpoint(id + "/reset"));
+    if (response.code != http::status_ok)
+    {
+        throw runtime_error("wrong http status code " + std::to_string(response.code));
+    }
+    return process_data_json(response.data);
+}
+
+service_response<nervana::next_response> nervana::service_connector::process_data_json(const string& data)
+{
     service_status status;
     json           json_response;
-    extract_status_and_json(response.data, status, json_response);
+    extract_status_and_json(data, status, json_response);
     if (status.type != service_status_type::SUCCESS)
     {
         return service_response<next_response>(status, next_response());
     }
-
-    int position = get_int_field(json_response, "position", status);
 
     string encoded_buffer_map;
     try
@@ -193,20 +206,7 @@ service_response<nervana::next_response> nervana::service_connector::next(const 
         throw runtime_error(string("cannot deserialize fixed_buffer_map: ") + ex.what());
     }
 
-    return service_response<next_response>(status, next_response(position, &m_buffer_map));
-}
-
-service_status nervana::service_connector::reset(const string& id)
-{
-    http_response response = m_http->get(full_endpoint(id + "/reset"));
-    if (response.code != http::status_ok)
-    {
-        throw runtime_error("wrong http status code " + std::to_string(response.code));
-    }
-    service_status status;
-    json           json_response;
-    extract_status_and_json(response.data, status, json_response);
-    return status;
+    return service_response<next_response>(status, next_response(&m_buffer_map));
 }
 
 service_response<names_and_shapes>

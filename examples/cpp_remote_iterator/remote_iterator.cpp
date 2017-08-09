@@ -19,9 +19,9 @@ const int    port    = 34568;
 
 string generate_manifest_file(const string& manifest_root, size_t record_count)
 {
-    string        manifest_name = "manifest.txt";
-    const char*   image_files[] = {"flowers.jpg", "img_2112_70.jpg"};
-    string manifest_fullpath = manifest_root + "/" + manifest_name;
+    string        manifest_name     = "manifest.txt";
+    const char*   image_files[]     = {"flowers.jpg", "img_2112_70.jpg"};
+    string        manifest_fullpath = manifest_root + "/" + manifest_name;
     std::ofstream f(manifest_fullpath);
     if (f)
     {
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
     int    width         = 32;
     size_t batch_size    = 4;
     string manifest_root = nervana::file_util::get_temp_directory();
-    string manifest      = generate_manifest_file(manifest_root, 20);
+    string manifest      = manifest_root + "/" + generate_manifest_file(manifest_root, 20);
 
     json image_config = {
         {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
