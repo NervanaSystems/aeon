@@ -57,7 +57,7 @@ namespace nervana
             : m_id_generator(std::random_device{}())
         {
         }
-        uint32_t register_agent(const nlohmann::json& config);
+        uint32_t                 register_agent(const nlohmann::json& config);
         void                     unregister_agent(uint32_t);
         nervana::loader_adapter& loader(uint32_t id);
 
@@ -74,6 +74,7 @@ namespace nervana
         server_parser();
         web::json::value post(std::string msg, std::string msg_body);
         web::json::value get(std::string msg);
+        web::json::value del(std::string msg);
 
     private:
         const std::string version         = "v1";
@@ -89,7 +90,6 @@ namespace nervana
         web::json::value names_and_shapes(loader_adapter& loader);
         web::json::value batch_count(loader_adapter& loader);
         web::json::value record_count(loader_adapter& loader);
-        web::json::value close(uint32_t id);
     };
 
     class aeon_server
@@ -103,6 +103,7 @@ namespace nervana
     private:
         void handle_post(web::http::http_request message);
         void handle_get(web::http::http_request message);
+        void handle_delete(web::http::http_request message);
 
         web::http::experimental::listener::http_listener m_listener;
         server_parser                                    m_server_parser;

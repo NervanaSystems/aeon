@@ -60,6 +60,8 @@ aeon_server::aeon_server(utility::string_t url)
                        std::bind(&aeon_server::handle_post, this, std::placeholders::_1));
     m_listener.support(methods::GET,
                        std::bind(&aeon_server::handle_get, this, std::placeholders::_1));
+    m_listener.support(methods::DEL,
+                       std::bind(&aeon_server::handle_delete, this, std::placeholders::_1));
 }
 
 pplx::task<void> aeon_server::open()
@@ -85,6 +87,13 @@ void aeon_server::handle_get(http_request message)
     INFO << "[GET] " << message.relative_uri().path();
     message.reply(status_codes::OK,
                   m_server_parser.get(web::uri::decode(message.relative_uri().path())));
+}
+
+void aeon_server::handle_delete(http_request message)
+{
+    INFO << "[DELETE] " << message.relative_uri().path();
+    message.reply(status_codes::OK,
+                  m_server_parser.del(web::uri::decode(message.relative_uri().path())));
 }
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -184,18 +193,35 @@ web::json::value server_parser::get(std::string msg)
 
         int dataset_id = std::stoi(path[0]);
 
-        if (path[1] == "close")
-        {
-            return close(dataset_id);
-        }
+        auto it = process_func.find(path[1]);
+        if (it == process_func.end())
+            throw std::invalid_argument("Invalid command");
         else
-        {
-            auto it = process_func.find(path[1]);
-            if (it == process_func.end())
-                throw std::invalid_argument("Invalid command");
-            else
-                return (this->*it->second)(m_loader_manager.loader(dataset_id));
-        }
+            return (this->*it->second)(m_loader_manager.loader(dataset_id));
+    }
+    catch (exception& ex)
+    {
+        web::json::value response_json         = web::json::value::object();
+        response_json["status"]["type"]        = web::json::value::string("FAILURE");
+        response_json["status"]["description"] = web::json::value::string(ex.what());
+        return response_json;
+    }
+}
+
+web::json::value server_parser::del(std::string msg)
+{
+      try
+    {
+        if (msg.substr(0, endpoint_prefix.length()) != endpoint_prefix)
+            throw std::invalid_argument("Invalid prefix");
+
+        msg.erase(0, endpoint_prefix.length() + 1);
+
+        int dataset_id = std::stoi(msg);
+        m_loader_manager.unregister_agent(dataset_id);
+        web::json::value reply_json  = web::json::value::object();
+        reply_json["status"]["type"] = web::json::value::string("SUCCESS");
+        return reply_json;
     }
     catch (exception& ex)
     {
@@ -269,14 +295,6 @@ web::json::value server_parser::names_and_shapes(loader_adapter& loader)
 
     response_json["status"]["type"]           = web::json::value::string("SUCCESS");
     response_json["data"]["names_and_shapes"] = web::json::value::string(loader.names_and_shapes());
-    return response_json;
-}
-
-web::json::value server_parser::close(uint32_t id)
-{
-    m_loader_manager.unregister_agent(id);
-    web::json::value response_json  = web::json::value::object();
-    response_json["status"]["type"] = web::json::value::string("SUCCESS");
     return response_json;
 }
 
