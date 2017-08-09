@@ -51,7 +51,8 @@ namespace nervana
         {
             if (!success())
             {
-                throw std::runtime_error("service responded without success with status " + to_string());
+                throw std::runtime_error("service responded without success with status " +
+                                         to_string());
             }
         }
 
@@ -120,6 +121,7 @@ namespace nervana
     public:
         virtual ~service() {}
         virtual service_response<std::string> create_session(const std::string& config)        = 0;
+        virtual service_status close_session(const std::string& id)                                    = 0;
         virtual service_response<names_and_shapes> get_names_and_shapes(const std::string& id) = 0;
         virtual service_response<next_response> next(const std::string& id)                    = 0;
         virtual service_status reset(const std::string& id)                                    = 0;
@@ -136,6 +138,7 @@ namespace nervana
         service_connector() = delete;
 
         service_response<std::string> create_session(const std::string& config) override;
+        service_status close_session(const std::string& id) override;
         service_response<next_response> next(const std::string& id) override;
         service_status reset(const std::string& id) override;
 
@@ -154,6 +157,6 @@ namespace nervana
 
         std::shared_ptr<http_connector> m_http;
         //TODO add double-buffering!
-        fixed_buffer_map                m_buffer_map;
+        fixed_buffer_map m_buffer_map;
     };
 }

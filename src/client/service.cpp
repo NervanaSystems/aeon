@@ -54,7 +54,7 @@ string nervana::to_string(service_status_type type)
     {
         return status_map.at(type);
     }
-    catch(const exception& ex)
+    catch(const exception&)
     {
         return "UNKNOWN";
     }
@@ -137,6 +137,20 @@ service_response<string> nervana::service_connector::create_session(const std::s
         throw std::runtime_error("service returned empty session id: " + status.to_string());
     }
     return service_response<string>(status, session_id);
+}
+
+//TODO: add UT
+service_status nervana::service_connector::close_session(const std::string& id)
+{
+    http_response response = m_http->get(full_endpoint(id + "/close"));
+    if (response.code != http::status_accepted && response.code != http::status_created)
+    {
+        throw runtime_error("wrong http status code " + std::to_string(response.code));
+    }
+    service_status status;
+    json           json_response;
+    extract_status_and_json(response.data, status, json_response);
+    return status;
 }
 
 service_response<nervana::next_response> nervana::service_connector::next(const string& id)
