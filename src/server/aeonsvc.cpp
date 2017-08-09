@@ -11,11 +11,14 @@
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
+#include <getopt.h>
+#include <string>
 
 #include "status.h"
 #include "pidfile.h"
 #include "utils.h"
-#include "aeonsvc.hpp"
+#include "server.hpp"
+
 
 /* Global timestamp value. It shell be used to update a timestamp field of block
    device structure. See block.h for details. */
@@ -121,80 +124,125 @@ static void _aeonsvc_setup_signals(void) {
   sigprocmask(SIG_UNBLOCK, &sigset, NULL);
 }
 
-#define RUN_AS_APPLICATION
-int main(int argc, char *argv[]) {
-#ifdef RUN_AS_APPLICATION
-   start_deamon();
-   while(true)
-        getchar();
-#else
-  verbose = VERB_ALL;
-  printf("%s\n", "launching aeon service...");
-  int i;
+int main(int argc, char *argv[])
+{
+    int deamon_flag;
+    std::string http_addr;
+    std::string path;
 
-  set_invocation_name(argv[0]);
-  printf("%s\n", "opening log...");
-  openlog(progname, LOG_PID | LOG_PERROR, LOG_DAEMON);
-  printf("%s\n", "opened.");
+    while(1)
+    {
+        static struct option long_options[] =
+        {
+            {"daemon",     no_argument,       &deamon_flag, 1},
+            {"help",       no_argument,       0, 'h'},
+            {"http_addr",  required_argument, 0, 'a'},
+            {"path",       required_argument, 0, 'p'},
+            {0, 0, 0, 0}
+        };
+        int option_index = 0;
+        int c = getopt_long_only(argc, argv, "h", long_options, &option_index);
 
-  if (getuid() != 0) {
-    printf("%s\n", "need to be root.");
-    log_error("Only root can run this application.");
-    return STATUS_NOT_A_PRIVILEGED_USER;
-  }
+        if (c == -1) break;
+        switch (c)
+        {
+            case 'a': http_addr = optarg; break;
+            case 'p': path      = optarg; break;
+            case 'h':
+                printf("Usage: %s ", argv[0]);
+                printf("[--daemon] --http_addr addr:port --path path\n");
+                return 0;
+            case '?':
+                return -1;
+                break;
+        }
+    }
+    if (http_addr.empty())
+    {
+        printf("Missing \"http_addr\" argument\n");
+        return -1;
+    }
+    if (path.empty())
+    {
+        printf("Missing \"path\" argument\n");
+        return -1;
+    }
 
-  if (on_exit(_aeonsvc_status, &terminate)) {
-    return STATUS_ONEXIT_ERROR;
-  }
+    if (!deamon_flag)
+    {
+        nervana::aeon_server server(http_addr, path);
+        while(true)
+            getchar();
+    }
+    else
+    {
+        verbose = VERB_ALL;
+        printf("%s\n", "launching aeon service...");
+        int i;
 
-  if (pidfile_check(progname, NULL) == 0) {
-    printf("%s\n", "process already running.");
-    log_warning("daemon is running...");
-    return STATUS_LEDMON_RUNNING;
-  }
+        set_invocation_name(argv[0]);
+        printf("%s\n", "opening log...");
+        openlog(progname, LOG_PID | LOG_PERROR, LOG_DAEMON);
+        printf("%s\n", "opened.");
 
-  pid_t pid = fork();
-  if (pid < 0) {
-    log_debug("main(): fork() failed (errno=%d).", errno);
-    exit(EXIT_FAILURE);
-  }
-  if (pid > 0) {
-    exit(EXIT_SUCCESS);
-  }
+        if (getuid() != 0) {
+          printf("%s\n", "need to be root.");
+          log_error("Only root can run this application.");
+          return STATUS_NOT_A_PRIVILEGED_USER;
+        }
 
-  pid_t sid = setsid();
-  if (sid < 0) {
-    log_debug("main(): setsid() failed (errno=%d).", errno);
-    exit(EXIT_FAILURE);
-  }
-  for (i = getdtablesize() - 1; i >= 0; --i)
-    close(i);
-  int t = open("/dev/null", O_RDWR);
-  dup(t);
-  dup(t);
-  umask(027);
+        if (on_exit(_aeonsvc_status, &terminate)) {
+          return STATUS_ONEXIT_ERROR;
+        }
 
-  if (chdir("/") < 0) {
-    log_debug("main(): chdir() failed (errno=%d).", errno);
-    exit(EXIT_FAILURE);
-  }
-  if (pidfile_create(progname)) {
-    log_debug("main(): pidfile_creat() failed.");
-    exit(EXIT_FAILURE);
-  }
-  _aeonsvc_setup_signals();
+        if (pidfile_check(progname, NULL) == 0) {
+          printf("%s\n", "process already running.");
+          log_warning("daemon is running...");
+          return STATUS_LEDMON_RUNNING;
+        }
 
-  if (on_exit(_aeonsvc_fini, progname))
-    exit(STATUS_ONEXIT_ERROR);
+        pid_t pid = fork();
+        if (pid < 0) {
+          log_debug("main(): fork() failed (errno=%d).", errno);
+          exit(EXIT_FAILURE);
+        }
+        if (pid > 0) {
+          exit(EXIT_SUCCESS);
+        }
 
-  log_info("aeon service has been started...");
-  start_deamon();
+        pid_t sid = setsid();
+        if (sid < 0) {
+          log_debug("main(): setsid() failed (errno=%d).", errno);
+          exit(EXIT_FAILURE);
+        }
+        for (i = getdtablesize() - 1; i >= 0; --i)
+          close(i);
+        int t = open("/dev/null", O_RDWR);
+        dup(t);
+        dup(t);
+        umask(027);
 
-  while (terminate == 0) {
-    timestamp = time(NULL);
-    log_debug("time %l",timestamp);
-    sleep(5);
-  }
-  exit(EXIT_SUCCESS);
-#endif
+        if (chdir("/") < 0) {
+          log_debug("main(): chdir() failed (errno=%d).", errno);
+          exit(EXIT_FAILURE);
+        }
+        if (pidfile_create(progname)) {
+          log_debug("main(): pidfile_creat() failed.");
+          exit(EXIT_FAILURE);
+        }
+        _aeonsvc_setup_signals();
+
+        if (on_exit(_aeonsvc_fini, progname))
+          exit(STATUS_ONEXIT_ERROR);
+
+        log_info("aeon service has been started...");
+        nervana::aeon_server server(http_addr, path);
+
+        while (terminate == 0) {
+          timestamp = time(NULL);
+          log_debug("time %l",timestamp);
+          sleep(5);
+        }
+        exit(EXIT_SUCCESS);
+    }
 }

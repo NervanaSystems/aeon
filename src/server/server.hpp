@@ -37,17 +37,20 @@ namespace nervana
             : m_loader(config)
         {
         }
-        void        reset();
-        bool        next();
-        std::string data();
+        std::string reset();
+        std::string next();
+
         std::string position();
-        std::string batch_size();
-        std::string names_and_shapes();
-        std::string batch_count();
-        std::string record_count();
+        std::string batch_size() const;
+        std::string names_and_shapes() const;
+        std::string batch_count() const;
+        std::string record_count() const;
 
     private:
         nervana::loader_local m_loader;
+        std::mutex            m_mutex;
+
+        std::string data();
     };
 
     class loader_manager
@@ -95,17 +98,15 @@ namespace nervana
     class aeon_server
     {
     public:
-        aeon_server(utility::string_t url);
-
-        pplx::task<void> open();
-        pplx::task<void> close();
+        aeon_server(std::string http_addr, std::string path);
+        ~aeon_server();
 
     private:
         void handle_post(web::http::http_request message);
         void handle_get(web::http::http_request message);
         void handle_delete(web::http::http_request message);
 
-        web::http::experimental::listener::http_listener m_listener;
-        server_parser                                    m_server_parser;
+        std::unique_ptr<web::http::experimental::listener::http_listener> m_listener;
+        server_parser                                                     m_server_parser;
     };
 }

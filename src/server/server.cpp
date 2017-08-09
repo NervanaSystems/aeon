@@ -53,25 +53,27 @@ nervana::loader_adapter& loader_manager::loader(uint32_t id)
     return *it->second.get();
 }
 
-aeon_server::aeon_server(utility::string_t url)
-    : m_listener(url)
+aeon_server::aeon_server(std::string http_addr, std::string path)
 {
-    m_listener.support(methods::POST,
+    uri_builder uri(http_addr);
+    uri.append_path(path);
+
+    auto addr = uri.to_uri().to_string();
+    
+    m_listener = make_unique<web::http::experimental::listener::http_listener>(addr);
+    
+    m_listener->support(methods::POST,
                        std::bind(&aeon_server::handle_post, this, std::placeholders::_1));
-    m_listener.support(methods::GET,
+    m_listener->support(methods::GET,
                        std::bind(&aeon_server::handle_get, this, std::placeholders::_1));
-    m_listener.support(methods::DEL,
+    m_listener->support(methods::DEL,
                        std::bind(&aeon_server::handle_delete, this, std::placeholders::_1));
+    m_listener->open().wait();
 }
 
-pplx::task<void> aeon_server::open()
+aeon_server::~aeon_server()
 {
-    return m_listener.open();
-}
-
-pplx::task<void> aeon_server::close()
-{
-    return m_listener.close();
+   m_listener->close().wait(); 
 }
 
 void aeon_server::handle_post(http_request message)
@@ -97,10 +99,21 @@ void aeon_server::handle_delete(http_request message)
 }
 
 // /////////////////////////////////////////////////////////////////////////////
-bool loader_adapter::next()
+
+string loader_adapter::next()
 {
+    lock_guard<mutex> lg(m_mutex);
+    
     m_loader.get_current_iter()++;
-    return !m_loader.get_current_iter().positional_end();
+    return m_loader.get_current_iter().positional_end() ? string(""): data();
+};
+
+string loader_adapter::reset() 
+{
+    lock_guard<mutex> lg(m_mutex);
+    
+    m_loader.reset();
+    return data();
 };
 
 string loader_adapter::data()
@@ -111,34 +124,29 @@ string loader_adapter::data()
     return std::string(encoded_data.begin(), encoded_data.end());
 }
 
-string loader_adapter::position()
+string loader_adapter::position() 
 {
     return to_string(m_loader.position());
 }
 
-string loader_adapter::batch_size()
+string loader_adapter::batch_size() const
 {
     return to_string(m_loader.batch_size());
 };
 
-void loader_adapter::reset()
-{
-    m_loader.reset();
-};
-
-string loader_adapter::names_and_shapes()
+string loader_adapter::names_and_shapes() const
 {
     std::stringstream ss;
     ss << m_loader.get_names_and_shapes();
     return string(ss.str());
 };
 
-string loader_adapter::batch_count()
+string loader_adapter::batch_count() const
 {
     return to_string(m_loader.batch_count());
 }
 
-string loader_adapter::record_count()
+string loader_adapter::record_count() const
 {
     return to_string(m_loader.record_count());
 }
@@ -235,12 +243,13 @@ web::json::value server_parser::del(std::string msg)
 web::json::value server_parser::next(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
-
-    if (loader.next())
+    string data = loader.next();
+    
+    if (!data.empty())
     {
         response_json["status"]["type"]           = web::json::value::string("SUCCESS");
         response_json["data"]["position"]         = web::json::value::string(loader.position());
-        response_json["data"]["fixed_buffer_map"] = web::json::value::string(loader.data());
+        response_json["data"]["fixed_buffer_map"] = web::json::value::string(data);
     }
     else
     {
@@ -253,11 +262,9 @@ web::json::value server_parser::next(loader_adapter& loader)
 web::json::value server_parser::reset(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
-
-    loader.reset();
-
+    
     response_json["status"]["type"]           = web::json::value::string("SUCCESS");
-    response_json["data"]["fixed_buffer_map"] = web::json::value::string(loader.data());
+    response_json["data"]["fixed_buffer_map"] = web::json::value::string(loader.reset());
 
     return response_json;
 }
@@ -296,27 +303,4 @@ web::json::value server_parser::names_and_shapes(loader_adapter& loader)
     response_json["status"]["type"]           = web::json::value::string("SUCCESS");
     response_json["data"]["names_and_shapes"] = web::json::value::string(loader.names_and_shapes());
     return response_json;
-}
-
-// /////////////////////////////////////////////////////////////////////////////
-
-struct shutdown_deamon
-{
-    void operator()(aeon_server* server) { server->close().wait(); }
-};
-
-void start_deamon()
-{
-    utility::string_t port      = U("34568");
-    utility::string_t http_addr = U("http://127.0.0.1:");
-    utility::string_t path      = U("api");
-
-    http_addr.append(port);
-    uri_builder uri(http_addr);
-    uri.append_path(path);
-
-    auto addr = uri.to_uri().to_string();
-
-    static std::unique_ptr<aeon_server, shutdown_deamon> server(new aeon_server(addr));
-    server->open().wait();
 }
