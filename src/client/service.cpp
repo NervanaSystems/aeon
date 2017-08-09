@@ -50,7 +50,14 @@ string nervana::to_string(service_status_type type)
         {service_status_type::FAILURE, "FAILURE"},
         {service_status_type::END_OF_DATASET, "END_OF_DATASET"},
         {service_status_type::UNDEFINED, "UNDEFINED"}};
-    return status_map[type];
+    try
+    {
+        return status_map.at(type);
+    }
+    catch(const exception& ex)
+    {
+        return "UNKNOWN";
+    }
 }
 
 service_status_type nervana::service_status_type_from_string(const string& input)
@@ -100,10 +107,7 @@ nervana::service_status::service_status(const json& input)
 
 string nervana::service_status::to_string() const
 {
-    static map<service_status_type, string> status_map = {
-        {service_status_type::SUCCESS, "SUCCESS"},
-        {service_status_type::END_OF_DATASET, "END_OF_DATASET"}};
-    return status_map[type];
+    return nervana::to_string(type) + ": " + description;
 }
 
 nervana::service_connector::service_connector(std::shared_ptr<http_connector> http)

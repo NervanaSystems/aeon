@@ -5,7 +5,6 @@
 #include "server.hpp"
 #include "json.hpp"
 #include "loader.hpp"
-#include "manifest_builder.hpp"
 #include "gen_image.hpp"
 #include "typemap.hpp"
 
@@ -16,35 +15,6 @@ using namespace web::http;
 using nlohmann::json;
 using namespace std;
 using namespace nervana;
-
-static std::string nervana::create_manifest_file(size_t record_count, size_t width, size_t height)
-{
-    std::string      manifest_filename = nervana::file_util::tmp_filename();
-    manifest_builder mb;
-    auto& ms = mb.record_count(record_count).image_width(width).image_height(height).create();
-    std::ofstream f(manifest_filename);
-    f << ms.str();
-    return manifest_filename;
-}
-
-default_config::default_config()
-    : height{16}
-    , width{16}
-    , batch_size{32}
-    , record_count{1003}
-    , block_size{300}
-    , js_image{{"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}}
-    , label{{"type", "label"}, {"binary", false}}
-    , augmentation{{{"type", "image"}, {"flip_enable", true}}}
-{
-    manifest_filename = create_manifest_file(record_count, width, height);
-
-    js = {{"manifest_filename", manifest_filename},
-          {"batch_size", batch_size},
-          {"block_size", block_size},
-          {"etl", {js_image, label}},
-          {"augmentation", augmentation}};
-}
 
 uint32_t loader_manager::register_agent(const nlohmann::json& config)
 {

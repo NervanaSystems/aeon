@@ -51,7 +51,7 @@ namespace nervana
         {
             if (!success())
             {
-                throw std::runtime_error("service responded without success: " + to_string());
+                throw std::runtime_error("service responded without success with status " + to_string());
             }
         }
 

@@ -15,8 +15,6 @@
 
 namespace nervana
 {
-    static std::string create_manifest_file(size_t record_count, size_t width, size_t height);
-
     struct default_config
     {
         size_t         height;

@@ -150,16 +150,18 @@ void nervana::loader_remote::retrieve_batch_count()
 void nervana::loader_remote::retrieve_next_batch()
 {
     auto response = m_service->next(m_session_id);
-    if (!response.success())
+    if (response.status.type != service_status_type::SUCCESS)
     {
-        handle_response_failure(response.status);
+        if (response.status.type == service_status_type::END_OF_DATASET)
+        {
+            m_position = m_batch_count;
+        }
+        else
+        {
+            handle_response_failure(response.status);
+        }
     }
     const next_response& next = response.data;
-    //TODO: is END_OF_DATASET required?
-    if (response.status.type == service_status_type::END_OF_DATASET)
-    {
-        m_position = m_batch_count;
-    }
     m_position          = next.position;
     m_output_buffer_ptr = next.data;
 }

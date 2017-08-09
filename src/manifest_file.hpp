@@ -97,7 +97,7 @@ protected:
 private:
     void generate_subset(std::vector<std::vector<std::string>>&, float subset_fraction);
 
-    const std::string                m_source_filename;
+    std::string                      m_source_filename;
     std::vector<std::vector<record>> m_block_list;
     CryptoPP::CRC32C                 m_crc_engine;
     uint32_t                         m_computed_crc;

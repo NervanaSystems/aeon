@@ -57,6 +57,14 @@ manifest_file::manifest_file(const string& filename,
     , m_shuffle{shuffle}
     , m_random{seed ? seed : random_device{}()}
 {
+    if(!root.empty())
+    {
+        m_source_filename = root + "/" + filename;
+    }
+    else
+    {
+        m_source_filename = filename;
+    }
     // for now parse the entire manifest on creation
     ifstream infile(m_source_filename);
 
