@@ -251,7 +251,7 @@ web::json::value server_parser::next(loader_adapter& loader)
     {
         response_json["status"]["type"]           = web::json::value::string("SUCCESS");
         response_json["data"]["position"]         = web::json::value::string(loader.position());
-        response_json["data"]["fixed_buffer_map"] = web::json::value::string(data);
+        response_json["data"]["fixed_buffer_map"] = web::json::value::string(data, false);
     }
     else
     {
