@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 {
     int deamon_flag;
     std::string http_addr;
-    std::string path;
+    std::string port;
 
     while(1)
     {
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
             {"daemon",     no_argument,       &deamon_flag, 1},
             {"help",       no_argument,       0, 'h'},
             {"http_addr",  required_argument, 0, 'a'},
-            {"path",       required_argument, 0, 'p'},
+            {"port",       required_argument, 0, 'p'},
             {0, 0, 0, 0}
         };
         int option_index = 0;
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
         switch (c)
         {
             case 'a': http_addr = optarg; break;
-            case 'p': path      = optarg; break;
+            case 'p': port      = optarg; break;
             case 'h':
                 printf("Usage: %s ", argv[0]);
                 printf("[--daemon] --http_addr addr:port --path path\n");
@@ -162,15 +162,18 @@ int main(int argc, char *argv[])
         printf("Missing \"http_addr\" argument\n");
         return -1;
     }
-    if (path.empty())
+    if (port.empty())
     {
-        printf("Missing \"path\" argument\n");
+        printf("Missing \"port\" argument\n");
         return -1;
     }
+    
+    http_addr.append(":");
+    http_addr.append(port);
 
     if (!deamon_flag)
     {
-        nervana::aeon_server server(http_addr, path);
+        nervana::aeon_server server(http_addr);
         while(true)
             getchar();
     }
@@ -236,7 +239,7 @@ int main(int argc, char *argv[])
           exit(STATUS_ONEXIT_ERROR);
 
         log_info("aeon service has been started...");
-        nervana::aeon_server server(http_addr, path);
+        nervana::aeon_server server(http_addr);
 
         while (terminate == 0) {
           timestamp = time(NULL);

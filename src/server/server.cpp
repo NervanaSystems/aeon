@@ -53,7 +53,9 @@ nervana::loader_adapter& loader_manager::loader(uint32_t id)
     return *it->second.get();
 }
 
-aeon_server::aeon_server(std::string http_addr, std::string path)
+utility::string_t aeon_server::path = U("api");
+
+aeon_server::aeon_server(std::string http_addr)
 {
     uri_builder uri(http_addr);
     uri.append_path(path);

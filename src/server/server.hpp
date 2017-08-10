@@ -98,13 +98,15 @@ namespace nervana
     class aeon_server
     {
     public:
-        aeon_server(std::string http_addr, std::string path);
+        aeon_server(std::string http_addr);
         ~aeon_server();
 
     private:
         void handle_post(web::http::http_request message);
         void handle_get(web::http::http_request message);
         void handle_delete(web::http::http_request message);
+        
+        static utility::string_t path;
 
         std::unique_ptr<web::http::experimental::listener::http_listener> m_listener;
         server_parser                                                     m_server_parser;
