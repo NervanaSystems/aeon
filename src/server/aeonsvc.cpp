@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
         {
             {"daemon",     no_argument,       &deamon_flag, 1},
             {"help",       no_argument,       0, 'h'},
-            {"http_addr",  required_argument, 0, 'a'},
+            {"address",    required_argument, 0, 'a'},
             {"port",       required_argument, 0, 'p'},
             {0, 0, 0, 0}
         };
@@ -150,11 +150,10 @@ int main(int argc, char *argv[])
             case 'p': port      = optarg; break;
             case 'h':
                 printf("Usage: %s ", argv[0]);
-                printf("[--daemon] --http_addr addr:port --path path\n");
+                printf("[--daemon] --address address -port port\n");
                 return 0;
             case '?':
                 return -1;
-                break;
         }
     }
     if (http_addr.empty())
