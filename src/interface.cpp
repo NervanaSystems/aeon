@@ -189,3 +189,8 @@ std::string nervana::dump_default(std::vector<nlohmann::json> v)
 {
     return "unimplemented";
 }
+
+std::string nervana::dump_default(nlohmann::json v)
+{
+    return v.dump();
+}

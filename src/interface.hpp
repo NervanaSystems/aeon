@@ -67,6 +67,7 @@ namespace nervana
     std::string dump_default(const std::bernoulli_distribution& v);
     std::string dump_default(nlohmann::json v);
     std::string dump_default(std::vector<nlohmann::json> v);
+    std::string dump_default(nlohmann::json v);
 }
 
 class nervana::interface::config_info_interface
