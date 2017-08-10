@@ -46,4 +46,5 @@ aeon performs a series of customizable transformations on the image before provi
    padding (int) | 0 | Size of the padding added to the image. Cannot be combined with ``crop_enable`` set to ``true``, because it crops the padded image to adjust to the original input image size.
    fixed_aspect_ratio (bool) | False | Maintain fixed aspect ratio when copying the image to the output buffer. This may result in padding of the output buffer.
    fixed_scaling_factor (float) | 1.0 | 
+   debug_output_directory (string) | "" | Writes transformed images and transformation parameters to the provided directory.
 

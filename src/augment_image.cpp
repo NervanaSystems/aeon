@@ -74,13 +74,14 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
 
     settings->output_size = cv::Size2i(output_width, output_height);
 
-    settings->angle      = angle(m_dre);
-    settings->flip       = flip_distribution(m_dre);
-    settings->hue        = hue(m_dre);
-    settings->contrast   = contrast(m_dre);
-    settings->brightness = brightness(m_dre);
-    settings->saturation = saturation(m_dre);
-    settings->padding = padding;
+    settings->angle                  = angle(m_dre);
+    settings->flip                   = flip_distribution(m_dre);
+    settings->hue                    = hue(m_dre);
+    settings->contrast               = contrast(m_dre);
+    settings->brightness             = brightness(m_dre);
+    settings->saturation             = saturation(m_dre);
+    settings->padding                = padding;
+    settings->debug_output_directory = debug_output_directory;
 
     cv::Size2f input_size = cv::Size(input_width, input_height);
     if (!crop_enable)
@@ -88,7 +89,7 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
         int c_off_x = padding_crop_offset_distribution(m_dre);
         int c_off_y = padding_crop_offset_distribution(m_dre);
         settings->padding_crop_offset = cv::Size2i(c_off_x, c_off_y);
-        settings->cropbox = cv::Rect(cv::Point2f(0, 0), input_size);
+        settings->cropbox             = cv::Rect(cv::Point2f(0, 0), input_size);
         float image_scale;
         if (fixed_scaling_factor > 0)
         {
@@ -104,9 +105,11 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
     }
     else
     {
-        if(padding > 0)
+        if (padding > 0)
         {
-            throw std::invalid_argument("crop_enable should not be true: when padding is defined, crop is executed by default with cropbox size equal to intput image size");
+            throw std::invalid_argument(
+                "crop_enable should not be true: when padding is defined, crop is executed by "
+                "default with cropbox size equal to intput image size");
         }
         float      image_scale            = scale(m_dre);
         float      _horizontal_distortion = horizontal_distortion(m_dre);

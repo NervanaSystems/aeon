@@ -44,19 +44,20 @@ class nervana::augment::image::params
 public:
     friend std::ostream& operator<<(std::ostream& out, const params& obj)
     {
-        out << "cropbox             " << obj.cropbox << "\n";
-        out << "output_size         " << obj.output_size << "\n";
-        out << "angle               " << obj.angle << "\n";
-        out << "flip                " << obj.flip << "\n";
-        out << "padding             " << obj.padding << "\n";
-        out << "padding_crop_offset " << obj.padding_crop_offset << "\n";
-        out << "lighting            " << join(obj.lighting, ", ") << "\n";
-        out << "color_noise_std     " << obj.color_noise_std << "\n";
-        out << "contrast            " << obj.contrast << "\n";
-        out << "brightness          " << obj.brightness << "\n";
-        out << "saturation          " << obj.saturation << "\n";
-        out << "hue                 " << obj.hue << "\n";
-        out << "debug_deterministic " << obj.debug_deterministic << "\n";
+        out << "cropbox                " << obj.cropbox << "\n";
+        out << "output_size            " << obj.output_size << "\n";
+        out << "angle                  " << obj.angle << "\n";
+        out << "flip                   " << obj.flip << "\n";
+        out << "padding                " << obj.padding << "\n";
+        out << "padding_crop_offset    " << obj.padding_crop_offset << "\n";
+        out << "lighting               " << join(obj.lighting, ", ") << "\n";
+        out << "color_noise_std        " << obj.color_noise_std << "\n";
+        out << "contrast               " << obj.contrast << "\n";
+        out << "brightness             " << obj.brightness << "\n";
+        out << "saturation             " << obj.saturation << "\n";
+        out << "hue                    " << obj.hue << "\n";
+        out << "debug_deterministic    " << obj.debug_deterministic << "\n";
+        out << "debug_output_directory " << obj.debug_output_directory << "\n";
         return out;
     }
 
@@ -67,12 +68,13 @@ public:
     int                angle = 0;
     bool               flip  = false;
     std::vector<float> lighting; // pixelwise random values
-    float              color_noise_std     = 0;
-    float              contrast            = 1.0;
-    float              brightness          = 1.0;
-    float              saturation          = 1.0;
-    int                hue                 = 0;
-    bool               debug_deterministic = false;
+    float              color_noise_std        = 0;
+    float              contrast               = 1.0;
+    float              brightness             = 1.0;
+    float              saturation             = 1.0;
+    int                hue                    = 0;
+    bool               debug_deterministic    = false;
+    std::string        debug_output_directory = "";
 
 private:
     params() {}
@@ -125,6 +127,9 @@ public:
     /** Image padding pixel number with random crop to original image size */
     int padding{0};
 
+    /** Writes transformed data to the provided directory */
+    std::string debug_output_directory = "";
+
 private:
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_DISTRIBUTION(scale,
@@ -145,6 +150,7 @@ private:
         ADD_SCALAR(fixed_aspect_ratio, mode::OPTIONAL),
         ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL),
         ADD_SCALAR(padding, mode::OPTIONAL),
+        ADD_SCALAR(debug_output_directory, mode::OPTIONAL),
         ADD_DISTRIBUTION(
             contrast, mode::OPTIONAL, [](decltype(contrast) v) { return v.a() <= v.b(); }),
         ADD_DISTRIBUTION(
