@@ -50,7 +50,8 @@ void nervana::loader_remote::initialize()
 {
     try
     {
-        m_session_id = m_config["server"]["session_id"];
+        m_session_id     = m_config.at("server").at("session_id");
+        m_shared_session = true;
     }
     catch (const std::exception&)
     {
@@ -172,6 +173,8 @@ nervana::loader::iterator nervana::loader_remote::begin()
 
 void nervana::loader_remote::reset()
 {
+    if (m_shared_session)
+        return;
     auto response = m_service->reset(m_session_id);
     if (!response.status.success())
     {

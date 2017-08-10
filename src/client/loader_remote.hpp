@@ -70,5 +70,6 @@ namespace nervana
         int                      m_batch_size;
         int                      m_batch_count;
         size_t                   m_position{0};
+        bool                     m_shared_session{false};
     };
 }
