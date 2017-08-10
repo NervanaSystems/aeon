@@ -129,6 +129,7 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
     cv::Mat rotatedImage;
     image::rotate(single_img, rotatedImage, img_xform->angle);
     cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
+    image::add_padding(croppedImage, img_xform->padding, img_xform->padding_crop_offset);
 
     cv::Mat resizedImage;
     image::resize(croppedImage, resizedImage, img_xform->output_size);

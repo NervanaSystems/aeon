@@ -15,6 +15,8 @@
 
 #include "gtest/gtest.h"
 
+#define private public
+
 #include "augment_image.hpp"
 #include "augment_audio.hpp"
 
@@ -25,6 +27,7 @@ TEST(image_augmentation, config)
 {
     nlohmann::json js = {{"type", "image"},
                          {"angle", {-20, 20}},
+                         {"padding", 4},
                          {"scale", {0.2, 0.8}},
                          {"lighting", {0.0, 0.1}},
                          {"horizontal_distortion", {0.75, 1.33}},
@@ -38,6 +41,10 @@ TEST(image_augmentation, config)
 
     EXPECT_EQ(-20, config.angle.a());
     EXPECT_EQ(20, config.angle.b());
+
+    EXPECT_EQ(4, config.padding);
+    EXPECT_EQ(0, config.padding_crop_offset_distribution.a());
+    EXPECT_EQ(8, config.padding_crop_offset_distribution.b());
 
     EXPECT_FLOAT_EQ(0.0, config.lighting.mean());
     EXPECT_FLOAT_EQ(0.1, config.lighting.stddev());
@@ -58,4 +65,19 @@ TEST(image_augmentation, config)
     EXPECT_FLOAT_EQ(0.5, config.crop_offset.b());
 
     EXPECT_FLOAT_EQ(0.0, config.flip_distribution.p());
+}
+
+TEST(image_augmentation, padding_with_crop_enabled)
+{
+    nlohmann::json js = {{"type", "image"},
+                         {"angle", {-20, 20}},
+                         {"padding", 4},
+                         {"scale", {0.2, 0.8}},
+                         {"lighting", {0.0, 0.1}},
+                         {"horizontal_distortion", {0.75, 1.33}},
+                         {"crop_enable", true},
+                         {"flip_enable", true}};
+
+    augment::image::param_factory config(js);
+    EXPECT_THROW(config.make_params(10, 10, 10, 10), std::invalid_argument);
 }

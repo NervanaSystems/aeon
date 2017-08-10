@@ -46,6 +46,22 @@ void image::rotate(
     }
 }
 
+void image::add_padding(cv::Mat& input, int padding, cv::Size2i crop_offset)
+{
+    // crop overlaps completely with input image
+    if (padding == 0 || (crop_offset.width == padding && crop_offset.height == padding))
+    {
+        return;
+    }
+
+    cv::Mat    paddedImage;
+    cv::Scalar blackPixel{0, 0, 0};
+    cv::copyMakeBorder(
+        input, paddedImage, padding, padding, padding, padding, cv::BORDER_CONSTANT, blackPixel);
+    cv::Rect cropbox{crop_offset.width, crop_offset.height, input.cols, input.rows};
+    input = paddedImage(cropbox);
+}
+
 void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size, bool interpolate)
 {
     if (size == input.size())

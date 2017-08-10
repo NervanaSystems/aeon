@@ -48,6 +48,8 @@ public:
         out << "output_size         " << obj.output_size << "\n";
         out << "angle               " << obj.angle << "\n";
         out << "flip                " << obj.flip << "\n";
+        out << "padding             " << obj.padding << "\n";
+        out << "padding_crop_offset " << obj.padding_crop_offset << "\n";
         out << "lighting            " << join(obj.lighting, ", ") << "\n";
         out << "color_noise_std     " << obj.color_noise_std << "\n";
         out << "contrast            " << obj.contrast << "\n";
@@ -59,6 +61,8 @@ public:
     }
 
     cv::Rect           cropbox;
+    int                padding;
+    cv::Size2i         padding_crop_offset;
     cv::Size2i         output_size;
     int                angle = 0;
     bool               flip  = false;
@@ -118,6 +122,9 @@ public:
     /** Flip the image left to right */
     std::bernoulli_distribution flip_distribution{0};
 
+    /** Image padding pixel number with random crop to original image size */
+    int padding{0};
+
 private:
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_DISTRIBUTION(scale,
@@ -137,6 +144,7 @@ private:
         ADD_SCALAR(crop_enable, mode::OPTIONAL),
         ADD_SCALAR(fixed_aspect_ratio, mode::OPTIONAL),
         ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL),
+        ADD_SCALAR(padding, mode::OPTIONAL),
         ADD_DISTRIBUTION(
             contrast, mode::OPTIONAL, [](decltype(contrast) v) { return v.a() <= v.b(); }),
         ADD_DISTRIBUTION(
@@ -147,6 +155,9 @@ private:
 
     bool flip_enable = false;
     bool center      = true;
+
+    /** Offset for padding cropbox */
+    std::uniform_int_distribution<int> padding_crop_offset_distribution{0, 0};
 
     std::default_random_engine m_dre;
 };

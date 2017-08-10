@@ -38,14 +38,14 @@
 using namespace std;
 using namespace nervana;
 
-static cv::Mat generate_indexed_image()
+static cv::Mat generate_indexed_image(int rows, int cols)
 {
-    cv::Mat        color = cv::Mat(256, 256, CV_8UC3);
+    cv::Mat        color = cv::Mat(rows, cols, CV_8UC3);
     unsigned char* input = (unsigned char*)(color.data);
     int            index = 0;
-    for (int row = 0; row < 256; row++)
+    for (int row = 0; row < rows; row++)
     {
-        for (int col = 0; col < 256; col++)
+        for (int col = 0; col < cols; col++)
         {
             input[index++] = col; // b
             input[index++] = row; // g
@@ -188,7 +188,7 @@ TEST(image, config)
 
 TEST(image, extract1)
 {
-    auto                  indexed = generate_indexed_image();
+    auto                  indexed = generate_indexed_image(256, 256);
     vector<unsigned char> png;
     cv::imencode(".png", indexed, png);
 
@@ -197,7 +197,7 @@ TEST(image, extract1)
 
 TEST(image, extract2)
 {
-    auto                  indexed = generate_indexed_image();
+    auto                  indexed = generate_indexed_image(256, 256);
     vector<unsigned char> png;
     cv::imencode(".png", indexed, png);
 
@@ -231,7 +231,7 @@ bool check_value(shared_ptr<image::decoded> transformed, int x0, int y0, int x1,
 
 TEST(image, transform_crop)
 {
-    auto                  indexed = generate_indexed_image();
+    auto                  indexed = generate_indexed_image(256, 256);
     vector<unsigned char> img;
     cv::imencode(".png", indexed, img);
 
@@ -264,7 +264,7 @@ TEST(image, transform_crop)
 
 TEST(image, transform_flip)
 {
-    auto                  indexed = generate_indexed_image();
+    auto                  indexed = generate_indexed_image(256, 256);
     vector<unsigned char> img;
     cv::imencode(".png", indexed, img);
 
@@ -293,6 +293,95 @@ TEST(image, transform_flip)
     EXPECT_TRUE(check_value(transformed, 0, 0, 119, 150));
     EXPECT_TRUE(check_value(transformed, 19, 0, 100, 150));
     EXPECT_TRUE(check_value(transformed, 0, 19, 119, 169));
+}
+
+TEST(image, transform_padding)
+{
+    struct test
+    {
+        const int width;
+        const int height;
+        const int padding;
+        const int crop_offset_x;
+        const int crop_offset_y;
+    };
+    vector<test> tests = {{32, 32, 5, 2, 8},
+                          {32, 32, 5, 5, 5},
+                          {32, 32, 4, 0, 0},
+                          {30, 30, 5, 10, 10},
+                          {30, 30, 0, 0, 0},
+                          {1, 1, 10, 0, 20},
+                          {2, 2, 10, 10, 10}};
+
+    for (const test& tc : tests)
+    {
+        auto                  indexed = generate_indexed_image(tc.height, tc.width);
+        vector<unsigned char> img;
+        cv::imencode(".png", indexed, img);
+
+        nlohmann::json js = {{"width", tc.width}, {"height", tc.height}};
+        nlohmann::json aug;
+        image::config  cfg(js);
+
+        image::extractor           ext{cfg};
+        shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+        augment::image::param_factory factory(aug);
+
+        auto                 image_size = decoded->get_image_size();
+        image_params_builder builder(
+            factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height));
+        shared_ptr<augment::image::params> params_ptr =
+            builder.output_size(tc.width, tc.height)
+                .padding(tc.padding, tc.crop_offset_x, tc.crop_offset_y);
+
+        image::transformer         trans{cfg};
+        shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+        cv::Mat image = transformed->get_image(0);
+
+        ASSERT_EQ(tc.width, image.size().width);
+        ASSERT_EQ(tc.height, image.size().height);
+
+        for (int row = 0; row < tc.height + tc.padding * 2; row++)
+        {
+            for (int col = 0; col < tc.width + tc.padding * 2; col++)
+            {
+                // out of cropped box
+                if (row < tc.crop_offset_y || col < tc.crop_offset_x ||
+                    row >= tc.crop_offset_y + tc.height || col >= tc.crop_offset_x + tc.width)
+                    continue;
+
+                auto pixel = image.at<cv::Vec3b>(row - tc.crop_offset_y, col - tc.crop_offset_x);
+                // col = b row = g
+                int r, g, b;
+                // we are at padded black pixel
+                if (col < tc.padding || col >= tc.width + tc.padding || row < tc.padding ||
+                    row >= tc.height + tc.padding)
+                {
+                    r = g = b = 0;
+                    EXPECT_EQ(b, pixel[0]) << "blue pixel at row " << row << " col " << col
+                                           << " is not equal to reference value";
+                    EXPECT_EQ(g, pixel[1]) << "green pixel at row " << row << " col " << col
+                                           << " is not equal to reference value";
+                    EXPECT_EQ(r, pixel[2]) << "red pixel at row " << row << " col " << col
+                                           << " is not equal to reference value";
+                }
+                else // input image
+                {
+                    b = col - tc.padding;
+                    g = row - tc.padding;
+                    r = 0;
+                    EXPECT_EQ(b, pixel[0]) << "blue pixel at row " << row << " col " << col
+                                           << " is not equal to reference value";
+                    EXPECT_EQ(g, pixel[1]) << "green pixel at row " << row << " col " << col
+                                           << " is not equal to reference value";
+                    EXPECT_EQ(r, pixel[2]) << "red pixel at row " << row << " col " << col
+                                           << " is not equal to reference value";
+                }
+            }
+        }
+    }
 }
 
 TEST(image, noconvert_nosplit)
@@ -757,7 +846,7 @@ TEST(image, var_resize_fixed_scale)
 
 TEST(image, var_transform_flip)
 {
-    auto                  indexed = generate_indexed_image();
+    auto                  indexed = generate_indexed_image(256, 256);
     vector<unsigned char> img;
     cv::imencode(".png", indexed, img);
     nlohmann::json jsConfig = {{"width", 256}, {"height", 256}, {"channels", 3}};

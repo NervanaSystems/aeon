@@ -35,6 +35,8 @@ namespace nervana
                                   std::vector<cv::Mat>& target,
                                   std::vector<int>&     from_to);
 
+        void add_padding(cv::Mat& input, int padding, cv::Size2i crop_offset);
+
         float calculate_scale(const cv::Size& size, int output_width, int output_height);
 
         cv::Size2f cropbox_max_proportional(const cv::Size2f& in_size, const cv::Size2f& out_size);

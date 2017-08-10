@@ -64,6 +64,12 @@ public:
         obj->angle = val;
         return *this;
     }
+    image_params_builder& padding(int padding, int crop_offset_x, int crop_offset_y)
+    {
+        obj->padding = padding;
+        obj->padding_crop_offset = cv::Size2i(crop_offset_x, crop_offset_y);
+        return *this;
+    }
     image_params_builder& flip(bool val)
     {
         obj->flip = val;
