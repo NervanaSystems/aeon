@@ -132,6 +132,6 @@ void audio::loader::load(const vector<void*>& outbuf, shared_ptr<audio::decoded>
     if (_cfg.emit_length)
     {
         uint32_t* length_buf = (uint32_t*)outbuf[1];
-        *length_buf          = input->size();
+        *length_buf          = std::min(input->size(), (unsigned long)_cfg.max_duration_tn);
     }
 }
