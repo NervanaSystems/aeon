@@ -12,7 +12,7 @@ set(SRC
 
 include_directories("${CMAKE_SOURCE_DIR}/src" "/usr/include/cpprest")
 
-find_package(OpenSSL 1.0.0 REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 add_library(cpprest SHARED IMPORTED)
 set_property(TARGET cpprest PROPERTY IMPORTED_LOCATION "/usr/local/lib/libcpprest.so")
