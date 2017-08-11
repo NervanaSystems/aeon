@@ -89,8 +89,11 @@ void aeon_server::handle_post(http_request message)
 void aeon_server::handle_get(http_request message)
 {
     INFO << "[GET] " << message.relative_uri().path();
-    message.reply(status_codes::OK,
-                  m_server_parser.get(web::uri::decode(message.relative_uri().path())));
+    auto reply = m_server_parser.get(web::uri::decode(message.relative_uri().path()));
+    if (std::get<1>(reply).empty())
+        message.reply(status_codes::OK, std::get<0>(reply));
+    else
+        message.reply(status_codes::NoContent, std::get<1>(reply));
 }
 
 void aeon_server::handle_delete(http_request message)
@@ -105,31 +108,30 @@ void aeon_server::handle_delete(http_request message)
 string loader_adapter::next()
 {
     lock_guard<mutex> lg(m_mutex);
-    
-    m_loader.get_current_iter()++;
-    return m_loader.get_current_iter().positional_end() ? string(""): data();
+
+    if (m_is_reset)
+        m_is_reset = false;
+    else
+        m_loader.get_current_iter()++;
+
+    if  (m_loader.get_current_iter().positional_end())
+    {
+        return string("");
+    }
+    else
+    {
+        std::stringstream ss;
+        ss << *m_loader.get_current_iter();
+        return ss.str();
+    }
 };
 
-string loader_adapter::reset() 
+void loader_adapter::reset()
 {
     lock_guard<mutex> lg(m_mutex);
-    
     m_loader.reset();
-    return data();
+    m_is_reset = true;
 };
-
-string loader_adapter::data()
-{
-    std::stringstream ss;
-    ss << *m_loader.get_current_iter();
-    std::vector<char> encoded_data = nervana::base64::encode(ss.str().data(), ss.str().size());
-    return std::string(encoded_data.begin(), encoded_data.end());
-}
-
-string loader_adapter::position() 
-{
-    return to_string(m_loader.position());
-}
 
 string loader_adapter::batch_size() const
 {
@@ -159,7 +161,6 @@ string loader_adapter::record_count() const
 
 server_parser::server_parser()
 {
-    REGISTER_SRV_FUNCTION(next);
     REGISTER_SRV_FUNCTION(batch_size);
     REGISTER_SRV_FUNCTION(reset);
     REGISTER_SRV_FUNCTION(names_and_shapes);
@@ -188,7 +189,7 @@ web::json::value server_parser::post(std::string msg, std::string msg_body)
     }
 }
 
-web::json::value server_parser::get(std::string msg)
+std::tuple<web::json::value, std::string> server_parser::get(std::string msg)
 {
     try
     {
@@ -203,18 +204,25 @@ web::json::value server_parser::get(std::string msg)
 
         int dataset_id = std::stoi(path[0]);
 
-        auto it = process_func.find(path[1]);
-        if (it == process_func.end())
-            throw std::invalid_argument("Invalid command");
+        if (path[1] == "next")
+        {
+            return next(m_loader_manager.loader(dataset_id));
+        }
         else
-            return (this->*it->second)(m_loader_manager.loader(dataset_id));
+        {
+            auto it = process_func.find(path[1]);
+            if (it == process_func.end())
+                throw std::invalid_argument("Invalid command");
+            else
+                return std::make_tuple((this->*it->second)(m_loader_manager.loader(dataset_id)),"");
+        }
     }
     catch (exception& ex)
     {
         web::json::value response_json         = web::json::value::object();
         response_json["status"]["type"]        = web::json::value::string("FAILURE");
         response_json["status"]["description"] = web::json::value::string(ex.what());
-        return response_json;
+        return std::make_tuple(response_json, "");
     }
 }
 
@@ -242,31 +250,28 @@ web::json::value server_parser::del(std::string msg)
     }
 }
 
-web::json::value server_parser::next(loader_adapter& loader)
+std::tuple<web::json::value, std::string> server_parser::next(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
     string data = loader.next();
     
     if (!data.empty())
     {
-        response_json["status"]["type"]           = web::json::value::string("SUCCESS");
-        response_json["data"]["position"]         = web::json::value::string(loader.position());
-        response_json["data"]["fixed_buffer_map"] = web::json::value::string(data, false);
+        return make_tuple(response_json, data);
     }
     else
     {
         response_json["status"]["type"] = web::json::value::string("END_OF_DATASET");
+        return make_tuple(response_json,"");
     }
-
-    return response_json;
 }
 
 web::json::value server_parser::reset(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
     
+    loader.reset();
     response_json["status"]["type"]           = web::json::value::string("SUCCESS");
-    response_json["data"]["fixed_buffer_map"] = web::json::value::string(loader.reset());
 
     return response_json;
 }

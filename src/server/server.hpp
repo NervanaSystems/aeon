@@ -5,6 +5,7 @@
 #include <chrono>
 #include <random>
 #include <mutex>
+#include <tuple>
 
 #include <cpprest/http_listener.h>
 
@@ -34,13 +35,12 @@ namespace nervana
     {
     public:
         loader_adapter(const nlohmann::json& config)
-            : m_loader(config)
+            : m_loader(config), m_is_reset(true)
         {
         }
-        std::string reset();
+        void        reset();
         std::string next();
 
-        std::string position();
         std::string batch_size() const;
         std::string names_and_shapes() const;
         std::string batch_count() const;
@@ -49,8 +49,7 @@ namespace nervana
     private:
         nervana::loader_local m_loader;
         std::mutex            m_mutex;
-
-        std::string data();
+        bool                  m_is_reset;
     };
 
     class loader_manager
@@ -76,8 +75,8 @@ namespace nervana
     public:
         server_parser();
         web::json::value post(std::string msg, std::string msg_body);
-        web::json::value get(std::string msg);
         web::json::value del(std::string msg);
+        std::tuple<web::json::value, std::string> get(std::string msg);
 
     private:
         const std::string version         = "v1";
@@ -87,7 +86,7 @@ namespace nervana
 
         loader_manager m_loader_manager;
 
-        web::json::value next(loader_adapter& loader);
+        std::tuple<web::json::value, std::string> next(loader_adapter& loader);
         web::json::value batch_size(loader_adapter& loader);
         web::json::value reset(loader_adapter& loader);
         web::json::value names_and_shapes(loader_adapter& loader);
