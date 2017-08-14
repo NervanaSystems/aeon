@@ -1,8 +1,6 @@
 import tempfile
 import numpy as np
 from PIL import Image as PILImage
-import random
-import struct
 import pytest
 import os
 import math
@@ -23,7 +21,6 @@ def test_loader_invalid_config_type():
     with pytest.raises(RuntimeError) as ex:
         dl = DataLoader(config)
     assert 'unsupported' in str(ex)
-
 
 
 def test_loader_missing_config_field():
@@ -86,9 +83,9 @@ def test_loader_exception_next():
     dl = DataLoader(config)
     num_of_batches_in_manifest = 60
     for x in range(0, num_of_batches_in_manifest):
-        dl.next()
+        next(dl)
     with pytest.raises(StopIteration) as ex:
-        dl.next()
+        next(dl)
     manifest.close()
     os.chdir(cwd)
 
@@ -124,7 +121,6 @@ def test_loader_json_parser_fail():
     files = glob.glob("./json/fail*.json")
 
     for f in files:
-        print f
         with open(f) as json_file:
             json_string = json_file.read()
 
@@ -139,6 +135,7 @@ def test_loader_json_parser_fail():
             dl = DataLoader(config)
         assert 'Required Argument' in str(ex) 
 
+
 def test_loader_json_parser_pass():
     files = glob.glob("./json/pass*.json")
 
@@ -151,6 +148,7 @@ def test_loader_json_parser_pass():
         with pytest.raises(RuntimeError) as ex:
             dl = DataLoader(config)
         assert 'Required Argument' in str(ex) 
+
 
 def test_parser_dump_pass():
     files = glob.glob("./json/pass*.json")
@@ -168,6 +166,7 @@ def test_parser_dump_pass():
                 dict2json(config)
             assert("can only take dictionary" in str(ex))
 
+
 def test_parser_dump_fail():
     files = glob.glob("./json/fail*.json")
 
@@ -183,6 +182,7 @@ def test_parser_dump_fail():
             dict2json(config)
         assert("can only take dictionary" in str(ex))
 
+
 def test_parse_json_dict_list_pass():
     test_dir = os.path.dirname(os.path.realpath(__file__)) + '/test_data/'
 
@@ -192,6 +192,7 @@ def test_parse_json_dict_list_pass():
     dl = DataLoader(config)
     assert (dl.config["etl"][0]["type"] == 'image' and dl.config["etl"][1]["type"] == 'label')
 
+
 def test_parse_json_dict_tuple_pass():
     test_dir = os.path.dirname(os.path.realpath(__file__)) + '/test_data/'
 
@@ -200,6 +201,7 @@ def test_parse_json_dict_tuple_pass():
 
     dl = DataLoader(config)
     assert (dl.config["etl"][0]["type"] == 'image' and dl.config["etl"][1]["type"] == 'label')
+
 
 if __name__ == '__main__':
     pytest.main()

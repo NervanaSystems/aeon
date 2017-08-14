@@ -60,13 +60,13 @@ static PyObject* error_out(PyObject* m)
 }
 
 /*
- * This method dums dictionary to a json string
+ * This method dumps dictionary to a json string
  */
 static PyObject* dict2json(PyObject* self, PyObject* dictionary)
 {
     try
     {
-        return PyBytes_FromString(JsonParser().parse(dictionary).dump().c_str());
+        return PyUnicode_FromString(JsonParser().parse(dictionary).dump().c_str());
     }
     catch (std::exception& e)
     {

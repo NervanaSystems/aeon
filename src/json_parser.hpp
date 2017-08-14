@@ -74,7 +74,7 @@ private:
             return Type::List;
         else if (PyTuple_Check(object))
             return Type::Tuple;
-        else if (PyMapping_Check(object))
+        else if (PyDict_Check(object))
             return Type::Dict;
         else if (PySequence_Check(object))
             return Type::String;
@@ -142,7 +142,7 @@ private:
     void parse_dict(nlohmann::json& json, PyObject* dict)
     {
         nervana::affirm(PyDict_Check(dict), "Input argument must be dictionary.");
-        PyObject * key, *value;
+        PyObject *key, *value;
         Py_ssize_t pos = 0;
 
         while (PyDict_Next(dict, &pos, &key, &value))
