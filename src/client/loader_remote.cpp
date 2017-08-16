@@ -167,21 +167,32 @@ void nervana::loader_remote::retrieve_next_batch()
 
 nervana::loader::iterator nervana::loader_remote::begin()
 {
-    reset();
+    retrieve_next_batch();
     return m_current_iter;
 }
 
 void nervana::loader_remote::reset()
 {
+    // client sharing session cannot reset data
     if (m_shared_session)
         return;
-    auto response = m_service->reset(m_session_id);
-    if (!response.status.success())
+    auto status = m_service->reset(m_session_id);
+    if (!status.success())
     {
-        handle_response_failure(response.status);
+        handle_response_failure(status);
     }
-    const next_response& next = response.data;
-    m_output_buffer_ptr       = next.data;
+    m_batch_to_fetch = true;
+}
+
+nervana::loader_remote::iterator& nervana::loader_remote::get_current_iter()
+{
+    // for remote loader we dont fetch data in reset, because client starting session may not want to use data
+    if (m_batch_to_fetch)
+    {
+        retrieve_next_batch();
+        m_batch_to_fetch = false;
+    }
+    return m_current_iter;
 }
 
 void nervana::loader_remote::increment_position()

@@ -40,7 +40,7 @@ namespace nervana
         int                     batch_count() const override { return m_batch_count; }
         iterator                begin() override;
         iterator                end() override { return m_end_iter; }
-        iterator&               get_current_iter() override { return m_current_iter; }
+        iterator&               get_current_iter() override;
         iterator&               get_end_iter() override { return m_end_iter; }
         const fixed_buffer_map* get_output_buffer() const override { return m_output_buffer_ptr; }
         const size_t&           position() override { return m_position; }
@@ -71,5 +71,6 @@ namespace nervana
         int                      m_batch_count;
         size_t                   m_position{0};
         bool                     m_shared_session{false};
+        bool                     m_batch_to_fetch{true};
     };
 }

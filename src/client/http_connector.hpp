@@ -25,16 +25,17 @@ namespace nervana
         const int status_ok       = 200;
         const int status_created  = 201;
         const int status_accepted = 202;
+        const int status_no_data  = 204;
 
         inline std::string merge_http_paths(const std::string& first, const std::string& second)
         {
-            auto   first_size  = first.size();
-            auto   second_size = second.size();
-            if(second_size == 0)
+            auto first_size  = first.size();
+            auto second_size = second.size();
+            if (second_size == 0)
             {
                 return first;
             }
-            std::string result        = "";
+            std::string result = "";
             if (first_size > 0 && first[first_size - 1] == '/')
             {
                 result = first;

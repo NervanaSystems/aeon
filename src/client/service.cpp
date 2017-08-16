@@ -54,7 +54,7 @@ string nervana::to_string(service_status_type type)
     {
         return status_map.at(type);
     }
-    catch(const exception&)
+    catch (const exception&)
     {
         return "UNKNOWN";
     }
@@ -156,49 +156,68 @@ service_status nervana::service_connector::close_session(const std::string& id)
 service_response<nervana::next_response> nervana::service_connector::next(const string& id)
 {
     http_response response = m_http->get(full_endpoint(id + "/next"));
-    if (response.code != http::status_ok)
+    if (response.code != http::status_ok && response.code != http::status_accepted)
     {
         throw runtime_error("wrong http status code " + std::to_string(response.code));
     }
-    return process_data_json(response.data);
+    return process_data_json(response);
 }
 
-service_response<nervana::next_response> nervana::service_connector::reset(const string& id)
+service_status nervana::service_connector::reset(const string& id)
 {
     http_response response = m_http->get(full_endpoint(id + "/reset"));
     if (response.code != http::status_ok)
     {
         throw runtime_error("wrong http status code " + std::to_string(response.code));
     }
-    return process_data_json(response.data);
-}
-
-service_response<nervana::next_response> nervana::service_connector::process_data_json(const string& data)
-{
     service_status status;
     json           json_response;
-    extract_status_and_json(data, status, json_response);
-    if (status.type != service_status_type::SUCCESS)
+    extract_status_and_json(response.data, status, json_response);
+    return status;
+}
+
+#include "../log.hpp"
+service_response<nervana::next_response>
+    nervana::service_connector::process_data_json(const http_response& response)
+{
+    service_status status;
+    string         serialized_buffer_map;
+
+    if (response.code == http::status_accepted)
     {
-        return service_response<next_response>(status, next_response());
+        serialized_buffer_map = response.data;
+        INFO << serialized_buffer_map.size();
+        INFO << response.data.size();
+        status.type           = service_status_type::SUCCESS;
+    }
+    else if (response.code == http::status_ok)
+    {
+        json json_response;
+        extract_status_and_json(response.data, status, json_response);
+        if (status.type != service_status_type::SUCCESS)
+        {
+            return service_response<next_response>(status, next_response());
+        }
+
+        string encoded_buffer_map;
+        try
+        {
+            encoded_buffer_map = json_response.at("fixed_buffer_map");
+        }
+        catch (const exception&)
+        {
+            throw runtime_error("no field 'fixed_buffer_map' in 'data' object of service response");
+        }
+
+        std::vector<char> serialized_buffer_map_buffer =
+            base64::decode(encoded_buffer_map.c_str(), encoded_buffer_map.size());
+        serialized_buffer_map =
+            string(serialized_buffer_map_buffer.begin(), serialized_buffer_map_buffer.end());
     }
 
-    string encoded_buffer_map;
     try
     {
-        encoded_buffer_map = json_response.at("fixed_buffer_map");
-    }
-    catch (const exception&)
-    {
-        throw runtime_error("no field 'fixed_buffer_map' in 'data' object of service response");
-    }
-
-    std::vector<char> serialized_buffer_map =
-        base64::decode(encoded_buffer_map.c_str(), encoded_buffer_map.size());
-
-    try
-    {
-        istringstream stream(string(serialized_buffer_map.begin(), serialized_buffer_map.end()));
+        istringstream stream(serialized_buffer_map);
         m_buffer_map.deserialize(stream);
     }
     catch (const exception& ex)

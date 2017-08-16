@@ -159,25 +159,15 @@ TEST(service_connector, reset)
         auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
         service_connector connector(mock);
 
-        fixed_buffer_map& buffer_map = get_fixed_buffer_map();
-        stringstream      serialized_buffer_map;
-        buffer_map.serialize(serialized_buffer_map);
-        std::vector<char> encoded_buffer_map = nervana::base64::encode(
-            serialized_buffer_map.str().data(), serialized_buffer_map.str().size());
-
         json expected_json;
         expected_json["status"]["type"] = "SUCCESS";
-        expected_json["data"]["fixed_buffer_map"] =
-            string(encoded_buffer_map.begin(), encoded_buffer_map.end());
-        auto   expected_next_response = next_response(&buffer_map);
-        auto   expected_response      = http_response(http::status_ok, expected_json.dump());
-        string endpoint               = "/api/v1/dataset/" + session_id + "/reset";
+        auto   expected_response        = http_response(http::status_ok, expected_json.dump());
+        string endpoint                 = "/api/v1/dataset/" + session_id + "/reset";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        service_response<next_response> response = connector.reset(session_id);
+        service_status status = connector.reset(session_id);
 
-        EXPECT_EQ(response.status.type, service_status_type::SUCCESS);
-        EXPECT_TRUE(response.data == expected_next_response);
+        EXPECT_EQ(status.type, service_status_type::SUCCESS);
     }
 
     // status type is not success
@@ -191,9 +181,9 @@ TEST(service_connector, reset)
         string endpoint                 = "/api/v1/dataset/" + session_id + "/reset";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        service_response<next_response> response = connector.reset(session_id);
+        service_status status = connector.reset(session_id);
 
-        EXPECT_EQ(response.status.type, service_status_type::FAILURE);
+        EXPECT_EQ(status.type, service_status_type::FAILURE);
     }
 }
 

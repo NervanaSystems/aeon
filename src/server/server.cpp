@@ -93,7 +93,7 @@ void aeon_server::handle_get(http_request message)
     if (std::get<1>(reply).empty())
         message.reply(status_codes::OK, std::get<0>(reply));
     else
-        message.reply(status_codes::NoContent, std::get<1>(reply));
+        message.reply(status_codes::Accepted, std::get<1>(reply));
 }
 
 void aeon_server::handle_delete(http_request message)
