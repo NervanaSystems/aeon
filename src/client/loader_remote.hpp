@@ -50,7 +50,7 @@ namespace nervana
         void increment_position() override;
 
         void initialize();
-        void handle_response_failure(const service_status& status);
+        [[noreturn]] void handle_response_failure(const service_status& status);
 
         void create_session();
         void retrieve_names_and_shapes();

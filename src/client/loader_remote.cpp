@@ -109,7 +109,6 @@ void nervana::loader_remote::retrieve_record_count()
     if (!response.success())
     {
         handle_response_failure(response.status);
-        return;
     }
     m_record_count = response.data;
 }
@@ -119,8 +118,8 @@ void nervana::loader_remote::retrieve_names_and_shapes()
     auto response = m_service->get_names_and_shapes(m_session_id);
     if (!response.success())
     {
-        handle_response_failure(response.status);
         m_record_count = -1;
+        handle_response_failure(response.status);
     }
     m_names_and_shapes = response.data;
 }
@@ -130,8 +129,8 @@ void nervana::loader_remote::retrieve_batch_size()
     auto response = m_service->batch_size(m_session_id);
     if (!response.success())
     {
-        handle_response_failure(response.status);
         m_batch_size = -1;
+        handle_response_failure(response.status);
     }
     m_batch_size = response.data;
 }
@@ -141,8 +140,8 @@ void nervana::loader_remote::retrieve_batch_count()
     auto response = m_service->batch_count(m_session_id);
     if (!response.success())
     {
-        handle_response_failure(response.status);
         m_batch_count = -1;
+        handle_response_failure(response.status);
     }
     m_batch_count = response.data;
 }

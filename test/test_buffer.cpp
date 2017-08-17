@@ -173,3 +173,4 @@ TEST(buffer, serialization)
         ASSERT_EQ(shape.second, shapes_restored[shape.first]);
     }
 }
+
