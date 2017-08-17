@@ -22,9 +22,7 @@
 #include <exception>
 #include <string>
 #include <sstream>
-#ifndef _MSC_VER
 #include <cxxabi.h>
-#endif
 
 #include "typemap.hpp"
 #include "util.hpp"
@@ -206,14 +204,12 @@ public:
         return m_shape_type_list;
     }
 
-    void add_shape_type(const std::vector<size_t>& shape_,
-                        const std::string&         output_type_)
+    void add_shape_type(const std::vector<size_t>& shape_, const std::string& output_type_)
     {
         m_shape_type_list.emplace_back(shape_, nervana::output_type{output_type_});
     }
 
-    void add_shape_type(const std::vector<size_t>&  shape_,
-                        const nervana::output_type& output_type_)
+    void add_shape_type(const std::vector<size_t>& shape_, const nervana::output_type& output_type_)
     {
         m_shape_type_list.emplace_back(shape_, output_type_);
     }
@@ -232,27 +228,30 @@ private:
 
 namespace nervana
 {
-    template <class T>
+    template <class Type>
     std::string type_name()
     {
-        typedef typename std::remove_reference<T>::type TR;
-        std::unique_ptr<char, void (*)(void*)> own(
-#ifndef _MSC_VER
-            abi::__cxa_demangle(typeid(TR).name(), nullptr, nullptr, nullptr),
-#else
-            nullptr,
-#endif
-            std::free);
-        std::string r = own != nullptr ? own.get() : typeid(TR).name();
-        if (std::is_const<TR>::value)
-            r += " const";
-        if (std::is_volatile<TR>::value)
-            r += " volatile";
-        if (std::is_lvalue_reference<T>::value)
-            r += "&";
-        else if (std::is_rvalue_reference<T>::value)
-            r += "&&";
-        return r;
+        std::string name;
+
+        typedef typename std::remove_reference<Type>::type NonReferenceType;
+        if (std::is_const<NonReferenceType>::value)
+            name = "const ";
+        if (std::is_volatile<NonReferenceType>::value)
+            name += "volatile ";
+
+        char* buffer = abi::__cxa_demangle(typeid(Type).name(), nullptr, nullptr, nullptr);
+        if (buffer != nullptr)
+        {
+            name += buffer;
+            free(buffer);
+        }
+
+        if (std::is_lvalue_reference<Type>::value)
+            name += "&";
+        else if (std::is_rvalue_reference<Type>::value)
+            name += "&&";
+
+        return name;
     }
 }
 
@@ -287,7 +286,7 @@ public:
         {
             m_parse_function(m_target_variable, m_variable_name, js, m_parse_mode);
         }
-        catch(const std::exception& ex)
+        catch (const std::exception& ex)
         {
             std::stringstream ss;
             ss << "error when parsing field \"" << m_variable_name << "\": " << ex.what();
