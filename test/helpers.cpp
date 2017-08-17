@@ -89,3 +89,23 @@ nlohmann::json create_metadata(const vector<nlohmann::json>& boxes, int width, i
     j["size"]        = {{"depth", 3}, {"height", height}, {"width", width}};
     return j;
 }
+
+fixed_buffer_map& get_fixed_buffer_map()
+{
+    auto image_shape = shape_type(vector<size_t>{10, 10, 3}, output_type("uint8_t"));
+    auto label_shape = shape_type(vector<size_t>{1}, output_type("uint32_t"));
+    auto write_sizes = std::map<string, shape_type>{{"image", image_shape}, {"label", label_shape}};
+    size_t                  batch_size = 1;
+    static fixed_buffer_map result(write_sizes, batch_size);
+    return result;
+}
+
+names_and_shapes get_names_and_shapes()
+{
+    names_and_shapes nas;
+    shape_type       s1{{1, 2}, {"int8_t"}};
+    shape_type       s2{{1, 2, 3, 4, 5}, {"int32_t"}};
+    nas["s1"] = s1;
+    nas["s2"] = s2;
+    return nas;
+}

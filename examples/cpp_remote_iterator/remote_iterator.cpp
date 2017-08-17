@@ -4,6 +4,9 @@
 #include "aeon.hpp"
 #include "file_util.hpp"
 
+// To run this example, firstly run server with command:
+// `cd server && ./aeon-server --address=http://127.0.0.1 --port 34568`
+
 using nlohmann::json;
 using std::cout;
 using std::endl;
@@ -46,14 +49,14 @@ int main(int argc, char** argv)
     int    height        = 32;
     int    width         = 32;
     size_t batch_size    = 4;
-    string manifest_root = nervana::file_util::get_temp_directory();
-    string manifest      = manifest_root + "/" + generate_manifest_file(manifest_root, 20);
+    string manifest_root = "server";
+    string manifest      = generate_manifest_file(manifest_root, 20);
 
     json image_config = {
         {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
     json label_config = {{"type", "label"}, {"binary", false}};
     json aug_config   = {{{"type", "image"}, {"flip_enable", true}}};
-    json config       = {{"manifest_root", manifest_root},
+    json config       = {{"manifest_root", "./"},
                    {"manifest_filename", manifest},
                    {"batch_size", batch_size},
                    {"iteration_mode", "ONCE"},
@@ -61,13 +64,16 @@ int main(int argc, char** argv)
                    {"augmentation", aug_config},
                    {"server", {{"address", address}, {"port", port}}}};
 
+    // initialize loader object
     loader_factory     factory;
     shared_ptr<loader> train_set = factory.get_loader(config);
 
+    // retrieve dataset info
     cout << "batch size: " << train_set->batch_size() << endl;
     cout << "batch count: " << train_set->batch_count() << endl;
     cout << "record count: " << train_set->record_count() << endl;
 
+    // iterate through all data
     int batch_no = 0;
     for (const auto& batch : *train_set)
     {

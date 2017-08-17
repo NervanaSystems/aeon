@@ -20,6 +20,7 @@
 
 #include "buffer_batch.hpp"
 #include "etl_image.hpp"
+#include "service.hpp"
 #include "util.hpp"
 
 std::vector<std::string> buffer_to_vector_of_strings(nervana::encoded_record_list& b);
@@ -27,6 +28,9 @@ bool sorted(std::vector<std::string> words);
 void dump_vector_of_strings(std::vector<std::string>& words);
 
 void assert_vector_unique(std::vector<std::string>& words);
+
+nervana::fixed_buffer_map& get_fixed_buffer_map();
+nervana::names_and_shapes  get_names_and_shapes();
 
 class element_info
 {
