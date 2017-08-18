@@ -126,7 +126,7 @@ static void _aeonsvc_setup_signals(void) {
 
 int main(int argc, char *argv[])
 {
-    int deamon_flag;
+    int daemon_flag = 0;
     std::string http_addr;
     std::string port;
 
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
     {
         static struct option long_options[] =
         {
-            {"daemon",     no_argument,       &deamon_flag, 1},
+            {"daemon",     no_argument,       &daemon_flag, 1},
             {"help",       no_argument,       0, 'h'},
             {"address",    required_argument, 0, 'a'},
             {"port",       required_argument, 0, 'p'},
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
     http_addr.append(":");
     http_addr.append(port);
 
-    if (!deamon_flag)
+    if (!daemon_flag)
     {
         nervana::aeon_server server(http_addr);
         while(true)
