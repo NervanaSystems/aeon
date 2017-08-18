@@ -490,6 +490,9 @@ TEST(benchmark, imagenet)
 {
     char* manifest_root = getenv("TEST_IMAGENET_ROOT");
     char* cache_root    = getenv("TEST_IMAGENET_CACHE");
+    char* address       = getenv("TEST_IMAGENET_ADDRESS");
+    char* port          = getenv("TEST_IMAGENET_PORT");
+    char* session_id    = getenv("TEST_IMAGENET_SESSION_ID");
 
     if (!manifest_root)
     {
@@ -520,6 +523,16 @@ TEST(benchmark, imagenet)
                        {"web_server_port", 8086},
                        {"etl", {image_config, label_config}},
                        {"augmentation", aug_config}};
+
+        if (address != NULL && port != NULL)
+        {
+            config["server"]["address"] = address;
+            config["server"]["port"]    = std::stoi(port);
+            if (session_id != NULL)
+            {
+                config["server"]["session_id"] = session_id;
+            }
+        }
 
         chrono::high_resolution_clock                     timer;
         chrono::time_point<chrono::high_resolution_clock> start_time;

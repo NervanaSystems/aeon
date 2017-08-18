@@ -176,7 +176,6 @@ service_status nervana::service_connector::reset(const string& id)
     return status;
 }
 
-#include "../log.hpp"
 service_response<nervana::next_response>
     nervana::service_connector::process_data_json(const http_response& response)
 {
@@ -186,8 +185,6 @@ service_response<nervana::next_response>
     if (response.code == http::status_accepted)
     {
         serialized_buffer_map = response.data;
-        INFO << serialized_buffer_map.size();
-        INFO << response.data.size();
         status.type           = service_status_type::SUCCESS;
     }
     else if (response.code == http::status_ok)
