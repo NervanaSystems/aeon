@@ -2,11 +2,15 @@
 
 ## Installation
 
-First grab aeon's dependencies:
+First grab Aeon's dependencies:
 
 ### Ubuntu:
 
-    sudo apt-get install libcurl4-openssl-dev clang libopencv-dev libsox-dev
+    apt-get install clang cmake python-dev python-pip libcurl4-openssl-dev libopencv-dev libsox-dev
+
+##### For Python 3.n
+
+    apt-get install python3-dev python3-pip
 
 ### OSX:
 
@@ -49,7 +53,6 @@ high and low level build systems)::
     cmake -G "Ninja" -DCMAKE_BUILD_TYPE=release ../llvm-3.9.0.src
     ninja && ninja install
 
-
 ## Code coverage
 
     Code coverage in aeon depends on llvm-cov and lcov.
@@ -65,12 +68,25 @@ high and low level build systems)::
     # If you want to generate report when unit test fails: make -i coverage
     make coverage
 
-### To install aeon:
+### To install Aeon:
 
-    git clone https://github.com/NervanaSystems/aeon.git
-    mkdir -p aeon/build && cd $_ && cmake .. && pip install .
+    git clone https://github.com/NervanaSystems/private-aeon.git aeon
 
-Note: if installing system wide (as opposed to within a virtual environment) you may need to run `sudo`.
+##### For Python 2.7
+    
+    cd aeon
+    pip install -r requirements.txt
+    mkdir -p build && cd $_ && cmake .. && pip install .
+
+##### For Python 3.n
+
+    cd aeon
+    pip3 install -r requirements.txt
+    pip install numpy==1.11.1
+    mkdir -p build && cd $_ && cmake .. && pip3 install .
+
+Note: if installing system wide (as opposed to within a virtual environment) you may need to run `sudo` and set `alias python=python3`
 
 Now continue on to the [user guide](doc/source/user_guide.rst) to get started using aeon. Or to the
 [developer guide](doc/source/developer_guide.rst) to developing custom loaders/transformers.
+
