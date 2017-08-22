@@ -70,14 +70,21 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-compat-deprecated-writable-st
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-double-promotion")
 
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(SOX REQUIRED sox)
+include_directories(${SOX_INCLUDE_DIRS})
+link_directories(${SOX_LIBRARY_DIRS})
+add_definitions(${SOX_CFLAGS_OTHERS})
+
 find_package(OpenCV REQUIRED)
-if(OpenCV_VERSION VERSION_LESS "2.4.8")
-  message(FATAL_ERROR "ERROR: Can't find OpenCV 2.4.8+")
-endif()
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # opecv_ts is for testing opencv. if it is left in the lib list then we get an error when
 # the unit test exits.
+# Centos like os:
+list(REMOVE_ITEM OpenCV_LIBRARIES "${OpenCV_LIB_DIR_OPT}/libopencv_ts.so")
+# Ubuntu like os:
 list(REMOVE_ITEM OpenCV_LIBRARIES opencv_ts)
 
 find_package(CURL REQUIRED)
