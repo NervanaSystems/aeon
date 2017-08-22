@@ -14,6 +14,11 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     # those lines are copied from distutils.ccompiler.CCompiler directly
     macros, objects, extra_postargs, pp_opts, build = self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+    # removing flags unsuported by clang on centos
+    self.compiler = [x for x in self.compiler if x != '-fstack-protector-strong']
+    self.compiler.append('-fstack-protector')
+    self.compiler_so = [x for x in self.compiler_so if x != '-fstack-protector-strong']
+    self.compiler_so.append('-fstack-protector')
     # parallel code
     import multiprocessing.pool
     def _single_compile(obj):
