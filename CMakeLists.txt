@@ -6,6 +6,9 @@ set(CMAKE_CXX_COMPILER "clang++")
 project (aeon)
 
 set(AEON_VERSION 1.0.0)
+if(APPLE)
+set(CMAKE_MACOSX_RPATH 1)
+endif()
 
 if(NOT ${POSTFIX_VERSION} STREQUAL "")
     set(AEON_VERSION "${AEON_VERSION}${POSTFIX_VERSION}")
@@ -79,6 +82,7 @@ add_definitions(${SOX_CFLAGS_OTHERS})
 
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
+link_directories(${OpenCV_LIBRARY_DIRS})
 
 # opecv_ts is for testing opencv. if it is left in the lib list then we get an error when
 # the unit test exits.
@@ -89,6 +93,7 @@ list(REMOVE_ITEM OpenCV_LIBRARIES opencv_ts)
 
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
+link_directories(${CURL_LIBRARY_DIRS})
 
 set(Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4)
 find_package(PythonLibs)
@@ -99,8 +104,10 @@ if (PYTHONLIBS_FOUND)
     if(NUMPY_FOUND)
         set(PYTHON_FOUND true)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPYTHON_FOUND")
-        include_directories(SYSTEM ${PYTHON_INCLUDE_DIR})
+        include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
+        link_directories(${PYTHON_LIBRARY_DIRS})
         include_directories(SYSTEM ${NUMPY_INCLUDE_DIRS})
+        link_directories(${NUMPY_LIBRARY_DIRS})
     else()
         message("Numpy not found, Python interface not included")
     endif(NUMPY_FOUND)

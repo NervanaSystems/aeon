@@ -4,5 +4,5 @@ if(COVERAGE)
 	COMMAND ${PROJECT_SOURCE_DIR}/gen_cov.sh
 	DEPENDS aeon runtest)
 else(COVERAGE)
-  message(WARNING "Without COVERAGE flag coverage raport is unavailable")
+  message("Without COVERAGE flag coverage raport is unavailable")
 endif(COVERAGE)

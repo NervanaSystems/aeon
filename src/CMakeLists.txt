@@ -62,3 +62,5 @@ add_library(aeon SHARED ${SRC})
 
 install(TARGETS aeon DESTINATION lib)
 install(FILES ${DEPLOY_HEADERS} DESTINATION include/aeon)
+
+target_link_libraries(aeon ${SOX_LIBRARIES} ${CURL_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES} ${NUMPY_LIBRARIES})
