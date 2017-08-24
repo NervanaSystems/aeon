@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <clocale>
 
 #include "gtest/gtest.h"
 
