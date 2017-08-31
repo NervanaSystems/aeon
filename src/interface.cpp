@@ -181,6 +181,11 @@ std::string nervana::dump_default(const std::bernoulli_distribution& v)
     return ss.str();
 }
 
+std::string nervana::dump_default(nlohmann::json v)
+{
+    return v.dump();
+}
+
 std::string nervana::dump_default(std::vector<nlohmann::json> v)
 {
     return "unimplemented";

@@ -22,6 +22,24 @@
 using namespace std;
 using namespace nervana;
 
+variable_record_field& encoded_record::element(size_t index)
+{
+    if (m_elements.size() <= index)
+    {
+        throw out_of_range("encoded_record element out of range access");
+    }
+    return m_elements[index];
+}
+
+const variable_record_field& encoded_record::element(size_t index) const
+{
+    if (m_elements.size() <= index)
+    {
+        throw out_of_range("encoded_record element out of range access");
+    }
+    return m_elements[index];
+}
+
 buffer_fixed_size_elements::buffer_fixed_size_elements(const shape_type& shp_tp,
                                                        size_t            batch_size,
                                                        bool              pinned)

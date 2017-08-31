@@ -47,7 +47,7 @@ manifest_file::manifest_file(const string& filename,
     : m_source_filename(filename)
     , m_record_count{0}
     , m_shuffle{shuffle}
-    , m_rnd{get_global_random_seed()}
+    , m_rnd{0}//get_global_random_seed()}
 {
     // for now parse the entire manifest on creation
     ifstream infile(m_source_filename);
@@ -67,7 +67,7 @@ manifest_file::manifest_file(std::istream&      stream,
                              size_t             block_size)
     : m_record_count{0}
     , m_shuffle{shuffle}
-    , m_rnd{get_global_random_seed()}
+    , m_rnd{0}//get_global_random_seed()}
 {
     initialize(stream, block_size, root, subset_fraction);
 }
@@ -269,7 +269,7 @@ void manifest_file::generate_subset(vector<vector<string>>& record_list, float s
     if (subset_fraction < 1.0)
     {
         std::bernoulli_distribution distribution(subset_fraction);
-        std::default_random_engine  generator(get_global_random_seed());
+        std::default_random_engine  generator(0);//get_global_random_seed());
         vector<record>              tmp;
         tmp.swap(record_list);
         size_t expected_count = tmp.size() * subset_fraction;

@@ -49,9 +49,22 @@ class image_params_builder
 {
 public:
     image_params_builder(std::shared_ptr<nervana::augment::image::params> _obj) { obj = _obj; }
+    image_params_builder&
+        expand(float expand_ratio, const cv::Size2i& expand_offset, const cv::Size2i& expand_size)
+    {
+        obj->expand_ratio  = expand_ratio;
+        obj->expand_offset = expand_offset;
+        obj->expand_size   = expand_size;
+        return *this;
+    }
     image_params_builder& cropbox(int x, int y, int w, int h)
     {
         obj->cropbox = cv::Rect(x, y, w, h);
+        return *this;
+    }
+    image_params_builder& cropbox(const cv::Rect& cropbox)
+    {
+        obj->cropbox = cropbox;
         return *this;
     }
     image_params_builder& output_size(int w, int h)
@@ -105,3 +118,9 @@ public:
 private:
     std::shared_ptr<nervana::augment::image::params> obj;
 };
+
+nlohmann::json create_box(const cv::Rect& rect, const std::string& label);
+nlohmann::json create_box(const nervana::boundingbox::box& box, const std::string& label);
+nlohmann::json create_box_with_normalized_field(const nervana::boundingbox::box& b,
+                                                const std::string&               label);
+nlohmann::json create_metadata(const std::vector<nlohmann::json>& boxes, int width, int height);

@@ -55,6 +55,33 @@ static cv::Mat generate_indexed_image(int rows, int cols)
     return color;
 }
 
+static cv::Mat generate_stripped_image(int          width,
+                                       int          height,
+                                       unsigned int left_color,
+                                       unsigned int right_color)
+{
+    cv::Mat  mat  = cv::Mat(height, width, CV_8UC3);
+    uint8_t* data = mat.data;
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width / 2; j++)
+        {
+            data[0] = left_color & 0xFF;
+            data[1] = ((left_color & 0xFF00) >> 8);
+            data[2] = ((left_color & 0xFF0000) >> 16);
+            data += 3;
+        }
+        for (int j = 0; j < width / 2; j++)
+        {
+            data[0] = right_color & 0xFF;
+            data[1] = ((right_color & 0xFF00) >> 8);
+            data[2] = ((right_color & 0xFF0000) >> 16);
+            data += 3;
+        }
+    }
+    return mat;
+}
+
 static void test_image(vector<unsigned char>& img, int channels)
 {
     nlohmann::json js = {{"channels", channels}, {"height", 30}, {"width", 30}};
@@ -260,6 +287,75 @@ TEST(image, transform_crop)
     EXPECT_TRUE(check_value(transformed, 0, 0, 100, 150));
     EXPECT_TRUE(check_value(transformed, 19, 0, 119, 150));
     EXPECT_TRUE(check_value(transformed, 0, 29, 100, 179));
+}
+
+TEST(image, transform_expand_crop_flip_resize)
+{
+    int input_width   = 25;
+    int input_height  = 25;
+    int output_width  = 100;
+    int output_height = 100;
+
+    cv::Size2i expand_offset(50, 0);
+    cv::Size2i expand_size(100, 100);
+    float      expand_ratio = 4.0;
+
+    cv::Rect cropbox = cv::Rect(50, 0, 50, 50);
+
+    cv::Mat mat = cv::Mat(input_height, input_width, CV_8UC3);
+    mat         = cv::Scalar(0xFF, 0, 0);
+
+    vector<unsigned char> img;
+    cv::imencode(".png", mat, img);
+
+    nlohmann::json js = {{"width", input_width}, {"height", input_height}, {"channels", 3}};
+    nlohmann::json aug;
+    image::config  cfg(js);
+
+    image::extractor           ext{cfg};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    augment::image::param_factory factory(aug);
+
+    auto                 image_size = decoded->get_image_size();
+    image_params_builder builder(factory.make_ssd_params(image_size.width,
+                                                         image_size.height,
+                                                         output_width,
+                                                         output_height,
+                                                         vector<boundingbox::box>()));
+    shared_ptr<augment::image::params> params_ptr =
+        builder.expand(expand_ratio, expand_offset, expand_size)
+            .cropbox(cropbox)
+            .flip(true)
+            .output_size(output_width, output_height);
+
+    image::transformer         trans{cfg};
+    shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+    cv::Mat image = transformed->get_image(0);
+    EXPECT_EQ(output_width, image.size().width);
+    EXPECT_EQ(output_height, image.size().height);
+
+    const int blurred_bias = 5;
+    for (int i = 0; i < image.size().height; i++)
+    {
+        for (int j = 0; j < image.size().width; j++)
+        {
+            auto pixel = image.at<cv::Vec3b>(i, j);
+            if (j >= output_width / 2 + blurred_bias && i < output_height / 2 - blurred_bias)
+            {
+                EXPECT_EQ(pixel[0], 0xFF);
+                EXPECT_EQ(pixel[1], 0x0);
+                EXPECT_EQ(pixel[2], 0x0);
+            }
+            else if (j < output_width / 2 - blurred_bias || i >= output_height / 2 + blurred_bias)
+            {
+                EXPECT_EQ(pixel[0], 0x0);
+                EXPECT_EQ(pixel[1], 0x0);
+                EXPECT_EQ(pixel[2], 0x0);
+            }
+        }
+    }
 }
 
 TEST(image, transform_flip)
@@ -844,6 +940,161 @@ TEST(image, var_resize_fixed_scale)
     EXPECT_EQ(200, image.size().height);
 }
 
+TEST(image, warp_resize)
+{
+    int input_width   = 100;
+    int input_height  = 200;
+    int output_width  = 400;
+    int output_height = 400;
+
+    cv::Mat mat = generate_stripped_image(input_width, input_height, 0xFF, 0xFF00);
+
+    vector<unsigned char> img;
+    cv::imencode(".png", mat, img);
+
+    nlohmann::json jsConfig = {{"width", input_width}, {"height", input_height}, {"channels", 3}};
+    nlohmann::json aug      = {{"type", "image"}};
+
+    image::config config_ptr{jsConfig};
+
+    image::extractor           ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    {
+        cv::Mat image = decoded->get_image(0);
+        EXPECT_EQ(input_width, image.size().width);
+        EXPECT_EQ(input_height, image.size().height);
+    }
+
+    augment::image::param_factory      factory(aug);
+    auto                               image_size = decoded->get_image_size();
+    shared_ptr<augment::image::params> params_ptr =
+        factory.make_ssd_params(image_size.width,
+                                image_size.height,
+                                output_width,
+                                output_height,
+                                vector<boundingbox::box>());
+
+    image::transformer         trans{config_ptr};
+    shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+    cv::Mat image = transformed->get_image(0);
+    EXPECT_EQ(output_width, image.size().width);
+    EXPECT_EQ(output_height, image.size().height);
+
+    //cv::imwrite("image_resize_source.png", mat);
+    //cv::imwrite("image_resize.png", image);
+
+    const int blurred_bias = 5;
+    uint8_t*  data         = image.data;
+    for (int i = 0; i < output_height; i++)
+    {
+        for (int j = 0; j < output_width / 2 - blurred_bias; j++)
+        {
+            EXPECT_EQ(data[0], 0xFF);
+            EXPECT_EQ(data[1], 0x00);
+            EXPECT_EQ(data[2], 0x00);
+            data += 3;
+        }
+        for (int j = 0; j < blurred_bias * 2; j++)
+        {
+            data += 3;
+        }
+        for (int j = 0; j < output_width / 2 - blurred_bias; j++)
+        {
+            EXPECT_EQ(data[0], 0x00);
+            EXPECT_EQ(data[1], 0xFF);
+            EXPECT_EQ(data[2], 0x00);
+            data += 3;
+        }
+    }
+}
+
+TEST(image, expand_not)
+{
+    auto                  mat = cv::Mat(300, 300, CV_8UC3);
+    vector<unsigned char> img;
+    cv::imencode(".png", mat, img);
+
+    nlohmann::json jsConfig = {
+        {"width", mat.size().width}, {"height", mat.size().height}, {"channels", 3}};
+    nlohmann::json aug = {{"type", "image"},
+                          {"expand_probability", 0.0},
+                          {"expand_ratio", {5, 10}},
+                          {"crop_enable", false}};
+
+    image::config config_ptr{jsConfig};
+
+    image::extractor           ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    augment::image::param_factory      factory(aug);
+    auto                               image_size = decoded->get_image_size();
+    shared_ptr<augment::image::params> params_ptr = factory.make_params(
+        image_size.width, image_size.height, config_ptr.width, config_ptr.height);
+
+    EXPECT_FLOAT_EQ(params_ptr->expand_ratio, 1.0);
+}
+
+TEST(image, expand_ratio_invalid)
+{
+    auto                  mat = cv::Mat(300, 200, CV_8UC3);
+    vector<unsigned char> img;
+    cv::imencode(".png", mat, img);
+
+    nlohmann::json jsConfig = {
+        {"width", mat.size().width}, {"height", mat.size().height}, {"channels", 3}};
+    nlohmann::json aug = {{"type", "image"},
+                          {"expand_probability", 1.0},
+                          {"expand_ratio", {0.01, 0.99}},
+                          {"crop_enable", false}};
+
+    image::config config_ptr{jsConfig};
+
+    image::extractor           ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+    EXPECT_THROW(augment::image::param_factory{aug}, std::invalid_argument);
+}
+
+TEST(image, expand)
+{
+    cv::Scalar            color(0, 0, 255);
+    auto                  mat = cv::Mat(300, 200, CV_8UC3, color);
+    vector<unsigned char> img;
+    cv::imencode(".png", mat, img);
+
+    nlohmann::json jsConfig = {
+        {"width", mat.size().width}, {"height", mat.size().height}, {"channels", 3}};
+    nlohmann::json aug = {{"type", "image"},
+                          {"expand_probability", 1.0},
+                          {"expand_ratio", {4.00, 4.00}},
+                          {"crop_enable", false}};
+
+    image::config config_ptr{jsConfig};
+
+    image::extractor           ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    augment::image::param_factory      factory(aug);
+    auto                               image_size = decoded->get_image_size();
+    shared_ptr<augment::image::params> params_ptr =
+        factory.make_ssd_params(image_size.width,
+                                image_size.height,
+                                config_ptr.width * 4,
+                                config_ptr.height * 4,
+                                vector<boundingbox::box>());
+
+    image::transformer         trans{config_ptr};
+    shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+    cv::Mat  image          = transformed->get_image(0);
+    cv::Mat  expected_image = cv::Mat::zeros(image.size(), mat.type());
+    cv::Rect roi(params_ptr->expand_offset, mat.size());
+    expected_image(roi).setTo(color);
+    auto the_sum = cv::sum(image != expected_image);
+    EXPECT_EQ(the_sum, cv::Scalar(0, 0, 0, 0)) << "Expanded image differs from the original";
+}
+
 TEST(image, var_transform_flip)
 {
     auto                  indexed = generate_indexed_image(256, 256);
@@ -1154,72 +1405,59 @@ TEST(DISABLED_photometric, saturation)
     }
 }
 
-TEST(DISABLED_photometric, hue)
+cv::Mat refHueShift(const cv::Mat image, int hue)
 {
-    cv::Mat  source{128 * 6, 512, CV_8UC3};
+    cv::Mat hsv;
+    cv::Mat ret;
+    cv::cvtColor(image, hsv, CV_BGR2HSV);
+    if (hue != 0)
+    {
+        uint8_t* p = hsv.data;
+        for (int i = 0; i < hsv.size().area(); i++)
+        {
+            *p = (*p + hue) % 180;
+            p += 3;
+        }
+    }
+    cv::cvtColor(hsv, ret, CV_HSV2BGR);
+    return ret;
+}
+
+TEST(photometric, hue)
+{
+    cv::Mat  source{1, 3, CV_8UC3, cv::Scalar::all(255)};
     uint8_t* p = source.data;
-    for (int row = 0; row < 128; row++)
+    for (int row = 0; row < 1; row++)
     {
-        for (int col = 0; col < 512; col++)
+        for (int col = 0; col < 1; col++)
         {
             *p++ = 128;
             *p++ = 0;
             *p++ = 0;
         }
     }
-    for (int row = 0; row < 128; row++)
+    for (int row = 0; row < 1; row++)
     {
-        for (int col = 0; col < 512; col++)
-        {
-            *p++ = 128;
-            *p++ = 128;
-            *p++ = 0;
-        }
-    }
-    for (int row = 0; row < 128; row++)
-    {
-        for (int col = 0; col < 512; col++)
+        for (int col = 1; col < 2; col++)
         {
             *p++ = 0;
             *p++ = 128;
-            *p++ = 0;
-        }
-    }
-    for (int row = 0; row < 128; row++)
-    {
-        for (int col = 0; col < 512; col++)
-        {
-            *p++ = 0;
-            *p++ = 128;
-            *p++ = 128;
-        }
-    }
-    for (int row = 0; row < 128; row++)
-    {
-        for (int col = 0; col < 512; col++)
-        {
-            *p++ = 0;
-            *p++ = 0;
-            *p++ = 128;
-        }
-    }
-    for (int row = 0; row < 128; row++)
-    {
-        for (int col = 0; col < 512; col++)
-        {
-            *p++ = 128;
-            *p++ = 0;
-            *p++ = 128;
+            *p++ = 255;
         }
     }
 
+    for (int i = 0; i <= 180; i += 45/2)
     {
-        for (int i = 0; i <= 180; i += 45 / 2)
-        {
-            cv::Mat mat = source.clone();
-            image::photometric::cbsjitter(mat, 1.0, 1.0, 1.0, i);
-            string name = "hue_" + to_string(i) + ".png";
-            cv::imwrite(name, mat);
-        }
+        cv::Mat mat = source.clone();
+        image::photometric::cbsjitter(mat, 1.0, 1.0, 1.0, i);
+        cv::Mat expected = refHueShift(source, i);
+        auto lambda      = [](cv::Mat m) {
+            stringstream ss;
+            ss << m;
+            return ss.str();
+        };
+        EXPECT_EQ(lambda(mat), lambda(expected)) << "at hue shift: " << i;
+//        string name = "hue_" + to_string(i) + ".png";
+//        cv::imwrite(name, mat);
     }
 }

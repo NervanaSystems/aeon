@@ -65,6 +65,7 @@ namespace nervana
     std::string dump_default(const std::uniform_int_distribution<int>& v);
     std::string dump_default(const std::normal_distribution<float>& v);
     std::string dump_default(const std::bernoulli_distribution& v);
+    std::string dump_default(nlohmann::json v);
     std::string dump_default(std::vector<nlohmann::json> v);
 }
 
@@ -92,21 +93,26 @@ public:
         REQUIRED
     };
 
-#define ADD_SCALAR(var, mode, ...)                                                                 \
+#define ADD_SCALAR(var, mode, ...) ADD_SCALAR_WITH_KEY(var, #var, mode, ##__VA_ARGS__)
+#define ADD_SCALAR_WITH_KEY(var, key, mode, ...)                                                   \
     std::make_shared<nervana::interface::config_info<decltype(var)>>(                              \
-        var, #var, mode, parse_value<decltype(var)>, ##__VA_ARGS__)
+        var, key, mode, parse_value<decltype(var)>, ##__VA_ARGS__)
 #define ADD_IGNORE(var)                                                                            \
     std::make_shared<nervana::interface::config_info<int>>(                                        \
         IGNORE_VALUE,                                                                              \
         #var,                                                                                      \
         mode::OPTIONAL,                                                                            \
         [](int, const std::string&, const nlohmann::json&, mode) {})
-#define ADD_DISTRIBUTION(var, mode, ...)                                                           \
+#define ADD_DISTRIBUTION(var, mode, ...) ADD_DISTRIBUTION_WITH_KEY(var, #var, mode, ##__VA_ARGS__)
+#define ADD_DISTRIBUTION_WITH_KEY(var, key, mode, ...)                                             \
     std::make_shared<nervana::interface::config_info<decltype(var)>>(                              \
-        var, #var, mode, parse_dist<decltype(var)>, ##__VA_ARGS__)
+        var, key, mode, parse_dist<decltype(var)>, ##__VA_ARGS__)
 #define ADD_OBJECT(var, mode, ...)                                                                 \
     std::make_shared<nervana::interface::config_info<decltype(var)>>(                              \
         var, #var, mode, parse_object<decltype(var)>, ##__VA_ARGS__)
+#define ADD_JSON(var, key, mode, ...)                                                              \
+    std::make_shared<nervana::interface::config_info<decltype(var)>>(                              \
+        var, key, mode, parse_json<decltype(var)>, ##__VA_ARGS__)
 
     template <typename T, typename S>
     static void set_dist_params(T& dist, S& params)
@@ -144,6 +150,23 @@ public:
         if (val != js.end())
         {
             value = val->get<T>();
+        }
+        else if (required == mode::REQUIRED)
+        {
+            throw std::invalid_argument("Required Argument: '" + key + "' not set");
+        }
+    }
+
+    template <typename T>
+    static void parse_json(T&                    value,
+                           const std::string&    key,
+                           const nlohmann::json& js,
+                           mode                  required = mode::OPTIONAL)
+    {
+        auto val = js.find(key);
+        if (val != js.end())
+        {
+            value = val.value();
         }
         else if (required == mode::REQUIRED)
         {

@@ -45,8 +45,8 @@ class nervana::encoded_record
     friend class encoded_record_list;
 
 public:
-    variable_record_field& element(size_t index) { return m_elements[index]; }
-    const variable_record_field& element(size_t index) const { return m_elements[index]; }
+    variable_record_field& element(size_t index);
+    const variable_record_field& element(size_t index) const;
     size_t                                      size() const { return m_elements.size(); }
     void add_element(const void* data, size_t size)
     {

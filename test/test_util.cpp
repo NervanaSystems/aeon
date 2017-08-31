@@ -37,7 +37,8 @@
 #include "etl_image.hpp"
 #include "etl_label.hpp"
 #include "etl_label_map.hpp"
-#include "etl_localization.hpp"
+#include "etl_localization_rcnn.hpp"
+#include "etl_localization_ssd.hpp"
 #include "etl_pixel_mask.hpp"
 #include "etl_video.hpp"
 #include "loader.hpp"
@@ -49,7 +50,7 @@ template <typename T>
 static T setup(initializer_list<uint8_t> data)
 {
     T        rc;
-    uint8_t* p = (uint8_t*)&rc;
+    uint8_t* p = reinterpret_cast<uint8_t*>(&rc);
     for (uint8_t v : data)
     {
         *p++ = v;
@@ -75,18 +76,13 @@ TEST(util, unpack_le)
         int  actual = unpack<int>(data);
         EXPECT_EQ(0x01000000, actual);
     }
-    // {
-    //     char data[] = {0,0,0,1};
-    //     int actual = unpack<int>(data,0);
-    //     EXPECT_EQ(0,actual);
-    // }
     {
         char data[] = {0, 0, 0, 1, 0};
         int  actual = unpack<int>(data, 1);
         EXPECT_EQ(0x00010000, actual);
     }
     {
-        char data[] = {(char)0x80, 0, 0, 0};
+        char data[] = {static_cast<char>(0x80), 0, 0, 0};
         int  actual = unpack<int>(data);
         EXPECT_EQ(128, actual);
     }
@@ -193,7 +189,7 @@ TEST(avi, video_buffer)
 TEST(util, memstream)
 {
     string          data = "abcdefghijklmnopqrstuvwxyz";
-    memstream<char> ms((char*)data.data(), data.size());
+    memstream<char> ms(const_cast<char*>(data.data()), data.size());
     istream         is(&ms);
     char            buf[10];
 
@@ -326,7 +322,8 @@ TEST(util, param_dump)
     DUMP_CONFIG(image);
     DUMP_CONFIG(label);
     DUMP_CONFIG(label_map);
-    DUMP_CONFIG(localization);
+    DUMP_CONFIG(localization::rcnn);
+    DUMP_CONFIG(localization::ssd);
     DUMP_CONFIG(video);
     {
         loader_config cfg;
@@ -484,4 +481,88 @@ TEST(util, trim)
     EXPECT_STREQ("test", trim("test\t").c_str());
     EXPECT_STREQ("test", trim("\ttest\t").c_str());
     EXPECT_STREQ("test", trim(" \t test \t ").c_str());
+}
+
+TEST(util, almost_equal)
+{
+    using test_case = tuple<float, float, bool>;
+    auto tests      = vector<test_case>{
+        test_case(0.0f, 0.0f, true),
+        test_case(-1.0f, -1.0f, true),
+        test_case(0.1f, 0.2f, false),
+        test_case(0.2f, 0.1f, false),
+        test_case(-0.2f, -0.1f, false),
+        test_case(0.1f, 0.1f + epsilon/2, true),
+        test_case(0.1f, 0.1f - epsilon/2, true),
+        test_case(0.1f, 0.1f + epsilon * 2, false),
+        test_case(0.1f, 0.1f - epsilon * 2, false),
+        test_case(-1.0f, -1.0f + epsilon / 2, true),
+        test_case(-1.0f, -1.0f - epsilon / 2, true),
+        test_case(-1.0f, -1.0f + epsilon * 2, false),
+        test_case(-1.0f, -1.0f - epsilon * 2, false),
+    };
+
+    for (const test_case& test : tests)
+    {
+        bool result = almost_equal(get<0>(test), get<1>(test));
+        EXPECT_EQ(result, get<2>(test)) << "almost_equal(" << get<0>(test) << ", " << get<1>(test)
+                                        << ") = " << get<2>(test);
+    }
+}
+
+TEST(util, almost_equal_or_bigger)
+{
+    using test_case = tuple<float, float, bool>;
+    auto tests      = vector<test_case>{
+        test_case(0.0f, 0.0f, true),
+        test_case(-1.0f, -1.0f, true),
+        test_case(0.1f, 0.2f, false),
+        test_case(0.2f, 0.1f, true),
+        test_case(-0.2f, -0.1f, false),
+        test_case(-0.1f, -0.2f, true),
+        test_case(0.1f, 0.1f + epsilon/2, true),
+        test_case(0.1f, 0.1f - epsilon/2, true),
+        test_case(0.1f, 0.1f + epsilon * 2, false),
+        test_case(0.1f, 0.1f - epsilon * 2, true),
+        test_case(-1.0f, -1.0f + epsilon / 2, true),
+        test_case(-1.0f, -1.0f - epsilon / 2, true),
+        test_case(-1.0f, -1.0f + epsilon * 2, false),
+        test_case(-1.0f, -1.0f - epsilon * 2, true),
+    };
+
+    for (const test_case& test : tests)
+    {
+        bool result = almost_equal_or_greater(get<0>(test), get<1>(test));
+        EXPECT_EQ(result, get<2>(test)) << "almost_equal_or_bigger(" << get<0>(test) << ", " << get<1>(test)
+                                        << ") = " << get<2>(test);
+    }
+
+}
+
+TEST(util, almost_equal_or_less)
+{
+    using test_case = tuple<float, float, bool>;
+    auto tests      = vector<test_case>{
+        test_case(0.0f, 0.0f, true),
+        test_case(-1.0f, -1.0f, true),
+        test_case(0.1f, 0.2f, true),
+        test_case(0.2f, 0.1f, false),
+        test_case(-0.2f, -0.1f, true),
+        test_case(-0.1f, -0.2f, false),
+        test_case(0.1f, 0.1f + epsilon/2, true),
+        test_case(0.1f, 0.1f - epsilon/2, true),
+        test_case(0.1f, 0.1f + epsilon * 2, true),
+        test_case(0.1f, 0.1f - epsilon * 2, false),
+        test_case(-1.0f, -1.0f + epsilon / 2, true),
+        test_case(-1.0f, -1.0f - epsilon / 2, true),
+        test_case(-1.0f, -1.0f + epsilon * 2, true),
+        test_case(-1.0f, -1.0f - epsilon * 2, false),
+    };
+
+    for (const test_case& test : tests)
+    {
+        bool result = almost_equal_or_less(get<0>(test), get<1>(test));
+        EXPECT_EQ(result, get<2>(test)) << "almost_equal_or_less(" << get<0>(test) << ", " << get<1>(test)
+                                        << ") = " << get<2>(test);
+    }
 }

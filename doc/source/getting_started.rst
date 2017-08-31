@@ -1,5 +1,5 @@
 .. ---------------------------------------------------------------------------
-.. Copyright 2015 Nervana Systems Inc.
+.. Copyright 2017 Nervana Systems Inc.
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -43,9 +43,6 @@ to understand the GCC flags that the Python extension build system imposes, so
 we build the latest version of Clang from source (after first installing it's
 high and low level build systems)::
 
-    yum -y install libcurl-devel gcc gcc-c++ make pkgconfig opencv-devel git \
-        python-virtualenv libyaml-devel epel-release hdf5-devel python-pip \
-        sox-devel
     sudo -i
     # Build CMake
     cd $BUILDROOT
@@ -72,15 +69,11 @@ high and low level build systems)::
     cmake -G "Ninja" -DCMAKE_BUILD_TYPE=release ../llvm-3.9.0.src
     ninja && ninja install
 
+
 Then build the aeon libraries::
 
-  git clone https://github.com/NervanaSystems/aeon.git
-  mkdir build_aeon && cd $_ && make ../aeon && make -j
-
-To install the python bindings, *after* the library has been built, run the following from the ``build_aeon`` directory::
-  pip install .
-
+    git clone https://github.com/NervanaSystems/aeon.git
+    mkdir -p aeon/build && cd $_ && cmake .. && pip install .
 
 Now continue on to the :doc:`user_guide` to get started using aeon. Or to the
 :doc:`developer_guide` to developing custom loaders/transformers.
-

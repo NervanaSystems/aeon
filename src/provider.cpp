@@ -15,14 +15,14 @@
 
 #include <sstream>
 
-#include "provider_custom.hpp"
+#include "provider.hpp"
 
 using namespace std;
 using namespace nervana;
 
-custom_provider::provider_base::provider_base(nlohmann::json                     js,
-                                              const std::vector<nlohmann::json>& etl,
-                                              nlohmann::json                     augmentation)
+provider::provider_base::provider_base(nlohmann::json                     js,
+                                       const std::vector<nlohmann::json>& etl,
+                                       nlohmann::json                     augmentation)
     : provider_interface(js, etl.size())
 {
     for (nlohmann::json j : etl)
@@ -38,61 +38,62 @@ custom_provider::provider_base::provider_base(nlohmann::json                    
         {
             throw invalid_argument("missing required 'type' element in etl object");
         }
-        shared_ptr<custom_provider::interface> prov = nullptr;
+        shared_ptr<provider::interface> prov = nullptr;
         if (type == "image")
         {
-            prov = static_pointer_cast<custom_provider::interface>(
-                make_shared<custom_provider::image>(j, augmentation));
+            prov = static_pointer_cast<provider::interface>(
+                make_shared<provider::image>(j, augmentation));
         }
         else if (type == "label")
         {
-            prov = static_pointer_cast<custom_provider::interface>(
-                make_shared<custom_provider::label>(j));
+            prov = static_pointer_cast<provider::interface>(make_shared<provider::label>(j));
         }
         else if (type == "audio")
         {
-            prov = static_pointer_cast<custom_provider::interface>(
-                make_shared<custom_provider::audio>(j, augmentation));
+            prov = static_pointer_cast<provider::interface>(
+                make_shared<provider::audio>(j, augmentation));
         }
-        else if (type == "localization")
+        else if (type == "localization_rcnn")
         {
-            prov = static_pointer_cast<custom_provider::interface>(
-                make_shared<custom_provider::localization>(j, augmentation));
+            prov = static_pointer_cast<provider::interface>(
+                make_shared<provider::localization::rcnn>(j, augmentation));
+        }
+        else if (type == "localization_ssd")
+        {
+            prov = static_pointer_cast<provider::interface>(
+                make_shared<provider::localization::ssd>(j, augmentation));
         }
         else if (type == "pixelmask")
         {
-            prov = static_pointer_cast<custom_provider::interface>(
-                make_shared<custom_provider::pixelmask>(j, augmentation));
+            prov = static_pointer_cast<provider::interface>(
+                make_shared<provider::pixelmask>(j, augmentation));
         }
         else if (type == "boundingbox")
         {
-            prov = static_pointer_cast<custom_provider::interface>(
-                make_shared<custom_provider::boundingbox>(j, augmentation));
+            prov = static_pointer_cast<provider::interface>(
+                make_shared<provider::boundingbox>(j, augmentation));
         }
         else if (type == "blob")
         {
-            prov = static_pointer_cast<custom_provider::interface>(
-                make_shared<custom_provider::blob>(j));
+            prov = static_pointer_cast<provider::interface>(make_shared<provider::blob>(j));
         }
         else if (type == "video")
         {
-            prov = static_pointer_cast<custom_provider::interface>(
-                make_shared<custom_provider::video>(j, augmentation));
+            prov = static_pointer_cast<provider::interface>(
+                make_shared<provider::video>(j, augmentation));
         }
         else if (type == "char_map")
         {
-            prov = static_pointer_cast<custom_provider::interface>(
-                make_shared<custom_provider::char_map>(j));
+            prov = static_pointer_cast<provider::interface>(make_shared<provider::char_map>(j));
         }
         else if (type == "label_map")
         {
-            prov = static_pointer_cast<custom_provider::interface>(
-                make_shared<custom_provider::label_map>(j));
+            prov = static_pointer_cast<provider::interface>(make_shared<provider::label_map>(j));
         }
         // else if (type == "multicrop")
         // {
-        //     prov = static_pointer_cast<custom_provider::interface>(
-        //         make_shared<custom_provider::multicrop>(j, augmentation));
+        //     prov = static_pointer_cast<provider::interface>(
+        //         make_shared<provider::multicrop>(j, augmentation));
         // }
         else
         {
@@ -109,28 +110,28 @@ custom_provider::provider_base::provider_base(nlohmann::json                    
     }
 }
 
-void custom_provider::provider_base::provide(int                           idx,
-                                             nervana::encoded_record_list& in_buf,
-                                             nervana::fixed_buffer_map&    out_buf)
+void provider::provider_base::provide(int                           idx,
+                                      nervana::encoded_record_list& in_buf,
+                                      nervana::fixed_buffer_map&    out_buf)
 {
     augmentation aug;
     int          index = 0;
-    for (const shared_ptr<custom_provider::interface>& provider : m_providers)
+    for (const shared_ptr<provider::interface>& provider : m_providers)
     {
         provider->provide(idx, in_buf.record(idx).element(index++), out_buf, aug);
     }
 }
 
 //=================================================================================================
-// custom_provider::interface
+// provider::interface
 //=================================================================================================
 
-custom_provider::interface::interface(nlohmann::json js, size_t input_count)
+provider::interface::interface(nlohmann::json js, size_t input_count)
     : provider_interface{js, input_count}
 {
 }
 
-string custom_provider::interface::create_name(const string& name, const string& base_name)
+string provider::interface::create_name(const string& name, const string& base_name)
 {
     string rc;
     if (name.size() > 0)
@@ -145,7 +146,7 @@ string custom_provider::interface::create_name(const string& name, const string&
 // image
 //=================================================================================================
 
-custom_provider::image::image(nlohmann::json js, nlohmann::json aug)
+provider::image::image(nlohmann::json js, nlohmann::json aug)
     : interface(js, 1)
     , m_config{js}
     , m_extractor{m_config}
@@ -157,10 +158,10 @@ custom_provider::image::image(nlohmann::json js, nlohmann::json aug)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::image::provide(int                        idx,
-                                     const std::vector<char>&   datum_in,
-                                     nervana::fixed_buffer_map& out_buf,
-                                     augmentation&              aug)
+void provider::image::provide(int                        idx,
+                              const std::vector<char>&   datum_in,
+                              nervana::fixed_buffer_map& out_buf,
+                              augmentation&              aug)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -186,7 +187,7 @@ void custom_provider::image::provide(int                        idx,
 // label
 //=================================================================================================
 
-custom_provider::label::label(nlohmann::json js)
+provider::label::label(nlohmann::json js)
     : interface(js, 1)
     , m_config{js}
     , m_extractor{m_config}
@@ -196,10 +197,10 @@ custom_provider::label::label(nlohmann::json js)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::label::provide(int                        idx,
-                                     const vector<char>&        datum_in,
-                                     nervana::fixed_buffer_map& out_buf,
-                                     augmentation&              aug)
+void provider::label::provide(int                        idx,
+                              const vector<char>&        datum_in,
+                              nervana::fixed_buffer_map& out_buf,
+                              augmentation&              aug)
 {
     char* target_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -218,7 +219,7 @@ void custom_provider::label::provide(int                        idx,
 // audio
 //=================================================================================================
 
-custom_provider::audio::audio(nlohmann::json js, nlohmann::json aug)
+provider::audio::audio(nlohmann::json js, nlohmann::json aug)
     : interface(js, 1)
     , m_config{js}
     , m_extractor{}
@@ -236,10 +237,10 @@ custom_provider::audio::audio(nlohmann::json js, nlohmann::json aug)
     }
 }
 
-void custom_provider::audio::provide(int                        idx,
-                                     const std::vector<char>&   datum_in,
-                                     nervana::fixed_buffer_map& out_buf,
-                                     augmentation&              aug)
+void provider::audio::provide(int                        idx,
+                              const std::vector<char>&   datum_in,
+                              nervana::fixed_buffer_map& out_buf,
+                              augmentation&              aug)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -268,10 +269,10 @@ void custom_provider::audio::provide(int                        idx,
 }
 
 //=================================================================================================
-// localization
+// localization::rcnn
 //=================================================================================================
 
-custom_provider::localization::localization(nlohmann::json js, nlohmann::json aug)
+provider::localization::rcnn::rcnn(nlohmann::json js, nlohmann::json aug)
     : interface(js, 1)
     , m_config{js}
     , m_augmentation_factory{aug}
@@ -302,10 +303,10 @@ custom_provider::localization::localization(nlohmann::json js, nlohmann::json au
     m_output_shapes.insert({m_difficult_flag_buffer_name, os[9]});
 }
 
-void custom_provider::localization::provide(int                        idx,
-                                            const std::vector<char>&   datum_in,
-                                            nervana::fixed_buffer_map& out_buf,
-                                            augmentation&              aug)
+void provider::localization::rcnn::provide(int                        idx,
+                                           const std::vector<char>&   datum_in,
+                                           nervana::fixed_buffer_map& out_buf,
+                                           augmentation&              aug)
 {
     vector<void*> output_list = {out_buf[m_bbtargets_buffer_name]->get_item(idx),
                                  out_buf[m_bbtargets_mask_buffer_name]->get_item(idx),
@@ -321,7 +322,7 @@ void custom_provider::localization::provide(int                        idx,
     if (datum_in.size() == 0)
     {
         std::stringstream ss;
-        ss << "received localization data with size 0, at idx " << idx;
+        ss << "received localization_rcnn data with size 0, at idx " << idx;
         throw std::runtime_error(ss.str());
     }
 
@@ -330,7 +331,6 @@ void custom_provider::localization::provide(int                        idx,
     {
         if (aug.m_image_augmentations == nullptr)
         {
-            INFO << "make params";
             auto input_size           = decoded->input_image_size;
             aug.m_image_augmentations = m_augmentation_factory.make_params(
                 input_size.width, input_size.height, m_config.width, m_config.height);
@@ -340,10 +340,70 @@ void custom_provider::localization::provide(int                        idx,
 }
 
 //=================================================================================================
+// localization::ssd
+//=================================================================================================
+
+provider::localization::ssd::ssd(nlohmann::json js, nlohmann::json aug)
+    : interface(js, 1)
+    , m_config{js}
+    , m_augmentation_factory{aug}
+    , m_extractor{m_config}
+    , m_transformer{}
+    , m_loader{m_config}
+    , m_image_shape_buffer_name{create_name(m_config.name, "image_shape")}
+    , m_gt_boxes_buffer_name{create_name(m_config.name, "gt_boxes")}
+    , m_gt_box_count_buffer_name{create_name(m_config.name, "gt_box_count")}
+    , m_gt_class_count_buffer_name{create_name(m_config.name, "gt_class_count")}
+    , m_difficult_flag_buffer_name{create_name(m_config.name, "difficult_flag")}
+{
+    auto os = m_config.get_shape_type_list();
+    m_output_shapes.insert({m_image_shape_buffer_name, os[0]});
+    m_output_shapes.insert({m_gt_boxes_buffer_name, os[1]});
+    m_output_shapes.insert({m_gt_box_count_buffer_name, os[2]});
+    m_output_shapes.insert({m_gt_class_count_buffer_name, os[3]});
+    m_output_shapes.insert({m_difficult_flag_buffer_name, os[4]});
+}
+
+void provider::localization::ssd::provide(int                        idx,
+                                          const std::vector<char>&   datum_in,
+                                          nervana::fixed_buffer_map& out_buf,
+                                          augmentation&              aug)
+{
+    vector<void*> output_list = {out_buf[m_image_shape_buffer_name]->get_item(idx),
+                                 out_buf[m_gt_boxes_buffer_name]->get_item(idx),
+                                 out_buf[m_gt_box_count_buffer_name]->get_item(idx),
+                                 out_buf[m_gt_class_count_buffer_name]->get_item(idx),
+                                 out_buf[m_difficult_flag_buffer_name]->get_item(idx)};
+
+    if (datum_in.size() == 0)
+    {
+        std::stringstream ss;
+        ss << "received localization_ssd data with size 0, at idx " << idx;
+        throw std::runtime_error(ss.str());
+    }
+
+    std::shared_ptr<nervana::localization::ssd::decoded> decoded =
+        m_extractor.extract(datum_in.data(), datum_in.size());
+    if (decoded)
+    {
+        if (aug.m_image_augmentations == nullptr)
+        {
+            auto input_size = decoded->input_image_size;
+            aug.m_image_augmentations = m_augmentation_factory.make_ssd_params(input_size.width,
+                                                                               input_size.height,
+                                                                               m_config.width,
+                                                                               m_config.height,
+                                                                               decoded->boxes());
+        }
+        m_loader.load(output_list, m_transformer.transform(aug.m_image_augmentations, decoded));
+    }
+}
+
+//=================================================================================================
 // pixelmask
 //=================================================================================================
 
-custom_provider::pixelmask::pixelmask(nlohmann::json js, nlohmann::json aug)
+provider::pixelmask::pixelmask(nlohmann::json js, nlohmann::json aug)
     : interface(js, 1)
     , m_config{js}
     , m_extractor{m_config}
@@ -355,10 +415,10 @@ custom_provider::pixelmask::pixelmask(nlohmann::json js, nlohmann::json aug)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::pixelmask::provide(int                        idx,
-                                         const std::vector<char>&   datum_in,
-                                         nervana::fixed_buffer_map& out_buf,
-                                         augmentation&              aug)
+void provider::pixelmask::provide(int                        idx,
+                                  const std::vector<char>&   datum_in,
+                                  nervana::fixed_buffer_map& out_buf,
+                                  augmentation&              aug)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -389,7 +449,7 @@ void custom_provider::pixelmask::provide(int                        idx,
 // boundingbox
 //=================================================================================================
 
-custom_provider::boundingbox::boundingbox(nlohmann::json js, nlohmann::json aug)
+provider::boundingbox::boundingbox(nlohmann::json js, nlohmann::json aug)
     : interface(js, 1)
     , m_config{js}
     , m_extractor{m_config.label_map}
@@ -401,10 +461,10 @@ custom_provider::boundingbox::boundingbox(nlohmann::json js, nlohmann::json aug)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::boundingbox::provide(int                        idx,
-                                           const std::vector<char>&   datum_in,
-                                           nervana::fixed_buffer_map& out_buf,
-                                           augmentation&              aug)
+void provider::boundingbox::provide(int                        idx,
+                                    const std::vector<char>&   datum_in,
+                                    nervana::fixed_buffer_map& out_buf,
+                                    augmentation&              aug)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -435,7 +495,7 @@ void custom_provider::boundingbox::provide(int                        idx,
 // blob
 //=================================================================================================
 
-custom_provider::blob::blob(nlohmann::json js)
+provider::blob::blob(nlohmann::json js)
     : interface(js, 1)
     , m_config{js}
     , m_extractor{m_config}
@@ -445,10 +505,10 @@ custom_provider::blob::blob(nlohmann::json js)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::blob::provide(int                        idx,
-                                    const std::vector<char>&   datum_in,
-                                    nervana::fixed_buffer_map& out_buf,
-                                    augmentation&)
+void provider::blob::provide(int                        idx,
+                             const std::vector<char>&   datum_in,
+                             nervana::fixed_buffer_map& out_buf,
+                             augmentation&)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -467,7 +527,7 @@ void custom_provider::blob::provide(int                        idx,
 // video
 //=================================================================================================
 
-custom_provider::video::video(nlohmann::json js, nlohmann::json aug)
+provider::video::video(nlohmann::json js, nlohmann::json aug)
     : interface(js, 1)
     , m_config(js)
     , m_extractor(m_config)
@@ -479,10 +539,10 @@ custom_provider::video::video(nlohmann::json js, nlohmann::json aug)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::video::provide(int                        idx,
-                                     const std::vector<char>&   datum_in,
-                                     nervana::fixed_buffer_map& out_buf,
-                                     augmentation&              aug)
+void provider::video::provide(int                        idx,
+                              const std::vector<char>&   datum_in,
+                              nervana::fixed_buffer_map& out_buf,
+                              augmentation&              aug)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -513,7 +573,7 @@ void custom_provider::video::provide(int                        idx,
 // char_map
 //=================================================================================================
 
-custom_provider::char_map::char_map(nlohmann::json js)
+provider::char_map::char_map(nlohmann::json js)
     : interface(js, 1)
     , m_config{js}
     , m_extractor{m_config}
@@ -529,10 +589,10 @@ custom_provider::char_map::char_map(nlohmann::json js)
     }
 }
 
-void custom_provider::char_map::provide(int                        idx,
-                                        const std::vector<char>&   datum_in,
-                                        nervana::fixed_buffer_map& out_buf,
-                                        augmentation&)
+void provider::char_map::provide(int                        idx,
+                                 const std::vector<char>&   datum_in,
+                                 nervana::fixed_buffer_map& out_buf,
+                                 augmentation&)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -560,7 +620,7 @@ void custom_provider::char_map::provide(int                        idx,
 // label_map
 //=================================================================================================
 
-custom_provider::label_map::label_map(nlohmann::json js)
+provider::label_map::label_map(nlohmann::json js)
     : interface(js, 1)
     , m_config{js}
     , m_extractor{m_config}
@@ -570,10 +630,10 @@ custom_provider::label_map::label_map(nlohmann::json js)
     m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
 }
 
-void custom_provider::label_map::provide(int                        idx,
-                                         const std::vector<char>&   datum_in,
-                                         nervana::fixed_buffer_map& out_buf,
-                                         augmentation&)
+void provider::label_map::provide(int                        idx,
+                                  const std::vector<char>&   datum_in,
+                                  nervana::fixed_buffer_map& out_buf,
+                                  augmentation&)
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 

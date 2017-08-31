@@ -132,14 +132,28 @@ shared_ptr<image::decoded>
     }
     return rc;
 }
-
+/**
+ * rotate
+ * expand
+ * crop
+ * resize
+ * distort
+ * flip
+ */
 cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::params> img_xform,
                                                    cv::Mat&                           single_img)
 {
     // img_xform->dump(cout);
     cv::Mat rotatedImage;
     image::rotate(single_img, rotatedImage, img_xform->angle);
-    cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
+
+    cv::Mat expandedImage;
+    if (img_xform->expand_ratio > 1.0)
+        image::expand(
+            rotatedImage, expandedImage, img_xform->expand_offset, img_xform->expand_size);
+    else
+        expandedImage    = rotatedImage;
+    cv::Mat croppedImage = expandedImage(img_xform->cropbox);
     image::add_padding(croppedImage, img_xform->padding, img_xform->padding_crop_offset);
 
     cv::Mat resizedImage;

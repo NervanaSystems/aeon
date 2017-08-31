@@ -21,11 +21,7 @@ using namespace std;
 using namespace nervana;
 using namespace nlohmann; // json stuff
 
-ostream& operator<<(ostream& out, const boundingbox::box& b)
-{
-    out << (box)b << " label=" << b.label;
-    return out;
-}
+using bbox = boundingbox::box;
 
 boundingbox::config::config(nlohmann::json js)
 {
@@ -66,7 +62,8 @@ boundingbox::extractor::extractor(const std::unordered_map<std::string, int>& ma
 
 void boundingbox::extractor::extract(const void*                            data,
                                      size_t                                 size,
-                                     std::shared_ptr<boundingbox::decoded>& rc)
+                                     std::shared_ptr<boundingbox::decoded>& rc,
+                                     bool                                   boxes_normalized)
 {
     string buffer((const char*)data, size);
     json   j = json::parse(buffer);
@@ -98,7 +95,7 @@ void boundingbox::extractor::extract(const void*                            data
     for (auto object : object_list)
     {
         auto bndbox = object["bndbox"];
-        box  b;
+        bbox b;
         if (bndbox["xmax"].is_null())
         {
             throw invalid_argument("'xmax' missing from metadata");
@@ -119,10 +116,10 @@ void boundingbox::extractor::extract(const void*                            data
         {
             throw invalid_argument("'name' missing from metadata");
         }
-        b.xmax = bndbox["xmax"];
-        b.xmin = bndbox["xmin"];
-        b.ymax = bndbox["ymax"];
-        b.ymin = bndbox["ymin"];
+        b.set_xmax(bndbox["xmax"]);
+        b.set_xmin(bndbox["xmin"]);
+        b.set_ymax(bndbox["ymax"]);
+        b.set_ymin(bndbox["ymin"]);
         if (!object["difficult"].is_null())
         {
             b.difficult = object["difficult"];
@@ -130,6 +127,19 @@ void boundingbox::extractor::extract(const void*                            data
         if (!object["truncated"].is_null())
         {
             b.truncated = object["truncated"];
+        }
+        if (!object["normalized"].is_null())
+        {
+            b.set_normalized(object["normalized"]);
+        }
+        // force normalized value to true if got_boxes_normalized is set to true
+        if (boxes_normalized)
+        {
+            b.set_normalized(true);
+        }
+        if (b.normalized())
+        {
+            b.throw_if_improperly_normalized();
         }
         string name  = object["name"];
         auto   found = label_map.find(name);
@@ -159,80 +169,116 @@ boundingbox::transformer::transformer(const boundingbox::config&)
 {
 }
 
-vector<boundingbox::box>
-    boundingbox::transformer::transform_box(const std::vector<boundingbox::box>& boxes,
-                                            const cv::Rect&                      crop,
-                                            bool                                 flip,
-                                            float                                x_scale,
-                                            float                                y_scale)
+bool boundingbox::transformer::meet_emit_constraint(const cv::Rect& cropbox,
+                                                    const bbox&     input_bbox,
+                                                    const emit_type emit_constraint_type,
+                                                    const float     emit_min_overlap)
 {
-    // 1) rotate
-    // 2) crop
-    // 3) scale
-    // 4) flip
-
-    vector<boundingbox::box> rc;
-    for (boundingbox::box b : boxes)
+    bbox crop_bbox(
+        cropbox.x, cropbox.y, cropbox.x + cropbox.width - 1, cropbox.y + cropbox.height - 1, false);
+    if (emit_constraint_type == emit_type::center)
     {
-        if (b.xmax <= crop.x)
+        float x_center = input_bbox.xcenter();
+        float y_center = input_bbox.ycenter();
+        if (x_center >= crop_bbox.xmin() && x_center <= crop_bbox.xmax() &&
+            y_center >= crop_bbox.ymin() && y_center <= crop_bbox.ymax())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else if (emit_constraint_type == emit_type::min_overlap)
+    {
+        return input_bbox.coverage(crop_bbox) >= emit_min_overlap;
+    }
+    return true;
+}
+
+vector<bbox> boundingbox::transformer::transform_box(const std::vector<bbox>&           boxes,
+                                                     shared_ptr<augment::image::params> pptr)
+{
+    cv::Rect crop    = pptr->cropbox;
+    float    x_scale = (float)(pptr->output_size.width) / (float)(crop.width);
+    float    y_scale = (float)(pptr->output_size.height) / (float)(crop.height);
+
+    /*
+    * expand
+    * crop
+    * flip
+    * scale
+    */
+
+    vector<bbox> rc;
+    for (bbox b : boxes)
+    {
+        if (pptr->expand_ratio > 1.)
+        {
+            b.expand_bbox(pptr->expand_offset, pptr->expand_size, pptr->expand_ratio);
+        }
+
+        if (pptr->emit_constraint_type != emit_type::undefined &&
+            !meet_emit_constraint(crop, b, pptr->emit_constraint_type, pptr->emit_min_overlap))
+            continue;
+
+        if (b.xmax() < crop.x)
         { // outside left
         }
-        else if (b.xmin >= crop.x + crop.width)
+        else if (b.xmin() >= crop.x + crop.width)
         { // outside right
         }
-        else if (b.ymax <= crop.y)
+        else if (b.ymax() < crop.y)
         { // outside above
         }
-        else if (b.ymin >= crop.y + crop.height)
+        else if (b.ymin() >= crop.y + crop.height)
         { // outside below
         }
         else
         {
-            if (b.xmin < crop.x)
+            if (b.xmin() < crop.x)
             {
-                b.xmin = 0;
+                b.set_xmin(0);
             }
             else
             {
-                b.xmin -= crop.x;
+                b.set_xmin(b.xmin() - crop.x);
             }
-            if (b.ymin < crop.y)
+            if (b.ymin() < crop.y)
             {
-                b.ymin = 0;
-            }
-            else
-            {
-                b.ymin -= crop.y;
-            }
-            if (b.xmax > crop.x + crop.width)
-            {
-                b.xmax = crop.width;
+                b.set_ymin(0);
             }
             else
             {
-                b.xmax -= crop.x;
+                b.set_ymin(b.ymin() - crop.y);
             }
-            if (b.ymax > crop.y + crop.height)
+            if (b.xmax() >= crop.x + crop.width)
             {
-                b.ymax = crop.height;
+                b.set_xmax(crop.width - 1);
             }
             else
             {
-                b.ymax -= crop.y;
+                b.set_xmax(b.xmax() - crop.x);
+            }
+            if (b.ymax() >= crop.y + crop.height)
+            {
+                b.set_ymax(crop.height - 1);
+            }
+            else
+            {
+                b.set_ymax(b.ymax() - crop.y);
             }
 
-            if (flip)
+            if (pptr->flip)
             {
-                auto xmax = b.xmax;
-                b.xmax    = crop.width - b.xmin - 1;
-                b.xmin    = crop.width - xmax - 1;
+                auto xmax = b.xmax();
+                b.set_xmax(crop.width - b.xmin() - 1);
+                b.set_xmin(crop.width - xmax - 1);
             }
 
             // now rescale box
-            b.xmin *= x_scale;
-            b.xmax *= x_scale;
-            b.ymin *= y_scale;
-            b.ymax *= y_scale;
+            b = b.rescale(x_scale, y_scale);
 
             rc.push_back(b);
         }
@@ -248,12 +294,8 @@ shared_ptr<boundingbox::decoded>
     {
         return shared_ptr<boundingbox::decoded>();
     }
-    shared_ptr<boundingbox::decoded> rc   = make_shared<boundingbox::decoded>();
-    cv::Rect                         crop = pptr->cropbox;
-    float x_scale                         = (float)(pptr->output_size.width) / (float)(crop.width);
-    float y_scale = (float)(pptr->output_size.height) / (float)(crop.height);
-
-    rc->m_boxes = transform_box(boxes->boxes(), crop, pptr->flip, x_scale, y_scale);
+    shared_ptr<boundingbox::decoded> rc = make_shared<boundingbox::decoded>();
+    rc->m_boxes                         = transform_box(boxes->boxes(), pptr);
 
     return rc;
 }
@@ -270,10 +312,10 @@ void boundingbox::loader::load(const vector<void*>& outlist, shared_ptr<bounding
     int    i            = 0;
     for (; i < output_count; i++)
     {
-        data[0] = boxes->boxes()[i].xmin;
-        data[1] = boxes->boxes()[i].ymin;
-        data[2] = boxes->boxes()[i].xmax;
-        data[3] = boxes->boxes()[i].ymax;
+        data[0] = boxes->boxes()[i].xmin();
+        data[1] = boxes->boxes()[i].ymin();
+        data[2] = boxes->boxes()[i].xmax();
+        data[3] = boxes->boxes()[i].ymax();
         data += 4;
     }
     for (; i < max_bbox; i++)

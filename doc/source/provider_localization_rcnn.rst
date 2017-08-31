@@ -13,10 +13,10 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-localization
+Faster-RCNN Localization
 ============
 
-The object localization provider module (``type=localization``) is designed to work with the Faster-RCNN model. The manifest should include paths to both the image but also the bounding box annotations:
+The object localization provider module (``type=localization_rcnn``) is designed to work with the Faster-RCNN model. The manifest should include paths to both the image but also the bounding box annotations:
 
 .. code-block:: bash
     @FIL	EFILE

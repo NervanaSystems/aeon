@@ -178,6 +178,14 @@ vector<char> nervana::file_util::read_file_contents(const string& path)
     return data;
 }
 
+std::string nervana::file_util::read_file_to_string(const std::string& path)
+{
+    std::ifstream     f(path);
+    std::stringstream ss;
+    ss << f.rdbuf();
+    return ss.str();
+}
+
 void nervana::file_util::iterate_files(const string& path,
                                        std::function<void(const string& file, bool is_dir)> func,
                                        bool recurse)

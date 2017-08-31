@@ -97,8 +97,6 @@ if (REQUIRED_PACKAGES_FOUND)
 		DEPENDS doxygen
 		COMMAND mkdir -p ${BUILDDIR}
 		COMMAND ${SPHINXENVCMD} -b html ${ALLSPHINXOPTS} ${BUILDDIR}/html
-		COMMAND @echo
-		COMMAND @echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 	)
 endif (REQUIRED_PACKAGES_FOUND)
 

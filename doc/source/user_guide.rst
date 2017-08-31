@@ -1,5 +1,5 @@
 .. ---------------------------------------------------------------------------
-.. Copyright 2015 Nervana Systems Inc.
+.. Copyright 2017 Nervana Systems Inc.
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -158,6 +158,7 @@ Importantly, the ``type`` key indicates to the dataloader which input data type 
    label||
    audio|audio|
    localization|image|
+   localization_ssd|image|
    pixelmask|image|
    boundingbox|image|
    blob||

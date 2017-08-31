@@ -35,6 +35,7 @@ public:
     static std::string get_temp_directory();
     static void remove_file(const std::string& file);
     static std::vector<char> read_file_contents(const std::string& path);
+    static std::string read_file_to_string(const std::string& path);
     static void iterate_files(const std::string& path,
                               std::function<void(const std::string& file, bool is_dir)> func,
                               bool recurse = false);

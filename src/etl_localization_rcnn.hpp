@@ -29,19 +29,22 @@ namespace nervana
 {
     namespace localization
     {
-        class decoded;
-        class params;
-        class config;
-        class target;
-        class anchor;
+        namespace rcnn
+        {
+            class decoded;
+            class params;
+            class config;
+            class target;
+            class anchor;
 
-        class extractor;
-        class transformer;
-        class loader;
+            class extractor;
+            class transformer;
+            class loader;
+        }
     }
 }
 
-class nervana::localization::target
+class nervana::localization::rcnn::target
 {
 public:
     target()
@@ -61,10 +64,10 @@ public:
     float dh;
 };
 
-class nervana::localization::anchor
+class nervana::localization::rcnn::anchor
 {
 public:
-    static std::vector<box> generate(const localization::config& cfg);
+    static std::vector<box> generate(const localization::rcnn::config& cfg);
     static std::vector<int>
         inside_image_bounds(int width, int height, const std::vector<box>& all_anchors);
 
@@ -91,7 +94,7 @@ private:
     static std::vector<box> scale_enum(const box& anchor, const std::vector<float>& scales);
 };
 
-class nervana::localization::config : public nervana::interface::config
+class nervana::localization::rcnn::config : public nervana::interface::config
 {
 public:
     size_t             rois_per_image = 256;
@@ -141,7 +144,7 @@ private:
     void validate();
 };
 
-class nervana::localization::decoded : public boundingbox::decoded
+class nervana::localization::rcnn::decoded : public boundingbox::decoded
 {
 public:
     decoded() {}
@@ -156,14 +159,14 @@ public:
     std::vector<boundingbox::box> gt_boxes;
 };
 
-class nervana::localization::extractor : public nervana::interface::extractor<localization::decoded>
+class nervana::localization::rcnn::extractor : public nervana::interface::extractor<localization::rcnn::decoded>
 {
 public:
-    extractor(const localization::config&);
+    extractor(const localization::rcnn::config&);
 
-    virtual std::shared_ptr<localization::decoded> extract(const void* data, size_t size) override
+    virtual std::shared_ptr<localization::rcnn::decoded> extract(const void* data, size_t size) override
     {
-        auto rc = std::make_shared<localization::decoded>();
+        auto rc = std::make_shared<localization::rcnn::decoded>();
         auto bb = std::static_pointer_cast<boundingbox::decoded>(rc);
         bbox_extractor.extract(data, size, bb);
         if (!bb)
@@ -177,16 +180,16 @@ private:
     boundingbox::extractor bbox_extractor;
 };
 
-class nervana::localization::transformer
-    : public interface::transformer<localization::decoded, augment::image::params>
+class nervana::localization::rcnn::transformer
+    : public interface::transformer<localization::rcnn::decoded, augment::image::params>
 {
 public:
-    transformer(const localization::config&, float fixed_scaling_factor);
+    transformer(const localization::rcnn::config&, float fixed_scaling_factor);
 
     virtual ~transformer() {}
-    std::shared_ptr<localization::decoded>
+    std::shared_ptr<localization::rcnn::decoded>
         transform(std::shared_ptr<augment::image::params> txs,
-                  std::shared_ptr<localization::decoded>  mp) override;
+                  std::shared_ptr<localization::rcnn::decoded>  mp) override;
 
 private:
     transformer() = delete;
@@ -196,20 +199,20 @@ private:
                                                const std::vector<box>& anchors);
     std::vector<int> sample_anchors(const std::vector<int>& labels, bool debug = false);
 
-    const localization::config& cfg;
+    const localization::rcnn::config& cfg;
     std::minstd_rand0           random;
     const std::vector<box>      all_anchors;
     float                       m_fixed_scaling_factor;
 };
 
-class nervana::localization::loader : public interface::loader<localization::decoded>
+class nervana::localization::rcnn::loader : public interface::loader<localization::rcnn::decoded>
 {
 public:
-    loader(const localization::config&);
+    loader(const localization::rcnn::config&);
 
     virtual ~loader() {}
     void load(const std::vector<void*>&              buf_list,
-              std::shared_ptr<localization::decoded> mp) override;
+              std::shared_ptr<localization::rcnn::decoded> mp) override;
 
 private:
     loader() = delete;

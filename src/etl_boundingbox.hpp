@@ -1,5 +1,5 @@
 /*
- Copyright 2016 Nervana Systems Inc.
+ Copyright 2017 Nervana Systems Inc.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -32,29 +32,8 @@ namespace nervana
         class extractor;
         class transformer;
         class loader;
-        class box;
     }
 }
-
-class nervana::boundingbox::box : public nervana::box
-{
-public:
-    bool difficult = false;
-    bool truncated = false;
-    int  label;
-
-    box operator*(float v) const
-    {
-        box rc = *this;
-        rc.xmin *= v;
-        rc.ymin *= v;
-        rc.xmax *= v;
-        rc.ymax *= v;
-        return rc;
-    }
-};
-
-std::ostream& operator<<(std::ostream&, const nervana::boundingbox::box&);
 
 class nervana::boundingbox::config : public nervana::interface::config
 {
@@ -101,7 +80,7 @@ public:
     int                                  height() const { return m_height; }
     int                                  depth() const { return m_depth; }
     cv::Size2i image_size() const override { return cv::Size2i(m_width, m_height); }
-private:
+protected:
     std::vector<boundingbox::box> m_boxes;
     int                           m_width;
     int                           m_height;
@@ -115,7 +94,10 @@ public:
     extractor(const std::unordered_map<std::string, int>&);
     virtual ~extractor() {}
     virtual std::shared_ptr<boundingbox::decoded> extract(const void*, size_t) override;
-    void extract(const void*, size_t, std::shared_ptr<boundingbox::decoded>&);
+    void                                          extract(const void*,
+                 size_t,
+                 std::shared_ptr<boundingbox::decoded>&,
+                 bool boxes_normalized = false);
 
 private:
     extractor() = delete;
@@ -132,13 +114,15 @@ public:
         transform(std::shared_ptr<augment::image::params>,
                   std::shared_ptr<boundingbox::decoded>) override;
 
-    static std::vector<boundingbox::box> transform_box(const std::vector<boundingbox::box>& b,
-                                                       const cv::Rect&                      crop,
-                                                       bool                                 flip,
-                                                       float                                x_scale,
-                                                       float y_scale);
+    static std::vector<boundingbox::box>
+        transform_box(const std::vector<boundingbox::box>&    b,
+                      std::shared_ptr<augment::image::params> pptr);
 
 private:
+    static bool meet_emit_constraint(const cv::Rect&         cropbox,
+                                     const boundingbox::box& input_bbox,
+                                     const emit_type         emit_constraint_type,
+                                     const float             emit_min_overlap);
 };
 
 class nervana::boundingbox::loader

@@ -78,7 +78,7 @@ public:
     std::uniform_real_distribution<float> noise_level{0.0f, 0.5f};
 
 private:
-    std::default_random_engine m_random{0};
+    std::default_random_engine m_random{get_global_random_seed()};
     float                      add_noise_probability = 0.0f;
 
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {

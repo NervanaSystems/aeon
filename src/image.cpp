@@ -180,6 +180,36 @@ cv::Point2f image::cropbox_shift(const cv::Size2f& in_size,
     return result;
 }
 
+// get expand_ratio and expand_prob from ExpandParameter in config
+void image::expand(const cv::Mat& input,
+                   cv::Mat&       output,
+                   cv::Size_<int> offset,
+                   cv::Size_<int> output_size)
+{
+    if (input.cols + offset.width > output_size.width ||
+        input.rows + offset.height > output_size.height || offset.area() < 0 ||
+        input.size().area() <= 0)
+    {
+        stringstream ss;
+        ss << "Invalid parameters to expand image:" << endl
+           << "input size: " << input.size() << endl
+           << "offset: " << offset << endl
+           << "output size: " << output_size;
+        throw std::invalid_argument(ss.str());
+    }
+    if (output_size == input.size())
+    {
+        output = input;
+        return;
+    }
+
+    output.create(output_size, input.type());
+    output.setTo(cv::Scalar(0));
+
+    cv::Rect bbox_roi(offset.width, offset.height, input.cols, input.rows);
+    input.copyTo((output)(bbox_roi));
+}
+
 /* Transform:
     image::config will be a supplied bunch of params used by this provider.
     on each record, the transformer will use the config along with the supplied
@@ -224,7 +254,8 @@ void image::photometric::lighting(cv::Mat& inout, vector<float> lighting, float 
 }
 
 /*
-Implements contrast, brightness, and saturation jittering using the following definitions:
+Implements hue shift as well as contrast, brightness, and saturation jittering using the following definitions:
+Hue: Add some multiple of 2 degrees to hue channel.
 Contrast: Add some multiple of the grayscale mean of the image.
 Brightness: Magnify the intensity of each pixel by photometric[1]
 Saturation: Add some multiple of the pixel's grayscale value to itself.
@@ -236,7 +267,7 @@ void image::photometric::cbsjitter(
     cv::Mat& inout, float contrast, float brightness, float saturation, int hue)
 {
     // Skip transformations if given deterministic settings
-    if (brightness != 1.0 || saturation != 1.0 || hue != 0)
+    if (brightness != 1.0 || saturation != 1.0)
     {
         /****************************
         *  BRIGHTNESS & SATURATION  *
@@ -247,6 +278,27 @@ void image::photometric::cbsjitter(
         cv::Mat       satmtx = brightness * (saturation * cv::Mat::eye(3, 3, CV_32FC1) +
                                        (1 - saturation) * cv::Mat::ones(3, 1, CV_32FC1) * GSCL.t());
         cv::transform(inout, inout, satmtx);
+    }
+
+    if (hue != 0)
+    {
+        /*************
+        *  HUE SHIFT *
+        **************/
+        cv::Mat hsv;
+        // Convert to HSV colorspae.
+        cv::cvtColor(inout, hsv, CV_BGR2HSV);
+
+        // Adjust the hue.
+        uint8_t* p = hsv.data;
+        for (int i = 0; i < hsv.size().area(); i++)
+        {
+            *p = (*p + hue) % 180;
+            p += 3;
+        }
+
+        // Back to BGR colorspace.
+        cvtColor(hsv, inout, CV_HSV2BGR);
     }
 
     if (contrast != 1.0)

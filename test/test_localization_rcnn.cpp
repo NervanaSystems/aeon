@@ -28,36 +28,30 @@
 
 #define private public
 
+#include "file_util.hpp"
 #include "etl_image.hpp"
-#include "etl_localization.hpp"
+#include "etl_localization_rcnn.hpp"
 #include "json.hpp"
 #include "provider_factory.hpp"
 #include "log.hpp"
 #include "loader.hpp"
+#include "test_localization.hpp"
 
 using namespace std;
 using namespace nervana;
-using namespace nervana::localization;
+using namespace nervana::localization::rcnn;
 
-static vector<string> label_list = {"person",
-                                    "dog",
-                                    "lion",
-                                    "tiger",
-                                    "eel",
-                                    "puma",
-                                    "rat",
-                                    "tick",
-                                    "flea",
-                                    "bicycle",
-                                    "hovercraft"};
-
-static string read_file(const string& path)
-{
-    ifstream     f(path);
-    stringstream ss;
-    ss << f.rdbuf();
-    return ss.str();
-}
+vector<string> label_list = {"person",
+                             "dog",
+                             "lion",
+                             "tiger",
+                             "eel",
+                             "puma",
+                             "rat",
+                             "tick",
+                             "flea",
+                             "bicycle",
+                             "hovercraft"};
 
 vector<uint8_t> make_image_from_metadata(const std::string& metadata)
 {
@@ -70,7 +64,7 @@ vector<uint8_t> make_image_from_metadata(const std::string& metadata)
     return test_image_data;
 }
 
-TEST(DISABLED_localization, example)
+TEST(DISABLED_localization_rcnn, example)
 {
     int                      height               = 1000;
     int                      width                = 1000;
@@ -82,7 +76,7 @@ TEST(DISABLED_localization, example)
 
     nlohmann::json js_image = {
         {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
-    nlohmann::json js_local = {{"type", "localization"},
+    nlohmann::json js_local = {{"type", "localization_rcnn"},
                                {"height", height},
                                {"width", width},
                                {"max_gt_boxes", 64},
@@ -102,7 +96,7 @@ TEST(DISABLED_localization, example)
     auto train_set = nervana::loader{config};
 }
 
-TEST(localization, generate_anchors)
+TEST(localization_rcnn, generate_anchors)
 {
     // Verify that we compute the same anchors as Shaoqing's matlab implementation:
     //    >> load output/rpn_cachedir/faster_rcnn_VOC2007_ZF_stage1_rpn/anchors.mat
@@ -145,7 +139,7 @@ TEST(localization, generate_anchors)
     nlohmann::json js_loc = {
         {"width", width}, {"height", height}, {"class_names", label_list}, {"max_gt_boxes", 64}};
 
-    localization::config cfg{js_loc};
+    config cfg{js_loc};
 
     vector<box> actual      = anchor::generate_anchors(cfg.base_size, cfg.ratios, cfg.scales);
     vector<box> all_anchors = anchor::generate(cfg);
@@ -166,10 +160,10 @@ void plot(const vector<box>& list, const string& prefix)
     float ymax = 0.0;
     for (const box& b : list)
     {
-        xmin = std::min(xmin, b.xmin);
-        xmax = std::max(xmax, b.xmax);
-        ymin = std::min(ymin, b.ymin);
-        ymax = std::max(ymax, b.ymax);
+        xmin = std::min(xmin, b.xmin());
+        xmax = std::max(xmax, b.xmax());
+        ymin = std::min(ymin, b.ymin());
+        ymax = std::max(ymax, b.ymax());
     }
 
     cv::Mat img(ymax - ymin, xmax - xmin, CV_8UC3);
@@ -177,17 +171,17 @@ void plot(const vector<box>& list, const string& prefix)
 
     for (box b : list)
     {
-        b.xmin -= xmin;
-        b.xmax -= xmin;
-        b.ymin -= ymin;
-        b.ymax -= ymin;
+        b.set_xmin(b.xmin() - xmin);
+        b.set_xmax(b.xmax() - xmin);
+        b.set_ymin(b.ymin() - ymin);
+        b.set_ymax(b.ymax() - ymin);
         cv::rectangle(img, b.rect(), cv::Scalar(255, 0, 0));
     }
     box b = list[0];
-    b.xmin -= xmin;
-    b.xmax -= xmin;
-    b.ymin -= ymin;
-    b.ymax -= ymin;
+    b.set_xmin(b.xmin() - xmin);
+    b.set_xmax(b.xmax() - xmin);
+    b.set_ymin(b.ymin() - ymin);
+    b.set_ymax(b.ymax() - ymin);
 
     cv::rectangle(img, b.rect(), cv::Scalar(0, 0, 255));
 
@@ -200,20 +194,19 @@ void plot(const vector<box>& list, const string& prefix)
 void plot(const string& path)
 {
     string         prefix = path.substr(path.size() - 11, 6) + "-";
-    string         data   = read_file(path);
+    string         data   = file_util::read_file_to_string(path);
     int            width  = 1000;
     int            height = 1000;
     nlohmann::json js_loc = {
         {"width", width}, {"height", height}, {"class_names", label_list}, {"max_gt_boxes", 64}};
 
-    localization::config      cfg{js_loc};
-    localization::extractor   extractor{cfg};
-    localization::transformer transformer{cfg, -1};
-    auto                      extracted_metadata = extractor.extract(&data[0], data.size());
+    config      cfg{js_loc};
+    extractor   extractor{cfg};
+    transformer transformer{cfg, -1};
+    auto        extracted_metadata = extractor.extract(&data[0], data.size());
     ASSERT_NE(nullptr, extracted_metadata);
-    auto                              params = make_shared<augment::image::params>();
-    shared_ptr<localization::decoded> transformed_metadata =
-        transformer.transform(params, extracted_metadata);
+    auto                params               = make_shared<augment::image::params>();
+    shared_ptr<decoded> transformed_metadata = transformer.transform(params, extracted_metadata);
 
     const vector<box>& an = transformer.all_anchors;
 
@@ -299,26 +292,26 @@ void plot(const string& path)
 //     plot(CURDIR"/test_data/009952.json");
 // }
 
-TEST(localization, config)
+TEST(localization_rcnn, config)
 {
     nlohmann::json js = {
         {"height", 300}, {"width", 400}, {"class_names", label_list}, {"max_gt_boxes", 100}};
 
-    EXPECT_NO_THROW(localization::config cfg(js));
+    EXPECT_NO_THROW(::config cfg(js));
 }
 
 // not sure how we want to handle this error with new augmentation system
-TEST(DISABLED_localization, config_rotate)
+TEST(DISABLED_localization_rcnn, config_rotate)
 {
     nlohmann::json js = {
         {"height", 300}, {"width", 400}, {"class_names", label_list}, {"max_gt_boxes", 100}};
 
-    EXPECT_THROW(localization::config cfg(js), std::invalid_argument);
+    EXPECT_THROW(::config cfg(js), std::invalid_argument);
 }
 
-TEST(localization, sample_anchors)
+TEST(localization_rcnn, sample_anchors)
 {
-    string         data     = read_file(CURDIR "/test_data/006637.json");
+    string         data     = file_util::read_file_to_string(CURDIR "/test_data/006637.json");
     int            height   = 1000;
     int            width    = 1000;
     nlohmann::json js_image = {{"width", width}, {"height", height}, {"channels", 3}};
@@ -330,10 +323,10 @@ TEST(localization, sample_anchors)
                              {"fixed_aspect_ratio", true},
                              {"fixed_scaling_factor", 1.6}};
     image::config                 image_config{js_image};
-    localization::config          cfg{js_loc};
+    config                        cfg{js_loc};
     augment::image::param_factory factory(js_aug);
-    localization::extractor       extractor{cfg};
-    localization::transformer     transformer{cfg, factory.fixed_scaling_factor};
+    extractor                     extractor{cfg};
+    transformer                   transformer{cfg, factory.fixed_scaling_factor};
     auto                          extracted_metadata = extractor.extract(&data[0], data.size());
     ASSERT_NE(nullptr, extracted_metadata);
 
@@ -365,16 +358,16 @@ TEST(localization, sample_anchors)
     for (int index : anchor_index)
     {
         box b = anchors[index];
-        EXPECT_GE(b.xmin, 0);
-        EXPECT_GE(b.ymin, 0);
-        EXPECT_LT(b.xmax, cfg.width);
-        EXPECT_LT(b.ymax, cfg.height);
+        EXPECT_GE(b.xmin(), 0);
+        EXPECT_GE(b.ymin(), 0);
+        EXPECT_LT(b.xmax(), cfg.width);
+        EXPECT_LT(b.ymax(), cfg.height);
     }
 }
 
-TEST(localization, transform_scale)
+TEST(localization_rcnn, transform_scale)
 {
-    string          metadata   = read_file(CURDIR "/test_data/006637.json");
+    string          metadata   = file_util::read_file_to_string(CURDIR "/test_data/006637.json");
     vector<uint8_t> image_data = make_image_from_metadata(metadata);
     int             width      = 600;
     int             height     = 600;
@@ -388,7 +381,7 @@ TEST(localization, transform_scale)
                              {"fixed_scaling_factor", 1.6}};
 
     image::config                 image_config{js_image};
-    localization::config          cfg{js_loc};
+    config                        cfg{js_loc};
     augment::image::param_factory factory{js_aug};
     image::extractor              image_extractor{image_config};
     shared_ptr<image::decoded>    image_decoded =
@@ -398,32 +391,31 @@ TEST(localization, transform_scale)
         factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
     params->debug_deterministic = true;
 
-    localization::extractor   extractor{cfg};
-    localization::transformer transformer{cfg, factory.fixed_scaling_factor};
-    auto                      decoded_data = extractor.extract(&metadata[0], metadata.size());
+    extractor   extractor{cfg};
+    transformer transformer{cfg, factory.fixed_scaling_factor};
+    auto        decoded_data = extractor.extract(&metadata[0], metadata.size());
     ASSERT_NE(nullptr, decoded_data);
 
-    shared_ptr<localization::decoded> transformed_data =
-        transformer.transform(params, decoded_data);
+    shared_ptr<::decoded> transformed_data = transformer.transform(params, decoded_data);
 
     for (int i = 0; i < decoded_data->boxes().size(); i++)
     {
         boundingbox::box expected = decoded_data->boxes()[i];
         boundingbox::box actual   = transformed_data->gt_boxes[i];
-        expected.xmin *= transformed_data->image_scale;
-        expected.ymin *= transformed_data->image_scale;
-        expected.xmax *= transformed_data->image_scale;
-        expected.ymax *= transformed_data->image_scale;
-        EXPECT_EQ(expected.xmin, actual.xmin);
-        EXPECT_EQ(expected.xmax, actual.xmax);
-        EXPECT_EQ(expected.ymin, actual.ymin);
-        EXPECT_EQ(expected.ymax, actual.ymax);
+        expected.set_xmin(expected.xmin() * transformed_data->image_scale);
+        expected.set_ymin(expected.ymin() * transformed_data->image_scale);
+        expected.set_xmax((expected.xmax() + 1) * transformed_data->image_scale - 1);
+        expected.set_ymax((expected.ymax() + 1) * transformed_data->image_scale - 1);
+        EXPECT_EQ(expected.xmin(), actual.xmin());
+        EXPECT_EQ(expected.xmax(), actual.xmax());
+        EXPECT_EQ(expected.ymin(), actual.ymin());
+        EXPECT_EQ(expected.ymax(), actual.ymax());
     }
 }
 
-TEST(localization, transform_flip)
+TEST(localization_rcnn, transform_flip)
 {
-    string          metadata   = read_file(CURDIR "/test_data/006637.json");
+    string          metadata   = file_util::read_file_to_string(CURDIR "/test_data/006637.json");
     vector<uint8_t> image_data = make_image_from_metadata(metadata);
     int             width      = 1000;
     int             height     = 1000;
@@ -437,7 +429,7 @@ TEST(localization, transform_flip)
                              {"fixed_scaling_factor", 1.6}};
 
     image::config                 image_config{js_image};
-    localization::config          cfg{js_loc};
+    config                        cfg{js_loc};
     augment::image::param_factory factory{js_aug};
     image::extractor              image_extractor{image_config};
 
@@ -449,13 +441,12 @@ TEST(localization, transform_flip)
     params->debug_deterministic = true;
     params->flip                = 1;
 
-    localization::extractor   extractor{cfg};
-    localization::transformer transformer{cfg, factory.fixed_scaling_factor};
-    auto                      decoded_data = extractor.extract(&metadata[0], metadata.size());
+    extractor   extractor{cfg};
+    transformer transformer{cfg, factory.fixed_scaling_factor};
+    auto        decoded_data = extractor.extract(&metadata[0], metadata.size());
     ASSERT_NE(nullptr, decoded_data);
 
-    shared_ptr<localization::decoded> transformed_data =
-        transformer.transform(params, decoded_data);
+    shared_ptr<decoded> transformed_data = transformer.transform(params, decoded_data);
 
     for (int i = 0; i < decoded_data->boxes().size(); i++)
     {
@@ -463,59 +454,53 @@ TEST(localization, transform_flip)
         boundingbox::box actual   = transformed_data->gt_boxes[i];
 
         // flip
-        auto xmin        = expected.xmin;
+        auto xmin        = expected.xmin();
         int  image_width = 500;
-        expected.xmin    = image_width - expected.xmax - 1;
-        expected.xmax    = image_width - xmin - 1;
+        expected.set_xmin(image_width - expected.xmax() - 1);
+        expected.set_xmax(image_width - xmin - 1);
 
         // scale
         float scale = 1.6;
-        expected.xmin *= scale;
-        expected.ymin *= scale;
-        expected.xmax *= scale;
-        expected.ymax *= scale;
+        expected.set_xmin(expected.xmin() * scale);
+        expected.set_ymin(expected.ymin() * scale);
+        expected.set_xmax((expected.xmax() + 1) * scale - 1);
+        expected.set_ymax((expected.ymax() + 1) * scale - 1);
 
-        EXPECT_EQ(expected.xmin, actual.xmin);
-        EXPECT_EQ(expected.xmax, actual.xmax);
-        EXPECT_EQ(expected.ymin, actual.ymin);
-        EXPECT_EQ(expected.ymax, actual.ymax);
+        EXPECT_EQ(expected.xmin(), actual.xmin());
+        EXPECT_EQ(expected.xmax(), actual.xmax());
+        EXPECT_EQ(expected.ymin(), actual.ymin());
+        EXPECT_EQ(expected.ymax(), actual.ymax());
     }
 }
 
-static boundingbox::box crop_single_box(boundingbox::box expected, cv::Rect cropbox, float scale)
+boundingbox::box crop_single_box(boundingbox::box expected, cv::Rect cropbox, float scale)
 {
-    expected.xmin -= cropbox.x;
-    expected.xmax -= cropbox.x;
-    expected.ymin -= cropbox.y;
-    expected.ymax -= cropbox.y;
+    expected = expected + (-cropbox.tl());
 
-    expected.xmin = max<float>(expected.xmin, 0);
-    expected.ymin = max<float>(expected.ymin, 0);
-    expected.xmax = max<float>(expected.xmax, 0);
-    expected.ymax = max<float>(expected.ymax, 0);
+    expected.set_xmin(max<float>(expected.xmin(), 0));
+    expected.set_ymin(max<float>(expected.ymin(), 0));
+    expected.set_xmax(max<float>(expected.xmax(), -1));
+    expected.set_ymax(max<float>(expected.ymax(), -1));
 
-    expected.xmin = min<float>(expected.xmin, cropbox.width);
-    expected.ymin = min<float>(expected.ymin, cropbox.height);
-    expected.xmax = min<float>(expected.xmax, cropbox.width);
-    expected.ymax = min<float>(expected.ymax, cropbox.height);
+    expected.set_xmin(min<float>(expected.xmin(), cropbox.width));
+    expected.set_ymin(min<float>(expected.ymin(), cropbox.height));
+    expected.set_xmax(min<float>(expected.xmax(), cropbox.width - 1));
+    expected.set_ymax(min<float>(expected.ymax(), cropbox.height - 1));
 
-    expected.xmin *= scale;
-    expected.ymin *= scale;
-    expected.xmax *= scale;
-    expected.ymax *= scale;
+    expected = expected.rescale(scale, scale);
 
     return expected;
 }
 
 bool is_box_valid(boundingbox::box b)
 {
-    return b.xmin != b.xmax && b.ymin != b.ymax;
+    return b.size() > 0;
 }
 
-TEST(localization, transform_crop)
+TEST(localization_rcnn, transform_crop)
 {
     {
-        string          data            = read_file(CURDIR "/test_data/006637.json");
+        string          data = file_util::read_file_to_string(CURDIR "/test_data/006637.json");
         vector<uint8_t> test_image_data = make_image_from_metadata(data);
         int             width           = 600;
         int             height          = 600;
@@ -528,7 +513,7 @@ TEST(localization, transform_crop)
         nlohmann::json js_aug = {{"type", "image"}, {"flip_enable", false}, {"scale", {0.8, 0.8}}};
 
         image::config                 image_config{js_image};
-        localization::config          cfg{js_loc};
+        config                        cfg{js_loc};
         augment::image::param_factory factory{js_aug};
         image::extractor              image_extractor{image_config};
 
@@ -538,12 +523,11 @@ TEST(localization, transform_crop)
         shared_ptr<augment::image::params> params =
             factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
 
-        localization::extractor   extractor{cfg};
-        localization::transformer transformer{cfg, factory.fixed_scaling_factor};
-        auto                      decoded_data = extractor.extract(&data[0], data.size());
+        extractor   extractor{cfg};
+        transformer transformer{cfg, factory.fixed_scaling_factor};
+        auto        decoded_data = extractor.extract(&data[0], data.size());
         ASSERT_NE(nullptr, decoded_data);
-        shared_ptr<localization::decoded> transformed_data =
-            transformer.transform(params, decoded_data);
+        shared_ptr<decoded> transformed_data = transformer.transform(params, decoded_data);
 
         EXPECT_EQ(6, transformed_data->gt_boxes.size());
         float scale = 2.0;
@@ -556,7 +540,7 @@ TEST(localization, transform_crop)
         }
     }
     {
-        string          data            = read_file(CURDIR "/test_data/006637.json");
+        string          data = file_util::read_file_to_string(CURDIR "/test_data/006637.json");
         vector<uint8_t> test_image_data = make_image_from_metadata(data);
         int             width           = 600;
         int             height          = 600;
@@ -569,7 +553,7 @@ TEST(localization, transform_crop)
         nlohmann::json js_aug = {{"type", "image"}, {"flip_enable", false}, {"scale", {0.2, 0.2}}};
 
         image::config                 image_config{js_image};
-        localization::config          cfg{js_loc};
+        config                        cfg{js_loc};
         augment::image::param_factory factory{js_aug};
         image::extractor              image_extractor{image_config};
 
@@ -579,12 +563,11 @@ TEST(localization, transform_crop)
         shared_ptr<augment::image::params> params =
             factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
 
-        localization::extractor   extractor{cfg};
-        localization::transformer transformer{cfg, factory.fixed_scaling_factor};
-        auto                      decoded_data = extractor.extract(&data[0], data.size());
+        extractor   extractor{cfg};
+        transformer transformer{cfg, factory.fixed_scaling_factor};
+        auto        decoded_data = extractor.extract(&data[0], data.size());
         ASSERT_NE(nullptr, decoded_data);
-        shared_ptr<localization::decoded> transformed_data =
-            transformer.transform(params, decoded_data);
+        shared_ptr<decoded> transformed_data = transformer.transform(params, decoded_data);
 
         vector<boundingbox::box> valid_boxes;
         float                    scale = 8.0;
@@ -607,7 +590,7 @@ TEST(localization, transform_crop)
     }
 }
 
-TEST(localization, loader)
+TEST(localization_rcnn, loader)
 {
     vector<int> bbox_mask_index = {
         1200,   1262,   1324,   1386,   23954,  24016,  24078,  24090,  24140,  24152,  24202,
@@ -625,262 +608,349 @@ TEST(localization, loader)
         131890, 131951, 131952, 132013, 132014, 132075, 132347, 132348};
 
     map<int, float> bbox_targets = {
-        {192, 2.90271735},     {193, 2.81576085},     {194, 2.72880435},     {195, 2.64184785},
-        {196, 2.55489135},     {197, 2.46793485},     {198, 2.38097835},     {199, 2.29402184},
-        {200, 2.20706511},     {201, 2.1201086},      {202, 2.0331521},      {203, 1.9461956},
-        {204, 1.8592391},      {205, 1.7722826},      {206, 1.6853261},      {207, 1.5983696},
-        {208, 1.5114131},      {209, 1.42445648},     {210, 1.33749998},     {211, 1.25054348},
-        {212, 1.16358697},     {213, 1.07663047},     {214, 0.98967391},     {215, 0.90271741},
-        {216, 0.81576085},     {217, 0.72880435},     {218, 0.64184785},     {219, 0.55489129},
-        {220, 0.46793479},     {221, 0.38097826},     {222, 0.29402173},     {223, 0.20706522},
-        {224, 0.12010869},     {225, 0.03315217},     {226, -0.05380435},    {227, -0.14076087},
-        {228, -0.22771738},    {229, -0.3146739},     {254, 2.90271735},     {255, 2.81576085},
-        {256, 2.72880435},     {257, 2.64184785},     {258, 2.55489135},     {259, 2.46793485},
-        {260, 2.38097835},     {261, 2.29402184},     {262, 2.20706511},     {263, 2.1201086},
-        {264, 2.0331521},      {265, 1.9461956},      {266, 1.8592391},      {267, 1.7722826},
-        {268, 1.6853261},      {269, 1.5983696},      {270, 1.5114131},      {271, 1.42445648},
-        {272, 1.33749998},     {273, 1.25054348},     {274, 1.16358697},     {275, 1.07663047},
-        {276, 0.98967391},     {277, 0.90271741},     {278, 0.81576085},     {279, 0.72880435},
-        {280, 0.64184785},     {281, 0.55489129},     {282, 0.46793479},     {283, 0.38097826},
-        {284, 0.29402173},     {285, 0.20706522},     {286, 0.12010869},     {287, 0.03315217},
-        {288, -0.05380435},    {289, -0.14076087},    {290, -0.22771738},    {291, -0.3146739},
-        {316, 2.90271735},     {317, 2.81576085},     {318, 2.72880435},     {319, 2.64184785},
-        {320, 2.55489135},     {321, 2.46793485},     {322, 2.38097835},     {323, 2.29402184},
-        {324, 2.20706511},     {325, 2.1201086},      {326, 2.0331521},      {327, 1.9461956},
-        {328, 1.8592391},      {329, 1.7722826},      {330, 1.6853261},      {331, 1.5983696},
-        {332, 1.5114131},      {333, 1.42445648},     {334, 1.33749998},     {335, 1.25054348},
-        {336, 1.16358697},     {337, 1.07663047},     {338, 0.98967391},     {339, 0.90271741},
-        {340, 0.81576085},     {341, 0.72880435},     {342, 0.64184785},     {343, 0.55489129},
-        {344, 0.46793479},     {345, 0.38097826},     {346, 0.29402173},     {347, 0.20706522},
-        {348, 0.12010869},     {349, 0.03315217},     {350, -0.05380435},    {351, -0.14076087},
-        {352, -0.22771738},    {353, -0.3146739},     {378, 2.90271735},     {379, 2.81576085},
-        {380, 2.72880435},     {381, 2.64184785},     {382, 2.55489135},     {383, 2.46793485},
-        {384, 2.38097835},     {385, 2.29402184},     {386, 0.72880435},     {387, 0.64184785},
-        {388, 0.55489129},     {389, 0.46793479},     {390, 0.38097826},     {391, 0.29402173},
-        {392, 0.20706522},     {393, 0.12010869},     {394, 0.03315217},     {395, -0.05380435},
-        {396, -0.14076087},    {397, -0.22771738},    {398, -0.3146739},     {399, -0.40163043},
-        {400, -0.48858696},    {401, -0.57554346},    {402, -0.66250002},    {403, -0.74945652},
-        {404, 0.64184785},     {405, 0.55489129},     {406, 0.46793479},     {407, 0.38097826},
-        {408, 0.29402173},     {409, 0.20706522},     {410, 0.12010869},     {411, 0.03315217},
-        {412, -0.05380435},    {413, -0.14076087},    {414, -0.22771738},    {415, -0.3146739},
-        {440, 2.90271735},     {441, 2.81576085},     {442, 2.72880435},     {443, 2.64184785},
-        {444, 2.55489135},     {445, 2.46793485},     {446, 2.38097835},     {447, 2.29402184},
-        {448, 0.72880435},     {449, 0.64184785},     {450, 0.55489129},     {451, 0.46793479},
-        {452, 0.38097826},     {453, 0.29402173},     {454, 0.20706522},     {455, 0.12010869},
-        {456, 0.03315217},     {457, -0.05380435},    {458, -0.14076087},    {459, -0.22771738},
-        {460, -0.3146739},     {461, -0.40163043},    {462, -0.48858696},    {463, -0.57554346},
-        {464, -0.66250002},    {465, -0.74945652},    {466, 0.64184785},     {467, 0.55489129},
-        {468, 0.46793479},     {469, 0.38097826},     {470, 0.29402173},     {471, 0.20706522},
-        {472, 0.12010869},     {473, 0.03315217},     {474, -0.05380435},    {475, -0.14076087},
-        {476, -0.22771738},    {477, -0.3146739},     {502, 0.80271739},     {503, 0.71576089},
-        {504, 0.62880433},     {505, 0.54184783},     {506, 0.45489129},     {507, 0.36793479},
-        {508, 0.28097826},     {509, 0.19402175},     {510, 0.10706522},     {511, 0.0201087},
-        {512, 0.55489129},     {513, 0.46793479},     {514, 0.38097826},     {515, 0.29402173},
-        {516, 0.20706522},     {517, 0.12010869},     {518, 0.03315217},     {519, -0.05380435},
-        {520, -0.14076087},    {521, -0.22771738},    {522, -0.3146739},     {523, -0.40163043},
-        {524, -0.48858696},    {525, -0.57554346},    {526, -0.66250002},    {527, 0.25923914},
-        {528, 0.17228261},     {529, 0.08532609},     {530, -0.00163043},    {531, -0.08858696},
-        {532, -0.17554347},    {1200, -0.03641304},   {1262, -0.03641304},   {1324, -0.03641304},
-        {1386, -0.03641304},   {23954, 0.06931818},   {24016, 0.06931818},   {24078, 0.06931818},
-        {24090, -0.00340909},  {24140, 0.06931818},   {24152, -0.00340909},  {24202, 0.06931818},
-        {24214, -0.00340909},  {24264, 0.06931818},   {24276, -0.00340909},  {24338, -0.00340909},
-        {24400, -0.00340909},  {24462, -0.00340909},  {24503, 0.06931818},   {24524, -0.00340909},
-        {24565, 0.06931818},   {24586, -0.00340909},  {24648, -0.00340909},  {27977, 0.02102273},
-        {27978, -0.06988636},  {28039, 0.02102273},   {28040, -0.06988636},  {28101, 0.02102273},
-        {28102, -0.06988636},  {28163, 0.02102273},   {28164, -0.06988636},  {28225, 0.02102273},
-        {28226, -0.06988636},  {28287, 0.02102273},   {28559, 0.03465909},   {28560, -0.05625},
-        {34788, 4.2302084},    {34789, 4.2302084},    {34790, 4.2302084},    {34791, 4.2302084},
-        {34792, 4.2302084},    {34793, 4.2302084},    {34794, 4.2302084},    {34795, 4.2302084},
-        {34796, 4.2302084},    {34797, 4.2302084},    {34798, 4.2302084},    {34799, 4.2302084},
-        {34800, 4.2302084},    {34801, 4.2302084},    {34802, 4.2302084},    {34803, 4.2302084},
-        {34804, 4.2302084},    {34805, 4.2302084},    {34806, 4.2302084},    {34807, 4.2302084},
-        {34808, 4.2302084},    {34809, 4.2302084},    {34810, 4.2302084},    {34811, 4.2302084},
-        {34812, 4.2302084},    {34813, 4.2302084},    {34814, 4.2302084},    {34815, 4.2302084},
-        {34816, 4.2302084},    {34817, 4.2302084},    {34818, 4.2302084},    {34819, 4.2302084},
-        {34820, 4.2302084},    {34821, 4.2302084},    {34822, 4.2302084},    {34823, 4.2302084},
-        {34824, 4.2302084},    {34825, 4.2302084},    {34850, 4.06354189},   {34851, 4.06354189},
-        {34852, 4.06354189},   {34853, 4.06354189},   {34854, 4.06354189},   {34855, 4.06354189},
-        {34856, 4.06354189},   {34857, 4.06354189},   {34858, 4.06354189},   {34859, 4.06354189},
-        {34860, 4.06354189},   {34861, 4.06354189},   {34862, 4.06354189},   {34863, 4.06354189},
-        {34864, 4.06354189},   {34865, 4.06354189},   {34866, 4.06354189},   {34867, 4.06354189},
-        {34868, 4.06354189},   {34869, 4.06354189},   {34870, 4.06354189},   {34871, 4.06354189},
-        {34872, 4.06354189},   {34873, 4.06354189},   {34874, 4.06354189},   {34875, 4.06354189},
-        {34876, 4.06354189},   {34877, 4.06354189},   {34878, 4.06354189},   {34879, 4.06354189},
-        {34880, 4.06354189},   {34881, 4.06354189},   {34882, 4.06354189},   {34883, 4.06354189},
-        {34884, 4.06354189},   {34885, 4.06354189},   {34886, 4.06354189},   {34887, 4.06354189},
-        {34912, 3.8968749},    {34913, 3.8968749},    {34914, 3.8968749},    {34915, 3.8968749},
-        {34916, 3.8968749},    {34917, 3.8968749},    {34918, 3.8968749},    {34919, 3.8968749},
-        {34920, 3.8968749},    {34921, 3.8968749},    {34922, 3.8968749},    {34923, 3.8968749},
-        {34924, 3.8968749},    {34925, 3.8968749},    {34926, 3.8968749},    {34927, 3.8968749},
-        {34928, 3.8968749},    {34929, 3.8968749},    {34930, 3.8968749},    {34931, 3.8968749},
-        {34932, 3.8968749},    {34933, 3.8968749},    {34934, 3.8968749},    {34935, 3.8968749},
-        {34936, 3.8968749},    {34937, 3.8968749},    {34938, 3.8968749},    {34939, 3.8968749},
-        {34940, 3.8968749},    {34941, 3.8968749},    {34942, 3.8968749},    {34943, 3.8968749},
-        {34944, 3.8968749},    {34945, 3.8968749},    {34946, 3.8968749},    {34947, 3.8968749},
-        {34948, 3.8968749},    {34949, 3.8968749},    {34974, 3.7302084},    {34975, 3.7302084},
-        {34976, 3.7302084},    {34977, 3.7302084},    {34978, 3.7302084},    {34979, 3.7302084},
-        {34980, 3.7302084},    {34981, 3.7302084},    {34982, 1.75520837},   {34983, 1.75520837},
-        {34984, 1.75520837},   {34985, 1.75520837},   {34986, 1.75520837},   {34987, 1.75520837},
-        {34988, 1.75520837},   {34989, 1.75520837},   {34990, 1.75520837},   {34991, 1.75520837},
-        {34992, 1.75520837},   {34993, 1.75520837},   {34994, 1.75520837},   {34995, 1.75520837},
-        {34996, 1.75520837},   {34997, 1.75520837},   {34998, 1.75520837},   {34999, 1.75520837},
-        {35000, 3.7302084},    {35001, 3.7302084},    {35002, 3.7302084},    {35003, 3.7302084},
-        {35004, 3.7302084},    {35005, 3.7302084},    {35006, 3.7302084},    {35007, 3.7302084},
-        {35008, 3.7302084},    {35009, 3.7302084},    {35010, 3.7302084},    {35011, 3.7302084},
-        {35036, 3.56354165},   {35037, 3.56354165},   {35038, 3.56354165},   {35039, 3.56354165},
-        {35040, 3.56354165},   {35041, 3.56354165},   {35042, 3.56354165},   {35043, 3.56354165},
-        {35044, 1.58854163},   {35045, 1.58854163},   {35046, 1.58854163},   {35047, 1.58854163},
-        {35048, 1.58854163},   {35049, 1.58854163},   {35050, 1.58854163},   {35051, 1.58854163},
-        {35052, 1.58854163},   {35053, 1.58854163},   {35054, 1.58854163},   {35055, 1.58854163},
-        {35056, 1.58854163},   {35057, 1.58854163},   {35058, 1.58854163},   {35059, 1.58854163},
-        {35060, 1.58854163},   {35061, 1.58854163},   {35062, 3.56354165},   {35063, 3.56354165},
-        {35064, 3.56354165},   {35065, 3.56354165},   {35066, 3.56354165},   {35067, 3.56354165},
-        {35068, 3.56354165},   {35069, 3.56354165},   {35070, 3.56354165},   {35071, 3.56354165},
-        {35072, 3.56354165},   {35073, 3.56354165},   {35098, 1.86354172},   {35099, 1.86354172},
-        {35100, 1.86354172},   {35101, 1.86354172},   {35102, 1.86354172},   {35103, 1.86354172},
-        {35104, 1.86354172},   {35105, 1.86354172},   {35106, 1.86354172},   {35107, 1.86354172},
-        {35108, 1.421875},     {35109, 1.421875},     {35110, 1.421875},     {35111, 1.421875},
-        {35112, 1.421875},     {35113, 1.421875},     {35114, 1.421875},     {35115, 1.421875},
-        {35116, 1.421875},     {35117, 1.421875},     {35118, 1.421875},     {35119, 1.421875},
-        {35120, 1.421875},     {35121, 1.421875},     {35122, 1.421875},     {35123, 2.12187505},
-        {35124, 2.12187505},   {35125, 2.12187505},   {35126, 2.12187505},   {35127, 2.12187505},
-        {35128, 2.12187505},   {35796, 0.21354167},   {35858, 0.046875},     {35920, -0.11979166},
-        {35982, -0.28645834},  {58550, 0.23011364},   {58612, 0.13920455},   {58674, 0.04829545},
-        {58686, 0.43011364},   {58736, -0.04261364},  {58748, 0.33920455},   {58798, -0.13352273},
-        {58810, 0.24829546},   {58860, -0.22443181},  {58872, 0.15738636},   {58934, 0.06647728},
-        {58996, -0.02443182},  {59058, -0.11534091},  {59099, 0.03011364},   {59120, -0.20625},
-        {59161, -0.06079546},  {59182, -0.29715911},  {59244, -0.38806817},  {62573, 0.09914773},
-        {62574, 0.09914773},   {62635, 0.05369318},   {62636, 0.05369318},   {62697, 0.00823864},
-        {62698, 0.00823864},   {62759, -0.03721591},  {62760, -0.03721591},  {62821, -0.08267046},
-        {62822, -0.08267046},  {62883, -0.128125},    {63155, 0.10823864},   {63156, 0.10823864},
-        {69384, -0.18449783},  {69385, -0.18449783},  {69386, -0.18449783},  {69387, -0.18449783},
-        {69388, -0.18449783},  {69389, -0.18449783},  {69390, -0.18449783},  {69391, -0.18449783},
-        {69392, -0.18449783},  {69393, -0.18449783},  {69394, -0.18449783},  {69395, -0.18449783},
-        {69396, -0.18449783},  {69397, -0.18449783},  {69398, -0.18449783},  {69399, -0.18449783},
-        {69400, -0.18449783},  {69401, -0.18449783},  {69402, -0.18449783},  {69403, -0.18449783},
-        {69404, -0.18449783},  {69405, -0.18449783},  {69406, -0.18449783},  {69407, -0.18449783},
-        {69408, -0.18449783},  {69409, -0.18449783},  {69410, -0.18449783},  {69411, -0.18449783},
-        {69412, -0.18449783},  {69413, -0.18449783},  {69414, -0.18449783},  {69415, -0.18449783},
-        {69416, -0.18449783},  {69417, -0.18449783},  {69418, -0.18449783},  {69419, -0.18449783},
-        {69420, -0.18449783},  {69421, -0.18449783},  {69446, -0.18449783},  {69447, -0.18449783},
-        {69448, -0.18449783},  {69449, -0.18449783},  {69450, -0.18449783},  {69451, -0.18449783},
-        {69452, -0.18449783},  {69453, -0.18449783},  {69454, -0.18449783},  {69455, -0.18449783},
-        {69456, -0.18449783},  {69457, -0.18449783},  {69458, -0.18449783},  {69459, -0.18449783},
-        {69460, -0.18449783},  {69461, -0.18449783},  {69462, -0.18449783},  {69463, -0.18449783},
-        {69464, -0.18449783},  {69465, -0.18449783},  {69466, -0.18449783},  {69467, -0.18449783},
-        {69468, -0.18449783},  {69469, -0.18449783},  {69470, -0.18449783},  {69471, -0.18449783},
-        {69472, -0.18449783},  {69473, -0.18449783},  {69474, -0.18449783},  {69475, -0.18449783},
-        {69476, -0.18449783},  {69477, -0.18449783},  {69478, -0.18449783},  {69479, -0.18449783},
-        {69480, -0.18449783},  {69481, -0.18449783},  {69482, -0.18449783},  {69483, -0.18449783},
-        {69508, -0.18449783},  {69509, -0.18449783},  {69510, -0.18449783},  {69511, -0.18449783},
-        {69512, -0.18449783},  {69513, -0.18449783},  {69514, -0.18449783},  {69515, -0.18449783},
-        {69516, -0.18449783},  {69517, -0.18449783},  {69518, -0.18449783},  {69519, -0.18449783},
-        {69520, -0.18449783},  {69521, -0.18449783},  {69522, -0.18449783},  {69523, -0.18449783},
-        {69524, -0.18449783},  {69525, -0.18449783},  {69526, -0.18449783},  {69527, -0.18449783},
-        {69528, -0.18449783},  {69529, -0.18449783},  {69530, -0.18449783},  {69531, -0.18449783},
-        {69532, -0.18449783},  {69533, -0.18449783},  {69534, -0.18449783},  {69535, -0.18449783},
-        {69536, -0.18449783},  {69537, -0.18449783},  {69538, -0.18449783},  {69539, -0.18449783},
-        {69540, -0.18449783},  {69541, -0.18449783},  {69542, -0.18449783},  {69543, -0.18449783},
-        {69544, -0.18449783},  {69545, -0.18449783},  {69570, -0.18449783},  {69571, -0.18449783},
-        {69572, -0.18449783},  {69573, -0.18449783},  {69574, -0.18449783},  {69575, -0.18449783},
-        {69576, -0.18449783},  {69577, -0.18449783},  {69578, -0.65685719},  {69579, -0.65685719},
-        {69580, -0.65685719},  {69581, -0.65685719},  {69582, -0.65685719},  {69583, -0.65685719},
-        {69584, -0.65685719},  {69585, -0.65685719},  {69586, -0.65685719},  {69587, -0.65685719},
-        {69588, -0.65685719},  {69589, -0.65685719},  {69590, -0.65685719},  {69591, -0.65685719},
-        {69592, -0.65685719},  {69593, -0.65685719},  {69594, -0.65685719},  {69595, -0.65685719},
-        {69596, -0.18449783},  {69597, -0.18449783},  {69598, -0.18449783},  {69599, -0.18449783},
-        {69600, -0.18449783},  {69601, -0.18449783},  {69602, -0.18449783},  {69603, -0.18449783},
-        {69604, -0.18449783},  {69605, -0.18449783},  {69606, -0.18449783},  {69607, -0.18449783},
-        {69632, -0.18449783},  {69633, -0.18449783},  {69634, -0.18449783},  {69635, -0.18449783},
-        {69636, -0.18449783},  {69637, -0.18449783},  {69638, -0.18449783},  {69639, -0.18449783},
-        {69640, -0.65685719},  {69641, -0.65685719},  {69642, -0.65685719},  {69643, -0.65685719},
-        {69644, -0.65685719},  {69645, -0.65685719},  {69646, -0.65685719},  {69647, -0.65685719},
-        {69648, -0.65685719},  {69649, -0.65685719},  {69650, -0.65685719},  {69651, -0.65685719},
-        {69652, -0.65685719},  {69653, -0.65685719},  {69654, -0.65685719},  {69655, -0.65685719},
-        {69656, -0.65685719},  {69657, -0.65685719},  {69658, -0.18449783},  {69659, -0.18449783},
-        {69660, -0.18449783},  {69661, -0.18449783},  {69662, -0.18449783},  {69663, -0.18449783},
-        {69664, -0.18449783},  {69665, -0.18449783},  {69666, -0.18449783},  {69667, -0.18449783},
-        {69668, -0.18449783},  {69669, -0.18449783},  {69694, -0.0945496},   {69695, -0.0945496},
-        {69696, -0.0945496},   {69697, -0.0945496},   {69698, -0.0945496},   {69699, -0.0945496},
-        {69700, -0.0945496},   {69701, -0.0945496},   {69702, -0.0945496},   {69703, -0.0945496},
-        {69704, -0.65685719},  {69705, -0.65685719},  {69706, -0.65685719},  {69707, -0.65685719},
-        {69708, -0.65685719},  {69709, -0.65685719},  {69710, -0.65685719},  {69711, -0.65685719},
-        {69712, -0.65685719},  {69713, -0.65685719},  {69714, -0.65685719},  {69715, -0.65685719},
-        {69716, -0.65685719},  {69717, -0.65685719},  {69718, -0.65685719},  {69719, -1.01623118},
-        {69720, -1.01623118},  {69721, -1.01623118},  {69722, -1.01623118},  {69723, -1.01623118},
-        {69724, -1.01623118},  {70392, -0.01202858},  {70454, -0.01202858},  {70516, -0.01202858},
-        {70578, -0.01202858},  {93146, 0.08074176},   {93208, 0.08074176},   {93270, 0.08074176},
-        {93282, -0.27863222},  {93332, 0.08074176},   {93344, -0.27863222},  {93394, 0.08074176},
-        {93406, -0.27863222},  {93456, 0.08074176},   {93468, -0.27863222},  {93530, -0.27863222},
-        {93592, -0.27863222},  {93654, -0.27863222},  {93695, 0.17662354},   {93716, -0.27863222},
-        {93757, 0.17662354},   {93778, -0.27863222},  {93840, -0.27863222},  {97169, -0.05009784},
-        {97170, -0.05009784},  {97231, -0.05009784},  {97232, -0.05009784},  {97293, -0.05009784},
-        {97294, -0.05009784},  {97355, -0.05009784},  {97356, -0.05009784},  {97417, -0.05009784},
-        {97418, -0.05009784},  {97479, -0.05009784},  {97751, -0.14004607},  {97752, -0.14004607},
-        {103980, 1.01538169},  {103981, 1.01538169},  {103982, 1.01538169},  {103983, 1.01538169},
-        {103984, 1.01538169},  {103985, 1.01538169},  {103986, 1.01538169},  {103987, 1.01538169},
-        {103988, 1.01538169},  {103989, 1.01538169},  {103990, 1.01538169},  {103991, 1.01538169},
-        {103992, 1.01538169},  {103993, 1.01538169},  {103994, 1.01538169},  {103995, 1.01538169},
-        {103996, 1.01538169},  {103997, 1.01538169},  {103998, 1.01538169},  {103999, 1.01538169},
-        {104000, 1.01538169},  {104001, 1.01538169},  {104002, 1.01538169},  {104003, 1.01538169},
-        {104004, 1.01538169},  {104005, 1.01538169},  {104006, 1.01538169},  {104007, 1.01538169},
-        {104008, 1.01538169},  {104009, 1.01538169},  {104010, 1.01538169},  {104011, 1.01538169},
-        {104012, 1.01538169},  {104013, 1.01538169},  {104014, 1.01538169},  {104015, 1.01538169},
-        {104016, 1.01538169},  {104017, 1.01538169},  {104042, 1.01538169},  {104043, 1.01538169},
-        {104044, 1.01538169},  {104045, 1.01538169},  {104046, 1.01538169},  {104047, 1.01538169},
-        {104048, 1.01538169},  {104049, 1.01538169},  {104050, 1.01538169},  {104051, 1.01538169},
-        {104052, 1.01538169},  {104053, 1.01538169},  {104054, 1.01538169},  {104055, 1.01538169},
-        {104056, 1.01538169},  {104057, 1.01538169},  {104058, 1.01538169},  {104059, 1.01538169},
-        {104060, 1.01538169},  {104061, 1.01538169},  {104062, 1.01538169},  {104063, 1.01538169},
-        {104064, 1.01538169},  {104065, 1.01538169},  {104066, 1.01538169},  {104067, 1.01538169},
-        {104068, 1.01538169},  {104069, 1.01538169},  {104070, 1.01538169},  {104071, 1.01538169},
-        {104072, 1.01538169},  {104073, 1.01538169},  {104074, 1.01538169},  {104075, 1.01538169},
-        {104076, 1.01538169},  {104077, 1.01538169},  {104078, 1.01538169},  {104079, 1.01538169},
-        {104104, 1.01538169},  {104105, 1.01538169},  {104106, 1.01538169},  {104107, 1.01538169},
-        {104108, 1.01538169},  {104109, 1.01538169},  {104110, 1.01538169},  {104111, 1.01538169},
-        {104112, 1.01538169},  {104113, 1.01538169},  {104114, 1.01538169},  {104115, 1.01538169},
-        {104116, 1.01538169},  {104117, 1.01538169},  {104118, 1.01538169},  {104119, 1.01538169},
-        {104120, 1.01538169},  {104121, 1.01538169},  {104122, 1.01538169},  {104123, 1.01538169},
-        {104124, 1.01538169},  {104125, 1.01538169},  {104126, 1.01538169},  {104127, 1.01538169},
-        {104128, 1.01538169},  {104129, 1.01538169},  {104130, 1.01538169},  {104131, 1.01538169},
-        {104132, 1.01538169},  {104133, 1.01538169},  {104134, 1.01538169},  {104135, 1.01538169},
-        {104136, 1.01538169},  {104137, 1.01538169},  {104138, 1.01538169},  {104139, 1.01538169},
-        {104140, 1.01538169},  {104141, 1.01538169},  {104166, 1.01538169},  {104167, 1.01538169},
-        {104168, 1.01538169},  {104169, 1.01538169},  {104170, 1.01538169},  {104171, 1.01538169},
-        {104172, 1.01538169},  {104173, 1.01538169},  {104174, 1.03333271},  {104175, 1.03333271},
-        {104176, 1.03333271},  {104177, 1.03333271},  {104178, 1.03333271},  {104179, 1.03333271},
-        {104180, 1.03333271},  {104181, 1.03333271},  {104182, 1.03333271},  {104183, 1.03333271},
-        {104184, 1.03333271},  {104185, 1.03333271},  {104186, 1.03333271},  {104187, 1.03333271},
-        {104188, 1.03333271},  {104189, 1.03333271},  {104190, 1.03333271},  {104191, 1.03333271},
-        {104192, 1.01538169},  {104193, 1.01538169},  {104194, 1.01538169},  {104195, 1.01538169},
-        {104196, 1.01538169},  {104197, 1.01538169},  {104198, 1.01538169},  {104199, 1.01538169},
-        {104200, 1.01538169},  {104201, 1.01538169},  {104202, 1.01538169},  {104203, 1.01538169},
-        {104228, 1.01538169},  {104229, 1.01538169},  {104230, 1.01538169},  {104231, 1.01538169},
-        {104232, 1.01538169},  {104233, 1.01538169},  {104234, 1.01538169},  {104235, 1.01538169},
-        {104236, 1.03333271},  {104237, 1.03333271},  {104238, 1.03333271},  {104239, 1.03333271},
-        {104240, 1.03333271},  {104241, 1.03333271},  {104242, 1.03333271},  {104243, 1.03333271},
-        {104244, 1.03333271},  {104245, 1.03333271},  {104246, 1.03333271},  {104247, 1.03333271},
-        {104248, 1.03333271},  {104249, 1.03333271},  {104250, 1.03333271},  {104251, 1.03333271},
-        {104252, 1.03333271},  {104253, 1.03333271},  {104254, 1.01538169},  {104255, 1.01538169},
-        {104256, 1.01538169},  {104257, 1.01538169},  {104258, 1.01538169},  {104259, 1.01538169},
-        {104260, 1.01538169},  {104261, 1.01538169},  {104262, 1.01538169},  {104263, 1.01538169},
-        {104264, 1.01538169},  {104265, 1.01538169},  {104290, 1.10759962},  {104291, 1.10759962},
-        {104292, 1.10759962},  {104293, 1.10759962},  {104294, 1.10759962},  {104295, 1.10759962},
-        {104296, 1.10759962},  {104297, 1.10759962},  {104298, 1.10759962},  {104299, 1.10759962},
-        {104300, 1.03333271},  {104301, 1.03333271},  {104302, 1.03333271},  {104303, 1.03333271},
-        {104304, 1.03333271},  {104305, 1.03333271},  {104306, 1.03333271},  {104307, 1.03333271},
-        {104308, 1.03333271},  {104309, 1.03333271},  {104310, 1.03333271},  {104311, 1.03333271},
-        {104312, 1.03333271},  {104313, 1.03333271},  {104314, 1.03333271},  {104315, 1.23656094},
-        {104316, 1.23656094},  {104317, 1.23656094},  {104318, 1.23656094},  {104319, 1.23656094},
-        {104320, 1.23656094},  {104988, 0.52694499},  {105050, 0.52694499},  {105112, 0.52694499},
-        {105174, 0.52694499},  {127742, 0.42719695},  {127804, 0.42719695},  {127866, 0.42719695},
-        {127878, 0.63042521},  {127928, 0.42719695},  {127940, 0.63042521},  {127990, 0.42719695},
-        {128002, 0.63042521},  {128052, 0.42719695},  {128064, 0.63042521},  {128126, 0.63042521},
-        {128188, 0.63042521},  {128250, 0.63042521},  {128291, 0.17185026},  {128312, 0.63042521},
-        {128353, 0.17185026},  {128374, 0.63042521},  {128436, 0.63042521},  {131765, -0.19168343},
-        {131766, -0.19168343}, {131827, -0.19168343}, {131828, -0.19168343}, {131889, -0.19168343},
-        {131890, -0.19168343}, {131951, -0.19168343}, {131952, -0.19168343}, {132013, -0.19168343},
-        {132014, -0.19168343}, {132075, -0.19168343}, {132347, -0.28390136}, {132348, -0.28390136}};
+        {192, 2.90435},       {193, 2.81739},       {194, 2.73043},
+        {195, 2.64348},       {196, 2.55652},       {197, 2.46957},
+        {198, 2.38261},       {199, 2.29565},       {200, 2.2087},
+        {201, 2.12174},       {202, 2.03478},       {203, 1.94783},
+        {204, 1.86087},       {205, 1.77391},       {206, 1.68696},
+        {207, 1.6},           {208, 1.51304},       {209, 1.42609},
+        {210, 1.33913},       {211, 1.25217},       {212, 1.16522},
+        {213, 1.07826},       {214, 0.991304},      {215, 0.904348},
+        {216, 0.817391},      {217, 0.730435},      {218, 0.643478},
+        {219, 0.556522},      {220, 0.469565},      {221, 0.382609},
+        {222, 0.295652},      {223, 0.208696},      {224, 0.121739},
+        {225, 0.0347827},     {226, -0.0521738},    {227, -0.13913},
+        {228, -0.226087},     {229, -0.313043},     {254, 2.90435},
+        {255, 2.81739},       {256, 2.73043},       {257, 2.64348},
+        {258, 2.55652},       {259, 2.46957},       {260, 2.38261},
+        {261, 2.29565},       {262, 2.2087},        {263, 2.12174},
+        {264, 2.03478},       {265, 1.94783},       {266, 1.86087},
+        {267, 1.77391},       {268, 1.68696},       {269, 1.6},
+        {270, 1.51304},       {271, 1.42609},       {272, 1.33913},
+        {273, 1.25217},       {274, 1.16522},       {275, 1.07826},
+        {276, 0.991304},      {277, 0.904348},      {278, 0.817391},
+        {279, 0.730435},      {280, 0.643478},      {281, 0.556522},
+        {282, 0.469565},      {283, 0.382609},      {284, 0.295652},
+        {285, 0.208696},      {286, 0.121739},      {287, 0.0347827},
+        {288, -0.0521738},    {289, -0.13913},      {290, -0.226087},
+        {291, -0.313043},     {316, 2.90435},       {317, 2.81739},
+        {318, 2.73043},       {319, 2.64348},       {320, 2.55652},
+        {321, 2.46957},       {322, 2.38261},       {323, 2.29565},
+        {324, 2.2087},        {325, 2.12174},       {326, 2.03478},
+        {327, 1.94783},       {328, 1.86087},       {329, 1.77391},
+        {330, 1.68696},       {331, 1.6},           {332, 1.51304},
+        {333, 1.42609},       {334, 1.33913},       {335, 1.25217},
+        {336, 1.16522},       {337, 1.07826},       {338, 0.991304},
+        {339, 0.904348},      {340, 0.817391},      {341, 0.730435},
+        {342, 0.643478},      {343, 0.556522},      {344, 0.469565},
+        {345, 0.382609},      {346, 0.295652},      {347, 0.208696},
+        {348, 0.121739},      {349, 0.0347827},     {350, -0.0521738},
+        {351, -0.13913},      {352, -0.226087},     {353, -0.313043},
+        {378, 2.90435},       {379, 2.81739},       {380, 2.73043},
+        {381, 2.64348},       {382, 2.55652},       {383, 2.46957},
+        {384, 2.38261},       {385, 2.29565},       {386, 0.730435},
+        {387, 0.643478},      {388, 0.556522},      {389, 0.469565},
+        {390, 0.382609},      {391, 0.295652},      {392, 0.208696},
+        {393, 0.121739},      {394, 0.0347826},     {395, -0.0521739},
+        {396, -0.13913},      {397, -0.226087},     {398, -0.313044},
+        {399, -0.4},          {400, -0.486957},     {401, -0.573913},
+        {402, -0.66087},      {403, -0.747826},     {404, 0.643478},
+        {405, 0.556522},      {406, 0.469565},      {407, 0.382609},
+        {408, 0.295652},      {409, 0.208696},      {410, 0.121739},
+        {411, 0.0347827},     {412, -0.0521738},    {413, -0.13913},
+        {414, -0.226087},     {415, -0.313043},     {440, 2.90435},
+        {441, 2.81739},       {442, 2.73043},       {443, 2.64348},
+        {444, 2.55652},       {445, 2.46957},       {446, 2.38261},
+        {447, 2.29565},       {448, 0.730435},      {449, 0.643478},
+        {450, 0.556522},      {451, 0.469565},      {452, 0.382609},
+        {453, 0.295652},      {454, 0.208696},      {455, 0.121739},
+        {456, 0.0347826},     {457, -0.0521739},    {458, -0.13913},
+        {459, -0.226087},     {460, -0.313044},     {461, -0.4},
+        {462, -0.486957},     {463, -0.573913},     {464, -0.66087},
+        {465, -0.747826},     {466, 0.643478},      {467, 0.556522},
+        {468, 0.469565},      {469, 0.382609},      {470, 0.295652},
+        {471, 0.208696},      {472, 0.121739},      {473, 0.0347827},
+        {474, -0.0521738},    {475, -0.13913},      {476, -0.226087},
+        {477, -0.313043},     {502, 0.804348},      {503, 0.717391},
+        {504, 0.630435},      {505, 0.543478},      {506, 0.456522},
+        {507, 0.369565},      {508, 0.282609},      {509, 0.195652},
+        {510, 0.108696},      {511, 0.0217391},     {512, 0.556522},
+        {513, 0.469565},      {514, 0.382609},      {515, 0.295652},
+        {516, 0.208696},      {517, 0.121739},      {518, 0.0347826},
+        {519, -0.0521739},    {520, -0.13913},      {521, -0.226087},
+        {522, -0.313044},     {523, -0.4},          {524, -0.486957},
+        {525, -0.573913},     {526, -0.66087},      {527, 0.26087},
+        {528, 0.173913},      {529, 0.0869565},     {530, 0},
+        {531, -0.0869565},    {532, -0.173913},     {1200, -0.0347826},
+        {1262, -0.0347826},   {1324, -0.0347826},   {1386, -0.0347826},
+        {23954, 0.0727272},   {24016, 0.0727272},   {24078, 0.0727272},
+        {24090, 0},           {24140, 0.0727272},   {24152, 0},
+        {24202, 0.0727272},   {24214, 0},           {24264, 0.0727272},
+        {24276, 0},           {24338, 0},           {24400, 0},
+        {24462, 0},           {24503, 0.0727274},   {24524, 0},
+        {24565, 0.0727274},   {24586, 0},           {24648, 0},
+        {27977, 0.0227273},   {27978, -0.0681818},  {28039, 0.0227273},
+        {28040, -0.0681818},  {28101, 0.0227273},   {28102, -0.0681818},
+        {28163, 0.0227273},   {28164, -0.0681818},  {28225, 0.0227273},
+        {28226, -0.0681818},  {28287, 0.0227273},   {28559, 0.0363638},
+        {28560, -0.0545453},  {34788, 4.23333},     {34789, 4.23333},
+        {34790, 4.23333},     {34791, 4.23333},     {34792, 4.23333},
+        {34793, 4.23333},     {34794, 4.23333},     {34795, 4.23333},
+        {34796, 4.23333},     {34797, 4.23333},     {34798, 4.23333},
+        {34799, 4.23333},     {34800, 4.23333},     {34801, 4.23333},
+        {34802, 4.23333},     {34803, 4.23333},     {34804, 4.23333},
+        {34805, 4.23333},     {34806, 4.23333},     {34807, 4.23333},
+        {34808, 4.23333},     {34809, 4.23333},     {34810, 4.23333},
+        {34811, 4.23333},     {34812, 4.23333},     {34813, 4.23333},
+        {34814, 4.23333},     {34815, 4.23333},     {34816, 4.23333},
+        {34817, 4.23333},     {34818, 4.23333},     {34819, 4.23333},
+        {34820, 4.23333},     {34821, 4.23333},     {34822, 4.23333},
+        {34823, 4.23333},     {34824, 4.23333},     {34825, 4.23333},
+        {34850, 4.06667},     {34851, 4.06667},     {34852, 4.06667},
+        {34853, 4.06667},     {34854, 4.06667},     {34855, 4.06667},
+        {34856, 4.06667},     {34857, 4.06667},     {34858, 4.06667},
+        {34859, 4.06667},     {34860, 4.06667},     {34861, 4.06667},
+        {34862, 4.06667},     {34863, 4.06667},     {34864, 4.06667},
+        {34865, 4.06667},     {34866, 4.06667},     {34867, 4.06667},
+        {34868, 4.06667},     {34869, 4.06667},     {34870, 4.06667},
+        {34871, 4.06667},     {34872, 4.06667},     {34873, 4.06667},
+        {34874, 4.06667},     {34875, 4.06667},     {34876, 4.06667},
+        {34877, 4.06667},     {34878, 4.06667},     {34879, 4.06667},
+        {34880, 4.06667},     {34881, 4.06667},     {34882, 4.06667},
+        {34883, 4.06667},     {34884, 4.06667},     {34885, 4.06667},
+        {34886, 4.06667},     {34887, 4.06667},     {34912, 3.9},
+        {34913, 3.9},         {34914, 3.9},         {34915, 3.9},
+        {34916, 3.9},         {34917, 3.9},         {34918, 3.9},
+        {34919, 3.9},         {34920, 3.9},         {34921, 3.9},
+        {34922, 3.9},         {34923, 3.9},         {34924, 3.9},
+        {34925, 3.9},         {34926, 3.9},         {34927, 3.9},
+        {34928, 3.9},         {34929, 3.9},         {34930, 3.9},
+        {34931, 3.9},         {34932, 3.9},         {34933, 3.9},
+        {34934, 3.9},         {34935, 3.9},         {34936, 3.9},
+        {34937, 3.9},         {34938, 3.9},         {34939, 3.9},
+        {34940, 3.9},         {34941, 3.9},         {34942, 3.9},
+        {34943, 3.9},         {34944, 3.9},         {34945, 3.9},
+        {34946, 3.9},         {34947, 3.9},         {34948, 3.9},
+        {34949, 3.9},         {34974, 3.73333},     {34975, 3.73333},
+        {34976, 3.73333},     {34977, 3.73333},     {34978, 3.73333},
+        {34979, 3.73333},     {34980, 3.73333},     {34981, 3.73333},
+        {34982, 1.75833},     {34983, 1.75833},     {34984, 1.75833},
+        {34985, 1.75833},     {34986, 1.75833},     {34987, 1.75833},
+        {34988, 1.75833},     {34989, 1.75833},     {34990, 1.75833},
+        {34991, 1.75833},     {34992, 1.75833},     {34993, 1.75833},
+        {34994, 1.75833},     {34995, 1.75833},     {34996, 1.75833},
+        {34997, 1.75833},     {34998, 1.75833},     {34999, 1.75833},
+        {35000, 3.73333},     {35001, 3.73333},     {35002, 3.73333},
+        {35003, 3.73333},     {35004, 3.73333},     {35005, 3.73333},
+        {35006, 3.73333},     {35007, 3.73333},     {35008, 3.73333},
+        {35009, 3.73333},     {35010, 3.73333},     {35011, 3.73333},
+        {35036, 3.56667},     {35037, 3.56667},     {35038, 3.56667},
+        {35039, 3.56667},     {35040, 3.56667},     {35041, 3.56667},
+        {35042, 3.56667},     {35043, 3.56667},     {35044, 1.59167},
+        {35045, 1.59167},     {35046, 1.59167},     {35047, 1.59167},
+        {35048, 1.59167},     {35049, 1.59167},     {35050, 1.59167},
+        {35051, 1.59167},     {35052, 1.59167},     {35053, 1.59167},
+        {35054, 1.59167},     {35055, 1.59167},     {35056, 1.59167},
+        {35057, 1.59167},     {35058, 1.59167},     {35059, 1.59167},
+        {35060, 1.59167},     {35061, 1.59167},     {35062, 3.56667},
+        {35063, 3.56667},     {35064, 3.56667},     {35065, 3.56667},
+        {35066, 3.56667},     {35067, 3.56667},     {35068, 3.56667},
+        {35069, 3.56667},     {35070, 3.56667},     {35071, 3.56667},
+        {35072, 3.56667},     {35073, 3.56667},     {35098, 1.86667},
+        {35099, 1.86667},     {35100, 1.86667},     {35101, 1.86667},
+        {35102, 1.86667},     {35103, 1.86667},     {35104, 1.86667},
+        {35105, 1.86667},     {35106, 1.86667},     {35107, 1.86667},
+        {35108, 1.425},       {35109, 1.425},       {35110, 1.425},
+        {35111, 1.425},       {35112, 1.425},       {35113, 1.425},
+        {35114, 1.425},       {35115, 1.425},       {35116, 1.425},
+        {35117, 1.425},       {35118, 1.425},       {35119, 1.425},
+        {35120, 1.425},       {35121, 1.425},       {35122, 1.425},
+        {35123, 2.125},       {35124, 2.125},       {35125, 2.125},
+        {35126, 2.125},       {35127, 2.125},       {35128, 2.125},
+        {35796, 0.216667},    {35858, 0.0499999},   {35920, -0.116667},
+        {35982, -0.283333},   {58550, 0.231818},    {58612, 0.140909},
+        {58674, 0.0499999},   {58686, 0.431818},    {58736, -0.0409092},
+        {58748, 0.340909},    {58798, -0.131818},   {58810, 0.25},
+        {58860, -0.222727},   {58872, 0.159091},    {58934, 0.0681818},
+        {58996, -0.0227273},  {59058, -0.113636},   {59099, 0.0318182},
+        {59120, -0.204545},   {59161, -0.0590909},  {59182, -0.295455},
+        {59244, -0.386364},   {62573, 0.1},         {62574, 0.1},
+        {62635, 0.0545455},   {62636, 0.0545455},   {62697, 0.00909094},
+        {62698, 0.00909094},  {62759, -0.0363636},  {62760, -0.0363636},
+        {62821, -0.0818181},  {62822, -0.0818181},  {62883, -0.127273},
+        {63155, 0.109091},    {63156, 0.109091},    {69384, -0.180584},
+        {69385, -0.180584},   {69386, -0.180584},   {69387, -0.180584},
+        {69388, -0.180584},   {69389, -0.180584},   {69390, -0.180584},
+        {69391, -0.180584},   {69392, -0.180584},   {69393, -0.180584},
+        {69394, -0.180584},   {69395, -0.180584},   {69396, -0.180584},
+        {69397, -0.180584},   {69398, -0.180584},   {69399, -0.180584},
+        {69400, -0.180584},   {69401, -0.180584},   {69402, -0.180584},
+        {69403, -0.180584},   {69404, -0.180584},   {69405, -0.180584},
+        {69406, -0.180584},   {69407, -0.180584},   {69408, -0.180584},
+        {69409, -0.180584},   {69410, -0.180584},   {69411, -0.180584},
+        {69412, -0.180584},   {69413, -0.180584},   {69414, -0.180584},
+        {69415, -0.180584},   {69416, -0.180584},   {69417, -0.180584},
+        {69418, -0.180584},   {69419, -0.180584},   {69420, -0.180584},
+        {69421, -0.180584},   {69446, -0.180584},   {69447, -0.180584},
+        {69448, -0.180584},   {69449, -0.180584},   {69450, -0.180584},
+        {69451, -0.180584},   {69452, -0.180584},   {69453, -0.180584},
+        {69454, -0.180584},   {69455, -0.180584},   {69456, -0.180584},
+        {69457, -0.180584},   {69458, -0.180584},   {69459, -0.180584},
+        {69460, -0.180584},   {69461, -0.180584},   {69462, -0.180584},
+        {69463, -0.180584},   {69464, -0.180584},   {69465, -0.180584},
+        {69466, -0.180584},   {69467, -0.180584},   {69468, -0.180584},
+        {69469, -0.180584},   {69470, -0.180584},   {69471, -0.180584},
+        {69472, -0.180584},   {69473, -0.180584},   {69474, -0.180584},
+        {69475, -0.180584},   {69476, -0.180584},   {69477, -0.180584},
+        {69478, -0.180584},   {69479, -0.180584},   {69480, -0.180584},
+        {69481, -0.180584},   {69482, -0.180584},   {69483, -0.180584},
+        {69508, -0.180584},   {69509, -0.180584},   {69510, -0.180584},
+        {69511, -0.180584},   {69512, -0.180584},   {69513, -0.180584},
+        {69514, -0.180584},   {69515, -0.180584},   {69516, -0.180584},
+        {69517, -0.180584},   {69518, -0.180584},   {69519, -0.180584},
+        {69520, -0.180584},   {69521, -0.180584},   {69522, -0.180584},
+        {69523, -0.180584},   {69524, -0.180584},   {69525, -0.180584},
+        {69526, -0.180584},   {69527, -0.180584},   {69528, -0.180584},
+        {69529, -0.180584},   {69530, -0.180584},   {69531, -0.180584},
+        {69532, -0.180584},   {69533, -0.180584},   {69534, -0.180584},
+        {69535, -0.180584},   {69536, -0.180584},   {69537, -0.180584},
+        {69538, -0.180584},   {69539, -0.180584},   {69540, -0.180584},
+        {69541, -0.180584},   {69542, -0.180584},   {69543, -0.180584},
+        {69544, -0.180584},   {69545, -0.180584},   {69570, -0.180584},
+        {69571, -0.180584},   {69572, -0.180584},   {69573, -0.180584},
+        {69574, -0.180584},   {69575, -0.180584},   {69576, -0.180584},
+        {69577, -0.180584},   {69578, -0.650588},   {69579, -0.650588},
+        {69580, -0.650588},   {69581, -0.650588},   {69582, -0.650588},
+        {69583, -0.650588},   {69584, -0.650588},   {69585, -0.650588},
+        {69586, -0.650588},   {69587, -0.650588},   {69588, -0.650588},
+        {69589, -0.650588},   {69590, -0.650588},   {69591, -0.650588},
+        {69592, -0.650588},   {69593, -0.650588},   {69594, -0.650588},
+        {69595, -0.650588},   {69596, -0.180584},   {69597, -0.180584},
+        {69598, -0.180584},   {69599, -0.180584},   {69600, -0.180584},
+        {69601, -0.180584},   {69602, -0.180584},   {69603, -0.180584},
+        {69604, -0.180584},   {69605, -0.180584},   {69606, -0.180584},
+        {69607, -0.180584},   {69632, -0.180584},   {69633, -0.180584},
+        {69634, -0.180584},   {69635, -0.180584},   {69636, -0.180584},
+        {69637, -0.180584},   {69638, -0.180584},   {69639, -0.180584},
+        {69640, -0.650588},   {69641, -0.650588},   {69642, -0.650588},
+        {69643, -0.650588},   {69644, -0.650588},   {69645, -0.650588},
+        {69646, -0.650588},   {69647, -0.650588},   {69648, -0.650588},
+        {69649, -0.650588},   {69650, -0.650588},   {69651, -0.650588},
+        {69652, -0.650588},   {69653, -0.650588},   {69654, -0.650588},
+        {69655, -0.650588},   {69656, -0.650588},   {69657, -0.650588},
+        {69658, -0.180584},   {69659, -0.180584},   {69660, -0.180584},
+        {69661, -0.180584},   {69662, -0.180584},   {69663, -0.180584},
+        {69664, -0.180584},   {69665, -0.180584},   {69666, -0.180584},
+        {69667, -0.180584},   {69668, -0.180584},   {69669, -0.180584},
+        {69694, -0.0909718},  {69695, -0.0909718},  {69696, -0.0909718},
+        {69697, -0.0909718},  {69698, -0.0909718},  {69699, -0.0909718},
+        {69700, -0.0909718},  {69701, -0.0909718},  {69702, -0.0909718},
+        {69703, -0.0909718},  {69704, -0.650588},   {69705, -0.650588},
+        {69706, -0.650588},   {69707, -0.650588},   {69708, -0.650588},
+        {69709, -0.650588},   {69710, -0.650588},   {69711, -0.650588},
+        {69712, -0.650588},   {69713, -0.650588},   {69714, -0.650588},
+        {69715, -0.650588},   {69716, -0.650588},   {69717, -0.650588},
+        {69718, -0.650588},   {69719, -1.00726},    {69720, -1.00726},
+        {69721, -1.00726},    {69722, -1.00726},    {69723, -1.00726},
+        {69724, -1.00726},    {70392, -0.00873357}, {70454, -0.00873357},
+        {70516, -0.00873357}, {70578, -0.00873357}, {93146, 0.0870114},
+        {93208, 0.0870114},   {93270, 0.0870114},   {93282, -0.269663},
+        {93332, 0.0870114},   {93344, -0.269663},   {93394, 0.0870114},
+        {93406, -0.269663},   {93456, 0.0870114},   {93468, -0.269663},
+        {93530, -0.269663},   {93592, -0.269663},   {93654, -0.269663},
+        {93695, 0.182322},    {93716, -0.269663},   {93757, 0.182322},
+        {93778, -0.269663},   {93840, -0.269663},   {97169, -0.04652},
+        {97170, -0.04652},    {97231, -0.04652},    {97232, -0.04652},
+        {97293, -0.04652},    {97294, -0.04652},    {97355, -0.04652},
+        {97356, -0.04652},    {97417, -0.04652},    {97418, -0.04652},
+        {97479, -0.04652},    {97751, -0.136132},   {97752, -0.136132},
+        {103980, 1.01764},    {103981, 1.01764},    {103982, 1.01764},
+        {103983, 1.01764},    {103984, 1.01764},    {103985, 1.01764},
+        {103986, 1.01764},    {103987, 1.01764},    {103988, 1.01764},
+        {103989, 1.01764},    {103990, 1.01764},    {103991, 1.01764},
+        {103992, 1.01764},    {103993, 1.01764},    {103994, 1.01764},
+        {103995, 1.01764},    {103996, 1.01764},    {103997, 1.01764},
+        {103998, 1.01764},    {103999, 1.01764},    {104000, 1.01764},
+        {104001, 1.01764},    {104002, 1.01764},    {104003, 1.01764},
+        {104004, 1.01764},    {104005, 1.01764},    {104006, 1.01764},
+        {104007, 1.01764},    {104008, 1.01764},    {104009, 1.01764},
+        {104010, 1.01764},    {104011, 1.01764},    {104012, 1.01764},
+        {104013, 1.01764},    {104014, 1.01764},    {104015, 1.01764},
+        {104016, 1.01764},    {104017, 1.01764},    {104042, 1.01764},
+        {104043, 1.01764},    {104044, 1.01764},    {104045, 1.01764},
+        {104046, 1.01764},    {104047, 1.01764},    {104048, 1.01764},
+        {104049, 1.01764},    {104050, 1.01764},    {104051, 1.01764},
+        {104052, 1.01764},    {104053, 1.01764},    {104054, 1.01764},
+        {104055, 1.01764},    {104056, 1.01764},    {104057, 1.01764},
+        {104058, 1.01764},    {104059, 1.01764},    {104060, 1.01764},
+        {104061, 1.01764},    {104062, 1.01764},    {104063, 1.01764},
+        {104064, 1.01764},    {104065, 1.01764},    {104066, 1.01764},
+        {104067, 1.01764},    {104068, 1.01764},    {104069, 1.01764},
+        {104070, 1.01764},    {104071, 1.01764},    {104072, 1.01764},
+        {104073, 1.01764},    {104074, 1.01764},    {104075, 1.01764},
+        {104076, 1.01764},    {104077, 1.01764},    {104078, 1.01764},
+        {104079, 1.01764},    {104104, 1.01764},    {104105, 1.01764},
+        {104106, 1.01764},    {104107, 1.01764},    {104108, 1.01764},
+        {104109, 1.01764},    {104110, 1.01764},    {104111, 1.01764},
+        {104112, 1.01764},    {104113, 1.01764},    {104114, 1.01764},
+        {104115, 1.01764},    {104116, 1.01764},    {104117, 1.01764},
+        {104118, 1.01764},    {104119, 1.01764},    {104120, 1.01764},
+        {104121, 1.01764},    {104122, 1.01764},    {104123, 1.01764},
+        {104124, 1.01764},    {104125, 1.01764},    {104126, 1.01764},
+        {104127, 1.01764},    {104128, 1.01764},    {104129, 1.01764},
+        {104130, 1.01764},    {104131, 1.01764},    {104132, 1.01764},
+        {104133, 1.01764},    {104134, 1.01764},    {104135, 1.01764},
+        {104136, 1.01764},    {104137, 1.01764},    {104138, 1.01764},
+        {104139, 1.01764},    {104140, 1.01764},    {104141, 1.01764},
+        {104166, 1.01764},    {104167, 1.01764},    {104168, 1.01764},
+        {104169, 1.01764},    {104170, 1.01764},    {104171, 1.01764},
+        {104172, 1.01764},    {104173, 1.01764},    {104174, 1.03555},
+        {104175, 1.03555},    {104176, 1.03555},    {104177, 1.03555},
+        {104178, 1.03555},    {104179, 1.03555},    {104180, 1.03555},
+        {104181, 1.03555},    {104182, 1.03555},    {104183, 1.03555},
+        {104184, 1.03555},    {104185, 1.03555},    {104186, 1.03555},
+        {104187, 1.03555},    {104188, 1.03555},    {104189, 1.03555},
+        {104190, 1.03555},    {104191, 1.03555},    {104192, 1.01764},
+        {104193, 1.01764},    {104194, 1.01764},    {104195, 1.01764},
+        {104196, 1.01764},    {104197, 1.01764},    {104198, 1.01764},
+        {104199, 1.01764},    {104200, 1.01764},    {104201, 1.01764},
+        {104202, 1.01764},    {104203, 1.01764},    {104228, 1.01764},
+        {104229, 1.01764},    {104230, 1.01764},    {104231, 1.01764},
+        {104232, 1.01764},    {104233, 1.01764},    {104234, 1.01764},
+        {104235, 1.01764},    {104236, 1.03555},    {104237, 1.03555},
+        {104238, 1.03555},    {104239, 1.03555},    {104240, 1.03555},
+        {104241, 1.03555},    {104242, 1.03555},    {104243, 1.03555},
+        {104244, 1.03555},    {104245, 1.03555},    {104246, 1.03555},
+        {104247, 1.03555},    {104248, 1.03555},    {104249, 1.03555},
+        {104250, 1.03555},    {104251, 1.03555},    {104252, 1.03555},
+        {104253, 1.03555},    {104254, 1.01764},    {104255, 1.01764},
+        {104256, 1.01764},    {104257, 1.01764},    {104258, 1.01764},
+        {104259, 1.01764},    {104260, 1.01764},    {104261, 1.01764},
+        {104262, 1.01764},    {104263, 1.01764},    {104264, 1.01764},
+        {104265, 1.01764},    {104290, 1.10966},    {104291, 1.10966},
+        {104292, 1.10966},    {104293, 1.10966},    {104294, 1.10966},
+        {104295, 1.10966},    {104296, 1.10966},    {104297, 1.10966},
+        {104298, 1.10966},    {104299, 1.10966},    {104300, 1.03555},
+        {104301, 1.03555},    {104302, 1.03555},    {104303, 1.03555},
+        {104304, 1.03555},    {104305, 1.03555},    {104306, 1.03555},
+        {104307, 1.03555},    {104308, 1.03555},    {104309, 1.03555},
+        {104310, 1.03555},    {104311, 1.03555},    {104312, 1.03555},
+        {104313, 1.03555},    {104314, 1.03555},    {104315, 1.23837},
+        {104316, 1.23837},    {104317, 1.23837},    {104318, 1.23837},
+        {104319, 1.23837},    {104320, 1.23837},    {104988, 0.530628},
+        {105050, 0.530628},   {105112, 0.530628},   {105174, 0.530628},
+        {127742, 0.429418},   {127804, 0.429418},   {127866, 0.429418},
+        {127878, 0.632239},   {127928, 0.429418},   {127940, 0.632239},
+        {127990, 0.429418},   {128002, 0.632239},   {128052, 0.429418},
+        {128064, 0.632239},   {128126, 0.632239},   {128188, 0.632239},
+        {128250, 0.632239},   {128291, 0.174717},   {128312, 0.632239},
+        {128353, 0.174717},   {128374, 0.632239},   {128436, 0.632239},
+        {131765, -0.189621},  {131766, -0.189621},  {131827, -0.189621},
+        {131828, -0.189621},  {131889, -0.189621},  {131890, -0.189621},
+        {131951, -0.189621},  {131952, -0.189621},  {132013, -0.189621},
+        {132014, -0.189621},  {132075, -0.189621},  {132347, -0.28164},
+        {132348, -0.28164},
+    };
 
     // These two tables were generated with model private-neon/examples/rpn
     // random choice was disabled
@@ -947,7 +1017,7 @@ TEST(localization, loader)
         59099, 59120, 59161, 59182, 59244, 62573, 62574, 62635, 62636, 62697, 62698, 62759, 62760,
         62821, 62822, 62883, 63155, 63156};
 
-    string         data     = read_file(CURDIR "/test_data/006637.json");
+    string         data     = file_util::read_file_to_string(CURDIR "/test_data/006637.json");
     int            width    = 1000;
     int            height   = 1000;
     nlohmann::json js_image = {{"width", width}, {"height", height}, {"channels", 3}};
@@ -959,13 +1029,13 @@ TEST(localization, loader)
                              {"fixed_aspect_ratio", true},
                              {"fixed_scaling_factor", 1.6}};
     image::config                 image_config{js_image};
-    localization::config          cfg{js_loc};
+    config                        cfg{js_loc};
     augment::image::param_factory factory(js_aug);
 
-    localization::extractor   extractor{cfg};
-    localization::transformer transformer{cfg, factory.fixed_scaling_factor};
-    localization::loader      loader{cfg};
-    auto                      extract_data = extractor.extract(&data[0], data.size());
+    extractor                  extractor{cfg};
+    transformer                transformer{cfg, factory.fixed_scaling_factor};
+    localization::rcnn::loader loader{cfg};
+    auto                       extract_data = extractor.extract(&data[0], data.size());
     ASSERT_NE(nullptr, extract_data);
 
     vector<unsigned char>              img = make_image_from_metadata(data);
@@ -976,8 +1046,7 @@ TEST(localization, loader)
         factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
     params->debug_deterministic = true;
 
-    shared_ptr<localization::decoded> transformed_data =
-        transformer.transform(params, extract_data);
+    shared_ptr<::decoded> transformed_data = transformer.transform(params, extract_data);
 
     ASSERT_EQ(transformed_data->anchor_index.size(), fg_idx.size() + bg_idx.size());
     for (int i = 0; i < fg_idx.size(); i++)
@@ -1095,7 +1164,7 @@ TEST(localization, loader)
         auto p = bbox_targets.find(i);
         if (p != bbox_targets.end())
         {
-            ASSERT_NEAR(p->second, bbtargets[i], 0.000001) << "at index " << i;
+            ASSERT_NEAR(p->second, bbtargets[i], 0.00001) << "at index " << i;
         }
         else
         {
@@ -1131,19 +1200,19 @@ TEST(localization, loader)
     for (int i = 0; i < num_gt_boxes[0]; i++)
     {
         const boundingbox::box& box = transformed_data->boxes()[i];
-        EXPECT_EQ(box.xmin * im_scale[0], gt_boxes[i * 4 + 0]);
-        EXPECT_EQ(box.ymin * im_scale[0], gt_boxes[i * 4 + 1]);
-        EXPECT_EQ(box.xmax * im_scale[0], gt_boxes[i * 4 + 2]);
-        EXPECT_EQ(box.ymax * im_scale[0], gt_boxes[i * 4 + 3]);
+        EXPECT_EQ(box.xmin() * im_scale[0], gt_boxes[i * 4 + 0]);
+        EXPECT_EQ(box.ymin() * im_scale[0], gt_boxes[i * 4 + 1]);
+        EXPECT_EQ((box.xmax() + 1) * im_scale[0] - 1, gt_boxes[i * 4 + 2]);
+        EXPECT_EQ((box.ymax() + 1) * im_scale[0] - 1, gt_boxes[i * 4 + 3]);
         EXPECT_EQ(box.label, gt_classes[i]);
         EXPECT_EQ(box.difficult, gt_difficult[i]);
     }
     EXPECT_FLOAT_EQ(1.6, im_scale[0]);
 }
 
-TEST(localization, loader_zero_gt_boxes)
+TEST(localization_rcnn, loader_zero_gt_boxes)
 {
-    string data   = read_file(CURDIR "/test_data/006637.json");
+    string data   = file_util::read_file_to_string(CURDIR "/test_data/006637.json");
     int    width  = 1000;
     int    height = 1000;
 
@@ -1152,13 +1221,13 @@ TEST(localization, loader_zero_gt_boxes)
         {"width", width}, {"height", height}, {"class_names", label_list}, {"max_gt_boxes", 64}};
     nlohmann::json js_aug = {{"type", "image"}, {"flip_enable", false}, {"scale", {0.1, 0.1}}};
     image::config  image_config{js_image};
-    localization::config          cfg{js_loc};
+    config         cfg{js_loc};
     augment::image::param_factory factory(js_aug);
 
-    localization::extractor   extractor{cfg};
-    localization::transformer transformer{cfg, factory.fixed_scaling_factor};
-    localization::loader      loader{cfg};
-    auto                      extract_data = extractor.extract(&data[0], data.size());
+    extractor                  extractor{cfg};
+    transformer                transformer{cfg, factory.fixed_scaling_factor};
+    localization::rcnn::loader loader{cfg};
+    auto                       extract_data = extractor.extract(&data[0], data.size());
     ASSERT_NE(nullptr, extract_data);
 
     vector<unsigned char>              img = make_image_from_metadata(data);
@@ -1171,8 +1240,7 @@ TEST(localization, loader_zero_gt_boxes)
     params->cropbox.x           = 0;
     params->cropbox.y           = 0;
 
-    shared_ptr<localization::decoded> transformed_data =
-        transformer.transform(params, extract_data);
+    shared_ptr<::decoded> transformed_data = transformer.transform(params, extract_data);
     ASSERT_EQ(0, transformed_data->gt_boxes.size());
 
     //    ASSERT_EQ(transformed_data->anchor_index.size(), fg_idx.size() + bg_idx.size());
@@ -1246,7 +1314,7 @@ TEST(localization, loader_zero_gt_boxes)
     loader.load(buf_list, transformed_data);
 }
 
-TEST(localization, compute_targets)
+TEST(localization_rcnn, compute_targets)
 {
     // expected values generated via python localization example
 
@@ -1285,7 +1353,7 @@ TEST(localization, compute_targets)
 
     ASSERT_EQ(gt_bb.size(), rp_bb.size());
 
-    vector<target> result = localization::transformer::compute_targets(gt_bb, rp_bb);
+    vector<target> result = ::transformer::compute_targets(gt_bb, rp_bb);
     ASSERT_EQ(result.size(), gt_bb.size());
 
     float acceptable_error = 0.00001;
@@ -1300,7 +1368,7 @@ TEST(localization, compute_targets)
     EXPECT_NEAR(dh_1_expected, result[1].dh, acceptable_error);
 }
 
-TEST(localization, provider)
+TEST(localization_rcnn, provider)
 {
     int   height               = 1000;
     int   width                = 1000;
@@ -1308,7 +1376,7 @@ TEST(localization, provider)
 
     nlohmann::json js_image = {
         {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
-    nlohmann::json js_local = {{"type", "localization"},
+    nlohmann::json js_local = {{"type", "localization_rcnn"},
                                {"height", height},
                                {"width", width},
                                {"max_gt_boxes", 64},
@@ -1325,7 +1393,7 @@ TEST(localization, provider)
     ASSERT_NE(nullptr, media);
     ASSERT_EQ(11, oshapes.size());
 
-    string       target = read_file(CURDIR "/test_data/006637.json");
+    string       target = file_util::read_file_to_string(CURDIR "/test_data/006637.json");
     vector<char> target_data;
     target_data.insert(target_data.begin(), target.begin(), target.end());
     // Image size is from the 006637.json target data file
@@ -1354,8 +1422,8 @@ TEST(localization, provider)
     int     output_height = image_shape.get_shape()[1];
     int     channels      = image_shape.get_shape()[2];
     cv::Mat result(output_height, output_width, CV_8UC(channels), out_buf["image"]->get_item(0));
-    //    cv::imwrite("localization_provider_source.png", image);
-    //    cv::imwrite("localization_provider.png", result);
+    //cv::imwrite("localization_provider_source.png", image);
+    //cv::imwrite("localization_provider.png", result);
 
     uint8_t* data = result.data;
     for (int row = 0; row < result.rows; row++)
@@ -1379,7 +1447,7 @@ TEST(localization, provider)
     }
 }
 
-TEST(localization, provider_channel_major)
+TEST(localization_rcnn, provider_channel_major)
 {
     int   height               = 1000;
     int   width                = 1000;
@@ -1387,7 +1455,7 @@ TEST(localization, provider_channel_major)
 
     nlohmann::json js_image = {
         {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", true}};
-    nlohmann::json js_loc = {{"type", "localization"},
+    nlohmann::json js_loc = {{"type", "localization_rcnn"},
                              {"height", height},
                              {"width", width},
                              {"max_gt_boxes", 64},
@@ -1404,7 +1472,7 @@ TEST(localization, provider_channel_major)
     ASSERT_NE(nullptr, media);
     ASSERT_EQ(11, oshapes.size());
 
-    string       target = read_file(CURDIR "/test_data/006637.json");
+    string       target = file_util::read_file_to_string(CURDIR "/test_data/006637.json");
     vector<char> target_data;
     target_data.insert(target_data.begin(), target.begin(), target.end());
     // Image size is from the 006637.json target data file

@@ -13,28 +13,28 @@
  limitations under the License.
 */
 
-#include "etl_localization.hpp"
+#include "etl_localization_rcnn.hpp"
 #include "box.hpp"
 
 using namespace std;
 using namespace nervana;
 
-localization::config::config(nlohmann::json js)
+localization::rcnn::config::config(nlohmann::json js)
 {
     if (js.is_null())
     {
-        throw std::runtime_error("missing localization config in json config");
+        throw std::runtime_error("missing localization_rcnn config in json config");
     }
 
     for (auto& info : config_list)
     {
         info->parse(js);
     }
-    verify_config("localization", config_list, js);
+    verify_config("localization_rcnn", config_list, js);
 
     // if (iconfig.angle.a() != 0 || iconfig.angle.b() != 0)
     // {
-    //     throw std::invalid_argument("localization does not support angle");
+    //     throw std::invalid_argument("localization_rcnn does not support angle");
     // }
 
     // # For training, the RPN needs:
@@ -76,25 +76,25 @@ localization::config::config(nlohmann::json js)
     validate();
 }
 
-void ::localization::config::validate()
+void localization::rcnn::config::validate()
 {
 }
 
-localization::extractor::extractor(const localization::config& cfg)
+localization::rcnn::extractor::extractor(const localization::rcnn::config& cfg)
     : bbox_extractor{cfg.class_name_map}
 {
 }
 
-localization::transformer::transformer(const localization::config& _cfg, float fixed_scaling_factor)
+localization::rcnn::transformer::transformer(const localization::rcnn::config& _cfg, float fixed_scaling_factor)
     : cfg{_cfg}
     , all_anchors{anchor::generate(_cfg)}
     , m_fixed_scaling_factor{fixed_scaling_factor}
 {
 }
 
-shared_ptr<localization::decoded>
-    localization::transformer::transform(shared_ptr<augment::image::params> settings,
-                                         shared_ptr<localization::decoded>  mp)
+shared_ptr<localization::rcnn::decoded>
+    localization::rcnn::transformer::transform(shared_ptr<augment::image::params> settings,
+                                         shared_ptr<localization::rcnn::decoded>  mp)
 {
     cv::Size input_size = settings->cropbox.size();
     float    im_scale;
@@ -122,8 +122,7 @@ shared_ptr<localization::decoded>
         anchors_inside.push_back(all_anchors[i]);
 
     // compute bbox overlaps
-    mp->gt_boxes = boundingbox::transformer::transform_box(
-        mp->boxes(), crop, settings->flip, im_scale, im_scale);
+    mp->gt_boxes     = boundingbox::transformer::transform_box(mp->boxes(), settings);
     cv::Mat overlaps = bbox_overlaps(anchors_inside, mp->gt_boxes);
 
     vector<int> labels(overlaps.rows, -1.0);
@@ -218,7 +217,7 @@ shared_ptr<localization::decoded>
     return mp;
 }
 
-vector<int> localization::transformer::sample_anchors(const vector<int>& labels, bool debug)
+vector<int> localization::rcnn::transformer::sample_anchors(const vector<int>& labels, bool debug)
 {
     // subsample labels if needed
     int         num_fg = int(cfg.foreground_fraction * cfg.rois_per_image);
@@ -257,7 +256,7 @@ vector<int> localization::transformer::sample_anchors(const vector<int>& labels,
     return result_idx;
 }
 
-vector<localization::target> localization::transformer::compute_targets(const vector<box>& gt_bb,
+vector<localization::rcnn::target> localization::rcnn::transformer::compute_targets(const vector<box>& gt_bb,
                                                                         const vector<box>& rp_bb)
 {
     //  Given ground truth bounding boxes and proposed boxes, compute the regresssion
@@ -288,7 +287,7 @@ vector<localization::target> localization::transformer::compute_targets(const ve
     return targets;
 }
 
-cv::Mat localization::transformer::bbox_overlaps(const vector<box>&              boxes,
+cv::Mat localization::rcnn::transformer::bbox_overlaps(const vector<box>&              boxes,
                                                  const vector<boundingbox::box>& bounding_boxes)
 {
     // Parameters
@@ -307,18 +306,17 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<box>&             
     for (uint32_t k = 0; k < bounding_boxes.size(); k++)
     {
         const box& bounding_box = bounding_boxes[k];
-        box_area                = (bounding_box.xmax - bounding_box.xmin + 1) *
-                   (bounding_box.ymax - bounding_box.ymin + 1);
+        box_area                = bounding_box.width() * bounding_box.height();
         for (uint32_t n = 0; n < boxes.size(); n++)
         {
             const box& b = boxes[n];
-            iw           = min(b.xmax, bounding_box.xmax) - max(b.xmin, bounding_box.xmin) + 1;
+            iw = min(b.xmax(), bounding_box.xmax()) - max(b.xmin(), bounding_box.xmin()) + 1;
             if (iw > 0)
             {
-                ih = min(b.ymax, bounding_box.ymax) - max(b.ymin, bounding_box.ymin) + 1;
+                ih = min(b.ymax(), bounding_box.ymax()) - max(b.ymin(), bounding_box.ymin()) + 1;
                 if (ih > 0)
                 {
-                    ua = (b.xmax - b.xmin + 1.) * (b.ymax - b.ymin + 1.) + box_area - iw * ih;
+                    ua = b.width() * b.height() + box_area - iw * ih;
                     overlaps.at<float>(n, k) = iw * ih / ua;
                 }
             }
@@ -327,15 +325,15 @@ cv::Mat localization::transformer::bbox_overlaps(const vector<box>&             
     return overlaps;
 }
 
-localization::loader::loader(const localization::config& cfg)
+localization::rcnn::loader::loader(const localization::rcnn::config& cfg)
 {
     total_anchors   = cfg.total_anchors();
     shape_type_list = cfg.get_shape_type_list();
     max_gt_boxes    = cfg.max_gt_boxes;
 }
 
-void localization::loader::load(const vector<void*>&                   buf_list,
-                                std::shared_ptr<localization::decoded> mp)
+void localization::rcnn::loader::load(const vector<void*>&                   buf_list,
+                                std::shared_ptr<localization::rcnn::decoded> mp)
 {
     // # 0. bounding box target coordinates
     // # 1. bounding box target masks (keep positive anchors only)
@@ -404,10 +402,10 @@ void localization::loader::load(const vector<void*>&                   buf_list,
     for (int i = 0; i < *num_gt_boxes; i++)
     {
         const boundingbox::box& gt = mp->gt_boxes[i];
-        *gt_boxes++                = gt.xmin;
-        *gt_boxes++                = gt.ymin;
-        *gt_boxes++                = gt.xmax;
-        *gt_boxes++                = gt.ymax;
+        *gt_boxes++                = gt.xmin();
+        *gt_boxes++                = gt.ymin();
+        *gt_boxes++                = gt.xmax();
+        *gt_boxes++                = gt.ymax();
         *gt_classes++              = gt.label;
         *gt_difficult++            = gt.difficult;
     }
@@ -424,7 +422,7 @@ void localization::loader::load(const vector<void*>&                   buf_list,
     *im_scale = mp->image_scale;
 }
 
-vector<box> localization::anchor::generate(const localization::config& cfg)
+vector<box> localization::rcnn::anchor::generate(const localization::rcnn::config& cfg)
 {
     int conv_size_x = int(std::floor(cfg.width * cfg.scaling_factor));
     int conv_size_y = int(std::floor(cfg.height * cfg.scaling_factor));
@@ -466,13 +464,13 @@ vector<box> localization::anchor::generate(const localization::config& cfg)
 }
 
 vector<int>
-    localization::anchor::inside_image_bounds(int width, int height, const vector<box>& all_anchors)
+    localization::rcnn::anchor::inside_image_bounds(int width, int height, const vector<box>& all_anchors)
 {
     vector<int> rc;
     for (int i = 0; i < all_anchors.size(); i++)
     {
         const box& b = all_anchors[i];
-        if (b.xmin >= 0 && b.ymin >= 0 && b.xmax < width && b.ymax < height)
+        if (b.xmin() >= 0 && b.ymin() >= 0 && b.xmax() < width && b.ymax() < height)
         {
             rc.emplace_back(i);
         }
@@ -480,7 +478,7 @@ vector<int>
     return rc;
 }
 
-vector<box> localization::anchor::generate_anchors(size_t               base_size,
+vector<box> localization::rcnn::anchor::generate_anchors(size_t               base_size,
                                                    const vector<float>& ratios,
                                                    const vector<float>& scales)
 {
@@ -499,7 +497,7 @@ vector<box> localization::anchor::generate_anchors(size_t               base_siz
     return result;
 }
 
-vector<box> localization::anchor::mkanchors(const vector<float>& ws,
+vector<box> localization::rcnn::anchor::mkanchors(const vector<float>& ws,
                                             const vector<float>& hs,
                                             float                x_ctr,
                                             float                y_ctr)
@@ -515,7 +513,7 @@ vector<box> localization::anchor::mkanchors(const vector<float>& ws,
     return rc;
 }
 
-vector<box> localization::anchor::ratio_enum(const box& anchor, const vector<float>& ratios)
+vector<box> localization::rcnn::anchor::ratio_enum(const box& anchor, const vector<float>& ratios)
 {
     int           size = anchor.width() * anchor.height();
     vector<float> size_ratios;
@@ -537,7 +535,7 @@ vector<box> localization::anchor::ratio_enum(const box& anchor, const vector<flo
     return mkanchors(ws, hs, anchor.xcenter(), anchor.ycenter());
 }
 
-vector<box> localization::anchor::scale_enum(const box& anchor, const vector<float>& scales)
+vector<box> localization::rcnn::anchor::scale_enum(const box& anchor, const vector<float>& scales)
 {
     vector<float> ws;
     vector<float> hs;

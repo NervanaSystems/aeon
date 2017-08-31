@@ -23,7 +23,8 @@ set (SRC
     test_image.cpp
     test_label_map.cpp
     test_loader.cpp
-    test_localization.cpp
+    test_localization_rcnn.cpp
+    test_localization_ssd.cpp
     test_logging.cpp
     test_manifest_csv.cpp
     test_params.cpp

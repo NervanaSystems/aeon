@@ -11,6 +11,7 @@ set (SRC
     block_loader_nds.cpp
     block_manager.cpp
     box.cpp
+    boundingbox.cpp
     buffer_batch.cpp
     cap_mjpeg_decoder.cpp
     cpio.cpp
@@ -21,7 +22,8 @@ set (SRC
     etl_depthmap.cpp
     etl_image.cpp
     etl_label_map.cpp
-    etl_localization.cpp
+    etl_localization_rcnn.cpp
+    etl_localization_ssd.cpp
     etl_pixel_mask.cpp
     etl_video.cpp
     file_util.cpp
@@ -32,7 +34,7 @@ set (SRC
     manifest_file.cpp
     manifest_nds.cpp
     noise_clips.cpp
-    provider_custom.cpp
+    provider.cpp
     provider_factory.cpp
     specgram.cpp
     typemap.cpp

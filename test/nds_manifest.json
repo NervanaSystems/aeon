@@ -1,7 +1,0 @@
-{
-    "url": "http://127.0.0.1:5000",
-    "params": {
-        "token": "token",
-        "collection_id": 1
-    }
-}

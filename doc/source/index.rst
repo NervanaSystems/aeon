@@ -46,12 +46,13 @@ bug reports at aeon_issues_ .
 .. toctree::
    :hidden:
    :maxdepth: 0
-   :caption: ETL Modules
+   :caption: Providers
 
    provider_image
    provider_label
    provider_audio
    provider_localization
+   provider_localization_ssd
    provider_pixelmask
    provider_boundingbox
    provider_blob

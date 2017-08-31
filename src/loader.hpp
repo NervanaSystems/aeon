@@ -78,7 +78,7 @@ private:
         ADD_SCALAR(block_size, mode::OPTIONAL),
         ADD_SCALAR(subset_fraction,
                    mode::OPTIONAL,
-                   [](decltype(subset_fraction) v) { return v <= 1.0 && v >= 0.0; }),
+                   [](decltype(subset_fraction) v) { return v <= 1.0f && v >= 0.0f; }),
         ADD_SCALAR(shuffle_enable, mode::OPTIONAL),
         ADD_SCALAR(shuffle_manifest, mode::OPTIONAL),
         ADD_SCALAR(decode_thread_count, mode::OPTIONAL),

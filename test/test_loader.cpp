@@ -321,7 +321,7 @@ TEST(loader, test)
     }
 }
 
-TEST(loader, custom_provider)
+TEST(loader, provider)
 {
     int    height       = 16;
     int    width        = 16;

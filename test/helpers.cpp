@@ -61,3 +61,43 @@ void assert_vector_unique(vector<string>& words)
         ASSERT_NE(*word, *(word + 1));
     }
 }
+
+nlohmann::json create_box(const cv::Rect& rect, const string& label)
+{
+    nlohmann::json j = {{"bndbox",
+                         {{"xmax", rect.x + rect.width - 1},
+                          {"xmin", rect.x},
+                          {"ymax", rect.y + rect.height - 1},
+                          {"ymin", rect.y}}},
+                        {"name", label}};
+    return j;
+}
+
+nlohmann::json create_box(const boundingbox::box& box, const string& label)
+{
+    nlohmann::json j = {{"bndbox",
+                         {{"xmax", box.xmax()},
+                          {"xmin", box.xmin()},
+                          {"ymax", box.ymax()},
+                          {"ymin", box.ymin()}}},
+                        {"name", label}};
+    return j;
+}
+
+nlohmann::json create_box_with_normalized_field(const boundingbox::box& b, const string& label)
+{
+    nlohmann::json j = {
+        {"bndbox",
+         {{"xmax", b.xmax()}, {"xmin", b.xmin()}, {"ymax", b.ymax()}, {"ymin", b.ymin()}}},
+        {"name", label},
+        {"normalized", b.normalized()}};
+    return j;
+}
+
+nlohmann::json create_metadata(const vector<nlohmann::json>& boxes, int width, int height)
+{
+    nlohmann::json j = nlohmann::json::object();
+    j["object"]      = boxes;
+    j["size"]        = {{"depth", 3}, {"height", height}, {"width", width}};
+    return j;
+}

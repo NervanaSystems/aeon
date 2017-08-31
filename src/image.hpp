@@ -26,6 +26,7 @@ namespace nervana
     {
         // These functions may be common across different transformers
         void resize(const cv::Mat&, cv::Mat&, const cv::Size2i&, bool interpolate = true);
+        void expand(const cv::Mat& input, cv::Mat& output, cv::Size offset, cv::Size size);
         void rotate(const cv::Mat&    input,
                     cv::Mat&          output,
                     int               angle,

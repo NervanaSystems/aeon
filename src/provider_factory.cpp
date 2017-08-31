@@ -14,7 +14,7 @@
 */
 
 #include "provider_factory.hpp"
-#include "provider_custom.hpp"
+#include "provider.hpp"
 #include "log.hpp"
 #include <sstream>
 
@@ -44,7 +44,7 @@ shared_ptr<nervana::provider_interface> nervana::provider_factory::create(nlohma
     // {
     //     aug_config = nlohmann::json::object();
     // }
-    rc = make_shared<custom_provider::provider_base>(configJs, cc.etl, aug_config);
+    rc = make_shared<provider::provider_base>(configJs, cc.etl, aug_config);
 
     return rc;
 }

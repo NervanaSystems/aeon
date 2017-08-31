@@ -28,21 +28,26 @@
 #include "etl_char_map.hpp"
 #include "etl_depthmap.hpp"
 #include "etl_label_map.hpp"
-#include "etl_localization.hpp"
+#include "etl_localization_rcnn.hpp"
+#include "etl_localization_ssd.hpp"
 #include "etl_pixel_mask.hpp"
 #include "etl_video.hpp"
 #include "augment_image.hpp"
 
 namespace nervana
 {
-    namespace custom_provider
+    namespace provider
     {
         class interface;
         class provider_base;
         class image;
         class label;
         class audio;
-        class localization;
+        namespace localization
+        {
+            class rcnn;
+            class ssd;
+        }
         class pixelmask;
         class boundingbox;
         class blob;
@@ -58,7 +63,7 @@ namespace nervana
 // provider_base
 //=================================================================================================
 
-class nervana::custom_provider::provider_base : public provider_interface
+class nervana::provider::provider_base : public provider_interface
 {
 public:
     provider_base(nlohmann::json                     js,
@@ -68,7 +73,7 @@ public:
     void provide(int idx, encoded_record_list& in_buf, fixed_buffer_map& out_buf) override;
 
 private:
-    std::vector<std::shared_ptr<custom_provider::interface>> m_providers;
+    std::vector<std::shared_ptr<provider::interface>> m_providers;
 };
 
 //=================================================================================================
@@ -80,13 +85,15 @@ class nervana::augmentation
 public:
     std::shared_ptr<augment::image::params> m_image_augmentations;
     std::shared_ptr<augment::audio::params> m_audio_augmentations;
+
+    std::shared_ptr<box> m_sample;
 };
 
 //=================================================================================================
-// custom_provider_interface
+// provider_interface
 //=================================================================================================
 
-class nervana::custom_provider::interface : public nervana::provider_interface
+class nervana::provider::interface : public nervana::provider_interface
 {
 public:
     interface(nlohmann::json, size_t);
@@ -108,7 +115,7 @@ private:
 // image
 //=================================================================================================
 
-class nervana::custom_provider::image : public custom_provider::interface
+class nervana::provider::image : public provider::interface
 {
 public:
     image(nlohmann::json config, nlohmann::json aug);
@@ -131,7 +138,7 @@ private:
 // label
 //=================================================================================================
 
-class nervana::custom_provider::label : public custom_provider::interface
+class nervana::provider::label : public provider::interface
 {
 public:
     label(nlohmann::json config);
@@ -152,7 +159,7 @@ private:
 // audio
 //=================================================================================================
 
-class nervana::custom_provider::audio : public custom_provider::interface
+class nervana::provider::audio : public provider::interface
 {
 public:
     audio(nlohmann::json js, nlohmann::json aug);
@@ -173,42 +180,70 @@ private:
 };
 
 //=================================================================================================
-// localization
+// localization::rcnn
 //=================================================================================================
 
-class nervana::custom_provider::localization : public custom_provider::interface
+class nervana::provider::localization::rcnn : public provider::interface
 {
 public:
-    localization(nlohmann::json js, nlohmann::json aug);
-    virtual ~localization() {}
+    rcnn(nlohmann::json js, nlohmann::json aug);
+    virtual ~rcnn() {}
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
                  augmentation&) override;
 
 private:
-    nervana::localization::config          m_config;
-    nervana::augment::image::param_factory m_augmentation_factory;
-    nervana::localization::extractor       m_extractor;
-    nervana::localization::transformer     m_transformer;
-    nervana::localization::loader          m_loader;
-    const std::string                      m_bbtargets_buffer_name;
-    const std::string                      m_bbtargets_mask_buffer_name;
-    const std::string                      m_labels_flat_buffer_name;
-    const std::string                      m_labels_mask_buffer_name;
-    const std::string                      m_image_shape_buffer_name;
-    const std::string                      m_gt_boxes_buffer_name;
-    const std::string                      m_gt_box_count_buffer_name;
-    const std::string                      m_gt_class_count_buffer_name;
-    const std::string                      m_image_scale_buffer_name;
-    const std::string                      m_difficult_flag_buffer_name;
+    nervana::localization::rcnn::config      m_config;
+    nervana::augment::image::param_factory   m_augmentation_factory;
+    nervana::localization::rcnn::extractor   m_extractor;
+    nervana::localization::rcnn::transformer m_transformer;
+    nervana::localization::rcnn::loader      m_loader;
+    const std::string                        m_bbtargets_buffer_name;
+    const std::string                        m_bbtargets_mask_buffer_name;
+    const std::string                        m_labels_flat_buffer_name;
+    const std::string                        m_labels_mask_buffer_name;
+    const std::string                        m_image_shape_buffer_name;
+    const std::string                        m_gt_boxes_buffer_name;
+    const std::string                        m_gt_box_count_buffer_name;
+    const std::string                        m_gt_class_count_buffer_name;
+    const std::string                        m_image_scale_buffer_name;
+    const std::string                        m_difficult_flag_buffer_name;
+};
+
+//=================================================================================================
+// localization::ssd
+//=================================================================================================
+
+class nervana::provider::localization::ssd : public provider::interface
+{
+public:
+    ssd(nlohmann::json js, nlohmann::json aug);
+    virtual ~ssd() {}
+    void provide(int                        idx,
+                 const std::vector<char>&   datum_in,
+                 nervana::fixed_buffer_map& out_buf,
+                 augmentation&) override;
+
+private:
+    nervana::localization::ssd::config                   m_config;
+    nervana::augment::image::param_factory               m_augmentation_factory;
+    nervana::localization::ssd::extractor                m_extractor;
+    nervana::localization::ssd::transformer              m_transformer;
+    nervana::localization::ssd::loader                   m_loader;
+    const std::string                                    m_image_shape_buffer_name;
+    const std::string                                    m_gt_boxes_buffer_name;
+    const std::string                                    m_gt_box_count_buffer_name;
+    const std::string                                    m_gt_class_count_buffer_name;
+    const std::string                                    m_difficult_flag_buffer_name;
+    std::shared_ptr<nervana::localization::ssd::decoded> m_decoded;
 };
 
 //=================================================================================================
 // pixelmask
 //=================================================================================================
 
-class nervana::custom_provider::pixelmask : public custom_provider::interface
+class nervana::provider::pixelmask : public provider::interface
 {
 public:
     pixelmask(nlohmann::json js, nlohmann::json aug);
@@ -231,7 +266,7 @@ private:
 // boundingbox
 //=================================================================================================
 
-class nervana::custom_provider::boundingbox : public custom_provider::interface
+class nervana::provider::boundingbox : public provider::interface
 {
 public:
     boundingbox(nlohmann::json js, nlohmann::json aug);
@@ -255,7 +290,7 @@ private:
 // blob
 //=================================================================================================
 
-class nervana::custom_provider::blob : public custom_provider::interface
+class nervana::provider::blob : public provider::interface
 {
 public:
     blob(nlohmann::json js);
@@ -277,7 +312,7 @@ private:
 // video
 //=================================================================================================
 
-class nervana::custom_provider::video : public custom_provider::interface
+class nervana::provider::video : public provider::interface
 {
 public:
     video(nlohmann::json js, nlohmann::json aug);
@@ -299,7 +334,7 @@ private:
 // char_map
 //=================================================================================================
 
-class nervana::custom_provider::char_map : public custom_provider::interface
+class nervana::provider::char_map : public provider::interface
 {
 public:
     char_map(nlohmann::json js);
@@ -322,7 +357,7 @@ private:
 // label_map
 //=================================================================================================
 
-class nervana::custom_provider::label_map : public custom_provider::interface
+class nervana::provider::label_map : public provider::interface
 {
 public:
     label_map(nlohmann::json js);

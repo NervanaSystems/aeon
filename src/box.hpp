@@ -26,36 +26,87 @@ namespace nervana
 class nervana::box
 {
 public:
-    float xmin;
-    float ymin;
-    float xmax;
-    float ymax;
-
-    box() {}
-    box(float _xmin, float _ymin, float _xmax, float _ymax)
-        : xmin{_xmin}
-        , ymin{_ymin}
-        , xmax{_xmax}
-        , ymax{_ymax}
+    box(bool normalized = false)
+        : m_xmin(0.f)
+        , m_ymin(0.f)
+        , m_xmax(0.f)
+        , m_ymax(0.f)
+        , m_normalized(normalized)
     {
     }
+
+    box(float _xmin, float _ymin, float _xmax, float _ymax, bool normalized = false)
+        : m_xmin{_xmin}
+        , m_ymin{_ymin}
+        , m_xmax{_xmax}
+        , m_ymax{_ymax}
+        , m_normalized{normalized}
+    {
+        if (m_normalized)
+        {
+            try
+            {
+                throw_if_improperly_normalized();
+            }
+            catch (std::exception& e)
+            {
+                std::stringstream ss;
+                ss << "Constructor of the box object: " << e.what();
+                throw std::invalid_argument(ss.str());
+            }
+        }
+    }
+
+    box(const box& b);
+    box(const box&& b);
+
+    box& operator=(const box& b);
 
     box operator+(const box& b) const
     {
-        return box(xmin + b.xmin, ymin + b.ymin, xmax + b.xmax, ymax + b.ymax);
+        return box(m_xmin + b.m_xmin,
+                   m_ymin + b.m_ymin,
+                   m_xmax + b.m_xmax,
+                   m_ymax + b.m_ymax,
+                   m_normalized);
     }
-    box operator*(float v) const { return box(xmin * v, ymin * v, xmax * v, ymax * v); }
-    bool operator==(const box& b) const
+    box operator*(float v) const
     {
-        return xmin == b.xmin && ymin == b.ymin && xmax == b.xmax && ymax == b.ymax;
+        return box(m_xmin * v, m_ymin * v, (m_xmax + 1) * v - 1, (m_ymax + 1) * v - 1);
     }
-    cv::Rect rect() const { return cv::Rect(xmin, ymin, xmax - xmin, ymax - ymin); }
-    float    xcenter() const { return xmin + (width() - 1.) / 2.; }
-    float    ycenter() const { return ymin + (height() - 1.) / 2.; }
-    float    x() const { return xmin; }
-    float    y() const { return ymin; }
-    float    width() const { return xmax - xmin + 1.; }
-    float    height() const { return ymax - ymin + 1.; }
+    bool operator==(const box& b) const;
+
+    cv::Rect rect() const
+    {
+        return cv::Rect(
+            std::round(m_xmin), std::round(m_ymin), std::round(width()), std::round(height()));
+    }
+    float xcenter() const;
+    float ycenter() const;
+    void set_xmin(float x) { m_xmin = x; }
+    float               xmin() const { return m_xmin; }
+    void set_ymin(float y) { m_ymin = y; }
+    float               ymin() const { return m_ymin; }
+    void set_xmax(float xmax) { m_xmax = xmax; }
+    float               xmax() const { return m_xmax; }
+    void set_ymax(float ymax) { m_ymax = ymax; }
+    float               ymax() const { return m_ymax; }
+    float               width() const;
+    float               height() const;
+    void set_normalized(bool normalized) { m_normalized = normalized; }
+    bool                     normalized() const { return m_normalized; }
+    bool                     is_properly_normalized() const;
+    void                     throw_if_improperly_normalized() const;
+
+    const static nervana::box& zerobox();
+
+protected:
+    float m_xmin;
+    float m_ymin;
+    float m_xmax;
+    float m_ymax;
+
+    bool m_normalized;
 };
 
 std::ostream& operator<<(std::ostream& out, const nervana::box& b);
