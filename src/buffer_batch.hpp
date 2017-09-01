@@ -121,6 +121,8 @@ public:
     void                                  clear() { m_records.clear(); }
     std::vector<encoded_record>::iterator begin() { return m_records.begin(); }
     std::vector<encoded_record>::iterator end() { return m_records.end(); }
+    std::vector<encoded_record>::const_iterator begin() const{ return m_records.begin(); }
+    std::vector<encoded_record>::const_iterator end() const{ return m_records.end(); }
     void shuffle(uint32_t random_seed)
     {
         std::minstd_rand0 rand_items(random_seed);

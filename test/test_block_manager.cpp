@@ -27,8 +27,8 @@
 #include "block.hpp"
 
 #define private public
-
 #include "block_manager.hpp"
+#include "cache_system.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -59,36 +59,39 @@ TEST(block_manager, block_list)
 
 TEST(block_manager, cache_complete)
 {
-    string cache_root = file_util::make_temp_directory();
+    cache_system cache(0, 0, 0, file_util::make_temp_directory(), false);
+    string       cache_root = file_util::make_temp_directory();
 
-    EXPECT_FALSE(block_manager::check_if_complete(cache_root));
-    block_manager::mark_cache_complete(cache_root);
-    EXPECT_TRUE(block_manager::check_if_complete(cache_root));
+    EXPECT_FALSE(cache.check_if_complete(cache_root));
+    cache.mark_cache_complete(cache_root);
+    EXPECT_TRUE(cache.check_if_complete(cache_root));
 
     file_util::remove_directory(cache_root);
 }
 
 TEST(block_manager, cache_ownership)
 {
-    string cache_root = file_util::make_temp_directory();
+    cache_system cache(0, 0, 0, file_util::make_temp_directory(), false);
+    string       cache_root = file_util::make_temp_directory();
 
     int lock;
-    EXPECT_TRUE(block_manager::take_ownership(cache_root, lock));
+    EXPECT_TRUE(cache.take_ownership(cache_root, lock));
 
     int lock2;
-    EXPECT_FALSE(block_manager::take_ownership(cache_root, lock2));
+    EXPECT_FALSE(cache.take_ownership(cache_root, lock2));
 
-    block_manager::release_ownership(cache_root, lock);
+    cache.release_ownership(cache_root, lock);
 
-    EXPECT_TRUE(block_manager::take_ownership(cache_root, lock));
-    block_manager::release_ownership(cache_root, lock);
+    EXPECT_TRUE(cache.take_ownership(cache_root, lock));
+    cache.release_ownership(cache_root, lock);
 
     file_util::remove_directory(cache_root);
 }
 
 TEST(block_manager, cache_busy)
 {
-    string cache_root = file_util::make_temp_directory();
+    cache_system cache(0, 0, 0, file_util::make_temp_directory(), false);
+    string       cache_root = file_util::make_temp_directory();
 
     manifest_builder mb;
 
@@ -102,23 +105,25 @@ TEST(block_manager, cache_busy)
     manifest_file manifest(manifest_stream, false);
 
     block_loader_file reader(&manifest, block_size);
-    string            cache_name = block_manager::create_cache_name(reader.get_uid());
+    string            cache_name = cache.create_cache_name(reader.get_uid());
     auto              cache_dir  = file_util::path_join(cache_root, cache_name);
 
     int lock;
     file_util::make_directory(cache_dir);
-    EXPECT_TRUE(block_manager::take_ownership(cache_dir, lock));
+    EXPECT_TRUE(cache.take_ownership(cache_dir, lock));
 
-    EXPECT_THROW(block_manager(&reader, block_size, cache_root, false), runtime_error);
+    block_manager bm(&reader, block_size, cache_root, false);
+    EXPECT_EQ(bm.m_cache->m_stage, nervana::cache_system::blocked);
 
-    block_manager::release_ownership(cache_root, lock);
+    cache.release_ownership(cache_root, lock);
 
     file_util::remove_directory(cache_root);
 }
 
 TEST(block_manager, build_cache)
 {
-    string cache_root = file_util::make_temp_directory();
+    cache_system cache(0, 0, 0, file_util::make_temp_directory(), false);
+    string       cache_root = file_util::make_temp_directory();
 
     manifest_builder mb;
 
@@ -136,7 +141,7 @@ TEST(block_manager, build_cache)
     manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
 
     block_loader_file reader(&manifest, block_size);
-    string            cache_name = block_manager::create_cache_name(reader.get_uid());
+    string            cache_name = cache.create_cache_name(reader.get_uid());
     auto              cache_dir  = file_util::path_join(cache_root, cache_name);
 
     block_manager manager(&reader, block_size, cache_root, false);
@@ -164,20 +169,15 @@ TEST(block_manager, build_cache)
     }
 
     // check that the cache files exist
-    string cache_complete      = block_manager::m_cache_complete_filename;
+    string cache_complete      = cache.m_cache_complete_filename;
     string cache_complete_path = file_util::path_join(cache_dir, cache_complete);
     EXPECT_TRUE(file_util::exists(cache_complete_path));
     for (size_t block_number = 0; block_number < block_count; block_number++)
     {
-        string cache_block_name = manager.create_cache_block_name(block_number);
+        string cache_block_name = manager.m_cache->create_cache_block_name(block_number);
         string cache_block_path = file_util::path_join(cache_dir, cache_block_name);
         EXPECT_TRUE(file_util::exists(cache_block_path));
     }
-
-    // prefetch might make hits more than block_count
-    EXPECT_LE(block_count, manager.m_cache_hit);
-    EXPECT_EQ(block_count, manager.m_cache_miss);
-
     file_util::remove_directory(cache_root);
 }
 
@@ -227,8 +227,6 @@ TEST(block_manager, reuse_cache)
                 record_number = (record_number + 1) % record_count;
             }
         }
-        // because of prefetch the hit count might not be zero here
-        ASSERT_EQ(block_count, manager.m_cache_miss);
     }
 
     // now read data with new reader, same manifest
@@ -258,7 +256,6 @@ TEST(block_manager, reuse_cache)
                 record_number = (record_number + 1) % record_count;
             }
         }
-        EXPECT_EQ(0, manager.m_cache_miss);
     }
 
     file_util::remove_directory(cache_root);

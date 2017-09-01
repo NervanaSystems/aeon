@@ -156,7 +156,7 @@ public:
     writer(std::ostream& stream);
     virtual ~writer();
 
-    void write_all_records(nervana::encoded_record_list& buff);
+    void write_all_records(const nervana::encoded_record_list& buff);
     void write_record_element(const char* elem, uint32_t elem_size, uint32_t element_idx);
     void increment_record_count() { m_header.m_record_count++; }
 private:

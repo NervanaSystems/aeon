@@ -269,7 +269,7 @@ cpio::writer::~writer()
     }
 }
 
-void cpio::writer::write_all_records(nervana::encoded_record_list& buff)
+void cpio::writer::write_all_records(const nervana::encoded_record_list& buff)
 {
     size_t record_count  = buff.size();
     size_t element_index = 0;

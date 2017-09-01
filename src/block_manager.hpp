@@ -18,9 +18,10 @@
 #include <string>
 
 #include "async_manager.hpp"
-#include "block_loader_source.hpp"
 #include "buffer_batch.hpp"
 #include "block.hpp"
+#include "block_loader_source.hpp"
+#include "cache_system.hpp"
 
 /* block_manager
  *
@@ -44,34 +45,15 @@ public:
     virtual ~block_manager() { finalize(); }
     encoded_record_list* filler() override;
 
+    virtual void initialize() override;
+
     size_t record_count() const override { return m_block_size; }
-    size_t elements_per_record() const override { return m_file_loader.elements_per_record(); }
+    size_t elements_per_record() const override { return m_elements_per_record; }
 private:
-    static std::string create_cache_name(source_uid_t uid);
-    static std::string create_cache_block_name(size_t block_number);
-
-    static bool check_if_complete(const std::string& cache_dir);
-    static void mark_cache_complete(const std::string& cache_dir);
-    static bool take_ownership(const std::string& cache_dir, int& lock);
-    static void release_ownership(const std::string& cache_dir, int lock);
-
-    static const std::string m_owner_lock_filename;
-    static const std::string m_cache_complete_filename;
-
-    block_loader_source& m_file_loader;
-    size_t               m_block_size;
-    size_t               m_block_count;
-    size_t               m_record_count;
-    size_t               m_current_block_number;
-    size_t               m_elements_per_record;
-    const std::string    m_cache_root;
-    bool                 m_cache_enabled;
-    std::string          m_cache_dir;
-    bool                 m_shuffle_enabled;
-    source_uid_t         m_source_uid;
-    int                  m_cache_lock = -1;
-    size_t               m_cache_hit  = 0;
-    size_t               m_cache_miss = 0;
-    std::vector<size_t>  m_block_load_sequence;
-    std::minstd_rand0    m_rnd;
+    std::unique_ptr<cache_system> m_cache;
+    size_t                        m_current_block_number;
+    size_t                        m_block_size;
+    size_t                        m_block_count;
+    size_t                        m_record_count;
+    size_t                        m_elements_per_record;
 };
