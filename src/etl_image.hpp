@@ -142,7 +142,7 @@ class nervana::image::extractor : public interface::extractor<image::decoded>
 public:
     extractor(const image::config&);
     ~extractor() {}
-    virtual std::shared_ptr<image::decoded> extract(const void*, size_t) override;
+    virtual std::shared_ptr<image::decoded> extract(const void*, size_t) const override;
 
     int get_channel_count() { return _color_mode == CV_LOAD_IMAGE_COLOR ? 3 : 1; }
 private:
@@ -157,9 +157,9 @@ public:
     transformer(const image::config&);
     ~transformer() {}
     virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<augment::image::params>,
-                                                      std::shared_ptr<image::decoded>) override;
+                                                      std::shared_ptr<image::decoded>) const override;
 
-    cv::Mat transform_single_image(std::shared_ptr<augment::image::params>, cv::Mat&);
+    cv::Mat transform_single_image(std::shared_ptr<augment::image::params>, cv::Mat&)const;
 
 private:
     image::photometric photo;
@@ -170,7 +170,7 @@ class nervana::image::loader : public interface::loader<image::decoded>
 public:
     loader(const image::config& cfg, bool fixed_aspect_ratio);
     ~loader() {}
-    virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) override;
+    virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) const override;
 
 private:
     void split(cv::Mat&, char*);

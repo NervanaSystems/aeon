@@ -82,7 +82,7 @@ class nervana::blob::extractor : public interface::extractor<blob::decoded>
 public:
     extractor(const blob::config& cfg) {}
     ~extractor() {}
-    std::shared_ptr<blob::decoded> extract(const void* buf, size_t bufSize) override
+    std::shared_ptr<blob::decoded> extract(const void* buf, size_t bufSize) const override
     {
         return std::make_shared<blob::decoded>(buf, bufSize);
     }
@@ -95,7 +95,7 @@ class nervana::blob::loader : public interface::loader<blob::decoded>
 public:
     loader(const blob::config& cfg) {}
     ~loader() {}
-    void load(const std::vector<void*>& buflist, std::shared_ptr<blob::decoded> mp) override
+    void load(const std::vector<void*>& buflist, std::shared_ptr<blob::decoded> mp) const override
     {
         void* buf = buflist[0];
         memcpy(buf, mp->m_data, mp->m_data_size);

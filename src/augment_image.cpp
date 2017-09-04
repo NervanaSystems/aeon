@@ -76,6 +76,7 @@ augment::image::param_factory::param_factory(nlohmann::json js)
             }
         }
     }
+    m_emit_type = get_emit_constraint_type();
 }
 
 emit_type augment::image::param_factory::get_emit_constraint_type()
@@ -97,21 +98,23 @@ emit_type augment::image::param_factory::get_emit_constraint_type()
 shared_ptr<augment::image::params> augment::image::param_factory::make_params(size_t input_width,
                                                                               size_t input_height,
                                                                               size_t output_width,
-                                                                              size_t output_height)
+                                                                              size_t output_height) const
 {
     // Must use this method for creating a shared_ptr rather than make_shared
     // since the params default ctor is private and factory is friend
     // make_shared is not friend :(
     auto settings = shared_ptr<augment::image::params>(new augment::image::params());
 
+    auto& random = get_thread_local_random_engine();
+
     settings->output_size = cv::Size2i(output_width, output_height);
 
-    settings->angle                  = angle(m_dre);
-    settings->flip                   = flip_distribution(m_dre);
-    settings->hue                    = hue(m_dre);
-    settings->contrast               = contrast(m_dre);
-    settings->brightness             = brightness(m_dre);
-    settings->saturation             = saturation(m_dre);
+    settings->angle                  = angle(random);
+    settings->flip                   = flip_distribution(random);
+    settings->hue                    = hue(random);
+    settings->contrast               = contrast(random);
+    settings->brightness             = brightness(random);
+    settings->saturation             = saturation(random);
     settings->padding                = padding;
     settings->debug_output_directory = debug_output_directory;
 
@@ -119,8 +122,8 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
 
     if (!crop_enable)
     {
-        int c_off_x = padding_crop_offset_distribution(m_dre);
-        int c_off_y = padding_crop_offset_distribution(m_dre);
+        int c_off_x = padding_crop_offset_distribution(random);
+        int c_off_y = padding_crop_offset_distribution(random);
         settings->padding_crop_offset = cv::Size2i(c_off_x, c_off_y);
         settings->cropbox             = cv::Rect(cv::Point2f(0, 0), input_size);
 
@@ -145,8 +148,8 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
                 "crop_enable should not be true: when padding is defined, crop is executed by "
                 "default with cropbox size equal to intput image size");
         }
-        float      image_scale            = scale(m_dre);
-        float      _horizontal_distortion = horizontal_distortion(m_dre);
+        float      image_scale            = scale(random);
+        float      _horizontal_distortion = horizontal_distortion(random);
         cv::Size2f out_shape(output_width * _horizontal_distortion, output_height);
 
         cv::Size2f cropbox_size = nervana::image::cropbox_max_proportional(input_size, out_shape);
@@ -160,8 +163,8 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
             cropbox_size = nervana::image::cropbox_linear_scale(cropbox_size, image_scale);
         }
 
-        float c_off_x = crop_offset(m_dre);
-        float c_off_y = crop_offset(m_dre);
+        float c_off_x = crop_offset(random);
+        float c_off_y = crop_offset(random);
 
         cv::Point2f cropbox_origin =
             nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
@@ -172,7 +175,7 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
     {
         for (int i = 0; i < 3; i++)
         {
-            settings->lighting.push_back(lighting(m_dre));
+            settings->lighting.push_back(lighting(random));
         }
         settings->color_noise_std = lighting.stddev();
     }
@@ -185,18 +188,19 @@ shared_ptr<augment::image::params>
                                                    size_t                   input_height,
                                                    size_t                   output_width,
                                                    size_t                   output_height,
-                                                   const std::vector<bbox>& object_bboxes)
+                                                   const std::vector<bbox>& object_bboxes) const
 {
+    auto& random = get_thread_local_random_engine();
     auto settings = make_params(input_width, input_height, output_width, output_height);
     settings->emit_min_overlap     = m_emit_constraint_min_overlap;
-    settings->emit_constraint_type = get_emit_constraint_type();
+    settings->emit_constraint_type = m_emit_type;
 
     // use warping
     settings->output_size = cv::Size2i(output_width, output_height);
 
     // expand
-    settings->expand_ratio = expand_ratio(m_dre);
-    bool expand_enabled    = expand_distribution(m_dre) < expand_probability;
+    settings->expand_ratio = expand_ratio(random);
+    bool expand_enabled    = expand_distribution(random) < expand_probability;
 
     cv::Size2f input_size = cv::Size(input_width, input_height);
 
@@ -212,8 +216,8 @@ shared_ptr<augment::image::params>
 
         float max_width_offset  = expand_width - input_width;
         float max_height_offset = expand_height - input_height;
-        float w_off             = expand_distribution(m_dre) * max_width_offset;
-        float h_off             = expand_distribution(m_dre) * max_height_offset;
+        float w_off             = expand_distribution(random) * max_width_offset;
+        float h_off             = expand_distribution(random) * max_height_offset;
         settings->expand_offset = cv::Size2i(floor(w_off), floor(h_off));
     }
     else
@@ -255,11 +259,11 @@ shared_ptr<augment::image::params>
     return settings;
 }
 
-bbox augment::image::param_factory::sample_patch(const vector<bbox>& object_bboxes)
+bbox augment::image::param_factory::sample_patch(const vector<bbox>& object_bboxes) const
 {
     vector<bbox> batch_samples;
 
-    for (batch_sampler& sampler : m_batch_samplers)
+    for (const batch_sampler& sampler : m_batch_samplers)
     {
         sampler.sample_patches(object_bboxes, batch_samples);
     }
@@ -270,7 +274,7 @@ bbox augment::image::param_factory::sample_patch(const vector<bbox>& object_bbox
     }
 
     std::uniform_int_distribution<int> uniform_dist(0, batch_samples.size() - 1);
-    int                                rand_index  = uniform_dist(m_dre);
+    int                                rand_index  = uniform_dist(get_thread_local_random_engine());
     bbox                               chosen_bbox = batch_samples[rand_index];
 
     return bbox(
@@ -303,15 +307,16 @@ void augment::image::sampler::operator=(const nlohmann::json& config)
     }
 }
 
-bbox augment::image::sampler::sample_patch()
+bbox augment::image::sampler::sample_patch() const
 {
-    float scale            = m_scale_generator(m_dre);
+    auto& random           = get_thread_local_random_engine();
+    float scale            = m_scale_generator(random);
     float min_aspect_ratio = std::max<float>(m_aspect_ratio_generator.min(), std::pow(scale, 2.));
     float max_aspect_ratio =
         std::min<float>(m_aspect_ratio_generator.max(), 1 / std::pow(scale, 2.));
     auto local_aspect_ratio_generator =
         std::uniform_real_distribution<float>(min_aspect_ratio, max_aspect_ratio);
-    float aspect_ratio = local_aspect_ratio_generator(m_dre);
+    float aspect_ratio = local_aspect_ratio_generator(random);
 
     // Figure out bbox dimension.
     float bbox_width  = scale * sqrt(aspect_ratio);
@@ -321,8 +326,8 @@ bbox augment::image::sampler::sample_patch()
     float                                 w_off, h_off;
     std::uniform_real_distribution<float> width_generator(0.f, 1.f - bbox_width);
     std::uniform_real_distribution<float> height_generator(0.f, 1.f - bbox_height);
-    w_off = width_generator(m_dre);
-    h_off = height_generator(m_dre);
+    w_off = width_generator(random);
+    h_off = height_generator(random);
 
     try
     {
@@ -342,7 +347,7 @@ bbox augment::image::sampler::sample_patch()
 }
 
 bool augment::image::sample_constraint::satisfies(const bbox&              sampled_bbox,
-                                                  const std::vector<bbox>& object_bboxes)
+                                                  const std::vector<bbox>& object_bboxes) const
 {
     bool has_jaccard_overlap = has_min_jaccard_overlap() || has_max_jaccard_overlap();
     bool has_sample_coverage = has_min_sample_coverage() || has_max_sample_coverage();
@@ -512,7 +517,7 @@ augment::image::batch_sampler::batch_sampler(const nlohmann::json& config)
 }
 
 void augment::image::batch_sampler::sample_patches(const vector<bbox>& object_bboxes,
-                                                   vector<bbox>&       output)
+                                                   vector<bbox>&       output) const
 {
     int found = 0;
     for (int i = 0; i < m_max_trials; ++i)

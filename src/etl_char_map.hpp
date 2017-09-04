@@ -140,7 +140,7 @@ public:
     virtual ~extractor() {}
     // in_array is transcription in UTF-8
     // in_sz is max size of transcription in unicode characters
-    virtual std::shared_ptr<char_map::decoded> extract(const void* in_array, size_t in_sz) override;
+    virtual std::shared_ptr<char_map::decoded> extract(const void* in_array, size_t in_sz) const override;
 
 private:
     const cmap_t&  _cmap; // This comes from config
@@ -156,7 +156,7 @@ public:
     {
     }
     virtual ~loader() {}
-    virtual void load(const std::vector<void*>&, std::shared_ptr<char_map::decoded>) override;
+    virtual void load(const std::vector<void*>&, std::shared_ptr<char_map::decoded>) const override;
 
 private:
     const bool _emit_length;

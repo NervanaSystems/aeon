@@ -82,7 +82,7 @@ class nervana::label_map::extractor : public interface::extractor<label_map::dec
 public:
     extractor(const label_map::config&);
     virtual ~extractor() {}
-    virtual std::shared_ptr<label_map::decoded> extract(const void*, size_t) override;
+    virtual std::shared_ptr<label_map::decoded> extract(const void*, size_t) const override;
 
     const std::unordered_map<std::string, int>& get_data() { return dictionary; }
 private:
@@ -96,7 +96,7 @@ public:
     transformer();
     virtual ~transformer() {}
     virtual std::shared_ptr<label_map::decoded>
-        transform(std::shared_ptr<label_map::params>, std::shared_ptr<label_map::decoded>) override;
+        transform(std::shared_ptr<label_map::params>, std::shared_ptr<label_map::decoded>) const override;
 
 private:
 };
@@ -106,7 +106,7 @@ class nervana::label_map::loader : public interface::loader<label_map::decoded>
 public:
     loader(const label_map::config&);
     virtual ~loader() {}
-    virtual void load(const std::vector<void*>&, std::shared_ptr<label_map::decoded>) override;
+    virtual void load(const std::vector<void*>&, std::shared_ptr<label_map::decoded>) const override;
 
 private:
     int max_label_count;

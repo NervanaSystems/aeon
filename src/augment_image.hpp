@@ -94,7 +94,7 @@ public:
         return out;
     }
 
-    float              expand_ratio    = 1.0;
+    float              expand_ratio = 1.0;
     cv::Size2i         expand_offset;
     cv::Size2i         expand_size;
     emit_type          emit_constraint_type = emit_type::undefined;
@@ -120,21 +120,19 @@ private:
 
 class nervana::augment::image::param_factory : public json_configurable
 {
-    emit_type get_emit_constraint_type();
-
 public:
     param_factory(nlohmann::json config);
     std::shared_ptr<params> make_params(size_t input_width,
                                         size_t input_height,
                                         size_t output_width,
-                                        size_t output_height);
+                                        size_t output_height) const;
 
     std::shared_ptr<params>
         make_ssd_params(size_t                                        input_width,
                         size_t                                        input_height,
                         size_t                                        output_width,
                         size_t                                        output_height,
-                        const std::vector<nervana::boundingbox::box>& object_bboxes);
+                        const std::vector<nervana::boundingbox::box>& object_bboxes) const;
 
     bool        do_area_scale                 = false;
     bool        crop_enable                   = true;
@@ -145,39 +143,39 @@ public:
     float       m_emit_constraint_min_overlap = 0.0;
 
     /** Scale the crop box (width, height) */
-    std::uniform_real_distribution<float> scale{1.0f, 1.0f};
+    mutable std::uniform_real_distribution<float> scale{1.0f, 1.0f};
 
     /** Rotate the image (rho, phi) */
-    std::uniform_int_distribution<int> angle{0, 0};
+    mutable std::uniform_int_distribution<int> angle{0, 0};
 
     /** Adjust lighting */
-    std::normal_distribution<float> lighting{0.0f, 0.0f};
+    mutable std::normal_distribution<float> lighting{0.0f, 0.0f};
 
     /** Adjust aspect ratio */
-    std::uniform_real_distribution<float> horizontal_distortion{1.0f, 1.0f};
+    mutable std::uniform_real_distribution<float> horizontal_distortion{1.0f, 1.0f};
 
     /** Adjust contrast */
-    std::uniform_real_distribution<float> contrast{1.0f, 1.0f};
+    mutable std::uniform_real_distribution<float> contrast{1.0f, 1.0f};
 
     /** Adjust brightness */
-    std::uniform_real_distribution<float> brightness{1.0f, 1.0f};
+    mutable std::uniform_real_distribution<float> brightness{1.0f, 1.0f};
 
     /** Adjust saturation */
-    std::uniform_real_distribution<float> saturation{1.0f, 1.0f};
+    mutable std::uniform_real_distribution<float> saturation{1.0f, 1.0f};
 
     /** Expand image */
-    std::uniform_real_distribution<float> expand_ratio{1.0f, 1.0f};
-    std::uniform_real_distribution<float> expand_distribution{0.0f, 1.0f};
+    mutable std::uniform_real_distribution<float> expand_ratio{1.0f, 1.0f};
+    mutable std::uniform_real_distribution<float> expand_distribution{0.0f, 1.0f};
 
     /** Rotate hue in degrees. Valid values are [-180; 180] */
-    std::uniform_int_distribution<int> hue{0, 0};
+    mutable std::uniform_int_distribution<int> hue{0, 0};
 
     /** Offset from center for the crop */
-    std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
+    mutable std::uniform_real_distribution<float> crop_offset{0.5f, 0.5f};
 
     /** Flip the image left to right */
-    std::bernoulli_distribution flip_distribution{0};
-    
+    mutable std::bernoulli_distribution flip_distribution{0};
+
     /** Image padding pixel number with random crop to original image size */
     int padding{0};
 
@@ -185,20 +183,19 @@ public:
     std::string debug_output_directory = "";
 
     std::vector<nlohmann::json> batch_samplers;
-    
+
 private:
     nervana::boundingbox::box
-        sample_patch(const std::vector<nervana::boundingbox::box>& object_bboxes);
+        sample_patch(const std::vector<nervana::boundingbox::box>& object_bboxes) const;
 
-    bool flip_enable = false;
-    bool center      = true;
+    bool      flip_enable = false;
+    bool      center      = true;
+    emit_type m_emit_type;
 
     /** Offset for padding cropbox */
-    std::uniform_int_distribution<int> padding_crop_offset_distribution{0, 0};
+    mutable std::uniform_int_distribution<int> padding_crop_offset_distribution{0, 0};
 
     std::vector<batch_sampler> m_batch_samplers;
-
-    std::default_random_engine m_dre{get_global_random_seed()};
 
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_DISTRIBUTION(scale,
@@ -235,6 +232,8 @@ private:
                          [](decltype(expand_ratio) v) { return v.a() >= 1 && v.a() <= v.b(); }),
         ADD_DISTRIBUTION(hue, mode::OPTIONAL, [](decltype(hue) v) { return v.a() <= v.b(); }),
         ADD_OBJECT(batch_samplers, mode::OPTIONAL)};
+
+    emit_type get_emit_constraint_type();
 };
 
 class nervana::augment::image::sample final
@@ -245,7 +244,6 @@ public:
         , m_aspect_ratio(aspect_ratio)
     {
     }
-
     float get_scale() const { return m_scale; }
     float get_aspect_ratio() const { return m_aspect_ratio; }
 private:
@@ -260,15 +258,13 @@ public:
     explicit sampler(const nlohmann::json& config);
     void operator=(const nlohmann::json& config);
 
-    boundingbox::box sample_patch();
+    boundingbox::box sample_patch() const;
 
 private:
     /** Scale of sampled box */
-    std::uniform_real_distribution<float> m_scale_generator{1.0f, 1.0f};
+    mutable std::uniform_real_distribution<float> m_scale_generator{1.0f, 1.0f};
     /** Aspect Ratio of sampled box */
-    std::uniform_real_distribution<float> m_aspect_ratio_generator{1.0f, 1.0f};
-
-    std::default_random_engine m_dre{get_global_random_seed()};
+    mutable std::uniform_real_distribution<float> m_aspect_ratio_generator{1.0f, 1.0f};
 
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_DISTRIBUTION_WITH_KEY(m_scale_generator,
@@ -293,7 +289,7 @@ public:
     void operator=(const nlohmann::json& config);
 
     bool satisfies(const boundingbox::box&              sampled_bbox,
-                   const std::vector<boundingbox::box>& object_bboxes);
+                   const std::vector<boundingbox::box>& object_bboxes) const;
 
     bool  has_min_jaccard_overlap() const { return !std::isnan(m_min_jaccard_overlap); }
     float get_min_jaccard_overlap() const;
@@ -339,7 +335,7 @@ public:
     batch_sampler(const nlohmann::json& config);
 
     void sample_patches(const std::vector<boundingbox::box>& object_bboxes,
-                        std::vector<boundingbox::box>&       output);
+                        std::vector<boundingbox::box>&       output) const;
 
 private:
     // If provided, break when found certain number of samples satisfing the

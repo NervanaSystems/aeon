@@ -26,7 +26,7 @@ depthmap::extractor::~extractor()
 {
 }
 
-shared_ptr<image::decoded> depthmap::extractor::extract(const void* inbuf, size_t insize)
+shared_ptr<image::decoded> depthmap::extractor::extract(const void* inbuf, size_t insize) const
 {
     cv::Mat image;
 
@@ -59,7 +59,7 @@ depthmap::transformer::~transformer()
 
 std::shared_ptr<image::decoded>
     depthmap::transformer::transform(std::shared_ptr<augment::image::params> img_xform,
-                                     std::shared_ptr<image::decoded>         image_list)
+                                     std::shared_ptr<image::decoded>         image_list) const
 {
     if (image_list->get_image_count() != 1)
         throw invalid_argument("depthmap transform only supports a single image");
@@ -84,7 +84,7 @@ std::shared_ptr<image::decoded>
     return make_shared<image::decoded>(*finalImage);
 }
 
-void depthmap::loader::load(const std::vector<void*>& outlist, shared_ptr<image::decoded> input)
+void depthmap::loader::load(const std::vector<void*>& outlist, shared_ptr<image::decoded> input) const
 {
     char* outbuf = (char*)outlist[0];
     // TODO: Generalize this to also handle multi_crop case

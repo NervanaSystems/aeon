@@ -112,7 +112,7 @@ provider::provider_base::provider_base(nlohmann::json                     js,
 
 void provider::provider_base::provide(int                           idx,
                                       nervana::encoded_record_list& in_buf,
-                                      nervana::fixed_buffer_map&    out_buf)
+                                      nervana::fixed_buffer_map&    out_buf) const
 {
     augmentation aug;
     int          index = 0;
@@ -161,7 +161,7 @@ provider::image::image(nlohmann::json js, nlohmann::json aug)
 void provider::image::provide(int                        idx,
                               const std::vector<char>&   datum_in,
                               nervana::fixed_buffer_map& out_buf,
-                              augmentation&              aug)
+                              augmentation&              aug) const
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -200,7 +200,7 @@ provider::label::label(nlohmann::json js)
 void provider::label::provide(int                        idx,
                               const vector<char>&        datum_in,
                               nervana::fixed_buffer_map& out_buf,
-                              augmentation&              aug)
+                              augmentation&              aug) const
 {
     char* target_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -240,7 +240,7 @@ provider::audio::audio(nlohmann::json js, nlohmann::json aug)
 void provider::audio::provide(int                        idx,
                               const std::vector<char>&   datum_in,
                               nervana::fixed_buffer_map& out_buf,
-                              augmentation&              aug)
+                              augmentation&              aug) const
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -306,7 +306,7 @@ provider::localization::rcnn::rcnn(nlohmann::json js, nlohmann::json aug)
 void provider::localization::rcnn::provide(int                        idx,
                                            const std::vector<char>&   datum_in,
                                            nervana::fixed_buffer_map& out_buf,
-                                           augmentation&              aug)
+                                           augmentation&              aug) const
 {
     vector<void*> output_list = {out_buf[m_bbtargets_buffer_name]->get_item(idx),
                                  out_buf[m_bbtargets_mask_buffer_name]->get_item(idx),
@@ -367,7 +367,7 @@ provider::localization::ssd::ssd(nlohmann::json js, nlohmann::json aug)
 void provider::localization::ssd::provide(int                        idx,
                                           const std::vector<char>&   datum_in,
                                           nervana::fixed_buffer_map& out_buf,
-                                          augmentation&              aug)
+                                          augmentation&              aug) const
 {
     vector<void*> output_list = {out_buf[m_image_shape_buffer_name]->get_item(idx),
                                  out_buf[m_gt_boxes_buffer_name]->get_item(idx),
@@ -418,7 +418,7 @@ provider::pixelmask::pixelmask(nlohmann::json js, nlohmann::json aug)
 void provider::pixelmask::provide(int                        idx,
                                   const std::vector<char>&   datum_in,
                                   nervana::fixed_buffer_map& out_buf,
-                                  augmentation&              aug)
+                                  augmentation&              aug) const
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -464,7 +464,7 @@ provider::boundingbox::boundingbox(nlohmann::json js, nlohmann::json aug)
 void provider::boundingbox::provide(int                        idx,
                                     const std::vector<char>&   datum_in,
                                     nervana::fixed_buffer_map& out_buf,
-                                    augmentation&              aug)
+                                    augmentation&              aug) const
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -508,7 +508,7 @@ provider::blob::blob(nlohmann::json js)
 void provider::blob::provide(int                        idx,
                              const std::vector<char>&   datum_in,
                              nervana::fixed_buffer_map& out_buf,
-                             augmentation&)
+                             augmentation&) const
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -542,7 +542,7 @@ provider::video::video(nlohmann::json js, nlohmann::json aug)
 void provider::video::provide(int                        idx,
                               const std::vector<char>&   datum_in,
                               nervana::fixed_buffer_map& out_buf,
-                              augmentation&              aug)
+                              augmentation&              aug) const
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -592,7 +592,7 @@ provider::char_map::char_map(nlohmann::json js)
 void provider::char_map::provide(int                        idx,
                                  const std::vector<char>&   datum_in,
                                  nervana::fixed_buffer_map& out_buf,
-                                 augmentation&)
+                                 augmentation&) const
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 
@@ -633,7 +633,7 @@ provider::label_map::label_map(nlohmann::json js)
 void provider::label_map::provide(int                        idx,
                                   const std::vector<char>&   datum_in,
                                   nervana::fixed_buffer_map& out_buf,
-                                  augmentation&)
+                                  augmentation&) const
 {
     char* datum_out = out_buf[m_buffer_name]->get_item(idx);
 

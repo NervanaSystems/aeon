@@ -61,24 +61,23 @@ class nervana::augment::audio::param_factory : public json_configurable
 {
 public:
     param_factory(nlohmann::json config);
-    std::shared_ptr<augment::audio::params> make_params();
+    std::shared_ptr<augment::audio::params> make_params() const;
 
     // This derived distribution gets filled by parsing add_noise_probability
     /** Probability of adding noise */
-    std::bernoulli_distribution add_noise{0.0f};
+    mutable std::bernoulli_distribution add_noise{0.0f};
     /** Index into noise index file */
-    std::uniform_int_distribution<uint32_t> noise_index{0, UINT32_MAX};
+    mutable std::uniform_int_distribution<uint32_t> noise_index{0, UINT32_MAX};
     /** Offset from start of noise file */
-    std::uniform_real_distribution<float> noise_offset_fraction{0.0f, 1.0f};
+    mutable std::uniform_real_distribution<float> noise_offset_fraction{0.0f, 1.0f};
 
     /** Simple linear time-warping */
-    std::uniform_real_distribution<float> time_scale_fraction{1.0f, 1.0f};
+    mutable std::uniform_real_distribution<float> time_scale_fraction{1.0f, 1.0f};
 
     /** How much noise to add (a value of 1 would be 0 dB SNR) */
-    std::uniform_real_distribution<float> noise_level{0.0f, 0.5f};
+    mutable std::uniform_real_distribution<float> noise_level{0.0f, 0.5f};
 
 private:
-    std::default_random_engine m_random{get_global_random_seed()};
     float                      add_noise_probability = 0.0f;
 
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {

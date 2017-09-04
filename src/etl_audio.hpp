@@ -298,7 +298,7 @@ class nervana::audio::extractor : public interface::extractor<audio::decoded>
 public:
     extractor() {}
     ~extractor() {}
-    std::shared_ptr<audio::decoded> extract(const void*, size_t) override;
+    std::shared_ptr<audio::decoded> extract(const void*, size_t) const override;
 
 private:
 };
@@ -310,7 +310,7 @@ public:
     transformer(const audio::config& config);
     ~transformer();
     std::shared_ptr<audio::decoded> transform(std::shared_ptr<augment::audio::params>,
-                                              std::shared_ptr<audio::decoded>) override;
+                                              std::shared_ptr<audio::decoded>) const override;
 
 private:
     transformer() = delete;
@@ -330,7 +330,7 @@ public:
     {
     }
     ~loader() {}
-    virtual void load(const std::vector<void*>&, std::shared_ptr<audio::decoded>) override;
+    virtual void load(const std::vector<void*>&, std::shared_ptr<audio::decoded>) const override;
 
 private:
     const audio::config& _cfg;

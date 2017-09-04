@@ -384,6 +384,69 @@ TEST(loader, provider)
     }
 }
 
+#ifdef DETERMINISTIC_MODE
+static std::string generate_manifest_file(size_t record_count)
+{
+    std::string manifest_name = "manifest.txt";
+    const char* image_files[] = {"flowers.jpg", "img_2112_70.jpg"};
+    std::ofstream f(manifest_name);
+    if (f)
+    {
+        f << nervana::manifest_file::get_metadata_char();
+        f << nervana::manifest_file::get_file_type_id();
+        f << nervana::manifest_file::get_delimiter();
+        f << nervana::manifest_file::get_string_type_id();
+        f << "\n";
+        for (size_t i=0; i<record_count; i++)
+        {
+            f << image_files[i % 2];
+            f << nervana::manifest_file::get_delimiter();
+            f << std::to_string(i % 2);
+            f << "\n";
+        }
+    }
+    return manifest_name;
+}
+
+TEST(loader, deterministic)
+{
+    std::string test_data_directory = file_util::path_join(string(CURDIR), "test_data");
+    std::string manifest            = generate_manifest_file(20);
+
+    int    height     = 1;
+    int    width      = 1;
+    size_t batch_size = 4;
+
+    nlohmann::json image_config = {
+        {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
+
+    nlohmann::json label_config = {{"type", "label"}, {"binary", false}};
+    auto           aug_config   = vector<nlohmann::json>{{{"type", "image"},
+                                       {"scale", {0.5, 1.0}},
+                                       {"saturation", {0.5, 2.0}},
+                                       {"contrast", {0.5, 1.0}},
+                                       {"brightness", {0.5, 1.0}},
+                                       {"flip_enable", true}}};
+    nlohmann::json config = {{"manifest_root", test_data_directory},
+                             {"manifest_filename", manifest},
+                             {"batch_size", batch_size},
+                             {"iteration_mode", "INFINITE"},
+                             {"decode_thread_count", 0},
+                             {"etl", {image_config, label_config}},
+                             {"augmentation", aug_config}};
+
+    auto loader = nervana::loader{config};
+    loader.get_current_iter();
+    auto& buffer  = *loader.get_current_iter();
+
+    const uint32_t expected_result[3]={0x36362f2a, 0x56493d3b, 0x6b665b5c};
+    uint32_t* data = reinterpret_cast<uint32_t*>(buffer["image"]->data());
+    EXPECT_EQ(data[0], expected_result[0]);
+    EXPECT_EQ(data[1], expected_result[1]);
+    EXPECT_EQ(data[2], expected_result[2]);
+}
+#endif
+
 TEST(benchmark, imagenet)
 {
     char* manifest_root = getenv("TEST_IMAGENET_ROOT");

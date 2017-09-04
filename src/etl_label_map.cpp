@@ -56,7 +56,7 @@ extractor::extractor(const label_map::config& cfg)
     }
 }
 
-shared_ptr<decoded> extractor::extract(const void* data, size_t size)
+shared_ptr<decoded> extractor::extract(const void* data, size_t size) const
 {
     auto         rc = make_shared<decoded>();
     stringstream ss(string((const char*)data, size));
@@ -83,7 +83,7 @@ transformer::transformer()
 {
 }
 
-shared_ptr<decoded> transformer::transform(shared_ptr<params> pptr, shared_ptr<decoded> media)
+shared_ptr<decoded> transformer::transform(shared_ptr<params> pptr, shared_ptr<decoded> media) const
 {
     return media;
 }
@@ -93,7 +93,7 @@ loader::loader(const nervana::label_map::config& cfg)
 {
 }
 
-void loader::load(const vector<void*>& data, shared_ptr<decoded> media)
+void loader::load(const vector<void*>& data, shared_ptr<decoded> media) const
 {
     int       i      = 0;
     uint32_t* data_p = (uint32_t*)data[0];

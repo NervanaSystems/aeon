@@ -267,9 +267,22 @@ void nervana::set_global_random_seed(uint32_t newval)
 }
 uint32_t nervana::get_global_random_seed()
 {
-    std::random_device rd;
-    return rd(); // TODO: global_random_seed;
+#ifdef DETERMINISTIC_MODE
+    return nervana::global_random_seed;
+#else
+    return random_device{}();
+#endif
 }
+
+namespace nervana
+{
+    thread_local static std::default_random_engine local_random_engine{get_global_random_seed()};
+}
+std::default_random_engine& nervana::get_thread_local_random_engine()
+{
+    return local_random_engine;
+}
+
 cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
 {
     SOX_SAMPLE_LOCALS;

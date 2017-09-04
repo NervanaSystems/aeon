@@ -98,6 +98,7 @@ void manifest_file::initialize(std::istream&      stream,
     size_t                 line_number   = 0;
     string                 line;
     vector<vector<string>> record_list;
+    
 
     // read in each line, then from that istringstream, break into
     // tab-separated elements.
@@ -189,7 +190,7 @@ void manifest_file::initialize(std::istream&      stream,
 
     if (m_shuffle)
     {
-        std::shuffle(record_list.begin(), record_list.end(), std::mt19937(0));
+        std::shuffle(record_list.begin(), record_list.end(), std::mt19937(get_global_random_seed()));
     }
 
     m_record_count = record_list.size();

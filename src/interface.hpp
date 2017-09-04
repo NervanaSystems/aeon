@@ -348,7 +348,7 @@ class nervana::interface::extractor
 {
 public:
     virtual ~extractor() {}
-    virtual std::shared_ptr<T> extract(const void*, size_t) = 0;
+    virtual std::shared_ptr<T> extract(const void*, size_t) const = 0;
 };
 
 template <typename T, typename S>
@@ -356,7 +356,7 @@ class nervana::interface::transformer
 {
 public:
     virtual ~transformer() {}
-    virtual std::shared_ptr<T> transform(std::shared_ptr<S>, std::shared_ptr<T>) = 0;
+    virtual std::shared_ptr<T> transform(std::shared_ptr<S>, std::shared_ptr<T>) const = 0;
 };
 
 template <typename T>
@@ -364,7 +364,7 @@ class nervana::interface::loader
 {
 public:
     virtual ~loader() {}
-    virtual void load(const std::vector<void*>&, std::shared_ptr<T>) = 0;
+    virtual void load(const std::vector<void*>&, std::shared_ptr<T>) const = 0;
 };
 
 /*  ABSTRACT INTERFACES */

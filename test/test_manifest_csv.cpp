@@ -581,6 +581,7 @@ private:
     vector<string> file_list;
 };
 
+#ifdef DETERMINISTIC_MODE
 TEST(manifest, manifest_shuffle)
 {
     string           source_dir = file_util::make_temp_directory(test_cache_directory);
@@ -648,6 +649,7 @@ TEST(manifest, subset_fraction)
 
     EXPECT_EQ(manifest1_crc, manifest2_crc);
 }
+#endif
 
 TEST(manifest, crc_root_dir)
 {

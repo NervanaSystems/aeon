@@ -63,7 +63,7 @@ boundingbox::extractor::extractor(const std::unordered_map<std::string, int>& ma
 void boundingbox::extractor::extract(const void*                            data,
                                      size_t                                 size,
                                      std::shared_ptr<boundingbox::decoded>& rc,
-                                     bool                                   boxes_normalized)
+                                     bool                                   boxes_normalized) const
 {
     string buffer((const char*)data, size);
     json   j = json::parse(buffer);
@@ -158,7 +158,7 @@ void boundingbox::extractor::extract(const void*                            data
     }
 }
 
-shared_ptr<boundingbox::decoded> boundingbox::extractor::extract(const void* data, size_t size)
+shared_ptr<boundingbox::decoded> boundingbox::extractor::extract(const void* data, size_t size) const
 {
     shared_ptr<decoded> rc = make_shared<decoded>();
     extract(data, size, rc);
@@ -288,7 +288,7 @@ vector<bbox> boundingbox::transformer::transform_box(const std::vector<bbox>&   
 
 shared_ptr<boundingbox::decoded>
     boundingbox::transformer::transform(shared_ptr<augment::image::params> pptr,
-                                        shared_ptr<boundingbox::decoded>   boxes)
+                                        shared_ptr<boundingbox::decoded>   boxes) const
 {
     if (pptr->angle != 0)
     {
@@ -305,7 +305,7 @@ boundingbox::loader::loader(const boundingbox::config& cfg)
 {
 }
 
-void boundingbox::loader::load(const vector<void*>& outlist, shared_ptr<boundingbox::decoded> boxes)
+void boundingbox::loader::load(const vector<void*>& outlist, shared_ptr<boundingbox::decoded> boxes) const
 {
     float* data         = (float*)outlist[0];
     size_t output_count = min(max_bbox, boxes->boxes().size());

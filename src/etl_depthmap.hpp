@@ -38,7 +38,7 @@ class nervana::depthmap::extractor : public interface::extractor<image::decoded>
 public:
     extractor(const image::config&);
     virtual ~extractor();
-    virtual std::shared_ptr<image::decoded> extract(const void*, size_t) override;
+    virtual std::shared_ptr<image::decoded> extract(const void*, size_t) const override;
 
 private:
 };
@@ -54,7 +54,7 @@ public:
     transformer(const image::config&);
     ~transformer();
     std::shared_ptr<image::decoded> transform(std::shared_ptr<augment::image::params> txs,
-                                              std::shared_ptr<image::decoded>         mp) override;
+                                              std::shared_ptr<image::decoded>         mp) const override;
 };
 
 //-------------------------------------------------------------------------
@@ -69,7 +69,7 @@ public:
     {
     }
     ~loader() {}
-    virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) override;
+    virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) const override;
 
 private:
     const image::config& _cfg;

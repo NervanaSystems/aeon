@@ -48,6 +48,15 @@ batch_decoder::~batch_decoder()
     finalize();
 }
 
+void batch_decoder::process(const int index)
+{
+#ifdef DETERMINISTIC_MODE
+    get_thread_local_random_engine().seed(index + (m_batch_size * m_iteration_number) +
+                                          get_global_random_seed());
+#endif
+    m_provider->provide(index, *m_inputs, *m_outputs);
+}
+
 fixed_buffer_map* batch_decoder::filler()
 {
     m_state                     = async_state::wait_for_buffer;
@@ -56,21 +65,22 @@ fixed_buffer_map* batch_decoder::filler()
     encoded_record_list* inputs = m_source->next();
     m_state                     = async_state::processing;
 
+    m_iteration_number++;
+
     if (inputs == nullptr)
     {
         outputs = nullptr;
     }
     else
     {
-        for(const encoded_record& record : *inputs)
+        for (const encoded_record& record : *inputs)
         {
             record.rethrow_if_exception();
         }
-        m_inputs = inputs;
+        m_inputs  = inputs;
         m_outputs = outputs;
         m_thread_pool.run();
-    }   
+    }
     m_state = async_state::idle;
     return outputs;
 }
-

@@ -164,7 +164,7 @@ class nervana::localization::rcnn::extractor : public nervana::interface::extrac
 public:
     extractor(const localization::rcnn::config&);
 
-    virtual std::shared_ptr<localization::rcnn::decoded> extract(const void* data, size_t size) override
+    virtual std::shared_ptr<localization::rcnn::decoded> extract(const void* data, size_t size) const override
     {
         auto rc = std::make_shared<localization::rcnn::decoded>();
         auto bb = std::static_pointer_cast<boundingbox::decoded>(rc);
@@ -177,7 +177,7 @@ public:
     virtual ~extractor() {}
 private:
     extractor() = delete;
-    boundingbox::extractor bbox_extractor;
+    const boundingbox::extractor bbox_extractor;
 };
 
 class nervana::localization::rcnn::transformer
@@ -189,18 +189,17 @@ public:
     virtual ~transformer() {}
     std::shared_ptr<localization::rcnn::decoded>
         transform(std::shared_ptr<augment::image::params> txs,
-                  std::shared_ptr<localization::rcnn::decoded>  mp) override;
+                  std::shared_ptr<localization::rcnn::decoded>  mp) const override;
 
 private:
     transformer() = delete;
     cv::Mat bbox_overlaps(const std::vector<box>&              boxes,
-                          const std::vector<boundingbox::box>& query_boxes);
+                          const std::vector<boundingbox::box>& query_boxes) const;
     static std::vector<target> compute_targets(const std::vector<box>& gt_bb,
                                                const std::vector<box>& anchors);
-    std::vector<int> sample_anchors(const std::vector<int>& labels, bool debug = false);
+    std::vector<int> sample_anchors(const std::vector<int>& labels, bool debug = false) const;
 
     const localization::rcnn::config& cfg;
-    std::minstd_rand0           random;
     const std::vector<box>      all_anchors;
     float                       m_fixed_scaling_factor;
 };
@@ -212,7 +211,7 @@ public:
 
     virtual ~loader() {}
     void load(const std::vector<void*>&              buf_list,
-              std::shared_ptr<localization::rcnn::decoded> mp) override;
+              std::shared_ptr<localization::rcnn::decoded> mp) const override;
 
 private:
     loader() = delete;

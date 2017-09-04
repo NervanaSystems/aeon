@@ -81,7 +81,7 @@ localization::ssd::extractor::extractor(const localization::ssd::config& _cfg)
 }
 
 std::shared_ptr<localization::ssd::decoded> localization::ssd::extractor::extract(const void* data,
-                                                                                  size_t      size)
+                                                                                  size_t      size) const
 {
     auto rc = std::make_shared<ssd::decoded>();
     auto bb = std::static_pointer_cast<boundingbox::decoded>(rc);
@@ -108,7 +108,7 @@ std::shared_ptr<localization::ssd::decoded> localization::ssd::extractor::extrac
 
 shared_ptr<localization::ssd::decoded>
     localization::ssd::transformer::transform(shared_ptr<augment::image::params>     settings,
-                                              shared_ptr<localization::ssd::decoded> mp)
+                                              shared_ptr<localization::ssd::decoded> mp) const
 {
     mp->gt_boxes = boundingbox::transformer::transform_box(mp->boxes(), settings);
 
@@ -123,7 +123,7 @@ localization::ssd::loader::loader(const localization::ssd::config& cfg)
 }
 
 void localization::ssd::loader::load(const vector<void*>&                        buf_list,
-                                     std::shared_ptr<localization::ssd::decoded> mp)
+                                     std::shared_ptr<localization::ssd::decoded> mp) const
 {
     int32_t* im_shape     = (int32_t*)buf_list[0];
     float*   gt_boxes     = (float*)buf_list[1];

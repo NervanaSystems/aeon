@@ -94,7 +94,7 @@ localization::rcnn::transformer::transformer(const localization::rcnn::config& _
 
 shared_ptr<localization::rcnn::decoded>
     localization::rcnn::transformer::transform(shared_ptr<augment::image::params> settings,
-                                         shared_ptr<localization::rcnn::decoded>  mp)
+                                         shared_ptr<localization::rcnn::decoded>  mp) const
 {
     cv::Size input_size = settings->cropbox.size();
     float    im_scale;
@@ -217,8 +217,9 @@ shared_ptr<localization::rcnn::decoded>
     return mp;
 }
 
-vector<int> localization::rcnn::transformer::sample_anchors(const vector<int>& labels, bool debug)
+vector<int> localization::rcnn::transformer::sample_anchors(const vector<int>& labels, bool debug) const
 {
+    cout<<"fuck"<<"\n";
     // subsample labels if needed
     int         num_fg = int(cfg.foreground_fraction * cfg.rois_per_image);
     vector<int> fg_idx;
@@ -234,6 +235,7 @@ vector<int> localization::rcnn::transformer::sample_anchors(const vector<int>& l
             bg_idx.push_back(i);
         }
     }
+    auto& random = get_thread_local_random_engine();
     if (debug == false)
     {
         shuffle(fg_idx.begin(), fg_idx.end(), random);
@@ -288,7 +290,7 @@ vector<localization::rcnn::target> localization::rcnn::transformer::compute_targ
 }
 
 cv::Mat localization::rcnn::transformer::bbox_overlaps(const vector<box>&              boxes,
-                                                 const vector<boundingbox::box>& bounding_boxes)
+                                                 const vector<boundingbox::box>& bounding_boxes) const
 {
     // Parameters
     // ----------
@@ -333,7 +335,7 @@ localization::rcnn::loader::loader(const localization::rcnn::config& cfg)
 }
 
 void localization::rcnn::loader::load(const vector<void*>&                   buf_list,
-                                std::shared_ptr<localization::rcnn::decoded> mp)
+                                std::shared_ptr<localization::rcnn::decoded> mp) const
 {
     // # 0. bounding box target coordinates
     // # 1. bounding box target masks (keep positive anchors only)

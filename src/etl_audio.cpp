@@ -19,7 +19,7 @@ using namespace std;
 using namespace nervana;
 
 /** \brief Extract audio data from a wav file using sox */
-std::shared_ptr<audio::decoded> audio::extractor::extract(const void* item, size_t itemSize)
+std::shared_ptr<audio::decoded> audio::extractor::extract(const void* item, size_t itemSize) const
 {
     return make_shared<audio::decoded>(nervana::read_audio_from_mem((const char*)item, itemSize));
 }
@@ -52,7 +52,7 @@ audio::transformer::~transformer()
 */
 std::shared_ptr<audio::decoded>
     audio::transformer::transform(std::shared_ptr<augment::audio::params> params,
-                                  std::shared_ptr<audio::decoded>         decoded)
+                                  std::shared_ptr<audio::decoded>         decoded) const
 {
     cv::Mat& samples_mat = decoded->get_time_data();
     _noisemaker->addNoise(samples_mat,
@@ -104,7 +104,7 @@ std::shared_ptr<audio::decoded>
     return decoded;
 }
 
-void audio::loader::load(const vector<void*>& outbuf, shared_ptr<audio::decoded> input)
+void audio::loader::load(const vector<void*>& outbuf, shared_ptr<audio::decoded> input) const
 {
     auto nframes = input->valid_frames;
     auto frames  = input->get_freq_data();

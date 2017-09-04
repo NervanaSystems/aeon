@@ -47,14 +47,16 @@ public:
         m_info_handler = f;
     }
 
-    void process(const int index) { m_provider->provide(index, *m_inputs, *m_outputs); }
+    void process(const int index);
+
 private:
-    size_t                              m_batch_size;
-    size_t                              m_number_elements_in;
-    size_t                              m_number_elements_out;
-    std::shared_ptr<provider_interface> m_provider;
-    encoded_record_list*                m_inputs{nullptr};
-    fixed_buffer_map*                   m_outputs{nullptr};
+    size_t                                    m_batch_size;
+    size_t                                    m_number_elements_in;
+    size_t                                    m_number_elements_out;
+    std::shared_ptr<const provider_interface> m_provider;
+    encoded_record_list*                      m_inputs{nullptr};
+    fixed_buffer_map*                         m_outputs{nullptr};
     thread_pool<batch_decoder, &batch_decoder::process> m_thread_pool;
     std::function<void(const fixed_buffer_map*)> m_info_handler;
+    size_t                                       m_iteration_number{0};
 };

@@ -146,6 +146,9 @@ namespace nervana
 
     void set_global_random_seed(uint32_t newval);
     uint32_t get_global_random_seed();
+
+    std::default_random_engine& get_thread_local_random_engine();
+
     cv::Mat read_audio_from_mem(const char* item, int itemSize);
 
     std::vector<char> string2vector(const std::string& s);

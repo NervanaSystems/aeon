@@ -91,7 +91,7 @@ public:
     extractor(const ssd::config&);
     virtual ~extractor() {}
 
-    virtual std::shared_ptr<ssd::decoded> extract(const void* data, size_t size) override;
+    virtual std::shared_ptr<ssd::decoded> extract(const void* data, size_t size) const override;
 
 private:
     extractor() = delete;
@@ -107,10 +107,9 @@ public:
 
     virtual ~transformer() {}
     std::shared_ptr<ssd::decoded> transform(std::shared_ptr<augment::image::params> txs,
-                                            std::shared_ptr<ssd::decoded>           mp) override;
+                                            std::shared_ptr<ssd::decoded>           mp) const override;
 
 private:
-    std::minstd_rand0  random;
 };
 
 class nervana::localization::ssd::loader : public interface::loader<ssd::decoded>
@@ -119,7 +118,7 @@ public:
     loader(const ssd::config&);
 
     virtual ~loader() {}
-    void load(const std::vector<void*>& buf_list, std::shared_ptr<ssd::decoded> mp) override;
+    void load(const std::vector<void*>& buf_list, std::shared_ptr<ssd::decoded> mp) const override;
 
 private:
     loader() = delete;

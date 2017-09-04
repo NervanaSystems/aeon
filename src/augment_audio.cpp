@@ -48,15 +48,17 @@ nervana::augment::audio::param_factory::param_factory(nlohmann::json js)
     }
 }
 
-shared_ptr<augment::audio::params> augment::audio::param_factory::make_params()
+shared_ptr<augment::audio::params> augment::audio::param_factory::make_params() const
 {
     auto audio_stgs = shared_ptr<augment::audio::params>(new augment::audio::params());
 
-    audio_stgs->add_noise             = add_noise(m_random);
-    audio_stgs->noise_index           = noise_index(m_random);
-    audio_stgs->noise_level           = noise_level(m_random);
-    audio_stgs->noise_offset_fraction = noise_offset_fraction(m_random);
-    audio_stgs->time_scale_fraction   = time_scale_fraction(m_random);
+    auto& random = get_thread_local_random_engine();
+
+    audio_stgs->add_noise             = add_noise(random);
+    audio_stgs->noise_index           = noise_index(random);
+    audio_stgs->noise_level           = noise_level(random);
+    audio_stgs->noise_offset_fraction = noise_offset_fraction(random);
+    audio_stgs->time_scale_fraction   = time_scale_fraction(random);
 
     return audio_stgs;
 }

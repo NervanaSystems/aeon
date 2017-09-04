@@ -26,7 +26,7 @@ pixel_mask::extractor::~extractor()
 {
 }
 
-shared_ptr<image::decoded> pixel_mask::extractor::extract(const void* inbuf, size_t insize)
+shared_ptr<image::decoded> pixel_mask::extractor::extract(const void* inbuf, size_t insize) const
 {
     cv::Mat image;
 
@@ -59,7 +59,7 @@ pixel_mask::transformer::~transformer()
 
 std::shared_ptr<image::decoded>
     pixel_mask::transformer::transform(std::shared_ptr<augment::image::params> img_xform,
-                                       std::shared_ptr<image::decoded>         image_list)
+                                       std::shared_ptr<image::decoded>         image_list) const
 {
     if (image_list->get_image_count() != 1)
         throw invalid_argument("pixel_mask transform only supports a single image");

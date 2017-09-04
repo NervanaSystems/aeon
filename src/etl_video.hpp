@@ -69,7 +69,7 @@ class nervana::video::extractor : public interface::extractor<image::decoded>
 public:
     extractor(const video::config&) {}
     virtual ~extractor() {}
-    virtual std::shared_ptr<image::decoded> extract(const void* item, size_t itemSize) override;
+    virtual std::shared_ptr<image::decoded> extract(const void* item, size_t itemSize) const override;
 
 protected:
 private:
@@ -85,7 +85,7 @@ public:
     transformer(const transformer&) = default;
     virtual ~transformer() {}
     virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<augment::image::params>,
-                                                      std::shared_ptr<image::decoded>) override;
+                                                      std::shared_ptr<image::decoded>) const override;
 
 protected:
     transformer() = delete;
@@ -98,7 +98,7 @@ class nervana::video::loader : public interface::loader<image::decoded>
 public:
     loader(const video::config& cfg) {}
     virtual ~loader() {}
-    virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) override;
+    virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) const override;
 
 private:
     loader() = delete;

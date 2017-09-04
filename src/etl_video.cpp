@@ -19,7 +19,7 @@
 using namespace std;
 using namespace nervana;
 
-std::shared_ptr<image::decoded> video::extractor::extract(const void* item, size_t itemSize)
+std::shared_ptr<image::decoded> video::extractor::extract(const void* item, size_t itemSize) const
 {
     // Very bad -- need to circle back and make an imemstream so we don't have to strip
     // constness from item
@@ -47,7 +47,7 @@ video::transformer::transformer(const video::config& config)
 
 std::shared_ptr<image::decoded>
     video::transformer::transform(std::shared_ptr<augment::image::params> img_xform,
-                                  std::shared_ptr<image::decoded>         img)
+                                  std::shared_ptr<image::decoded>         img) const
 {
     auto tx_img  = frame_transformer.transform(img_xform, img);
     auto out_img = make_shared<image::decoded>();
@@ -72,7 +72,7 @@ std::shared_ptr<image::decoded>
     return out_img;
 }
 
-void video::loader::load(const vector<void*>& buflist, shared_ptr<image::decoded> input)
+void video::loader::load(const vector<void*>& buflist, shared_ptr<image::decoded> input) const
 {
     char* outbuf = (char*)buflist[0];
     // loads in channel x depth(frame) x height x width

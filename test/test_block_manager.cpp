@@ -509,8 +509,10 @@ TEST(block_manager, file_shuffle_no_cache)
     }
     EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
     EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+#ifdef DETERMINISTIC_MODE
     EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
     EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+#endif
 }
 
 TEST(block_manager, nds_no_shuffle_cache)

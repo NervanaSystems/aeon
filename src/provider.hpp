@@ -70,7 +70,7 @@ public:
                   const std::vector<nlohmann::json>& etl,
                   nlohmann::json                     augmentation);
 
-    void provide(int idx, encoded_record_list& in_buf, fixed_buffer_map& out_buf) override;
+    void provide(int idx, encoded_record_list& in_buf, fixed_buffer_map& out_buf) const override;
 
 private:
     std::vector<std::shared_ptr<provider::interface>> m_providers;
@@ -101,12 +101,12 @@ public:
     virtual void provide(int                        idx,
                          const std::vector<char>&   datum_in,
                          nervana::fixed_buffer_map& out_buf,
-                         augmentation&) = 0;
+                         augmentation&) const = 0;
 
     static std::string create_name(const std::string& name, const std::string& base_name);
 
 private:
-    void provide(int idx, nervana::encoded_record_list& in_buf, nervana::fixed_buffer_map& out_buf)
+    void provide(int idx, nervana::encoded_record_list& in_buf, nervana::fixed_buffer_map& out_buf) const
     {
     }
 };
@@ -123,10 +123,10 @@ public:
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
-                 augmentation&) override;
+                 augmentation&) const override;
 
 private:
-    nervana::image::config                 m_config;
+    const nervana::image::config           m_config;
     nervana::image::extractor              m_extractor;
     nervana::image::transformer            m_transformer;
     nervana::augment::image::param_factory m_augmentation_factory;
@@ -146,7 +146,7 @@ public:
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
-                 augmentation&) override;
+                 augmentation&) const override;
 
 private:
     nervana::label::config    m_config;
@@ -167,7 +167,7 @@ public:
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
-                 augmentation&) override;
+                 augmentation&) const override;
 
 private:
     nervana::audio::config        m_config;
@@ -191,7 +191,7 @@ public:
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
-                 augmentation&) override;
+                 augmentation&) const override;
 
 private:
     nervana::localization::rcnn::config      m_config;
@@ -223,7 +223,7 @@ public:
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
-                 augmentation&) override;
+                 augmentation&) const override;
 
 private:
     nervana::localization::ssd::config                   m_config;
@@ -236,7 +236,6 @@ private:
     const std::string                                    m_gt_box_count_buffer_name;
     const std::string                                    m_gt_class_count_buffer_name;
     const std::string                                    m_difficult_flag_buffer_name;
-    std::shared_ptr<nervana::localization::ssd::decoded> m_decoded;
 };
 
 //=================================================================================================
@@ -251,7 +250,7 @@ public:
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
-                 augmentation&) override;
+                 augmentation&) const override;
 
 private:
     nervana::image::config                 m_config;
@@ -274,7 +273,7 @@ public:
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
-                 augmentation&) override;
+                 augmentation&) const override;
 
 private:
     boundingbox() = delete;
@@ -298,7 +297,7 @@ public:
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
-                 augmentation&) override;
+                 augmentation&) const override;
 
 private:
     blob() = delete;
@@ -319,7 +318,7 @@ public:
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
-                 augmentation&) override;
+                 augmentation&) const override;
 
 private:
     nervana::video::config        m_config;
@@ -342,7 +341,7 @@ public:
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
-                 augmentation&) override;
+                 augmentation&) const override;
 
 private:
     char_map() = delete;
@@ -365,7 +364,7 @@ public:
     void provide(int                        idx,
                  const std::vector<char>&   datum_in,
                  nervana::fixed_buffer_map& out_buf,
-                 augmentation&) override;
+                 augmentation&) const override;
 
 private:
     label_map() = delete;
