@@ -219,7 +219,6 @@ shared_ptr<localization::rcnn::decoded>
 
 vector<int> localization::rcnn::transformer::sample_anchors(const vector<int>& labels, bool debug) const
 {
-    cout<<"fuck"<<"\n";
     // subsample labels if needed
     int         num_fg = int(cfg.foreground_fraction * cfg.rois_per_image);
     vector<int> fg_idx;
