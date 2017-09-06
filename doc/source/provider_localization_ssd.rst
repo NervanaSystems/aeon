@@ -19,10 +19,10 @@ SSD Localization
 The object localization provider (``type=localization_ssd``) is designed to work with the Single Shot MultiBox Detector model. The manifest should include paths to both the image but also the bounding box annotations:
 
 .. code-block:: bash
-
-    /annotations/0001.json  /image_dir/image0001.jpg
-    /annotations/0002.json  /image_dir/image0002.jpg
-    /annotations/0003.json  /image_dir/image0003.jpg
+    @FILE	FILE
+    /annotations/0001.json	/image_dir/image0001.jpg
+    /annotations/0002.json	/image_dir/image0002.jpg
+    /annotations/0003.json	/image_dir/image0003.jpg
 
 Each annotation is in the JSON format, which should have the main field "object" containing the bounding box in normalized coordinates, class, and difficulty of each object in the image. For example:
 
@@ -69,7 +69,7 @@ Input parameters:
    width | *Required* | Input height of the network, to which the image should be scaled to fit.
    output_type (string) | ~"float~" | Output data type.
    max_gt_boxes (long) | 64 | Maximum number of ground truth boxes in dataset. Used to buffer the ground truth boxes.
-   gt_boxes_normalized (bool) | true | If input ground truth boxes are normalized, this flag has to be set to `true`.
+   gt_boxes_normalized (bool) | true | Tells if input ground thruth boxes are normalized.
 
 This provider creates a set of six buffers that are consumed by the SSD model. Defining ``N`` as the ``max_gt_boxes`` parameter, we have the provisioned buffers in this order:
 
