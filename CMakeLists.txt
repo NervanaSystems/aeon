@@ -121,7 +121,7 @@ endif (PYTHONLIBS_FOUND)
 
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 
-include_directories(BEFORE gtest/googletest/include/)
+include_directories(BEFORE gtest/googletest/include)
 include_directories(BEFORE gtest/googlemock/include)
 set(BUILD_SHARED_LIBS off)
 add_subdirectory(gtest)
