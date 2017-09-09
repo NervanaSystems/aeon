@@ -188,11 +188,6 @@ void manifest_file::initialize(std::istream&      stream,
            "subset_fraction must be >= 0 and <= 1");
     generate_subset(record_list, subset_fraction);
 
-    if (m_shuffle)
-    {
-        std::shuffle(record_list.begin(), record_list.end(), std::mt19937(get_global_random_seed()));
-    }
-
     m_record_count = record_list.size();
 
     // At this point the manifest is complete and ready to use
@@ -206,6 +201,9 @@ void manifest_file::initialize(std::istream&      stream,
         }
     }
     m_crc_engine.TruncatedFinal((uint8_t*)&m_computed_crc, sizeof(m_computed_crc));
+
+    if (m_shuffle)
+        std::shuffle(record_list.begin(), record_list.end(), std::mt19937(get_global_random_seed()));
 
     if (!root.empty())
     {
