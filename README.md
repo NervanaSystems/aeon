@@ -1,3 +1,15 @@
+# aeon
+
+[aeon](https://github.com/NervanaSystems/aeon) is Intel Nervana's framework-independent deep learning dataloader committed to best performance. Designed for ease-of-use and extensibility.
+
+- Supports common media types: image, video, audio. It is ready for use with classification, segmentation, localization, transcription and more.
+- Loads and augments data in parallel to framework computation.
+- [Examples](examples) folder contains simple scripts showing how to use it.
+
+For fast iteration and model exploration, it is already used by fastest performance deep learning framework [neon](https://github.com/NervanaSystems/neon).
+
+See the new features in our latest release. 
+
 # Getting Started
 
 ## Installation
@@ -106,6 +118,21 @@ high and low level build systems)::
 
 Note: if installing system wide (as opposed to within a virtual environment) you may need to run `sudo`
 
-Now continue on to the [user guide](doc/source/user_guide.rst) to get started using aeon. Or to the
-[developer guide](doc/source/developer_guide.rst) to developing custom loaders/transformers.
+Now continue on to the [user guide](http://aeon.nervanasys.com/index.html/user_guide.html) to get started using aeon. Or to the
+[developer guide](http://aeon.nervanasys.com/index.html/developer_guide.html) to developing custom loaders/transformers.
 
+# Documentation
+
+The complete documentation for aeon is available [here](aeon.nervanasys.com).
+
+# Support
+
+For any bugs or feature requests please:
+
+Search the open and closed [issues list](https://github.com/NervanaSystems/aeon/issues) to see if we're already working on what you have uncovered.
+Check that your issue/request isn't framework related.
+File a new [issue](https://github.com/NervanaSystems/aeon/issues) or submit a new [pull request](https://github.com/NervanaSystems/aeon/pulls) if you have some code you'd like to contribute
+
+# License
+
+We are releasing [aeon](https://github.com/NervanaSystems/aeon) under an open source [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) License. We welcome you to [contact us](info@nervanasys.com) with your use cases.
