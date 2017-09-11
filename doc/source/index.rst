@@ -51,7 +51,7 @@ bug reports at aeon_issues_ .
    provider_image
    provider_label
    provider_audio
-   provider_localization
+   provider_localization_rcnn
    provider_localization_ssd
    provider_pixelmask
    provider_boundingbox

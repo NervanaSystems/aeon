@@ -106,7 +106,7 @@ Here is a c++ configuration example::
     auto train_set = nervana::loader{config};
 
 Faster-RCNN Localization
-============
+========================
 
 The object localization provider (``type=image,localization_rcnn``) is designed to work with the Faster-RCNN model. The manifest should include paths to both the image but also the bounding box annotations:
 

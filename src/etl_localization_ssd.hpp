@@ -50,7 +50,7 @@ public:
     size_t                   max_gt_boxes = 64;
     std::vector<std::string> class_names;
     std::string              name;
-    bool                     gt_boxes_normalized = true;
+    bool                     gt_boxes_normalized = false;
 
     // Derived values
     size_t output_buffer_size;

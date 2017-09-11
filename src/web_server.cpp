@@ -65,7 +65,7 @@ string web::server::to_lower(const string& s)
 string web::server::trim(const string& s)
 {
     string rc = s;
-    while (rc.back() == '\r' || rc.back() == '\n')
+    while (!rc.empty() && (rc.back() == '\r' || rc.back() == '\n'))
     {
         rc.pop_back();
     }
