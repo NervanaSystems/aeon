@@ -78,12 +78,11 @@ This provider creates a set of six buffers that are consumed by the SSD model. D
    :widths: 5, 20, 10, 45
    :delim: |
 
-   0 | image | (1, C, H, W) | Input image resized (with warping) to (H, W).
-   1 | im_shape | (2, 1) | Shape of the input image.
-   2 | gt_boxes | (N * 4, 1) | Ground truth bounding box coordinates, in normalized coordinates (between 0 and 1). Boxes are padded into a larger buffer of size N, and the coordinates are in (xmin, ymin, xmax, ymax).
-   3 | num_gt_boxes | (1, 1) | Number of ground truth bounding boxes.
-   4 | gt_classes | (N, 1) | Class label for each ground truth box.
-   5 | is_difficult | (N, 1) | Indicates if each ground truth box has the difficult metadata property.
+   0 | im_shape | (2, 1) | Shape of the input image.
+   1 | gt_boxes | (N * 4, 1) | Ground truth bounding box coordinates, in normalized coordinates (between 0 and 1). Boxes are padded into a larger buffer of size N, and the coordinates are in (xmin, ymin, xmax, ymax).
+   2 | num_gt_boxes | (1, 1) | Number of ground truth bounding boxes.
+   3 | gt_classes | (N, 1) | Class label for each ground truth box.
+   4 | is_difficult | (N, 1) | Indicates if each ground truth box has the difficult metadata property.
 
 
 For SSD, we handle variable image sizes by resizing (warping) an image to the input size of the network. Note that the ``angle`` transformation is not supported.
