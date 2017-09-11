@@ -181,6 +181,7 @@ void nervana::loader_remote::reset()
         handle_response_failure(status);
     }
     m_batch_to_fetch = true;
+    m_position = 0;
 }
 
 nervana::loader_remote::iterator& nervana::loader_remote::get_current_iter()
