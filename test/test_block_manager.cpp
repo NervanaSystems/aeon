@@ -427,7 +427,9 @@ TEST(block_manager, file_shuffle_cache)
         }
     }
     EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+#ifdef DETERMINISTIC_MODE
     EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+#endif
 
     // second read should be shuffled
     for (size_t i = 0; i < block_count; i++)
@@ -445,8 +447,10 @@ TEST(block_manager, file_shuffle_cache)
     }
     EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
     EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+#ifdef DETERMINISTIC_MODE
     EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
     EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+#endif
 
     file_util::remove_directory(cache_root);
 }
@@ -491,7 +495,9 @@ TEST(block_manager, file_shuffle_no_cache)
         }
     }
     EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+#ifdef DETERMINISTIC_MODE
     EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+#endif
 
     // second read should be shuffled
     for (size_t i = 0; i < block_count; i++)
@@ -681,7 +687,9 @@ TEST(block_manager, nds_shuffle_cache)
         }
     }
     EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+#ifdef DETERMINISTIC_MODE
     EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+#endif
 
     // second read should be shuffled
     for (size_t i = 0; i < block_count; i++)
@@ -699,8 +707,10 @@ TEST(block_manager, nds_shuffle_cache)
     }
     EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
     EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+#ifdef DETERMINISTIC_MODE
     EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
     EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+#endif
 
     file_util::remove_directory(cache_root);
 }
@@ -745,7 +755,9 @@ TEST(block_manager, nds_shuffle_no_cache)
         }
     }
     EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+#ifdef DETERMINISTIC_MODE
     EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+#endif
 
     // second read should be shuffled
     for (size_t i = 0; i < block_count; i++)
@@ -763,6 +775,8 @@ TEST(block_manager, nds_shuffle_no_cache)
     }
     EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
     EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+#ifdef DETERMINISTIC_MODE
     EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
     EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+#endif
 }
