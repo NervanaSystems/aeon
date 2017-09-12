@@ -55,7 +55,7 @@ if __name__ == '__main__':
         required=True,
         help='number of batches to use')
     parser.add_argument(
-        '--config', type=file, required=True, help='ssd config file')
+        '--network_config', type=file, required=True, help='ssd network defining config file')
     parser.add_argument(
         '--manifest_filename', type=str, required=True, help='manifest path')
     parser.add_argument(
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     num_of_batches_to_process = args.num_batches
-    net_definition_file = args.config
+    net_definition_file = args.network_config
     manifest_filename = args.manifest_filename
     manifest_root = args.manifest_root
 
