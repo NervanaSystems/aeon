@@ -109,7 +109,7 @@ public:
     ~loader();
 
     const std::vector<std::string>& get_buffer_names() const;
-    const std::map<std::string, shape_type>& get_names_and_shapes() const;
+    const std::vector<std::pair<std::string, shape_type> >& get_names_and_shapes() const;
     const shape_t& get_shape(const std::string& name) const;
 
     int record_count() { return m_manifest->record_count(); }

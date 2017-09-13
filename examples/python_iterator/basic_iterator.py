@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os
 from aeon import DataLoader
-import json
 
 pdir = os.path.dirname(os.path.abspath(__file__))
 manifest_root = os.path.join(pdir, '..', '..', 'test', 'test_data')
@@ -17,8 +16,8 @@ cfg = {
            'cache_directory': cache_root,
            'etl': [
                {'type': 'image',
-                'height': 28,
                 'width': 28,
+                'height': 28,
                 'channels': 1},
                {'type': 'label',
                 'binary': False}
@@ -29,13 +28,11 @@ d1 = DataLoader(config=cfg)
 print("d1 length {0}".format(len(d1)))
 
 shapes = d1.axes_info
-
-print("shapes {}".format(shapes))
+print("shapes: {0}".format(shapes))
 
 for x in d1:
-    print("d1, v1: {0}".format(x.keys()))
+    image = x[0]
+    label = x[1]
 
-# d1.reset()
-
-# for x in d1:
-#     print("d1 {0}").format(x.keys())
+    print("{0} data: {1}".format(image[0], image[1]))
+    print("{0} data: {1}".format(label[0], label[1]))

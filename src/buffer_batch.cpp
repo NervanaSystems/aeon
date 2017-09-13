@@ -153,7 +153,7 @@ void fixed_buffer_map::copy(fixed_buffer_map& src, size_t src_index, size_t dst_
     for (auto name: m_names)
     {
         buffer_fixed_size_elements* src_fbm =    src[name];
-        buffer_fixed_size_elements* dst_fbm = m_data[name];
+        buffer_fixed_size_elements* dst_fbm = operator[](name);
         char* p_src = src_fbm->get_item(src_index);
         char* p_dst = dst_fbm->get_item(dst_index);
 

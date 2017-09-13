@@ -21,6 +21,7 @@
 #include <iostream>
 #include <initializer_list>
 #include <opencv2/core/core.hpp>
+#include <tuple>
 
 #include "typemap.hpp"
 #include "util.hpp"
@@ -47,7 +48,7 @@ class nervana::encoded_record
 public:
     variable_record_field& element(size_t index);
     const variable_record_field& element(size_t index) const;
-    size_t                                      size() const { return m_elements.size(); }
+    size_t size() const { return m_elements.size(); }
     void add_element(const void* data, size_t size)
     {
         std::vector<char> tmp(size);
@@ -64,14 +65,14 @@ public:
     void add_exception(std::exception_ptr e) { m_exception = e; }
     variable_record_field_list::iterator  begin() { return m_elements.begin(); }
     variable_record_field_list::iterator  end() { return m_elements.end(); }
-
-    void rethrow_if_exception() const
+    void                                  rethrow_if_exception() const
     {
         if (m_exception != nullptr)
         {
             std::rethrow_exception(m_exception);
         }
     }
+
 private:
     variable_record_field_list m_elements;
     std::exception_ptr         m_exception;
@@ -118,11 +119,11 @@ public:
         m_records.erase(begin, end);
     }
 
-    void                                  clear() { m_records.clear(); }
-    std::vector<encoded_record>::iterator begin() { return m_records.begin(); }
-    std::vector<encoded_record>::iterator end() { return m_records.end(); }
-    std::vector<encoded_record>::const_iterator begin() const{ return m_records.begin(); }
-    std::vector<encoded_record>::const_iterator end() const{ return m_records.end(); }
+    void                                        clear() { m_records.clear(); }
+    std::vector<encoded_record>::iterator       begin() { return m_records.begin(); }
+    std::vector<encoded_record>::iterator       end() { return m_records.end(); }
+    std::vector<encoded_record>::const_iterator begin() const { return m_records.begin(); }
+    std::vector<encoded_record>::const_iterator end() const { return m_records.end(); }
     void shuffle(uint32_t random_seed)
     {
         std::minstd_rand0 rand_items(random_seed);
@@ -167,7 +168,7 @@ public:
     char*             data() const { return m_data; }
     size_t            get_item_count() const { return m_size / m_stride; }
     size_t            size() const { return m_size; }
-    size_t            get_stride() const {return m_stride;}
+    size_t            get_stride() const { return m_stride; }
     const shape_type& get_shape_type() const { return m_shape_type; }
 protected:
     buffer_fixed_size_elements() = delete;
@@ -184,22 +185,22 @@ class nervana::fixed_buffer_map
 {
 public:
     fixed_buffer_map() {}
-    fixed_buffer_map(const std::map<std::string, shape_type>& write_sizes,
+    fixed_buffer_map(const std::vector<std::pair<std::string, shape_type>>& write_sizes,
                      size_t batch_size,
                      bool   pinned = false)
     {
         add_items(write_sizes, batch_size, pinned);
     }
 
-    void add_items(const std::map<std::string, shape_type>& write_sizes,
-                     size_t batch_size,
-                     bool   pinned = false)
+    void add_items(const std::vector<std::pair<std::string, shape_type>>& write_sizes,
+                   size_t batch_size,
+                   bool   pinned = false)
     {
-         for (auto sz : write_sizes)
-         {
-             add_item(sz.first, sz.second, batch_size, pinned);
-         }
-     }
+        for (auto sz : write_sizes)
+        {
+            add_item(std::get<0>(sz), std::get<1>(sz), batch_size, pinned);
+        }
+    }
 
     void add_item(const std::string& name,
                   const shape_type&  shp_tp,
@@ -207,7 +208,8 @@ public:
                   bool               pinned = false)
     {
         m_names.push_back(name);
-        m_data.insert({name, new buffer_fixed_size_elements(shp_tp, batch_size, pinned)});
+        m_data.emplace_back(
+            std::make_pair(name, new buffer_fixed_size_elements(shp_tp, batch_size, pinned)));
     }
 
     ~fixed_buffer_map()
@@ -221,18 +223,22 @@ public:
     const std::vector<std::string>& get_names() { return m_names; }
     const buffer_fixed_size_elements* operator[](const std::string& name) const
     {
-        auto it = m_data.find(name);
+        auto it = std::find_if(m_data.begin(), m_data.end(), [&](decltype(*m_data.begin())& v) {
+            return v.first == name;
+        });
         return (it == m_data.end() ? nullptr : it->second);
     }
 
     buffer_fixed_size_elements* operator[](const std::string& name)
     {
-        auto it = m_data.find(name);
+        auto it = std::find_if(m_data.begin(), m_data.end(), [&](decltype(*m_data.begin())& v) {
+            return v.first == name;
+        });
         return (it == m_data.end() ? nullptr : it->second);
     }
-    
+
     void copy(fixed_buffer_map& src, size_t src_index, size_t dst_index, size_t count);
- 
+
     size_t size() const { return m_data.size(); }
 private:
     fixed_buffer_map(const fixed_buffer_map&) = delete;
@@ -241,5 +247,5 @@ private:
     const buffer_fixed_size_elements* operator[](int) const = delete;
     buffer_fixed_size_elements* operator[](int)             = delete;
     std::vector<std::string> m_names;
-    std::map<std::string, buffer_fixed_size_elements*> m_data;
+    std::vector<std::pair<std::string, buffer_fixed_size_elements*>> m_data;
 };

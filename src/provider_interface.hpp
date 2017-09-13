@@ -47,17 +47,23 @@ public:
     virtual void post_process(fixed_buffer_map& out_buf) {}
     const shape_type& get_output_shape(const std::string& name) const
     {
-        auto it = m_output_shapes.find(name);
+        auto it =
+            std::find_if(m_output_shapes.begin(),
+                         m_output_shapes.end(),
+                         [&](decltype(*m_output_shapes.begin())& v) { return v.first == name; });
         if (it == m_output_shapes.end())
         {
             std::stringstream ss;
             ss << "key '" << name << "' not found";
             throw std::runtime_error(ss.str());
         }
-        return it->second;
+         return it->second;
     }
 
-    const std::map<std::string, shape_type>& get_output_shapes() const { return m_output_shapes; }
+    const std::vector<std::pair<std::string, shape_type>>& get_output_shapes() const
+    {
+        return m_output_shapes;
+    }
     nlohmann::json                  get_config() { return m_js; }
     const std::vector<std::string>& get_buffer_names()
     {
@@ -72,7 +78,7 @@ public:
     }
 
 protected:
-    std::map<std::string, shape_type> m_output_shapes;
+    std::vector<std::pair<std::string, shape_type>> m_output_shapes;
     std::vector<std::string> m_buffer_names;
     nlohmann::json           m_js;
     size_t                   m_input_count{0};

@@ -105,7 +105,7 @@ provider::provider_base::provider_base(nlohmann::json                     js,
         {
             m_providers.push_back(prov);
             auto os = prov->get_output_shapes();
-            m_output_shapes.insert(os.begin(), os.end());
+            m_output_shapes.insert(m_output_shapes.end(), os.begin(), os.end());
         }
     }
 }
@@ -155,7 +155,7 @@ provider::image::image(nlohmann::json js, nlohmann::json aug)
     , m_loader{m_config, m_augmentation_factory.fixed_aspect_ratio}
     , m_buffer_name{create_name(m_config.name, "image")}
 {
-    m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
+    m_output_shapes.emplace_back(make_pair(m_buffer_name, m_config.get_shape_type()));
 }
 
 void provider::image::provide(int                        idx,
@@ -194,7 +194,7 @@ provider::label::label(nlohmann::json js)
     , m_loader{m_config}
     , m_buffer_name{create_name(m_config.name, "label")}
 {
-    m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
+    m_output_shapes.emplace_back(make_pair(m_buffer_name, m_config.get_shape_type()));
 }
 
 void provider::label::provide(int                        idx,
@@ -230,10 +230,10 @@ provider::audio::audio(nlohmann::json js, nlohmann::json aug)
     , m_length_name{create_name(m_config.name, "audio_length")}
 {
     auto os = m_config.get_shape_type_list();
-    m_output_shapes.insert({m_buffer_name, os[0]});
+    m_output_shapes.emplace_back(make_pair(m_buffer_name, os[0]));
     if (m_config.emit_length)
     {
-        m_output_shapes.insert({m_length_name, os[1]});
+        m_output_shapes.emplace_back(make_pair(m_length_name, os[1]));
     }
 }
 
@@ -291,16 +291,16 @@ provider::localization::rcnn::rcnn(nlohmann::json js, nlohmann::json aug)
     , m_difficult_flag_buffer_name{create_name(m_config.name, "difficult_flag")}
 {
     auto os = m_config.get_shape_type_list();
-    m_output_shapes.insert({m_bbtargets_buffer_name, os[0]});
-    m_output_shapes.insert({m_bbtargets_mask_buffer_name, os[1]});
-    m_output_shapes.insert({m_labels_flat_buffer_name, os[2]});
-    m_output_shapes.insert({m_labels_mask_buffer_name, os[3]});
-    m_output_shapes.insert({m_image_shape_buffer_name, os[4]});
-    m_output_shapes.insert({m_gt_boxes_buffer_name, os[5]});
-    m_output_shapes.insert({m_gt_box_count_buffer_name, os[6]});
-    m_output_shapes.insert({m_gt_class_count_buffer_name, os[7]});
-    m_output_shapes.insert({m_image_scale_buffer_name, os[8]});
-    m_output_shapes.insert({m_difficult_flag_buffer_name, os[9]});
+    m_output_shapes.emplace_back(make_pair(m_bbtargets_buffer_name, os[0]));
+    m_output_shapes.emplace_back(make_pair(m_bbtargets_mask_buffer_name, os[1]));
+    m_output_shapes.emplace_back(make_pair(m_labels_flat_buffer_name, os[2]));
+    m_output_shapes.emplace_back(make_pair(m_labels_mask_buffer_name, os[3]));
+    m_output_shapes.emplace_back(make_pair(m_image_shape_buffer_name, os[4]));
+    m_output_shapes.emplace_back(make_pair(m_gt_boxes_buffer_name, os[5]));
+    m_output_shapes.emplace_back(make_pair(m_gt_box_count_buffer_name, os[6]));
+    m_output_shapes.emplace_back(make_pair(m_gt_class_count_buffer_name, os[7]));
+    m_output_shapes.emplace_back(make_pair(m_image_scale_buffer_name, os[8]));
+    m_output_shapes.emplace_back(make_pair(m_difficult_flag_buffer_name, os[9]));
 }
 
 void provider::localization::rcnn::provide(int                        idx,
@@ -357,11 +357,11 @@ provider::localization::ssd::ssd(nlohmann::json js, nlohmann::json aug)
     , m_difficult_flag_buffer_name{create_name(m_config.name, "difficult_flag")}
 {
     auto os = m_config.get_shape_type_list();
-    m_output_shapes.insert({m_image_shape_buffer_name, os[0]});
-    m_output_shapes.insert({m_gt_boxes_buffer_name, os[1]});
-    m_output_shapes.insert({m_gt_box_count_buffer_name, os[2]});
-    m_output_shapes.insert({m_gt_class_count_buffer_name, os[3]});
-    m_output_shapes.insert({m_difficult_flag_buffer_name, os[4]});
+    m_output_shapes.emplace_back(make_pair(m_image_shape_buffer_name, os[0]));
+    m_output_shapes.emplace_back(make_pair(m_gt_boxes_buffer_name, os[1]));
+    m_output_shapes.emplace_back(make_pair(m_gt_box_count_buffer_name, os[2]));
+    m_output_shapes.emplace_back(make_pair(m_gt_class_count_buffer_name, os[3]));
+    m_output_shapes.emplace_back(make_pair(m_difficult_flag_buffer_name, os[4]));
 }
 
 void provider::localization::ssd::provide(int                        idx,
@@ -412,7 +412,7 @@ provider::pixelmask::pixelmask(nlohmann::json js, nlohmann::json aug)
     , m_loader{m_config, m_augmentation_factory.fixed_aspect_ratio}
     , m_buffer_name{create_name(m_config.name, "pixelmask")}
 {
-    m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
+    m_output_shapes.emplace_back(make_pair(m_buffer_name, m_config.get_shape_type()));
 }
 
 void provider::pixelmask::provide(int                        idx,
@@ -458,7 +458,7 @@ provider::boundingbox::boundingbox(nlohmann::json js, nlohmann::json aug)
     , m_augmentation_factory{aug}
     , m_buffer_name{create_name(m_config.name, "boundingbox")}
 {
-    m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
+    m_output_shapes.emplace_back(make_pair(m_buffer_name, m_config.get_shape_type()));
 }
 
 void provider::boundingbox::provide(int                        idx,
@@ -502,7 +502,7 @@ provider::blob::blob(nlohmann::json js)
     , m_loader{m_config}
     , m_buffer_name{create_name(m_config.name, "blob")}
 {
-    m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
+    m_output_shapes.emplace_back(make_pair(m_buffer_name, m_config.get_shape_type()));
 }
 
 void provider::blob::provide(int                        idx,
@@ -536,7 +536,7 @@ provider::video::video(nlohmann::json js, nlohmann::json aug)
     , m_augmentation_factory(aug["frame"])
     , m_buffer_name{create_name(m_config.name, "video")}
 {
-    m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
+    m_output_shapes.emplace_back(make_pair(m_buffer_name, m_config.get_shape_type()));
 }
 
 void provider::video::provide(int                        idx,
@@ -582,10 +582,10 @@ provider::char_map::char_map(nlohmann::json js)
     , m_length_name{create_name(m_config.name, "char_map_length")}
 {
     auto os = m_config.get_shape_type_list();
-    m_output_shapes.insert({m_buffer_name, os[0]});
+    m_output_shapes.emplace_back(make_pair(m_buffer_name, os[0]));
     if (m_config.emit_length)
     {
-        m_output_shapes.insert({m_length_name, os[1]});
+        m_output_shapes.emplace_back(make_pair(m_length_name, os[1]));
     }
 }
 
@@ -627,7 +627,7 @@ provider::label_map::label_map(nlohmann::json js)
     , m_loader{m_config}
     , m_buffer_name{create_name(m_config.name, "label_map")}
 {
-    m_output_shapes.insert({m_buffer_name, m_config.get_shape_type()});
+    m_output_shapes.emplace_back(make_pair(m_buffer_name, m_config.get_shape_type()));
 }
 
 void provider::label_map::provide(int                        idx,
