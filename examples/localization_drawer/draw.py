@@ -9,6 +9,7 @@ cnt = 0
 
 def draw_images(batch):
     global cnt
+    batch = {k:v for k,v in batch}
     images = batch['image']
     gt_box_count = batch['gt_box_count']
     gt_boxes = batch['gt_boxes']
