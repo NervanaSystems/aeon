@@ -11,4 +11,5 @@ list(REMOVE_ITEM STYLE_SRC "${PROJECT_SOURCE_DIR}/src/json.hpp")
 add_custom_target(
 	style
 	COMMAND clang-format -style=file
-	-i ${STYLE_SRC})
+	-i ${STYLE_SRC}
+	COMMAND git diff --stat)
