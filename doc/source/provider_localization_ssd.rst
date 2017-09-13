@@ -24,7 +24,7 @@ The object localization provider (``type=localization_ssd``) is designed to work
     /annotations/0002.json	/image_dir/image0002.jpg
     /annotations/0003.json	/image_dir/image0003.jpg
 
-Each annotation is in the JSON format, which should have the main field "object" containing the bounding box in pixel coordinates, class, and difficulty of each object in the image. For example:
+Each annotation is in the JSON format, which should have the main field "object" containing the bounding box in normalized coordinates, class, and difficulty of each object in the image. For example:
 
 
 .. code-block:: bash
@@ -33,20 +33,20 @@ Each annotation is in the JSON format, which should have the main field "object"
        "object": [
            {
                "bndbox": {
-                   "xmax": 299,
-                   "xmin": 100,
-                   "ymax": 299,
-                   "ymin": 200
+                   "xmax": 0.511,
+                   "xmin": 0.404,
+                   "ymax": 0.146,
+                   "ymin": 0.020
                },
                "difficult": false,
                "name": "tvmonitor",
            },
            {
                "bndbox": {
-                   "xmax": 56,
-                   "xmin": 0,
-                   "ymax": 54,
-                   "ymin": 24
+                   "xmax": 0.841,
+                   "xmin": 0.721,
+                   "ymax": 0.654,
+                   "ymin": 0.248
                },
                "difficult": false,
                "name": "person",
@@ -69,6 +69,7 @@ Input parameters:
    width | *Required* | Input height of the network, to which the image should be scaled to fit.
    output_type (string) | ~"float~" | Output data type.
    max_gt_boxes (long) | 64 | Maximum number of ground truth boxes in dataset. Used to buffer the ground truth boxes.
+   gt_boxes_normalized (bool) | true | Tells if input ground thruth boxes are normalized.
 
 This provider creates a set of six buffers that are consumed by the SSD model. Defining ``N`` as the ``max_gt_boxes`` parameter, we have the provisioned buffers in this order:
 
@@ -78,7 +79,7 @@ This provider creates a set of six buffers that are consumed by the SSD model. D
    :delim: |
 
    0 | im_shape | (2, 1) | Shape of the input image.
-   1 | gt_boxes | (N * 4, 1) | Ground truth bounding box coordinates, in normalized coordinates (between 0 and 1, where 1 is the last pixel). Boxes are padded into a larger buffer of size N.
+   1 | gt_boxes | (N * 4, 1) | Ground truth bounding box coordinates, in normalized coordinates (between 0 and 1). Boxes are padded into a larger buffer of size N, and the coordinates are in (xmin, ymin, xmax, ymax).
    2 | num_gt_boxes | (1, 1) | Number of ground truth bounding boxes.
    3 | gt_classes | (N, 1) | Class label for each ground truth box.
    4 | is_difficult | (N, 1) | Indicates if each ground truth box has the difficult metadata property.

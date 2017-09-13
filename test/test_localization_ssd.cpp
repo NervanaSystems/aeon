@@ -43,7 +43,6 @@ using namespace nervana;
 using namespace nervana::localization::ssd;
 
 using bbox = boundingbox::box;
-using nbox = normalized_box::box;
 
 TEST(localization_ssd, provider)
 {
@@ -56,7 +55,8 @@ TEST(localization_ssd, provider)
                                {"height", height},
                                {"width", width},
                                {"max_gt_boxes", 64},
-                               {"class_names", {"bicycle", "person"}}};
+                               {"class_names", {"bicycle", "person"}},
+                               {"gt_boxes_normalized", false}};
     nlohmann::json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
     nlohmann::json js           = {{"etl", {js_local, js_image}}, {"augmentation", augmentation}};
 
@@ -110,7 +110,7 @@ TEST(localization_ssd, provider)
     }
 }
 
-TEST(localization_ssd, extract_gt_boxes)
+TEST(localization_ssd, extract_gt_boxes_unnormalized)
 {
     int input_height  = 100;
     int input_width   = 100;
@@ -120,13 +120,15 @@ TEST(localization_ssd, extract_gt_boxes)
     nlohmann::json js_local = {{"height", output_height},
                                {"width", output_width},
                                {"max_gt_boxes", 64},
-                               {"class_names", {"bicycle", "person"}}};
+                               {"class_names", {"bicycle", "person"}},
+                               {"gt_boxes_normalized", false}};
 
-    cv::Rect r0 = cv::Rect(0, 0, 10, 15);
-    cv::Rect r1 = cv::Rect(10, 10, 12, 13);
-    bbox     r2 = bbox(10, 20, 29, 39);
-    ;
-    auto   list   = {create_box(r0, "bicycle"), create_box(r1, "person"), create_box(r2, "person")};
+    cv::Rect r0   = cv::Rect(0, 0, 10, 15);
+    cv::Rect r1   = cv::Rect(10, 10, 12, 13);
+    bbox     r2   = bbox(0.1f, 0.2f, 0.3f, 0.4f, true);
+    auto     list = {create_box(r0, "bicycle"),
+                 create_box(r1, "person"),
+                 create_box_with_normalized_field(r2, "person")};
     auto   j      = create_metadata(list, input_width, input_height);
     string buffer = j.dump();
 
@@ -141,17 +143,99 @@ TEST(localization_ssd, extract_gt_boxes)
 
     ASSERT_EQ(decoded->boxes().size(), 3);
 
-    bbox expected    = bbox(0, 0, 9, 14);
-    expected.m_label = 0;
+    bbox expected  = bbox(0, 0, 9, 14, false);
+    expected.label = 0;
     EXPECT_EQ(decoded->boxes()[0].rect(), expected.rect());
 
-    expected         = bbox(10, 10, 21, 22);
-    expected.m_label = 1;
+    expected       = bbox(10, 10, 21, 22, false);
+    expected.label = 1;
     EXPECT_EQ(decoded->boxes()[1], expected);
 
-    expected         = bbox(10, 20, 29, 39);
-    expected.m_label = 1;
+    expected       = bbox(10, 20, 29, 39, false);
+    expected.label = 1;
     EXPECT_EQ(decoded->boxes()[2], expected);
+}
+
+TEST(localization_ssd, extract_gt_boxes_normalized)
+{
+    int height = 100;
+    int width  = 100;
+
+    nlohmann::json js_local = {{"height", height},
+                               {"width", width},
+                               {"max_gt_boxes", 64},
+                               {"class_names", {"bicycle", "person"}},
+                               {"gt_boxes_normalized", true}};
+
+    bbox r0   = bbox(0.0f, 0.0f, 1.0, 1.0, false);
+    bbox r1   = bbox(0.2f, 0.4f, 0.3f, 0.5f, true);
+    bbox r2   = bbox(0.0f, 0.0f, 0.0f, 0.0f, true);
+    auto list = {create_box_with_normalized_field(r0, "bicycle"),
+                 create_box_with_normalized_field(r1, "person"),
+                 create_box_with_normalized_field(r2, "bicycle")};
+    auto   j      = create_metadata(list, width, height);
+    string buffer = j.dump();
+
+    localization::ssd::config    cfg{js_local};
+    localization::ssd::extractor ext{cfg};
+    auto                         decoded = ext.extract(&buffer[0], buffer.size());
+
+    ASSERT_NE(nullptr, decoded);
+    ASSERT_EQ(decoded->boxes().size(), 3);
+
+    bbox expected  = bbox(0, 0, 99, 99, false);
+    expected.label = 0;
+    EXPECT_EQ(decoded->boxes()[0], expected);
+
+    expected       = bbox(20, 40, 29, 49, false);
+    expected.label = 1;
+    EXPECT_EQ(decoded->boxes()[1], expected);
+
+    expected       = bbox(0, 0, -1, -1, false);
+    expected.label = 0;
+    EXPECT_EQ(decoded->boxes()[2], expected);
+}
+
+TEST(localization_ssd, extract_gt_boxes_normalized_with_wrongly_normalized_box)
+{
+    int height = 100;
+    int width  = 100;
+
+    nlohmann::json js_local = {{"height", height},
+                               {"width", width},
+                               {"max_gt_boxes", 64},
+                               {"class_names", {"bicycle", "person"}},
+                               {"gt_boxes_normalized", true}};
+
+    bbox   r0     = bbox(0.2f, 0.4f, 0.3f, 1.5f, false);
+    auto   list   = {create_box(r0, "bicycle")};
+    auto   j      = create_metadata(list, width, height);
+    string buffer = j.dump();
+
+    localization::ssd::config    cfg{js_local};
+    localization::ssd::extractor ext{cfg};
+    EXPECT_THROW(ext.extract(&buffer[0], buffer.size()), std::invalid_argument);
+}
+
+TEST(localization_ssd, gt_boxes_normalized_with_normalized_field_false)
+{
+    int height = 100;
+    int width  = 100;
+
+    nlohmann::json js_local = {{"height", height},
+                               {"width", width},
+                               {"max_gt_boxes", 64},
+                               {"class_names", {"bicycle", "person"}},
+                               {"gt_boxes_normalized", true}};
+
+    bbox   r0     = bbox(1, 2, 3, 4, false);
+    auto   list   = {create_box_with_normalized_field(r0, "bicycle")};
+    auto   j      = create_metadata(list, width, height);
+    string buffer = j.dump();
+
+    localization::ssd::config    cfg{js_local};
+    localization::ssd::extractor ext{cfg};
+    EXPECT_THROW(ext.extract(&buffer[0], buffer.size()), std::invalid_argument);
 }
 
 TEST(localization_ssd, transform)
@@ -165,16 +249,20 @@ TEST(localization_ssd, transform)
     nlohmann::json js_local = {{"height", output_height},
                                {"width", output_width},
                                {"max_gt_boxes", 64},
-                               {"class_names", {"bicycle", "person"}}};
+                               {"class_names", {"bicycle", "person"}},
+                               {"gt_boxes_normalized", true}};
 
     auto decoded               = make_shared<localization::ssd::decoded>();
     decoded->input_image_size  = cv::Size2i(input_width, input_height);
     decoded->output_image_size = cv::Size2i(output_width, output_height);
-    decoded->m_boxes = vector<bbox>{bbox(0, 0, 99, 99), bbox(20, 40, 29, 49), bbox(10, 20, 29, 39)};
-    auto expected =
-        vector<bbox>{nbox(0.0f, 0.0f, 1.0, 1.0).unnormalize(output_width, output_height),
-                     nbox(0.7f, 0.4f, 0.8f, 0.5f).unnormalize(output_width, output_height),
-                     nbox(0.7f, 0.2f, 0.9f, 0.4f).unnormalize(output_width, output_height)};
+    decoded->m_boxes           = vector<bbox>{
+        bbox(0, 0, 99, 99, false),
+        bbox(20, 40, 29, 49, false),
+        bbox(10, 20, 29, 39, false)
+    };
+    auto expected = vector<bbox>{bbox(0.0f, 0.0f, 1.0, 1.0, true),
+                                 bbox(0.7f, 0.4f, 0.8f, 0.5f, true),
+                                 bbox(0.7f, 0.2f, 0.9f, 0.4f, true)};
     augment::image::param_factory      factory({});
     shared_ptr<augment::image::params> augmentation_params = factory.make_ssd_params(
         input_width, input_height, output_width, output_height, vector<bbox>());
@@ -191,7 +279,7 @@ TEST(localization_ssd, transform)
     {
         std::stringstream ss;
         ss << decoded->gt_boxes[i] << " is not equal to " << expected[i];
-        EXPECT_EQ(decoded->gt_boxes[i], expected[i]) << ss.str() << endl;
+        EXPECT_EQ(decoded->gt_boxes[i], expected[i]) << ss.str();
     }
 }
 
@@ -204,26 +292,27 @@ TEST(localization_ssd, loader)
     nlohmann::json js_local = {{"height", height},
                                {"width", width},
                                {"max_gt_boxes", max_gt_boxes},
-                               {"class_names", {"bicycle", "person", "cat"}}};
+                               {"class_names", {"bicycle", "person", "cat"}},
+                               {"gt_boxes_normalized", true}};
 
     bbox   r0     = bbox(1, 2, 3, 4, false);
-    auto   list   = {create_box(r0, "bicycle")};
+    auto   list   = {create_box_with_normalized_field(r0, "bicycle")};
     auto   j      = create_metadata(list, width, height);
     string buffer = j.dump();
 
     localization::ssd::config    cfg{js_local};
     localization::ssd::extractor ext{cfg};
-    ext.extract(&buffer[0], buffer.size());
+    EXPECT_THROW(ext.extract(&buffer[0], buffer.size()), std::invalid_argument);
 
     auto decoded               = make_shared<localization::ssd::decoded>();
     decoded->output_image_size = cv::Size2i(width, height);
     decoded->gt_boxes          = vector<bbox>{bbox(0.0, 0.0, 1.0, 1.0, true),
                                      bbox(0.1, 0.2, 0.3, 0.4, true),
                                      bbox(0.44444, 0.55555, 1.0, 0.99999, true)};
-    decoded->gt_boxes[1].m_difficult = true;
-    decoded->gt_boxes[1].m_label     = 1;
-    decoded->gt_boxes[2].m_difficult = true;
-    decoded->gt_boxes[2].m_label     = 2;
+    decoded->gt_boxes[1].difficult = true;
+    decoded->gt_boxes[1].label     = 1;
+    decoded->gt_boxes[2].difficult = true;
+    decoded->gt_boxes[2].label     = 2;
 
     auto          shape        = unique_ptr<int32_t>(new int32_t[2]);
     auto          gt_boxes     = unique_ptr<float>(new float[max_gt_boxes * 4]);
@@ -253,8 +342,8 @@ TEST(localization_ssd, loader)
         EXPECT_FLOAT_EQ(*boxes_ptr++, box.ymin());
         EXPECT_FLOAT_EQ(*boxes_ptr++, box.xmax());
         EXPECT_FLOAT_EQ(*boxes_ptr++, box.ymax());
-        EXPECT_EQ(*classes_ptr++, box.label());
-        EXPECT_EQ(*difficult_ptr++, box.difficult());
+        EXPECT_EQ(*classes_ptr++, box.label);
+        EXPECT_EQ(*difficult_ptr++, box.difficult);
     }
     for (int i = decoded->gt_boxes.size(); i < max_gt_boxes; i++)
     {

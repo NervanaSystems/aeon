@@ -407,8 +407,8 @@ void localization::rcnn::loader::load(const vector<void*>&                   buf
         *gt_boxes++                = gt.ymin();
         *gt_boxes++                = gt.xmax();
         *gt_boxes++                = gt.ymax();
-        *gt_classes++              = gt.label();
-        *gt_difficult++            = gt.difficult();
+        *gt_classes++              = gt.label;
+        *gt_difficult++            = gt.difficult;
     }
     for (int i = *num_gt_boxes; i < max_gt_boxes; i++)
     {
