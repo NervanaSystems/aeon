@@ -1204,8 +1204,8 @@ TEST(localization_rcnn, loader)
         EXPECT_EQ(box.ymin() * im_scale[0], gt_boxes[i * 4 + 1]);
         EXPECT_EQ((box.xmax() + 1) * im_scale[0] - 1, gt_boxes[i * 4 + 2]);
         EXPECT_EQ((box.ymax() + 1) * im_scale[0] - 1, gt_boxes[i * 4 + 3]);
-        EXPECT_EQ(box.label, gt_classes[i]);
-        EXPECT_EQ(box.difficult, gt_difficult[i]);
+        EXPECT_EQ(box.label(), gt_classes[i]);
+        EXPECT_EQ(box.difficult(), gt_difficult[i]);
     }
     EXPECT_FLOAT_EQ(1.6, im_scale[0]);
 }

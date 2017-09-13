@@ -94,14 +94,12 @@ public:
     extractor(const std::unordered_map<std::string, int>&);
     virtual ~extractor() {}
     virtual std::shared_ptr<boundingbox::decoded> extract(const void*, size_t) const override;
-    void                                          extract(const void*,
-                 size_t,
-                 std::shared_ptr<boundingbox::decoded>&,
-                 bool boxes_normalized = false) const;
+    void extract(const void*, size_t, std::shared_ptr<boundingbox::decoded>&) const;
 
 private:
     extractor() = delete;
     std::unordered_map<std::string, int> label_map;
+    int get_label(const nlohmann::json& object) const;
 };
 
 class nervana::boundingbox::transformer
@@ -131,7 +129,8 @@ class nervana::boundingbox::loader
 public:
     loader(const boundingbox::config&);
     virtual ~loader() {}
-    virtual void load(const std::vector<void*>&, std::shared_ptr<boundingbox::decoded>) const override;
+    virtual void load(const std::vector<void*>&,
+                      std::shared_ptr<boundingbox::decoded>) const override;
 
 private:
     const size_t max_bbox;

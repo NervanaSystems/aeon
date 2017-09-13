@@ -22,6 +22,7 @@ using namespace nervana;
 
 using nlohmann::json;
 using bbox = boundingbox::box;
+using nbox = normalized_box::box;
 
 augment::image::param_factory::param_factory(nlohmann::json js)
 {
@@ -72,7 +73,8 @@ augment::image::param_factory::param_factory(nlohmann::json js)
 
             if (padding > 0)
             {
-                padding_crop_offset_distribution = std::uniform_int_distribution<int>(0, padding*2);
+                padding_crop_offset_distribution =
+                    std::uniform_int_distribution<int>(0, padding * 2);
             }
         }
     }
@@ -95,10 +97,8 @@ emit_type augment::image::param_factory::get_emit_constraint_type()
         throw std::invalid_argument("Invalid emit constraint type");
 }
 
-shared_ptr<augment::image::params> augment::image::param_factory::make_params(size_t input_width,
-                                                                              size_t input_height,
-                                                                              size_t output_width,
-                                                                              size_t output_height) const
+shared_ptr<augment::image::params> augment::image::param_factory::make_params(
+    size_t input_width, size_t input_height, size_t output_width, size_t output_height) const
 {
     // Must use this method for creating a shared_ptr rather than make_shared
     // since the params default ctor is private and factory is friend
@@ -122,8 +122,8 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
 
     if (!crop_enable)
     {
-        int c_off_x = padding_crop_offset_distribution(random);
-        int c_off_y = padding_crop_offset_distribution(random);
+        int c_off_x                   = padding_crop_offset_distribution(random);
+        int c_off_y                   = padding_crop_offset_distribution(random);
         settings->padding_crop_offset = cv::Size2i(c_off_x, c_off_y);
         settings->cropbox             = cv::Rect(cv::Point2f(0, 0), input_size);
 
@@ -190,8 +190,8 @@ shared_ptr<augment::image::params>
                                                    size_t                   output_height,
                                                    const std::vector<bbox>& object_bboxes) const
 {
-    auto& random = get_thread_local_random_engine();
-    auto settings = make_params(input_width, input_height, output_width, output_height);
+    auto& random   = get_thread_local_random_engine();
+    auto  settings = make_params(input_width, input_height, output_width, output_height);
     settings->emit_min_overlap     = m_emit_constraint_min_overlap;
     settings->emit_constraint_type = m_emit_type;
 
@@ -227,13 +227,13 @@ shared_ptr<augment::image::params>
         settings->expand_size   = input_size;
     }
 
-    vector<bbox> copy_object_bboxes(object_bboxes.size());
+    vector<bbox> expanded_object_bboxes(object_bboxes.size());
+    vector<nbox> normalized_object_bboxes(object_bboxes.size());
     for (int i = 0; i < object_bboxes.size(); i++)
     {
         try
         {
-            copy_object_bboxes[i] = object_bboxes[i];
-            copy_object_bboxes[i].expand_bbox(
+            expanded_object_bboxes[i] = object_bboxes[i].expand(
                 settings->expand_offset, settings->expand_size, settings->expand_ratio);
         }
         catch (exception&)
@@ -244,24 +244,24 @@ shared_ptr<augment::image::params>
     }
     try
     {
-        bbox::normalize_bboxes(
-            copy_object_bboxes, settings->expand_size.width, settings->expand_size.height);
+        normalized_object_bboxes = normalize_bboxes(
+            expanded_object_bboxes, settings->expand_size.width, settings->expand_size.height);
     }
     catch (exception&)
     {
         ERR << "Cannot normalize boxes in make_ssd_params";
         throw;
     }
-    bbox patch      = sample_patch(copy_object_bboxes);
+    nbox patch      = sample_patch(normalized_object_bboxes);
     bbox patch_bbox = patch.unnormalize(settings->expand_size.width, settings->expand_size.height);
     settings->cropbox = patch_bbox.rect();
 
     return settings;
 }
 
-bbox augment::image::param_factory::sample_patch(const vector<bbox>& object_bboxes) const
+nbox augment::image::param_factory::sample_patch(const vector<nbox>& object_bboxes) const
 {
-    vector<bbox> batch_samples;
+    vector<nbox> batch_samples;
 
     for (const batch_sampler& sampler : m_batch_samplers)
     {
@@ -270,15 +270,14 @@ bbox augment::image::param_factory::sample_patch(const vector<bbox>& object_bbox
 
     if (batch_samples.empty())
     {
-        return bbox(0, 0, 1, 1, true);
+        return nbox(0, 0, 1, 1);
     }
 
     std::uniform_int_distribution<int> uniform_dist(0, batch_samples.size() - 1);
     int                                rand_index  = uniform_dist(get_thread_local_random_engine());
-    bbox                               chosen_bbox = batch_samples[rand_index];
+    nbox                               chosen_bbox = batch_samples[rand_index];
 
-    return bbox(
-        chosen_bbox.xmin(), chosen_bbox.ymin(), chosen_bbox.xmax(), chosen_bbox.ymax(), true);
+    return chosen_bbox;
 }
 
 augment::image::sampler::sampler(const nlohmann::json& config)
@@ -307,7 +306,7 @@ void augment::image::sampler::operator=(const nlohmann::json& config)
     }
 }
 
-bbox augment::image::sampler::sample_patch() const
+nbox augment::image::sampler::sample_patch() const
 {
     auto& random           = get_thread_local_random_engine();
     float scale            = m_scale_generator(random);
@@ -318,7 +317,7 @@ bbox augment::image::sampler::sample_patch() const
         std::uniform_real_distribution<float>(min_aspect_ratio, max_aspect_ratio);
     float aspect_ratio = local_aspect_ratio_generator(random);
 
-    // Figure out bbox dimension.
+    // Figure out nbox dimension.
     float bbox_width  = scale * sqrt(aspect_ratio);
     float bbox_height = scale / sqrt(aspect_ratio);
 
@@ -331,7 +330,7 @@ bbox augment::image::sampler::sample_patch() const
 
     try
     {
-        return bbox(w_off, h_off, w_off + bbox_width, h_off + bbox_height, true);
+        return nbox(w_off, h_off, w_off + bbox_width, h_off + bbox_height);
     }
     catch (exception&)
     {
@@ -346,8 +345,8 @@ bbox augment::image::sampler::sample_patch() const
     }
 }
 
-bool augment::image::sample_constraint::satisfies(const bbox&              sampled_bbox,
-                                                  const std::vector<bbox>& object_bboxes) const
+bool augment::image::sample_constraint::satisfies(const nbox&              sampled_bbox,
+                                                  const std::vector<nbox>& object_bboxes) const
 {
     bool has_jaccard_overlap = has_min_jaccard_overlap() || has_max_jaccard_overlap();
     bool has_sample_coverage = has_min_sample_coverage() || has_max_sample_coverage();
@@ -362,7 +361,7 @@ bool augment::image::sample_constraint::satisfies(const bbox&              sampl
     bool found = false;
     for (int i = 0; i < object_bboxes.size(); ++i)
     {
-        const bbox& object_bbox = object_bboxes[i];
+        const nbox& object_bbox = object_bboxes[i];
         // Test jaccard overlap.
         if (has_jaccard_overlap)
         {
@@ -516,8 +515,8 @@ augment::image::batch_sampler::batch_sampler(const nlohmann::json& config)
     }
 }
 
-void augment::image::batch_sampler::sample_patches(const vector<bbox>& object_bboxes,
-                                                   vector<bbox>&       output) const
+void augment::image::batch_sampler::sample_patches(const vector<nbox>& object_bboxes,
+                                                   vector<nbox>&       output) const
 {
     int found = 0;
     for (int i = 0; i < m_max_trials; ++i)
@@ -527,8 +526,8 @@ void augment::image::batch_sampler::sample_patches(const vector<bbox>& object_bb
             break;
         }
         // Generate sampled_bbox in the normalized space [0, 1].
-        bbox sampled_bbox = m_sampler.sample_patch();
-        // Determine if the sampled bbox is positive or negative by the constraint.
+        nbox sampled_bbox = m_sampler.sample_patch();
+        // Determine if the sampled nbox is positive or negative by the constraint.
         if (m_sample_constraint.satisfies(sampled_bbox, object_bboxes))
         {
             ++found;

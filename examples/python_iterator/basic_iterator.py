@@ -16,6 +16,7 @@ cfg = {
            'cache_directory': cache_root,
            'etl': [
                {'type': 'image',
+                'channel_major': False,
                 'width': 28,
                 'height': 28,
                 'channels': 1},

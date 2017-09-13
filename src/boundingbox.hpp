@@ -20,48 +20,51 @@
 #include "box.hpp"
 #include "log.hpp"
 
-namespace nervana
-{
-    namespace boundingbox
-    {
-        class box;
-    }
-}
-
 std::ostream& operator<<(std::ostream&, const nervana::boundingbox::box&);
 std::ostream& operator<<(std::ostream&, const std::vector<nervana::boundingbox::box>&);
 
 class nervana::boundingbox::box final : public nervana::box
 {
 public:
-    box(bool normalized = false)
-        : nervana::box(normalized)
+    box() = default;
+    box(float xmin,
+        float ymin,
+        float xmax,
+        float ymax,
+        int   label     = default_label,
+        bool  difficult = default_difficult,
+        bool  truncated = default_truncated)
+        : nervana::box(xmin, ymin, xmax, ymax)
+        , m_label(label)
+        , m_difficult(difficult)
+        , m_truncated(truncated)
     {
     }
+    ~box() {}
+    float jaccard_overlap(const nervana::boundingbox::box& second_bbox) const;
+    float coverage(const nervana::boundingbox::box& second_bbox) const;
+    nervana::boundingbox::box intersect(const nervana::boundingbox::box& second_bbox) const;
 
-    box(float xmin, float ymin, float xmax, float ymax, bool normalized = false)
-        : nervana::box(xmin, ymin, xmax, ymax, normalized)
-    {
-    }
+    bool operator==(const nervana::boundingbox::box& b) const;
+    bool operator!=(const nervana::boundingbox::box& b) const;
+    boundingbox::box& operator=(const nervana::boundingbox::box& b);
+    boundingbox::box operator+(const cv::Point& s) const;
+    boundingbox::box operator+(const boundingbox::box& b) const;
+    boundingbox::box rescale(float x, float y) const;
+    boundingbox::box expand(const cv::Size2i& expand_offset,
+                            const cv::Size2i& expand_size,
+                            const float       expand_ratio) const;
+    int               label() const { return m_label; }
+    bool              difficult() const { return m_difficult; }
+    bool              truncated() const { return m_truncated; }
+    const static int  default_label     = -1;
+    const static bool default_difficult = false;
+    const static bool default_truncated = false;
 
-    bool operator==(const boundingbox::box& b) const;
-    bool operator!=(const boundingbox::box& b) const;
-    box operator+(const cv::Size& s) const;
-    void normalize(float width, float height);
-    box unnormalize(float width, float height) const;
-    box rescale(float x, float y) const;
-    void expand_bbox(const cv::Size2i& expand_offset,
-                     const cv::Size2i& expand_size,
-                     const float       expand_ratio);
-    float size() const;
+    nervana::normalized_box::box normalize(float width, float height) const;
 
-    float jaccard_overlap(const boundingbox::box& second_bbox) const;
-    float coverage(const boundingbox::box& second_bbox) const;
-    boundingbox::box intersect(const boundingbox::box& second_bbox) const;
-
-    static void normalize_bboxes(std::vector<box>& bboxes, int width, int height);
-
-    bool difficult = false;
-    bool truncated = false;
-    int  label     = -1;
+protected:
+    int  m_label     = default_label;
+    bool m_difficult = default_difficult;
+    bool m_truncated = default_truncated;
 };

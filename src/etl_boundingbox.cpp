@@ -62,8 +62,7 @@ boundingbox::extractor::extractor(const std::unordered_map<std::string, int>& ma
 
 void boundingbox::extractor::extract(const void*                            data,
                                      size_t                                 size,
-                                     std::shared_ptr<boundingbox::decoded>& rc,
-                                     bool                                   boxes_normalized) const
+                                     std::shared_ptr<boundingbox::decoded>& rc) const
 {
     string buffer((const char*)data, size);
     json   j = json::parse(buffer);
@@ -95,7 +94,6 @@ void boundingbox::extractor::extract(const void*                            data
     for (auto object : object_list)
     {
         auto bndbox = object["bndbox"];
-        bbox b;
         if (bndbox["xmax"].is_null())
         {
             throw invalid_argument("'xmax' missing from metadata");
@@ -116,49 +114,24 @@ void boundingbox::extractor::extract(const void*                            data
         {
             throw invalid_argument("'name' missing from metadata");
         }
-        b.set_xmax(bndbox["xmax"]);
-        b.set_xmin(bndbox["xmin"]);
-        b.set_ymax(bndbox["ymax"]);
-        b.set_ymin(bndbox["ymin"]);
-        if (!object["difficult"].is_null())
-        {
-            b.difficult = object["difficult"];
-        }
-        if (!object["truncated"].is_null())
-        {
-            b.truncated = object["truncated"];
-        }
-        if (!object["normalized"].is_null())
-        {
-            b.set_normalized(object["normalized"]);
-        }
-        // force normalized value to true if got_boxes_normalized is set to true
-        if (boxes_normalized)
-        {
-            b.set_normalized(true);
-        }
-        if (b.normalized())
-        {
-            b.throw_if_improperly_normalized();
-        }
-        string name  = object["name"];
-        auto   found = label_map.find(name);
-        if (found == label_map.end())
-        {
-            // did not find the label in the ctor supplied label list
-            stringstream ss;
-            ss << "label '" << name << "' not found in metadata label list";
-            throw invalid_argument(ss.str());
-        }
-        else
-        {
-            b.label = found->second;
-        }
+
+        bool difficult = object["difficult"].is_null() ? false : object["difficult"].get<bool>();
+        bool truncated = object["truncated"].is_null() ? false : object["truncated"].get<bool>();
+        int  label     = this->get_label(object);
+
+        bbox b(bndbox["xmin"],
+               bndbox["ymin"],
+               bndbox["xmax"],
+               bndbox["ymax"],
+               label,
+               difficult,
+               truncated);
         rc->m_boxes.push_back(b);
     }
 }
 
-shared_ptr<boundingbox::decoded> boundingbox::extractor::extract(const void* data, size_t size) const
+shared_ptr<boundingbox::decoded> boundingbox::extractor::extract(const void* data,
+                                                                 size_t      size) const
 {
     shared_ptr<decoded> rc = make_shared<decoded>();
     extract(data, size, rc);
@@ -216,7 +189,7 @@ vector<bbox> boundingbox::transformer::transform_box(const std::vector<bbox>&   
     {
         if (pptr->expand_ratio > 1.)
         {
-            b.expand_bbox(pptr->expand_offset, pptr->expand_size, pptr->expand_ratio);
+            b = b.expand(pptr->expand_offset, pptr->expand_size, pptr->expand_ratio);
         }
 
         if (pptr->emit_constraint_type != emit_type::undefined &&
@@ -286,6 +259,20 @@ vector<bbox> boundingbox::transformer::transform_box(const std::vector<bbox>&   
     return rc;
 }
 
+int nervana::boundingbox::extractor::get_label(const json& object) const
+{
+    string obj_name = object["name"];
+    auto   found    = label_map.find(obj_name);
+    if (found == label_map.end())
+    {
+        // did not find the label in the ctor supplied label list
+        stringstream ss;
+        ss << "label '" << obj_name << "' not found in metadata label list";
+        throw invalid_argument(ss.str());
+    }
+    return found->second;
+}
+
 shared_ptr<boundingbox::decoded>
     boundingbox::transformer::transform(shared_ptr<augment::image::params> pptr,
                                         shared_ptr<boundingbox::decoded>   boxes) const
@@ -305,7 +292,8 @@ boundingbox::loader::loader(const boundingbox::config& cfg)
 {
 }
 
-void boundingbox::loader::load(const vector<void*>& outlist, shared_ptr<boundingbox::decoded> boxes) const
+void boundingbox::loader::load(const vector<void*>&             outlist,
+                               shared_ptr<boundingbox::decoded> boxes) const
 {
     float* data         = (float*)outlist[0];
     size_t output_count = min(max_bbox, boxes->boxes().size());

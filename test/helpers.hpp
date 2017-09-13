@@ -79,7 +79,7 @@ public:
     }
     image_params_builder& padding(int padding, int crop_offset_x, int crop_offset_y)
     {
-        obj->padding = padding;
+        obj->padding             = padding;
         obj->padding_crop_offset = cv::Size2i(crop_offset_x, crop_offset_y);
         return *this;
     }
@@ -121,6 +121,4 @@ private:
 
 nlohmann::json create_box(const cv::Rect& rect, const std::string& label);
 nlohmann::json create_box(const nervana::boundingbox::box& box, const std::string& label);
-nlohmann::json create_box_with_normalized_field(const nervana::boundingbox::box& b,
-                                                const std::string&               label);
 nlohmann::json create_metadata(const std::vector<nlohmann::json>& boxes, int width, int height);

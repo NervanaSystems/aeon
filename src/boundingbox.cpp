@@ -17,20 +17,17 @@
 #include "etl_boundingbox.hpp"
 #include "log.hpp"
 
-using namespace std;
-using namespace nervana;
-using namespace nlohmann; // json stuff
-
-using bbox = boundingbox::box;
+using std::ostream;
+using bbox = nervana::boundingbox::box;
 
 ostream& operator<<(ostream& out, const bbox& b)
 {
-    out << (box)b << " label=" << b.label << " difficult=" << b.difficult
-        << " truncated=" << b.truncated;
+    out << static_cast<nervana::box>(b) << " label=" << b.label() << " difficult=" << b.difficult()
+        << " truncated=" << b.truncated();
     return out;
 }
 
-ostream& operator<<(ostream& out, const vector<bbox>& boxes)
+ostream& operator<<(ostream& out, const std::vector<bbox>& boxes)
 {
     out << "[";
     for (const bbox& box : boxes)
@@ -41,12 +38,25 @@ ostream& operator<<(ostream& out, const vector<bbox>& boxes)
     return out;
 }
 
+bbox& bbox::operator=(const bbox& b)
+{
+    if (&b != this)
+    {
+        m_xmin      = b.m_xmin;
+        m_ymin      = b.m_ymin;
+        m_xmax      = b.m_xmax;
+        m_ymax      = b.m_ymax;
+        m_label     = b.m_label;
+        m_difficult = b.m_difficult;
+        m_truncated = b.m_truncated;
+    }
+    return *this;
+}
+
 bool bbox::operator==(const bbox& b) const
 {
-    bool base_box_equal = ((nervana::box)(*this)) == ((nervana::box)b);
-    if (!base_box_equal)
-        return false;
-    return difficult == b.difficult && truncated == b.truncated && label == b.label;
+    return nervana::box::operator==(b) && m_label == b.m_label && m_difficult == b.m_difficult &&
+           m_truncated == b.m_truncated;
 }
 
 bool bbox::operator!=(const bbox& b) const
@@ -54,104 +64,43 @@ bool bbox::operator!=(const bbox& b) const
     return !((*this) == b);
 }
 
-bbox bbox::operator+(const cv::Size& s) const
+bbox bbox::operator+(const cv::Point& s) const
 {
     bbox rc = *this;
-    rc.m_xmin += s.width;
-    rc.m_ymin += s.height;
-    rc.m_xmax += s.width;
-    rc.m_ymax += s.height;
-    rc.m_normalized = false;
-
-    return rc;
-}
-
-void bbox::normalize(float width, float height)
-{
-    if (m_normalized)
-        throw runtime_error("Cannot normalize box which is already normalized.");
-
-    m_xmin /= width;
-    m_xmax = (m_xmax + 1) / width;
-    m_ymin /= height;
-    m_ymax       = (m_ymax + 1) / height;
-    m_normalized = true;
-    try
-    {
-        throw_if_improperly_normalized();
-    }
-    catch (exception&)
-    {
-        ERR << "Error when normalizing boundingbox: " << *this << ". Range had width: " << width
-            << " height: " << height;
-        throw;
-    }
-}
-
-bbox bbox::unnormalize(float width, float height) const
-{
-    if (!m_normalized)
-        throw runtime_error("Cannot unnormalize box which is not normalized.");
-
-    bbox rc         = *this;
-    rc.m_xmin       = rc.m_xmin * width;
-    rc.m_ymin       = rc.m_ymin * height;
-    rc.m_xmax       = rc.m_xmax * width - 1;
-    rc.m_ymax       = rc.m_ymax * height - 1;
-    rc.m_normalized = false;
+    rc.m_xmin += s.x;
+    rc.m_ymin += s.y;
+    rc.m_xmax += s.x;
+    rc.m_ymax += s.y;
     return rc;
 }
 
 bbox bbox::rescale(float x, float y) const
 {
-    bbox rc = *this;
-    if (m_normalized)
-    {
-        rc.m_xmin = rc.m_xmin * x;
-        rc.m_ymin = rc.m_ymin * y;
-        rc.m_xmax = rc.m_xmax * x;
-        rc.m_ymax = rc.m_ymax * y;
-    }
-    else
-    {
-        rc.m_xmin = rc.m_xmin * x;
-        rc.m_ymin = rc.m_ymin * y;
-        rc.m_xmax = (rc.m_xmax + 1) * x - 1;
-        rc.m_ymax = (rc.m_ymax + 1) * y - 1;
-    }
+    bbox rc   = *this;
+    rc.m_xmin = rc.m_xmin * x;
+    rc.m_ymin = rc.m_ymin * y;
+    rc.m_xmax = (rc.m_xmax + 1) * x - 1;
+    rc.m_ymax = (rc.m_ymax + 1) * y - 1;
     return rc;
 }
 
-void bbox::expand_bbox(const cv::Size2i& expand_offset,
-                       const cv::Size2i& expand_size,
-                       const float       expand_ratio)
+bbox bbox::expand(const cv::Size2i& expand_offset,
+                  const cv::Size2i& expand_size,
+                  const float       expand_ratio) const
 {
     if (m_xmax + expand_offset.width > expand_size.width ||
         m_ymax + expand_offset.height > expand_size.height)
     {
-        stringstream ss;
-        ss << "Invalid parameters to expand boundingbox: " << *this << endl
-           << "Expand_offset: " << expand_offset << " expand_size: " << expand_size << endl
+        std::stringstream ss;
+        ss << "Invalid parameters to expand boundingbox: " << *this << std::endl
+           << "Expand_offset: " << expand_offset << " expand_size: " << expand_size << std::endl
            << m_xmax << " + " << expand_offset.width << " > " << expand_size.width << " || "
            << m_ymax << " + " << expand_offset.height << " > " << expand_size.height;
 
         throw std::invalid_argument(ss.str());
     }
 
-    *this = *this + expand_offset;
-}
-
-float bbox::size() const
-{
-    if (xmax() < xmin() || ymax() < ymin())
-    {
-        // If bbox is invalid (e.g. xmax < xmin or ymax < ymin), return 0.
-        return 0.0f;
-    }
-    else
-    {
-        return width() * height();
-    }
+    return *this + expand_offset;
 }
 
 float bbox::jaccard_overlap(const bbox& second_bbox) const
@@ -184,28 +133,30 @@ float bbox::coverage(const bbox& second_bbox) const
 
 bbox bbox::intersect(const bbox& second_bbox) const
 {
-    if (second_bbox.normalized() != m_normalized)
-        throw std::invalid_argument("Intersection of normalized and unnormalized boundingboxes.");
-
-    // Return [0, 0, 0, 0, true] if there is no intersection.
+    // Return [0, 0, -1, -1] if there is no intersection.
     if (second_bbox.xmin() > xmax() || second_bbox.xmax() < xmin() || second_bbox.ymin() > ymax() ||
         second_bbox.ymax() < ymin())
     {
-        return box::zerobox;
+        return box();
     }
 
-    bbox intersect_bbox(m_normalized);
-    intersect_bbox.set_xmin(std::max(xmin(), second_bbox.xmin()));
-    intersect_bbox.set_ymin(std::max(ymin(), second_bbox.ymin()));
-    intersect_bbox.set_xmax(std::min(xmax(), second_bbox.xmax()));
-    intersect_bbox.set_ymax(std::min(ymax(), second_bbox.ymax()));
-    return intersect_bbox;
+    return bbox(std::max(xmin(), second_bbox.xmin()),
+                std::max(ymin(), second_bbox.ymin()),
+                std::min(xmax(), second_bbox.xmax()),
+                std::min(ymax(), second_bbox.ymax()));
 }
 
-void bbox::normalize_bboxes(vector<bbox>& bboxes, int width, int height)
+nervana::normalized_box::box bbox::normalize(float width, float height) const
 {
-    for (bbox& box : bboxes)
+    try
     {
-        box.normalize(width, height);
+        return nervana::normalized_box::box(
+            xmin() / width, ymin() / height, (xmax() + 1) / width, (ymax() + 1) / height);
+    }
+    catch (std::exception&)
+    {
+        ERR << "Error when normalizing boundingbox: " << (*this) << ". Range had width: " << width
+            << " height: " << height;
+        throw;
     }
 }
