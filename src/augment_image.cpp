@@ -251,9 +251,13 @@ shared_ptr<augment::image::params>
         ERR << "Cannot normalize boxes in make_ssd_params";
         throw;
     }
-    bbox patch      = sample_patch(copy_object_bboxes);
-    bbox patch_bbox = patch.unnormalize(settings->expand_size.width, settings->expand_size.height);
-    settings->cropbox = patch_bbox.rect();
+    if (!crop_enable)
+    {
+        bbox patch = sample_patch(copy_object_bboxes);
+        bbox patch_bbox =
+            patch.unnormalize(settings->expand_size.width, settings->expand_size.height);
+        settings->cropbox = patch_bbox.rect();
+    }
 
     return settings;
 }
