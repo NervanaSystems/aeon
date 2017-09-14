@@ -260,7 +260,7 @@ TEST(localization_ssd, transform)
     auto expected = vector<bbox>{bbox(0.0f, 0.0f, 1.0, 1.0, true),
                                  bbox(0.7f, 0.4f, 0.8f, 0.5f, true),
                                  bbox(0.7f, 0.2f, 0.9f, 0.4f, true)};
-    augment::image::param_factory      factory({});
+    augment::image::param_factory      factory({{"type", "image"}, {"crop_enable", false}});
     shared_ptr<augment::image::params> augmentation_params = factory.make_ssd_params(
         input_width, input_height, output_width, output_height, vector<bbox>());
     augmentation_params->flip = true;
