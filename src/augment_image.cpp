@@ -58,6 +58,12 @@ augment::image::param_factory::param_factory(nlohmann::json js)
                     m_batch_samplers.emplace_back(batch_sampler_json);
                 }
             }
+            if (crop_enable && !m_batch_samplers.empty())
+            {
+                throw std::invalid_argument(
+                    "'Cannot use 'batch_samplers' with 'crop_enable'. Please use only one cropping "
+                    "method in augmentations.");
+            }
 
             // Now fill in derived
             if (flip_enable)
