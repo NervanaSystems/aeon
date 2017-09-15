@@ -122,13 +122,13 @@ static PyObject* DataLoader_iternext(PyObject* self)
         const fixed_buffer_map& d     = *(DL_get_loader(self)->get_current_iter());
         auto                    names = DL_get_loader(self)->get_buffer_names();
 
-        result = PyTuple_New(names.size());
+        result            = PyTuple_New(names.size());
         int buf_tuple_len = 2;
-        int tuple_pos = 0;
+        int tuple_pos     = 0;
         for (auto&& nm : names)
         {
-            PyObject* wrapped_buf = wrap_buffer_as_np_array(d[nm]);
-            PyObject* buf_name = Py_BuildValue("s", nm.c_str());
+            PyObject* wrapped_buf     = wrap_buffer_as_np_array(d[nm]);
+            PyObject* buf_name        = Py_BuildValue("s", nm.c_str());
             PyObject* named_buf_tuple = PyTuple_New(buf_tuple_len);
 
             // build tuple of (name, buffer) ex: ('image', buf)
@@ -137,7 +137,7 @@ static PyObject* DataLoader_iternext(PyObject* self)
 
             int set_status = PyTuple_SetItem(result, tuple_pos, named_buf_tuple);
             tuple_pos++;
- 
+
             // Fix me: do i need call Py_DECREF on named_buf_tuple?
             // Note: PyTuple_SetItem steals the reference.
             if (set_status < 0)
@@ -174,7 +174,6 @@ static PySequenceMethods DataLoader_sequence_methods = {aeon_DataLoader_length, 
                                                         0, /* sq_inplace_concat */
                                                         0, /* sq_inplace_repeat */
                                                         0 /* sq_inplace_repeat */};
-
 
 static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf)
 {
@@ -262,9 +261,9 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             auto name_shape_list = self->m_loader->get_names_and_shapes();
 
             // axes_info is represented as a tuple of tuples.
-            // A single entry in axes_info is represented as 
+            // A single entry in axes_info is represented as
             // a tuple of datum_name and j tuples (axis_name, axis_length).
-            self->axes_info         = PyTuple_New(name_shape_list.size());
+            self->axes_info = PyTuple_New(name_shape_list.size());
 
             for (size_t i = 0; i < name_shape_list.size(); ++i)
             {
@@ -275,27 +274,29 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                 // using tuple instead of dict to preserve the order
                 // python 2.x doesnt have the support for ordereddict obj, its supported in python 3.x onwards
 
-                PyObject* py_axis_tuple = PyTuple_New(axes_lengths.size());
-                int axis_tuple_len = 2;
+                PyObject* py_axis_tuple  = PyTuple_New(axes_lengths.size());
+                int       axis_tuple_len = 2;
                 for (size_t j = 0; j < axes_lengths.size(); ++j)
                 {
-                    PyObject* tmp_length = Py_BuildValue("i", axes_lengths[j]);
-                    PyObject* axes_name = Py_BuildValue("s", axes_names[j].c_str());
+                    PyObject* tmp_length    = Py_BuildValue("i", axes_lengths[j]);
+                    PyObject* axes_name     = Py_BuildValue("s", axes_names[j].c_str());
                     PyObject* py_temp_tuple = PyTuple_New(axis_tuple_len);
 
-                    if (py_temp_tuple == NULL){
+                    if (py_temp_tuple == NULL)
+                    {
                         ERR << "Error creating new tuple";
                         PyErr_SetString(PyExc_RuntimeError, "Error creating new tuple");
                         return NULL;
                     }
 
                     // create a tuple of (axis_name, axis_length)
-                    PyTuple_SetItem(py_temp_tuple, 0 , axes_name);
-                    PyTuple_SetItem(py_temp_tuple, 1 , tmp_length);
+                    PyTuple_SetItem(py_temp_tuple, 0, axes_name);
+                    PyTuple_SetItem(py_temp_tuple, 1, tmp_length);
 
                     //add it to a tuple list
                     int tuple_status = PyTuple_SetItem(py_axis_tuple, j, py_temp_tuple);
-                    if (tuple_status != 0){
+                    if (tuple_status != 0)
+                    {
                         ERR << "Error building tuple of (axis_name, axis_length)";
                         PyErr_SetString(PyExc_RuntimeError, "Error building shape tuple");
                         return NULL;
@@ -305,7 +306,7 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                 int datum_tuple_len = 2;
                 // The tuple holds a pair that maps datum name to axis tuple
                 PyObject* py_datum_tuple = PyTuple_New(datum_tuple_len);
-                PyObject* py_datum_name = Py_BuildValue("s", datum_name.c_str());
+                PyObject* py_datum_name  = Py_BuildValue("s", datum_name.c_str());
 
                 PyTuple_SetItem(py_datum_tuple, 0, py_datum_name);
                 PyTuple_SetItem(py_datum_tuple, 1, py_axis_tuple);

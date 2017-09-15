@@ -62,7 +62,7 @@ public:
     uint32_t                    decode_thread_count  = 0;
     std::string                 iteration_mode       = "ONCE";
     int                         iteration_mode_count = 0;
-    uint16_t                    web_server_port = 0;
+    uint16_t                    web_server_port      = 0;
     std::vector<nlohmann::json> etl;
     std::vector<nlohmann::json> augmentation;
 
@@ -109,7 +109,7 @@ public:
     ~loader();
 
     const std::vector<std::string>& get_buffer_names() const;
-    const std::vector<std::pair<std::string, shape_type> >& get_names_and_shapes() const;
+    const std::vector<std::pair<std::string, shape_type>>& get_names_and_shapes() const;
     const shape_t& get_shape(const std::string& name) const;
 
     int record_count() { return m_manifest->record_count(); }
@@ -139,8 +139,8 @@ public:
     private:
         iterator() = delete;
 
-        loader&    m_current_loader;
-        const bool m_is_end;
+        loader&          m_current_loader;
+        const bool       m_is_end;
         fixed_buffer_map m_empty_buffer;
     };
 
@@ -170,25 +170,25 @@ private:
 
     friend class nervana::loader::iterator;
 
-    iterator                            m_current_iter;
-    iterator                            m_end_iter;
-    std::shared_ptr<manifest_file>      m_manifest;
-    std::shared_ptr<block_loader_file>  m_block_loader;
-    std::shared_ptr<block_manager>      m_block_manager;
-    std::shared_ptr<batch_iterator>     m_batch_iterator;
-    std::shared_ptr<provider_interface> m_provider;
-    std::shared_ptr<batch_decoder>      m_decoder;
+    iterator                                                m_current_iter;
+    iterator                                                m_end_iter;
+    std::shared_ptr<manifest_file>                          m_manifest;
+    std::shared_ptr<block_loader_file>                      m_block_loader;
+    std::shared_ptr<block_manager>                          m_block_manager;
+    std::shared_ptr<batch_iterator>                         m_batch_iterator;
+    std::shared_ptr<provider_interface>                     m_provider;
+    std::shared_ptr<batch_decoder>                          m_decoder;
     std::shared_ptr<async_manager_source<fixed_buffer_map>> m_final_stage;
-    int                                 m_batch_size;
-    BatchMode                           m_batch_mode;
-    size_t                              m_batch_count_value;
-    size_t                              m_position{0};
-    fixed_buffer_map*                   m_output_buffer_ptr{nullptr};
-    nlohmann::json                      m_current_config;
-    std::shared_ptr<web_app>            m_debug_web_app;
-    
+    int                                                     m_batch_size;
+    BatchMode                                               m_batch_mode;
+    size_t                                                  m_batch_count_value;
+    size_t                                                  m_position{0};
+    fixed_buffer_map*                                       m_output_buffer_ptr{nullptr};
+    nlohmann::json                                          m_current_config;
+    std::shared_ptr<web_app>                                m_debug_web_app;
+
     // Shows how bigger should be batch size than CPU thread count to not use extended pipeline which increase input size for decoder
-    const float                         m_increase_input_size_coefficient = 1.5; 
+    const float m_increase_input_size_coefficient = 1.5;
     // How many times we should increase input data size for decoder
-    const int                           m_input_multiplier = 8;
+    const int m_input_multiplier = 8;
 };

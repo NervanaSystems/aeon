@@ -69,8 +69,7 @@ private:
         ADD_SCALAR(name, mode::OPTIONAL),
         ADD_SCALAR(max_gt_boxes, mode::OPTIONAL),
         // if gt_boxes_normalized is true, input gt boxes are required to be normalized
-        ADD_SCALAR(gt_boxes_normalized, mode::OPTIONAL)
-    };
+        ADD_SCALAR(gt_boxes_normalized, mode::OPTIONAL)};
 };
 
 class nervana::localization::ssd::decoded : public boundingbox::decoded
@@ -90,13 +89,12 @@ class nervana::localization::ssd::extractor : public nervana::interface::extract
 public:
     extractor(const ssd::config&);
     virtual ~extractor() {}
-
     virtual std::shared_ptr<ssd::decoded> extract(const void* data, size_t size) const override;
 
 private:
     extractor() = delete;
     boundingbox::extractor bbox_extractor;
-    config cfg;
+    config                 cfg;
 };
 
 class nervana::localization::ssd::transformer
@@ -107,7 +105,7 @@ public:
 
     virtual ~transformer() {}
     std::shared_ptr<ssd::decoded> transform(std::shared_ptr<augment::image::params> txs,
-                                            std::shared_ptr<ssd::decoded>           mp) const override;
+                                            std::shared_ptr<ssd::decoded> mp) const override;
 
 private:
 };

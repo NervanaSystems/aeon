@@ -18,10 +18,10 @@
 #include <string>
 #include <opencv2/core/core.hpp>
 
-
 extern std::vector<std::string> label_list;
 std::vector<uint8_t> make_image_from_metadata(const std::string& metadata);
-nervana::boundingbox::box crop_single_box(nervana::boundingbox::box expected, cv::Rect cropbox, float scale);
+nervana::boundingbox::box
+    crop_single_box(nervana::boundingbox::box expected, cv::Rect cropbox, float scale);
 
 void plot(const std::vector<nervana::box>& list, const std::string& prefix);
 void plot(const std::string& path);

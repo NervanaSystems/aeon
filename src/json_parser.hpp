@@ -90,15 +90,15 @@ private:
             throw std::invalid_argument(ss.str());
         }
     }
-    
+
     void push_value(nlohmann::json& arr, PyObject* value)
     {
         switch (getType(value))
         {
-        case Type::Bool:  arr.push_back((bool)(value == Py_True)); break;
-        case Type::Int:   arr.push_back((int)PyLong_AsLong(value)); break;
+        case Type::Bool: arr.push_back((bool)(value == Py_True)); break;
+        case Type::Int: arr.push_back((int)PyLong_AsLong(value)); break;
         case Type::Float: arr.push_back((float)PyFloat_AsDouble(value)); break;
-        case Type::List:  arr.push_back(parse_list(value)); break;
+        case Type::List: arr.push_back(parse_list(value)); break;
         case Type::Tuple: arr.push_back(parse_tuple(value)); break;
         case Type::Dict:
         {
@@ -108,7 +108,7 @@ private:
             break;
         }
         case Type::String: arr.push_back(py23_string_to_ascii_string(value)); break;
-        case Type::None:   arr.push_back(nullptr); break;
+        case Type::None: arr.push_back(nullptr); break;
         default:
             throw std::runtime_error("Unexpected return value from recognize function.");
             break;
@@ -142,7 +142,7 @@ private:
     void parse_dict(nlohmann::json& json, PyObject* dict)
     {
         nervana::affirm(PyDict_Check(dict), "Input argument must be dictionary.");
-        PyObject *key, *value;
+        PyObject * key, *value;
         Py_ssize_t pos = 0;
 
         while (PyDict_Next(dict, &pos, &key, &value))
@@ -151,30 +151,14 @@ private:
 
             switch (getType(value))
             {
-                case Type::Bool:
-                    json[ascii_key] = (bool)(value == Py_True);
-                    break;
-                case Type::Int:
-                    json[ascii_key] = (int)PyLong_AsLong(value);
-                    break;
-                case Type::Float:
-                    json[ascii_key] = (float)PyFloat_AsDouble(value);
-                    break;
-                case Type::List:
-                    json[ascii_key] = parse_list(value);
-                    break;
-                case Type::Tuple:
-                    json[ascii_key] = parse_tuple(value);
-                    break;
-                case Type::Dict:
-                    parse_dict(json[ascii_key], value);
-                    break;
-                case Type::String:
-                    json[ascii_key] = py23_string_to_ascii_string(value);
-                    break;
-                case Type::None:
-                    json[ascii_key] = nullptr;
-                    break;
+            case Type::Bool: json[ascii_key]  = (bool)(value == Py_True); break;
+            case Type::Int: json[ascii_key]   = (int)PyLong_AsLong(value); break;
+            case Type::Float: json[ascii_key] = (float)PyFloat_AsDouble(value); break;
+            case Type::List: json[ascii_key]  = parse_list(value); break;
+            case Type::Tuple: json[ascii_key] = parse_tuple(value); break;
+            case Type::Dict: parse_dict(json[ascii_key], value); break;
+            case Type::String: json[ascii_key] = py23_string_to_ascii_string(value); break;
+            case Type::None: json[ascii_key]   = nullptr; break;
             }
         }
     }

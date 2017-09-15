@@ -78,7 +78,7 @@ public:
     mutable std::uniform_real_distribution<float> noise_level{0.0f, 0.5f};
 
 private:
-    float                      add_noise_probability = 0.0f;
+    float add_noise_probability = 0.0f;
 
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         // ADD_SCALAR(type, mode::REQUIRED, [](const std::string& s) { return s == "audio"; }),

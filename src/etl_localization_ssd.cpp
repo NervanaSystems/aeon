@@ -81,7 +81,7 @@ localization::ssd::extractor::extractor(const localization::ssd::config& _cfg)
 }
 
 std::shared_ptr<localization::ssd::decoded> localization::ssd::extractor::extract(const void* data,
-                                                                                  size_t      size) const
+                                                                                  size_t size) const
 {
     auto rc = std::make_shared<ssd::decoded>();
     auto bb = std::static_pointer_cast<boundingbox::decoded>(rc);

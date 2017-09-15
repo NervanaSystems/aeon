@@ -72,7 +72,8 @@ augment::image::param_factory::param_factory(nlohmann::json js)
 
             if (padding > 0)
             {
-                padding_crop_offset_distribution = std::uniform_int_distribution<int>(0, padding*2);
+                padding_crop_offset_distribution =
+                    std::uniform_int_distribution<int>(0, padding * 2);
             }
         }
     }
@@ -95,10 +96,8 @@ emit_type augment::image::param_factory::get_emit_constraint_type()
         throw std::invalid_argument("Invalid emit constraint type");
 }
 
-shared_ptr<augment::image::params> augment::image::param_factory::make_params(size_t input_width,
-                                                                              size_t input_height,
-                                                                              size_t output_width,
-                                                                              size_t output_height) const
+shared_ptr<augment::image::params> augment::image::param_factory::make_params(
+    size_t input_width, size_t input_height, size_t output_width, size_t output_height) const
 {
     // Must use this method for creating a shared_ptr rather than make_shared
     // since the params default ctor is private and factory is friend
@@ -122,8 +121,8 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(si
 
     if (!crop_enable)
     {
-        int c_off_x = padding_crop_offset_distribution(random);
-        int c_off_y = padding_crop_offset_distribution(random);
+        int c_off_x                   = padding_crop_offset_distribution(random);
+        int c_off_y                   = padding_crop_offset_distribution(random);
         settings->padding_crop_offset = cv::Size2i(c_off_x, c_off_y);
         settings->cropbox             = cv::Rect(cv::Point2f(0, 0), input_size);
 
@@ -190,8 +189,8 @@ shared_ptr<augment::image::params>
                                                    size_t                   output_height,
                                                    const std::vector<bbox>& object_bboxes) const
 {
-    auto& random = get_thread_local_random_engine();
-    auto settings = make_params(input_width, input_height, output_width, output_height);
+    auto& random   = get_thread_local_random_engine();
+    auto  settings = make_params(input_width, input_height, output_width, output_height);
     settings->emit_min_overlap     = m_emit_constraint_min_overlap;
     settings->emit_constraint_type = m_emit_type;
 

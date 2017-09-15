@@ -67,7 +67,7 @@ void cache_system::restart()
 void cache_system::try_get_access()
 {
     m_current_block_number = 0;
-    m_stage                  = complete;
+    m_stage                = complete;
     lock_guard<mutex> lg(m_mutex);
     if (!check_if_complete(m_cache_dir))
         m_stage = take_ownership(m_cache_dir, m_cache_lock) ? ownership : blocked;

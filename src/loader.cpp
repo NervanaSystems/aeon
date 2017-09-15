@@ -154,13 +154,11 @@ void loader::initialize(nlohmann::json& config_json)
         const int decode_size = threads_num * m_input_multiplier;
         m_batch_iterator      = make_shared<batch_iterator>(m_block_manager.get(), decode_size);
 
-        m_decoder = make_shared<batch_decoder>(m_batch_iterator.get(),
-                                                    decode_size,
-                                                    lcfg.decode_thread_count,
-                                                    lcfg.pinned,
-                                                    m_provider);
+        m_decoder = make_shared<batch_decoder>(
+            m_batch_iterator.get(), decode_size, lcfg.decode_thread_count, lcfg.pinned, m_provider);
 
-        m_final_stage = make_shared<batch_iterator_fbm>(m_decoder.get(), lcfg.batch_size, m_provider);
+        m_final_stage =
+            make_shared<batch_iterator_fbm>(m_decoder.get(), lcfg.batch_size, m_provider);
     }
 
     m_output_buffer_ptr = m_final_stage->next();
@@ -179,7 +177,7 @@ const vector<string>& loader::get_buffer_names() const
     return m_provider->get_buffer_names();
 }
 
-const vector<pair<string, shape_type> >& loader::get_names_and_shapes() const
+const vector<pair<string, shape_type>>& loader::get_names_and_shapes() const
 {
     return m_provider->get_output_shapes();
 }

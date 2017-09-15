@@ -84,7 +84,8 @@ std::shared_ptr<image::decoded>
     return make_shared<image::decoded>(*finalImage);
 }
 
-void depthmap::loader::load(const std::vector<void*>& outlist, shared_ptr<image::decoded> input) const
+void depthmap::loader::load(const std::vector<void*>&  outlist,
+                            shared_ptr<image::decoded> input) const
 {
     char* outbuf = (char*)outlist[0];
     // TODO: Generalize this to also handle multi_crop case

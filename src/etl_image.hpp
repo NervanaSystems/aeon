@@ -156,10 +156,11 @@ class nervana::image::transformer
 public:
     transformer(const image::config&);
     ~transformer() {}
-    virtual std::shared_ptr<image::decoded> transform(std::shared_ptr<augment::image::params>,
-                                                      std::shared_ptr<image::decoded>) const override;
+    virtual std::shared_ptr<image::decoded>
+        transform(std::shared_ptr<augment::image::params>,
+                  std::shared_ptr<image::decoded>) const override;
 
-    cv::Mat transform_single_image(std::shared_ptr<augment::image::params>, cv::Mat&)const;
+    cv::Mat transform_single_image(std::shared_ptr<augment::image::params>, cv::Mat&) const;
 
 private:
     image::photometric photo;

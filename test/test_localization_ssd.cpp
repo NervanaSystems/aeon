@@ -256,10 +256,7 @@ TEST(localization_ssd, transform)
     decoded->input_image_size  = cv::Size2i(input_width, input_height);
     decoded->output_image_size = cv::Size2i(output_width, output_height);
     decoded->m_boxes           = vector<bbox>{
-        bbox(0, 0, 99, 99, false),
-        bbox(20, 40, 29, 49, false),
-        bbox(10, 20, 29, 39, false)
-    };
+        bbox(0, 0, 99, 99, false), bbox(20, 40, 29, 49, false), bbox(10, 20, 29, 39, false)};
     auto expected = vector<bbox>{bbox(0.0f, 0.0f, 1.0, 1.0, true),
                                  bbox(0.7f, 0.4f, 0.8f, 0.5f, true),
                                  bbox(0.7f, 0.2f, 0.9f, 0.4f, true)};

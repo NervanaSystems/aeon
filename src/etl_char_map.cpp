@@ -52,7 +52,8 @@ nervana::char_map::config::config(nlohmann::json js)
     validate();
 }
 
-std::shared_ptr<char_map::decoded> char_map::extractor::extract(const void* in_array, size_t in_sz) const
+std::shared_ptr<char_map::decoded> char_map::extractor::extract(const void* in_array,
+                                                                size_t      in_sz) const
 {
     uint32_t         nvalid = std::min((uint32_t)in_sz, _max_length);
     string           transcript((const char*)in_array);
@@ -81,7 +82,8 @@ std::shared_ptr<char_map::decoded> char_map::extractor::extract(const void* in_a
     return rc;
 }
 
-void char_map::loader::load(const vector<void*>& outlist, std::shared_ptr<char_map::decoded> dc) const
+void char_map::loader::load(const vector<void*>&               outlist,
+                            std::shared_ptr<char_map::decoded> dc) const
 {
     wchar_t* outbuf = (wchar_t*)outlist[0];
     for (auto c : dc->get_data())

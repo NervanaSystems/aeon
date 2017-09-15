@@ -106,7 +106,6 @@ public:
     size_t      m_size;
 
 private:
-
     // These are field names for json serialization
     static const std::string m_tp_name_json_name;
     static const std::string m_np_type_json_name;

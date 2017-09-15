@@ -43,12 +43,12 @@ TEST(config, throws)
 {
     // config is missing a required parameter
 
-    int    height        = 32;
-    int    width         = 32;
-    size_t batch_size    = 1;
-    string manifest_root = string(CURDIR) + "/test_data";
-    string manifest      = manifest_root + "/manifest.csv";
-    nlohmann::json image = {{"type", "image"},
+    int            height        = 32;
+    int            width         = 32;
+    size_t         batch_size    = 1;
+    string         manifest_root = string(CURDIR) + "/test_data";
+    string         manifest      = manifest_root + "/manifest.csv";
+    nlohmann::json image         = {{"type", "image"},
                             {"name", "image1"},
                             {"height", height},
                             {"width", width},

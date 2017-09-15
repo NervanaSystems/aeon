@@ -131,7 +131,8 @@ class nervana::boundingbox::loader
 public:
     loader(const boundingbox::config&);
     virtual ~loader() {}
-    virtual void load(const std::vector<void*>&, std::shared_ptr<boundingbox::decoded>) const override;
+    virtual void load(const std::vector<void*>&,
+                      std::shared_ptr<boundingbox::decoded>) const override;
 
 private:
     const size_t max_bbox;

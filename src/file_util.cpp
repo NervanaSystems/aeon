@@ -144,7 +144,7 @@ std::string nervana::file_util::get_temp_directory()
 
 vector<char> nervana::file_util::read_file_contents(const string& path)
 {
-    size_t file_size = get_file_size(path);
+    size_t       file_size = get_file_size(path);
     vector<char> data;
     data.reserve(file_size);
     data.resize(file_size);
@@ -152,9 +152,9 @@ vector<char> nervana::file_util::read_file_contents(const string& path)
     FILE* f = fopen(path.c_str(), "rb");
     if (f)
     {
-        char* p = data.data();
-        int remainder = file_size;
-        size_t offset = 0;
+        char*  p         = data.data();
+        int    remainder = file_size;
+        size_t offset    = 0;
         while (remainder > 0)
         {
             int rc = fread(&p[offset], 1, remainder, f);

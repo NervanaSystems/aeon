@@ -263,8 +263,9 @@ TEST(manifest, file_implicit)
         }
     }
 
-    size_t        block_size = 16;
-    EXPECT_THROW(manifest_file(ss, false, test_data_directory, 1.0, block_size), std::invalid_argument);
+    size_t block_size = 16;
+    EXPECT_THROW(manifest_file(ss, false, test_data_directory, 1.0, block_size),
+                 std::invalid_argument);
 }
 
 TEST(manifest, wrong_elements_number)

@@ -105,12 +105,12 @@ public:
             {
                 lbl = std::stoi(std::string((const char*)buf, bufSize));
             }
-            catch(const std::invalid_argument& ex)
+            catch (const std::invalid_argument& ex)
             {
                 ERR << "Cannot convert string to integer: " << ex.what();
                 throw ex;
             }
-            catch(const std::out_of_range& ex)
+            catch (const std::out_of_range& ex)
             {
                 ERR << "String to int conversion out of range error: " << ex.what();
                 throw ex;

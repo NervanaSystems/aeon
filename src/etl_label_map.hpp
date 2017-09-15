@@ -96,7 +96,8 @@ public:
     transformer();
     virtual ~transformer() {}
     virtual std::shared_ptr<label_map::decoded>
-        transform(std::shared_ptr<label_map::params>, std::shared_ptr<label_map::decoded>) const override;
+        transform(std::shared_ptr<label_map::params>,
+                  std::shared_ptr<label_map::decoded>) const override;
 
 private:
 };
@@ -106,7 +107,8 @@ class nervana::label_map::loader : public interface::loader<label_map::decoded>
 public:
     loader(const label_map::config&);
     virtual ~loader() {}
-    virtual void load(const std::vector<void*>&, std::shared_ptr<label_map::decoded>) const override;
+    virtual void load(const std::vector<void*>&,
+                      std::shared_ptr<label_map::decoded>) const override;
 
 private:
     int max_label_count;

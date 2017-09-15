@@ -57,7 +57,7 @@ public:
             ss << "key '" << name << "' not found";
             throw std::runtime_error(ss.str());
         }
-         return it->second;
+        return it->second;
     }
 
     const std::vector<std::pair<std::string, shape_type>>& get_output_shapes() const

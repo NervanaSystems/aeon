@@ -387,8 +387,8 @@ TEST(loader, provider)
 #ifdef DETERMINISTIC_MODE
 static std::string generate_manifest_file(size_t record_count)
 {
-    std::string manifest_name = "manifest.txt";
-    const char* image_files[] = {"flowers.jpg", "img_2112_70.jpg"};
+    std::string   manifest_name = "manifest.txt";
+    const char*   image_files[] = {"flowers.jpg", "img_2112_70.jpg"};
     std::ofstream f(manifest_name);
     if (f)
     {
@@ -397,7 +397,7 @@ static std::string generate_manifest_file(size_t record_count)
         f << nervana::manifest_file::get_delimiter();
         f << nervana::manifest_file::get_string_type_id();
         f << "\n";
-        for (size_t i=0; i<record_count; i++)
+        for (size_t i = 0; i < record_count; i++)
         {
             f << image_files[i % 2];
             f << nervana::manifest_file::get_delimiter();
@@ -422,11 +422,11 @@ TEST(loader, deterministic)
 
     nlohmann::json label_config = {{"type", "label"}, {"binary", false}};
     auto           aug_config   = vector<nlohmann::json>{{{"type", "image"},
-                                       {"scale", {0.5, 1.0}},
-                                       {"saturation", {0.5, 2.0}},
-                                       {"contrast", {0.5, 1.0}},
-                                       {"brightness", {0.5, 1.0}},
-                                       {"flip_enable", true}}};
+                                              {"scale", {0.5, 1.0}},
+                                              {"saturation", {0.5, 2.0}},
+                                              {"contrast", {0.5, 1.0}},
+                                              {"brightness", {0.5, 1.0}},
+                                              {"flip_enable", true}}};
     nlohmann::json config = {{"manifest_root", test_data_directory},
                              {"manifest_filename", manifest},
                              {"batch_size", batch_size},
@@ -437,10 +437,10 @@ TEST(loader, deterministic)
 
     auto loader = nervana::loader{config};
     loader.get_current_iter();
-    auto& buffer  = *loader.get_current_iter();
+    auto& buffer = *loader.get_current_iter();
 
-    const uint32_t expected_result[3]={0x36362f2a, 0x56493d3b, 0x6b665b5c};
-    uint32_t* data = reinterpret_cast<uint32_t*>(buffer["image"]->data());
+    const uint32_t expected_result[3] = {0x36362f2a, 0x56493d3b, 0x6b665b5c};
+    uint32_t*      data               = reinterpret_cast<uint32_t*>(buffer["image"]->data());
     EXPECT_EQ(data[0], expected_result[0]);
     EXPECT_EQ(data[1], expected_result[1]);
     EXPECT_EQ(data[2], expected_result[2]);
@@ -467,11 +467,11 @@ TEST(benchmark, imagenet)
             {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
         nlohmann::json label_config = {{"type", "label"}, {"binary", false}};
         auto           aug_config   = vector<nlohmann::json>{{{"type", "image"},
-                                           {"scale", {0.5, 1.0}},
-                                           {"saturation", {0.5, 2.0}},
-                                           {"contrast", {0.5, 1.0}},
-                                           {"brightness", {0.5, 1.0}},
-                                           {"flip_enable", true}}};
+                                                  {"scale", {0.5, 1.0}},
+                                                  {"saturation", {0.5, 2.0}},
+                                                  {"contrast", {0.5, 1.0}},
+                                                  {"brightness", {0.5, 1.0}},
+                                                  {"flip_enable", true}}};
         nlohmann::json config = {{"manifest_root", manifest_root},
                                  {"manifest_filename", manifest},
                                  {"batch_size", batch_size},
@@ -508,8 +508,12 @@ TEST(benchmark, imagenet)
                     {
                         cout << " time " << ms_time;
                         cout << " " << (float)batches_per_output / sec_time << " batches/s";
-                        total_time += chrono::duration_cast<chrono::milliseconds>(start_time - last_time);
-                        cout << "\t\taverage " << (float)(current_batch - batches_per_output) / (total_time.count() / 1000.0f) << " batches/s";
+                        total_time +=
+                            chrono::duration_cast<chrono::milliseconds>(start_time - last_time);
+                        cout << "\t\taverage "
+                             << (float)(current_batch - batches_per_output) /
+                                    (total_time.count() / 1000.0f)
+                             << " batches/s";
                     }
                     cout << endl;
                 }

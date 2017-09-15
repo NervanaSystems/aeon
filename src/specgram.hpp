@@ -33,7 +33,7 @@ namespace nervana
 class nervana::specgram
 {
 public:
-    specgram() = delete;
+    specgram()          = delete;
     virtual ~specgram() = delete;
     static void wav_to_specgram(const cv::Mat& wav_mat,
                                 const int      frame_length_tn,

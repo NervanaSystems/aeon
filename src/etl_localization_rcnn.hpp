@@ -159,12 +159,14 @@ public:
     std::vector<boundingbox::box> gt_boxes;
 };
 
-class nervana::localization::rcnn::extractor : public nervana::interface::extractor<localization::rcnn::decoded>
+class nervana::localization::rcnn::extractor
+    : public nervana::interface::extractor<localization::rcnn::decoded>
 {
 public:
     extractor(const localization::rcnn::config&);
 
-    virtual std::shared_ptr<localization::rcnn::decoded> extract(const void* data, size_t size) const override
+    virtual std::shared_ptr<localization::rcnn::decoded> extract(const void* data,
+                                                                 size_t      size) const override
     {
         auto rc = std::make_shared<localization::rcnn::decoded>();
         auto bb = std::static_pointer_cast<boundingbox::decoded>(rc);
@@ -188,8 +190,8 @@ public:
 
     virtual ~transformer() {}
     std::shared_ptr<localization::rcnn::decoded>
-        transform(std::shared_ptr<augment::image::params> txs,
-                  std::shared_ptr<localization::rcnn::decoded>  mp) const override;
+        transform(std::shared_ptr<augment::image::params>      txs,
+                  std::shared_ptr<localization::rcnn::decoded> mp) const override;
 
 private:
     transformer() = delete;
@@ -200,8 +202,8 @@ private:
     std::vector<int> sample_anchors(const std::vector<int>& labels, bool debug = false) const;
 
     const localization::rcnn::config& cfg;
-    const std::vector<box>      all_anchors;
-    float                       m_fixed_scaling_factor;
+    const std::vector<box>            all_anchors;
+    float                             m_fixed_scaling_factor;
 };
 
 class nervana::localization::rcnn::loader : public interface::loader<localization::rcnn::decoded>
@@ -210,7 +212,7 @@ public:
     loader(const localization::rcnn::config&);
 
     virtual ~loader() {}
-    void load(const std::vector<void*>&              buf_list,
+    void load(const std::vector<void*>&                    buf_list,
               std::shared_ptr<localization::rcnn::decoded> mp) const override;
 
 private:

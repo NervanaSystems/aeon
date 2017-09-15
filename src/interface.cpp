@@ -28,16 +28,15 @@ void json_configurable::verify_config(
     const vector<shared_ptr<interface::config_info_interface>>& config,
     nlohmann::json                                              js) const
 {
-    vector<string>          ignore_list;
-    string error_key;
-    string suggestion;
-    int    distance = numeric_limits<int>::max();
+    vector<string> ignore_list;
+    string         error_key;
+    string         suggestion;
+    int            distance = numeric_limits<int>::max();
 
-    json::parser_callback_t cb = [&](int depth, json::parse_event_t event, json& parsed)
-    {
+    json::parser_callback_t cb = [&](int depth, json::parse_event_t event, json& parsed) {
         if (depth == 1)
         {
-            switch(event)
+            switch (event)
             {
             case json::parse_event_t::key:
             {
@@ -79,7 +78,8 @@ void json_configurable::verify_config(
                 if (error_key.size() > 0)
                 {
                     stringstream ss;
-                    ss << "config element {" << error_key << ": " << parsed << "} is not understood";
+                    ss << "config element {" << error_key << ": " << parsed
+                       << "} is not understood";
                     if (distance < error_key.size() / 2)
                     {
                         ss << ", did you mean '" << suggestion << "'";
@@ -88,8 +88,7 @@ void json_configurable::verify_config(
                 }
                 break;
             }
-            default:
-                break;
+            default: break;
             }
         }
         return true;

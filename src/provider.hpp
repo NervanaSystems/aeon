@@ -106,7 +106,9 @@ public:
     static std::string create_name(const std::string& name, const std::string& base_name);
 
 private:
-    void provide(int idx, nervana::encoded_record_list& in_buf, nervana::fixed_buffer_map& out_buf) const
+    void provide(int                           idx,
+                 nervana::encoded_record_list& in_buf,
+                 nervana::fixed_buffer_map&    out_buf) const
     {
     }
 };
@@ -226,16 +228,16 @@ public:
                  augmentation&) const override;
 
 private:
-    nervana::localization::ssd::config                   m_config;
-    nervana::augment::image::param_factory               m_augmentation_factory;
-    nervana::localization::ssd::extractor                m_extractor;
-    nervana::localization::ssd::transformer              m_transformer;
-    nervana::localization::ssd::loader                   m_loader;
-    const std::string                                    m_image_shape_buffer_name;
-    const std::string                                    m_gt_boxes_buffer_name;
-    const std::string                                    m_gt_box_count_buffer_name;
-    const std::string                                    m_gt_class_count_buffer_name;
-    const std::string                                    m_difficult_flag_buffer_name;
+    nervana::localization::ssd::config      m_config;
+    nervana::augment::image::param_factory  m_augmentation_factory;
+    nervana::localization::ssd::extractor   m_extractor;
+    nervana::localization::ssd::transformer m_transformer;
+    nervana::localization::ssd::loader      m_loader;
+    const std::string                       m_image_shape_buffer_name;
+    const std::string                       m_gt_boxes_buffer_name;
+    const std::string                       m_gt_box_count_buffer_name;
+    const std::string                       m_gt_class_count_buffer_name;
+    const std::string                       m_difficult_flag_buffer_name;
 };
 
 //=================================================================================================

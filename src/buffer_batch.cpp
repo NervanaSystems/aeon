@@ -150,16 +150,16 @@ buffer_fixed_size_elements::~buffer_fixed_size_elements()
 
 void fixed_buffer_map::copy(fixed_buffer_map& src, size_t src_index, size_t dst_index, size_t count)
 {
-    for (auto name: m_names)
+    for (auto name : m_names)
     {
-        buffer_fixed_size_elements* src_fbm =    src[name];
+        buffer_fixed_size_elements* src_fbm = src[name];
         buffer_fixed_size_elements* dst_fbm = operator[](name);
-        char* p_src = src_fbm->get_item(src_index);
-        char* p_dst = dst_fbm->get_item(dst_index);
+        char*                       p_src   = src_fbm->get_item(src_index);
+        char*                       p_dst   = dst_fbm->get_item(dst_index);
 
-        if ((count + src_index > src_fbm->get_item_count())
-          ||(count + dst_index > dst_fbm->get_item_count()))
-           throw invalid_argument("buffer_fixed_size: count out-of-range");
+        if ((count + src_index > src_fbm->get_item_count()) ||
+            (count + dst_index > dst_fbm->get_item_count()))
+            throw invalid_argument("buffer_fixed_size: count out-of-range");
 
         memcpy(p_dst, p_src, count * src_fbm->get_stride());
     }

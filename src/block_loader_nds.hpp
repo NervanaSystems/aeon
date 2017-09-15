@@ -41,12 +41,11 @@ public:
     virtual ~block_loader_nds() { finalize(); }
     encoded_record_list* filler() override;
 
-    size_t               record_count() const override { return m_record_count; }
-    size_t               block_size() const override { return m_block_size; }
-    size_t               block_count() const override { return m_block_count; }
-    size_t               elements_per_record() const override { return m_elements_per_record; }
-    source_uid_t         get_uid() const override { return 0; }
-
+    size_t       record_count() const override { return m_record_count; }
+    size_t       block_size() const override { return m_block_size; }
+    size_t       block_count() const override { return m_block_count; }
+    size_t       elements_per_record() const override { return m_elements_per_record; }
+    source_uid_t get_uid() const override { return 0; }
 private:
     manifest_nds& m_manifest;
     size_t        m_block_size;

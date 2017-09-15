@@ -58,7 +58,9 @@ private:
 class nervana::batch_iterator_fbm : public async_manager<fixed_buffer_map, fixed_buffer_map>
 {
 public:
-    batch_iterator_fbm(batch_decoder* blkl, size_t batch_size, const std::shared_ptr<provider_interface>& prov);
+    batch_iterator_fbm(batch_decoder*                             blkl,
+                       size_t                                     batch_size,
+                       const std::shared_ptr<provider_interface>& prov);
     ~batch_iterator_fbm() { finalize(); }
     fixed_buffer_map* filler() override;
 
@@ -71,10 +73,9 @@ public:
     }
 
 private:
-    size_t             m_batch_size;
-    size_t             m_element_count;
-    fixed_buffer_map*  m_input_ptr{nullptr};
-    size_t             m_src_index = 0;
-    size_t             m_dst_index = 0;
+    size_t            m_batch_size;
+    size_t            m_element_count;
+    fixed_buffer_map* m_input_ptr{nullptr};
+    size_t            m_src_index = 0;
+    size_t            m_dst_index = 0;
 };
-

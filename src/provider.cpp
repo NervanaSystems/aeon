@@ -388,7 +388,7 @@ void provider::localization::ssd::provide(int                        idx,
     {
         if (aug.m_image_augmentations == nullptr)
         {
-            auto input_size = decoded->input_image_size;
+            auto input_size           = decoded->input_image_size;
             aug.m_image_augmentations = m_augmentation_factory.make_ssd_params(input_size.width,
                                                                                input_size.height,
                                                                                m_config.width,

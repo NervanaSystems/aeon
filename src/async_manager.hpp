@@ -69,11 +69,9 @@ public:
     virtual size_t  record_count() const        = 0;
     virtual size_t  elements_per_record() const = 0;
     virtual void    reset()                     = 0;
-    virtual void    suspend_output()              {}
-
+    virtual void    suspend_output() {}
     async_manager_source(const async_manager_source&) = default;
 };
-
 
 template <typename INPUT, typename OUTPUT>
 class nervana::async_manager : public virtual nervana::async_manager_source<OUTPUT>,
@@ -89,19 +87,18 @@ public:
         async_manager_status.push_back(this);
     }
     virtual ~async_manager() { finalize(); }
-    
     OUTPUT* next() override
     {
-        if (!m_active_thread) 
+        if (!m_active_thread)
             initialize();
-    
+
         inner_buffer_t output_buffer;
         if (!m_bfirst_next)
         {
             m_bq_output.top(output_buffer);
             if (std::get<0>(output_buffer) == nullptr)
             {
-                return nullptr; 
+                return nullptr;
             }
             m_bq_output.pop(output_buffer);
             m_bq_input.push(output_buffer);
@@ -114,10 +111,10 @@ public:
 
         return std::get<0>(output_buffer);
     }
- 
+
     // do the work to fill up m_containers
     virtual OUTPUT* filler() = 0;
- 
+
     virtual void reset() override
     {
         std::unique_lock<std::mutex> lock(m_mutex);
@@ -132,13 +129,13 @@ public:
         m_source->reset();
     }
 
-    virtual void initialize() 
+    virtual void initialize()
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         if (!m_active_thread)
         {
             m_active_thread = true;
-            m_bfirst_next = true;
+            m_bfirst_next   = true;
             m_bq_input.clear();
             m_bq_output.clear();
             m_bq_input.push(inner_buffer_t(&m_containers[0], nullptr));
@@ -146,12 +143,8 @@ public:
             fill_thread.reset(new std::thread(&async_manager::run_filler, this));
         }
     }
-   
-    void finalize()
-    {
-      reset();
-    }
- 
+
+    void         finalize() { reset(); }
     virtual void suspend_output() override
     {
         m_bq_output.clear();
@@ -167,44 +160,44 @@ protected:
 
     void run_filler()
     {
-      for(;;)
-      {
-        inner_buffer_t free_buffer;
-        m_bq_input.pop(free_buffer);
-
-        m_pending_buffer = std::get<0>(free_buffer);
-
-        if (!m_active_thread)
-            return;
-        if (m_pending_buffer == nullptr)
+        for (;;)
         {
-            m_bq_output.push(inner_buffer_t(nullptr,nullptr));
-            return;
-        }
+            inner_buffer_t free_buffer;
+            m_bq_input.pop(free_buffer);
 
-        OUTPUT* buff;
-        try
-        {
-            buff = filler();
-        }
-        catch(...)
-        {
-            m_bq_output.push(inner_buffer_t(nullptr, std::current_exception()));
-            return;
-        }
+            m_pending_buffer = std::get<0>(free_buffer);
 
-        if (!m_active_thread)
-            return;
-        m_bq_output.push(inner_buffer_t(buff, nullptr));
-      }
+            if (!m_active_thread)
+                return;
+            if (m_pending_buffer == nullptr)
+            {
+                m_bq_output.push(inner_buffer_t(nullptr, nullptr));
+                return;
+            }
+
+            OUTPUT* buff;
+            try
+            {
+                buff = filler();
+            }
+            catch (...)
+            {
+                m_bq_output.push(inner_buffer_t(nullptr, std::current_exception()));
+                return;
+            }
+
+            if (!m_active_thread)
+                return;
+            m_bq_output.push(inner_buffer_t(buff, nullptr));
+        }
     }
 
     OUTPUT* get_pending_buffer()
     {
-      if (m_active_thread)
-        return m_pending_buffer;
-      else 
-        return &m_containers[0];
+        if (m_active_thread)
+            return m_pending_buffer;
+        else
+            return &m_containers[0];
     }
     OUTPUT                       m_containers[2];
     OUTPUT*                      m_pending_buffer;
@@ -212,11 +205,11 @@ protected:
 
     async_state m_state = async_state::idle;
     std::string m_name;
-    
-    BlockingQueue<inner_buffer_t>   m_bq_input;
-    BlockingQueue<inner_buffer_t>  m_bq_output;
-    std::shared_ptr<std::thread> fill_thread;
-    bool                m_bfirst_next{true};
-    volatile bool       m_active_thread{false};
-    std::mutex          m_mutex;
+
+    BlockingQueue<inner_buffer_t> m_bq_input;
+    BlockingQueue<inner_buffer_t> m_bq_output;
+    std::shared_ptr<std::thread>  fill_thread;
+    bool                          m_bfirst_next{true};
+    volatile bool                 m_active_thread{false};
+    std::mutex                    m_mutex;
 };

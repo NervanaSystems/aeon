@@ -27,7 +27,7 @@ public:
     void pop(T& item)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_cond.wait(lock, [this]{return !m_queue.empty();});
+        m_cond.wait(lock, [this] { return !m_queue.empty(); });
         item = m_queue.front();
         m_queue.pop();
     }
@@ -35,7 +35,7 @@ public:
     void top(T& item)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_cond.wait(lock, [this]{return !m_queue.empty();});
+        m_cond.wait(lock, [this] { return !m_queue.empty(); });
         item = m_queue.front();
     }
 
@@ -50,8 +50,8 @@ public:
     void clear()
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        std::queue<T> empty;
-        std::swap(m_queue ,empty);
+        std::queue<T>                empty;
+        std::swap(m_queue, empty);
     }
 
 private:
@@ -59,4 +59,3 @@ private:
     std::mutex              m_mutex;
     std::condition_variable m_cond;
 };
-

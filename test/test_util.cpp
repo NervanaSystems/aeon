@@ -492,8 +492,8 @@ TEST(util, almost_equal)
         test_case(0.1f, 0.2f, false),
         test_case(0.2f, 0.1f, false),
         test_case(-0.2f, -0.1f, false),
-        test_case(0.1f, 0.1f + epsilon/2, true),
-        test_case(0.1f, 0.1f - epsilon/2, true),
+        test_case(0.1f, 0.1f + epsilon / 2, true),
+        test_case(0.1f, 0.1f - epsilon / 2, true),
         test_case(0.1f, 0.1f + epsilon * 2, false),
         test_case(0.1f, 0.1f - epsilon * 2, false),
         test_case(-1.0f, -1.0f + epsilon / 2, true),
@@ -520,8 +520,8 @@ TEST(util, almost_equal_or_bigger)
         test_case(0.2f, 0.1f, true),
         test_case(-0.2f, -0.1f, false),
         test_case(-0.1f, -0.2f, true),
-        test_case(0.1f, 0.1f + epsilon/2, true),
-        test_case(0.1f, 0.1f - epsilon/2, true),
+        test_case(0.1f, 0.1f + epsilon / 2, true),
+        test_case(0.1f, 0.1f - epsilon / 2, true),
         test_case(0.1f, 0.1f + epsilon * 2, false),
         test_case(0.1f, 0.1f - epsilon * 2, true),
         test_case(-1.0f, -1.0f + epsilon / 2, true),
@@ -533,10 +533,9 @@ TEST(util, almost_equal_or_bigger)
     for (const test_case& test : tests)
     {
         bool result = almost_equal_or_greater(get<0>(test), get<1>(test));
-        EXPECT_EQ(result, get<2>(test)) << "almost_equal_or_bigger(" << get<0>(test) << ", " << get<1>(test)
-                                        << ") = " << get<2>(test);
+        EXPECT_EQ(result, get<2>(test)) << "almost_equal_or_bigger(" << get<0>(test) << ", "
+                                        << get<1>(test) << ") = " << get<2>(test);
     }
-
 }
 
 TEST(util, almost_equal_or_less)
@@ -549,8 +548,8 @@ TEST(util, almost_equal_or_less)
         test_case(0.2f, 0.1f, false),
         test_case(-0.2f, -0.1f, true),
         test_case(-0.1f, -0.2f, false),
-        test_case(0.1f, 0.1f + epsilon/2, true),
-        test_case(0.1f, 0.1f - epsilon/2, true),
+        test_case(0.1f, 0.1f + epsilon / 2, true),
+        test_case(0.1f, 0.1f - epsilon / 2, true),
         test_case(0.1f, 0.1f + epsilon * 2, true),
         test_case(0.1f, 0.1f - epsilon * 2, false),
         test_case(-1.0f, -1.0f + epsilon / 2, true),
@@ -562,7 +561,7 @@ TEST(util, almost_equal_or_less)
     for (const test_case& test : tests)
     {
         bool result = almost_equal_or_less(get<0>(test), get<1>(test));
-        EXPECT_EQ(result, get<2>(test)) << "almost_equal_or_less(" << get<0>(test) << ", " << get<1>(test)
-                                        << ") = " << get<2>(test);
+        EXPECT_EQ(result, get<2>(test)) << "almost_equal_or_less(" << get<0>(test) << ", "
+                                        << get<1>(test) << ") = " << get<2>(test);
     }
 }

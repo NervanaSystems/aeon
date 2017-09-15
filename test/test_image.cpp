@@ -1446,7 +1446,7 @@ TEST(photometric, hue)
         }
     }
 
-    for (int i = 0; i <= 180; i += 45/2)
+    for (int i = 0; i <= 180; i += 45 / 2)
     {
         cv::Mat mat = source.clone();
         image::photometric::cbsjitter(mat, 1.0, 1.0, 1.0, i);
@@ -1457,7 +1457,7 @@ TEST(photometric, hue)
             return ss.str();
         };
         EXPECT_EQ(lambda(mat), lambda(expected)) << "at hue shift: " << i;
-//        string name = "hue_" + to_string(i) + ".png";
-//        cv::imwrite(name, mat);
+        //        string name = "hue_" + to_string(i) + ".png";
+        //        cv::imwrite(name, mat);
     }
 }

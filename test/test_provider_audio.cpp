@@ -304,7 +304,8 @@ TEST(provider, audio_transcript_extends_max_duration)
     // Check the audio and transcript lengths match source string length
     for (int i = 0; i < batch_size; i++)
     {
-        ASSERT_EQ(unpack<uint32_t>(out_buf["audio_length"]->get_item(i)), 2*44100 /*max length * sample_freq*/);
+        ASSERT_EQ(unpack<uint32_t>(out_buf["audio_length"]->get_item(i)),
+                  2 * 44100 /*max length * sample_freq*/);
         ASSERT_EQ(unpack<uint32_t>(out_buf["char_map_length"]->get_item(i)), tr[i % 2].length());
     }
 }

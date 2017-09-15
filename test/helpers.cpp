@@ -75,12 +75,10 @@ nlohmann::json create_box(const cv::Rect& rect, const string& label)
 
 nlohmann::json create_box(const boundingbox::box& box, const string& label)
 {
-    nlohmann::json j = {{"bndbox",
-                         {{"xmax", box.xmax()},
-                          {"xmin", box.xmin()},
-                          {"ymax", box.ymax()},
-                          {"ymin", box.ymin()}}},
-                        {"name", label}};
+    nlohmann::json j = {
+        {"bndbox",
+         {{"xmax", box.xmax()}, {"xmin", box.xmin()}, {"ymax", box.ymax()}, {"ymin", box.ymin()}}},
+        {"name", label}};
     return j;
 }
 

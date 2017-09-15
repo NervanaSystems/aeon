@@ -141,7 +141,7 @@ shared_ptr<image::decoded>
  * flip
  */
 cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::params> img_xform,
-                                                   cv::Mat&                           single_img) const
+                                                   cv::Mat& single_img) const
 {
     // img_xform->dump(cout);
     cv::Mat rotatedImage;
@@ -276,7 +276,7 @@ namespace
     string get_debug_file_id()
     {
         static std::atomic_uint index{0};
-        unsigned int number = index++;
+        unsigned int            number = index++;
 
         return std::to_string(number);
     }
