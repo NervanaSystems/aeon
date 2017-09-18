@@ -39,6 +39,13 @@ const string manifest_file::m_string_type_id      = "STRING";
 const string manifest_file::m_ascii_int_type_id   = "ASCII_INT";
 const string manifest_file::m_ascii_float_type_id = "ASCII_FLOAT";
 
+namespace errors
+{
+    const string no_header =
+        "Metadata must be defined before any data. Potentially old manifest format used. Read "
+        "neon doc/source/loading_data.rst#aeon-dataloader for more information.";
+}
+
 manifest_file::manifest_file(const string& filename,
                              bool          shuffle,
                              const string& root,
@@ -112,11 +119,8 @@ void manifest_file::initialize(std::istream&      stream,
             line = line.substr(1);
             if (m_element_types.empty() == false)
             {
-                // Already have element types so this is an error
                 // Element types must be defined before any data
-                ostringstream ss;
-                ss << "metadata must be defined before any data at line " << line_number;
-                throw std::invalid_argument(ss.str());
+                throw std::invalid_argument(errors::no_header);
             }
             vector<string> element_list = split(line, m_delimiter_char);
             for (const string& type : element_list)
@@ -160,10 +164,7 @@ void manifest_file::initialize(std::istream&      stream,
             vector<string> element_list = split(line, m_delimiter_char);
             if (m_element_types.empty())
             {
-                ostringstream ss;
-                ss << "metadata must be defined before any data at line " << line_number;
-                ERR << ss.str();
-                throw std::invalid_argument(ss.str());
+                throw std::invalid_argument(errors::no_header);
             }
 
             if (element_list.size() != element_count)
