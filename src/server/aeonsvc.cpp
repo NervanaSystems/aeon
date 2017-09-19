@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
             case 'p': port      = optarg; break;
             case 'h':
                 printf("Usage: %s ", argv[0]);
-                printf("[--daemon] --address address -port port\n");
+                printf("[--daemon] --address address --port port\n");
                 return 0;
             case '?':
                 return -1;

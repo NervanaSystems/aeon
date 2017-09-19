@@ -18,7 +18,7 @@ First grab Aeon's dependencies:
 
 ### Ubuntu (release 14.04 LTS and later):
 
-    apt-get install git clang cmake python-dev python-pip libcurl4-openssl-dev libopencv-dev libsox-dev
+    apt-get install git clang cmake python-dev python-pip libcurl4-openssl-dev libopencv-dev libsox-dev libcpprest-dev
 
 ##### For Python 3.n
 

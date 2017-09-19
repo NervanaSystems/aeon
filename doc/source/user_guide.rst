@@ -192,6 +192,7 @@ The possible base loader configurations are the following (configurations withou
    iteration_mode_count||
    etl||
    augmentation||
+   server|| Configuration of server in distrubted dataloading scenario. Please take a look at server documentation.
 
 Example python usage
 --------------------
