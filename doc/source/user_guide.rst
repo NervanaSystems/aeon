@@ -22,7 +22,7 @@ The dataloader was created to provide an easy interface to configure the loader 
 
 .. image:: aeon_workflow.png
 
-Users first perform **ingest**, which means converting their data into a format supported by the dataloader (if needed), and generating a manifest file in comma-separated values (csv) format. This file tells the dataloader where the input and target data reside.
+Users first perform **ingest**, which means converting their data into a format supported by the dataloader (if needed), and generating a manifest file in tab-separated values (tsv) format. This file tells the dataloader where the input and target data reside.
 
 Given a configuration file, the aeon dataloader takes care of the rest (green box). During operation, the first time a dataset is encountered, the dataloader will **cache** the data into `cpio <https://en.wikipedia.org/wiki/Cpio>`_ format, allowing for quick subsequent reads. This is an optional but highly recommended step.
 
