@@ -111,7 +111,7 @@ TEST(service_connector, batch_size)
         string endpoint                     = "/api/v1/dataset/" + session_id + "/batch_size";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        service_response<int> response = connector.batch_size(session_id);
+        service_response<int> response = connector.get_batch_size(session_id);
 
         EXPECT_EQ(response.status.type, service_status_type::SUCCESS);
         EXPECT_EQ(response.data, 64);
@@ -128,7 +128,7 @@ TEST(service_connector, batch_size)
         string endpoint                 = "/api/v1/dataset/" + session_id + "/batch_size";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        service_response<int> response = connector.batch_size(session_id);
+        service_response<int> response = connector.get_batch_size(session_id);
 
         EXPECT_EQ(response.status.type, service_status_type::FAILURE);
     }
@@ -146,7 +146,7 @@ TEST(service_connector, batch_size)
         string endpoint          = "/api/v1/dataset/" + session_id + "/batch_size";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        ASSERT_THROW(connector.batch_size(session_id), std::runtime_error);
+        ASSERT_THROW(connector.get_batch_size(session_id), std::runtime_error);
     }
 }
 
@@ -163,7 +163,7 @@ TEST(service_connector, reset)
         string endpoint                 = "/api/v1/dataset/" + session_id + "/reset";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        service_status status = connector.reset(session_id);
+        service_status status = connector.reset_session(session_id);
 
         EXPECT_EQ(status.type, service_status_type::SUCCESS);
     }
@@ -179,7 +179,7 @@ TEST(service_connector, reset)
         string endpoint                 = "/api/v1/dataset/" + session_id + "/reset";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        service_status status = connector.reset(session_id);
+        service_status status = connector.reset_session(session_id);
 
         EXPECT_EQ(status.type, service_status_type::FAILURE);
     }
@@ -207,7 +207,7 @@ TEST(service_connector, next)
         string endpoint               = "/api/v1/dataset/" + session_id + "/next";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        service_response<next_response> response = connector.next(session_id);
+        service_response<next_response> response = connector.get_next(session_id);
 
         EXPECT_EQ(response.status.type, service_status_type::SUCCESS);
         EXPECT_TRUE(response.data == expected_next_response);
@@ -224,7 +224,7 @@ TEST(service_connector, next)
         string endpoint                 = "/api/v1/dataset/" + session_id + "/next";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        service_response<next_response> response = connector.next(session_id);
+        service_response<next_response> response = connector.get_next(session_id);
 
         EXPECT_EQ(response.status.type, service_status_type::END_OF_DATASET);
     }
@@ -242,7 +242,7 @@ TEST(service_connector, next)
         string endpoint          = "/api/v1/dataset/" + session_id + "/batch_size";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        ASSERT_THROW(connector.batch_size(session_id), std::runtime_error);
+        ASSERT_THROW(connector.get_batch_size(session_id), std::runtime_error);
     }
 }
 

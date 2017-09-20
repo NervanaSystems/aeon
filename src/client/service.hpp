@@ -18,6 +18,7 @@
 #include <string>
 
 #include "../buffer_batch.hpp"
+#include "../async_manager.hpp"
 #include "http_connector.hpp"
 
 namespace nervana
@@ -114,32 +115,33 @@ namespace nervana
     {
     public:
         virtual ~service() {}
-        virtual service_response<std::string> create_session(const std::string& config)        = 0;
-        virtual service_status close_session(const std::string& id)                            = 0;
-        virtual service_response<names_and_shapes> get_names_and_shapes(const std::string& id) = 0;
-        virtual service_response<next_response> next(const std::string& id)                    = 0;
-        virtual service_status reset(const std::string& id)                                    = 0;
+        virtual service_response<std::string> create_session(const std::string& config) = 0;
+        virtual service_status close_session(const std::string& id)                     = 0;
+        virtual service_status reset_session(const std::string& id)                     = 0;
 
-        virtual service_response<int> record_count(const std::string& id) = 0;
-        virtual service_response<int> batch_size(const std::string& id)   = 0;
-        virtual service_response<int> batch_count(const std::string& id)  = 0;
+        virtual service_response<next_response> get_next(const std::string& id)                = 0;
+        virtual service_response<names_and_shapes> get_names_and_shapes(const std::string& id) = 0;
+        virtual service_response<int> get_record_count(const std::string& id)                  = 0;
+        virtual service_response<int> get_batch_size(const std::string& id)                    = 0;
+        virtual service_response<int> get_batch_count(const std::string& id)                   = 0;
     };
 
-    class service_connector final : public service
+    class service_connector : public service
     {
     public:
         service_connector(std::shared_ptr<http_connector> http);
         service_connector() = delete;
 
+        // service methods
         service_response<std::string> create_session(const std::string& config) override;
         service_status close_session(const std::string& id) override;
-        service_response<next_response> next(const std::string& id) override;
-        service_status reset(const std::string& id) override;
+        service_status reset_session(const std::string& id) override;
 
+        service_response<next_response> get_next(const std::string& id) override;
         service_response<names_and_shapes> get_names_and_shapes(const std::string& id) override;
-        service_response<int> record_count(const std::string& id) override;
-        service_response<int> batch_size(const std::string& id) override;
-        service_response<int> batch_count(const std::string& id) override;
+        service_response<int> get_record_count(const std::string& id) override;
+        service_response<int> get_batch_size(const std::string& id) override;
+        service_response<int> get_batch_count(const std::string& id) override;
 
     private:
         service_response<next_response> process_data_json(const nervana::http_response& data);
@@ -152,7 +154,134 @@ namespace nervana
                                      nlohmann::json&    output_json);
 
         std::shared_ptr<http_connector> m_http;
-        //TODO add double-buffering!
-        fixed_buffer_map m_buffer_map;
+        fixed_buffer_map                m_fixed_buffer_map;
+        service_response<next_response> m_next_response_buffer;
+        //TODO: this need to be changed!
+        std::string m_session_id;
+    };
+
+    class service_connector_async_source
+        : public service,
+          public async_manager_source<service_response<next_response>>
+    {
+    public:
+        service_connector_async_source(std::shared_ptr<service> base_service)
+            : m_base_service(base_service)
+        {
+        }
+
+        // service methods
+        service_response<std::string> create_session(const std::string& config) override
+        {
+            return m_base_service->create_session(config);
+        }
+        service_status close_session(const std::string& id) override
+        {
+            return m_base_service->close_session(id);
+        }
+        service_status reset_session(const std::string& id) override
+        {
+            return m_base_service->reset_session(id);
+        }
+
+        service_response<next_response> get_next(const std::string& id) override
+        {
+            return m_base_service->get_next(id);
+        }
+        service_response<names_and_shapes> get_names_and_shapes(const std::string& id) override
+        {
+            //todo change it!
+            m_session_id = id;
+            return m_base_service->get_names_and_shapes(id);
+        }
+        service_response<int> get_record_count(const std::string& id) override
+        {
+            return m_base_service->get_record_count(id);
+        }
+        service_response<int> get_batch_size(const std::string& id) override
+        {
+            return m_base_service->get_batch_size(id);
+        }
+        service_response<int> get_batch_count(const std::string& id) override
+        {
+            return m_base_service->get_batch_count(id);
+        }
+
+        // async_manager_source methods
+        service_response<next_response>* next() override;
+        size_t                           record_count() const override { return 0; }
+        size_t                           elements_per_record() const override { return 0; }
+        void                             reset() override;
+
+    private:
+        std::shared_ptr<service>        m_base_service;
+        service_response<next_response> m_last_next_response;
+        std::string m_session_id;
+    };
+
+    class service_connector_async
+        : public service,
+          public async_manager<service_response<next_response>, service_response<next_response>>
+    {
+    public:
+        service_connector_async(std::shared_ptr<service_connector_async_source> base_service)
+            : async_manager<service_response<next_response>,
+                            service_response<next_response>>{base_service.get(),
+                                                             "service_connector_async"}
+            , m_base_service(base_service)
+        {
+        }
+
+        ~service_connector_async() {}
+
+        // service methods
+        service_response<std::string> create_session(const std::string& config) override
+        {
+            return m_base_service->create_session(config);
+        }
+        service_status close_session(const std::string& id) override
+        {
+            return m_base_service->close_session(id);
+        }
+        service_status reset_session(const std::string& id) override
+        {
+            return m_base_service->reset_session(id);
+        }
+
+        service_response<next_response> get_next(const std::string& id) override
+        {
+            return m_base_service->get_next(id);
+        }
+        service_response<names_and_shapes> get_names_and_shapes(const std::string& id) override
+        {
+            return m_base_service->get_names_and_shapes(id);
+        }
+        service_response<int> get_record_count(const std::string& id) override
+        {
+            return m_base_service->get_record_count(id);
+        }
+        service_response<int> get_batch_size(const std::string& id) override
+        {
+            return m_base_service->get_batch_size(id);
+        }
+        service_response<int> get_batch_count(const std::string& id) override
+        {
+            return m_base_service->get_batch_count(id);
+        }
+
+        // async_manager_source methods
+        size_t record_count() const override { return m_base_service->record_count(); }
+        size_t elements_per_record() const override
+        {
+            return m_base_service->elements_per_record();
+        }
+        service_response<next_response>* filler() override;
+
+    private:
+        std::shared_ptr<service_connector_async_source> m_base_service;
+        //service_connector*       next_provider;
+        //next_response*           m_inputs{nullptr};
+        //fixed_buffer_map*        m_outputs{nullptr};
+        //size_t                   m_iteration_number{0};
     };
 }

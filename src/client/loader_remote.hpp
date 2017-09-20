@@ -60,19 +60,19 @@ namespace nervana
         void retrieve_batch_count();
         void retrieve_next_batch();
 
-        nlohmann::json                   m_config;
-        std::string                      m_session_id;
-        std::shared_ptr<service>         m_service;
-        iterator                         m_current_iter;
-        iterator                         m_end_iter;
-        fixed_buffer_map*                m_output_buffer_ptr;
-        names_and_shapes                 m_names_and_shapes;
-        mutable std::vector<std::string> m_names;
-        int                              m_record_count;
-        int                              m_batch_size;
-        int                              m_batch_count;
-        size_t                           m_position{0};
-        bool                             m_shared_session{false};
-        bool                             m_batch_to_fetch{true};
+        nlohmann::json                                          m_config;
+        std::string                                             m_session_id;
+        std::shared_ptr<service>                                m_service;
+        iterator                                                m_current_iter;
+        iterator                                                m_end_iter;
+        std::shared_ptr<async_manager_source<fixed_buffer_map>> m_final_stage;
+        fixed_buffer_map*                                       m_output_buffer_ptr{nullptr};
+        names_and_shapes                                        m_names_and_shapes;
+        int                                                     m_record_count;
+        int                                                     m_batch_size;
+        int                                                     m_batch_count;
+        size_t                                                  m_position{0};
+        bool                                                    m_shared_session{false};
+        bool                                                    m_batch_to_fetch{true};
     };
 }

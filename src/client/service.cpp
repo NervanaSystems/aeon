@@ -153,7 +153,7 @@ service_status nervana::service_connector::close_session(const std::string& id)
     return status;
 }
 
-service_response<nervana::next_response> nervana::service_connector::next(const string& id)
+service_response<nervana::next_response> nervana::service_connector::get_next(const string& id)
 {
     http_response response = m_http->get(full_endpoint(id + "/next"));
     if (response.code != http::status_ok && response.code != http::status_accepted)
@@ -163,7 +163,7 @@ service_response<nervana::next_response> nervana::service_connector::next(const 
     return process_data_json(response);
 }
 
-service_status nervana::service_connector::reset(const string& id)
+service_status nervana::service_connector::reset_session(const string& id)
 {
     http_response response = m_http->get(full_endpoint(id + "/reset"));
     if (response.code != http::status_ok)
@@ -215,19 +215,22 @@ service_response<nervana::next_response>
     try
     {
         istringstream stream(serialized_buffer_map);
-        m_buffer_map.deserialize(stream);
+        m_fixed_buffer_map.deserialize(stream);
     }
     catch (const exception& ex)
     {
         throw runtime_error(string("cannot deserialize fixed_buffer_map: ") + ex.what());
     }
 
-    return service_response<next_response>(status, next_response(&m_buffer_map));
+    m_next_response_buffer = service_response<next_response>(status, next_response(&m_fixed_buffer_map));
+    return m_next_response_buffer;
 }
 
 service_response<names_and_shapes>
     nervana::service_connector::get_names_and_shapes(const string& id)
 {
+    //TODO: this need to be changed!
+    m_session_id = id;
     http_response response = m_http->get(full_endpoint(id + "/names_and_shapes"));
     if (response.code != http::status_ok)
     {
@@ -264,19 +267,19 @@ service_response<names_and_shapes>
     return service_response<names_and_shapes>(status, nas);
 }
 
-service_response<int> nervana::service_connector::record_count(const string& id)
+service_response<int> nervana::service_connector::get_record_count(const string& id)
 {
     http_response response = m_http->get(full_endpoint(id + "/record_count"));
     return handle_single_int_response(response, "record_count");
 }
 
-service_response<int> nervana::service_connector::batch_size(const string& id)
+service_response<int> nervana::service_connector::get_batch_size(const string& id)
 {
     http_response response = m_http->get(full_endpoint(id + "/batch_size"));
     return handle_single_int_response(response, "batch_size");
 }
 
-service_response<int> nervana::service_connector::batch_count(const string& id)
+service_response<int> nervana::service_connector::get_batch_count(const string& id)
 {
     http_response response = m_http->get(full_endpoint(id + "/batch_count"));
     return handle_single_int_response(response, "batch_count");
@@ -336,6 +339,24 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
         output_json = json({});
     }
 }
+
+nervana::service_response<nervana::next_response>* nervana::service_connector_async_source::next()
+{
+    //todo: std::move call here?
+    m_last_next_response = m_base_service->get_next(m_session_id);
+    return &m_last_next_response;
+}
+
+void nervana::service_connector_async_source::reset()
+{
+    // TODO: is reset necessary?
+}
+
+nervana::service_response<nervana::next_response>* nervana::service_connector_async::filler()
+{
+    return nullptr;
+}
+
 
 namespace
 {

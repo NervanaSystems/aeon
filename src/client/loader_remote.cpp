@@ -109,7 +109,7 @@ const shape_t& nervana::loader_remote::get_shape(const string& name) const
 
 void nervana::loader_remote::retrieve_record_count()
 {
-    auto response = m_service->record_count(m_session_id);
+    auto response = m_service->get_record_count(m_session_id);
     if (!response.success())
     {
         handle_response_failure(response.status);
@@ -130,7 +130,7 @@ void nervana::loader_remote::retrieve_names_and_shapes()
 
 void nervana::loader_remote::retrieve_batch_size()
 {
-    auto response = m_service->batch_size(m_session_id);
+    auto response = m_service->get_batch_size(m_session_id);
     if (!response.success())
     {
         m_batch_size = -1;
@@ -141,7 +141,7 @@ void nervana::loader_remote::retrieve_batch_size()
 
 void nervana::loader_remote::retrieve_batch_count()
 {
-    auto response = m_service->batch_count(m_session_id);
+    auto response = m_service->get_batch_count(m_session_id);
     if (!response.success())
     {
         m_batch_count = -1;
@@ -152,7 +152,7 @@ void nervana::loader_remote::retrieve_batch_count()
 
 void nervana::loader_remote::retrieve_next_batch()
 {
-    auto response = m_service->next(m_session_id);
+    auto response = m_service->get_next(m_session_id);
     if (response.status.type != service_status_type::SUCCESS)
     {
         if (response.status.type == service_status_type::END_OF_DATASET)
@@ -179,7 +179,7 @@ void nervana::loader_remote::reset()
     // client sharing session cannot reset data
     if (m_shared_session)
         return;
-    auto status = m_service->reset(m_session_id);
+    auto status = m_service->reset_session(m_session_id);
     if (!status.success())
     {
         handle_response_failure(status);

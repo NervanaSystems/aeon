@@ -32,14 +32,14 @@ class mock_service : public service
 {
 public:
     MOCK_METHOD1(create_session, service_response<string>(const std::string& config));
-    MOCK_METHOD1(get_names_and_shapes, service_response<names_and_shapes>(const std::string& id));
-    MOCK_METHOD1(next, service_response<next_response>(const std::string& id));
-    MOCK_METHOD1(reset, service_status(const std::string& id));
+    MOCK_METHOD1(reset_session, service_status(const std::string& id));
     MOCK_METHOD1(close_session, service_status(const std::string& id));
 
-    MOCK_METHOD1(record_count, service_response<int>(const std::string& id));
-    MOCK_METHOD1(batch_size, service_response<int>(const std::string& id));
-    MOCK_METHOD1(batch_count, service_response<int>(const std::string& id));
+    MOCK_METHOD1(get_next, service_response<next_response>(const std::string& id));
+    MOCK_METHOD1(get_names_and_shapes, service_response<names_and_shapes>(const std::string& id));
+    MOCK_METHOD1(get_record_count, service_response<int>(const std::string& id));
+    MOCK_METHOD1(get_batch_size, service_response<int>(const std::string& id));
+    MOCK_METHOD1(get_batch_count, service_response<int>(const std::string& id));
 };
 
 TEST(loader_remote, new_session_scenario)
@@ -60,9 +60,9 @@ TEST(loader_remote, new_session_scenario)
     auto expected_batch_count    = service_response<int>(status_success, batch_count);
     EXPECT_CALL(*mock, create_session(config.dump())).WillOnce(Return(expected_create_session));
     EXPECT_CALL(*mock, get_names_and_shapes(session_id)).WillOnce(Return(expected_nas));
-    EXPECT_CALL(*mock, record_count(session_id)).WillOnce(Return(expected_record_count));
-    EXPECT_CALL(*mock, batch_size(session_id)).WillOnce(Return(expected_batch_size));
-    EXPECT_CALL(*mock, batch_count(session_id)).WillOnce(Return(expected_batch_count));
+    EXPECT_CALL(*mock, get_record_count(session_id)).WillOnce(Return(expected_record_count));
+    EXPECT_CALL(*mock, get_batch_size(session_id)).WillOnce(Return(expected_batch_size));
+    EXPECT_CALL(*mock, get_batch_count(session_id)).WillOnce(Return(expected_batch_count));
 
     loader_remote loader(mock, config.dump());
 
@@ -80,8 +80,8 @@ TEST(loader_remote, new_session_scenario)
             service_status(service_status_type::END_OF_DATASET, ""), next_response());
 
         testing::InSequence dummy;
-        EXPECT_CALL(*mock, next(session_id)).WillOnce(Return(expected_batch));
-        EXPECT_CALL(*mock, next(session_id)).WillOnce(Return(expected_end_of_data));
+        EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
+        EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_end_of_data));
 
         // iteration
         {
@@ -102,7 +102,7 @@ TEST(loader_remote, new_session_scenario)
         // reset successful
         {
             // batch is retrieved, because iteration has finished in previous step
-            EXPECT_CALL(*mock, next(session_id)).WillOnce(Return(expected_batch));
+            EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
             loader.get_current_iter();
 
             // no batch retrieval
@@ -110,11 +110,11 @@ TEST(loader_remote, new_session_scenario)
 
             EXPECT_EQ(loader.position(), 3);
 
-            EXPECT_CALL(*mock, reset(session_id)).WillOnce(Return(status_success));
+            EXPECT_CALL(*mock, reset_session(session_id)).WillOnce(Return(status_success));
             loader.reset();
 
             // reset makes get_current_iter to retrieve data
-            EXPECT_CALL(*mock, next(session_id)).WillOnce(Return(expected_batch));
+            EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
             loader.get_current_iter();
 
             EXPECT_EQ(loader.position(), 0);
@@ -122,7 +122,7 @@ TEST(loader_remote, new_session_scenario)
 
         // reset unsuccessful
         {
-            EXPECT_CALL(*mock, reset(session_id))
+            EXPECT_CALL(*mock, reset_session(session_id))
                 .WillOnce(Return(service_status(service_status_type::FAILURE, "some message")));
             EXPECT_THROW(loader.reset(), runtime_error);
         }
@@ -147,9 +147,9 @@ TEST(loader_remote, shared_session_scenario)
     auto expected_batch_size     = service_response<int>(status_success, batch_size);
     auto expected_batch_count    = service_response<int>(status_success, batch_count);
     EXPECT_CALL(*mock, get_names_and_shapes(session_id)).WillOnce(Return(expected_nas));
-    EXPECT_CALL(*mock, record_count(session_id)).WillOnce(Return(expected_record_count));
-    EXPECT_CALL(*mock, batch_size(session_id)).WillOnce(Return(expected_batch_size));
-    EXPECT_CALL(*mock, batch_count(session_id)).WillOnce(Return(expected_batch_count));
+    EXPECT_CALL(*mock, get_record_count(session_id)).WillOnce(Return(expected_record_count));
+    EXPECT_CALL(*mock, get_batch_size(session_id)).WillOnce(Return(expected_batch_size));
+    EXPECT_CALL(*mock, get_batch_count(session_id)).WillOnce(Return(expected_batch_count));
 
     loader_remote loader(mock, config.dump());
 
@@ -167,8 +167,8 @@ TEST(loader_remote, shared_session_scenario)
             service_status(service_status_type::END_OF_DATASET, ""), next_response());
 
         testing::InSequence dummy;
-        EXPECT_CALL(*mock, next(session_id)).WillOnce(Return(expected_batch));
-        EXPECT_CALL(*mock, next(session_id)).WillOnce(Return(expected_end_of_data));
+        EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
+        EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_end_of_data));
 
         // iteration
         {
