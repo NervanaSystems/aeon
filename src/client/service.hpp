@@ -160,12 +160,11 @@ namespace nervana
         std::string m_session_id;
     };
 
-    class service_connector_async_source
-        : public service,
-          public async_manager_source<service_response<next_response>>
+    class service_async_source : public service,
+                                 public async_manager_source<service_response<next_response>>
     {
     public:
-        service_connector_async_source(std::shared_ptr<service> base_service)
+        service_async_source(std::shared_ptr<service> base_service)
             : m_base_service(base_service)
         {
         }
@@ -215,25 +214,24 @@ namespace nervana
 
     private:
         std::shared_ptr<service>        m_base_service;
-        service_response<next_response> m_last_next_response;
-        std::string m_session_id;
+        service_response<next_response> m_current_next_response;
+        std::string                     m_session_id;
     };
 
-    class service_connector_async
+    class service_async
         : public service,
           public async_manager<service_response<next_response>, service_response<next_response>>
     {
     public:
-        service_connector_async(std::shared_ptr<service_connector_async_source> base_service)
+        service_async(std::shared_ptr<service_async_source> base_service)
             : async_manager<service_response<next_response>,
-                            service_response<next_response>>{base_service.get(),
-                                                             "service_connector_async"}
+                            service_response<next_response>>{base_service.get(), "service_async"}
             , m_base_service(base_service)
         {
+            INFO << "async batch loading enabled";
         }
 
-        ~service_connector_async() {}
-
+        ~service_async() {}
         // service methods
         service_response<std::string> create_session(const std::string& config) override
         {
@@ -248,10 +246,6 @@ namespace nervana
             return m_base_service->reset_session(id);
         }
 
-        service_response<next_response> get_next(const std::string& id) override
-        {
-            return m_base_service->get_next(id);
-        }
         service_response<names_and_shapes> get_names_and_shapes(const std::string& id) override
         {
             return m_base_service->get_names_and_shapes(id);
@@ -269,16 +263,20 @@ namespace nervana
             return m_base_service->get_batch_count(id);
         }
 
+        service_response<next_response> get_next(const std::string& id) override;
+
         // async_manager_source methods
         size_t record_count() const override { return m_base_service->record_count(); }
         size_t elements_per_record() const override
         {
             return m_base_service->elements_per_record();
         }
+
         service_response<next_response>* filler() override;
 
     private:
-        std::shared_ptr<service_connector_async_source> m_base_service;
+        std::shared_ptr<service_async_source> m_base_service;
+        service_response<next_response>*      m_current_next_response;
         //service_connector*       next_provider;
         //next_response*           m_inputs{nullptr};
         //fixed_buffer_map*        m_outputs{nullptr};

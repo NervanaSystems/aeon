@@ -222,7 +222,8 @@ service_response<nervana::next_response>
         throw runtime_error(string("cannot deserialize fixed_buffer_map: ") + ex.what());
     }
 
-    m_next_response_buffer = service_response<next_response>(status, next_response(&m_fixed_buffer_map));
+    m_next_response_buffer =
+        service_response<next_response>(status, next_response(&m_fixed_buffer_map));
     return m_next_response_buffer;
 }
 
@@ -230,7 +231,7 @@ service_response<names_and_shapes>
     nervana::service_connector::get_names_and_shapes(const string& id)
 {
     //TODO: this need to be changed!
-    m_session_id = id;
+    m_session_id           = id;
     http_response response = m_http->get(full_endpoint(id + "/names_and_shapes"));
     if (response.code != http::status_ok)
     {
@@ -340,23 +341,42 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
     }
 }
 
-nervana::service_response<nervana::next_response>* nervana::service_connector_async_source::next()
+nervana::service_response<nervana::next_response>* nervana::service_async_source::next()
 {
     //todo: std::move call here?
-    m_last_next_response = m_base_service->get_next(m_session_id);
-    return &m_last_next_response;
+    m_current_next_response = m_base_service->get_next(m_session_id);
+    return &m_current_next_response;
 }
 
-void nervana::service_connector_async_source::reset()
+void nervana::service_async_source::reset()
 {
     // TODO: is reset necessary?
 }
 
-nervana::service_response<nervana::next_response>* nervana::service_connector_async::filler()
+nervana::service_response<nervana::next_response>
+    nervana::service_async::get_next(const std::string& id)
 {
-    return nullptr;
+    //INFO << "get_next start";
+    m_current_next_response = next();
+    //INFO << "get_next finished";
+    return *m_current_next_response;
 }
 
+nervana::service_response<nervana::next_response>* nervana::service_async::filler()
+{
+    //INFO << "filler start";
+    m_state                                = async_state::wait_for_buffer;
+    service_response<next_response>* rc    = get_pending_buffer();
+    m_state                                = async_state::processing;
+
+    m_state = async_state::fetching_data;
+    rc   = m_source->next();
+    m_state = async_state::processing;
+
+    m_state = async_state::idle;
+    //INFO << "filler finished";
+    return rc;
+}
 
 namespace
 {

@@ -281,33 +281,48 @@ std::unique_ptr<loader> loader_factory::get_loader(const json& config)
         int    port;
         try
         {
-            address = config["server"]["address"];
+            address = config["server"].at("address");
         }
         catch (const exception& ex)
         {
             throw invalid_argument(string("cannot parse 'address' field from 'service' object: ") +
                                    ex.what());
         }
+
         try
         {
-            port = config["server"]["port"];
+            port = config["server"].at("port");
         }
         catch (const exception& ex)
         {
             throw invalid_argument(string("cannot parse 'port' field from 'service' object: ") +
                                    ex.what());
         }
+
+        bool use_async = true;
+        try
+        {
+            use_async = config["server"].at("async");
+        }
+        catch (const exception&)
+        {
+        }
+
         shared_ptr<http_connector> my_http_connector = make_shared<curl_connector>(address, port);
 
-        //shared_ptr<service>        my_service = make_shared<service_connector>(my_http_connector);
-        auto my_service_connector =
-            make_shared<service_connector>(my_http_connector);
-        auto my_service_connector_async_source =
-            make_shared<service_connector_async_source>(my_service_connector);
-        auto my_service_connector_async =
-            make_shared<service_connector_async>(my_service_connector_async_source);
+        shared_ptr<service> my_service;
+        if (use_async)
+        {
+            auto my_service_connector    = make_shared<service_connector>(my_http_connector);
+            auto my_service_async_source = make_shared<service_async_source>(my_service_connector);
+            my_service                   = make_shared<service_async>(my_service_async_source);
+        }
+        else
+        {
+            my_service = make_shared<service_connector>(my_http_connector);
+        }
 
-        return unique_ptr<loader_remote>(new loader_remote(my_service_connector_async, config));
+        return unique_ptr<loader_remote>(new loader_remote(my_service, config));
     }
     return unique_ptr<loader_local>(new loader_local(config));
 }
