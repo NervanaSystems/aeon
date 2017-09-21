@@ -79,12 +79,13 @@ TEST(loader_remote, new_session_scenario)
         auto expected_end_of_data = service_response<next_response>(
             service_status(service_status_type::END_OF_DATASET, ""), next_response());
 
-        testing::InSequence dummy;
-        EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
-        EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_end_of_data));
-
         // iteration
         {
+            testing::InSequence dummy;
+            EXPECT_CALL(*mock, reset_session(session_id)).WillOnce(Return(status_success));
+            EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
+            EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_end_of_data));
+
             int index = 0;
             for (const auto& batch : loader)
             {
@@ -107,7 +108,6 @@ TEST(loader_remote, new_session_scenario)
 
             // no batch retrieval
             loader.get_current_iter();
-
             EXPECT_EQ(loader.position(), 3);
 
             EXPECT_CALL(*mock, reset_session(session_id)).WillOnce(Return(status_success));
@@ -116,7 +116,6 @@ TEST(loader_remote, new_session_scenario)
             // reset makes get_current_iter to retrieve data
             EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
             loader.get_current_iter();
-
             EXPECT_EQ(loader.position(), 0);
         }
 

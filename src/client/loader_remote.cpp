@@ -170,6 +170,7 @@ void nervana::loader_remote::retrieve_next_batch()
 
 nervana::loader::iterator nervana::loader_remote::begin()
 {
+    reset();
     retrieve_next_batch();
     return m_current_iter;
 }

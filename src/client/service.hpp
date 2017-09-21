@@ -156,8 +156,6 @@ namespace nervana
         std::shared_ptr<http_connector> m_http;
         fixed_buffer_map                m_fixed_buffer_map;
         service_response<next_response> m_next_response_buffer;
-        //TODO: this need to be changed!
-        std::string m_session_id;
     };
 
     class service_async_source : public service,
@@ -189,7 +187,6 @@ namespace nervana
         }
         service_response<names_and_shapes> get_names_and_shapes(const std::string& id) override
         {
-            //todo change it!
             m_session_id = id;
             return m_base_service->get_names_and_shapes(id);
         }
@@ -210,11 +207,11 @@ namespace nervana
         service_response<next_response>* next() override;
         size_t                           record_count() const override { return 0; }
         size_t                           elements_per_record() const override { return 0; }
-        void                             reset() override;
-
+        void                             reset() override {}
     private:
         std::shared_ptr<service>        m_base_service;
         service_response<next_response> m_current_next_response;
+        // session_id needs to be stored for next() which does not have id parameter
         std::string                     m_session_id;
     };
 
@@ -241,10 +238,6 @@ namespace nervana
         {
             return m_base_service->close_session(id);
         }
-        service_status reset_session(const std::string& id) override
-        {
-            return m_base_service->reset_session(id);
-        }
 
         service_response<names_and_shapes> get_names_and_shapes(const std::string& id) override
         {
@@ -263,6 +256,7 @@ namespace nervana
             return m_base_service->get_batch_count(id);
         }
 
+        service_status reset_session(const std::string& id) override;
         service_response<next_response> get_next(const std::string& id) override;
 
         // async_manager_source methods

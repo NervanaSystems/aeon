@@ -230,8 +230,6 @@ service_response<nervana::next_response>
 service_response<names_and_shapes>
     nervana::service_connector::get_names_and_shapes(const string& id)
 {
-    //TODO: this need to be changed!
-    m_session_id           = id;
     http_response response = m_http->get(full_endpoint(id + "/names_and_shapes"));
     if (response.code != http::status_ok)
     {
@@ -348,23 +346,21 @@ nervana::service_response<nervana::next_response>* nervana::service_async_source
     return &m_current_next_response;
 }
 
-void nervana::service_async_source::reset()
+nervana::service_status nervana::service_async::reset_session(const std::string& id)
 {
-    // TODO: is reset necessary?
+    reset();
+    return m_base_service->reset_session(id);
 }
 
 nervana::service_response<nervana::next_response>
     nervana::service_async::get_next(const std::string& id)
 {
-    //INFO << "get_next start";
     m_current_next_response = next();
-    //INFO << "get_next finished";
     return *m_current_next_response;
 }
 
 nervana::service_response<nervana::next_response>* nervana::service_async::filler()
 {
-    //INFO << "filler start";
     m_state                                = async_state::wait_for_buffer;
     service_response<next_response>* rc    = get_pending_buffer();
     m_state                                = async_state::processing;
@@ -374,7 +370,6 @@ nervana::service_response<nervana::next_response>* nervana::service_async::fille
     m_state = async_state::processing;
 
     m_state = async_state::idle;
-    //INFO << "filler finished";
     return rc;
 }
 
