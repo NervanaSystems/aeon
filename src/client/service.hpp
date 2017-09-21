@@ -212,7 +212,7 @@ namespace nervana
         std::shared_ptr<service>        m_base_service;
         service_response<next_response> m_current_next_response;
         // session_id needs to be stored for next() which does not have id parameter
-        std::string                     m_session_id;
+        std::string m_session_id;
     };
 
     class service_async
@@ -225,7 +225,6 @@ namespace nervana
                             service_response<next_response>>{base_service.get(), "service_async"}
             , m_base_service(base_service)
         {
-            INFO << "async batch loading enabled";
         }
 
         ~service_async() {}
@@ -271,9 +270,5 @@ namespace nervana
     private:
         std::shared_ptr<service_async_source> m_base_service;
         service_response<next_response>*      m_current_next_response;
-        //service_connector*       next_provider;
-        //next_response*           m_inputs{nullptr};
-        //fixed_buffer_map*        m_outputs{nullptr};
-        //size_t                   m_iteration_number{0};
     };
 }

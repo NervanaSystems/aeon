@@ -52,3 +52,5 @@ Parameters of server object from main aeon config:
    address | string | *Required* | Server address to connect to.
    port | uint | *Required* | Server port to connect on.
    session_id | string | ~"~" | ID of shared session to connect to. If it's not provided, new session will be created.
+   async | bool | true | async set to true makes batch to be double-buffered on
+   client side, decreasing batch fetch time significantly.
