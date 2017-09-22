@@ -166,11 +166,20 @@ TEST(buffer, serialization)
     stringstream ss_spahes;
     ss_spahes << provider->get_output_shapes();
 
-    std::map<std::string, nervana::shape_type> shapes_restored;
+    std::vector<std::pair<std::string, nervana::shape_type>> shapes_restored;
     ss_spahes >> shapes_restored;
     for (auto shape:provider->get_output_shapes())
     {
-        ASSERT_EQ(shape.second, shapes_restored[shape.first]);
+        bool found = false;
+        for(auto shape_restored : shapes_restored)
+        {
+            if(std::get<0>(shape_restored) == std::get<0>(shape))
+            {
+                ASSERT_EQ(std::get<1>(shape), std::get<1>(shape_restored));
+                found = true;
+            }
+        }
+        ASSERT_TRUE(found);
     }
 }
 

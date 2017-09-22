@@ -253,7 +253,7 @@ TEST(service_connector, names_and_shapes)
         auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
         service_connector connector(mock);
 
-        map<string, shape_type> nas = get_names_and_shapes();
+        vector<pair<string, shape_type>> nas = get_names_and_shapes();
         stringstream serialized_nas;
         serialized_nas << nas;
 

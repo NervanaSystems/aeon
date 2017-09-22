@@ -79,7 +79,7 @@ namespace nervana
         T              data;
     };
 
-    using names_and_shapes = std::map<std::string, shape_type>;
+    using names_and_shapes = std::vector<std::pair<std::string, shape_type>>;
 
     class next_response
     {

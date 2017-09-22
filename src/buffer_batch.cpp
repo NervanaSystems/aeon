@@ -337,7 +337,7 @@ std::istream& fixed_buffer_map::deserialize(std::istream& in)
         buffer_fixed_size_elements* fse = new buffer_fixed_size_elements();
         in >> *fse;
 
-        m_data[name] = fse;
+        m_data.emplace_back(name, fse);
         m_names.push_back(name);
     }
     return in;

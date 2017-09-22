@@ -189,7 +189,7 @@ void loader_local::initialize(const json& config_json)
     }
 }
 
-vector<string> loader_local::get_buffer_names() const
+const vector<string>& loader_local::get_buffer_names() const
 {
     return m_provider->get_buffer_names();
 }
@@ -199,7 +199,7 @@ const vector<pair<string, shape_type>>& loader_local::get_names_and_shapes() con
     return m_provider->get_output_shapes();
 }
 
-shape_t loader_local::get_shape(const string& name) const
+const shape_t& loader_local::get_shape(const string& name) const
 {
     return m_provider->get_output_shape(name).get_shape();
 }

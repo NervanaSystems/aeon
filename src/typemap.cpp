@@ -13,6 +13,8 @@
  limitations under the License.
 */
 
+#include <tuple>
+
 #include "typemap.hpp"
 
 const std::string nervana::output_type::m_tp_name_json_name = "name";
@@ -54,23 +56,27 @@ std::istream& operator>>(std::istream& in, nervana::shape_type& obj)
     return obj.deserialize(in);
 }
 
-std::ostream& operator<<(std::ostream& out, const std::map<std::string, nervana::shape_type>& obj)
+std::ostream& operator<<(std::ostream& out, const std::vector<std::pair<std::string, nervana::shape_type>>& obj)
 {
     json json_out;
     for (auto el : obj)
-        to_json(json_out[el.first], el.second);
+        to_json(json_out[std::get<0>(el)], std::get<1>(el));
 
     out << json_out;
     return out;
 }
 
-std::istream& operator>>(std::istream& in, std::map<std::string, nervana::shape_type>& obj)
+std::istream& operator>>(std::istream& in, std::vector<std::pair<std::string, nervana::shape_type>>& obj)
 {
     json json_in;
     in >> json_in;
 
     for (json::iterator it = json_in.begin(); it != json_in.end(); ++it)
-        from_json(it.value(), obj[it.key()]);
+    {
+        shape_type new_object;
+        from_json(it.value(), new_object);
+        obj.push_back(std::pair<std::string, nervana::shape_type>(it.key(), new_object));
+    }
 
     return in;
 }

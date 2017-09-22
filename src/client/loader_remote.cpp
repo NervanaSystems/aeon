@@ -81,26 +81,30 @@ void nervana::loader_remote::create_session()
     }
 }
 
-vector<string> nervana::loader_remote::get_buffer_names() const
+const vector<string>& nervana::loader_remote::get_buffer_names() const
 {
-    vector<string> names;
-    for (const auto& item : m_names_and_shapes)
+    if (m_names.empty())
     {
-        names.push_back(item.first);
+        for (const auto& item : m_names_and_shapes)
+        {
+            m_names.push_back(std::get<0>(item));
+        }
     }
-    return names;
+    return m_names;
 }
 
-shape_t nervana::loader_remote::get_shape(const string& name) const
+const shape_t& nervana::loader_remote::get_shape(const string& name) const
 {
-    auto it = m_names_and_shapes.find(name);
-    if (it == m_names_and_shapes.end())
+    for (const auto& item : m_names_and_shapes)
     {
-        std::stringstream ss;
-        ss << "key '" << name << "' not found";
-        throw std::runtime_error(ss.str());
+        if (std::get<0>(item) == name)
+        {
+            return std::get<1>(item).get_shape();
+        }
     }
-    return it->second.get_shape();
+    std::stringstream ss;
+    ss << "key '" << name << "' not found";
+    throw std::runtime_error(ss.str());
 }
 
 void nervana::loader_remote::retrieve_record_count()
@@ -181,7 +185,7 @@ void nervana::loader_remote::reset()
         handle_response_failure(status);
     }
     m_batch_to_fetch = true;
-    m_position = 0;
+    m_position       = 0;
 }
 
 nervana::loader_remote::iterator& nervana::loader_remote::get_current_iter()
