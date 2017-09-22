@@ -366,7 +366,7 @@ nervana::service_response<nervana::next_response>* nervana::service_async::fille
     m_state                                = async_state::processing;
 
     m_state = async_state::fetching_data;
-    rc   = m_source->next();
+    *rc   = *(m_source->next());
     m_state = async_state::processing;
 
     m_state = async_state::idle;
