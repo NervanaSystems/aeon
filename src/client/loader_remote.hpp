@@ -28,7 +28,7 @@ namespace nervana
         explicit loader_remote(std::shared_ptr<service> client, const nlohmann::json&);
 
         ~loader_remote() override {}
-        const const std::vector<std::pair<std::string, shape_type>>&
+        const std::vector<std::pair<std::string, shape_type>>&
             get_names_and_shapes() const override
         {
             return m_names_and_shapes;
@@ -68,6 +68,7 @@ namespace nervana
         std::shared_ptr<async_manager_source<fixed_buffer_map>> m_final_stage;
         fixed_buffer_map*                                       m_output_buffer_ptr{nullptr};
         names_and_shapes                                        m_names_and_shapes;
+        mutable std::vector<std::string>                        m_names;
         int                                                     m_record_count;
         int                                                     m_batch_size;
         int                                                     m_batch_count;
