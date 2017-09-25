@@ -315,10 +315,7 @@ std::ostream& fixed_buffer_map::serialize(std::ostream& out) const
 
 std::istream& fixed_buffer_map::deserialize(std::istream& in)
 {
-    for (auto buf : m_data)
-        delete buf.second;
-    m_data.clear();
-    m_names.clear();
+    clear();
 
     char   separator;
     size_t count;

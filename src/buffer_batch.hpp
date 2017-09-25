@@ -216,14 +216,15 @@ public:
             std::make_pair(name, new buffer_fixed_size_elements(shp_tp, batch_size, pinned)));
     }
 
-    ~fixed_buffer_map()
+    void clear()
     {
         for (auto buf : m_data)
-        {
             delete buf.second;
-        }
+        m_data.clear();
+        m_names.clear();
     }
 
+    ~fixed_buffer_map() { clear(); }
     const std::vector<std::string>& get_names() const { return m_names; }
     const buffer_fixed_size_elements* operator[](const std::string& name) const
     {
