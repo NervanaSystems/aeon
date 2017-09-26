@@ -57,7 +57,7 @@ Transcription provisioning can be configured using the following parameters:
                             "max_length": 25}
 
     aeon_config = {"etl": (transcription_config),
-                   "manifest_filename": "/path/to/manifest.csv",
+                   "manifest_filename": "/path/to/manifest.tsv",
                    "batch_size": minibatch_size}
 
 

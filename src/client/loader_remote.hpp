@@ -64,7 +64,6 @@ namespace nervana
         std::shared_ptr<service>                                m_service;
         iterator                                                m_current_iter;
         iterator                                                m_end_iter;
-        std::shared_ptr<async_manager_source<fixed_buffer_map>> m_final_stage;
         std::shared_ptr<fixed_buffer_map>                       m_output_buffer_ptr;
         names_and_shapes                                        m_names_and_shapes;
         mutable std::vector<std::string>                        m_names;

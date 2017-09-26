@@ -46,7 +46,7 @@ Splitting the videos into equal length segments as we did here is not necessary
 in general for the aeon ``DataLoader``, but is helpful for training this
 particular model in neon.
 
-Once preprocessing is complete, a sample manifest CSV file must be created with
+Once preprocessing is complete, a sample manifest TSV file must be created with
 the absolute paths of the videos and the classification labels. For example::
 
   @FILE	ASCII_INT

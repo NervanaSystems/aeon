@@ -77,7 +77,7 @@ def test_loader_exception_next():
     cwd = os.getcwd()
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_path+'/test_data')
-    manifest = open("manifest.csv")
+    manifest = open("manifest.tsv")
 
     config = generic_config(manifest.name, batch_size)
     dl = DataLoader(config)
@@ -95,7 +95,7 @@ def test_loader_exception_iter():
     cwd = os.getcwd()
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_path+'/test_data')
-    manifest = open("manifest.csv")
+    manifest = open("manifest.tsv")
 
     config = generic_config(manifest.name, batch_size)
     dl = DataLoader(config)
@@ -133,7 +133,7 @@ def test_loader_json_parser_fail():
         config = json.loads(json_string)
         with pytest.raises(RuntimeError) as ex:
             dl = DataLoader(config)
-        assert 'Required Argument' in str(ex) 
+        assert 'Required Argument' in str(ex)
 
 
 def test_loader_json_parser_pass():
@@ -147,7 +147,7 @@ def test_loader_json_parser_pass():
         config = json.loads(json_string)
         with pytest.raises(RuntimeError) as ex:
             dl = DataLoader(config)
-        assert 'Required Argument' in str(ex) 
+        assert 'Required Argument' in str(ex)
 
 
 def test_parser_dump_pass():
@@ -186,7 +186,7 @@ def test_parser_dump_fail():
 def test_parse_json_dict_list_pass():
     test_dir = os.path.dirname(os.path.realpath(__file__)) + '/test_data/'
 
-    config = {'batch_size': 16, 'manifest_root': test_dir, 'manifest_filename': test_dir + 'manifest.csv',
+    config = {'batch_size': 16, 'manifest_root': test_dir, 'manifest_filename': test_dir + 'manifest.tsv',
         'etl': [{'type': 'image', 'width': 32, 'height': 32}, {'type': 'label', 'binary': False}]}
 
     dl = DataLoader(config)
@@ -196,7 +196,7 @@ def test_parse_json_dict_list_pass():
 def test_parse_json_dict_tuple_pass():
     test_dir = os.path.dirname(os.path.realpath(__file__)) + '/test_data/'
 
-    config = {'batch_size': 16, 'manifest_root': test_dir, 'manifest_filename': test_dir + 'manifest.csv',
+    config = {'batch_size': 16, 'manifest_root': test_dir, 'manifest_filename': test_dir + 'manifest.tsv',
         'etl': ({'type': 'image', 'width': 32, 'height': 32}, {'type': 'label', 'binary': False})}
 
     dl = DataLoader(config)
@@ -206,7 +206,7 @@ def test_dataloader_axes_info():
     pdir = os.path.dirname(os.path.abspath(__file__))
     manifest_root = os.path.join(pdir, 'test_data')
 
-    manifest_file = os.path.join(manifest_root, 'manifest.csv')
+    manifest_file = os.path.join(manifest_root, 'manifest.tsv')
     cache_root = ""
 
     cfg = {

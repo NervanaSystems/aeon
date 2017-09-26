@@ -156,7 +156,7 @@ TEST(manifest, non_paired_manifests)
 
 TEST(manifest, root_path)
 {
-    string manifest_file = "tmp_manifest.csv";
+    string manifest_file = "tmp_manifest.tsv";
     {
         ofstream f(manifest_file);
         f << "@FILE\tFILE\n";
@@ -550,7 +550,7 @@ public:
     {
         test_root         = source_dir;
         source_directory  = file_util::make_temp_directory(source_dir);
-        manifest_filename = file_util::path_join(source_directory, "manifest.csv");
+        manifest_filename = file_util::path_join(source_directory, "manifest.tsv");
         file_list.push_back(manifest_filename);
         ofstream mfile(manifest_filename);
         mfile << "@FILE\tFILE\n";

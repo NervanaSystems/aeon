@@ -48,7 +48,7 @@ TEST(loader, syntax)
     int    width         = 32;
     size_t batch_size    = 1;
     string manifest_root = string(CURDIR) + "/test_data";
-    string manifest      = manifest_root + "/manifest.csv";
+    string manifest      = manifest_root + "/manifest.tsv";
 
     json image = {{"type", "image"},
                   {"name", "image1"},

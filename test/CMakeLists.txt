@@ -28,7 +28,7 @@ set (SRC
     test_localization_ssd.cpp
     test_loader_remote.cpp
     test_logging.cpp
-    test_manifest_csv.cpp
+    test_manifest_tsv.cpp
     test_params.cpp
     test_pixel_mask.cpp
     test_provider_audio.cpp

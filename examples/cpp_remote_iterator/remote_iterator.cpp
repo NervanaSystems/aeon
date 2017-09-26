@@ -1,63 +1,63 @@
 #include <iostream>
-#include <fstream>
+#include <string>
 
 #include "aeon.hpp"
 #include "file_util.hpp"
 
-// To run this example, firstly run server with command:
-// `cd server && ./aeon-server --address=http://127.0.0.1 --port 34568`
+// This example needs aeon-server to be running
 
 using nlohmann::json;
+using std::cerr;
 using std::cout;
 using std::endl;
 using std::shared_ptr;
+using std::stoi;
 using std::string;
 
 using nervana::loader;
 using nervana::loader_factory;
 using nervana::manifest_file;
 
-const string address = "127.0.0.1";
-const int    port    = 34568;
-
-string generate_manifest_file(const string& manifest_root, size_t record_count)
-{
-    string        manifest_name     = "manifest.txt";
-    const char*   image_files[]     = {"flowers.jpg", "img_2112_70.jpg"};
-    string        manifest_fullpath = manifest_root + "/" + manifest_name;
-    std::ofstream f(manifest_fullpath);
-    if (f)
-    {
-        f << manifest_file::get_metadata_char();
-        f << manifest_file::get_file_type_id();
-        f << manifest_file::get_delimiter();
-        f << manifest_file::get_string_type_id();
-        f << "\n";
-        for (size_t i = 0; i < record_count; i++)
-        {
-            f << image_files[i % 2];
-            f << manifest_file::get_delimiter();
-            f << std::to_string(i % 2);
-            f << "\n";
-        }
-    }
-    return manifest_name;
-}
+void use_aeon(const string& address, int port);
 
 int main(int argc, char** argv)
+{
+    string address;
+    int    port{0};
+
+    int opt;
+    while ((opt = getopt(argc, argv, "a:p:h")) != EOF)
+        switch (opt)
+        {
+        case 'a': address = optarg; break;
+        case 'p': port    = stoi(optarg); break;
+        case 'h':
+        case '?': cout << "remote_iterator -a <address> -p <port>" << endl; return 0;
+        }
+
+    if (address.empty() || port == 0)
+    {
+        cerr << "address (-a) and port (-p) parameters have to be provided" << endl;
+        return 1;
+    }
+
+    use_aeon(address, port);
+}
+
+void use_aeon(const string& address, int port)
 {
     int    height        = 32;
     int    width         = 32;
     size_t batch_size    = 4;
-    string manifest_root = "server";
-    string manifest      = generate_manifest_file(manifest_root, 20);
+    string manifest_root = "../../../test/test_data/";
+    string manifest_path = "../../../test/test_data/manifest.tsv";
 
     json image_config = {
         {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
     json label_config = {{"type", "label"}, {"binary", false}};
     json aug_config   = {{{"type", "image"}, {"flip_enable", true}}};
-    json config       = {{"manifest_root", "./"},
-                   {"manifest_filename", manifest},
+    json config       = {{"manifest_root", manifest_root},
+                   {"manifest_filename", manifest_path},
                    {"batch_size", batch_size},
                    {"iteration_mode", "ONCE"},
                    {"etl", {image_config, label_config}},

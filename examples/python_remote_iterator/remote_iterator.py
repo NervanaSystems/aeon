@@ -1,12 +1,37 @@
 #!/usr/bin/env python
 import os
+import sys
+import getopt
 from aeon import DataLoader
+
+
+def parse_input():
+    argv = sys.argv[1:]
+    address = ''
+    port = ''
+    try:
+        opts, args = getopt.getopt(argv, "ha:p:", ["address=", "port="])
+    except getopt.GetoptError:
+        print('remote_iterator.py -a <address> -p <port>')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print('remote_iterator.py -a <address> -p <port>')
+            sys.exit()
+        elif opt in ("-a", "--address"):
+            address = arg
+        elif opt in ("-p", "--port"):
+            port = arg
+    return address, port
+
 
 pdir = os.path.dirname(os.path.abspath(__file__))
 manifest_root = os.path.join(pdir, '..', '..', 'test', 'test_data')
 
 manifest_file = os.path.join(manifest_root, 'manifest.tsv')
 cache_root = ""
+
+address, port = parse_input()
 
 cfg = {
            'manifest_filename': manifest_file,
@@ -16,13 +41,13 @@ cfg = {
            'cache_directory': cache_root,
            'etl': [
                {'type': 'image',
-                'channel_major': False,
                 'width': 28,
                 'height': 28,
                 'channels': 1},
                {'type': 'label',
                 'binary': False}
-           ]
+           ],
+           'server': {'address': address, 'port': int(port)}
         }
 
 d1 = DataLoader(config=cfg)
