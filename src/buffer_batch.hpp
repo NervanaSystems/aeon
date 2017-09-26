@@ -196,6 +196,19 @@ public:
         add_items(write_sizes, batch_size, pinned);
     }
 
+    fixed_buffer_map(fixed_buffer_map&& buffer)
+    {
+        std::swap(m_data, buffer.m_data);
+        std::swap(m_names, buffer.m_names);
+    }
+
+    fixed_buffer_map& operator=(fixed_buffer_map&& buffer)
+    {
+        std::swap(m_data, buffer.m_data);
+        std::swap(m_names, buffer.m_names);
+        return *this;
+    }
+
     void add_items(const std::vector<std::pair<std::string, shape_type>>& write_sizes,
                    size_t batch_size,
                    bool   pinned = false)

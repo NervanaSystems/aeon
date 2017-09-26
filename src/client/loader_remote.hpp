@@ -28,8 +28,7 @@ namespace nervana
         explicit loader_remote(std::shared_ptr<service> client, const nlohmann::json&);
 
         ~loader_remote() override {}
-        const std::vector<std::pair<std::string, shape_type>>&
-            get_names_and_shapes() const override
+        const std::vector<std::pair<std::string, shape_type>>& get_names_and_shapes() const override
         {
             return m_names_and_shapes;
         }
@@ -43,7 +42,7 @@ namespace nervana
         iterator                end() override { return m_end_iter; }
         iterator&               get_current_iter() override;
         iterator&               get_end_iter() override { return m_end_iter; }
-        const fixed_buffer_map* get_output_buffer() const override { return m_output_buffer_ptr; }
+        const fixed_buffer_map* get_output_buffer() const override { return m_output_buffer_ptr.get(); }
         const size_t&           position() override { return m_position; }
         void                    reset() override;
         nlohmann::json          get_current_config() const override { return m_config; }
@@ -66,7 +65,7 @@ namespace nervana
         iterator                                                m_current_iter;
         iterator                                                m_end_iter;
         std::shared_ptr<async_manager_source<fixed_buffer_map>> m_final_stage;
-        fixed_buffer_map*                                       m_output_buffer_ptr{nullptr};
+        std::shared_ptr<fixed_buffer_map>                       m_output_buffer_ptr;
         names_and_shapes                                        m_names_and_shapes;
         mutable std::vector<std::string>                        m_names;
         int                                                     m_record_count;

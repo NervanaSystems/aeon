@@ -21,6 +21,7 @@ using std::exception;
 using std::istringstream;
 using std::ostringstream;
 using std::invalid_argument;
+using std::make_shared;
 using std::map;
 using std::runtime_error;
 using std::string;
@@ -212,19 +213,18 @@ service_response<nervana::next_response>
             string(serialized_buffer_map_buffer.begin(), serialized_buffer_map_buffer.end());
     }
 
+    auto fbm = make_shared<fixed_buffer_map>();
     try
     {
         istringstream stream(serialized_buffer_map);
-        m_fixed_buffer_map.deserialize(stream);
+        fbm->deserialize(stream);
     }
     catch (const exception& ex)
     {
         throw runtime_error(string("cannot deserialize fixed_buffer_map: ") + ex.what());
     }
 
-    m_next_response_buffer =
-        service_response<next_response>(status, next_response(&m_fixed_buffer_map));
-    return m_next_response_buffer;
+    return service_response<next_response>(status, next_response(fbm));
 }
 
 service_response<names_and_shapes>
@@ -341,7 +341,6 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
 
 nervana::service_response<nervana::next_response>* nervana::service_async_source::next()
 {
-    //todo: std::move call here?
     m_current_next_response = m_base_service->get_next(m_session_id);
     return &m_current_next_response;
 }
@@ -361,12 +360,20 @@ nervana::service_response<nervana::next_response>
 
 nervana::service_response<nervana::next_response>* nervana::service_async::filler()
 {
-    m_state                                = async_state::wait_for_buffer;
-    service_response<next_response>* rc    = get_pending_buffer();
-    m_state                                = async_state::processing;
+    m_state                             = async_state::wait_for_buffer;
+    service_response<next_response>* rc = get_pending_buffer();
+    m_state                             = async_state::processing;
 
-    m_state = async_state::fetching_data;
-    *rc   = *(m_source->next());
+    m_state                                = async_state::fetching_data;
+    service_response<next_response>* input = m_source->next();
+    if (input == nullptr)
+    {
+        rc = nullptr;
+    }
+    else
+    {
+        *rc = *input;
+    }
     m_state = async_state::processing;
 
     m_state = async_state::idle;

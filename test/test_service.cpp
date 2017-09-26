@@ -192,9 +192,8 @@ TEST(service_connector, next)
         auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
         service_connector connector(mock);
 
-        fixed_buffer_map& buffer_map = get_fixed_buffer_map();
-        stringstream      serialized_buffer_map;
-        buffer_map.serialize(serialized_buffer_map);
+        auto buffer_map = shared_ptr<fixed_buffer_map>(); stringstream      serialized_buffer_map;
+        buffer_map->serialize(serialized_buffer_map);
         std::vector<char> encoded_buffer_map = nervana::base64::encode(
             serialized_buffer_map.str().data(), serialized_buffer_map.str().size());
 
@@ -202,7 +201,7 @@ TEST(service_connector, next)
         expected_json["status"]["type"] = "SUCCESS";
         expected_json["data"]["fixed_buffer_map"] =
             string(encoded_buffer_map.begin(), encoded_buffer_map.end());
-        auto   expected_next_response = next_response(&buffer_map);
+        auto   expected_next_response = next_response(buffer_map);
         auto   expected_response      = http_response(http::status_ok, expected_json.dump());
         string endpoint               = "/api/v1/dataset/" + session_id + "/next";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));

@@ -74,7 +74,7 @@ TEST(loader_remote, new_session_scenario)
 
     // testing iteration
     {
-        nervana::fixed_buffer_map* fbm = &(get_fixed_buffer_map());
+        auto fbm = make_shared<nervana::fixed_buffer_map>();
         auto expected_batch = service_response<next_response>(status_success, next_response(fbm));
         auto expected_end_of_data = service_response<next_response>(
             service_status(service_status_type::END_OF_DATASET, ""), next_response());
@@ -160,7 +160,7 @@ TEST(loader_remote, shared_session_scenario)
 
     // testing iteration
     {
-        nervana::fixed_buffer_map* fbm = &(get_fixed_buffer_map());
+        auto fbm = make_shared<nervana::fixed_buffer_map>();
         auto expected_batch = service_response<next_response>(status_success, next_response(fbm));
         auto expected_end_of_data = service_response<next_response>(
             service_status(service_status_type::END_OF_DATASET, ""), next_response());

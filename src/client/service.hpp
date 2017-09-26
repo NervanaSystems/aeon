@@ -85,11 +85,8 @@ namespace nervana
     class next_response
     {
     public:
-        next_response()
-            : data(nullptr)
-        {
-        }
-        next_response(fixed_buffer_map* buffer_map)
+        next_response() {}
+        next_response(std::shared_ptr<fixed_buffer_map> buffer_map)
             : data(buffer_map)
         {
         }
@@ -107,8 +104,7 @@ namespace nervana
             return this_serialized.str() == other_serialized.str();
         }
 
-        fixed_buffer_map* data;
-        int               position;
+        std::shared_ptr<fixed_buffer_map> data;
     };
 
     class service
@@ -154,8 +150,6 @@ namespace nervana
                                      nlohmann::json&    output_json);
 
         std::shared_ptr<http_connector> m_http;
-        fixed_buffer_map                m_fixed_buffer_map;
-        service_response<next_response> m_next_response_buffer;
     };
 
     class service_async_source : public service,
@@ -211,7 +205,7 @@ namespace nervana
     private:
         std::shared_ptr<service>        m_base_service;
         service_response<next_response> m_current_next_response;
-        // session_id needs to be stored for next() which does not have id parameter
+        // session_id needs to be storedp for next() which does not have id parameter
         std::string m_session_id;
     };
 
