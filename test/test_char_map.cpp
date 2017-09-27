@@ -148,16 +148,5 @@ TEST(char_map, test)
 
             ASSERT_EQ(outbuf[max_length - 1], 38);
         }
-
-        // Check zero padding
-        {
-            string short_str = "now✓";
-            auto   decoded   = extractor.extract(&short_str[0], short_str.size());
-            loader.load({outbuf}, decoded);
-            for (int i = 4; i < max_length; i++)
-            {
-                ASSERT_EQ(outbuf[i], 0);
-            }
-        }
     }
 }
