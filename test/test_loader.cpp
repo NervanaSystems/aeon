@@ -592,7 +592,8 @@ TEST(benchmark, imagenet)
                             total_average_delay_time += current_delay;
                             batch_delay_watch = stopwatch();
                             cout << "batch delay " << current_delay << "us\t\t average "
-                                 << total_average_delay_time / ((current_batch - batches_per_output) / batches_per_output)
+                                 << total_average_delay_time /
+                                        ((current_batch - batches_per_output) / batches_per_output)
                                  << "us" << endl;
                         }
                     }
@@ -721,11 +722,11 @@ TEST(benchmark, load_block_manager)
     {
         manifest_stream << image_path << "\n";
     }
-    manifest_file manifest{manifest_stream, false};
+    auto manifest = make_shared<manifest_file>(manifest_stream, false);
 
-    block_loader_file loader{&manifest, block_size};
+    auto loader = make_shared<block_loader_file>(manifest, block_size);
 
-    block_manager manager{&loader, 5000, cache_directory, shuffle};
+    block_manager manager{loader, 5000, cache_directory, shuffle};
 
     encoded_record_list* records;
     timer.start();

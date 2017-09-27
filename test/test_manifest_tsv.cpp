@@ -323,15 +323,15 @@ TEST(manifest, file_explicit)
         }
     }
 
-    size_t        block_size = 16;
-    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
+    size_t block_size = 16;
+    auto   manifest   = make_shared<manifest_file>(ss, false, test_data_directory, 1.0, block_size);
 
-    auto types = manifest.get_element_types();
+    auto types = manifest->get_element_types();
     ASSERT_EQ(2, types.size());
     EXPECT_EQ(manifest::element_t::FILE, types[0]);
     EXPECT_EQ(manifest::element_t::FILE, types[1]);
 
-    block_loader_file bload{&manifest, block_size};
+    block_loader_file bload{manifest, block_size};
     for (int i = 0; i < 2; i++)
     {
         encoded_record_list* buffer = bload.filler();
@@ -375,15 +375,15 @@ TEST(manifest, binary)
         }
     }
 
-    size_t        block_size = 16;
-    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
+    size_t block_size = 16;
+    auto   manifest   = make_shared<manifest_file>(ss, false, test_data_directory, 1.0, block_size);
 
-    auto types = manifest.get_element_types();
+    auto types = manifest->get_element_types();
     ASSERT_EQ(2, types.size());
     EXPECT_EQ(manifest::element_t::FILE, types[0]);
     EXPECT_EQ(manifest::element_t::BINARY, types[1]);
 
-    block_loader_file block_loader{&manifest, block_size};
+    block_loader_file block_loader{manifest, block_size};
     index = 0;
     for (int i = 0; i < 2; i++)
     {
@@ -397,7 +397,7 @@ TEST(manifest, binary)
             auto           tdata    = record.element(1);
             string         str      = vector2string(tdata);
             string         expected = make_target_data(index);
-            index                   = (index + 1) % manifest.record_count();
+            index                   = (index + 1) % manifest->record_count();
             EXPECT_STREQ(expected.c_str(), str.c_str());
         }
     }
@@ -421,20 +421,20 @@ TEST(manifest, string)
         }
     }
 
-    size_t        block_size = 16;
-    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
+    size_t block_size = 16;
+    auto   manifest   = make_shared<manifest_file>(ss, false, test_data_directory, 1.0, block_size);
 
     //    for (auto data : manifest)
     //    {
     //        INFO << data[0] << ", " << data[1];
     //    }
 
-    auto types = manifest.get_element_types();
+    auto types = manifest->get_element_types();
     ASSERT_EQ(2, types.size());
     EXPECT_EQ(manifest::element_t::FILE, types[0]);
     EXPECT_EQ(manifest::element_t::STRING, types[1]);
 
-    block_loader_file block_loader{&manifest, block_size};
+    block_loader_file block_loader{manifest, block_size};
     index = 0;
     for (int i = 0; i < 2; i++)
     {
@@ -448,7 +448,7 @@ TEST(manifest, string)
             auto           tdata    = record.element(1);
             string         str      = vector2string(tdata);
             string         expected = make_target_data(index);
-            index                   = (index + 1) % manifest.record_count();
+            index                   = (index + 1) % manifest->record_count();
             EXPECT_STREQ(expected.c_str(), str.c_str());
         }
     }
@@ -471,15 +471,15 @@ TEST(manifest, ascii_int)
         }
     }
 
-    size_t        block_size = 16;
-    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
+    size_t block_size = 16;
+    auto   manifest   = make_shared<manifest_file>(ss, false, test_data_directory, 1.0, block_size);
 
-    auto types = manifest.get_element_types();
+    auto types = manifest->get_element_types();
     ASSERT_EQ(2, types.size());
     EXPECT_EQ(manifest::element_t::FILE, types[0]);
     EXPECT_EQ(manifest::element_t::ASCII_INT, types[1]);
 
-    block_loader_file block_loader{&manifest, block_size};
+    block_loader_file block_loader{manifest, block_size};
     index = 0;
     for (int i = 0; i < 2; i++)
     {
@@ -514,15 +514,15 @@ TEST(manifest, ascii_float)
         }
     }
 
-    size_t        block_size = 16;
-    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
+    size_t block_size = 16;
+    auto   manifest   = make_shared<manifest_file>(ss, false, test_data_directory, 1.0, block_size);
 
-    auto types = manifest.get_element_types();
+    auto types = manifest->get_element_types();
     ASSERT_EQ(2, types.size());
     EXPECT_EQ(manifest::element_t::FILE, types[0]);
     EXPECT_EQ(manifest::element_t::ASCII_FLOAT, types[1]);
 
-    block_loader_file block_loader{&manifest, block_size};
+    block_loader_file block_loader{manifest, block_size};
     index = 0;
     for (int i = 0; i < 2; i++)
     {

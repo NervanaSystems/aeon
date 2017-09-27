@@ -40,11 +40,11 @@ TEST(block_loader_file, file_block)
     // each call to next() will yield pointer to vector<string> (filename list per record)
     stringstream& manifest_stream =
         mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
+    auto manifest = make_shared<manifest_file>(manifest_stream, false, "", 1.0, block_size);
 
     // each call to next() will yield pointer to variable buffer_array
     //   which is vector of encoded_record_list
-    block_loader_file loader(&manifest, block_size);
+    block_loader_file loader(manifest, block_size);
 
     auto block_count = loader.block_count();
     ASSERT_EQ(record_count / block_size, block_count);
@@ -83,11 +83,11 @@ TEST(block_loader_file, file_block_odd)
     // each call to next() will yield pointer to vector<string> (filename list per record)
     stringstream& manifest_stream =
         mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
+    auto manifest = make_shared<manifest_file>(manifest_stream, false, "", 1.0, block_size);
 
     // each call to next() will yield pointer to variable buffer_array
     //   which is vector of encoded_record_list
-    block_loader_file loader(&manifest, block_size);
+    block_loader_file loader(manifest, block_size);
 
     auto block_count = ceil((float)record_count / (float)block_size);
     ASSERT_EQ(2, block_count);
@@ -119,13 +119,13 @@ TEST(block_loader_file, iterate_batch)
     // each call to next() will yield pointer to vector<string> (filename list per record)
     stringstream& manifest_stream =
         mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
+    auto manifest = make_shared<manifest_file>(manifest_stream, false, "", 1.0, block_size);
 
     // each call to next() will yield pointer to variable buffer_array
     //   which is vector of encoded_record_list
-    block_loader_file block_loader(&manifest, block_size);
-    block_manager     block_manager(&block_loader, block_size, "", false);
-    batch_iterator    batch_iterator(&block_manager, batch_size);
+    auto           block_loader  = make_shared<block_loader_file>(manifest, block_size);
+    auto           block_mgr = make_shared<block_manager>(block_loader, block_size, "", false);
+    batch_iterator batch_iterator(block_mgr, batch_size);
 
     auto batch_count = record_count / batch_size;
     ASSERT_EQ(record_count / block_size, block_size);

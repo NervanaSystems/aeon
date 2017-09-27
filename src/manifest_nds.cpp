@@ -244,7 +244,7 @@ manifest_nds manifest_nds_builder::create()
         throw invalid_argument("elements_per_record is required");
     }
 
-    return manifest_nds(m_base_url,
+    return unique_ptr<manifest_nds>(new manifest_nds(m_base_url,
                         m_token,
                         m_collection_id,
                         m_block_size,

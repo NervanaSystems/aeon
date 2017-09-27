@@ -37,7 +37,7 @@ namespace nervana
 class nervana::block_manager : public async_manager<encoded_record_list, encoded_record_list>
 {
 public:
-    block_manager(block_loader_source* file_loader,
+    block_manager(std::shared_ptr<block_loader_source> file_loader,
                   size_t               block_size,
                   const std::string&   cache_root,
                   bool                 enable_shuffle,

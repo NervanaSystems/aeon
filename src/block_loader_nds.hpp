@@ -36,7 +36,7 @@ class nervana::block_loader_nds : public block_loader_source,
                                   public async_manager<encoded_record_list, encoded_record_list>
 {
 public:
-    block_loader_nds(manifest_nds* manifest, size_t block_size);
+    block_loader_nds(std::shared_ptr<manifest_nds>, size_t block_size);
 
     virtual ~block_loader_nds() { finalize(); }
     encoded_record_list* filler() override;

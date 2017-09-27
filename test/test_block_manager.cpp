@@ -102,17 +102,17 @@ TEST(block_manager, cache_busy)
 
     stringstream& manifest_stream =
         mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file manifest(manifest_stream, false);
+    auto manifest = make_shared<manifest_file>(manifest_stream, false);
 
-    block_loader_file reader(&manifest, block_size);
-    string            cache_name = cache.create_cache_name(reader.get_uid());
-    auto              cache_dir  = file_util::path_join(cache_root, cache_name);
+    auto   reader     = make_shared<block_loader_file>(manifest, block_size);
+    string cache_name = cache.create_cache_name(reader->get_uid());
+    auto   cache_dir  = file_util::path_join(cache_root, cache_name);
 
     int lock;
     file_util::make_directory(cache_dir);
     EXPECT_TRUE(cache.take_ownership(cache_dir, lock));
 
-    block_manager bm(&reader, block_size, cache_root, false);
+    block_manager bm(reader, block_size, cache_root, false);
     EXPECT_EQ(bm.m_cache->m_stage, nervana::cache_system::blocked);
 
     cache.release_ownership(cache_root, lock);
@@ -138,13 +138,13 @@ TEST(block_manager, build_cache)
 
     stringstream& manifest_stream =
         mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
+    auto manifest = make_shared<manifest_file>(manifest_stream, false, "", 1.0, block_size);
 
-    block_loader_file reader(&manifest, block_size);
-    string            cache_name = cache.create_cache_name(reader.get_uid());
-    auto              cache_dir  = file_util::path_join(cache_root, cache_name);
+    auto   reader     = make_shared<block_loader_file>(manifest, block_size);
+    string cache_name = cache.create_cache_name(reader->get_uid());
+    auto   cache_dir  = file_util::path_join(cache_root, cache_name);
 
-    block_manager manager(&reader, block_size, cache_root, false);
+    block_manager manager(reader, block_size, cache_root, false);
 
     size_t record_number = 0;
     for (size_t i = 0; i < block_count * 2; i++)
@@ -198,13 +198,13 @@ TEST(block_manager, reuse_cache)
 
     stringstream& manifest_stream =
         mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
+    auto manifest = make_shared<manifest_file>(manifest_stream, false, "", 1.0, block_size);
 
     // first build the cache
     {
-        block_loader_file reader(&manifest, block_size);
+        auto reader = make_shared<block_loader_file>(manifest, block_size);
 
-        block_manager manager(&reader, block_size, cache_root, false);
+        block_manager manager(reader, block_size, cache_root, false);
 
         size_t record_number = 0;
         for (size_t i = 0; i < block_count; i++)
@@ -231,9 +231,9 @@ TEST(block_manager, reuse_cache)
 
     // now read data with new reader, same manifest
     {
-        block_loader_file reader(&manifest, block_size);
+        auto reader = make_shared<block_loader_file>(manifest, block_size);
 
-        block_manager manager(&reader, block_size, cache_root, false);
+        block_manager manager(reader, block_size, cache_root, false);
 
         size_t record_number = 0;
         for (size_t i = 0; i < block_count; i++)
@@ -281,9 +281,10 @@ TEST(block_manager, file_no_shuffle_cache)
 
     stringstream& manifest_stream =
         mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file     manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
-    block_loader_file reader(&manifest, block_size);
-    block_manager     manager(&reader, block_size, cache_root, enable_shuffle);
+    auto manifest =
+        make_shared<manifest_file>(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    auto          reader = make_shared<block_loader_file>(manifest, block_size);
+    block_manager manager(reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
@@ -345,9 +346,10 @@ TEST(block_manager, file_no_shuffle_no_cache)
 
     stringstream& manifest_stream =
         mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file     manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
-    block_loader_file reader(&manifest, block_size);
-    block_manager     manager(&reader, block_size, cache_root, enable_shuffle);
+    auto manifest =
+        make_shared<manifest_file>(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    auto          reader = make_shared<block_loader_file>(manifest, block_size);
+    block_manager manager(reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
@@ -408,9 +410,10 @@ TEST(block_manager, file_shuffle_cache)
 
     stringstream& manifest_stream =
         mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file     manifest(manifest_stream, enable_shuffle, "", 1.0, block_size, seed);
-    block_loader_file reader(&manifest, block_size);
-    block_manager     manager(&reader, block_size, cache_root, enable_shuffle, seed);
+    auto manifest =
+        make_shared<manifest_file>(manifest_stream, enable_shuffle, "", 1.0, block_size, seed);
+    auto          reader = make_shared<block_loader_file>(manifest, block_size);
+    block_manager manager(reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
@@ -473,9 +476,10 @@ TEST(block_manager, file_shuffle_no_cache)
 
     stringstream& manifest_stream =
         mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file     manifest(manifest_stream, enable_shuffle, "", 1.0, block_size, seed);
-    block_loader_file reader(&manifest, block_size);
-    block_manager     manager(&reader, block_size, cache_root, enable_shuffle, seed);
+    auto manifest =
+        make_shared<manifest_file>(manifest_stream, enable_shuffle, "", 1.0, block_size, seed);
+    auto          reader = make_shared<block_loader_file>(manifest, block_size);
+    block_manager manager(reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
@@ -528,16 +532,16 @@ TEST(block_manager, nds_no_shuffle_cache)
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
-    manifest_nds manifest = manifest_nds_builder()
-                                .base_url("http://127.0.0.1:5000")
-                                .token("token")
-                                .collection_id(1)
-                                .block_size(block_size)
-                                .elements_per_record(elements_per_record)
-                                .shuffle(enable_shuffle)
-                                .create();
-    block_loader_nds reader(&manifest, block_size);
-    block_manager    manager(&reader, block_size, cache_root, enable_shuffle);
+    shared_ptr<manifest_nds> manifest(manifest_nds_builder()
+                                          .base_url("http://127.0.0.1:5000")
+                                          .token("token")
+                                          .collection_id(1)
+                                          .block_size(block_size)
+                                          .elements_per_record(elements_per_record)
+                                          .shuffle(enable_shuffle)
+                                          .create());
+    auto          reader = make_shared<block_loader_nds>(manifest, block_size);
+    block_manager manager(reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
@@ -592,16 +596,16 @@ TEST(block_manager, nds_no_shuffle_no_cache)
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
-    manifest_nds manifest = manifest_nds_builder()
-                                .base_url("http://127.0.0.1:5000")
-                                .token("token")
-                                .collection_id(1)
-                                .block_size(block_size)
-                                .elements_per_record(elements_per_record)
-                                .shuffle(enable_shuffle)
-                                .create();
-    block_loader_nds reader(&manifest, block_size);
-    block_manager    manager(&reader, block_size, cache_root, enable_shuffle);
+    shared_ptr<manifest_nds> manifest(manifest_nds_builder()
+                                          .base_url("http://127.0.0.1:5000")
+                                          .token("token")
+                                          .collection_id(1)
+                                          .block_size(block_size)
+                                          .elements_per_record(elements_per_record)
+                                          .shuffle(enable_shuffle)
+                                          .create());
+    auto          reader = make_shared<block_loader_nds>(manifest, block_size);
+    block_manager manager(reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
@@ -655,17 +659,17 @@ TEST(block_manager, nds_shuffle_cache)
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
-    manifest_nds manifest = manifest_nds_builder()
-                                .base_url("http://127.0.0.1:5000")
-                                .token("token")
-                                .collection_id(1)
-                                .block_size(block_size)
-                                .elements_per_record(elements_per_record)
-                                .shuffle(enable_shuffle)
-                                .seed(seed)
-                                .create();
-    block_loader_nds reader(&manifest, block_size);
-    block_manager    manager(&reader, block_size, cache_root, enable_shuffle, seed);
+    shared_ptr<manifest_nds> manifest(manifest_nds_builder()
+                                          .base_url("http://127.0.0.1:5000")
+                                          .token("token")
+                                          .collection_id(1)
+                                          .block_size(block_size)
+                                          .elements_per_record(elements_per_record)
+                                          .shuffle(enable_shuffle)
+                                          .seed(seed)
+                                          .create());
+    auto          reader = make_shared<block_loader_nds>(manifest, block_size);
+    block_manager manager(reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;
@@ -721,17 +725,17 @@ TEST(block_manager, nds_shuffle_no_cache)
     vector<size_t> sorted_record_list(record_count);
     iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
 
-    manifest_nds manifest = manifest_nds_builder()
-                                .base_url("http://127.0.0.1:5000")
-                                .token("token")
-                                .collection_id(1)
-                                .block_size(block_size)
-                                .elements_per_record(elements_per_record)
-                                .shuffle(enable_shuffle)
-                                .seed(seed)
-                                .create();
-    block_loader_nds reader(&manifest, block_size);
-    block_manager    manager(&reader, block_size, cache_root, enable_shuffle, seed);
+    shared_ptr<manifest_nds> manifest(manifest_nds_builder()
+                                          .base_url("http://127.0.0.1:5000")
+                                          .token("token")
+                                          .collection_id(1)
+                                          .block_size(block_size)
+                                          .elements_per_record(elements_per_record)
+                                          .shuffle(enable_shuffle)
+                                          .seed(seed)
+                                          .create());
+    auto          reader = make_shared<block_loader_nds>(manifest, block_size);
+    block_manager manager(reader, block_size, cache_root, enable_shuffle);
 
     vector<size_t> first_pass;
     vector<size_t> second_pass;

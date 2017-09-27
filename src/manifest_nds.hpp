@@ -55,8 +55,6 @@ private:
     const int         m_collection_id;
     const int         m_shard_count;
     const int         m_shard_index;
-    unsigned int      m_object_count;
-    unsigned int      m_block_count;
     uint32_t          m_macrobatch_size;
 };
 

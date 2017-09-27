@@ -161,6 +161,11 @@ void loader_local::initialize(const json& config_json)
         m_batch_count_value = lcfg.iteration_mode_count;
     }
 
+    m_block_loader = make_shared<block_loader_file>(m_manifest, lcfg.block_size);
+
+    m_block_manager = make_shared<block_manager>(
+        m_block_loader, lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_enable, lcfg.random_seed);
+
     m_provider = provider_factory::create(config_json);
 
     unsigned int threads_num = lcfg.decode_thread_count != 0 ? lcfg.decode_thread_count
@@ -179,6 +184,28 @@ void loader_local::initialize(const json& config_json)
 
     m_final_stage = make_shared<batch_iterator_fbm>(
         m_decoder.get(), lcfg.batch_size, m_provider, !lcfg.batch_major);
+
+    if (lcfg.batch_size > threads_num * m_increase_input_size_coefficient)
+    {
+        m_batch_iterator = make_shared<batch_iterator>(m_block_manager, lcfg.batch_size);
+        m_final_stage    = make_shared<batch_decoder>(m_batch_iterator,
+                                                   static_cast<size_t>(lcfg.batch_size),
+                                                   lcfg.decode_thread_count,
+                                                   lcfg.pinned,
+                                                   m_provider,
+                                                   lcfg.random_seed);
+    }
+    else
+    {
+        const int decode_size = threads_num * m_input_multiplier;
+        m_batch_iterator      = make_shared<batch_iterator>(m_block_manager, decode_size);
+
+        m_decoder = make_shared<batch_decoder>(
+            m_batch_iterator, decode_size, lcfg.decode_thread_count, lcfg.pinned, m_provider, lcfg.random_seed);
+
+        m_final_stage = make_shared<batch_iterator_fbm>(m_decoder, lcfg.batch_size, m_provider);
+    }
+>>>>>>> refactoring async_manager to take shared_ptr instead of raw pointer
 
     m_output_buffer_ptr = m_final_stage->next();
 

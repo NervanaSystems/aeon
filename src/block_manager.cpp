@@ -22,7 +22,7 @@
 using namespace std;
 using namespace nervana;
 
-nervana::block_manager::block_manager(block_loader_source* file_loader,
+nervana::block_manager::block_manager(shared_ptr<block_loader_source> file_loader,
                                       size_t               block_size,
                                       const string&        cache_root,
                                       bool                 enable_shuffle,

@@ -61,7 +61,7 @@ typedef array<int, 2> minibatch;
 class integer_batcher : public async_manager<int, minibatch>
 {
 public:
-    integer_batcher(data_source* d)
+    integer_batcher(shared_ptr<data_source> d)
         : async_manager<int, minibatch>(d, "test")
     {
     }

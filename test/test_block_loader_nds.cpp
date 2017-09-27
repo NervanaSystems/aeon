@@ -55,16 +55,16 @@ TEST(block_loader_nds, curl_stream)
     size_t block_size          = 16;
     size_t elements_per_record = 2;
 
-    manifest_nds client = manifest_nds_builder()
+    shared_ptr<manifest_nds> client (manifest_nds_builder()
                               .base_url("http://127.0.0.1:5000")
                               .token("token")
                               .collection_id(1)
                               .block_size(block_size)
                               .elements_per_record(elements_per_record)
-                              .create();
+                              .create());
 
     stringstream stream;
-    client.m_network_client.get("http://127.0.0.1:5000/test_pattern/", stream);
+    client->m_network_client.get("http://127.0.0.1:5000/test_pattern/", stream);
 
     stringstream expected;
     for (int i = 0; i < 1024; ++i)
@@ -112,16 +112,16 @@ TEST(block_loader_nds, curl_stream_error)
     size_t block_size          = 16;
     size_t elements_per_record = 2;
 
-    manifest_nds client = manifest_nds_builder()
+    shared_ptr<manifest_nds> client(manifest_nds_builder()
                               .base_url("http://127.0.0.1:5000")
                               .token("token")
                               .collection_id(1)
                               .block_size(block_size)
                               .elements_per_record(elements_per_record)
-                              .create();
+                              .create());
 
     stringstream stream;
-    EXPECT_THROW(client.m_network_client.get("http://127.0.0.1:5000/error", stream),
+    EXPECT_THROW(client->m_network_client.get("http://127.0.0.1:5000/error", stream),
                  std::runtime_error);
 }
 
@@ -130,17 +130,17 @@ TEST(block_loader_nds, record_count)
     size_t block_size          = 16;
     size_t elements_per_record = 2;
 
-    manifest_nds client = manifest_nds_builder()
+    shared_ptr<manifest_nds> client(manifest_nds_builder()
                               .base_url("http://127.0.0.1:5000")
                               .token("token")
                               .collection_id(1)
                               .block_size(block_size)
                               .elements_per_record(elements_per_record)
-                              .create();
+                              .create());
 
     // 200 and 5 are hard coded in the mock nds server
-    ASSERT_EQ(client.record_count(), 200);
-    ASSERT_EQ(client.block_count(), 5);
+    ASSERT_EQ(client->record_count(), 200);
+    ASSERT_EQ(client->block_count(), 5);
 }
 
 TEST(block_loader_nds, cpio)
@@ -149,18 +149,18 @@ TEST(block_loader_nds, cpio)
     size_t elements_per_record = 2;
     size_t block_count         = 3;
 
-    manifest_nds client = manifest_nds_builder()
+    shared_ptr<manifest_nds> client(manifest_nds_builder()
                               .base_url("http://127.0.0.1:5000")
                               .token("token")
                               .collection_id(1)
                               .block_size(block_size)
                               .elements_per_record(elements_per_record)
-                              .create();
+                              .create());
 
     size_t record_number = 0;
     for (size_t block_number = 0; block_number < block_count; block_number++)
     {
-        encoded_record_list* block = client.load_block(block_number);
+        encoded_record_list* block = client->load_block(block_number);
         ASSERT_EQ(block_size, block->size());
 
         for (auto record : *block)

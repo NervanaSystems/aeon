@@ -50,14 +50,9 @@ manifest_file::manifest_file(const string& filename,
                              bool          shuffle,
                              const string& root,
                              float         subset_fraction,
-<<<<<<< 7ff3e28b8e80f2c6d172b8f9a8049fc061105905
                              size_t        block_size,
                              uint32_t      seed)
     : m_source_filename(filename)
-=======
-                             size_t        block_size)
-    : m_source_filename{filename}
->>>>>>> handling reset providing data
     , m_record_count{0}
     , m_shuffle{shuffle}
     , m_random{seed ? seed : random_device{}()}

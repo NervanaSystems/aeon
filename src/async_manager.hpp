@@ -78,7 +78,7 @@ class nervana::async_manager : public virtual nervana::async_manager_source<OUTP
                                public async_manager_info
 {
 public:
-    async_manager(async_manager_source<INPUT>* source, const std::string& name)
+    async_manager(std::shared_ptr<async_manager_source<INPUT>> source, const std::string& name)
         : m_source(source)
         , m_state{async_state::idle}
         , m_name{name}
@@ -199,9 +199,9 @@ protected:
         else
             return &m_containers[0];
     }
-    OUTPUT                       m_containers[2];
-    OUTPUT*                      m_pending_buffer;
-    async_manager_source<INPUT>* m_source;
+    OUTPUT                                       m_containers[2];
+    OUTPUT*                                      m_pending_buffer;
+    std::shared_ptr<async_manager_source<INPUT>> m_source;
 
     async_state m_state = async_state::idle;
     std::string m_name;
