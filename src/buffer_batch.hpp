@@ -1,5 +1,5 @@
 /*
- Copyright 2016 Nervana Systems Inc.
+ Copyright 2017 Nervana Systems Inc.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -31,7 +31,6 @@
 
 namespace nervana
 {
-    // class buffer_batch;
     class buffer_fixed_size_elements;
     class fixed_buffer_map;
     class encoded_record;
@@ -161,10 +160,11 @@ public:
 
     explicit buffer_fixed_size_elements(const buffer_fixed_size_elements&);
     buffer_fixed_size_elements(buffer_fixed_size_elements&&);
-    buffer_fixed_size_elements& operator=(buffer_fixed_size_elements&&);
-    void swap(buffer_fixed_size_elements& first, buffer_fixed_size_elements& second);
+    buffer_fixed_size_elements& operator=(buffer_fixed_size_elements&&) noexcept;
+    void move(buffer_fixed_size_elements& second);
 
-    virtual void allocate();
+    void allocate();
+    void deallocate();
     const char* get_item(size_t index) const;
     char* get_item(size_t index);
     cv::Mat get_item_as_mat(size_t index, bool channel_major = false) const;
@@ -202,10 +202,15 @@ public:
         std::swap(m_names, buffer.m_names);
     }
 
-    fixed_buffer_map& operator = (fixed_buffer_map&& buffer)
+    fixed_buffer_map& operator = (fixed_buffer_map&& buffer) noexcept
     {
-        std::swap(m_data, buffer.m_data);
-        std::swap(m_names, buffer.m_names);
+        std::cout << "= &&" << std::endl;
+        clear();
+        m_data = buffer.m_data;
+        m_names = buffer.m_names;
+        buffer.m_data.clear();
+        buffer.m_names.clear();
+
         return *this;
     }
 

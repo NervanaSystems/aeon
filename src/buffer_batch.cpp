@@ -75,26 +75,28 @@ buffer_fixed_size_elements::buffer_fixed_size_elements(const buffer_fixed_size_e
 buffer_fixed_size_elements::buffer_fixed_size_elements(buffer_fixed_size_elements&& other)
     : buffer_fixed_size_elements()
 {
-    swap(*this, other);
+    move(other);
 }
 
 buffer_fixed_size_elements& buffer_fixed_size_elements::
-    operator=(buffer_fixed_size_elements&& other)
+    operator=(buffer_fixed_size_elements&& other) noexcept
 {
-    swap(*this, other);
+    move(other);
     return *this;
 }
 
-void buffer_fixed_size_elements::swap(buffer_fixed_size_elements& first,
-                                      buffer_fixed_size_elements& second)
+void buffer_fixed_size_elements::move(buffer_fixed_size_elements& second)
 {
+    deallocate();
+    m_data = second.m_data;
+    second.m_data = nullptr;
+
     using std::swap;
-    swap(first.m_data, second.m_data);
-    swap(first.m_shape_type, second.m_shape_type);
-    swap(first.m_size, second.m_size);
-    swap(first.m_batch_size, second.m_batch_size);
-    swap(first.m_stride, second.m_stride);
-    swap(first.m_pinned, second.m_pinned);
+    swap(m_shape_type, second.m_shape_type);
+    swap(m_size, second.m_size);
+    swap(m_batch_size, second.m_batch_size);
+    swap(m_stride, second.m_stride);
+    swap(m_pinned, second.m_pinned);
 }
 
 char* buffer_fixed_size_elements::get_item(size_t index)
@@ -165,8 +167,10 @@ void buffer_fixed_size_elements::allocate()
 #endif
 }
 
-buffer_fixed_size_elements::~buffer_fixed_size_elements()
+void buffer_fixed_size_elements::deallocate()
 {
+    if(m_data == nullptr)
+        return;
 #if HAS_GPU
     if (m_pinned)
     {
@@ -229,6 +233,11 @@ static void transpose_buf(
         break;
     default: throw "unsupported type";
     }
+}
+
+buffer_fixed_size_elements::~buffer_fixed_size_elements()
+{
+    deallocate();
 }
 
 void fixed_buffer_map::copy(fixed_buffer_map& src,
