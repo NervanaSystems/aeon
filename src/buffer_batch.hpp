@@ -204,7 +204,6 @@ public:
 
     fixed_buffer_map& operator = (fixed_buffer_map&& buffer) noexcept
     {
-        std::cout << "= &&" << std::endl;
         clear();
         m_data = buffer.m_data;
         m_names = buffer.m_names;

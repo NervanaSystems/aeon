@@ -74,7 +74,7 @@ TEST(loader_remote, new_session_scenario)
 
     // testing iteration
     {
-        auto fbm = make_shared<nervana::fixed_buffer_map>();
+        auto fbm            = make_shared<nervana::fixed_buffer_map>();
         auto expected_batch = service_response<next_response>(status_success, next_response(fbm));
         auto expected_end_of_data = service_response<next_response>(
             service_status(service_status_type::END_OF_DATASET, ""), next_response());
@@ -86,23 +86,18 @@ TEST(loader_remote, new_session_scenario)
             EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
             EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_end_of_data));
 
-            int index = 0;
             for (const auto& batch : loader)
             {
-                if (index == 0)
-                {
-                    ostringstream batch_serialized, fbm_serialized;
-                    batch.serialize(batch_serialized);
-                    fbm->serialize(fbm_serialized);
-                    EXPECT_EQ(batch_serialized.str(), fbm_serialized.str());
-                }
-                index++;
+                ostringstream batch_serialized, fbm_serialized;
+                batch.serialize(batch_serialized);
+                fbm->serialize(fbm_serialized);
+                EXPECT_EQ(batch_serialized.str(), fbm_serialized.str());
             }
         }
 
         // reset successful
         {
-            // batch is retrieved, because iteration has finished in previous step
+            // batch is retrieved, because m_batch_to_fetch is set to true - this test will be changed after removing c++-like iterator
             EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
             loader.get_current_iter();
 
@@ -160,7 +155,7 @@ TEST(loader_remote, shared_session_scenario)
 
     // testing iteration
     {
-        auto fbm = make_shared<nervana::fixed_buffer_map>();
+        auto fbm            = make_shared<nervana::fixed_buffer_map>();
         auto expected_batch = service_response<next_response>(status_success, next_response(fbm));
         auto expected_end_of_data = service_response<next_response>(
             service_status(service_status_type::END_OF_DATASET, ""), next_response());
@@ -171,23 +166,100 @@ TEST(loader_remote, shared_session_scenario)
 
         // iteration
         {
-            int index = 0;
             for (const auto& batch : loader)
             {
-                if (index == 0)
-                {
-                    ostringstream batch_serialized, fbm_serialized;
-                    batch.serialize(batch_serialized);
-                    fbm->serialize(fbm_serialized);
-                    EXPECT_EQ(batch_serialized.str(), fbm_serialized.str());
-                }
-                index++;
+                ostringstream batch_serialized, fbm_serialized;
+                batch.serialize(batch_serialized);
+                fbm->serialize(fbm_serialized);
+                EXPECT_EQ(batch_serialized.str(), fbm_serialized.str());
             }
         }
 
         // reset does nothing in case of shared session
         {
             loader.reset();
+        }
+    }
+}
+
+TEST(loader_remote, service_async)
+{
+    auto           mock                    = make_shared<mock_service>();
+    auto           my_service_async_source = make_shared<service_async_source>(mock);
+    auto           my_service              = make_shared<service_async>(my_service_async_source);
+    json           config       = {{"server", {"address", "localhost"}, {"port", 34568}}};
+    string         session_id   = "123";
+    auto           nas          = get_names_and_shapes();
+    int            batch_size   = 64;
+    int            batch_count  = 3;
+    int            record_count = batch_size * batch_count;
+    service_status status_success(service_status_type::SUCCESS, "");
+
+    auto expected_create_session = service_response<string>(status_success, session_id);
+    auto expected_nas            = service_response<names_and_shapes>(status_success, nas);
+    auto expected_record_count   = service_response<int>(status_success, record_count);
+    auto expected_batch_size     = service_response<int>(status_success, batch_size);
+    auto expected_batch_count    = service_response<int>(status_success, batch_count);
+    EXPECT_CALL(*mock, create_session(config.dump())).WillOnce(Return(expected_create_session));
+    EXPECT_CALL(*mock, get_names_and_shapes(session_id)).WillOnce(Return(expected_nas));
+    EXPECT_CALL(*mock, get_record_count(session_id)).WillOnce(Return(expected_record_count));
+    EXPECT_CALL(*mock, get_batch_size(session_id)).WillOnce(Return(expected_batch_size));
+    EXPECT_CALL(*mock, get_batch_count(session_id)).WillOnce(Return(expected_batch_count));
+
+    loader_remote loader(my_service, config.dump());
+
+    EXPECT_EQ(loader.get_names_and_shapes(), nas);
+    EXPECT_EQ(loader.record_count(), record_count);
+    EXPECT_EQ(loader.batch_size(), batch_size);
+    EXPECT_EQ(loader.batch_count(), batch_count);
+    EXPECT_EQ(loader.get_current_config(), config);
+
+    // testing iteration
+    {
+        auto fbm            = make_shared<nervana::fixed_buffer_map>();
+        auto expected_batch = service_response<next_response>(status_success, next_response(fbm));
+        auto expected_end_of_data = service_response<next_response>(
+            service_status(service_status_type::END_OF_DATASET, ""), next_response());
+
+         //iteration
+        {
+            testing::InSequence dummy;
+            EXPECT_CALL(*mock, reset_session(session_id)).WillOnce(Return(status_success));
+            EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
+            EXPECT_CALL(*mock, get_next(session_id))
+                .WillRepeatedly(Return(expected_end_of_data));
+
+            for (const auto& batch : loader)
+            {
+                ostringstream batch_serialized, fbm_serialized;
+                batch.serialize(batch_serialized);
+                fbm->serialize(fbm_serialized);
+                EXPECT_EQ(batch_serialized.str(), fbm_serialized.str());
+            }
+        }
+
+        // reset successful
+        {
+            // no batch retrieval
+            loader.get_current_iter();
+            EXPECT_EQ(loader.position(), 3);
+
+            EXPECT_CALL(*mock, reset_session(session_id)).WillOnce(Return(status_success));
+            loader.reset();
+
+            testing::InSequence dummy;
+            // reset makes get_current_iter to retrieve data
+            EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
+            EXPECT_CALL(*mock, get_next(session_id)).Times(1).WillRepeatedly(Return(expected_end_of_data));
+            loader.get_current_iter();
+            EXPECT_EQ(loader.position(), 0);
+        }
+
+        // reset unsuccessful
+        {
+            EXPECT_CALL(*mock, reset_session(session_id))
+                .WillOnce(Return(service_status(service_status_type::FAILURE, "some message")));
+            EXPECT_THROW(loader.reset(), runtime_error);
         }
     }
 }
