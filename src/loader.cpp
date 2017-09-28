@@ -47,7 +47,6 @@ loader_config::loader_config(nlohmann::json js)
         block_size = 2 * batch_size;
     }
 
-    set_global_random_seed(random_seed);
     validate();
 }
 
@@ -106,8 +105,11 @@ void loader::initialize(nlohmann::json& config_json)
     sox_format_init();
 
     // the manifest defines which data should be included in the dataset
-    m_manifest = make_shared<manifest_file>(
-        lcfg.manifest_filename, lcfg.shuffle_manifest, lcfg.manifest_root, lcfg.subset_fraction);
+    m_manifest = make_shared<manifest_file>(lcfg.manifest_filename,
+                                            lcfg.shuffle_manifest,
+                                            lcfg.manifest_root,
+                                            lcfg.subset_fraction,
+                                            lcfg.random_seed);
 
     // TODO: make the constructor throw this error
     if (m_manifest->record_count() == 0)
@@ -132,8 +134,11 @@ void loader::initialize(nlohmann::json& config_json)
 
     m_block_loader = make_shared<block_loader_file>(m_manifest.get(), lcfg.block_size);
 
-    m_block_manager = make_shared<block_manager>(
-        m_block_loader.get(), lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_enable);
+    m_block_manager = make_shared<block_manager>(m_block_loader.get(),
+                                                 lcfg.block_size,
+                                                 lcfg.cache_directory,
+                                                 lcfg.shuffle_enable,
+                                                 lcfg.random_seed);
 
     m_provider = provider_factory::create(config_json);
 
@@ -147,15 +152,20 @@ void loader::initialize(nlohmann::json& config_json)
                                                    static_cast<size_t>(lcfg.batch_size),
                                                    lcfg.decode_thread_count,
                                                    lcfg.pinned,
-                                                   m_provider);
+                                                   m_provider,
+                                                   lcfg.random_seed);
     }
     else
     {
         const int decode_size = threads_num * m_input_multiplier;
         m_batch_iterator      = make_shared<batch_iterator>(m_block_manager.get(), decode_size);
 
-        m_decoder = make_shared<batch_decoder>(
-            m_batch_iterator.get(), decode_size, lcfg.decode_thread_count, lcfg.pinned, m_provider);
+        m_decoder = make_shared<batch_decoder>(m_batch_iterator.get(),
+                                               decode_size,
+                                               lcfg.decode_thread_count,
+                                               lcfg.pinned,
+                                               m_provider,
+                                               lcfg.random_seed);
 
         m_final_stage =
             make_shared<batch_iterator_fbm>(m_decoder.get(), lcfg.batch_size, m_provider);

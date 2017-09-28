@@ -261,24 +261,11 @@ void nervana::affirm(bool cond, const std::string& msg)
     }
 }
 
-void nervana::set_global_random_seed(uint32_t newval)
-{
-    nervana::global_random_seed = newval;
-}
-uint32_t nervana::get_global_random_seed()
-{
-#ifdef DETERMINISTIC_MODE
-    return nervana::global_random_seed;
-#else
-    return random_device{}();
-#endif
-}
-
 namespace nervana
 {
-    thread_local static std::default_random_engine local_random_engine{get_global_random_seed()};
+    thread_local static random_engine_t local_random_engine{random_device{}()};
 }
-std::default_random_engine& nervana::get_thread_local_random_engine()
+nervana::random_engine_t& nervana::get_thread_local_random_engine()
 {
     return local_random_engine;
 }

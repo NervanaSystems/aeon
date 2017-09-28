@@ -71,6 +71,7 @@ public:
     manifest_nds_builder& shard_count(size_t shard_count);
     manifest_nds_builder& shard_index(size_t shard_index);
     manifest_nds_builder& shuffle(bool enable);
+    manifest_nds_builder& seed(uint32_t seed);
     manifest_nds create();
 
 private:
@@ -82,6 +83,7 @@ private:
     size_t      m_shard_count         = 1;
     size_t      m_shard_index         = 0;
     size_t      m_shuffle             = false;
+    uint32_t    m_seed                = 0;
 };
 
 class nervana::manifest_nds : public nervana::async_manager_source<encoded_record_list>,
@@ -140,7 +142,8 @@ private:
                  size_t             elements_per_record,
                  size_t             shard_count,
                  size_t             shard_index,
-                 bool               shuffle);
+                 bool               shuffle,
+                 uint32_t           seed = 0);
 
     static size_t write_data(void* ptr, size_t size, size_t nmemb, void* stream);
 };

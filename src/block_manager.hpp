@@ -40,7 +40,8 @@ public:
     block_manager(block_loader_source* file_loader,
                   size_t               block_size,
                   const std::string&   cache_root,
-                  bool                 enable_shuffle);
+                  bool                 enable_shuffle,
+                  uint32_t             seed = 0);
 
     virtual ~block_manager() { finalize(); }
     encoded_record_list* filler() override;

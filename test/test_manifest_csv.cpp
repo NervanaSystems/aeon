@@ -582,33 +582,40 @@ private:
     vector<string> file_list;
 };
 
-#ifdef DETERMINISTIC_MODE
 TEST(manifest, manifest_shuffle)
 {
-    string           source_dir = file_util::make_temp_directory(test_cache_directory);
+    const uint32_t   seed            = 1234;
+    const size_t     block_size      = 4;
+    const float      subset_fraction = 1.0;
+    string           source_dir      = file_util::make_temp_directory(test_cache_directory);
     manifest_manager manifest_builder{source_dir, 10, 25, 25};
 
     string manifest_root;
 
-    nervana::manifest_file manifest1{manifest_builder.manifest_file(), true, manifest_root};
-    nervana::manifest_file manifest2{manifest_builder.manifest_file(), false, manifest_root};
+    nervana::manifest_file manifest1{
+        manifest_builder.manifest_file(), true, manifest_root, subset_fraction, block_size, seed};
+    nervana::manifest_file manifest2{
+        manifest_builder.manifest_file(), false, manifest_root, subset_fraction, block_size, seed};
 
-    EXPECT_NE(manifest1.get_crc(), manifest2.get_crc());
+    EXPECT_EQ(manifest1.get_crc(), manifest2.get_crc());
 }
 
 TEST(manifest, manifest_shuffle_repeatable)
 {
-    string           source_dir = file_util::make_temp_directory(test_cache_directory);
+    const uint32_t   seed            = 1234;
+    const size_t     block_size      = 4;
+    const float      subset_fraction = 1.0;
+    string           source_dir      = file_util::make_temp_directory(test_cache_directory);
     manifest_manager manifest_builder{source_dir, 10, 25, 25};
 
     string manifest_root;
 
-    nervana::manifest_file manifest1{manifest_builder.manifest_file(), false, manifest_root};
-    nervana::manifest_file manifest2{manifest_builder.manifest_file(), true, manifest_root};
-    nervana::manifest_file manifest3{manifest_builder.manifest_file(), true, manifest_root};
+    nervana::manifest_file manifest1{
+        manifest_builder.manifest_file(), true, manifest_root, subset_fraction, block_size, seed};
+    nervana::manifest_file manifest2{
+        manifest_builder.manifest_file(), true, manifest_root, subset_fraction, block_size, seed};
 
-    EXPECT_NE(manifest1.get_crc(), manifest2.get_crc());
-    EXPECT_EQ(manifest2.get_crc(), manifest3.get_crc());
+    EXPECT_EQ(manifest1.get_crc(), manifest2.get_crc());
 }
 
 TEST(manifest, subset_fraction)
@@ -619,17 +626,19 @@ TEST(manifest, subset_fraction)
     uint32_t manifest1_crc;
     uint32_t manifest2_crc;
 
-    float  subset_fraction  = 0.01;
-    int    block_size       = 4;
-    bool   shuffle_manifest = true;
-    string manifest_root;
+    const uint32_t seed             = 1234;
+    float          subset_fraction  = 0.01;
+    int            block_size       = 4;
+    bool           shuffle_manifest = true;
+    string         manifest_root;
 
     {
         auto manifest = make_shared<nervana::manifest_file>(manifest_builder.manifest_file(),
                                                             shuffle_manifest,
                                                             manifest_root,
                                                             subset_fraction,
-                                                            block_size);
+                                                            block_size,
+                                                            seed);
 
         ASSERT_NE(nullptr, manifest);
 
@@ -641,7 +650,8 @@ TEST(manifest, subset_fraction)
                                                             shuffle_manifest,
                                                             manifest_root,
                                                             subset_fraction,
-                                                            block_size);
+                                                            block_size,
+                                                            seed);
 
         ASSERT_NE(nullptr, manifest);
 
@@ -650,7 +660,6 @@ TEST(manifest, subset_fraction)
 
     EXPECT_EQ(manifest1_crc, manifest2_crc);
 }
-#endif
 
 TEST(manifest, crc_root_dir)
 {

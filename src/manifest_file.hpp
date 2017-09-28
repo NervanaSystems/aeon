@@ -52,13 +52,15 @@ public:
                   bool               shuffle,
                   const std::string& root            = "",
                   float              subset_fraction = 1.0,
-                  size_t             block_size      = 5000);
+                  size_t             block_size      = 5000,
+                  uint32_t           seed            = 0);
 
     manifest_file(std::istream&      stream,
                   bool               shuffle,
                   const std::string& root            = "",
                   float              subset_fraction = 1.0,
-                  size_t             block_size      = 5000);
+                  size_t             block_size      = 5000,
+                  uint32_t           seed            = 0);
 
     virtual ~manifest_file() {}
     typedef std::vector<std::string> record;
@@ -107,7 +109,7 @@ private:
     std::vector<element_t>           m_element_types;
     std::vector<size_t>              m_block_load_sequence;
     bool                             m_shuffle;
-    std::minstd_rand0                m_rnd;
+    std::minstd_rand0                m_random;
     static const std::string         m_file_type_id;
     static const std::string         m_binary_type_id;
     static const std::string         m_string_type_id;

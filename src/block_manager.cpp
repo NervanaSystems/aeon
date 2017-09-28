@@ -25,7 +25,8 @@ using namespace nervana;
 nervana::block_manager::block_manager(block_loader_source* file_loader,
                                       size_t               block_size,
                                       const string&        cache_root,
-                                      bool                 enable_shuffle)
+                                      bool                 enable_shuffle,
+                                      uint32_t             seed)
     : async_manager<encoded_record_list, encoded_record_list>{file_loader, "block_manager"}
     , m_current_block_number{0}
     , m_block_size{file_loader->block_size()}
@@ -38,7 +39,8 @@ nervana::block_manager::block_manager(block_loader_source* file_loader,
                                        file_loader->block_count(),
                                        file_loader->elements_per_record(),
                                        cache_root,
-                                       enable_shuffle));
+                                       enable_shuffle,
+                                       seed));
 }
 
 void block_manager::initialize()

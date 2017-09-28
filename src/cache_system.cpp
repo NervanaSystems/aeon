@@ -31,13 +31,14 @@ cache_system::cache_system(source_uid_t       uid,
                            size_t             block_count,
                            size_t             elements_per_record,
                            const std::string& cache_root,
-                           bool               shuffle_enabled)
+                           bool               shuffle_enabled,
+                           uint32_t           seed)
     : m_block_count(block_count)
     , m_cache_root(cache_root)
     , m_shuffle_enabled(shuffle_enabled)
     , m_elements_per_record(elements_per_record)
     , m_current_block_number{0}
-    , m_random{get_global_random_seed()}
+    , m_random{seed ? seed : random_device{}()}
 {
     m_block_load_sequence.resize(m_block_count);
     iota(m_block_load_sequence.begin(), m_block_load_sequence.end(), 0);

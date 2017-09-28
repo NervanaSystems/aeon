@@ -50,11 +50,12 @@ manifest_file::manifest_file(const string& filename,
                              bool          shuffle,
                              const string& root,
                              float         subset_fraction,
-                             size_t        block_size)
+                             size_t        block_size,
+                             uint32_t      seed)
     : m_source_filename(filename)
     , m_record_count{0}
     , m_shuffle{shuffle}
-    , m_rnd{0} //get_global_random_seed()}
+    , m_random{seed ? seed : random_device{}()}
 {
     // for now parse the entire manifest on creation
     ifstream infile(m_source_filename);
@@ -71,10 +72,11 @@ manifest_file::manifest_file(std::istream&      stream,
                              bool               shuffle,
                              const std::string& root,
                              float              subset_fraction,
-                             size_t             block_size)
+                             size_t             block_size,
+                             uint32_t           seed)
     : m_record_count{0}
     , m_shuffle{shuffle}
-    , m_rnd{0} //get_global_random_seed()}
+    , m_random{seed ? seed : random_device{}()}
 {
     initialize(stream, block_size, root, subset_fraction);
 }
@@ -203,8 +205,7 @@ void manifest_file::initialize(std::istream&      stream,
     m_crc_engine.TruncatedFinal((uint8_t*)&m_computed_crc, sizeof(m_computed_crc));
 
     if (m_shuffle)
-        std::shuffle(
-            record_list.begin(), record_list.end(), std::mt19937(get_global_random_seed()));
+        std::shuffle(record_list.begin(), record_list.end(), m_random);
 
     if (!root.empty())
     {
@@ -259,7 +260,7 @@ void manifest_file::reset()
 {
     if (m_shuffle)
     {
-        shuffle(m_block_load_sequence.begin(), m_block_load_sequence.end(), m_rnd);
+        shuffle(m_block_load_sequence.begin(), m_block_load_sequence.end(), m_random);
     }
     m_counter = 0;
 }

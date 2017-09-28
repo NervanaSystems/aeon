@@ -33,7 +33,8 @@ public:
                  size_t             block_count,
                  size_t             elements_per_record,
                  const std::string& cache_root,
-                 bool               shuffle_enabled);
+                 bool               shuffle_enabled,
+                 uint32_t           seed = 0);
     ~cache_system();
     void load_block(encoded_record_list& buffer);
     void store_block(const encoded_record_list& buffer);

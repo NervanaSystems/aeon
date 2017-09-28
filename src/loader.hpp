@@ -58,7 +58,7 @@ public:
     bool                        shuffle_enable       = false;
     bool                        shuffle_manifest     = false;
     bool                        pinned               = false;
-    int                         random_seed          = 0;
+    uint32_t                    random_seed          = 0;
     uint32_t                    decode_thread_count  = 0;
     std::string                 iteration_mode       = "ONCE";
     int                         iteration_mode_count = 0;

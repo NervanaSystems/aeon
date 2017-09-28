@@ -142,12 +142,8 @@ namespace nervana
 
     void affirm(bool cond, const std::string& msg);
 
-    static uint32_t global_random_seed = 0;
-
-    void set_global_random_seed(uint32_t newval);
-    uint32_t get_global_random_seed();
-
-    std::default_random_engine& get_thread_local_random_engine();
+    typedef std::minstd_rand0 random_engine_t;
+    random_engine_t& get_thread_local_random_engine();
 
     cv::Mat read_audio_from_mem(const char* item, int itemSize);
 

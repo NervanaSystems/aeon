@@ -24,11 +24,13 @@ batch_decoder::batch_decoder(batch_iterator*                            b_itor,
                              size_t                                     batch_size,
                              uint32_t                                   thread_count,
                              bool                                       pinned,
-                             const std::shared_ptr<provider_interface>& prov)
+                             const std::shared_ptr<provider_interface>& prov,
+                             uint32_t                                   seed)
     : async_manager<encoded_record_list, fixed_buffer_map>(b_itor, "batch_decoder")
     , m_batch_size(batch_size)
     , m_provider(prov)
     , m_thread_pool(this, thread_count, batch_size)
+    , m_deterministic_mode(seed != 0)
 {
     auto oshapes         = prov->get_output_shapes();
     m_number_elements_in = prov->get_input_count();
@@ -41,6 +43,12 @@ batch_decoder::batch_decoder(batch_iterator*                            b_itor,
             m_containers[k].add_item(sz.first, sz.second, batch_size, pinned);
         }
     }
+
+    if (m_deterministic_mode)
+    {
+        m_random.resize(batch_size);
+        for_each(m_random.begin(), m_random.end(), [&](random_engine_t& eng) { eng.seed(seed++); });
+    }
 }
 
 batch_decoder::~batch_decoder()
@@ -50,11 +58,13 @@ batch_decoder::~batch_decoder()
 
 void batch_decoder::process(const int index)
 {
-#ifdef DETERMINISTIC_MODE
-    get_thread_local_random_engine().seed(index + (m_batch_size * m_iteration_number) +
-                                          get_global_random_seed());
-#endif
+    if (m_deterministic_mode)
+        get_thread_local_random_engine() = m_random[index];
+
     m_provider->provide(index, *m_inputs, *m_outputs);
+
+    if (m_deterministic_mode)
+        m_random[index] = get_thread_local_random_engine();
 }
 
 fixed_buffer_map* batch_decoder::filler()

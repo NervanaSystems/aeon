@@ -186,7 +186,7 @@ The possible base loader configurations are the following (configurations withou
    shuffle_manifest (bool) | False | Shuffles manifest file contents
    decode_thread_count (int)| 0 | Number of threads to use. If default value 0 is set, Aeon automatically chooses number of threads to logical number of cores diminished by two. To execute on a single thread, use value of 1
    pinned (bool)| False |
-   random_seed (int)| 0 | Set the random seed.
+   random_seed (uint)| 0 | Set not a zero value if you need to have deterministic output. In that case aeon will always produce the same output for given a particular input.
    iteration_mode (string)|"ONCE"| Can be "ONCE", "COUNT", or "INFINITE"
    iteration_mode_count||
    etl||
