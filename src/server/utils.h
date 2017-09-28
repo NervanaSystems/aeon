@@ -23,24 +23,25 @@
 /**
  * Maximum number of bytes in temporary buffer. It is used for local variables.
  */
-#define BUFFER_MAX          128
+#define BUFFER_MAX 128
 
 /**
  * Maximum number of bytes in write buffer. It is used for local variables when
  * function needs to write a sysfs attribute.
  */
-#define WRITE_BUFFER_SIZE   1024
+#define WRITE_BUFFER_SIZE 1024
 
 /**
  * Verbose level for messages out from application.
  */
-enum verbose_level {
-	VERB_QUIET = 0,
-	VERB_ERROR,
-	VERB_WARN,
-	VERB_INFO,
-	VERB_DEBUG,
-	VERB_ALL
+enum verbose_level
+{
+    VERB_QUIET = 0,
+    VERB_ERROR,
+    VERB_WARN,
+    VERB_INFO,
+    VERB_DEBUG,
+    VERB_ALL
 };
 
 /**
@@ -52,15 +53,16 @@ extern enum verbose_level verbose;
  * This structure describes a device identifier. It consists of major and minor
  * attributes of device.
  */
-struct device_id {
-	int major, minor;
+struct device_id
+{
+    int major, minor;
 };
 
 /**
  * This global variable holds the name of binary file an application has been
  * executed from.
  */
-extern char *progname;
+extern char* progname;
 
 /**
  * @brief Reads integer value from a text file.
@@ -77,7 +79,7 @@ extern char *progname;
  * @return Value read from a file if successful, otherwise a value stored in
  *         defval argument.
  */
-int get_int(const char *path, int defval, const char *name);
+int get_int(const char* path, int defval, const char* name);
 
 /**
  * @brief Reads 64-bit unsigned integer from a text file.
@@ -93,7 +95,7 @@ int get_int(const char *path, int defval, const char *name);
  * @return Value read from a file if successful, otherwise a value stored in
  *         defval argument.
  */
-uint64_t get_uint64(const char *path, uint64_t defval, const char *name);
+uint64_t get_uint64(const char* path, uint64_t defval, const char* name);
 
 /**
  * @brief Reads a content of a text file.
@@ -108,7 +110,7 @@ uint64_t get_uint64(const char *path, uint64_t defval, const char *name);
  *
  * @return Pointer to memory buffer if successful, otherwise NULL pointer.
  */
-char *get_text(const char *path, const char *name);
+char* get_text(const char* path, const char* name);
 
 /**
  * @brief Reads boolean value from a text file.
@@ -125,7 +127,7 @@ char *get_text(const char *path, const char *name);
  * @return Value read from a file if successful, otherwise a value stored in
  *         defval argument. 1 is returned for True, 0 for False.
  */
-int get_bool(const char *path, int defval, const char *name);
+int get_bool(const char* path, int defval, const char* name);
 
 /**
  * @brief Writes a text to file.
@@ -140,7 +142,7 @@ int get_bool(const char *path, int defval, const char *name);
  *
  * @return The number of bytes written or -1 if an error occurred.
  */
-int put_text(const char *path, const char *name, const char *value);
+int put_text(const char* path, const char* name, const char* value);
 
 /**
  * @brief Writes an integer value to a text file.
@@ -155,7 +157,7 @@ int put_text(const char *path, const char *name, const char *value);
  *
  * @return The number of bytes written or -1 if an error occurred.
  */
-int put_int(const char *path, const char *name, int value);
+int put_int(const char* path, const char* name, int value);
 
 /**
  * @brief Scans directory for files.
@@ -183,7 +185,7 @@ void *scan_dir(const char *path);
  *
  * @return Number of bytes written if successful, otherwise -1 for an error.
  */
-int buf_write(const char *path, const char *buf);
+int buf_write(const char* path, const char* buf);
 
 /**
  * @brief Reads the content of a text file.
@@ -199,7 +201,7 @@ int buf_write(const char *path, const char *buf);
  *
  * @return Pointer to memory block if successful, otherwise NULL pointer.
  */
-char *buf_read(const char *path);
+char* buf_read(const char* path);
 
 /**
  * @brief Gets major and minor of device.
@@ -212,7 +214,7 @@ char *buf_read(const char *path);
  *
  * @return The function does not return a value.
  */
-void get_id(const char *buf, struct device_id *did);
+void get_id(const char* buf, struct device_id* did);
 
 /**
  * @brief Open a local log file.
@@ -226,7 +228,7 @@ void get_id(const char *buf, struct device_id *did);
  * @return The function returns 0 if successful, otherwise -1 and errno variable
  *         has additional error information.
  */
-int log_open(const char *path);
+int log_open(const char* path);
 
 /**
  * @brief Close a local log file.
@@ -249,7 +251,7 @@ void log_close(void);
  *
  * @return The function does not return a value.
  */
-void log_error(const char *buf, ...);
+void log_error(const char* buf, ...);
 
 /**
  * @brief Logs a debug message.
@@ -262,7 +264,7 @@ void log_error(const char *buf, ...);
  *
  * @return The function does not return a value.
  */
-void log_debug(const char *buf, ...);
+void log_debug(const char* buf, ...);
 
 /**
  * @brief Logs a warning message.
@@ -275,7 +277,7 @@ void log_debug(const char *buf, ...);
  *
  * @return The function does not return a value.
  */
-void log_warning(const char *buf, ...);
+void log_warning(const char* buf, ...);
 
 /**
  * @brief Logs a information message.
@@ -288,11 +290,11 @@ void log_warning(const char *buf, ...);
  *
  * @return The function does not return a value.
  */
-void log_info(const char *buf, ...);
+void log_info(const char* buf, ...);
 
 /**
  */
-void set_invocation_name(char *invocation_name);
+void set_invocation_name(char* invocation_name);
 
 /**
  * @brief Copies a text buffer.
@@ -306,7 +308,7 @@ void set_invocation_name(char *invocation_name);
  *
  * @return Pointer to destination buffer even if function failed.
  */
-char *str_cpy(char *dest, const char *src, size_t size);
+char* str_cpy(char* dest, const char* src, size_t size);
 
 /**
  * @brief Duplicates a text buffer.
@@ -320,7 +322,7 @@ char *str_cpy(char *dest, const char *src, size_t size);
  *
  * @return Pointer to allocated memory block if successful, otherwise NULL.
  */
-char *str_dup(const char *src);
+char* str_dup(const char* src);
 
 /**
  * @brief Concatenates text buffers.
@@ -339,19 +341,19 @@ char *str_dup(const char *src);
  *
  * @return Pointer to destination buffer even if function failed.
  */
-char *str_cat(char *dest, const char *src, size_t size);
+char* str_cat(char* dest, const char* src, size_t size);
 
 /**
  */
-char *truncate_path_component_rev(const char *path, int index);
+char* truncate_path_component_rev(const char* path, int index);
 
 /**
  */
-char *get_path_component_rev(const char *path, int index);
+char* get_path_component_rev(const char* path, int index);
 
 /**
  * @brief Extracts the 'hostX' part from path.
  */
-char *get_path_hostN(const char *path);
+char* get_path_hostN(const char* path);
 
-#endif				/* _UTILS_H_INCLUDED_ */
+#endif /* _UTILS_H_INCLUDED_ */

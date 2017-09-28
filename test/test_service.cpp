@@ -192,8 +192,8 @@ TEST(service_connector, next)
         auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
         service_connector connector(mock);
 
-        auto buffer_map = make_shared<fixed_buffer_map>();
-        stringstream      serialized_buffer_map;
+        auto         buffer_map = make_shared<fixed_buffer_map>();
+        stringstream serialized_buffer_map;
         buffer_map->serialize(serialized_buffer_map);
         std::vector<char> encoded_buffer_map = nervana::base64::encode(
             serialized_buffer_map.str().data(), serialized_buffer_map.str().size());

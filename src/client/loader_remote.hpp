@@ -42,10 +42,13 @@ namespace nervana
         iterator                end() override { return m_end_iter; }
         iterator&               get_current_iter() override;
         iterator&               get_end_iter() override { return m_end_iter; }
-        const fixed_buffer_map* get_output_buffer() const override { return m_output_buffer_ptr.get(); }
-        const size_t&           position() override { return m_position; }
-        void                    reset() override;
-        nlohmann::json          get_current_config() const override { return m_config; }
+        const fixed_buffer_map* get_output_buffer() const override
+        {
+            return m_output_buffer_ptr.get();
+        }
+        const size_t&  position() override { return m_position; }
+        void           reset() override;
+        nlohmann::json get_current_config() const override { return m_config; }
     private:
         void increment_position() override;
 
@@ -59,19 +62,19 @@ namespace nervana
         void retrieve_batch_count();
         void retrieve_next_batch();
 
-        nlohmann::json                                          m_config;
-        std::string                                             m_session_id;
-        std::shared_ptr<service>                                m_service;
-        iterator                                                m_current_iter;
-        iterator                                                m_end_iter;
-        std::shared_ptr<fixed_buffer_map>                       m_output_buffer_ptr;
-        names_and_shapes                                        m_names_and_shapes;
-        mutable std::vector<std::string>                        m_names;
-        int                                                     m_record_count;
-        int                                                     m_batch_size;
-        int                                                     m_batch_count;
-        size_t                                                  m_position{0};
-        bool                                                    m_shared_session{false};
-        bool                                                    m_batch_to_fetch{true};
+        nlohmann::json                    m_config;
+        std::string                       m_session_id;
+        std::shared_ptr<service>          m_service;
+        iterator                          m_current_iter;
+        iterator                          m_end_iter;
+        std::shared_ptr<fixed_buffer_map> m_output_buffer_ptr;
+        names_and_shapes                  m_names_and_shapes;
+        mutable std::vector<std::string>  m_names;
+        int                               m_record_count;
+        int                               m_batch_size;
+        int                               m_batch_count;
+        size_t                            m_position{0};
+        bool                              m_shared_session{false};
+        bool                              m_batch_to_fetch{true};
     };
 }

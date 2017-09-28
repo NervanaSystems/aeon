@@ -163,8 +163,8 @@ public:
     buffer_fixed_size_elements& operator=(buffer_fixed_size_elements&&) noexcept;
     void move(buffer_fixed_size_elements& second);
 
-    void allocate();
-    void deallocate();
+    void        allocate();
+    void        deallocate();
     const char* get_item(size_t index) const;
     char* get_item(size_t index);
     cv::Mat get_item_as_mat(size_t index, bool channel_major = false) const;
@@ -202,10 +202,10 @@ public:
         std::swap(m_names, buffer.m_names);
     }
 
-    fixed_buffer_map& operator = (fixed_buffer_map&& buffer) noexcept
+    fixed_buffer_map& operator=(fixed_buffer_map&& buffer) noexcept
     {
         clear();
-        m_data = buffer.m_data;
+        m_data  = buffer.m_data;
         m_names = buffer.m_names;
         buffer.m_data.clear();
         buffer.m_names.clear();

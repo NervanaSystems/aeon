@@ -213,5 +213,7 @@ private:
 std::ostream& operator<<(std::ostream& out, const nervana::shape_type& obj);
 std::istream& operator>>(std::istream& in, nervana::shape_type& obj);
 
-std::ostream& operator<<(std::ostream& out, const std::vector<std::pair<std::string, nervana::shape_type>>& obj);
-std::istream& operator>>(std::istream& in, std::vector<std::pair<std::string, nervana::shape_type>>& obj);
+std::ostream& operator<<(std::ostream& out,
+                         const std::vector<std::pair<std::string, nervana::shape_type>>& obj);
+std::istream& operator>>(std::istream& in,
+                         std::vector<std::pair<std::string, nervana::shape_type>>& obj);

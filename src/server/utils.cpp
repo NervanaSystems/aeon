@@ -45,18 +45,18 @@
 
 /**
  */
-#define DEFAULT_LOG_NAME      "/var/log/%s.log"
+#define DEFAULT_LOG_NAME "/var/log/%s.log"
 
 /**
  */
-#define PREFIX_DEBUG          "  DEBUG: "
-#define PREFIX_WARNING        "WARNING: "
-#define PREFIX_INFO           "   INFO: "
-#define PREFIX_ERROR          "  ERROR: "
+#define PREFIX_DEBUG "  DEBUG: "
+#define PREFIX_WARNING "WARNING: "
+#define PREFIX_INFO "   INFO: "
+#define PREFIX_ERROR "  ERROR: "
 
 /**
  */
-#define TIMESTAMP_PATTERN    "0x%08x:0x%08x "
+#define TIMESTAMP_PATTERN "0x%08x:0x%08x "
 
 /**
  */
@@ -65,69 +65,72 @@ enum verbose_level verbose = VERB_WARN;
 /**
  * Name of the executable. It is the last section of invocation path.
  */
-char *progname = NULL;
+char* progname = NULL;
 
 /**
  */
-static FILE *s_log = NULL;
+static FILE* s_log = NULL;
 
 /*
  * Function returns a content of a text file. See utils.h for details.
  */
-char *get_text(const char *path, const char *name)
+char* get_text(const char* path, const char* name)
 {
-	char temp[PATH_MAX];
+    char temp[PATH_MAX];
 
-	str_cpy(temp, path, PATH_MAX);
-	str_cat(temp, PATH_DELIM_STR, PATH_MAX);
-	str_cat(temp, name, PATH_MAX);
+    str_cpy(temp, path, PATH_MAX);
+    str_cat(temp, PATH_DELIM_STR, PATH_MAX);
+    str_cat(temp, name, PATH_MAX);
 
-	return buf_read(temp);
+    return buf_read(temp);
 }
 
 /*
  * Function returns integer value (1 or 0) based on a boolean value ('Y' or 'N')
  * read from a text file. See utils.h for details.
  */
-int get_bool(const char *path, int defval, const char *name)
+int get_bool(const char* path, int defval, const char* name)
 {
-	char *p = get_text(path, name);
-	if (p) {
-		if (*p == 'Y')
-			defval = 1;
-		else if (*p == 'N')
-			defval = 0;
-		free(p);
-	}
-	return defval;
+    char* p = get_text(path, name);
+    if (p)
+    {
+        if (*p == 'Y')
+            defval = 1;
+        else if (*p == 'N')
+            defval = 0;
+        free(p);
+    }
+    return defval;
 }
 
 /*
  * Function returns 64-bit unsigned integer value read from a text file. See
  * utils.h for details.
  */
-uint64_t get_uint64(const char *path, uint64_t defval, const char *name)
+uint64_t get_uint64(const char* path, uint64_t defval, const char* name)
 {
-	char *p = get_text(path, name);
-	if (p) {
-		sscanf(p, "0x%Lx", (long long unsigned int *)&defval);
-		free(p);
-	}
-	return defval;
+    char* p = get_text(path, name);
+    if (p)
+    {
+        sscanf(p, "0x%Lx", (long long unsigned int*)&defval);
+        free(p);
+    }
+    return defval;
 }
 
 /*
  * Function returns integer value read from a text file.
  * See utils.h for details.
  */
-int get_int(const char *path, int defval, const char *name)
+int get_int(const char* path, int defval, const char* name)
 {
-	char *p = get_text(path, name);
-	if (p) {
-		defval = atoi(p);
-		free(p);
-	}
-	return defval;
+    char* p = get_text(path, name);
+    if (p)
+    {
+        defval = atoi(p);
+        free(p);
+    }
+    return defval;
 }
 
 /**
@@ -161,243 +164,257 @@ void *scan_dir(const char *path)
  */
 static int _is_virtual(int dev_type)
 {
-	switch (dev_type) {
-	case 0:		/* sysfs  */
-	case 3:		/* procfs */
-		return 1;
-	}
-	return 0;
+    switch (dev_type)
+    {
+    case 0: /* sysfs  */
+    case 3: /* procfs */ return 1;
+    }
+    return 0;
 }
 
 /**
  */
-int buf_write(const char *path, const char *buf)
+int buf_write(const char* path, const char* buf)
 {
-	int fd, size = -1;
+    int fd, size = -1;
 
-	if (path == NULL)
-		__set_errno_and_return(EINVAL);
-	if ((buf == NULL) || (strlen(buf) == 0))
-		__set_errno_and_return(ENODATA);
-	fd = open(path, O_WRONLY);
-	if (fd >= 0) {
-		size = write(fd, buf, strlen(buf));
-		close(fd);
-	}
-	return size;
+    if (path == NULL)
+        __set_errno_and_return(EINVAL);
+    if ((buf == NULL) || (strlen(buf) == 0))
+        __set_errno_and_return(ENODATA);
+    fd = open(path, O_WRONLY);
+    if (fd >= 0)
+    {
+        size = write(fd, buf, strlen(buf));
+        close(fd);
+    }
+    return size;
 }
 
 /**
  */
-char *buf_read(const char *path)
+char* buf_read(const char* path)
 {
-	struct stat st;
-	int fd, size;
-	char *buf, *t;
+    struct stat st;
+    int         fd, size;
+    char *      buf, *t;
 
-	if (stat(path, &st) < 0)
-		return NULL;
-	if (st.st_size == 0) {
-		if (!_is_virtual(st.st_dev))
-			return NULL;
-		st.st_size = st.st_blksize;
-	}
-	if (_is_virtual(st.st_dev))
-		st.st_size = st.st_blksize;
-	t = buf = (char*)malloc(st.st_size);
-	if (buf) {
-		fd = open(path, O_RDONLY);
-		if (fd >= 0) {
-			size = read(fd, buf, st.st_size);
-			close(fd);
-			if (size > 0)
-				t = strchrnul(buf, '\n');
-		}
-		*t = '\0';
-	}
-	return buf;
+    if (stat(path, &st) < 0)
+        return NULL;
+    if (st.st_size == 0)
+    {
+        if (!_is_virtual(st.st_dev))
+            return NULL;
+        st.st_size = st.st_blksize;
+    }
+    if (_is_virtual(st.st_dev))
+        st.st_size = st.st_blksize;
+    t = buf = (char*)malloc(st.st_size);
+    if (buf)
+    {
+        fd = open(path, O_RDONLY);
+        if (fd >= 0)
+        {
+            size = read(fd, buf, st.st_size);
+            close(fd);
+            if (size > 0)
+                t = strchrnul(buf, '\n');
+        }
+        *t = '\0';
+    }
+    return buf;
 }
 
 /**
  */
-void get_id(const char *path, struct device_id *did)
+void get_id(const char* path, struct device_id* did)
 {
-	char *t, *p;
+    char *t, *p;
 
-	if (did && path) {
-		did->major = did->minor = -1;
-		p = buf_read(path);
-		if (p) {
-			t = strchr(p, ':');
-			if (t) {
-				*(t++) = '\0';
-				did->major = atoi(p);
-				did->minor = atoi(t);
-			}
-			free(p);
-		}
-	}
+    if (did && path)
+    {
+        did->major = did->minor = -1;
+        p                       = buf_read(path);
+        if (p)
+        {
+            t = strchr(p, ':');
+            if (t)
+            {
+                *(t++)     = '\0';
+                did->major = atoi(p);
+                did->minor = atoi(t);
+            }
+            free(p);
+        }
+    }
 }
 
 /**
  */
 static void _log_timestamp(void)
 {
-	struct timeval t;
-	if (gettimeofday(&t, NULL) == 0) {
-		fprintf(s_log, TIMESTAMP_PATTERN, (int)t.tv_sec,
-			(int)t.tv_usec);
-	}
+    struct timeval t;
+    if (gettimeofday(&t, NULL) == 0)
+    {
+        fprintf(s_log, TIMESTAMP_PATTERN, (int)t.tv_sec, (int)t.tv_usec);
+    }
 }
 
 /**
  */
-static int _mkdir(const char *path)
+static int _mkdir(const char* path)
 {
-	char temp[PATH_MAX];
-	int status = -1;
-	char *t = realpath(path, temp);
-	while (t) {
-		t = strchr(t + 1, PATH_DELIM);
-		if (t)
-			*t = '\0';
-		status = mkdir(temp, 0640);
-		if (t)
-			*t = PATH_DELIM;
-		if ((status < 0) && (errno != EEXIST))
-			break;
-		status = 0;
-	}
-	return status;
+    char  temp[PATH_MAX];
+    int   status = -1;
+    char* t      = realpath(path, temp);
+    while (t)
+    {
+        t = strchr(t + 1, PATH_DELIM);
+        if (t)
+            *t = '\0';
+        status = mkdir(temp, 0640);
+        if (t)
+            *t = PATH_DELIM;
+        if ((status < 0) && (errno != EEXIST))
+            break;
+        status = 0;
+    }
+    return status;
 }
 
 /**
  */
-int log_open(const char *path)
+int log_open(const char* path)
 {
-	if (s_log)
-		log_close();
-	char *t = (char*)rindex(path, PATH_DELIM);
-	if (t)
-		*t = '\0';
-	int status = _mkdir(path);
-	if (t)
-		*t = PATH_DELIM;
-	if (status == 0) {
-		s_log = fopen(path, "a");
-		if (s_log == NULL)
-			return -1;
-	}
-	return status;
+    if (s_log)
+        log_close();
+    char* t = (char*)rindex(path, PATH_DELIM);
+    if (t)
+        *t     = '\0';
+    int status = _mkdir(path);
+    if (t)
+        *t = PATH_DELIM;
+    if (status == 0)
+    {
+        s_log = fopen(path, "a");
+        if (s_log == NULL)
+            return -1;
+    }
+    return status;
 }
 
 /**
  */
 void log_close(void)
 {
-	if (s_log) {
-		fflush(s_log);
-		fclose(s_log);
-		s_log = NULL;
-	}
-	closelog();
+    if (s_log)
+    {
+        fflush(s_log);
+        fclose(s_log);
+        s_log = NULL;
+    }
+    closelog();
 }
 
 /**
  */
 static void _log_open_default(void)
 {
-	char temp[PATH_MAX];
-	sprintf(temp, DEFAULT_LOG_NAME, progname);
-	log_open(temp);
+    char temp[PATH_MAX];
+    sprintf(temp, DEFAULT_LOG_NAME, progname);
+    log_open(temp);
 }
 
 /**
  */
-void log_debug(const char *buf, ...)
+void log_debug(const char* buf, ...)
 {
-	va_list vl;
+    va_list vl;
 
-	if (s_log == NULL)
-		_log_open_default();
-	if (s_log && (verbose >= VERB_DEBUG)) {
-		_log_timestamp();
-		fprintf(s_log, PREFIX_DEBUG);
-		va_start(vl, buf);
-		vfprintf(s_log, buf, vl);
-		va_end(vl);
-		fprintf(s_log, "\n");
-		fflush(s_log);
-		va_start(vl, buf);
-		vsyslog(LOG_DEBUG, buf, vl);
-		va_end(vl);
-	}
+    if (s_log == NULL)
+        _log_open_default();
+    if (s_log && (verbose >= VERB_DEBUG))
+    {
+        _log_timestamp();
+        fprintf(s_log, PREFIX_DEBUG);
+        va_start(vl, buf);
+        vfprintf(s_log, buf, vl);
+        va_end(vl);
+        fprintf(s_log, "\n");
+        fflush(s_log);
+        va_start(vl, buf);
+        vsyslog(LOG_DEBUG, buf, vl);
+        va_end(vl);
+    }
 }
 
 /**
  */
-void log_error(const char *buf, ...)
+void log_error(const char* buf, ...)
 {
-	va_list vl;
+    va_list vl;
 
-	if (s_log == NULL)
-		_log_open_default();
-	if (s_log && (verbose >= VERB_ERROR)) {
-		_log_timestamp();
-		fprintf(s_log, PREFIX_ERROR);
-		va_start(vl, buf);
-		vfprintf(s_log, buf, vl);
-		va_end(vl);
-		fprintf(s_log, END_LINE_STR);
-		fflush(s_log);
-		va_start(vl, buf);
-		vsyslog(LOG_ERR, buf, vl);
-		va_end(vl);
-	}
+    if (s_log == NULL)
+        _log_open_default();
+    if (s_log && (verbose >= VERB_ERROR))
+    {
+        _log_timestamp();
+        fprintf(s_log, PREFIX_ERROR);
+        va_start(vl, buf);
+        vfprintf(s_log, buf, vl);
+        va_end(vl);
+        fprintf(s_log, END_LINE_STR);
+        fflush(s_log);
+        va_start(vl, buf);
+        vsyslog(LOG_ERR, buf, vl);
+        va_end(vl);
+    }
 }
 
 /**
  */
-void log_warning(const char *buf, ...)
+void log_warning(const char* buf, ...)
 {
-	va_list vl;
+    va_list vl;
 
-	if (s_log == NULL)
-		_log_open_default();
-	if (s_log && (verbose >= VERB_WARN)) {
-		_log_timestamp();
-		fprintf(s_log, PREFIX_WARNING);
-		va_start(vl, buf);
-		vfprintf(s_log, buf, vl);
-		va_end(vl);
-		fprintf(s_log, END_LINE_STR);
-		fflush(s_log);
-		va_start(vl, buf);
-		vsyslog(LOG_WARNING, buf, vl);
-		va_end(vl);
-	}
+    if (s_log == NULL)
+        _log_open_default();
+    if (s_log && (verbose >= VERB_WARN))
+    {
+        _log_timestamp();
+        fprintf(s_log, PREFIX_WARNING);
+        va_start(vl, buf);
+        vfprintf(s_log, buf, vl);
+        va_end(vl);
+        fprintf(s_log, END_LINE_STR);
+        fflush(s_log);
+        va_start(vl, buf);
+        vsyslog(LOG_WARNING, buf, vl);
+        va_end(vl);
+    }
 }
 
 /**
  */
-void log_info(const char *buf, ...)
+void log_info(const char* buf, ...)
 {
-	va_list vl;
+    va_list vl;
 
-	if (s_log == NULL)
-		_log_open_default();
-	if (s_log && (verbose >= VERB_INFO)) {
-		_log_timestamp();
-		fprintf(s_log, PREFIX_INFO);
-		va_start(vl, buf);
-		vfprintf(s_log, buf, vl);
-		va_end(vl);
-		fprintf(s_log, END_LINE_STR);
-		fflush(s_log);
-		va_start(vl, buf);
-		vsyslog(LOG_INFO, buf, vl);
-		va_end(vl);
-	}
+    if (s_log == NULL)
+        _log_open_default();
+    if (s_log && (verbose >= VERB_INFO))
+    {
+        _log_timestamp();
+        fprintf(s_log, PREFIX_INFO);
+        va_start(vl, buf);
+        vfprintf(s_log, buf, vl);
+        va_end(vl);
+        fprintf(s_log, END_LINE_STR);
+        fflush(s_log);
+        va_start(vl, buf);
+        vsyslog(LOG_INFO, buf, vl);
+        va_end(vl);
+    }
 }
 
 /**
@@ -411,96 +428,98 @@ void log_info(const char *buf, ...)
  *
  * @return The function does not return a value.
  */
-void set_invocation_name(char *invocation_name)
+void set_invocation_name(char* invocation_name)
 {
 #ifdef program_invocation_short_name
-	(void)invocation_name;
-	progname = program_invocation_short_name;
+    (void)invocation_name;
+    progname = program_invocation_short_name;
 #else
-	char *t = rindex(invocation_name, PATH_DELIM);
-	if (t)
-		progname = t + 1;
-	else
-		progname = invocation_name;
-#endif				/* program_invocation_short_name */
+    char* t = rindex(invocation_name, PATH_DELIM);
+    if (t)
+        progname = t + 1;
+    else
+        progname = invocation_name;
+#endif /* program_invocation_short_name */
 }
 
 /**
  */
-char *str_cpy(char *dest, const char *src, size_t size)
+char* str_cpy(char* dest, const char* src, size_t size)
 {
-	strncpy(dest, src, size - 1);
-	dest[size - 1] = '\0';
-	return dest;
+    strncpy(dest, src, size - 1);
+    dest[size - 1] = '\0';
+    return dest;
 }
 
 /**
  */
-char *str_dup(const char *src)
+char* str_dup(const char* src)
 {
-	if (src && (strlen(src) > 0))
-		return strdup(src);
-	return NULL;
+    if (src && (strlen(src) > 0))
+        return strdup(src);
+    return NULL;
 }
 
 /**
  */
-char *str_cat(char *dest, const char *src, size_t size)
+char* str_cat(char* dest, const char* src, size_t size)
 {
-	int t = strlen(dest);
-	strncat(dest, src, size - t);
-	if (t + strlen(src) >= size)
-		dest[size - 1] = '\0';
-	return dest;
+    int t = strlen(dest);
+    strncat(dest, src, size - t);
+    if (t + strlen(src) >= size)
+        dest[size - 1] = '\0';
+    return dest;
 }
 
-char *get_path_hostN(const char *path)
+char* get_path_hostN(const char* path)
 {
-	char *c = NULL, *s = NULL, *p = strdup(path);
-	if (!p)
-		return NULL;
-	c = strstr(p, "host");
-	if (!c)
-		goto end;
-	s = strchr(c, '/');
-	if (!s)
-		goto end;
-	*s = 0;
-	s = strdup(c);
- end:
-	free(p);
-	return s;
+    char *c = NULL, *s = NULL, *p = strdup(path);
+    if (!p)
+        return NULL;
+    c = strstr(p, "host");
+    if (!c)
+        goto end;
+    s = strchr(c, '/');
+    if (!s)
+        goto end;
+    *s = 0;
+    s  = strdup(c);
+end:
+    free(p);
+    return s;
 }
 
-char *get_path_component_rev(const char *path, int index)
+char* get_path_component_rev(const char* path, int index)
 {
-	int i;
-	char *c = NULL, *p = strdup(path);
-	char *result = NULL;
-	for (i = 0; i <= index; i++) {
-		if (c)
-			*c = '\0';
-		c = strrchr(p, '/');
-	}
-	if (c)
-		result = strdup(c + 1);
-	free(p);
-	return result;
+    int   i;
+    char *c = NULL, *p = strdup(path);
+    char* result = NULL;
+    for (i = 0; i <= index; i++)
+    {
+        if (c)
+            *c = '\0';
+        c      = strrchr(p, '/');
+    }
+    if (c)
+        result = strdup(c + 1);
+    free(p);
+    return result;
 }
 
-char *truncate_path_component_rev(const char *path, int index)
+char* truncate_path_component_rev(const char* path, int index)
 {
-	int i;
-	char *c = NULL, *p = str_dup(path);
-	if (!p)
-		return NULL;
+    int   i;
+    char *c = NULL, *p = str_dup(path);
+    if (!p)
+        return NULL;
 
-	for (i = 0; i <= index; i++) {
-		if (c)
-			*c = '\0';
-		c = strrchr(p, '/');
-	}
-	c = strdup(p);
-	free(p);
-	return c;
+    for (i = 0; i <= index; i++)
+    {
+        if (c)
+            *c = '\0';
+        c      = strrchr(p, '/');
+    }
+    c = strdup(p);
+    free(p);
+    return c;
 }

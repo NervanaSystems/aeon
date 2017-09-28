@@ -123,8 +123,8 @@ TEST(block_loader_file, iterate_batch)
 
     // each call to next() will yield pointer to variable buffer_array
     //   which is vector of encoded_record_list
-    auto           block_loader  = make_shared<block_loader_file>(manifest, block_size);
-    auto           block_mgr = make_shared<block_manager>(block_loader, block_size, "", false);
+    auto           block_loader = make_shared<block_loader_file>(manifest, block_size);
+    auto           block_mgr    = make_shared<block_manager>(block_loader, block_size, "", false);
     batch_iterator batch_iterator(block_mgr, batch_size);
 
     auto batch_count = record_count / batch_size;

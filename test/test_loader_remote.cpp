@@ -221,13 +221,12 @@ TEST(loader_remote, service_async)
         auto expected_end_of_data = service_response<next_response>(
             service_status(service_status_type::END_OF_DATASET, ""), next_response());
 
-         //iteration
+        //iteration
         {
             testing::InSequence dummy;
             EXPECT_CALL(*mock, reset_session(session_id)).WillOnce(Return(status_success));
             EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
-            EXPECT_CALL(*mock, get_next(session_id))
-                .WillRepeatedly(Return(expected_end_of_data));
+            EXPECT_CALL(*mock, get_next(session_id)).WillRepeatedly(Return(expected_end_of_data));
 
             for (const auto& batch : loader)
             {
@@ -250,7 +249,9 @@ TEST(loader_remote, service_async)
             testing::InSequence dummy;
             // reset makes get_current_iter to retrieve data
             EXPECT_CALL(*mock, get_next(session_id)).WillOnce(Return(expected_batch));
-            EXPECT_CALL(*mock, get_next(session_id)).Times(1).WillRepeatedly(Return(expected_end_of_data));
+            EXPECT_CALL(*mock, get_next(session_id))
+                .Times(1)
+                .WillRepeatedly(Return(expected_end_of_data));
             loader.get_current_iter();
             EXPECT_EQ(loader.position(), 0);
         }

@@ -29,7 +29,8 @@ namespace nervana
         curl_connector() = delete;
         ~curl_connector();
 
-        http_response get(const std::string& endpoint, const http_query_t& query = http_query_t()) override;
+        http_response get(const std::string&  endpoint,
+                          const http_query_t& query = http_query_t()) override;
         http_response post(const std::string& endpoint, const std::string& body = "") override;
         http_response post(const std::string& endpoint, const http_query_t& query) override;
 

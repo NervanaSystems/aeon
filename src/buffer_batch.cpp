@@ -88,7 +88,7 @@ buffer_fixed_size_elements& buffer_fixed_size_elements::
 void buffer_fixed_size_elements::move(buffer_fixed_size_elements& second)
 {
     deallocate();
-    m_data = second.m_data;
+    m_data        = second.m_data;
     second.m_data = nullptr;
 
     using std::swap;
@@ -169,7 +169,7 @@ void buffer_fixed_size_elements::allocate()
 
 void buffer_fixed_size_elements::deallocate()
 {
-    if(m_data == nullptr)
+    if (m_data == nullptr)
         return;
 #if HAS_GPU
     if (m_pinned)

@@ -24,7 +24,7 @@
 
 /**
  */
-#define _HAVE_DMALLOC_H        0
+#define _HAVE_DMALLOC_H 0
 
 /**
  * @brief Sets errno variable and returns.
@@ -35,30 +35,34 @@
  *
  * @return The macro does not return a value.
  */
-#define __set_errno_and_return(__val) { errno = (__val); return -1; }
+#define __set_errno_and_return(__val)                                                              \
+    {                                                                                              \
+        errno = (__val);                                                                           \
+        return -1;                                                                                 \
+    }
 
 /**
  */
-#define PATH_DELIM          '/'
+#define PATH_DELIM '/'
 
 /**
  */
-#define PATH_DELIM_STR      "/"
+#define PATH_DELIM_STR "/"
 
 /**
  */
-#define PATH_SEP            ':'
+#define PATH_SEP ':'
 
 /**
  */
-#define PATH_SEP_STR        ":"
+#define PATH_SEP_STR ":"
 
 /**
  */
-#define END_LINE            ('\n')
+#define END_LINE ('\n')
 
 /**
  */
-#define END_LINE_STR        "\n"
+#define END_LINE_STR "\n"
 
-#endif				/* _CONFIG_H_INCLUDED_ */
+#endif /* _CONFIG_H_INCLUDED_ */

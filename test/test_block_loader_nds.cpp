@@ -55,13 +55,13 @@ TEST(block_loader_nds, curl_stream)
     size_t block_size          = 16;
     size_t elements_per_record = 2;
 
-    shared_ptr<manifest_nds> client (manifest_nds_builder()
-                              .base_url("http://127.0.0.1:5000")
-                              .token("token")
-                              .collection_id(1)
-                              .block_size(block_size)
-                              .elements_per_record(elements_per_record)
-                              .create());
+    shared_ptr<manifest_nds> client(manifest_nds_builder()
+                                        .base_url("http://127.0.0.1:5000")
+                                        .token("token")
+                                        .collection_id(1)
+                                        .block_size(block_size)
+                                        .elements_per_record(elements_per_record)
+                                        .create());
 
     stringstream stream;
     client->m_network_client.get("http://127.0.0.1:5000/test_pattern/", stream);
@@ -113,12 +113,12 @@ TEST(block_loader_nds, curl_stream_error)
     size_t elements_per_record = 2;
 
     shared_ptr<manifest_nds> client(manifest_nds_builder()
-                              .base_url("http://127.0.0.1:5000")
-                              .token("token")
-                              .collection_id(1)
-                              .block_size(block_size)
-                              .elements_per_record(elements_per_record)
-                              .create());
+                                        .base_url("http://127.0.0.1:5000")
+                                        .token("token")
+                                        .collection_id(1)
+                                        .block_size(block_size)
+                                        .elements_per_record(elements_per_record)
+                                        .create());
 
     stringstream stream;
     EXPECT_THROW(client->m_network_client.get("http://127.0.0.1:5000/error", stream),
@@ -131,12 +131,12 @@ TEST(block_loader_nds, record_count)
     size_t elements_per_record = 2;
 
     shared_ptr<manifest_nds> client(manifest_nds_builder()
-                              .base_url("http://127.0.0.1:5000")
-                              .token("token")
-                              .collection_id(1)
-                              .block_size(block_size)
-                              .elements_per_record(elements_per_record)
-                              .create());
+                                        .base_url("http://127.0.0.1:5000")
+                                        .token("token")
+                                        .collection_id(1)
+                                        .block_size(block_size)
+                                        .elements_per_record(elements_per_record)
+                                        .create());
 
     // 200 and 5 are hard coded in the mock nds server
     ASSERT_EQ(client->record_count(), 200);
@@ -150,12 +150,12 @@ TEST(block_loader_nds, cpio)
     size_t block_count         = 3;
 
     shared_ptr<manifest_nds> client(manifest_nds_builder()
-                              .base_url("http://127.0.0.1:5000")
-                              .token("token")
-                              .collection_id(1)
-                              .block_size(block_size)
-                              .elements_per_record(elements_per_record)
-                              .create());
+                                        .base_url("http://127.0.0.1:5000")
+                                        .token("token")
+                                        .collection_id(1)
+                                        .block_size(block_size)
+                                        .elements_per_record(elements_per_record)
+                                        .create());
 
     size_t record_number = 0;
     for (size_t block_number = 0; block_number < block_count; block_number++)

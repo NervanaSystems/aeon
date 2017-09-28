@@ -69,7 +69,7 @@ public:
     uint16_t                    web_server_port      = 0;
     std::vector<nlohmann::json> etl;
     std::vector<nlohmann::json> augmentation;
-    nlohmann::json server;
+    nlohmann::json              server;
 
     loader_config(nlohmann::json js);
 
@@ -141,8 +141,8 @@ public:
     private:
         iterator() = delete;
 
-        loader&          m_current_loader;
-        const bool       m_is_end;
+        loader&    m_current_loader;
+        const bool m_is_end;
     };
 
     virtual ~loader() {}

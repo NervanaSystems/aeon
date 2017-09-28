@@ -94,7 +94,8 @@ fixed_buffer_map& get_fixed_buffer_map()
 {
     auto image_shape = shape_type(vector<size_t>{10, 10, 3}, output_type("uint8_t"));
     auto label_shape = shape_type(vector<size_t>{1}, output_type("uint32_t"));
-    auto write_sizes = std::vector<std::pair<string, shape_type>>{{"image", image_shape}, {"label", label_shape}};
+    auto write_sizes =
+        std::vector<std::pair<string, shape_type>>{{"image", image_shape}, {"label", label_shape}};
     size_t                  batch_size = 1;
     static fixed_buffer_map result(write_sizes, batch_size);
     return result;

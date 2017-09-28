@@ -61,21 +61,22 @@ aeon_server::aeon_server(std::string http_addr)
     uri.append_path(path);
 
     auto addr = uri.to_uri().to_string();
-    
-    m_listener = unique_ptr<web::http::experimental::listener::http_listener>(new web::http::experimental::listener::http_listener(addr));
-    
+
+    m_listener = unique_ptr<web::http::experimental::listener::http_listener>(
+        new web::http::experimental::listener::http_listener(addr));
+
     m_listener->support(methods::POST,
-                       std::bind(&aeon_server::handle_post, this, std::placeholders::_1));
+                        std::bind(&aeon_server::handle_post, this, std::placeholders::_1));
     m_listener->support(methods::GET,
-                       std::bind(&aeon_server::handle_get, this, std::placeholders::_1));
+                        std::bind(&aeon_server::handle_get, this, std::placeholders::_1));
     m_listener->support(methods::DEL,
-                       std::bind(&aeon_server::handle_delete, this, std::placeholders::_1));
+                        std::bind(&aeon_server::handle_delete, this, std::placeholders::_1));
     m_listener->open().wait();
 }
 
 aeon_server::~aeon_server()
 {
-   m_listener->close().wait(); 
+    m_listener->close().wait();
 }
 
 void aeon_server::handle_post(http_request message)
@@ -114,7 +115,7 @@ string loader_adapter::next()
     else
         m_loader.get_current_iter()++;
 
-    if  (m_loader.get_current_iter().positional_end())
+    if (m_loader.get_current_iter().positional_end())
     {
         return string("");
     }
@@ -214,7 +215,8 @@ std::tuple<web::json::value, std::string> server_parser::get(std::string msg)
             if (it == process_func.end())
                 throw std::invalid_argument("Invalid command");
             else
-                return std::make_tuple((this->*it->second)(m_loader_manager.loader(dataset_id)),"");
+                return std::make_tuple((this->*it->second)(m_loader_manager.loader(dataset_id)),
+                                       "");
         }
     }
     catch (exception& ex)
@@ -228,7 +230,7 @@ std::tuple<web::json::value, std::string> server_parser::get(std::string msg)
 
 web::json::value server_parser::del(std::string msg)
 {
-      try
+    try
     {
         if (msg.substr(0, endpoint_prefix.length()) != endpoint_prefix)
             throw std::invalid_argument("Invalid prefix");
@@ -253,8 +255,8 @@ web::json::value server_parser::del(std::string msg)
 std::tuple<web::json::value, std::string> server_parser::next(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
-    string data = loader.next();
-    
+    string           data          = loader.next();
+
     if (!data.empty())
     {
         return make_tuple(response_json, data);
@@ -262,16 +264,16 @@ std::tuple<web::json::value, std::string> server_parser::next(loader_adapter& lo
     else
     {
         response_json["status"]["type"] = web::json::value::string("END_OF_DATASET");
-        return make_tuple(response_json,"");
+        return make_tuple(response_json, "");
     }
 }
 
 web::json::value server_parser::reset(loader_adapter& loader)
 {
     web::json::value response_json = web::json::value::object();
-    
+
     loader.reset();
-    response_json["status"]["type"]           = web::json::value::string("SUCCESS");
+    response_json["status"]["type"] = web::json::value::string("SUCCESS");
 
     return response_json;
 }

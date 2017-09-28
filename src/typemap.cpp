@@ -56,7 +56,8 @@ std::istream& operator>>(std::istream& in, nervana::shape_type& obj)
     return obj.deserialize(in);
 }
 
-std::ostream& operator<<(std::ostream& out, const std::vector<std::pair<std::string, nervana::shape_type>>& obj)
+std::ostream& operator<<(std::ostream& out,
+                         const std::vector<std::pair<std::string, nervana::shape_type>>& obj)
 {
     json json_out;
     for (auto el : obj)
@@ -66,7 +67,8 @@ std::ostream& operator<<(std::ostream& out, const std::vector<std::pair<std::str
     return out;
 }
 
-std::istream& operator>>(std::istream& in, std::vector<std::pair<std::string, nervana::shape_type>>& obj)
+std::istream& operator>>(std::istream& in,
+                         std::vector<std::pair<std::string, nervana::shape_type>>& obj)
 {
     json json_in;
     in >> json_in;

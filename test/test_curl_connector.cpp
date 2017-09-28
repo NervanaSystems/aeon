@@ -137,7 +137,8 @@ TEST(curl_connector, post_query)
         string       var1  = "a b\"c!";
         http_query_t query = {{query1_name, var1}};
         stringstream expected;
-        expected << query1_name << "=" << "a%20b%22c%21";
+        expected << query1_name << "="
+                 << "a%20b%22c%21";
 
         http_response response = connector.post(post_query_page_endpoint, query);
 

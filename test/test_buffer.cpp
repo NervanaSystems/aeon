@@ -117,7 +117,7 @@ TEST(buffer, serialization)
     json image_config = {
         {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
     json label_config = {{"type", "label"}, {"binary", false}};
-    json config = {{"manifest_root", ""},
+    json config       = {{"manifest_root", ""},
                    {"manifest_filename", ""},
                    {"batch_size", batch_size},
                    {"iteration_mode", "INFINITE"},
@@ -133,7 +133,7 @@ TEST(buffer, serialization)
     std::minstd_rand0 rand_items(0);
     for (auto name : fbm.get_names())
     {
-        for (int i = 0; i < fbm[name]->size(); i++)
+        for (int i               = 0; i < fbm[name]->size(); i++)
             fbm[name]->data()[i] = rand_items() % 100 + 32;
     }
 
@@ -168,12 +168,12 @@ TEST(buffer, serialization)
 
     std::vector<std::pair<std::string, nervana::shape_type>> shapes_restored;
     ss_spahes >> shapes_restored;
-    for (auto shape:provider->get_output_shapes())
+    for (auto shape : provider->get_output_shapes())
     {
         bool found = false;
-        for(auto shape_restored : shapes_restored)
+        for (auto shape_restored : shapes_restored)
         {
-            if(std::get<0>(shape_restored) == std::get<0>(shape))
+            if (std::get<0>(shape_restored) == std::get<0>(shape))
             {
                 ASSERT_EQ(std::get<1>(shape), std::get<1>(shape_restored));
                 found = true;
@@ -182,4 +182,3 @@ TEST(buffer, serialization)
         ASSERT_TRUE(found);
     }
 }
-

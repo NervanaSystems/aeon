@@ -23,10 +23,16 @@ using namespace std;
 using namespace nervana;
 
 nervana::block_manager::block_manager(shared_ptr<block_loader_source> file_loader,
+<<<<<<< fb18e5cae53831fd22c0b48aa1c88c944a75ce35
                                       size_t               block_size,
                                       const string&        cache_root,
                                       bool                 enable_shuffle,
                                       uint32_t             seed)
+=======
+                                      size_t                          block_size,
+                                      const string&                   cache_root,
+                                      bool                            enable_shuffle)
+>>>>>>> style changes
     : async_manager<encoded_record_list, encoded_record_list>{file_loader, "block_manager"}
     , m_current_block_number{0}
     , m_block_size{file_loader->block_size()}

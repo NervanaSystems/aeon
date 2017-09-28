@@ -40,11 +40,7 @@ namespace nervana
         // reuse curl connection across requests
     }
 
-    curl_connector::~curl_connector()
-    {
-        curl_global_cleanup();
-    }
-
+    curl_connector::~curl_connector() { curl_global_cleanup(); }
     http_response curl_connector::get(const string& endpoint, const http_query_t& query)
     {
         CURL* curl_handle = curl_easy_init();
@@ -149,7 +145,7 @@ namespace nervana
         // given a url, make an HTTP GET request and fill stream with
         // the body of the response
         stringstream stream;
-        string query_string = query_to_string(query);
+        string       query_string = query_to_string(query);
 
         string url = merge_http_paths(m_address, endpoint);
         curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
@@ -197,7 +193,7 @@ namespace nervana
     size_t curl_connector::read_callback(void* ptr, size_t size, size_t nmemb, void* stream)
     {
         stringstream& ss = *(stringstream*)stream;
-        if(size*nmemb < 1 || ss.eof())
+        if (size * nmemb < 1 || ss.eof())
             return 0;
 
         ss.read(static_cast<char*>(ptr), 1);
@@ -206,7 +202,7 @@ namespace nervana
 
     string curl_connector::url_with_query(const string& url, const nervana::http_query_t& query)
     {
-        if(query.empty())
+        if (query.empty())
             return url;
         return url + "?" + query_to_string(query);
     }
@@ -214,7 +210,7 @@ namespace nervana
     string curl_connector::query_to_string(const http_query_t& query)
     {
         stringstream ss;
-        bool first = true;
+        bool         first = true;
         for (const auto& item : query)
         {
             if (first)
@@ -250,7 +246,7 @@ namespace
 {
     string address_with_port(const string& address, int port)
     {
-        int size = address.size();
+        int          size = address.size();
         stringstream ss;
         if (size > 0 && address[size - 1] == '/')
         {
@@ -263,5 +259,4 @@ namespace
         ss << ":" << port;
         return ss.str();
     }
-
 }

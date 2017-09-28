@@ -94,7 +94,7 @@ TEST(DISABLED_localization_rcnn, example)
                              {"augmentation", {js_aug}}};
 
     loader_factory factory;
-    auto train_set = factory.get_loader(config);
+    auto           train_set = factory.get_loader(config);
 }
 
 TEST(localization_rcnn, generate_anchors)
