@@ -38,10 +38,10 @@ class nervana::block_manager : public async_manager<encoded_record_list, encoded
 {
 public:
     block_manager(std::shared_ptr<block_loader_source> file_loader,
-                  size_t               block_size,
-                  const std::string&   cache_root,
-                  bool                 enable_shuffle,
-                  uint32_t             seed = 0);
+                  size_t                               block_size,
+                  const std::string&                   cache_root,
+                  bool                                 enable_shuffle,
+                  uint32_t                             seed = 0);
 
     virtual ~block_manager() { finalize(); }
     encoded_record_list* filler() override;

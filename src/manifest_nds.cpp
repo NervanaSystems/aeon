@@ -245,24 +245,14 @@ manifest_nds manifest_nds_builder::create()
     }
 
     return unique_ptr<manifest_nds>(new manifest_nds(m_base_url,
-<<<<<<< fb18e5cae53831fd22c0b48aa1c88c944a75ce35
-                        m_token,
-                        m_collection_id,
-                        m_block_size,
-                        m_elements_per_record,
-                        m_shard_count,
-                        m_shard_index,
-                        m_shuffle,
-                        m_seed);
-=======
                                                      m_token,
                                                      m_collection_id,
                                                      m_block_size,
                                                      m_elements_per_record,
                                                      m_shard_count,
                                                      m_shard_index,
-                                                     m_shuffle));
->>>>>>> style changes
+                                                     m_shuffle,
+                                                     m_seed));
 }
 
 std::shared_ptr<manifest_nds> manifest_nds_builder::make_shared()

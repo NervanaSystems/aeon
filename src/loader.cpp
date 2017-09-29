@@ -163,8 +163,11 @@ void loader_local::initialize(const json& config_json)
 
     m_block_loader = make_shared<block_loader_file>(m_manifest, lcfg.block_size);
 
-    m_block_manager = make_shared<block_manager>(
-        m_block_loader, lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_enable, lcfg.random_seed);
+    m_block_manager = make_shared<block_manager>(m_block_loader,
+                                                 lcfg.block_size,
+                                                 lcfg.cache_directory,
+                                                 lcfg.shuffle_enable,
+                                                 lcfg.random_seed);
 
     m_provider = provider_factory::create(config_json);
 
@@ -200,8 +203,12 @@ void loader_local::initialize(const json& config_json)
         const int decode_size = threads_num * m_input_multiplier;
         m_batch_iterator      = make_shared<batch_iterator>(m_block_manager, decode_size);
 
-        m_decoder = make_shared<batch_decoder>(
-            m_batch_iterator, decode_size, lcfg.decode_thread_count, lcfg.pinned, m_provider, lcfg.random_seed);
+        m_decoder = make_shared<batch_decoder>(m_batch_iterator,
+                                               decode_size,
+                                               lcfg.decode_thread_count,
+                                               lcfg.pinned,
+                                               m_provider,
+                                               lcfg.random_seed);
 
         m_final_stage = make_shared<batch_iterator_fbm>(m_decoder, lcfg.batch_size, m_provider);
     }

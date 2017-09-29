@@ -446,7 +446,7 @@ TEST(loader, deterministic)
                              {"augmentation", aug_config},
                              {"random_seed", seed}};
 
-    auto loader = nervana::loader{config};
+    auto loader = nervana::loader_local{config};
     loader.get_current_iter();
     auto& buffer = *loader.get_current_iter();
 
