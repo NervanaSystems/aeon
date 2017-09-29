@@ -25,6 +25,7 @@ The object localization provider (``type=localization_ssd``) is designed to work
     /annotations/0003.json	/image_dir/image0003.jpg
 
 Each annotation is in the JSON format, which should have the main field "object" containing the bounding box in pixel coordinates, class, and difficulty of each object in the image. For example:
+Top-left corner of a bounding box is ``xmin,ymin`` and bottom-right corner is ``xmax,ymax``.
 
 
 .. code-block:: bash
@@ -78,7 +79,7 @@ This provider creates a set of six buffers that are consumed by the SSD model. D
    :delim: |
 
    0 | im_shape | (2, 1) | Shape of the input image.
-   1 | gt_boxes | (N * 4, 1) | Ground truth bounding box coordinates, in normalized coordinates (between 0 and 1, where 1 is the last pixel). Boxes are padded into a larger buffer of size N.
+   1 | gt_boxes | (N * 4, 1) | Ground truth bounding box coordinates, in normalized coordinates (between 0 and 1, where 1 is the last pixel). Boxes are padded into a larger buffer of size N. The format is [xmin,ymin,xmax,ymax].
    2 | num_gt_boxes | (1, 1) | Number of ground truth bounding boxes.
    3 | gt_classes | (N, 1) | Class label for each ground truth box.
    4 | is_difficult | (N, 1) | Indicates if each ground truth box has the difficult metadata property.

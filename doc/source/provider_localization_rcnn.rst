@@ -25,6 +25,7 @@ The object localization provider module (``type=localization_rcnn``) is designed
     /image_dir/image0003.jpg	/annotations/0003.json
 
 Each annotation is in the JSON format, which should have the main field "object" containing the bounding box, class, and difficulty of each object in the image. For example:
+Top-left corner of a bounding box is ``xmin,ymin`` and bottom-right corner is ``xmax,ymax``.
 
 
 .. code-block:: bash
@@ -91,7 +92,7 @@ This provider creates a set of eleven buffers that are consumed by the Faster-RC
    labels | (N, 2 * A) | Target positive/negative labels for the region proposal network.
    labels_mask | (N, 2 * A) | Mask for the labels buffer. Includes ``rois_per_image`` non-zero elements.
    im_shape | (N, 2) | Shape of the input image.
-   gt_boxes | (N, M * 4) | Ground truth bounding box coordinates, already scaled by ``im_scale``. Boxes are padded into a larger buffer.
+   gt_boxes | (N, M * 4) | Ground truth bounding box coordinates, already scaled by ``im_scale``. Boxes are padded into a larger buffer. The format is [xmin,ymin,xmax,ymax].
    num_gt_boxes | (N) | Number of ground truth bounding boxes.
    gt_classes | (N, M) | Class label for each ground truth box.
    im_scale | (N) | Scaling factor that was applied to the image.
