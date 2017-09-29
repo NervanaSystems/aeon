@@ -217,9 +217,8 @@ TEST(localization_ssd, loader)
 
     auto decoded               = make_shared<localization::ssd::decoded>();
     decoded->output_image_size = cv::Size2i(width, height);
-    decoded->gt_boxes          = vector<bbox>{bbox(0.0, 0.0, 1.0, 1.0, true),
-                                     bbox(0.1, 0.2, 0.3, 0.4, true),
-                                     bbox(0.44444, 0.55555, 1.0, 0.99999, true)};
+    decoded->gt_boxes =
+        vector<bbox>{bbox(0.0, 0.0, 99, 99), bbox(10, 20, 30, 40), bbox(44.444, 55.555, 98, 99)};
     decoded->gt_boxes[1].m_difficult = true;
     decoded->gt_boxes[1].m_label     = 1;
     decoded->gt_boxes[2].m_difficult = true;
@@ -248,11 +247,12 @@ TEST(localization_ssd, loader)
     auto difficult_ptr = gt_difficult.get();
     for (int i = 0; i < decoded->gt_boxes.size(); i++)
     {
-        bbox box = decoded->gt_boxes[i];
-        EXPECT_FLOAT_EQ(*boxes_ptr++, box.xmin());
-        EXPECT_FLOAT_EQ(*boxes_ptr++, box.ymin());
-        EXPECT_FLOAT_EQ(*boxes_ptr++, box.xmax());
-        EXPECT_FLOAT_EQ(*boxes_ptr++, box.ymax());
+        bbox box  = decoded->gt_boxes[i];
+        nbox nbox = box.normalize(width, height);
+        EXPECT_FLOAT_EQ(*boxes_ptr++, nbox.xmin());
+        EXPECT_FLOAT_EQ(*boxes_ptr++, nbox.ymin());
+        EXPECT_FLOAT_EQ(*boxes_ptr++, nbox.xmax());
+        EXPECT_FLOAT_EQ(*boxes_ptr++, nbox.ymax());
         EXPECT_EQ(*classes_ptr++, box.label());
         EXPECT_EQ(*difficult_ptr++, box.difficult());
     }
