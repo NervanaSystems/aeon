@@ -28,6 +28,11 @@ using nervana::fixed_buffer_map;
 using nervana::shape_type;
 using nervana::shape_t;
 
+namespace
+{
+    std::exception service_exception(const nervana::service_status& status, const string& action);
+}
+
 nervana::loader_remote::loader_remote(shared_ptr<service> client, const string& config)
     : m_service(client)
     , m_current_iter(*this, false)
@@ -46,8 +51,17 @@ nervana::loader_remote::loader_remote(shared_ptr<service> client, const nlohmann
     initialize();
 }
 
+nervana::loader_remote::~loader_remote()
+{
+    if (!m_shared_session && !m_session_id.empty())
+    {
+        close_session();
+    }
+}
+
 void nervana::loader_remote::initialize()
 {
+    // If there is a session_id provided, we share already created session. Otherwise, we create a new one.
     try
     {
         m_session_id     = m_config.at("server").at("session_id");
@@ -75,9 +89,23 @@ void nervana::loader_remote::create_session()
         response.status.assert_success();
         m_session_id = response.data;
     }
-    catch (const exception& ex)
+    catch (exception& ex)
     {
-        throw runtime_error(string("cannot create service session: ") + ex.what());
+        throw runtime_error(string("cannot create session: ") + ex.what());
+    }
+}
+
+void nervana::loader_remote::close_session()
+{
+    try
+    {
+        service_status status = m_service->close_session(m_session_id);
+        //TODO: uncomment that when close is ready on server side
+        //status.assert_success();
+    }
+    catch (exception& ex)
+    {
+        throw runtime_error(string("cannot close session: ") + ex.what());
     }
 }
 
@@ -109,50 +137,74 @@ const shape_t& nervana::loader_remote::get_shape(const string& name) const
 
 void nervana::loader_remote::retrieve_record_count()
 {
-    auto response = m_service->get_record_count(m_session_id);
-    if (!response.success())
+    try
     {
-        handle_response_failure(response.status);
+        auto response = m_service->get_record_count(m_session_id);
+        response.status.assert_success();
+        m_record_count = response.data;
     }
-    m_record_count = response.data;
+    catch (exception& ex)
+    {
+        throw runtime_error(string("cannot retrieve record count: ") + ex.what());
+    }
 }
 
 void nervana::loader_remote::retrieve_names_and_shapes()
 {
-    auto response = m_service->get_names_and_shapes(m_session_id);
-    if (!response.success())
+    try
     {
+        auto response  = m_service->get_names_and_shapes(m_session_id);
         m_record_count = -1;
-        handle_response_failure(response.status);
+        response.status.assert_success();
+        m_names_and_shapes = response.data;
     }
-    m_names_and_shapes = response.data;
+    catch (exception& ex)
+    {
+        throw runtime_error(string("cannot retrieve names and shapes: ") + ex.what());
+    }
 }
 
 void nervana::loader_remote::retrieve_batch_size()
 {
-    auto response = m_service->get_batch_size(m_session_id);
-    if (!response.success())
+    try
     {
-        m_batch_size = -1;
-        handle_response_failure(response.status);
+        auto response = m_service->get_batch_size(m_session_id);
+        m_batch_size  = -1;
+        response.status.assert_success();
+        m_batch_size = response.data;
     }
-    m_batch_size = response.data;
+    catch (exception& ex)
+    {
+        throw runtime_error(string("cannot retrieve batch size: ") + ex.what());
+    }
 }
 
 void nervana::loader_remote::retrieve_batch_count()
 {
-    auto response = m_service->get_batch_count(m_session_id);
-    if (!response.success())
+    try
     {
+        auto response = m_service->get_batch_count(m_session_id);
         m_batch_count = -1;
-        handle_response_failure(response.status);
+        response.status.assert_success();
+        m_batch_count = response.data;
     }
-    m_batch_count = response.data;
+    catch (exception& ex)
+    {
+        throw runtime_error(string("cannot retrieve batch count: ") + ex.what());
+    }
 }
 
 void nervana::loader_remote::retrieve_next_batch()
 {
-    auto response = m_service->get_next(m_session_id);
+    service_response<next_response> response;
+    try
+    {
+        response = m_service->get_next(m_session_id);
+    }
+    catch (exception& ex)
+    {
+        throw runtime_error(string("cannot retrieve next batch: ") + ex.what());
+    }
     if (response.status.type != service_status_type::SUCCESS)
     {
         if (response.status.type == service_status_type::END_OF_DATASET)
@@ -161,7 +213,7 @@ void nervana::loader_remote::retrieve_next_batch()
         }
         else
         {
-            handle_response_failure(response.status);
+            throw service_exception(response.status, "cannot retrieve next batch");
         }
     }
     const next_response& next = response.data;
@@ -183,7 +235,7 @@ void nervana::loader_remote::reset()
     auto status = m_service->reset_session(m_session_id);
     if (!status.success())
     {
-        handle_response_failure(status);
+        throw service_exception(status, "cannot reset session");
     }
     m_batch_to_fetch = true;
     m_position       = 0;
@@ -205,10 +257,14 @@ void nervana::loader_remote::increment_position()
     retrieve_next_batch();
 }
 
-void nervana::loader_remote::handle_response_failure(const service_status& status)
+namespace
 {
-    stringstream ss;
-    ss << "service response failure."
-       << "status: " << to_string(status.type) << "description: " << status.description;
-    throw std::runtime_error(ss.str());
+    std::exception service_exception(const nervana::service_status& status, const string& action)
+    {
+        stringstream ss;
+        ss << action << ": service response failure ["
+           << "status: " << to_string(status.type) << "; description: " << status.description
+           << "]";
+        throw std::runtime_error(ss.str());
+    }
 }

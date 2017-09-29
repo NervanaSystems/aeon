@@ -106,11 +106,6 @@ nervana::service_status::service_status(const json& input)
     }
 }
 
-string nervana::service_status::to_string() const
-{
-    return nervana::to_string(type) + ": " + description;
-}
-
 nervana::service_connector::service_connector(std::shared_ptr<http_connector> http)
     : m_http(http)
 {
@@ -140,11 +135,10 @@ service_response<string> nervana::service_connector::create_session(const std::s
     return service_response<string>(status, session_id);
 }
 
-//TODO: add UT
 service_status nervana::service_connector::close_session(const std::string& id)
 {
     http_response response = m_http->get(full_endpoint(id + "/close"));
-    if (response.code != http::status_accepted && response.code != http::status_created)
+    if (response.code != http::status_ok)
     {
         throw runtime_error("wrong http status code " + std::to_string(response.code));
     }

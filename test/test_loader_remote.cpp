@@ -121,6 +121,8 @@ TEST(loader_remote, new_session_scenario)
             EXPECT_THROW(loader.reset(), runtime_error);
         }
     }
+
+    EXPECT_CALL(*mock, close_session(session_id)).WillOnce(Return(status_success));
 }
 
 TEST(loader_remote, shared_session_scenario)
@@ -263,4 +265,6 @@ TEST(loader_remote, service_async)
             EXPECT_THROW(loader.reset(), runtime_error);
         }
     }
+
+    EXPECT_CALL(*mock, close_session(session_id)).WillOnce(Return(status_success));
 }

@@ -24,10 +24,10 @@ namespace nervana
     {
     public:
         loader_remote() = delete;
+        ~loader_remote() override;
         explicit loader_remote(std::shared_ptr<service> client, const std::string&);
         explicit loader_remote(std::shared_ptr<service> client, const nlohmann::json&);
 
-        ~loader_remote() override {}
         const std::vector<std::pair<std::string, shape_type>>& get_names_and_shapes() const override
         {
             return m_names_and_shapes;
@@ -50,12 +50,11 @@ namespace nervana
         void           reset() override;
         nlohmann::json get_current_config() const override { return m_config; }
     private:
+        void initialize();
         void increment_position() override;
 
-        void              initialize();
-        [[noreturn]] void handle_response_failure(const service_status& status);
-
         void create_session();
+        void close_session();
         void retrieve_names_and_shapes();
         void retrieve_record_count();
         void retrieve_batch_size();

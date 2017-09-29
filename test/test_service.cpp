@@ -185,6 +185,41 @@ TEST(service_connector, reset)
     }
 }
 
+TEST(service_connector, close)
+{
+    // success scenario
+    {
+        auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
+        service_connector connector(mock);
+
+        json expected_json;
+        expected_json["status"]["type"] = "SUCCESS";
+        auto   expected_response        = http_response(http::status_ok, expected_json.dump());
+        string endpoint                 = "/api/v1/dataset/" + session_id + "/close";
+        EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
+
+        service_status status = connector.close_session(session_id);
+
+        EXPECT_EQ(status.type, service_status_type::SUCCESS);
+    }
+
+    // status type is not success
+    {
+        auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
+        service_connector connector(mock);
+
+        json expected_json;
+        expected_json["status"]["type"] = "FAILURE";
+        auto   expected_response        = http_response(http::status_ok, expected_json.dump());
+        string endpoint                 = "/api/v1/dataset/" + session_id + "/close";
+        EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
+
+        service_status status = connector.close_session(session_id);
+
+        EXPECT_EQ(status.type, service_status_type::FAILURE);
+    }
+}
+
 TEST(service_connector, next)
 {
     // success scenario

@@ -52,14 +52,13 @@ namespace nervana
         {
             if (!success())
             {
-                throw std::runtime_error("service responded without success with status " +
-                                         to_string());
+                throw std::runtime_error("service responded without success status " + to_string());
             }
         }
 
-        std::string         to_string() const;
-        bool                success() { return type == service_status_type::SUCCESS; }
-        bool                failure() { return type != service_status_type::SUCCESS; }
+        std::string to_string() const { return nervana::to_string(type) + ": " + description; }
+        bool        success() { return type == service_status_type::SUCCESS; }
+        bool        failure() { return type != service_status_type::SUCCESS; }
         service_status_type type;
         std::string         description;
     };

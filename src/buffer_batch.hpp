@@ -205,8 +205,8 @@ public:
     fixed_buffer_map& operator=(fixed_buffer_map&& buffer) noexcept
     {
         clear();
-        m_data  = buffer.m_data;
-        m_names = buffer.m_names;
+        m_data  = std::move(buffer.m_data);
+        m_names = std::move(buffer.m_names);
         buffer.m_data.clear();
         buffer.m_names.clear();
 
