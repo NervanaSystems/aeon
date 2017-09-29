@@ -23,6 +23,7 @@ using std::invalid_argument;
 using nlohmann::json;
 
 using bbox = boundingbox::box;
+using nbox = normalized_box::box;
 
 localization::ssd::config::config(nlohmann::json js)
 {
@@ -126,10 +127,11 @@ void localization::ssd::loader::load(const vector<void*>&                       
     for (int i = 0; i < *num_gt_boxes; i++)
     {
         const bbox& gt  = mp->gt_boxes[i];
-        *gt_boxes++     = gt.xmin();
-        *gt_boxes++     = gt.ymin();
-        *gt_boxes++     = gt.xmax();
-        *gt_boxes++     = gt.ymax();
+        const nbox& ngt = gt.normalize(mp->output_image_size.width, mp->output_image_size.height);
+        *gt_boxes++     = ngt.xmin();
+        *gt_boxes++     = ngt.ymin();
+        *gt_boxes++     = ngt.xmax();
+        *gt_boxes++     = ngt.ymax();
         *gt_classes++   = gt.label();
         *gt_difficult++ = gt.difficult();
     }
