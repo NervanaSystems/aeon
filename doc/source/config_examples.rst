@@ -200,7 +200,7 @@ The object localization provider (``type=localization_ssd,image``) is designed t
     ...
     annotations/N.json	image_dir/imageN.jpg
 
-Each annotation is in the JSON format, which should have the main field "object" containing the bounding box in normalized coordinates, class, and difficulty of each object in the image. For example:
+Each annotation is in the JSON format, which should have the main field "object" containing the bounding box in pixel coordinates, class, and difficulty of each object in the image. For example:
 
 .. code-block:: bash
 
@@ -208,20 +208,20 @@ Each annotation is in the JSON format, which should have the main field "object"
        "object": [
            {
                "bndbox": {
-                   "xmax": 0.511,
-                   "xmin": 0.404,
-                   "ymax": 0.146,
-                   "ymin": 0.020
+                   "xmax": 299,
+                   "xmin": 100,
+                   "ymax": 299,
+                   "ymin": 200
                },
                "difficult": false,
                "name": "tvmonitor",
            },
            {
                "bndbox": {
-                   "xmax": 0.841,
-                   "xmin": 0.721,
-                   "ymax": 0.654,
-                   "ymin": 0.248
+                   "xmax": 56,
+                   "xmin": 0,
+                   "ymax": 54,
+                   "ymin": 24
                },
                "difficult": false,
                "name": "person",

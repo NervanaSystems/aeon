@@ -39,8 +39,8 @@ extern gen_image image_dataset;
 using namespace std;
 using namespace nervana;
 
-using bbox  = boundingbox::box;
-using nbbox = normalized_boundingbox::box;
+using bbox = boundingbox::box;
+using nbox = normalized_box::box;
 
 static vector<string> label_list = {"person",
                                     "dog",
@@ -223,28 +223,6 @@ TEST(boundingbox, meet_emit_constraint_min_overlap)
     ASSERT_EQ(tx_boxes.size(), 2);
     EXPECT_EQ(tx_boxes[0].rect(), cv::Rect(0, 0, 10, 1));
     EXPECT_EQ(tx_boxes[1].rect(), cv::Rect(0, 0, 10, 1));
-}
-
-TEST(boundingbox, mixed_boxes)
-{
-    string data = file_util::read_file_to_string(CURDIR "/test_data/mixed_boxes.json");
-    auto   cfg  = make_bbox_config(100);
-    boundingbox::extractor extractor{cfg.label_map};
-    auto                   decoded = extractor.extract(&data[0], data.size());
-    ASSERT_NE(nullptr, decoded);
-    auto boxes = decoded->boxes();
-    ASSERT_EQ(2, boxes.size());
-
-    nbbox expected(0.0, 0.1, 0.5, 0.6, 1);
-    EXPECT_EQ(normalize(decoded->boxes()[1], decoded->width(), decoded->height()), expected);
-}
-
-TEST(boundingbox, wrongly_normalized_box)
-{
-    string data = file_util::read_file_to_string(CURDIR "/test_data/wrongly_normalized_box.json");
-    auto   cfg  = make_bbox_config(100);
-    boundingbox::extractor extractor{cfg.label_map};
-    EXPECT_THROW(extractor.extract(&data[0], data.size()), std::invalid_argument);
 }
 
 TEST(boundingbox, operator_mult)
@@ -783,7 +761,7 @@ TEST(boundingbox, intersect_boundingbox)
 {
     std::vector<std::tuple<bbox, bbox, bbox>> boxes = {
         std::make_tuple(bbox(5, 5, 60, 60), bbox(50, 40, 80, 70), bbox(50, 40, 60, 60)),
-        std::make_tuple(bbox::zerobox(), bbox::zerobox(), bbox::zerobox()),
+        std::make_tuple(bbox(), bbox(), bbox()),
         std::make_tuple(bbox(0, 0, 0, 0), bbox(0, 0, 0, 0), bbox(0, 0, 0, 0)),
         std::make_tuple(
             bbox(0.7, 0.7, 0.7, 0.7), bbox(0.7, 0.7, 0.7, 0.7), bbox(0.7, 0.7, 0.7, 0.7))};
@@ -793,12 +771,12 @@ TEST(boundingbox, intersect_boundingbox)
         stringstream ss;
         ss << " at iteration " << i;
         box exp_b = get<2>(boxes[i]);
-        box int_b = intersect(get<0>(boxes[i]), get<1>(boxes[i]));
+        box int_b = get<0>(boxes[i]).intersect(get<1>(boxes[i]));
         EXPECT_FLOAT_EQ(exp_b.xmin(), int_b.xmin()) << ss.str();
         EXPECT_FLOAT_EQ(exp_b.xmax(), int_b.xmax()) << ss.str();
         EXPECT_FLOAT_EQ(exp_b.ymin(), int_b.ymin()) << ss.str();
         EXPECT_FLOAT_EQ(exp_b.ymax(), int_b.ymax()) << ss.str();
-        int_b = intersect(get<1>(boxes[i]), get<0>(boxes[i]));
+        int_b = get<1>(boxes[i]).intersect(get<0>(boxes[i]));
         EXPECT_FLOAT_EQ(exp_b.xmin(), int_b.xmin()) << ss.str();
         EXPECT_FLOAT_EQ(exp_b.xmax(), int_b.xmax()) << ss.str();
         EXPECT_FLOAT_EQ(exp_b.ymin(), int_b.ymin()) << ss.str();
@@ -806,29 +784,29 @@ TEST(boundingbox, intersect_boundingbox)
     }
 }
 
-TEST(boundingbox, intersect_normalized_boundingbox)
+TEST(normalized_gbox, intersect_normalized_box)
 {
-    nbbox box1(0.0, 0.0, 0.1, 0.1);
-    std::vector<std::tuple<nbbox, nbbox, nbbox>> boxes = {
-        std::make_tuple(box1, nbbox(0.0, 0.0, .05, 0.1), nbbox(0.0, 0.0, .05, 0.1)),
-        std::make_tuple(box1, nbbox(0.0, 0.0, .05, .05), nbbox(0.0, 0.0, .05, .05)),
-        std::make_tuple(box1, nbbox::zerobox(), nbbox::zerobox()),
-        std::make_tuple(box1, nbbox(0.2, 0.2, 0.3, 0.3), nbbox::zerobox()),
-        std::make_tuple(box1, nbbox(0.0, 0.0, 0.1, 0.1), nbbox(0.0, 0.0, 0.1, 0.1)),
-        std::make_tuple(nbbox(0, 0, .6, .6), nbbox(.5, .5, 1., 1.), nbbox(.5, .5, .6, .6)),
-        std::make_tuple(nbbox(0.5, 0.5, 1, 1), nbbox(0, 0, 0.4, 0.4), nbbox::zerobox())};
+    nbox box1(0.0, 0.0, 0.1, 0.1);
+    std::vector<std::tuple<nbox, nbox, nbox>> boxes = {
+        std::make_tuple(box1, nbox(0.0, 0.0, .05, 0.1), nbox(0.0, 0.0, .05, 0.1)),
+        std::make_tuple(box1, nbox(0.0, 0.0, .05, .05), nbox(0.0, 0.0, .05, .05)),
+        std::make_tuple(box1, nbox(), nbox()),
+        std::make_tuple(box1, nbox(0.2, 0.2, 0.3, 0.3), nbox()),
+        std::make_tuple(box1, nbox(0.0, 0.0, 0.1, 0.1), nbox(0.0, 0.0, 0.1, 0.1)),
+        std::make_tuple(nbox(0, 0, .6, .6), nbox(.5, .5, 1., 1.), nbox(.5, .5, .6, .6)),
+        std::make_tuple(nbox(0.5, 0.5, 1, 1), nbox(0, 0, 0.4, 0.4), nbox())};
 
     for (int i = 0; i < boxes.size(); i++)
     {
         stringstream ss;
         ss << " at iteration " << i;
-        nbbox exp_b = get<2>(boxes[i]);
-        nbbox int_b = intersect(get<0>(boxes[i]), get<1>(boxes[i]));
+        nbox exp_b = get<2>(boxes[i]);
+        nbox int_b = get<0>(boxes[i]).intersect(get<1>(boxes[i]));
         EXPECT_FLOAT_EQ(exp_b.xmin(), int_b.xmin()) << ss.str();
         EXPECT_FLOAT_EQ(exp_b.xmax(), int_b.xmax()) << ss.str();
         EXPECT_FLOAT_EQ(exp_b.ymin(), int_b.ymin()) << ss.str();
         EXPECT_FLOAT_EQ(exp_b.ymax(), int_b.ymax()) << ss.str();
-        int_b = intersect(get<1>(boxes[i]), get<0>(boxes[i]));
+        int_b = get<1>(boxes[i]).intersect(get<0>(boxes[i]));
         EXPECT_FLOAT_EQ(exp_b.xmin(), int_b.xmin()) << ss.str();
         EXPECT_FLOAT_EQ(exp_b.xmax(), int_b.xmax()) << ss.str();
         EXPECT_FLOAT_EQ(exp_b.ymin(), int_b.ymin()) << ss.str();
@@ -841,48 +819,48 @@ TEST(boundingbox, jaccard_overlap_boundingbox)
     std::vector<std::tuple<bbox, bbox, float>> boxes = {
         std::make_tuple(
             bbox(0, 0, 60, 60), bbox(50, 50, 100, 100), 11.f * 11 / (61 * 61 + 51 * 51 - 11 * 11)),
-        std::make_tuple(bbox::zerobox(), bbox::zerobox(), 0),
+        std::make_tuple(bbox(), bbox(), 0),
         std::make_tuple(bbox(0, 0, 0, 0), bbox(0, 0, 0, 0), 1)};
     for (int i = 0; i < boxes.size(); i++)
     {
         bbox  b1      = get<0>(boxes[i]);
         bbox  b2      = get<1>(boxes[i]);
         float overlap = get<2>(boxes[i]);
-        EXPECT_FLOAT_EQ(jaccard_overlap(b1, b2), overlap) << "at index " << i;
-        EXPECT_FLOAT_EQ(jaccard_overlap(b2, b1), overlap) << "at index " << i;
+        EXPECT_FLOAT_EQ(b1.jaccard_overlap(b2), overlap) << "at index " << i;
+        EXPECT_FLOAT_EQ(b2.jaccard_overlap(b1), overlap) << "at index " << i;
     }
 }
 
-TEST(boundingbox, jaccard_overlap_normalized_boundingbox)
+TEST(normalized_box, jaccard_overlap_normalized_box)
 {
-    nbbox box1(0, 0, 0.1, 0.1);
-    std::vector<std::tuple<nbbox, nbbox, float>> boxes = {
-        std::make_tuple(box1, nbbox(0.0, 0.0, .05, 0.1), 0.5),
+    nbox box1(0, 0, 0.1, 0.1);
+    std::vector<std::tuple<nbox, nbox, float>> boxes = {
+        std::make_tuple(box1, nbox(0.0, 0.0, .05, 0.1), 0.5),
         std::make_tuple(box1, box1, 1.0),
-        std::make_tuple(box1, nbbox(0.0, 0.0, .05, .05), .25),
-        std::make_tuple(box1, nbbox::zerobox(), 0.0),
-        std::make_tuple(box1, nbbox(0.2, 0.2, 0.3, 0.3), 0.0),
-        std::make_tuple(nbbox(0, 0, 0.6, 0.6),
-                        nbbox(0.5, 0.5, 1, 1),
+        std::make_tuple(box1, nbox(0.0, 0.0, .05, .05), .25),
+        std::make_tuple(box1, nbox(), 0.0),
+        std::make_tuple(box1, nbox(0.2, 0.2, 0.3, 0.3), 0.0),
+        std::make_tuple(nbox(0, 0, 0.6, 0.6),
+                        nbox(0.5, 0.5, 1, 1),
                         0.1 * 0.1 / (0.5 * 0.5 + 0.6 * 0.6 - 0.1 * 0.1))};
     for (int i = 0; i < boxes.size(); i++)
     {
-        nbbox b1      = get<0>(boxes[i]);
-        nbbox b2      = get<1>(boxes[i]);
+        nbox  b1      = get<0>(boxes[i]);
+        nbox  b2      = get<1>(boxes[i]);
         float overlap = get<2>(boxes[i]);
-        EXPECT_FLOAT_EQ(jaccard_overlap(b1, b2), overlap) << "at index " << i;
-        EXPECT_FLOAT_EQ(jaccard_overlap(b2, b1), overlap) << "at index " << i;
+        EXPECT_FLOAT_EQ(b1.jaccard_overlap(b2), overlap) << "at index " << i;
+        EXPECT_FLOAT_EQ(b2.jaccard_overlap(b1), overlap) << "at index " << i;
     }
 }
-TEST(boundingbox, coverage_normalized_boundingbox)
+TEST(normalized_box, coverage_normalized_box)
 {
-    nbbox box1(0, 0, 1, 1);
-    nbbox box2(0, 0, 1, 1);
-    nbbox box3(0, 0, 0.5, 1);
-    nbbox box4(0, 0, 0.5, 0.5);
-    nbbox box5(0.5, 0.5, 1, 1);
-    nbbox box6(0, 0, 0.6, 0.6);
-    std::vector<std::tuple<nbbox, nbbox, float>> boxes = {
+    nbox box1(0, 0, 1, 1);
+    nbox box2(0, 0, 1, 1);
+    nbox box3(0, 0, 0.5, 1);
+    nbox box4(0, 0, 0.5, 0.5);
+    nbox box5(0.5, 0.5, 1, 1);
+    nbox box6(0, 0, 0.6, 0.6);
+    std::vector<std::tuple<nbox, nbox, float>> boxes = {
         make_tuple(box1, box2, 1),
         make_tuple(box2, box1, 1),
         make_tuple(box1, box3, 0.5),
@@ -891,14 +869,14 @@ TEST(boundingbox, coverage_normalized_boundingbox)
         make_tuple(box5, box4, 0),
         make_tuple(box5, box6, (0.1f * 0.1f) / (0.5f * 0.5f)),
         make_tuple(box6, box5, (0.1f * 0.1f) / (0.6f * 0.6f)),
-        make_tuple(nbbox::zerobox(), nbbox::zerobox(), 0)};
+        make_tuple(nbox(), nbox(), 0)};
 
     for (int i = 0; i < boxes.size(); i++)
     {
-        nbbox b1    = get<0>(boxes[i]);
-        nbbox b2    = get<1>(boxes[i]);
+        nbox  b1    = get<0>(boxes[i]);
+        nbox  b2    = get<1>(boxes[i]);
         float cover = get<2>(boxes[i]);
-        EXPECT_NEAR(coverage(b1, b2), cover, nervana::epsilon) << "at index " << i;
+        EXPECT_NEAR(b1.coverage(b2), cover, nervana::epsilon) << "at index " << i;
     }
 }
 
@@ -920,7 +898,7 @@ TEST(boundingbox, coverage_boundingbox)
         make_tuple(box5, box4, 0),
         make_tuple(box5, box6, (0.1f * 0.1f) / (0.5f * 0.5f)),
         make_tuple(box6, box5, (0.1f * 0.1f) / (0.6f * 0.6f)),
-        make_tuple(bbox::zerobox(), bbox::zerobox(), 0),
+        make_tuple(bbox(), bbox(), 0),
         make_tuple(box7, box7, 1)};
 
     for (int i = 0; i < boxes.size(); i++)
@@ -928,7 +906,7 @@ TEST(boundingbox, coverage_boundingbox)
         bbox  b1    = get<0>(boxes[i]);
         bbox  b2    = get<1>(boxes[i]);
         float cover = get<2>(boxes[i]);
-        EXPECT_NEAR(coverage(b1, b2), cover, nervana::epsilon) << "at index " << i;
+        EXPECT_NEAR(b1.coverage(b2), cover, nervana::epsilon) << "at index " << i;
     }
 }
 

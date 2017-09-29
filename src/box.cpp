@@ -16,7 +16,7 @@
 #include "box.hpp"
 #include "log.hpp"
 #include "boundingbox.hpp"
-#include "normalized_boundingbox.hpp"
+#include "normalized_box.hpp"
 
 using namespace std;
 
@@ -50,44 +50,13 @@ nervana::box& nervana::box::operator=(const nervana::box& b)
 
 namespace nervana
 {
-    normalized_boundingbox::box normalize(const boundingbox::box& b, float width, float height)
-    {
-        try
-        {
-            return normalized_boundingbox::box(b.xmin() / width,
-                                               b.ymin() / height,
-                                               (b.xmax() + 1) / width,
-                                               (b.ymax() + 1) / height,
-                                               b.label(),
-                                               b.difficult(),
-                                               b.truncated());
-        }
-        catch (exception&)
-        {
-            ERR << "Error when normalizing boundingbox: " << b << ". Range had width: " << width
-                << " height: " << height;
-            throw;
-        }
-    }
-
-    boundingbox::box unnormalize(const normalized_boundingbox::box& b, float width, float height)
-    {
-        return boundingbox::box(b.xmin() * width,
-                                b.ymin() * height,
-                                b.xmax() * width - 1,
-                                b.ymax() * height - 1,
-                                b.label(),
-                                b.difficult(),
-                                b.truncated());
-    }
-
-    std::vector<normalized_boundingbox::box>
+    std::vector<normalized_box::box>
         normalize_bboxes(const std::vector<boundingbox::box>& bboxes, int width, int height)
     {
-        std::vector<normalized_boundingbox::box> rc(bboxes.size());
+        std::vector<normalized_box::box> rc(bboxes.size());
         for (int i = 0; i < rc.size(); i++)
         {
-            rc[i] = normalize(bboxes[i], width, height);
+            rc[i] = bboxes[i].normalize(width, height);
         }
         return rc;
     }

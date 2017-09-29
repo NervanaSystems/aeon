@@ -21,8 +21,7 @@ using namespace std;
 using namespace nervana;
 using namespace nlohmann; // json stuff
 
-using bbox            = boundingbox::box;
-using normalized_bbox = normalized_boundingbox::box;
+using bbox = boundingbox::box;
 
 boundingbox::config::config(nlohmann::json js)
 {
@@ -63,8 +62,7 @@ boundingbox::extractor::extractor(const std::unordered_map<std::string, int>& ma
 
 void boundingbox::extractor::extract(const void*                            data,
                                      size_t                                 size,
-                                     std::shared_ptr<boundingbox::decoded>& rc,
-                                     bool                                   boxes_normalized) const
+                                     std::shared_ptr<boundingbox::decoded>& rc) const
 {
     string buffer((const char*)data, size);
     json   j = json::parse(buffer);
@@ -120,31 +118,15 @@ void boundingbox::extractor::extract(const void*                            data
         bool difficult = object["difficult"].is_null() ? false : object["difficult"].get<bool>();
         bool truncated = object["truncated"].is_null() ? false : object["truncated"].get<bool>();
         int  label     = this->get_label(object);
-        // force normalized value to true if boxes_normalized is set to true
-        if (boxes_normalized || (!object["normalized"].is_null() && object["normalized"]))
-        {
-            normalized_bbox nb(bndbox["xmin"],
-                               bndbox["ymin"],
-                               bndbox["xmax"],
-                               bndbox["ymax"],
-                               label,
-                               difficult,
-                               truncated);
 
-            // unnormalize boxes if necessary
-            rc->m_boxes.push_back(unnormalize(nb, rc->width(), rc->height()));
-        }
-        else
-        {
-            bbox b(bndbox["xmin"],
-                   bndbox["ymin"],
-                   bndbox["xmax"],
-                   bndbox["ymax"],
-                   label,
-                   difficult,
-                   truncated);
-            rc->m_boxes.push_back(b);
-        }
+        bbox b(bndbox["xmin"],
+               bndbox["ymin"],
+               bndbox["xmax"],
+               bndbox["ymax"],
+               label,
+               difficult,
+               truncated);
+        rc->m_boxes.push_back(b);
     }
 }
 

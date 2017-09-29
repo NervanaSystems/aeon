@@ -45,12 +45,6 @@ public:
     float coverage(const nervana::boundingbox::box& second_bbox) const;
     nervana::boundingbox::box intersect(const nervana::boundingbox::box& second_bbox) const;
 
-    const static nervana::boundingbox::box& zerobox()
-    {
-        const static boundingbox::box b(0, 0, -1, -1);
-        return b;
-    }
-
     bool operator==(const nervana::boundingbox::box& b) const;
     bool operator!=(const nervana::boundingbox::box& b) const;
     boundingbox::box& operator=(const nervana::boundingbox::box& b);
@@ -60,13 +54,14 @@ public:
     boundingbox::box expand(const cv::Size2i& expand_offset,
                             const cv::Size2i& expand_size,
                             const float       expand_ratio) const;
-
     int               label() const { return m_label; }
     bool              difficult() const { return m_difficult; }
     bool              truncated() const { return m_truncated; }
     const static int  default_label     = -1;
     const static bool default_difficult = false;
     const static bool default_truncated = false;
+
+    nervana::normalized_box::box normalize(float width, float height) const;
 
 protected:
     int  m_label     = default_label;

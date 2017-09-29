@@ -137,11 +137,26 @@ bbox bbox::intersect(const bbox& second_bbox) const
     if (second_bbox.xmin() > xmax() || second_bbox.xmax() < xmin() || second_bbox.ymin() > ymax() ||
         second_bbox.ymax() < ymin())
     {
-        return zerobox();
+        return box();
     }
 
     return bbox(std::max(xmin(), second_bbox.xmin()),
                 std::max(ymin(), second_bbox.ymin()),
                 std::min(xmax(), second_bbox.xmax()),
                 std::min(ymax(), second_bbox.ymax()));
+}
+
+nervana::normalized_box::box bbox::normalize(float width, float height) const
+{
+    try
+    {
+        return nervana::normalized_box::box(
+            xmin() / width, ymin() / height, (xmax() + 1) / width, (ymax() + 1) / height);
+    }
+    catch (std::exception&)
+    {
+        ERR << "Error when normalizing boundingbox: " << (*this) << ". Range had width: " << width
+            << " height: " << height;
+        throw;
+    }
 }

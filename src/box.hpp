@@ -27,28 +27,11 @@ namespace nervana
     {
         class box;
     }
-    namespace normalized_boundingbox
+    namespace normalized_box
     {
         class box;
     }
-    template <typename T>
-    float jaccard_overlap(const T& first_bbox, const T& second_bbox)
-    {
-        return first_bbox.jaccard_overlap(second_bbox);
-    }
-    template <typename T>
-    float coverage(const T& first_bbox, const T& second_bbox)
-    {
-        return first_bbox.coverage(second_bbox);
-    }
-    template <typename T>
-    T intersect(const T& first_bbox, const T& second_bbox)
-    {
-        return first_bbox.intersect(second_bbox);
-    }
-    normalized_boundingbox::box normalize(const boundingbox::box& b, float width, float height);
-    boundingbox::box unnormalize(const normalized_boundingbox::box& b, float width, float height);
-    std::vector<normalized_boundingbox::box>
+    std::vector<normalized_box::box>
         normalize_bboxes(const std::vector<boundingbox::box>& bboxes, int width, int height);
 }
 
@@ -101,11 +84,6 @@ public:
     bool operator!=(const nervana::box& b) const { return !((*this) == b); }
     nervana::box& operator=(const nervana::box& b);
 
-    const static nervana::box& zerobox()
-    {
-        throw std::runtime_error("Called zerobox, which is not defined for base class `box`");
-    }
-
     float ymin() const { return m_ymin; }
     float xmin() const { return m_xmin; }
     float ymax() const { return m_ymax; }
@@ -119,8 +97,8 @@ public:
 protected:
     float m_xmin = 0;
     float m_ymin = 0;
-    float m_xmax = 0;
-    float m_ymax = 0;
+    float m_xmax = -1;
+    float m_ymax = -1;
 };
 
 std::ostream& operator<<(std::ostream& out, const nervana::box& b);

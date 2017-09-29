@@ -85,7 +85,7 @@ std::shared_ptr<localization::ssd::decoded> localization::ssd::extractor::extrac
 {
     auto rc = std::make_shared<ssd::decoded>();
     auto bb = std::static_pointer_cast<boundingbox::decoded>(rc);
-    bbox_extractor.extract(data, size, bb, cfg.gt_boxes_normalized);
+    bbox_extractor.extract(data, size, bb);
     if (!bb)
     {
         return nullptr;

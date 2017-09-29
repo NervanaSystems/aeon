@@ -38,7 +38,7 @@ void test_sampler(float aspect, float scale, string what = "min_jaccard_overlap"
 
     augment::image::param_factory factory(js);
 
-    vector<normalized_boundingbox::box> object_bboxes;
+    vector<normalized_box::box> object_bboxes;
     object_bboxes.emplace_back(0.2, 0.2, 0.6, 0.4);
     object_bboxes.emplace_back(0, 0, 0.4, 0.4);
     object_bboxes.emplace_back(0.5, 0.5, 0.6, 0.6);
@@ -55,12 +55,12 @@ void test_sampler(float aspect, float scale, string what = "min_jaccard_overlap"
     uint32_t non_full_samples_count = 0;
     for (int i = 0; i < 50; i++)
     {
-        normalized_boundingbox::box out = factory.sample_patch(object_bboxes);
+        normalized_box::box out = factory.sample_patch(object_bboxes);
         ASSERT_GE(out.xmin(), 0);
         ASSERT_GE(out.ymin(), 0);
         ASSERT_LE(out.xmax(), 1);
         ASSERT_LE(out.ymax(), 1);
-        if (normalized_boundingbox::box(0, 0, 1, 1) != out)
+        if (normalized_box::box(0, 0, 1, 1) != out)
         {
             EXPECT_FLOAT_EQ(out.width() / out.height(), aspect);
             EXPECT_GT(out.width(), 0);
@@ -360,20 +360,20 @@ TEST(image_augmentation, max_sample)
 
     augment::image::param_factory factory(js);
 
-    vector<normalized_boundingbox::box> object_bboxes;
+    vector<normalized_box::box> object_bboxes;
     object_bboxes.emplace_back(0, 0, 1, 1);
     object_bboxes.emplace_back(0, 0, 0.5, 0.5);
-    std::vector<normalized_boundingbox::box> output;
+    std::vector<normalized_box::box> output;
     factory.m_batch_samplers[0].sample_patches(object_bboxes, output);
     EXPECT_EQ(output.size(), max_sample);
 }
 
 TEST(image_augmentation, max_trials)
 {
-    std::default_random_engine          e;
-    float                               aspect = 1;
-    float                               scale  = 1;
-    vector<normalized_boundingbox::box> object_bboxes;
+    std::default_random_engine  e;
+    float                       aspect = 1;
+    float                       scale  = 1;
+    vector<normalized_box::box> object_bboxes;
     object_bboxes.emplace_back(0, 0, 1, 1);
     object_bboxes.emplace_back(0, 0, 0.5, 0.5);
     for (int i = 0; i < 10; i++)
@@ -397,7 +397,7 @@ TEST(image_augmentation, max_trials)
 
         augment::image::param_factory factory(js);
 
-        std::vector<normalized_boundingbox::box> output;
+        std::vector<normalized_box::box> output;
         factory.m_batch_samplers[0].sample_patches(object_bboxes, output);
         EXPECT_LE(output.size(), max_trials) << "at iteration " << i;
     }
@@ -423,15 +423,15 @@ TEST(image_augmentation, default_patch)
 
     augment::image::param_factory factory(js);
 
-    vector<normalized_boundingbox::box> object_bboxes;
+    vector<normalized_box::box> object_bboxes;
     object_bboxes.emplace_back(0, 0, 1, 1);
     object_bboxes.emplace_back(0, 0, 0.5, 0.5);
-    std::vector<normalized_boundingbox::box> output;
+    std::vector<normalized_box::box> output;
     factory.m_batch_samplers[0].sample_patches(object_bboxes, output);
 
     for (int i = 0; i < output.size(); i++)
     {
-        EXPECT_EQ(output[i], normalized_boundingbox::box(0, 0, 1, 1)) << "at iteration " << i;
+        EXPECT_EQ(output[i], normalized_box::box(0, 0, 1, 1)) << "at iteration " << i;
     }
 }
 

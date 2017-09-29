@@ -21,8 +21,8 @@ using namespace std;
 using namespace nervana;
 
 using nlohmann::json;
-using bbox            = boundingbox::box;
-using nbox = normalized_boundingbox::box;
+using bbox = boundingbox::box;
+using nbox = normalized_box::box;
 
 augment::image::param_factory::param_factory(nlohmann::json js)
 {
@@ -233,8 +233,8 @@ shared_ptr<augment::image::params>
         settings->expand_size   = input_size;
     }
 
-    vector<bbox>            expanded_object_bboxes(object_bboxes.size());
-    vector<normalized_bbox> normalized_object_bboxes(object_bboxes.size());
+    vector<bbox> expanded_object_bboxes(object_bboxes.size());
+    vector<nbox> normalized_object_bboxes(object_bboxes.size());
     for (int i = 0; i < object_bboxes.size(); i++)
     {
         try
@@ -260,7 +260,7 @@ shared_ptr<augment::image::params>
     }
     if (!crop_enable)
     {
-        nbox patch = sample_patch(copy_object_bboxes);
+        nbox patch = sample_patch(normalized_object_bboxes);
         bbox patch_bbox =
             patch.unnormalize(settings->expand_size.width, settings->expand_size.height);
         settings->cropbox = patch_bbox.rect();
@@ -269,10 +269,9 @@ shared_ptr<augment::image::params>
     return settings;
 }
 
-normalized_bbox
-    augment::image::param_factory::sample_patch(const vector<normalized_bbox>& object_bboxes) const
+nbox augment::image::param_factory::sample_patch(const vector<nbox>& object_bboxes) const
 {
-    vector<normalized_bbox> batch_samples;
+    vector<nbox> batch_samples;
 
     for (const batch_sampler& sampler : m_batch_samplers)
     {
@@ -281,12 +280,12 @@ normalized_bbox
 
     if (batch_samples.empty())
     {
-        return normalized_bbox(0, 0, 1, 1);
+        return nbox(0, 0, 1, 1);
     }
 
     std::uniform_int_distribution<int> uniform_dist(0, batch_samples.size() - 1);
     int                                rand_index  = uniform_dist(get_thread_local_random_engine());
-    normalized_bbox                    chosen_bbox = batch_samples[rand_index];
+    nbox                               chosen_bbox = batch_samples[rand_index];
 
     return chosen_bbox;
 }
@@ -317,7 +316,7 @@ void augment::image::sampler::operator=(const nlohmann::json& config)
     }
 }
 
-normalized_bbox augment::image::sampler::sample_patch() const
+nbox augment::image::sampler::sample_patch() const
 {
     auto& random           = get_thread_local_random_engine();
     float scale            = m_scale_generator(random);
@@ -328,7 +327,7 @@ normalized_bbox augment::image::sampler::sample_patch() const
         std::uniform_real_distribution<float>(min_aspect_ratio, max_aspect_ratio);
     float aspect_ratio = local_aspect_ratio_generator(random);
 
-    // Figure out normalized_bbox dimension.
+    // Figure out nbox dimension.
     float bbox_width  = scale * sqrt(aspect_ratio);
     float bbox_height = scale / sqrt(aspect_ratio);
 
@@ -341,7 +340,7 @@ normalized_bbox augment::image::sampler::sample_patch() const
 
     try
     {
-        return normalized_bbox(w_off, h_off, w_off + bbox_width, h_off + bbox_height);
+        return nbox(w_off, h_off, w_off + bbox_width, h_off + bbox_height);
     }
     catch (exception&)
     {
@@ -356,8 +355,8 @@ normalized_bbox augment::image::sampler::sample_patch() const
     }
 }
 
-bool augment::image::sample_constraint::satisfies(
-    const normalized_bbox& sampled_bbox, const std::vector<normalized_bbox>& object_bboxes) const
+bool augment::image::sample_constraint::satisfies(const nbox&              sampled_bbox,
+                                                  const std::vector<nbox>& object_bboxes) const
 {
     bool has_jaccard_overlap = has_min_jaccard_overlap() || has_max_jaccard_overlap();
     bool has_sample_coverage = has_min_sample_coverage() || has_max_sample_coverage();
@@ -372,7 +371,7 @@ bool augment::image::sample_constraint::satisfies(
     bool found = false;
     for (int i = 0; i < object_bboxes.size(); ++i)
     {
-        const normalized_bbox& object_bbox = object_bboxes[i];
+        const nbox& object_bbox = object_bboxes[i];
         // Test jaccard overlap.
         if (has_jaccard_overlap)
         {
@@ -526,8 +525,8 @@ augment::image::batch_sampler::batch_sampler(const nlohmann::json& config)
     }
 }
 
-void augment::image::batch_sampler::sample_patches(const vector<normalized_bbox>& object_bboxes,
-                                                   vector<normalized_bbox>&       output) const
+void augment::image::batch_sampler::sample_patches(const vector<nbox>& object_bboxes,
+                                                   vector<nbox>&       output) const
 {
     int found = 0;
     for (int i = 0; i < m_max_trials; ++i)
@@ -537,8 +536,8 @@ void augment::image::batch_sampler::sample_patches(const vector<normalized_bbox>
             break;
         }
         // Generate sampled_bbox in the normalized space [0, 1].
-        normalized_bbox sampled_bbox = m_sampler.sample_patch();
-        // Determine if the sampled normalized_bbox is positive or negative by the constraint.
+        nbox sampled_bbox = m_sampler.sample_patch();
+        // Determine if the sampled nbox is positive or negative by the constraint.
         if (m_sample_constraint.satisfies(sampled_bbox, object_bboxes))
         {
             ++found;

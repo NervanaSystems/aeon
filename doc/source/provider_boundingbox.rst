@@ -54,7 +54,6 @@ Note that one would typically not use a ``boundingbox`` provider in isolation, b
        ],
    }
 
-In case of SSD, the coordinates are normalized.
 To generate these json files from the XML format used by some object localization datasets such as PASCALVOC, see the main neon repository.
 
 The dataloader generates on-the-fly the anchor targets required for training neon's Faster-RCNN model. Several important parameters control this anchor generation process:

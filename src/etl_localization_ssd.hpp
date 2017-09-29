@@ -50,7 +50,6 @@ public:
     size_t                   max_gt_boxes = 64;
     std::vector<std::string> class_names;
     std::string              name;
-    bool                     gt_boxes_normalized = false;
 
     // Derived values
     size_t output_buffer_size;
@@ -67,9 +66,7 @@ private:
         ADD_SCALAR(width, mode::REQUIRED),
         ADD_SCALAR(class_names, mode::REQUIRED),
         ADD_SCALAR(name, mode::OPTIONAL),
-        ADD_SCALAR(max_gt_boxes, mode::OPTIONAL),
-        // if gt_boxes_normalized is true, input gt boxes are required to be normalized
-        ADD_SCALAR(gt_boxes_normalized, mode::OPTIONAL)};
+        ADD_SCALAR(max_gt_boxes, mode::OPTIONAL)};
 };
 
 class nervana::localization::ssd::decoded : public boundingbox::decoded
