@@ -29,20 +29,15 @@ batch_decoder::batch_decoder(batch_iterator*                            b_itor,
     : async_manager<encoded_record_list, fixed_buffer_map>(b_itor, "batch_decoder")
     , m_batch_size(batch_size)
     , m_provider(prov)
-    , m_thread_pool(this, thread_count, batch_size)
     , m_deterministic_mode(seed != 0)
 {
-    auto oshapes         = prov->get_output_shapes();
+    m_thread_pool =
+        singleton<thread_pool_queue<batch_decoder, &batch_decoder::process>>::get(thread_count);
     m_number_elements_in = prov->get_input_count();
 
     // Allocate the space in the output buffers
     for (unsigned int k = 0; k < 2; ++k)
-    {
-        for (auto& sz : oshapes)
-        {
-            m_containers[k].add_item(sz.first, sz.second, batch_size, pinned);
-        }
-    }
+        m_containers[k].add_items(prov->get_output_shapes(), batch_size, pinned);
 
     if (m_deterministic_mode)
     {
@@ -89,7 +84,7 @@ fixed_buffer_map* batch_decoder::filler()
         }
         m_inputs  = inputs;
         m_outputs = outputs;
-        m_thread_pool.run();
+        m_thread_pool->run(this, m_batch_size);
     }
     m_state = async_state::idle;
     return outputs;

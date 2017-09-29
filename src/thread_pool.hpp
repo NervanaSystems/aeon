@@ -26,9 +26,11 @@
 
 namespace nervana
 {
+    class thread_barrier;
     template <typename T, void (T::*process_func)(int index)>
     class thread_pool;
-    class thread_barrier;
+    template <typename T, void (T::*process_func)(int index)>
+    class thread_pool_queue;
 }
 
 #ifdef __linux__
@@ -80,9 +82,7 @@ template <typename T, void (T::*process_func)(int index)>
 class nervana::thread_pool
 {
 public:
-    thread_pool(T* worker, int thread_count, int task_count)
-        : m_worker(worker)
-        , m_task_count(task_count)
+    thread_pool(int thread_count)
     {
         int nthreads;
 
@@ -93,7 +93,6 @@ public:
                        std::min(m_max_count_of_free_threads,
                                 static_cast<int>(std::thread::hardware_concurrency() /
                                                  m_free_threads_ratio));
-            nthreads = std::min(nthreads, m_task_count);
         }
         else
         {
@@ -125,8 +124,10 @@ public:
             thread.join();
     }
 
-    void run()
+    void run(T* worker, int task_count)
     {
+        m_worker          = worker;
+        m_task_count      = task_count;
         m_current_task_id = 0;
         m_pool_exception  = nullptr;
         m_br_wake->wait();
@@ -192,5 +193,45 @@ private:
 
             m_br_endtasks->wait();
         }
+    }
+};
+
+template <typename T, void (T::*process_func)(int index)>
+class nervana::thread_pool_queue
+{
+public:
+    thread_pool_queue(int thread_count)
+        : m_thread_pool(thread_count)
+        , m_thread(&thread_pool_queue::process_tasks, this)
+    {
+    }
+
+    ~thread_pool_queue()
+    {
+        m_stop.store(true, std::memory_order_relaxed);
+        std::packaged_task<void()> task([]() {});
+        m_task_queue.push(std::move(task));
+        m_thread.join();
+    }
+
+    void run(T* worker, int task_count)
+    {
+        std::packaged_task<void()> task(
+            std::bind(&thread_pool<T, process_func>::run, &m_thread_pool, worker, task_count));
+        auto fut = task.get_future();
+        m_task_queue.push(std::move(task));
+        fut.wait();
+    }
+
+private:
+    BlockingQueue<std::packaged_task<void()>> m_task_queue;
+    std::atomic<bool>                         m_stop{false};
+    nervana::thread_pool<T, process_func> m_thread_pool;
+    std::thread m_thread;
+
+    void process_tasks()
+    {
+        while (!m_stop.load(std::memory_order_relaxed))
+            m_task_queue.pop()();
     }
 };

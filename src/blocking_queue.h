@@ -24,11 +24,20 @@ template <typename T>
 class BlockingQueue
 {
 public:
+    T pop()
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_cond.wait(lock, [this] { return !m_queue.empty(); });
+        T item = std::move(m_queue.front());
+        m_queue.pop();
+        return item;
+    }
+
     void pop(T& item)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_cond.wait(lock, [this] { return !m_queue.empty(); });
-        item = m_queue.front();
+        item = std::move(m_queue.front());
         m_queue.pop();
     }
 
@@ -43,6 +52,14 @@ public:
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_queue.push(item);
+        lock.unlock();
+        m_cond.notify_one();
+    }
+
+    void push(T&& item)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_queue.push(std::move(item));
         lock.unlock();
         m_cond.notify_one();
     }
