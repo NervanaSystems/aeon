@@ -163,6 +163,7 @@ public:
     virtual const size_t&           position()                 = 0;
     virtual void                    reset()                    = 0;
     virtual nlohmann::json          get_current_config() const = 0;
+    virtual const char*             get_session_id() const     = 0;
 
 protected:
     virtual void increment_position() = 0;
@@ -217,6 +218,7 @@ public:
     }
 
     nlohmann::json get_current_config() const override { return m_current_config; }
+    const char*    get_session_id() const override { return ""; }
 private:
     friend class nervana::loader::iterator;
 

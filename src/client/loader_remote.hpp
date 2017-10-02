@@ -49,6 +49,7 @@ namespace nervana
         const size_t&  position() override { return m_position; }
         void           reset() override;
         nlohmann::json get_current_config() const override { return m_config; }
+        const char*    get_session_id() const override { return m_session_id.c_str(); }
     private:
         void initialize();
         void increment_position() override;
@@ -75,5 +76,6 @@ namespace nervana
         size_t                            m_position{0};
         bool                              m_shared_session{false};
         bool                              m_batch_to_fetch{true};
+        bool                              m_close_session{true};
     };
 }

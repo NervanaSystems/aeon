@@ -53,7 +53,7 @@ nervana::loader_remote::loader_remote(shared_ptr<service> client, const nlohmann
 
 nervana::loader_remote::~loader_remote()
 {
-    if (!m_shared_session && !m_session_id.empty())
+    if (!m_shared_session && !m_session_id.empty() && m_close_session)
     {
         close_session();
     }
@@ -66,6 +66,13 @@ void nervana::loader_remote::initialize()
     {
         m_session_id     = m_config.at("server").at("session_id");
         m_shared_session = true;
+    }
+    catch (const std::exception&)
+    {
+    }
+    try
+    {
+        m_close_session = m_config.at("server").at("close_session");
     }
     catch (const std::exception&)
     {

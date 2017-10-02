@@ -24,33 +24,39 @@ Dependencies
 ^^^^^^
 `cpprestsdk <https://github.com/Microsoft/cpprestsdk>`_ library is used to implement REST service.  It's available on ubuntu 16.04, but not on ubuntu 14.04 or centos. If that's your problem, you need to build this library from sources. `This <https://github.com/Microsoft/cpprestsdk/wiki/How-to-build-for-Linux>`_ might be helpful to achieve that.
 
+Sessions
+^^^^^^
+Currently only data parallelism is supported. That means that each client will get different batch in every iteration step. If there are B batches in whole dataset, C clients and they are synchronized to process batch after batch, then each client will get only B/C batches.
+To initialize dataloading session, you need to create one. It can be done in two ways. The first is to send POST request to /api/v1/dataset with config in the body. In response there will be a session id. The second one is to create aeon object as usual, but providing ``server`` object  without ``session_id`` field. In this case aeon will create new session, which can be passed to other clients. Session id can be fetched from aeon object with field ``session_id``.
+Session is destroyed along with dataloader object destruction assuming that this object created session and ``close_session`` is not set to ``false``.
+
 Parameters
 ^^^^^^
 ``aeon-server`` is a separate binary. Below you can find it's parameters.
 
 .. csv-table::
-   :header: "Parameter", "Short version", "Type", "Required", "Description"
-   :widths: 20, 10, 10, 10, 50
-   :delim: |
-   :escape: ~
+:header: "Parameter", "Short version", "Type", "Required", "Description"
+         :widths: 20, 10, 10, 10, 50
+         :delim: |
+         :escape: ~
 
-   --address | a | string | true | Server address to listen on.
-   --port | p | true | uint | Server port to listen on.
-   --daemon | d | false | flag | Runs ``aeon-server`` as daemon.
+      --address | a | string | true | Server address to listen on.
+      --port | p | true | uint | Server port to listen on.
+      --daemon | d | false | flag | Runs ``aeon-server`` as daemon.
 
-Client
------------
-Connection with server is configurable with ``server`` object from aeon config. Below you can find it's fields. If ``server`` object is absent, usual local data loading will happen.
-Parameters of server object from main aeon config:
+      Client
+      -----------
+      Connection with server is configurable with ``server`` object from aeon config. Below you can find it's fields. If ``server`` object is absent, usual local data loading will happen.
+      Parameters of server object from main aeon config:
 
-.. csv-table::
-   :header: "Parameter", "Type", "Default", "Description"
-   :widths: 20, 10, 10, 50
-   :delim: |
-   :escape: ~
+      .. csv-table::
+      :header: "Parameter", "Type", "Default", "Description"
+      :widths: 20, 10, 10, 50
+      :delim: |
+      :escape: ~
 
    address | string | *Required* | Server address to connect to.
    port | uint | *Required* | Server port to connect on.
    session_id | string | ~"~" | ID of shared session to connect to. If it's not provided, new session will be created.
-   async | bool | true | async set to true makes batch to be double-buffered on
-   client side, decreasing batch fetch time significantly.
+   close_session | bool | true | If set to true, aeon will close session when aeon object is being destroyed. It works only if session was created by this object (``session_id`` is not provided)
+   async | bool | true | async set to true makes batch loading to be double-buffered

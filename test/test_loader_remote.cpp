@@ -45,7 +45,7 @@ public:
 TEST(loader_remote, new_session_scenario)
 {
     auto           mock         = make_shared<mock_service>();
-    json           config       = {{"server", {"address", "localhost"}, {"port", 34568}}};
+    json           config       = {{"server", {{"address", "localhost"}, {"port", 34568}}}};
     string         session_id   = "123";
     auto           nas          = get_names_and_shapes();
     int            batch_size   = 64;
@@ -71,6 +71,7 @@ TEST(loader_remote, new_session_scenario)
     EXPECT_EQ(loader.batch_size(), batch_size);
     EXPECT_EQ(loader.batch_count(), batch_count);
     EXPECT_EQ(loader.get_current_config(), config);
+    EXPECT_EQ(loader.get_session_id(), session_id);
 
     // testing iteration
     {
@@ -154,6 +155,7 @@ TEST(loader_remote, shared_session_scenario)
     EXPECT_EQ(loader.batch_size(), batch_size);
     EXPECT_EQ(loader.batch_count(), batch_count);
     EXPECT_EQ(loader.get_current_config(), config);
+    EXPECT_EQ(loader.get_session_id(), session_id);
 
     // testing iteration
     {
@@ -189,7 +191,7 @@ TEST(loader_remote, service_async)
     auto           mock                    = make_shared<mock_service>();
     auto           my_service_async_source = make_shared<service_async_source>(mock);
     auto           my_service              = make_shared<service_async>(my_service_async_source);
-    json           config       = {{"server", {"address", "localhost"}, {"port", 34568}}};
+    json           config       = {{"server", {{"address", "localhost"}, {"port", 34568}}}};
     string         session_id   = "123";
     auto           nas          = get_names_and_shapes();
     int            batch_size   = 64;
@@ -215,6 +217,7 @@ TEST(loader_remote, service_async)
     EXPECT_EQ(loader.batch_size(), batch_size);
     EXPECT_EQ(loader.batch_count(), batch_count);
     EXPECT_EQ(loader.get_current_config(), config);
+    EXPECT_EQ(loader.get_session_id(), session_id);
 
     // testing iteration
     {
@@ -267,4 +270,63 @@ TEST(loader_remote, service_async)
     }
 
     EXPECT_CALL(*mock, close_session(session_id)).WillOnce(Return(status_success));
+}
+
+TEST(loader_remote, close_session)
+{
+    // close_session set to false and session_id is not provided
+    {
+        auto   mock       = make_shared<mock_service>();
+        string session_id = "123";
+        json   config     = {
+            {"server", {{"address", "localhost"}, {"port", 34568}, {"close_session", false}}}};
+        auto           nas          = get_names_and_shapes();
+        int            batch_size   = 64;
+        int            batch_count  = 3;
+        int            record_count = batch_size * batch_count;
+        service_status status_success(service_status_type::SUCCESS, "");
+
+        auto expected_create_session = service_response<string>(status_success, session_id);
+        auto expected_nas            = service_response<names_and_shapes>(status_success, nas);
+        auto expected_record_count   = service_response<int>(status_success, record_count);
+        auto expected_batch_size     = service_response<int>(status_success, batch_size);
+        auto expected_batch_count    = service_response<int>(status_success, batch_count);
+        EXPECT_CALL(*mock, create_session(config.dump())).WillOnce(Return(expected_create_session));
+        EXPECT_CALL(*mock, get_names_and_shapes(session_id)).WillOnce(Return(expected_nas));
+        EXPECT_CALL(*mock, get_record_count(session_id)).WillOnce(Return(expected_record_count));
+        EXPECT_CALL(*mock, get_batch_size(session_id)).WillOnce(Return(expected_batch_size));
+        EXPECT_CALL(*mock, get_batch_count(session_id)).WillOnce(Return(expected_batch_count));
+
+        loader_remote loader(mock, config.dump());
+
+        EXPECT_CALL(*mock, close_session(session_id)).Times(0);
+    }
+
+    // close_session set to false and session_id is provided
+    {
+        auto   mock       = make_shared<mock_service>();
+        string session_id = "123";
+        json   config     = {{"server",
+                        {{"address", "localhost"},
+                         {"port", 34568},
+                         {"session_id", session_id},
+                         {"close_session", false}}}};
+        auto           nas          = get_names_and_shapes();
+        int            batch_size   = 64;
+        int            batch_count  = 3;
+        int            record_count = batch_size * batch_count;
+        service_status status_success(service_status_type::SUCCESS, "");
+        auto           expected_nas = service_response<names_and_shapes>(status_success, nas);
+        auto           expected_record_count = service_response<int>(status_success, record_count);
+        auto           expected_batch_size   = service_response<int>(status_success, batch_size);
+        auto           expected_batch_count  = service_response<int>(status_success, batch_count);
+        EXPECT_CALL(*mock, get_names_and_shapes(session_id)).WillOnce(Return(expected_nas));
+        EXPECT_CALL(*mock, get_record_count(session_id)).WillOnce(Return(expected_record_count));
+        EXPECT_CALL(*mock, get_batch_size(session_id)).WillOnce(Return(expected_batch_size));
+        EXPECT_CALL(*mock, get_batch_count(session_id)).WillOnce(Return(expected_batch_count));
+
+        loader_remote loader(mock, config.dump());
+
+        EXPECT_CALL(*mock, close_session(session_id)).Times(0);
+    }
 }
