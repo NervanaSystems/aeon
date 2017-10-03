@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     int    height        = 32;
     int    width         = 32;
     size_t batch_size    = 1;
-    std::string manifest_root = "/test_data";
+    std::string manifest_root = "";
     std::string manifest      = generate_manifest_file(20);
 
     nlohmann::json image_config = {{"type", "image"},
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
                          {"batch_size", batch_size},
                          {"iteration_mode", "INFINITE"},
                          {"etl", {image_config, label_config}},
-                         {"augmentation", {aug_config}}};
+                         {"augmentation", {{aug_config}}}};
 
     auto train_set = nervana::loader{config};
 }

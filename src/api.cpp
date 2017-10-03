@@ -95,9 +95,7 @@ static PyMethodDef aeon_methods[] = {
 
 static PyObject* DataLoader_iter(PyObject* self)
 {
-#ifdef AEON_DEBUG
     INFO << " aeon_DataLoader_iter";
-#endif
     Py_INCREF(self);
     DL_get_loader(self)->reset();
     ((aeon_DataLoader*)(self))->m_first_iteration = true;
@@ -106,9 +104,7 @@ static PyObject* DataLoader_iter(PyObject* self)
 
 static PyObject* DataLoader_iternext(PyObject* self)
 {
-#ifdef AEON_DEBUG
     INFO << " aeon_DataLoader_iternext";
-#endif
     PyObject* result = NULL;
 
     if (!((aeon_DataLoader*)(self))->m_first_iteration)
@@ -158,9 +154,7 @@ static PyObject* DataLoader_iternext(PyObject* self)
 
 static Py_ssize_t aeon_DataLoader_length(PyObject* self)
 {
-#ifdef AEON_DEBUG
     INFO << " aeon_DataLoader_length " << DL_get_loader(self)->record_count();
-#endif
     return DL_get_loader(self)->record_count();
 }
 
@@ -198,9 +192,7 @@ static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf)
 
 static void DataLoader_dealloc(aeon_DataLoader* self)
 {
-#ifdef AEON_DEBUG
     INFO << " DataLoader_dealloc";
-#endif
     if (self->m_loader != nullptr)
     {
         delete self->m_loader;
@@ -214,9 +206,7 @@ static void DataLoader_dealloc(aeon_DataLoader* self)
 
 static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
-#ifdef AEON_DEBUG
     INFO << " DataLoader_new";
-#endif
     aeon_DataLoader* self = nullptr;
 
     static const char* keyword_list[] = {"config", nullptr};
@@ -240,9 +230,7 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
             return NULL;
         }
-#ifdef AEON_DEBUG
         INFO << " config " << json_config.dump(4);
-#endif
         self = (aeon_DataLoader*)type->tp_alloc(type, 0);
         if (!self)
         {
@@ -343,9 +331,7 @@ static int DataLoader_init(aeon_DataLoader* self, PyObject* args, PyObject* kwds
 
 static PyObject* aeon_reset(PyObject* self, PyObject*)
 {
-#ifdef AEON_DEBUG
     INFO << " aeon_reset";
-#endif
     DL_get_loader(self)->reset();
     return Py_None;
 }
@@ -463,9 +449,7 @@ PyMODINIT_FUNC PyInit_aeon(void)
 PyMODINIT_FUNC initaeon(void)
 #endif
 {
-#ifdef AEON_DEBUG
     INFO << " initaeon";
-#endif
 
     PyObject* m;
     if (PyType_Ready(&aeon_DataLoaderType) < 0)

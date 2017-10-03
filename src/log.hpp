@@ -21,6 +21,17 @@
 
 namespace nervana
 {
+    enum class log_level
+    {
+        level_error,
+        level_warning,
+        level_info,
+        level_undefined,
+    };
+
+    static const char*              log_level_env_var = "AEON_LOG_LEVEL";
+    static const nervana::log_level default_log_level = nervana::log_level::level_warning;
+
     class conststring
     {
     public:
@@ -53,22 +64,21 @@ namespace nervana
         return find_last(s, s.size() - 1, ch);
     }
     constexpr const char* get_file_name(conststring s) { return find_last(s, '/'); }
-    enum class LOG_TYPE
-    {
-        _LOG_TYPE_ERROR,
-        _LOG_TYPE_WARNING,
-        _LOG_TYPE_INFO,
-    };
+    log_level from_string(const std::string& level);
+    std::string to_string(log_level);
 
     class log_helper
     {
     public:
-        log_helper(LOG_TYPE, const char* file, int line, const char* func);
+        log_helper(log_level, const char* file, int line, const char* func);
         ~log_helper();
 
         std::ostream& stream() { return _stream; }
     private:
+        log_level         get_log_level();
+        bool              log_to_be_printed();
         std::stringstream _stream;
+        log_level         _level;
     };
 
     class logger
@@ -84,24 +94,23 @@ namespace nervana
         static void log_item(const std::string& s);
         static void process_event(const std::string& s);
         static void thread_entry(void* param);
-        static std::string             log_path;
         static std::deque<std::string> queue;
     };
 
 #define ERR                                                                                        \
-    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_ERROR,                                        \
+    nervana::log_helper(nervana::log_level::level_error,                                           \
                         nervana::get_file_name(__FILE__),                                          \
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \
         .stream()
 #define WARN                                                                                       \
-    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_WARNING,                                      \
+    nervana::log_helper(nervana::log_level::level_warning,                                         \
                         nervana::get_file_name(__FILE__),                                          \
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \
         .stream()
 #define INFO                                                                                       \
-    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_INFO,                                         \
+    nervana::log_helper(nervana::log_level::level_info,                                            \
                         nervana::get_file_name(__FILE__),                                          \
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \

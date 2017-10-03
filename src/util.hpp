@@ -175,7 +175,7 @@ namespace nervana
     void affirm(bool cond, const std::string& msg);
 
     typedef std::minstd_rand0 random_engine_t;
-    random_engine_t& get_thread_local_random_engine();
+    random_engine_t&          get_thread_local_random_engine();
 
     cv::Mat read_audio_from_mem(const char* item, int itemSize);
 

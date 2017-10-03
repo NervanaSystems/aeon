@@ -643,13 +643,13 @@ TEST(block_manager, nds_no_shuffle_no_cache)
 
 TEST(block_manager, nds_shuffle_cache)
 {
-    string cache_root          = file_util::make_temp_directory();
-    size_t record_count        = 1000;
-    size_t block_size          = 200;
-    size_t elements_per_record = 2;
-    size_t block_count         = record_count / block_size;
-    bool   enable_shuffle      = true;
-    const uint32_t seed        = 1234;
+    string         cache_root          = file_util::make_temp_directory();
+    size_t         record_count        = 1000;
+    size_t         block_size          = 200;
+    size_t         elements_per_record = 2;
+    size_t         block_count         = record_count / block_size;
+    bool           enable_shuffle      = true;
+    const uint32_t seed                = 1234;
     ASSERT_EQ(0, record_count % block_size);
 
     vector<size_t> sorted_record_list(record_count);

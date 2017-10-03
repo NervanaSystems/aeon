@@ -19,7 +19,9 @@
 #include <ctime>
 #include <thread>
 #include <mutex>
+#include <map>
 #include <condition_variable>
+#include <cassert>
 
 #include "log.hpp"
 
@@ -30,7 +32,6 @@ namespace nervana
     class thread_starter;
 }
 
-string                    nervana::logger::log_path;
 deque<string>             nervana::logger::queue;
 static mutex              queue_mutex;
 static condition_variable queue_condition;
@@ -45,11 +46,6 @@ public:
 };
 
 static nervana::thread_starter _starter;
-
-void nervana::logger::set_log_path(const string& path)
-{
-    log_path = path;
-}
 
 void nervana::logger::start()
 {
@@ -93,13 +89,21 @@ void nervana::logger::log_item(const string& s)
     queue_condition.notify_one();
 }
 
-nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const char* func)
+nervana::log_helper::log_helper(nervana::log_level level,
+                                const char*        file,
+                                int                line,
+                                const char*        func)
 {
-    switch (type)
+    _level = level;
+    switch (level)
     {
-    case LOG_TYPE::_LOG_TYPE_ERROR: _stream << "[ERR ] "; break;
-    case LOG_TYPE::_LOG_TYPE_WARNING: _stream << "[WARN] "; break;
-    case LOG_TYPE::_LOG_TYPE_INFO: _stream << "[INFO] "; break;
+    case log_level::level_error: _stream << "[ERROR] "; break;
+    case log_level::level_info: _stream << "[INFO] "; break;
+    case log_level::level_warning: _stream << "[WARNING] "; break;
+    case log_level::level_undefined:
+        _stream << "[UNDEFINED] ";
+        assert(false);
+        break;
     }
 
     std::time_t tt = chrono::system_clock::to_time_t(chrono::system_clock::now());
@@ -118,6 +122,73 @@ nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const
 
 nervana::log_helper::~log_helper()
 {
-    cout << _stream.str() << endl;
-    // logger::log_item(_stream.str());
+    if (log_to_be_printed())
+    {
+        cout << _stream.str() << endl;
+    }
+}
+
+nervana::log_level nervana::log_helper::get_log_level()
+{
+    const char* level_env = std::getenv(log_level_env_var);
+    log_level   level;
+    if (level_env == nullptr)
+    {
+        level = default_log_level;
+    }
+    else
+    {
+        level = from_string(level_env);
+        if (level == log_level::level_undefined)
+        {
+            return default_log_level;
+        }
+    }
+    return level;
+}
+
+bool nervana::log_helper::log_to_be_printed()
+{
+    log_level global_level = get_log_level();
+    switch (global_level)
+    {
+    case log_level::level_info: break;
+    case log_level::level_warning:
+        if (_level == log_level::level_info)
+            return false;
+        ;
+        break;
+    case log_level::level_error:
+        if (_level == log_level::level_info || _level == log_level::level_warning)
+            return false;
+        break;
+    case log_level::level_undefined: assert(false);
+    };
+    return true;
+}
+
+nervana::log_level nervana::from_string(const string& level)
+{
+    static const map<string, log_level> level_map{{"INFO", log_level::level_info},
+                                                  {"WARNING", log_level::level_warning},
+                                                  {"ERROR", log_level::level_error}};
+    auto iter = level_map.find(level);
+    if (iter == level_map.end())
+    {
+        return log_level::level_undefined;
+    }
+    return iter->second;
+}
+
+string nervana::to_string(nervana::log_level level)
+{
+    static const map<log_level, string> level_map{{log_level::level_info, "INFO"},
+                                                  {log_level::level_warning, "WARNING"},
+                                                  {log_level::level_error, "ERROR"}};
+    auto iter = level_map.find(level);
+    if (iter == level_map.end())
+    {
+        return "UNDEFINED";
+    }
+    return iter->second;
 }

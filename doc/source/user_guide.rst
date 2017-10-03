@@ -225,3 +225,13 @@ The above configuration will, for each image, take a random crop of 224x224 pixe
     train_set = DataLoader(json.dumps(aeon_config))
 
 The backend argument above from neon tells the dataloader where to place the buffers to provision to the model.
+
+Logging
+-------------
+
+There are three levels of logs in aeon:
+* INFO - prints all logs
+* WARNING - prints only warnings and errors
+* ERROR - prints only errors
+Default log level is WARNING. You can set it with `AEON_LOG_LEVEL` environmental variable. For example
+`export AEON_LOG_LEVEL=INFO` sets log level to INFO.
