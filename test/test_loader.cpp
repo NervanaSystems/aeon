@@ -30,6 +30,7 @@
 #include "gen_image.hpp"
 #include "file_util.hpp"
 #include "util.hpp"
+#include "../server/server.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -474,17 +475,16 @@ TEST(loader, loader_factory_server)
 {
     loader_factory factory;
     json           config_json = create_some_config_with_manifest();
-    config_json["server"]      = {{"address", "127.0.0.1"}, {"port", 34568}};
+    aeon_server    server("http://127.0.0.1:34568");
 
     // there is no server running, so we expect exception
+    config_json["server"] = {{"address", "127.0.0.1"}, {"port", 34569}};
     EXPECT_THROW(unique_ptr<loader> ptr = factory.get_loader(config_json), std::runtime_error);
 
-    // uncomment lines below when server will be available to use in testing
-    //unique_ptr<loader> ptr = factory.get_loader(config_json);
-    //ASSERT_TRUE(dynamic_cast<loader_local*>(ptr.get()) != 0);
-
-    //unique_ptr<loader> ptr2 = factory.get_loader(config_json);
-    //ASSERT_TRUE(dynamic_cast<loader_local*>(ptr2.get()) == 0);
+    config_json["server"]    = {{"address", "127.0.0.1"}, {"port", 34568}};
+    unique_ptr<loader> ptr2 = factory.get_loader(config_json);
+    ASSERT_TRUE(dynamic_cast<loader_remote*>(ptr2.get()) != 0);
+    ASSERT_TRUE(dynamic_cast<loader_local*>(ptr2.get()) == 0);
 }
 
 TEST(benchmark, imagenet)

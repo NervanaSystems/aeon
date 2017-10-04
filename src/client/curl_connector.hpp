@@ -43,7 +43,7 @@ namespace nervana
         // used for sending body
         static size_t read_callback(void* ptr, size_t size, size_t nmemb, void* stream);
 
-        void check_response(CURLcode response, const std::string& url, long http_code);
+        void check_response(CURLcode response, const std::string& call);
         long get_http_code(CURL* curl_handle);
         std::string url_with_query(const std::string& url, const nervana::http_query_t& query);
         std::string query_to_string(const http_query_t& query);

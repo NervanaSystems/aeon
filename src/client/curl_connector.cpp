@@ -34,10 +34,8 @@ namespace nervana
     {
         m_address = address_with_port(address, port);
 
-        // curl_global_init is supposed to be called only once globally!
+        // curl_global_init is supposed to be called only once globally
         curl_global_init(CURL_GLOBAL_ALL);
-
-        // reuse curl connection across requests
     }
 
     curl_connector::~curl_connector() { curl_global_cleanup(); }
@@ -60,12 +58,12 @@ namespace nervana
         curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &stream);
         curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
 
-        INFO << "[GET] " << url;
-        // Perform the request, res will get the return code
+        string call = "[GET] " + url;
+        INFO << call;
         CURLcode res = curl_easy_perform(curl_handle);
+        check_response(res, call);
 
         long http_code = get_http_code(curl_handle);
-        check_response(res, url, http_code);
 
         curl_easy_cleanup(curl_handle);
 
@@ -80,7 +78,7 @@ namespace nervana
             throw std::runtime_error("curl init error");
         }
 
-        // given a url, make an HTTP GET request and fill stream with
+        // given a url, make an HTTP POST request and fill stream with
         // the body of the response
         stringstream stream;
         stringstream read_stream;
@@ -96,12 +94,12 @@ namespace nervana
         curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, body.size());
         curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
 
-        INFO << "[POST] " << url;
-        // Perform the request, res will get the return code
+        string call = "[POST] " + url;
+        INFO << call;
         CURLcode res = curl_easy_perform(curl_handle);
+        check_response(res, call);
 
         long http_code = get_http_code(curl_handle);
-        check_response(res, url, http_code);
 
         curl_easy_cleanup(curl_handle);
 
@@ -116,7 +114,7 @@ namespace nervana
             throw std::runtime_error("curl init error");
         }
 
-        // given a url, make an HTTP GET request and fill stream with
+        // given a url, make an HTTP POST request and fill stream with
         // the body of the response
         stringstream stream;
         string       query_string = query_to_string(query);
@@ -129,12 +127,12 @@ namespace nervana
         curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, query_string.size());
         curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
 
-        INFO << "[POST] " << url;
-        // Perform the request, res will get the return code
+        string call = "[POST] " + url;
+        INFO << call;
         CURLcode res = curl_easy_perform(curl_handle);
+        check_response(res, call);
 
         long http_code = get_http_code(curl_handle);
-        check_response(res, url, http_code);
 
         curl_easy_cleanup(curl_handle);
 
@@ -161,12 +159,12 @@ namespace nervana
         curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
         curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "DELETE");
 
-        INFO << "[DELETE] " << url;
-        // Perform the request, res will get the return code
+        string call = "[DELETE] " + url;
+        INFO << call;
         CURLcode res = curl_easy_perform(curl_handle);
+        check_response(res, call);
 
         long http_code = get_http_code(curl_handle);
-        check_response(res, url, http_code);
 
         curl_easy_cleanup(curl_handle);
 
@@ -193,17 +191,13 @@ namespace nervana
         return 1;
     }
 
-    void curl_connector::check_response(CURLcode response, const string& url, long http_code)
+    void curl_connector::check_response(CURLcode response, const string& call)
     {
         if (response != CURLE_OK)
         {
             stringstream ss;
-            ss << "HTTP DELETE on \n'" << url << "' failed. ";
-            ss << "status code: " << http_code;
-            if (response != CURLE_OK)
-            {
-                ss << " curl return: " << curl_easy_strerror(response);
-            }
+            ss << "HTTP call to '" << call << "' failed. ";
+            ss << "Curl return: " << curl_easy_strerror(response);
 
             throw std::runtime_error(ss.str());
         }

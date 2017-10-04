@@ -5,7 +5,6 @@
 #include "server.hpp"
 #include "json.hpp"
 #include "loader.hpp"
-#include "gen_image.hpp"
 #include "typemap.hpp"
 
 #include "base64.hpp"

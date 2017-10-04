@@ -11,8 +11,6 @@
 
 #include "json.hpp"
 #include "loader.hpp"
-#include "manifest_builder.hpp"
-#include "gen_image.hpp"
 
 namespace nervana
 {
