@@ -109,6 +109,7 @@ void loader::initialize(nlohmann::json& config_json)
                                             lcfg.shuffle_manifest,
                                             lcfg.manifest_root,
                                             lcfg.subset_fraction,
+                                            lcfg.block_size,
                                             lcfg.random_seed);
 
     // TODO: make the constructor throw this error

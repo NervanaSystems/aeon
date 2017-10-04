@@ -433,6 +433,7 @@ TEST(loader, deterministic)
                              {"batch_size", batch_size},
                              {"iteration_mode", "INFINITE"},
                              {"decode_thread_count", 0},
+                             {"shuffle_manifest", true},
                              {"etl", {image_config, label_config}},
                              {"augmentation", aug_config},
                              {"random_seed", seed}};
@@ -441,7 +442,7 @@ TEST(loader, deterministic)
     loader.get_current_iter();
     auto& buffer = *loader.get_current_iter();
 
-    const uint32_t expected_result[3] = {0x2f39342e, 0x62543433, 0x5c595066};
+    const uint32_t expected_result[3] = {0x3f393834, 0x2c284d47, 0x5c59502b};
     uint32_t*      data               = reinterpret_cast<uint32_t*>(buffer["image"]->data());
     EXPECT_EQ(data[0], expected_result[0]);
     EXPECT_EQ(data[1], expected_result[1]);

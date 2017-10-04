@@ -53,7 +53,7 @@ public:
     int         batch_size;
 
     std::string                 cache_directory      = "";
-    int                         block_size           = 0;
+    int                         block_size           = 5000;
     float                       subset_fraction      = 1.0;
     bool                        shuffle_enable       = false;
     bool                        shuffle_manifest     = false;
