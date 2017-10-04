@@ -35,25 +35,25 @@ Parameters
 ``aeon-server`` is a separate binary. Below you can find it's parameters.
 
 .. csv-table::
-:header: "Parameter", "Short version", "Type", "Required", "Description"
-         :widths: 20, 10, 10, 10, 50
-         :delim: |
-         :escape: ~
+   :header: "Parameter", "Short version", "Type", "Required", "Description"
+   :widths: 20, 10, 10, 10, 50
+   :delim: |
+   :escape: ~
 
-      --address | a | string | true | Server address to listen on.
-      --port | p | true | uint | Server port to listen on.
-      --daemon | d | false | flag | Runs ``aeon-server`` as daemon.
+   --address | a | string | true | Server address to listen on.
+   --port | p | true | uint | Server port to listen on.
+   --daemon | d | false | flag | Runs ``aeon-server`` as daemon.
 
-      Client
-      -----------
-      Connection with server is configurable with ``server`` object from aeon config. Below you can find it's fields. If ``server`` object is absent, usual local data loading will happen.
-      Parameters of server object from main aeon config:
+Client
+-----------
+Connection with server is configurable with ``server`` object from aeon config. Below you can find it's fields. If ``server`` object is absent, usual local data loading will happen.
+Parameters of server object from main aeon config:
 
-      .. csv-table::
-      :header: "Parameter", "Type", "Default", "Description"
-      :widths: 20, 10, 10, 50
-      :delim: |
-      :escape: ~
+.. csv-table::
+   :header: "Parameter", "Type", "Default", "Description"
+   :widths: 20, 10, 10, 50
+   :delim: |
+   :escape: ~
 
    address | string | *Required* | Server address to connect to.
    port | uint | *Required* | Server port to connect on.
