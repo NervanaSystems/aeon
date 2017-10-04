@@ -107,8 +107,7 @@ void nervana::loader_remote::close_session()
     try
     {
         service_status status = m_service->close_session(m_session_id);
-        //TODO: uncomment that when close is ready on server side
-        //status.assert_success();
+        status.assert_success();
     }
     catch (exception& ex)
     {

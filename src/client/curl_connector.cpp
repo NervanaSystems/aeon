@@ -64,21 +64,8 @@ namespace nervana
         // Perform the request, res will get the return code
         CURLcode res = curl_easy_perform(curl_handle);
 
-        // Check for errors
-        long http_code = 0;
-        curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
-        if (res != CURLE_OK)
-        {
-            stringstream ss;
-            ss << "HTTP GET on \n'" << url << "' failed. ";
-            ss << "status code: " << http_code;
-            if (res != CURLE_OK)
-            {
-                ss << " curl return: " << curl_easy_strerror(res);
-            }
-
-            throw std::runtime_error(ss.str());
-        }
+        long http_code = get_http_code(curl_handle);
+        check_response(res, url, http_code);
 
         curl_easy_cleanup(curl_handle);
 
@@ -113,21 +100,8 @@ namespace nervana
         // Perform the request, res will get the return code
         CURLcode res = curl_easy_perform(curl_handle);
 
-        // Check for errors
-        long http_code = 0;
-        curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
-        if (res != CURLE_OK)
-        {
-            stringstream ss;
-            ss << "HTTP POST on \n'" << url << "' failed. ";
-            ss << "status code: " << http_code;
-            if (res != CURLE_OK)
-            {
-                ss << " curl return: " << curl_easy_strerror(res);
-            }
-
-            throw std::runtime_error(ss.str());
-        }
+        long http_code = get_http_code(curl_handle);
+        check_response(res, url, http_code);
 
         curl_easy_cleanup(curl_handle);
 
@@ -159,21 +133,40 @@ namespace nervana
         // Perform the request, res will get the return code
         CURLcode res = curl_easy_perform(curl_handle);
 
-        // Check for errors
-        long http_code = 0;
-        curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
-        if (res != CURLE_OK)
-        {
-            stringstream ss;
-            ss << "HTTP POST on \n'" << url << "' failed. ";
-            ss << "status code: " << http_code;
-            if (res != CURLE_OK)
-            {
-                ss << " curl return: " << curl_easy_strerror(res);
-            }
+        long http_code = get_http_code(curl_handle);
+        check_response(res, url, http_code);
 
-            throw std::runtime_error(ss.str());
+        curl_easy_cleanup(curl_handle);
+
+        return http_response(http_code, stream.str());
+    }
+
+    http_response curl_connector::del(const string& endpoint, const http_query_t& query)
+    {
+        CURL* curl_handle = curl_easy_init();
+        if (NULL == curl_handle)
+        {
+            throw std::runtime_error("curl init error");
         }
+
+        // given a url, make an HTTP DELETE request and fill stream with
+        // the body of the response
+        stringstream stream;
+
+        string url = merge_http_paths(m_address, endpoint);
+        url        = url_with_query(url, query);
+        curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &stream);
+        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
+        curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "DELETE");
+
+        INFO << "[DELETE] " << url;
+        // Perform the request, res will get the return code
+        CURLcode res = curl_easy_perform(curl_handle);
+
+        long http_code = get_http_code(curl_handle);
+        check_response(res, url, http_code);
 
         curl_easy_cleanup(curl_handle);
 
@@ -198,6 +191,29 @@ namespace nervana
 
         ss.read(static_cast<char*>(ptr), 1);
         return 1;
+    }
+
+    void curl_connector::check_response(CURLcode response, const string& url, long http_code)
+    {
+        if (response != CURLE_OK)
+        {
+            stringstream ss;
+            ss << "HTTP DELETE on \n'" << url << "' failed. ";
+            ss << "status code: " << http_code;
+            if (response != CURLE_OK)
+            {
+                ss << " curl return: " << curl_easy_strerror(response);
+            }
+
+            throw std::runtime_error(ss.str());
+        }
+    }
+
+    long curl_connector::get_http_code(CURL* curl_handle)
+    {
+        long http_code = 0;
+        curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
+        return http_code;
     }
 
     string curl_connector::url_with_query(const string& url, const nervana::http_query_t& query)

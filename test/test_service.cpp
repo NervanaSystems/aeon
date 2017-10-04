@@ -40,6 +40,7 @@ public:
     MOCK_METHOD2(get, http_response(const std::string& endpoint, const http_query_t& query));
     MOCK_METHOD2(post, http_response(const std::string& endpoint, const std::string& body));
     MOCK_METHOD2(post, http_response(const std::string& endpoint, const http_query_t& query));
+    MOCK_METHOD2(del, http_response(const std::string& endpoint, const http_query_t& query));
 };
 
 TEST(service_connector, create_session)
@@ -196,7 +197,7 @@ TEST(service_connector, close)
         expected_json["status"]["type"] = "SUCCESS";
         auto   expected_response        = http_response(http::status_ok, expected_json.dump());
         string endpoint                 = "/api/v1/dataset/" + session_id + "/close";
-        EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
+        EXPECT_CALL(*mock, del(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
         service_status status = connector.close_session(session_id);
 
@@ -212,7 +213,7 @@ TEST(service_connector, close)
         expected_json["status"]["type"] = "FAILURE";
         auto   expected_response        = http_response(http::status_ok, expected_json.dump());
         string endpoint                 = "/api/v1/dataset/" + session_id + "/close";
-        EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
+        EXPECT_CALL(*mock, del(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
         service_status status = connector.close_session(session_id);
 

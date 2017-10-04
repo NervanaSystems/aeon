@@ -137,7 +137,7 @@ service_response<string> nervana::service_connector::create_session(const std::s
 
 service_status nervana::service_connector::close_session(const std::string& id)
 {
-    http_response response = m_http->get(full_endpoint(id + "/close"));
+    http_response response = m_http->del(full_endpoint(id + "/close"));
     if (response.code != http::status_ok)
     {
         throw runtime_error("wrong http status code " + std::to_string(response.code));
