@@ -14,20 +14,21 @@
 
 namespace nervana
 {
-    struct default_config
+    template <typename T>
+    class statused_response
     {
-        size_t         height;
-        size_t         width;
-        size_t         batch_size;
-        size_t         record_count;
-        size_t         block_size;
-        std::string    manifest_filename;
-        nlohmann::json js_image;
-        nlohmann::json label;
-        nlohmann::json augmentation;
-        nlohmann::json js;
-        default_config();
+    public:
+        statused_response(int _status_code, const T& _value)
+            : status_code(_status_code)
+            , value(_value)
+        {
+        }
+        int status_code;
+        T   value;
     };
+
+    using json_response = statused_response<web::json::value>;
+    using next_tuple    = std::tuple<web::json::value, std::string>;
 
     class loader_adapter
     {
@@ -73,9 +74,9 @@ namespace nervana
     {
     public:
         server_parser();
-        web::json::value post(std::string msg, std::string msg_body);
-        web::json::value del(std::string msg);
-        std::tuple<web::json::value, std::string> get(std::string msg);
+        json_response post(std::string msg, std::string msg_body);
+        json_response del(std::string msg);
+        statused_response<next_tuple> get(std::string msg);
 
     private:
         const std::string version         = "v1";
@@ -85,7 +86,7 @@ namespace nervana
 
         loader_manager m_loader_manager;
 
-        std::tuple<web::json::value, std::string> next(loader_adapter& loader);
+        statused_response<next_tuple> next(loader_adapter& loader);
         web::json::value batch_size(loader_adapter& loader);
         web::json::value reset(loader_adapter& loader);
         web::json::value names_and_shapes(loader_adapter& loader);

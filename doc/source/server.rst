@@ -44,6 +44,8 @@ Parameters
    --port | p | true | uint | Server port to listen on.
    --daemon | d | false | flag | Runs ``aeon-server`` as daemon.
 
+RESTful API can be found :doc:`here <server_api>`.
+
 Client
 -----------
 Connection with server is configurable with ``server`` object from aeon config. Below you can find it's fields. If ``server`` object is absent, usual local data loading will happen.

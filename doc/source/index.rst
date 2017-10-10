@@ -20,10 +20,9 @@ Nervana aeon
 :Release: |version|
 :Date: |today|
 
-aeon_ is Nervana_ ’s project to enable fast and flexible access to data when
+aeon_ is Intel Nervana_ ’s project to enable fast and flexible access to data when
 training your neon_ neural network models. You probably want to get started
-with :doc:`installation <getting_started>` then on to the `user guide
-<user_guide>` followed by the more detailed `developer's guide <developer_guide>`.
+with :doc:`installation <getting_started>` then on to the :doc:`user guide <user_guide>` followed by the more detailed :doc:`developer's guide <developer_guide>`.
 
 This project is evolving quickly, so feel free to send us feature requests and
 bug reports at aeon_issues_ .
@@ -42,6 +41,7 @@ bug reports at aeon_issues_ .
    getting_started
    user_guide
    developer_guide
+   server
 
 .. toctree::
    :hidden:
@@ -82,3 +82,4 @@ bug reports at aeon_issues_ .
 
    python_api
    cpp_api
+   server_api

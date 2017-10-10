@@ -196,7 +196,7 @@ TEST(service_connector, close)
         json expected_json;
         expected_json["status"]["type"] = "SUCCESS";
         auto   expected_response        = http_response(http::status_ok, expected_json.dump());
-        string endpoint                 = "/api/v1/dataset/" + session_id + "/close";
+        string endpoint                 = "/api/v1/dataset/" + session_id;
         EXPECT_CALL(*mock, del(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
         service_status status = connector.close_session(session_id);
@@ -212,7 +212,7 @@ TEST(service_connector, close)
         json expected_json;
         expected_json["status"]["type"] = "FAILURE";
         auto   expected_response        = http_response(http::status_ok, expected_json.dump());
-        string endpoint                 = "/api/v1/dataset/" + session_id + "/close";
+        string endpoint                 = "/api/v1/dataset/" + session_id;
         EXPECT_CALL(*mock, del(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
         service_status status = connector.close_session(session_id);
@@ -256,7 +256,7 @@ TEST(service_connector, next)
 
         json expected_json;
         expected_json["status"]["type"] = "END_OF_DATASET";
-        auto   expected_response        = http_response(http::status_ok, expected_json.dump());
+        auto   expected_response        = http_response(http::status_no_data, expected_json.dump());
         string endpoint                 = "/api/v1/dataset/" + session_id + "/next";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
