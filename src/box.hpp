@@ -18,95 +18,109 @@
 #include <ostream>
 #include <opencv2/core/core.hpp>
 
+#include "util.hpp"
+
 namespace nervana
 {
     class box;
+    namespace boundingbox
+    {
+        class box;
+    }
+    namespace normalized_boundingbox
+    {
+        class box;
+    }
+    template <typename T>
+    float jaccard_overlap(const T& first_bbox, const T& second_bbox)
+    {
+        return first_bbox.jaccard_overlap(second_bbox);
+    }
+    template <typename T>
+    float coverage(const T& first_bbox, const T& second_bbox)
+    {
+        return first_bbox.coverage(second_bbox);
+    }
+    template <typename T>
+    T intersect(const T& first_bbox, const T& second_bbox)
+    {
+        return first_bbox.intersect(second_bbox);
+    }
+    normalized_boundingbox::box normalize(const boundingbox::box& b, float width, float height);
+    boundingbox::box unnormalize(const normalized_boundingbox::box& b, float width, float height);
+    std::vector<normalized_boundingbox::box>
+        normalize_bboxes(const std::vector<boundingbox::box>& bboxes, int width, int height);
 }
 
 class nervana::box
 {
 public:
-    box(bool normalized = false)
-        : m_xmin(0.f)
-        , m_ymin(0.f)
-        , m_xmax(0.f)
-        , m_ymax(0.f)
-        , m_normalized(normalized)
+    box() = default;
+    box(float xmin, float ymin, float xmax, float ymax)
+        : m_xmin(xmin)
+        , m_ymin(ymin)
+        , m_xmax(xmax)
+        , m_ymax(ymax)
     {
     }
-
-    box(float _xmin, float _ymin, float _xmax, float _ymax, bool normalized = false)
-        : m_xmin{_xmin}
-        , m_ymin{_ymin}
-        , m_xmax{_xmax}
-        , m_ymax{_ymax}
-        , m_normalized{normalized}
-    {
-        if (m_normalized)
-        {
-            try
-            {
-                throw_if_improperly_normalized();
-            }
-            catch (std::exception& e)
-            {
-                std::stringstream ss;
-                ss << "Constructor of the box object: " << e.what();
-                throw std::invalid_argument(ss.str());
-            }
-        }
-    }
-
-    box(const box& b);
-    box(const box&& b);
-
-    box& operator=(const box& b);
-
-    box operator+(const box& b) const
-    {
-        return box(m_xmin + b.m_xmin,
-                   m_ymin + b.m_ymin,
-                   m_xmax + b.m_xmax,
-                   m_ymax + b.m_ymax,
-                   m_normalized);
-    }
-    box operator*(float v) const
-    {
-        return box(m_xmin * v, m_ymin * v, (m_xmax + 1) * v - 1, (m_ymax + 1) * v - 1);
-    }
-    bool operator==(const box& b) const;
-
-    cv::Rect rect() const
+    virtual ~box() {}
+    virtual float    width() const { return m_xmax - m_xmin + 1; }
+    virtual float    height() const { return m_ymax - m_ymin + 1; }
+    virtual cv::Rect rect() const
     {
         return cv::Rect(
             std::round(m_xmin), std::round(m_ymin), std::round(width()), std::round(height()));
     }
-    float xcenter() const;
-    float ycenter() const;
+    float size() const
+    {
+        if (xmax() < xmin() || ymax() < ymin())
+        {
+            // If box is invalid (e.g. xmax < xmin or ymax < ymin), return 0.
+            return 0.0f;
+        }
+        else
+        {
+            return width() * height();
+        }
+    }
+
+    nervana::box operator+(const nervana::box& b) const
+    {
+        return nervana::box(
+            m_xmin + b.xmin(), m_ymin + b.ymin(), m_xmax + b.xmax(), m_ymax + b.ymax());
+    }
+    nervana::box operator*(float v) const
+    {
+        return nervana::box(m_xmin * v, m_ymin * v, m_xmax * v, m_ymax * v);
+    }
+    bool operator==(const nervana::box& b) const
+    {
+        return nervana::almost_equal(m_xmin, b.m_xmin) && nervana::almost_equal(m_xmax, b.m_xmax) &&
+               nervana::almost_equal(m_ymin, b.m_ymin) && nervana::almost_equal(m_ymax, b.m_ymax);
+    }
+    bool operator!=(const nervana::box& b) const { return !((*this) == b); }
+    nervana::box& operator=(const nervana::box& b);
+
+    const static nervana::box& zerobox()
+    {
+        throw std::runtime_error("Called zerobox, which is not defined for base class `box`");
+    }
+
+    float ymin() const { return m_ymin; }
+    float xmin() const { return m_xmin; }
+    float ymax() const { return m_ymax; }
+    float xmax() const { return m_xmax; }
+    float xcenter() const { return m_xmin + (m_xmax - m_xmin) / 2.; }
+    float ycenter() const { return m_ymin + (m_ymax - m_ymin) / 2.; }
     void set_xmin(float x) { m_xmin = x; }
-    float               xmin() const { return m_xmin; }
     void set_ymin(float y) { m_ymin = y; }
-    float               ymin() const { return m_ymin; }
     void set_xmax(float xmax) { m_xmax = xmax; }
-    float               xmax() const { return m_xmax; }
     void set_ymax(float ymax) { m_ymax = ymax; }
-    float               ymax() const { return m_ymax; }
-    float               width() const;
-    float               height() const;
-    void set_normalized(bool normalized) { m_normalized = normalized; }
-    bool                     normalized() const { return m_normalized; }
-    bool                     is_properly_normalized() const;
-    void                     throw_if_improperly_normalized() const;
-
-    const static nervana::box& zerobox();
-
 protected:
-    float m_xmin;
-    float m_ymin;
-    float m_xmax;
-    float m_ymax;
-
-    bool m_normalized;
+    float m_xmin = 0;
+    float m_ymin = 0;
+    float m_xmax = 0;
+    float m_ymax = 0;
 };
 
 std::ostream& operator<<(std::ostream& out, const nervana::box& b);

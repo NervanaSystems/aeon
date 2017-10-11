@@ -35,6 +35,7 @@ set (SRC
     manifest_file.cpp
     manifest_nds.cpp
     noise_clips.cpp
+    normalized_boundingbox.cpp
     provider.cpp
     provider_factory.cpp
     specgram.cpp

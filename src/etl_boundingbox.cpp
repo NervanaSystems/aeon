@@ -21,7 +21,8 @@ using namespace std;
 using namespace nervana;
 using namespace nlohmann; // json stuff
 
-using bbox = boundingbox::box;
+using bbox            = boundingbox::box;
+using normalized_bbox = normalized_boundingbox::box;
 
 boundingbox::config::config(nlohmann::json js)
 {
@@ -95,7 +96,6 @@ void boundingbox::extractor::extract(const void*                            data
     for (auto object : object_list)
     {
         auto bndbox = object["bndbox"];
-        bbox b;
         if (bndbox["xmax"].is_null())
         {
             throw invalid_argument("'xmax' missing from metadata");
@@ -116,45 +116,35 @@ void boundingbox::extractor::extract(const void*                            data
         {
             throw invalid_argument("'name' missing from metadata");
         }
-        b.set_xmax(bndbox["xmax"]);
-        b.set_xmin(bndbox["xmin"]);
-        b.set_ymax(bndbox["ymax"]);
-        b.set_ymin(bndbox["ymin"]);
-        if (!object["difficult"].is_null())
+
+        bool difficult = object["difficult"].is_null() ? false : object["difficult"].get<bool>();
+        bool truncated = object["truncated"].is_null() ? false : object["truncated"].get<bool>();
+        int  label     = this->get_label(object);
+        // force normalized value to true if boxes_normalized is set to true
+        if (boxes_normalized || (!object["normalized"].is_null() && object["normalized"]))
         {
-            b.difficult = object["difficult"];
-        }
-        if (!object["truncated"].is_null())
-        {
-            b.truncated = object["truncated"];
-        }
-        if (!object["normalized"].is_null())
-        {
-            b.set_normalized(object["normalized"]);
-        }
-        // force normalized value to true if got_boxes_normalized is set to true
-        if (boxes_normalized)
-        {
-            b.set_normalized(true);
-        }
-        if (b.normalized())
-        {
-            b.throw_if_improperly_normalized();
-        }
-        string name  = object["name"];
-        auto   found = label_map.find(name);
-        if (found == label_map.end())
-        {
-            // did not find the label in the ctor supplied label list
-            stringstream ss;
-            ss << "label '" << name << "' not found in metadata label list";
-            throw invalid_argument(ss.str());
+            normalized_bbox nb(bndbox["xmin"],
+                               bndbox["ymin"],
+                               bndbox["xmax"],
+                               bndbox["ymax"],
+                               label,
+                               difficult,
+                               truncated);
+
+            // unnormalize boxes if necessary
+            rc->m_boxes.push_back(unnormalize(nb, rc->width(), rc->height()));
         }
         else
         {
-            b.label = found->second;
+            bbox b(bndbox["xmin"],
+                   bndbox["ymin"],
+                   bndbox["xmax"],
+                   bndbox["ymax"],
+                   label,
+                   difficult,
+                   truncated);
+            rc->m_boxes.push_back(b);
         }
-        rc->m_boxes.push_back(b);
     }
 }
 
@@ -217,7 +207,7 @@ vector<bbox> boundingbox::transformer::transform_box(const std::vector<bbox>&   
     {
         if (pptr->expand_ratio > 1.)
         {
-            b.expand_bbox(pptr->expand_offset, pptr->expand_size, pptr->expand_ratio);
+            b = b.expand(pptr->expand_offset, pptr->expand_size, pptr->expand_ratio);
         }
 
         if (pptr->emit_constraint_type != emit_type::undefined &&
@@ -285,6 +275,20 @@ vector<bbox> boundingbox::transformer::transform_box(const std::vector<bbox>&   
         }
     }
     return rc;
+}
+
+int nervana::boundingbox::extractor::get_label(const json& object) const
+{
+    string obj_name = object["name"];
+    auto   found    = label_map.find(obj_name);
+    if (found == label_map.end())
+    {
+        // did not find the label in the ctor supplied label list
+        stringstream ss;
+        ss << "label '" << obj_name << "' not found in metadata label list";
+        throw invalid_argument(ss.str());
+    }
+    return found->second;
 }
 
 shared_ptr<boundingbox::decoded>

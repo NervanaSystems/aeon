@@ -102,6 +102,7 @@ public:
 private:
     extractor() = delete;
     std::unordered_map<std::string, int> label_map;
+    int get_label(const nlohmann::json& object) const;
 };
 
 class nervana::boundingbox::transformer

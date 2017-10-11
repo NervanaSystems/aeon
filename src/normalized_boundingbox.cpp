@@ -15,10 +15,12 @@
 
 #include <sstream>
 #include "etl_boundingbox.hpp"
+#include "util.hpp"
 #include "log.hpp"
 
 using std::ostream;
-using bbox = nervana::boundingbox::box;
+using bbox = nervana::normalized_boundingbox::box;
+using nervana::almost_equal;
 
 ostream& operator<<(ostream& out, const bbox& b)
 {
@@ -49,6 +51,16 @@ bbox& bbox::operator=(const bbox& b)
         m_label     = b.m_label;
         m_difficult = b.m_difficult;
         m_truncated = b.m_truncated;
+
+        try
+        {
+            throw_if_improperly_normalized();
+        }
+        catch (std::exception&)
+        {
+            ERR << "Error when assigning normalized bbox: " << b;
+            throw;
+        }
     }
     return *this;
 }
@@ -64,13 +76,13 @@ bool bbox::operator!=(const bbox& b) const
     return !((*this) == b);
 }
 
-bbox bbox::operator+(const cv::Point& s) const
+bbox bbox::operator+(const bbox& b) const
 {
     bbox rc = *this;
-    rc.m_xmin += s.x;
-    rc.m_ymin += s.y;
-    rc.m_xmax += s.x;
-    rc.m_ymax += s.y;
+    rc.m_xmin += b.xmin();
+    rc.m_ymin += b.ymin();
+    rc.m_xmax += b.xmax();
+    rc.m_ymax += b.ymax();
     return rc;
 }
 
@@ -79,28 +91,9 @@ bbox bbox::rescale(float x, float y) const
     bbox rc   = *this;
     rc.m_xmin = rc.m_xmin * x;
     rc.m_ymin = rc.m_ymin * y;
-    rc.m_xmax = (rc.m_xmax + 1) * x - 1;
-    rc.m_ymax = (rc.m_ymax + 1) * y - 1;
+    rc.m_xmax = rc.m_xmax * x;
+    rc.m_ymax = rc.m_ymax * y;
     return rc;
-}
-
-bbox bbox::expand(const cv::Size2i& expand_offset,
-                  const cv::Size2i& expand_size,
-                  const float       expand_ratio) const
-{
-    if (m_xmax + expand_offset.width > expand_size.width ||
-        m_ymax + expand_offset.height > expand_size.height)
-    {
-        std::stringstream ss;
-        ss << "Invalid parameters to expand boundingbox: " << *this << std::endl
-           << "Expand_offset: " << expand_offset << " expand_size: " << expand_size << std::endl
-           << m_xmax << " + " << expand_offset.width << " > " << expand_size.width << " || "
-           << m_ymax << " + " << expand_offset.height << " > " << expand_size.height;
-
-        throw std::invalid_argument(ss.str());
-    }
-
-    return *this + expand_offset;
 }
 
 float bbox::jaccard_overlap(const bbox& second_bbox) const
@@ -133,7 +126,7 @@ float bbox::coverage(const bbox& second_bbox) const
 
 bbox bbox::intersect(const bbox& second_bbox) const
 {
-    // Return [0, 0, -1, -1] if there is no intersection.
+    // Return [0, 0, 0, 0, true] if there is no intersection.
     if (second_bbox.xmin() > xmax() || second_bbox.xmax() < xmin() || second_bbox.ymin() > ymax() ||
         second_bbox.ymax() < ymin())
     {
@@ -144,4 +137,23 @@ bbox bbox::intersect(const bbox& second_bbox) const
                 std::max(ymin(), second_bbox.ymin()),
                 std::min(xmax(), second_bbox.xmax()),
                 std::min(ymax(), second_bbox.ymax()));
+}
+
+bool bbox::is_properly_normalized() const
+{
+    auto is_value_normalized = [](float x) {
+        return almost_equal_or_greater(x, 0.0f) && almost_equal_or_less(x, 1.0);
+    };
+    return is_value_normalized(m_xmin) && is_value_normalized(m_xmax) &&
+           is_value_normalized(m_ymin) && is_value_normalized(m_ymax);
+}
+
+void bbox::throw_if_improperly_normalized() const
+{
+    if (!is_properly_normalized())
+    {
+        std::stringstream ss;
+        ss << "bounding box '" << (*this) << "' is not properly normalized";
+        throw std::invalid_argument(ss.str());
+    }
 }
