@@ -140,7 +140,7 @@ void loader_adapter::reset()
 
 string loader_adapter::batch_size() const
 {
-    return to_string(m_loader.batch_size());
+    return std::to_string(m_loader.batch_size());
 };
 
 string loader_adapter::names_and_shapes() const
@@ -152,12 +152,12 @@ string loader_adapter::names_and_shapes() const
 
 string loader_adapter::batch_count() const
 {
-    return to_string(m_loader.batch_count());
+    return std::to_string(m_loader.batch_count());
 }
 
 string loader_adapter::record_count() const
 {
-    return to_string(m_loader.record_count());
+    return std::to_string(m_loader.record_count());
 }
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -182,7 +182,7 @@ json_response server_parser::post(std::string msg, std::string msg_body)
         web::json::value reply_json  = web::json::value::object();
         reply_json["status"]["type"] = web::json::value::string("SUCCESS");
         reply_json["data"]["id"]     = web::json::value::string(
-            to_string(m_loader_manager.register_agent(json::parse(msg_body))));
+            std::to_string(m_loader_manager.register_agent(json::parse(msg_body))));
         return json_response(status_codes::Accepted, reply_json);
     }
     catch (exception& ex)
