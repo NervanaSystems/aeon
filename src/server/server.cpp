@@ -125,7 +125,11 @@ string loader_adapter::next()
     }
     else
     {
-        std::stringstream ss;
+        // stringstream initialization is very costly, so we have to avoid it by using thread_local.
+        // It has a drawback though that of increased memory consumption.
+        // If this is a problem, we can consider using sprintf and allocating memory on each request.
+        thread_local std::ostringstream ss;
+        ss.seekp(ios::beg);
         ss << *m_loader.get_current_iter();
         return ss.str();
     }
