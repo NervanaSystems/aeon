@@ -85,8 +85,6 @@ class nervana::augmentation
 public:
     std::shared_ptr<augment::image::params> m_image_augmentations;
     std::shared_ptr<augment::audio::params> m_audio_augmentations;
-
-    std::shared_ptr<box> m_sample;
 };
 
 //=================================================================================================
