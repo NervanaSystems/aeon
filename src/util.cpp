@@ -294,13 +294,14 @@ cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
             samples_mat.at<int16_t>(i, 0) = SOX_SAMPLE_TO_SIGNED_16BIT(sample_buffer[i], nclipped);
         }
         delete[] sample_buffer;
-
+        sox_close(in);
         return samples_mat;
     }
     else
     {
         std::cout << "Unable to read";
         cv::Mat samples_mat(1, 1, CV_16SC1);
+        sox_close(in);
         return samples_mat;
     }
 }
