@@ -113,7 +113,6 @@ high and low level build systems)::
 
     cd aeon
     pip3 install -r requirements.txt
-    pip install numpy==1.11.1
     mkdir -p build && cd $_ && cmake .. && pip3 install .
 
 Note: if installing system wide (as opposed to within a virtual environment) you may need to run `sudo`
