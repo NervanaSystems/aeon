@@ -81,3 +81,6 @@ cmake-build-*
 *.REMOTE
 *.LOCAL
 *.BASE
+
+# StGit temporary files/folders
+patches-*/
