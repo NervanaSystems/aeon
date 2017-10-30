@@ -11,6 +11,7 @@
 
 #include "json.hpp"
 #include "loader.hpp"
+#include "log.hpp"
 
 namespace nervana
 {
@@ -35,7 +36,6 @@ namespace nervana
     public:
         loader_adapter(const nlohmann::json& config)
             : m_loader(config)
-            , m_is_reset(true)
         {
         }
         void        reset();
@@ -49,7 +49,7 @@ namespace nervana
     private:
         nervana::loader_local m_loader;
         std::mutex            m_mutex;
-        bool                  m_is_reset;
+        bool                  m_is_reset{ true };
     };
 
     class loader_manager
@@ -94,20 +94,54 @@ namespace nervana
         web::json::value record_count(loader_adapter& loader);
     };
 
-    class aeon_server
+  class daemon {
+  public:
+    explicit daemon(const std::string& addr)
+      : listener_{ web::http::uri_builder{ addr }.append_path(U("api")).to_uri() }
     {
-    public:
-        aeon_server(std::string http_addr);
-        ~aeon_server();
+      listener_.support(web::http::methods::POST,
+                        std::bind(&daemon::handle_post, this, std::placeholders::_1));
+      listener_.support(web::http::methods::GET,
+                        std::bind(&daemon::handle_get, this, std::placeholders::_1));
+      listener_.support(web::http::methods::DEL,
+                        std::bind(&daemon::handle_delete, this, std::placeholders::_1));
 
-    private:
-        void handle_post(web::http::http_request message);
-        void handle_get(web::http::http_request message);
-        void handle_delete(web::http::http_request message);
+      listener_.open().wait();
+    }
 
-        static utility::string_t path;
+    daemon() = delete;
 
-        std::unique_ptr<web::http::experimental::listener::http_listener> m_listener;
-        server_parser                                                     m_server_parser;
-    };
+    daemon(const daemon&) = delete;
+    daemon& operator = (const daemon&) = delete;
+
+    daemon(daemon&&) = delete;
+    daemon& operator = (daemon&&) = delete;
+
+    ~daemon() {
+      listener_.close().wait();
+    }
+
+  private:
+    web::http::experimental::listener::http_listener listener_;
+    server_parser server_parser_;
+
+    void handle_post(web::http::http_request r) {
+      log::info("POST %s", r.relative_uri().path());
+      r.reply(web::http::status_codes::Accepted,
+              server_parser_.post(web::uri::decode(r.relative_uri().path()),
+                                  r.extract_string().get()));
+    }
+    void handle_get(web::http::http_request r) {
+      log::info("GET %s", r.relative_uri().path());
+      auto answer{ server_parser_.get(web::uri::decode(r.relative_uri().path())) };
+      r.reply(std::get<1>(answer).empty() ?
+              web::http::status_codes::OK : web::http::status_codes::Accepted,
+              std::get<0>(answer));
+    }
+    void handle_delete(web::http::http_request r) {
+      log::info("DELETE %s", r.relative_uri().path());
+      r.reply(web::http::status_codes::OK,
+              server_parser_.del(web::uri::decode(r.relative_uri().path())));
+    }
+  };
 }

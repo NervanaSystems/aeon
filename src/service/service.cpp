@@ -2,7 +2,7 @@
 #include <memory>
 #include <sstream>
 
-#include "server.hpp"
+#include "service.hpp"
 #include "json.hpp"
 #include "loader.hpp"
 #include "typemap.hpp"
@@ -16,7 +16,7 @@ using namespace nervana;
 
 namespace
 {
-    const string     notFoundLoader = "loader doesn't exist";
+    constexpr char notFoundLoader[] = "loader doesn't exist";
     web::json::value notFoundJson();
 }
 
@@ -57,56 +57,7 @@ nervana::loader_adapter& loader_manager::loader(uint32_t id)
     return *it->second.get();
 }
 
-utility::string_t aeon_server::path = U("api");
 
-aeon_server::aeon_server(std::string http_addr)
-{
-    uri_builder uri(http_addr);
-    uri.append_path(path);
-
-    auto addr = uri.to_uri().to_string();
-
-    m_listener = unique_ptr<web::http::experimental::listener::http_listener>(
-        new web::http::experimental::listener::http_listener(addr));
-
-    m_listener->support(methods::POST,
-                        std::bind(&aeon_server::handle_post, this, std::placeholders::_1));
-    m_listener->support(methods::GET,
-                        std::bind(&aeon_server::handle_get, this, std::placeholders::_1));
-    m_listener->support(methods::DEL,
-                        std::bind(&aeon_server::handle_delete, this, std::placeholders::_1));
-    m_listener->open().wait();
-}
-
-aeon_server::~aeon_server()
-{
-    m_listener->close().wait();
-}
-
-void aeon_server::handle_post(http_request message)
-{
-    INFO << "[POST] " << message.relative_uri().path();
-    auto response = m_server_parser.post(web::uri::decode(message.relative_uri().path()),
-                                         message.extract_string().get());
-    message.reply(response.status_code, response.value);
-}
-
-void aeon_server::handle_get(http_request message)
-{
-    INFO << "[GET] " << message.relative_uri().path();
-    auto reply = m_server_parser.get(web::uri::decode(message.relative_uri().path()));
-    if (std::get<1>(reply.value).empty())
-        message.reply(reply.status_code, get<0>(reply.value));
-    else
-        message.reply(reply.status_code, get<1>(reply.value));
-}
-
-void aeon_server::handle_delete(http_request message)
-{
-    INFO << "[DELETE] " << message.relative_uri().path();
-    auto response = m_server_parser.del(web::uri::decode(message.relative_uri().path()));
-    message.reply(response.status_code, response.value);
-}
 
 // /////////////////////////////////////////////////////////////////////////////
 
