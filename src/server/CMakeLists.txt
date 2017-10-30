@@ -43,8 +43,8 @@ find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIRS})
 link_directories(${OPENSSL_LIBRARY_DIRS})
 
-set(AEON_SERVICE_SOURCES aeonsvc.cpp pidfile.cpp server.cpp status.cpp utils.cpp)
-set(AEON_SERVICE_HEADERS aeonsvc.hpp config.h dataset.hpp pidfile.h server.hpp status.h utils.h)
+set(AEON_SERVICE_SOURCES daemon.cpp server.cpp)
+set(AEON_SERVICE_HEADERS dataset.hpp server.hpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
