@@ -75,3 +75,9 @@ venv/
 
 # Ignore CLion default build directories
 cmake-build-*
+
+# Git-merge/rebase temporary files
+*.orig
+*.REMOTE
+*.LOCAL
+*.BASE
