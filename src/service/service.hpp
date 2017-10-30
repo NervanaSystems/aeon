@@ -127,21 +127,22 @@ namespace nervana
 
     void handle_post(web::http::http_request r) {
       log::info("POST %s", r.relative_uri().path());
-      r.reply(web::http::status_codes::Accepted,
-              server_parser_.post(web::uri::decode(r.relative_uri().path()),
-                                  r.extract_string().get()));
+      auto answer{ server_parser_.post(web::uri::decode(r.relative_uri().path()), r.extract_string().get()) };
+      r.reply(answer.status_code, answer.value);
     }
     void handle_get(web::http::http_request r) {
       log::info("GET %s", r.relative_uri().path());
       auto answer{ server_parser_.get(web::uri::decode(r.relative_uri().path())) };
-      r.reply(std::get<1>(answer).empty() ?
-              web::http::status_codes::OK : web::http::status_codes::Accepted,
-              std::get<0>(answer));
+      if (std::get<1>(answer.value).empty()) {
+        r.reply(answer.status_code, std::get<0>(answer.value));
+      } else {
+        r.reply(answer.status_code, std::get<1>(answer.value));
+      }
     }
     void handle_delete(web::http::http_request r) {
       log::info("DELETE %s", r.relative_uri().path());
-      r.reply(web::http::status_codes::OK,
-              server_parser_.del(web::uri::decode(r.relative_uri().path())));
+      auto answer{ server_parser_.del(web::uri::decode(r.relative_uri().path())) };
+      r.reply(answer.status_code, answer.value);
     }
   };
 }
