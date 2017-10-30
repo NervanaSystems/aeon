@@ -69,3 +69,9 @@ config_args.txt
 .nfs*
 venv/
 .vscode/
+
+# Ignore CLion project folder
+.idea/
+
+# Ignore CLion default build directories
+cmake-build-*
