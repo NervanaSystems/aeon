@@ -76,6 +76,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-double-promotion")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
 
+find_package(Threads)
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(SOX REQUIRED sox)
@@ -118,6 +119,36 @@ else()
     message("Python not found, Python interface not included")
     set(PYTHON_LIBRARIES "")
 endif (PYTHONLIBS_FOUND)
+
+# Check for C++ REST API (Casablanca)
+pkg_check_modules(CPPREST cpprest)
+
+if (NOT CPPREST_FOUND)
+    set(CPPREST_LIBRARIES cpprest)
+    find_path(CPPREST_INCLUDE_DIRS
+            NAMES cpprest/http_client.h
+            PATHS ${CPPREST_DIR} $ENV{CPPREST_DIR} ${CASABLANKA_DIR} $ENV{CASABLANKA_DIR} /usr/local/include /usr/include
+            PATH_SUFFIXES Release/include include)
+    find_library(CPPREST_LIBRARY_DIRS
+            NAME libcpprest.so
+            PATHS ${CPPREST_DIR} $ENV{CPPREST_DIR} ${CASABLANKA_DIR} $ENV{CASABLABKA_DIR} /usr/local /usr
+            PATH_SUFFIXES lib Release/build.release/Binaries build.release/Binaries)
+endif(NOT CPPREST_FOUND)
+
+include_directories(${CPPREST_INCLUDE_DIRS})
+link_directories(${CPPREST_LIBRARY_DIRS})
+
+# Check for BOOST components
+find_package(Boost REQUIRED COMPONENTS system filesystem)
+
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
+# Check for OpenSSL
+find_package(OpenSSL REQUIRED)
+
+include_directories(${OPENSSL_INCLUDE_DIRS})
+link_directories(${OPENSSL_LIBRARY_DIRS})
 
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 

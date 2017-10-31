@@ -61,7 +61,6 @@ static std::ostream& operator<<(std::ostream& out, const emit_type& et)
     case emit_type::center: out << "center"; break;
     case emit_type::min_overlap: out << "min_overlap"; break;
     case emit_type::undefined: out << "undefined"; break;
-    default: throw std::out_of_range("cannot print provided emit_type value");
     }
     return out;
 }

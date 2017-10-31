@@ -33,7 +33,7 @@
 using namespace nervana;
 
 namespace {
-  namespace service {
+  namespace detail {
 
     void fini(int, void *) {
       pidfile::remove();
@@ -120,7 +120,7 @@ int main(int argc, char* argv[]) {
       cfg_path = optarg;
       break;
     case 'h':
-      service::help(progname);
+      detail::help(progname);
       return 0;
     case 'd':
       run_as_daemon = true;
@@ -221,19 +221,19 @@ int main(int argc, char* argv[]) {
       exit(EXIT_FAILURE);
     }
   }
-  if (on_exit(service::fini, nullptr)) {
+  if (on_exit(detail::fini, nullptr)) {
     exit(EXIT_FAILURE);
   }
 
   log::info("starting AEON service...");
 
-  signal(SIGINT, service::sighandler);
-  signal(SIGHUP, service::sighandler);
-  signal(SIGTERM, service::sighandler);
+  signal(SIGINT, detail::sighandler);
+  signal(SIGHUP, detail::sighandler);
+  signal(SIGTERM, detail::sighandler);
 
   log::info("signal handlers installed");
   try {
-    service::read_configuration(cfg_path);
+    detail::read_configuration(cfg_path);
   } catch(std::exception& e) {
     log::error("failure to read configuration - %s"
                 "terminating...", e.what());
@@ -241,17 +241,17 @@ int main(int argc, char* argv[]) {
   }
   log::info("configuration read successfully");
   try {
-    nervana::daemon daemon{ addr + ":" + port };
+    aeon::service service{ addr + ":" + port };
   } catch(const web::uri_exception& e) {
     log::critical("unable to start AEON service - %s, "
         "terminating...", e.what());
     exit(EXIT_FAILURE);
   }
   log::info("AEON service started");
-  while (service::terminate == 0) {
-    if (service::configure != 0) {
+  while (detail::terminate == 0) {
+    if (detail::configure != 0) {
       log::info("configuration reloaded successfully");
-      service::read_configuration(cfg_path);
+      detail::read_configuration(cfg_path);
     }
     sleep(5);
   }

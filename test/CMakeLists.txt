@@ -7,6 +7,7 @@ set (SRC
     helpers.cpp
     main.cpp
     manifest_builder.cpp
+    ../src/service/service.cpp
     test_async_manager.cpp
     test_audio.cpp
     test_augmentation.cpp
@@ -43,7 +44,9 @@ set (SRC
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
 
 add_executable(testsuite ${SRC})
-target_link_libraries(testsuite aeon pthread sox ${CURL_LIBRARIES} gtest gmock ${LCOVERAGE} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
+target_link_libraries(testsuite aeon ${SOX_LIBRARIES} ${CURL_LIBRARIES} gtest gmock
+		${LCOVERAGE} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES} ${CPPREST_LIBRARIES}
+		${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 add_dependencies(testsuite aeon)
 
 add_custom_target(runtest

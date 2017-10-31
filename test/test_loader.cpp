@@ -30,7 +30,7 @@
 #include "gen_image.hpp"
 #include "file_util.hpp"
 #include "util.hpp"
-#include "../server/server.hpp"
+#include "service/service.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -475,7 +475,7 @@ TEST(loader, loader_factory_server)
 {
     loader_factory factory;
     json           config_json = create_some_config_with_manifest();
-    aeon_server    server("http://127.0.0.1:34568");
+    aeon::service  service{ "http://127.0.0.1:34568" };
 
     // there is no server running, so we expect exception
     config_json["server"] = {{"address", "127.0.0.1"}, {"port", 34569}};

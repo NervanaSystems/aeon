@@ -13,40 +13,11 @@
 # limitations under the License.
 #
 
-# Check for C++ REST API (Casablanca)
-pkg_check_modules(CPPREST cpprest)
-
-if (NOT CPPREST_FOUND)
-    set(CPPREST_LIBRARIES cpprest)
-    find_path(CPPREST_INCLUDE_DIRS
-          NAMES cpprest/http_client.h
-          PATHS ${CPPREST_DIR} $ENV{CPPREST_DIR} ${CASABLANKA_DIR} $ENV{CASABLANKA_DIR} /usr/local/include /usr/include
-          PATH_SUFFIXES Release/include include)
-    find_library(CPPREST_LIBRARY_DIRS
-          NAME libcpprest.so
-          PATHS ${CPPREST_DIR} $ENV{CPPREST_DIR} ${CASABLANKA_DIR} $ENV{CASABLABKA_DIR} /usr/local /usr
-          PATH_SUFFIXES lib Release/build.release/Binaries build.release/Binaries)
-endif(NOT CPPREST_FOUND)
-
-include_directories(${CPPREST_INCLUDE_DIRS})
-link_directories(${CPPREST_LIBRARY_DIRS})
-
-# Check for BOOST components
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
-
-# Check for OpenSSL
-find_package(OpenSSL REQUIRED)
-
-include_directories(${OPENSSL_INCLUDE_DIRS})
-link_directories(${OPENSSL_LIBRARY_DIRS})
-
 set(AEON_SERVICE_SOURCES daemon.cpp service.cpp)
 set(AEON_SERVICE_HEADERS dataset.hpp log.hpp pidfile.hpp service.hpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 add_executable(aeon-service ${AEON_SERVICE_SOURCES} ${AEON_SERVICE_HEADERS})
-target_link_libraries(aeon-service aeon pthread ${Boost_LIBRARIES} ${CPPREST_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(aeon-service aeon ${CMAKE_THREAD_LIBS_INIT}
+        ${Boost_LIBRARIES} ${CPPREST_LIBRARIES} ${OPENSSL_LIBRARIES})
