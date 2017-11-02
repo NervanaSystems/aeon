@@ -32,7 +32,7 @@ namespace nervana {
 
     class loader_adapter {
     public:
-      loader_adapter(const nlohmann::json &config)
+      explicit loader_adapter(const nlohmann::json &config)
         : m_loader(config) {
       }
 
