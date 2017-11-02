@@ -103,7 +103,7 @@ namespace nervana {
 
 // ////////////////////////////////////////////////////////////////////////////
 
-#define REGISTER_SRV_FUNCTION(f) process_func[#f] = &parser::f;
+#define REGISTER_SRV_FUNCTION(f) process_func[#f] = std::bind(&parser::f, this, std::placeholders::_1)
 
     parser::parser() {
         REGISTER_SRV_FUNCTION(batch_size);
@@ -161,7 +161,7 @@ namespace nervana {
                 else
                     return statused_response<next_tuple>(
                       status_codes::OK,
-                      make_tuple((this->*it->second)(m_loader_manager.loader(dataset_id)), ""));
+                      make_tuple((it->second)(m_loader_manager.loader(dataset_id)), ""));
             }
         }
         catch (exception &ex) {

@@ -39,13 +39,9 @@ namespace nervana {
       void reset();
 
       std::string next();
-
       std::string batch_size() const;
-
       std::string names_and_shapes() const;
-
       std::string batch_count() const;
-
       std::string record_count() const;
 
     private:
@@ -83,9 +79,9 @@ namespace nervana {
       const std::string version = "v1";
       const std::string endpoint_prefix = "/" + version + "/dataset";
 
-      typedef web::json::value (parser::*msg_process_func_t)(loader_adapter &);
+      using msg_process_func_t = std::function<web::json::value(loader_adapter&)>;
 
-      std::map<std::string, parser::msg_process_func_t> process_func;
+      std::map<std::string, msg_process_func_t> process_func;
       loader_manager m_loader_manager;
 
       statused_response<next_tuple> next(loader_adapter &loader);
