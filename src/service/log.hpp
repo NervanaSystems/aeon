@@ -186,16 +186,16 @@ namespace nervana {
 
         void _output(const std::string& prefix, const std::string& msg) {
           std::stringstream ss;
-          stamp t{ ss, [&prefix](std::ostream& os) {
+          detail::stamp stamp{ ss, [&prefix](std::ostream& os) {
             std::chrono::system_clock::time_point tp{ std::chrono::system_clock::now() };
             std::time_t tt{ std::chrono::system_clock::to_time_t(tp) };
-            std::tm tm; gmtime_r(&tt, &tm);
-            std::chrono::duration<double> sd{ tp - std::chrono::system_clock::from_time_t(tt) + std::chrono::seconds{ tm.tm_sec } };
-            os << std::setw(4) << std::setfill('0') << tm.tm_year << "-"
-               << std::setw(2) << std::setfill('0') << tm.tm_mon << "-"
-               << std::setw(2) << std::setfill('0') << tm.tm_mday << " "
-               << std::setw(2) << std::setfill('0') << tm.tm_hour << ":"
-               << std::setw(2) << std::setfill('0') << tm.tm_min << ":"
+            std::tm *tm{ std::localtime(&tt) };
+            std::chrono::duration<double> sd{ tp - std::chrono::system_clock::from_time_t(tt) + std::chrono::seconds{ tm->tm_sec } };
+            os << std::setw(4) << std::setfill('0') << tm->tm_year + 1900 << "-"
+               << std::setw(2) << std::setfill('0') << tm->tm_mon << "-"
+               << std::setw(2) << std::setfill('0') << tm->tm_mday << " "
+               << std::setw(2) << std::setfill('0') << tm->tm_hour << ":"
+               << std::setw(2) << std::setfill('0') << tm->tm_min << ":"
                << (sd.count() < 10 ? "0" : "") << std::fixed << sd.count()
                << " [" << prefix << "] ";
             } };
