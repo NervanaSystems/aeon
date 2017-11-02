@@ -19,11 +19,11 @@ namespace nervana {
     template<typename T>
     class statused_response {
     public:
-      statused_response(int _status_code, const T &_value)
+      statused_response(web::http::status_code _status_code, const T &_value)
         : status_code(_status_code), value(_value) {
       }
 
-      int status_code;
+      web::http::status_code status_code;
       T value;
     };
 
