@@ -1,5 +1,5 @@
 /*
- Copyright 2017 Nervana Systems Inc.
+ Copyright 2017 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -32,16 +32,26 @@ using nervana::fixed_buffer_map;
 namespace
 {
     const string session_id = "3";
-}
 
-class mock_http_connector : public http_connector
-{
-public:
-    MOCK_METHOD2(get, http_response(const std::string& endpoint, const http_query_t& query));
-    MOCK_METHOD2(post, http_response(const std::string& endpoint, const std::string& body));
-    MOCK_METHOD2(post, http_response(const std::string& endpoint, const http_query_t& query));
-    MOCK_METHOD2(del, http_response(const std::string& endpoint, const http_query_t& query));
-};
+    class mock_http_connector : public http_connector
+    {
+    public:
+        MOCK_METHOD2(get, http_response(const std::string& endpoint, const http_query_t& query));
+        MOCK_METHOD2(post, http_response(const std::string& endpoint, const std::string& body));
+        MOCK_METHOD2(post, http_response(const std::string& endpoint, const http_query_t& query));
+        MOCK_METHOD2(del, http_response(const std::string& endpoint, const http_query_t& query));
+    };
+
+    enum class property
+    {
+        batch_count,
+        batch_size,
+        record_count
+    };
+
+    template <property P>
+    void test_get_property(const string& property);
+}
 
 TEST(service_connector, create_session)
 {
@@ -97,58 +107,19 @@ TEST(service_connector, create_session)
     }
 }
 
-//TODO: write UTs for record_count, batch_count
 TEST(service_connector, batch_size)
 {
-    // success scenario
-    {
-        auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
-        service_connector connector(mock);
+    test_get_property<property::batch_size>("batch_size");
+}
 
-        json expected_json;
-        expected_json["status"]["type"]     = "SUCCESS";
-        expected_json["data"]["batch_size"] = "64";
-        auto   expected_response            = http_response(http::status_ok, expected_json.dump());
-        string endpoint                     = "/api/v1/dataset/" + session_id + "/batch_size";
-        EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
+TEST(service_connector, record_count)
+{
+    test_get_property<property::record_count>("record_count");
+}
 
-        service_response<int> response = connector.get_batch_size(session_id);
-
-        EXPECT_EQ(response.status.type, service_status_type::SUCCESS);
-        EXPECT_EQ(response.data, 64);
-    }
-
-    // status type is not success
-    {
-        auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
-        service_connector connector(mock);
-
-        json expected_json;
-        expected_json["status"]["type"] = "FAILURE";
-        auto   expected_response        = http_response(http::status_ok, expected_json.dump());
-        string endpoint                 = "/api/v1/dataset/" + session_id + "/batch_size";
-        EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
-
-        service_response<int> response = connector.get_batch_size(session_id);
-
-        EXPECT_EQ(response.status.type, service_status_type::FAILURE);
-    }
-
-    // batch_size has improper value
-    {
-        auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
-        service_connector connector(mock);
-
-        json expected_json;
-        expected_json["status"]["type"]        = "SUCCESS";
-        expected_json["status"]["description"] = "some description";
-        expected_json["data"]["batch_size"]    = "";
-        auto   expected_response = http_response(http::status_ok, expected_json.dump());
-        string endpoint          = "/api/v1/dataset/" + session_id + "/batch_size";
-        EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
-
-        ASSERT_THROW(connector.get_batch_size(session_id), std::runtime_error);
-    }
+TEST(service_connector, batch_count)
+{
+    test_get_property<property::batch_count>("batch_count");
 }
 
 TEST(service_connector, reset)
@@ -234,13 +205,10 @@ TEST(service_connector, next)
         std::vector<char> encoded_buffer_map = nervana::base64::encode(
             serialized_buffer_map.str().data(), serialized_buffer_map.str().size());
 
-        json expected_json;
-        expected_json["status"]["type"] = "SUCCESS";
-        expected_json["data"]["fixed_buffer_map"] =
-            string(encoded_buffer_map.begin(), encoded_buffer_map.end());
-        auto   expected_next_response = next_response(buffer_map);
-        auto   expected_response      = http_response(http::status_ok, expected_json.dump());
-        string endpoint               = "/api/v1/dataset/" + session_id + "/next";
+        auto expected_next_response = next_response(buffer_map);
+        auto expected_response      = http_response(
+            http::status_ok, string(encoded_buffer_map.begin(), encoded_buffer_map.end()));
+        string endpoint = "/api/v1/dataset/" + session_id + "/next";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
         service_response<next_response> response = connector.get_next(session_id);
@@ -265,20 +233,16 @@ TEST(service_connector, next)
         EXPECT_EQ(response.status.type, service_status_type::END_OF_DATASET);
     }
 
-    // batch_size has improper value
+    // next has improper value (is empty)
     {
         auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
         service_connector connector(mock);
 
-        json expected_json;
-        expected_json["status"]["type"]        = "SUCCESS";
-        expected_json["status"]["description"] = "some description";
-        expected_json["data"]["batch_size"]    = "";
-        auto   expected_response = http_response(http::status_ok, expected_json.dump());
-        string endpoint          = "/api/v1/dataset/" + session_id + "/batch_size";
+        auto   expected_response = http_response(http::status_ok, "");
+        string endpoint          = "/api/v1/dataset/" + session_id + "/next";
         EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
 
-        ASSERT_THROW(connector.get_batch_size(session_id), std::runtime_error);
+        ASSERT_THROW(connector.get_next(session_id), std::runtime_error);
     }
 }
 
@@ -320,5 +284,86 @@ TEST(service_connector, names_and_shapes)
         service_response<names_and_shapes> response = connector.get_names_and_shapes(session_id);
 
         EXPECT_EQ(response.status.type, service_status_type::FAILURE);
+    }
+}
+
+namespace
+{
+    template <property    P>
+    service_response<int> get_property(service_connector& connector, const string& _session_id);
+
+    template <>
+    service_response<int> get_property<property::batch_count>(service_connector& connector,
+                                                              const string&      _session_id)
+    {
+        return connector.get_batch_count(_session_id);
+    }
+
+    template <>
+    service_response<int> get_property<property::batch_size>(service_connector& connector,
+                                                             const string&      _session_id)
+    {
+        return connector.get_batch_size(_session_id);
+    }
+
+    template <>
+    service_response<int> get_property<property::record_count>(service_connector& connector,
+                                                               const string&      _session_id)
+    {
+        return connector.get_record_count(_session_id);
+    }
+
+    template <property P>
+    void test_get_property(const string& property)
+    {
+        // success scenario
+        {
+            auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
+            service_connector connector(mock);
+
+            json expected_json;
+            expected_json["status"]["type"] = "SUCCESS";
+            expected_json["data"][property] = "64";
+            auto   expected_response        = http_response(http::status_ok, expected_json.dump());
+            string endpoint                 = "/api/v1/dataset/" + session_id + "/" + property;
+            EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
+
+            service_response<int> response = get_property<P>(connector, session_id);
+
+            EXPECT_EQ(response.status.type, service_status_type::SUCCESS);
+            EXPECT_EQ(response.data, 64);
+        }
+
+        // status type is not success
+        {
+            auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
+            service_connector connector(mock);
+
+            json expected_json;
+            expected_json["status"]["type"] = "FAILURE";
+            auto   expected_response        = http_response(http::status_ok, expected_json.dump());
+            string endpoint                 = "/api/v1/dataset/" + session_id + "/" + property;
+            EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
+
+            service_response<int> response = get_property<P>(connector, session_id);
+
+            EXPECT_EQ(response.status.type, service_status_type::FAILURE);
+        }
+
+        // property has improper value
+        {
+            auto              mock = shared_ptr<mock_http_connector>(new mock_http_connector());
+            service_connector connector(mock);
+
+            json expected_json;
+            expected_json["status"]["type"]        = "SUCCESS";
+            expected_json["status"]["description"] = "some description";
+            expected_json["data"][property]        = "";
+            auto   expected_response = http_response(http::status_ok, expected_json.dump());
+            string endpoint          = "/api/v1/dataset/" + session_id + "/" + property;
+            EXPECT_CALL(*mock, get(endpoint, http_query_t())).WillOnce(Return(expected_response));
+
+            ASSERT_THROW(get_property<P>(connector, session_id), std::runtime_error);
+        }
     }
 }

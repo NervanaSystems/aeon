@@ -1,5 +1,5 @@
 .. ---------------------------------------------------------------------------
-.. Copyright 2017 Nervana Systems Inc.
+.. Copyright 2017 Intel(R) Nervana(TM)
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -14,7 +14,7 @@
 .. ---------------------------------------------------------------------------
 .. neon documentation master file
 
-Server RESTful API
+Service RESTful API
 ==================
 
    **URI structure**:
@@ -23,8 +23,8 @@ Server RESTful API
 
    Where:
 
-   - **host**: *aeon-server* address
-   - **port**: *aeon-server* port
+   - **host**: *aeon-service* address
+   - **port**: *aeon-service* port
    - **v1**: means it's the first version of API
    - **dataset**: namespace for all resources related to dataset
    - **session_id**: dataset session id
@@ -232,6 +232,7 @@ Server RESTful API
 
    Provides next serialized batch data for session ``session_id``.
    This is the only request which does not return service_response_ json for successful response (status code 200). This is performance optimization. Returning service_response_ would require conversion to BASE64 format, which is quite costly when a lot of data is being transferred. All requests with status code different than 200 return service_response_ json.
+   If RDMA is being used, then for successful response service_response_ is returned and data transfer happens via RDMA.
 
    **Example request**:
 
@@ -295,6 +296,6 @@ Server RESTful API
 
 
    :query session_id: session id
-   :statuscode 204: session has been successfully delted
+   :statuscode 200: session has been successfully delted
    :statuscode 404: there's no such session id
    :statuscode 500: internal error

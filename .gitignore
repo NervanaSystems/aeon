@@ -84,3 +84,7 @@ cmake-build-*
 
 # StGit temporary files/folders
 patches-*/
+
+# Tags
+tags
+compile_commands.json

@@ -1,11 +1,50 @@
-cmake_minimum_required (VERSION 2.8.11)
+#
+# Copyright 2017 Intel(R) Nervana(TM)
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+cmake_minimum_required(VERSION 2.8.11)
 
 # Set this flag before project definition to avoid using other compiler by gtest
 set(CMAKE_CXX_COMPILER "clang++")
 
-project (aeon)
+project(aeon C CXX)
 
-set(AEON_VERSION 1.2.0)
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
+        "Choose the type of build, options are: Debug, Release, RelWithDebInfo and MinSizeRel"
+        FORCE)
+endif()
+
+set(AEON_VERSION_MAJOR 1)
+set(AEON_VERSION_MINOR 2)
+set(AEON_VERSION_PATCH 0)
+
+set(AEON_BUILD_NUMBER 0)
+
+set(AEON_VERSION ${AEON_VERSION_MAJOR}.${AEON_VERSION_MINOR}.${AEON_VERSION_PATCH}
+                 CACHE STRING "AEON logical version")
+
+add_definitions(-DBUILD_VERSION_MAJOR=${AEON_VERSION_MAJOR}
+                -DBUILD_VERSION_MINOR=${AEON_VERSION_MINOR}
+                -DBUILD_VERSION_PATCH=${AEON_VERSION_PATCH}
+                -DBUILD_BUILD_NUMBER=${AEON_BUILD_NUMBER})
+
+option(ENABLE_AEON_SERVICE "Enable compilation of AEON Service and AEON Client" ON)
+option(ENABLE_OPENFABRICS_CONNECTOR   "Enable OpenFabrics connector for batch exchange between service and client" ON)
+
+include(cmake/summary.cmake)
+
 if(APPLE)
 set(CMAKE_MACOSX_RPATH 1)
 endif()
@@ -37,7 +76,6 @@ else()
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=return-type")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=inconsistent-missing-override")
@@ -66,6 +104,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-documentation-unknown-command")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-conversion")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-member-function")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-float-equal")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-duplicate-enum") # from numpy
@@ -100,9 +139,10 @@ include_directories(${CURL_INCLUDE_DIRS})
 link_directories(${CURL_LIBRARY_DIRS})
 
 set(Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4)
+
 find_package(PythonLibs)
 find_package(PythonInterp)
- 
+
 if (PYTHONLIBS_FOUND)
     find_package(NumPy)
     if(NUMPY_FOUND)
@@ -112,31 +152,30 @@ if (PYTHONLIBS_FOUND)
         link_directories(${PYTHON_LIBRARY_DIRS})
         include_directories(SYSTEM ${NUMPY_INCLUDE_DIRS})
         link_directories(${NUMPY_LIBRARY_DIRS})
-    else()
-        message("Numpy not found, Python interface not included")
     endif(NUMPY_FOUND)
 else()
-    message("Python not found, Python interface not included")
-    set(PYTHON_LIBRARIES "")
+    unset(PYTHON_LIBRARIES)
 endif (PYTHONLIBS_FOUND)
 
-# Check for C++ REST API (Casablanca)
-pkg_check_modules(CPPREST cpprest)
+# Check for C++ REST API
+find_package(CppRest)
 
-if (NOT CPPREST_FOUND)
-    set(CPPREST_LIBRARIES cpprest)
-    find_path(CPPREST_INCLUDE_DIRS
-            NAMES cpprest/http_client.h
-            PATHS ${CPPREST_DIR} $ENV{CPPREST_DIR} ${CASABLANKA_DIR} $ENV{CASABLANKA_DIR} /usr/local/include /usr/include
-            PATH_SUFFIXES Release/include include)
-    find_library(CPPREST_LIBRARY_DIRS
-            NAME libcpprest.so
-            PATHS ${CPPREST_DIR} $ENV{CPPREST_DIR} ${CASABLANKA_DIR} $ENV{CASABLABKA_DIR} /usr/local /usr
-            PATH_SUFFIXES lib Release/build.release/Binaries build.release/Binaries)
-endif(NOT CPPREST_FOUND)
+if (CPPREST_FOUND)
+    include_directories(${CPPREST_INCLUDE_DIRS})
+    link_directories(${CPPREST_LIBRARY_DIRS})
+else(CPPREST_FOUND)
+    set(ENABLE_AEON_SERVICE OFF)
+endif(CPPREST_FOUND)
 
-include_directories(${CPPREST_INCLUDE_DIRS})
-link_directories(${CPPREST_LIBRARY_DIRS})
+# Check for Open Fabric (RDMA)
+find_package(OpenFabrics)
+
+if (OPENFABRICS_FOUND)
+    include_directories(${OPENFABRICS_INCLUDE_DIRS})
+    link_directories(${OPENFABRICS_LIBRARY_DIRS})
+else()
+    set(ENABLE_OPENFABRICS_CONNECTOR OFF)
+endif()
 
 # Check for BOOST components
 find_package(Boost REQUIRED COMPONENTS system filesystem)
@@ -152,17 +191,36 @@ link_directories(${OPENSSL_LIBRARY_DIRS})
 
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 
+if (ENABLE_AEON_SERVICE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_AEON_SERVICE")
+    if (ENABLE_OPENFABRICS_CONNECTOR)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_OPENFABRICS_CONNECTOR")
+    endif()
+endif()
+
+# Check for documentation prerequisites
+find_package(LATEX)
+find_package(Doxygen)
+find_package(Sphinx)
+find_package(Breathe)
+
 include_directories(BEFORE gtest/googletest/include)
 include_directories(BEFORE gtest/googlemock/include)
 set(BUILD_SHARED_LIBS off)
 add_subdirectory(gtest)
 set(BUILD_SHARED_LIBS on)
 add_subdirectory(src)
+if (ENABLE_AEON_SERVICE)
 add_subdirectory(src/service)
+endif()
 include_directories(src)
+if (ENABLE_AEON_SERVICE)
 include_directories(src/client)
+endif()
 add_subdirectory(test)
 add_subdirectory(examples)
 add_subdirectory(doc)
-include(clang-format.cmake)
-include(coverage.cmake)
+include(cmake/clang-format.cmake)
+include(cmake/coverage.cmake)
+
+print_configuration_summary()

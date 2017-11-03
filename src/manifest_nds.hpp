@@ -1,5 +1,5 @@
 /*
- Copyright 2016 Nervana Systems Inc.
+ Copyright 2016 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -123,10 +123,7 @@ private:
     const std::string   m_base_url;
     const std::string   m_token;
     const size_t        m_collection_id;
-    const size_t        m_block_size;
     const size_t        m_elements_per_record;
-    const size_t        m_shard_count;
-    const size_t        m_shard_index;
     size_t              m_record_count;
     size_t              m_block_count;
     network_client      m_network_client;

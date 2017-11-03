@@ -1,5 +1,5 @@
 /*
- Copyright 2017 Nervana Systems Inc.
+ Copyright 2017 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -22,7 +22,7 @@
 
 namespace nervana
 {
-    class curl_connector final : public http_connector
+    class curl_connector : public http_connector
     {
     public:
         explicit curl_connector(const std::string& address, unsigned int port);

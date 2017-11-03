@@ -1,5 +1,5 @@
 /*
- Copyright 2017 Nervana Systems Inc.
+ Copyright 2017 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -45,7 +45,7 @@ public:
 TEST(loader_remote, new_session_scenario)
 {
     auto           mock         = make_shared<mock_service>();
-    json           config       = {{"server", {{"address", "localhost"}, {"port", 34568}}}};
+    json           config       = {{"remote", {{"address", "localhost"}, {"port", 34568}}}};
     string         session_id   = "123";
     auto           nas          = get_names_and_shapes();
     int            batch_size   = 64;
@@ -131,7 +131,7 @@ TEST(loader_remote, shared_session_scenario)
     string session_id = "SESSION_ID";
     auto   mock       = make_shared<mock_service>();
     json   config     = {
-        {"server", {{"address", "localhost"}, {"port", 34568}, {"session_id", session_id}}}};
+        {"remote", {{"address", "localhost"}, {"port", 34568}, {"session_id", session_id}}}};
     auto           nas          = get_names_and_shapes();
     int            batch_size   = 64;
     int            batch_count  = 3;
@@ -184,6 +184,8 @@ TEST(loader_remote, shared_session_scenario)
             loader.reset();
         }
     }
+
+    EXPECT_CALL(*mock, close_session(session_id)).WillOnce(Return(status_success));
 }
 
 TEST(loader_remote, service_async)
@@ -191,7 +193,7 @@ TEST(loader_remote, service_async)
     auto           mock                    = make_shared<mock_service>();
     auto           my_service_async_source = make_shared<service_async_source>(mock);
     auto           my_service              = make_shared<service_async>(my_service_async_source);
-    json           config       = {{"server", {{"address", "localhost"}, {"port", 34568}}}};
+    json           config       = {{"remote", {{"address", "localhost"}, {"port", 34568}}}};
     string         session_id   = "123";
     auto           nas          = get_names_and_shapes();
     int            batch_size   = 64;
@@ -274,12 +276,12 @@ TEST(loader_remote, service_async)
 
 TEST(loader_remote, close_session)
 {
-    // close_session set to false and session_id is not provided
+    // close_session set to false when creating new session
     {
         auto   mock       = make_shared<mock_service>();
         string session_id = "123";
         json   config     = {
-            {"server", {{"address", "localhost"}, {"port", 34568}, {"close_session", false}}}};
+            {"remote", {{"address", "localhost"}, {"port", 34568}, {"close_session", false}}}};
         auto           nas          = get_names_and_shapes();
         int            batch_size   = 64;
         int            batch_count  = 3;
@@ -302,24 +304,25 @@ TEST(loader_remote, close_session)
         EXPECT_CALL(*mock, close_session(session_id)).Times(0);
     }
 
-    // close_session set to false and session_id is provided
+    // close_session set to false when providing session_id
     {
         auto   mock       = make_shared<mock_service>();
         string session_id = "123";
-        json   config     = {{"server",
+        json   config     = {{"remote",
                         {{"address", "localhost"},
                          {"port", 34568},
-                         {"session_id", session_id},
-                         {"close_session", false}}}};
+                         {"close_session", false},
+                         {"session_id", session_id}}}};
         auto           nas          = get_names_and_shapes();
         int            batch_size   = 64;
         int            batch_count  = 3;
         int            record_count = batch_size * batch_count;
         service_status status_success(service_status_type::SUCCESS, "");
-        auto           expected_nas = service_response<names_and_shapes>(status_success, nas);
-        auto           expected_record_count = service_response<int>(status_success, record_count);
-        auto           expected_batch_size   = service_response<int>(status_success, batch_size);
-        auto           expected_batch_count  = service_response<int>(status_success, batch_count);
+
+        auto expected_nas          = service_response<names_and_shapes>(status_success, nas);
+        auto expected_record_count = service_response<int>(status_success, record_count);
+        auto expected_batch_size   = service_response<int>(status_success, batch_size);
+        auto expected_batch_count  = service_response<int>(status_success, batch_count);
         EXPECT_CALL(*mock, get_names_and_shapes(session_id)).WillOnce(Return(expected_nas));
         EXPECT_CALL(*mock, get_record_count(session_id)).WillOnce(Return(expected_record_count));
         EXPECT_CALL(*mock, get_batch_size(session_id)).WillOnce(Return(expected_batch_size));

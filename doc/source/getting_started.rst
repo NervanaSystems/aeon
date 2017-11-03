@@ -1,5 +1,5 @@
 .. ---------------------------------------------------------------------------
-.. Copyright 2017 Nervana Systems Inc.
+.. Copyright 2017 Intel(R) Nervana(TM)
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -23,22 +23,21 @@ First grab aeon's dependencies:
 
 Ubuntu::
 
-  sudo apt-get install libcurl4-openssl-dev clang libopencv-dev libsox-dev
+  apt-get install git clang libcurl4-openssl-dev libopencv-dev libsox-dev libboost-filesystem-dev libboost-system-dev
 
-OSX (Assuming you followed neon_'s Homebrew based install)::
+Centos::
+
+  yum install epel-release
+  yum install git clang gcc-c++ make cmake opencv-devel libcurl-devel sox-devel boost-devel boost-filesystem boost-system
+
+OSX (Assuming you followed neon's Homebrew based install)::
 
   brew tap homebrew/science
   brew install opencv
   brew install sox
+  brew install boost
 
-Note: Fedora and CentOS 7 are unsupported platforms for aeon, but we've found the following
-instructions to be useful.
-
-Fedora::
-
-  sudo dnf install opencv-devel clang libcurl-devel sox-devel
-
-For CentOS 7, the version of Clang available in the EPEL repository is too old
+For CentOS 7, it might be that the version of Clang available in the EPEL repository is too old
 to understand the GCC flags that the Python extension build system imposes, so
 we build the latest version of Clang from source (after first installing it's
 high and low level build systems)::
@@ -77,3 +76,5 @@ Then build the aeon libraries::
 
 Now continue on to the :doc:`user_guide` to get started using aeon. Or to the
 :doc:`developer_guide` to developing custom loaders/transformers.
+
+For distributed aeon please check `dependencies <service.html#dependencies>`_ and `building <service.html#building>`_ information.

@@ -13,11 +13,14 @@
 # limitations under the License.
 #
 
-set(AEON_SERVICE_SOURCES daemon.cpp service.cpp)
-set(AEON_SERVICE_HEADERS dataset.hpp log.hpp pidfile.hpp service.hpp)
+set(AEON_SERVICE_SOURCES main.cpp service.cpp)
+set(AEON_SERVICE_HEADERS log.hpp pidfile.hpp service.hpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 add_executable(aeon-service ${AEON_SERVICE_SOURCES} ${AEON_SERVICE_HEADERS})
 target_link_libraries(aeon-service aeon ${CMAKE_THREAD_LIBS_INIT}
         ${Boost_LIBRARIES} ${CPPREST_LIBRARIES} ${OPENSSL_LIBRARIES})
+install(TARGETS aeon-service DESTINATION sbin)
+# we need to run ldconfig to make aeon library visible for aeon-service
+install(CODE "execute_process(COMMAND ldconfig)")

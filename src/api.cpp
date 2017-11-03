@@ -1,5 +1,5 @@
 /*
- Copyright 2017 Nervana Systems Inc.
+ Copyright 2017 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -113,8 +113,16 @@ static PyObject* DataLoader_iter(PyObject* self)
 static PyObject* DataLoader_iternext(PyObject* self)
 {
     INFO << " aeon_DataLoader_iternext";
-    PyObject* result = NULL;
-    auto      lconf  = loader_config(DL_get_loader(self)->get_current_config());
+    PyObject*      result = NULL;
+    nlohmann::json conf   = DL_get_loader(self)->get_current_config();
+    bool           batch_major{true};
+    try
+    {
+        batch_major = conf.at("batch_major");
+    }
+    catch (nlohmann::detail::out_of_range&)
+    {
+    }
     if (!((aeon_DataLoader*)(self))->m_first_iteration)
         DL_get_loader(self)->get_current_iter()++;
     else
@@ -131,7 +139,7 @@ static PyObject* DataLoader_iternext(PyObject* self)
         int tuple_pos     = 0;
         for (auto&& nm : names)
         {
-            PyObject* wrapped_buf     = wrap_buffer_as_np_array(d[nm], !lconf.batch_major);
+            PyObject* wrapped_buf     = wrap_buffer_as_np_array(d[nm], !batch_major);
             PyObject* buf_name        = Py_BuildValue("s", nm.c_str());
             PyObject* named_buf_tuple = PyTuple_New(buf_tuple_len);
 
@@ -333,9 +341,9 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
         catch (std::exception& e)
         {
             // Some kind of problem with creating the internal loader object
-            ERR << "Unable to create internal loader object";
             std::stringstream ss;
             ss << "Unable to create internal loader object: " << e.what() << endl;
+            ERR << "Unable to create internal loader object: " << e.what() << endl;
             ss << "config is: " << json_config << endl;
             PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
             return NULL;
@@ -389,7 +397,7 @@ static PyMemberDef DataLoader_members[] = {
      T_OBJECT_EX,
      offsetof(aeon_DataLoader, session_id),
      0,
-     (char*)"ID of DataLoader session object set when server is defined and no session_id is "
+     (char*)"ID of DataLoader session object set when remote is defined and no session_id is "
             "specified"},
     {NULL, NULL, 0, 0, NULL} /* Sentinel */
 };

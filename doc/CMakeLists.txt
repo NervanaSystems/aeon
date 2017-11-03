@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright 2017 Nervana Systems Inc.
+# Copyright 2017 Intel(R) Nervana(TM)
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,16 +16,6 @@
 #
 
 set(REQUIRED_PACKAGES_FOUND true)
-
-find_package(LATEX)
-find_package(Doxygen)
-find_package(Sphinx)
-find_package(Breathe)
-
-# if (NOT LATEX_FOUND)
-# 	message("LATEX not found, skipping documentation")
-# 	set(REQUIRED_PACKAGES_FOUND false)
-# endif ()
 
 if (NOT DOXYGEN_FOUND)
 	message("Doxygen not found, skipping documentation")

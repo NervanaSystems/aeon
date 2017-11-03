@@ -1,5 +1,5 @@
 /*
- Copyright 2016 Nervana Systems Inc.
+ Copyright 2016 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -244,15 +244,15 @@ manifest_nds manifest_nds_builder::create()
         throw invalid_argument("elements_per_record is required");
     }
 
-    return unique_ptr<manifest_nds>(new manifest_nds(m_base_url,
-                                                     m_token,
-                                                     m_collection_id,
-                                                     m_block_size,
-                                                     m_elements_per_record,
-                                                     m_shard_count,
-                                                     m_shard_index,
-                                                     m_shuffle,
-                                                     m_seed));
+    return manifest_nds(m_base_url,
+                        m_token,
+                        m_collection_id,
+                        m_block_size,
+                        m_elements_per_record,
+                        m_shard_count,
+                        m_shard_index,
+                        m_shuffle,
+                        m_seed);
 }
 
 std::shared_ptr<manifest_nds> manifest_nds_builder::make_shared()
@@ -280,10 +280,7 @@ manifest_nds::manifest_nds(const std::string& base_url,
     : m_base_url(base_url)
     , m_token(token)
     , m_collection_id(collection_id)
-    , m_block_size(block_size)
     , m_elements_per_record(elements_per_record)
-    , m_shard_count(shard_count)
-    , m_shard_index(shard_index)
     , m_network_client{base_url, token, collection_id, block_size, shard_count, shard_index}
     , m_current_block_number{0}
     , m_shuffle{enable_shuffle}

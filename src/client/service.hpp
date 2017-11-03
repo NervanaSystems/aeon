@@ -1,5 +1,5 @@
 /*
- Copyright 2017 Nervana Systems Inc.
+ Copyright 2017 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -52,7 +52,8 @@ namespace nervana
         {
             if (!success())
             {
-                throw std::runtime_error("service responded without success status " + to_string());
+                throw std::runtime_error("service responded without success; status " +
+                                         to_string());
             }
         }
 
@@ -220,7 +221,7 @@ namespace nervana
         {
         }
 
-        ~service_async() {}
+        ~service_async() { finalize(); }
         // service methods
         service_response<std::string> create_session(const std::string& config) override
         {
@@ -228,6 +229,7 @@ namespace nervana
         }
         service_status close_session(const std::string& id) override
         {
+            finalize();
             return m_base_service->close_session(id);
         }
 

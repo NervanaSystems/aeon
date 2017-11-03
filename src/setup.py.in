@@ -52,6 +52,15 @@ lib_dirs += getoutput("pkg-config --libs-only-L sox")
 libs += ' ' + getoutput("pkg-config --libs-only-l sox")
 libs += ' -lcurl'
 
+include_dirs += ' ${Boost_INCLUDE_DIRS}'
+lib_dirs += ' ${Boost_LIBRARY_DIRS}'
+libs += ' -lboost_system -lboost_filesystem'
+
+if '${OPENFABRICS_INCLUDE_DIRS}' != '':
+    include_dirs += ' -I${OPENFABRICS_INCLUDE_DIRS} '
+    lib_dirs += ' -L${OPENFABRICS_LIBRARY_DIRS} '
+    libs += ' -lfabric '
+
 os.environ["CC"] = "clang++"
 src_list = "${SRC}".split(";")
 sources = [
@@ -65,6 +74,7 @@ include_dirs = include_dirs.split()
 libs = libs.replace('-l', '').split()
 lib_dirs = lib_dirs.replace('-L','').split()
 extra_compile_args = "${CMAKE_CXX_FLAGS}".split(' ')
+
 
 module = Extension(
     'aeon',

@@ -1,5 +1,5 @@
 /*
- Copyright 2017 Nervana Systems Inc.
+ Copyright 2017 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -55,7 +55,7 @@ string nervana::to_string(service_status_type type)
     {
         return status_map.at(type);
     }
-    catch (const exception&)
+    catch (const std::out_of_range&)
     {
         return "UNKNOWN";
     }
@@ -82,7 +82,7 @@ nervana::service_status::service_status(const json& input)
     {
         type_str = input.at("type");
     }
-    catch (const exception&)
+    catch (const nlohmann::detail::out_of_range&)
     {
         throw invalid_argument("cannot parse service_status: no 'type' field provided");
     }
@@ -133,7 +133,7 @@ service_response<string> nervana::service_connector::create_session(const std::s
 
 service_status nervana::service_connector::close_session(const std::string& id)
 {
-    http_response response = m_http->del(full_endpoint(id));
+    http_response  response = m_http->del(full_endpoint(id));
     service_status status;
     json           json_response;
     extract_status_and_json(response.data, status, json_response);
@@ -148,7 +148,7 @@ service_response<nervana::next_response> nervana::service_connector::get_next(co
 
 service_status nervana::service_connector::reset_session(const string& id)
 {
-    http_response response = m_http->get(full_endpoint(id + "/reset"));
+    http_response  response = m_http->get(full_endpoint(id + "/reset"));
     service_status status;
     json           json_response;
     extract_status_and_json(response.data, status, json_response);
@@ -190,7 +190,7 @@ service_response<nervana::next_response>
 service_response<names_and_shapes>
     nervana::service_connector::get_names_and_shapes(const string& id)
 {
-    http_response response = m_http->get(full_endpoint(id + "/names_and_shapes"));
+    http_response  response = m_http->get(full_endpoint(id + "/names_and_shapes"));
     service_status status;
     json           json_response;
     extract_status_and_json(response.data, status, json_response);
@@ -204,7 +204,7 @@ service_response<names_and_shapes>
     {
         serialized_nas = json_response.at("names_and_shapes");
     }
-    catch (const exception&)
+    catch (const nlohmann::detail::out_of_range&)
     {
         throw runtime_error("no field 'names_and_shapes' in 'data' object of service response");
     }
@@ -264,7 +264,7 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
     {
         input_json = json::parse(input);
     }
-    catch (const exception& ex)
+    catch (const nlohmann::detail::exception& ex)
     {
         throw runtime_error(string("cannot parse json: ") + ex.what());
     }
@@ -274,7 +274,7 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
     {
         status_json = input_json.at("status");
     }
-    catch (const exception&)
+    catch (const nlohmann::detail::out_of_range&)
     {
         throw runtime_error("service response does not contain status field");
     }
@@ -284,7 +284,7 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
     {
         output_json = input_json.at("data");
     }
-    catch (const exception&)
+    catch (const nlohmann::detail::out_of_range&)
     {
         // no data was provided
         output_json = json({});
@@ -318,6 +318,7 @@ nervana::service_response<nervana::next_response>* nervana::service_async::fille
 
     m_state                                = async_state::fetching_data;
     service_response<next_response>* input = m_source->next();
+    m_state                                = async_state::processing;
     if (input == nullptr)
     {
         rc = nullptr;
@@ -326,7 +327,6 @@ nervana::service_response<nervana::next_response>* nervana::service_async::fille
     {
         *rc = *input;
     }
-    m_state = async_state::processing;
 
     m_state = async_state::idle;
     return rc;
@@ -345,7 +345,7 @@ namespace
         {
             return input.at(key);
         }
-        catch (const std::exception&)
+        catch (const nlohmann::detail::out_of_range&)
         {
             throw std::runtime_error("response body does not contain string field '" + key + "': " +
                                      status.to_string());
@@ -359,7 +359,7 @@ namespace
         {
             field = input.at(key);
         }
-        catch (const std::exception&)
+        catch (const nlohmann::detail::out_of_range&)
         {
             throw std::runtime_error("response body does not contain number field '" + key + "': " +
                                      status.to_string());

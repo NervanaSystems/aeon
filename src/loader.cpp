@@ -1,5 +1,5 @@
 /*
- Copyright 2016 Nervana Systems Inc.
+ Copyright 2016 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -23,11 +23,18 @@
 #include <memory>
 
 #include "loader.hpp"
-#include "client/loader_remote.hpp"
-#include "client/curl_connector.hpp"
 #include "log.hpp"
 #include "web_app.hpp"
 #include "manifest_nds.hpp"
+
+#if defined(ENABLE_AEON_SERVICE)
+#include "client/loader_remote.hpp"
+#include "client/curl_connector.hpp"
+#include "client/remote_config.hpp"
+#if defined(ENABLE_OPENFABRICS_CONNECTOR)
+#include "client/ofi_connector.hpp"
+#endif
+#endif
 
 using namespace std;
 using namespace nervana;
@@ -119,7 +126,7 @@ void loader_local::initialize(const json& config_json)
                              .seed(lcfg.random_seed)
                              .make_shared();
 
-        m_block_loader = std::make_shared<block_loader_nds>(m_manifest_nds.get(), lcfg.block_size);
+        m_block_loader = std::make_shared<block_loader_nds>(m_manifest_nds, lcfg.block_size);
     }
     else
     {
@@ -136,10 +143,10 @@ void loader_local::initialize(const json& config_json)
         {
             throw std::runtime_error("manifest file is empty");
         }
-        m_block_loader = make_shared<block_loader_file>(m_manifest_file.get(), lcfg.block_size);
+        m_block_loader = make_shared<block_loader_file>(m_manifest_file, lcfg.block_size);
     }
 
-    m_block_manager = make_shared<block_manager>(m_block_loader.get(),
+    m_block_manager = make_shared<block_manager>(m_block_loader,
                                                  lcfg.block_size,
                                                  lcfg.cache_directory,
                                                  lcfg.shuffle_enable,
@@ -161,14 +168,6 @@ void loader_local::initialize(const json& config_json)
         m_batch_count_value = lcfg.iteration_mode_count;
     }
 
-    m_block_loader = make_shared<block_loader_file>(m_manifest, lcfg.block_size);
-
-    m_block_manager = make_shared<block_manager>(m_block_loader,
-                                                 lcfg.block_size,
-                                                 lcfg.cache_directory,
-                                                 lcfg.shuffle_enable,
-                                                 lcfg.random_seed);
-
     m_provider = provider_factory::create(config_json);
 
     unsigned int threads_num = lcfg.decode_thread_count != 0 ? lcfg.decode_thread_count
@@ -176,43 +175,17 @@ void loader_local::initialize(const json& config_json)
 
     const int decode_size =
         lcfg.batch_size * ((threads_num * m_input_multiplier - 1) / lcfg.batch_size + 1);
-    m_batch_iterator = make_shared<batch_iterator>(m_block_manager.get(), decode_size);
+    m_batch_iterator = make_shared<batch_iterator>(m_block_manager, decode_size);
 
-    m_decoder = make_shared<batch_decoder>(m_batch_iterator.get(),
+    m_decoder = make_shared<batch_decoder>(m_batch_iterator,
                                            decode_size,
                                            lcfg.decode_thread_count,
                                            lcfg.pinned,
                                            m_provider,
                                            lcfg.random_seed);
 
-    m_final_stage = make_shared<batch_iterator_fbm>(
-        m_decoder.get(), lcfg.batch_size, m_provider, !lcfg.batch_major);
-
-    if (lcfg.batch_size > threads_num * m_increase_input_size_coefficient)
-    {
-        m_batch_iterator = make_shared<batch_iterator>(m_block_manager, lcfg.batch_size);
-        m_final_stage    = make_shared<batch_decoder>(m_batch_iterator,
-                                                   static_cast<size_t>(lcfg.batch_size),
-                                                   lcfg.decode_thread_count,
-                                                   lcfg.pinned,
-                                                   m_provider,
-                                                   lcfg.random_seed);
-    }
-    else
-    {
-        const int decode_size = threads_num * m_input_multiplier;
-        m_batch_iterator      = make_shared<batch_iterator>(m_block_manager, decode_size);
-
-        m_decoder = make_shared<batch_decoder>(m_batch_iterator,
-                                               decode_size,
-                                               lcfg.decode_thread_count,
-                                               lcfg.pinned,
-                                               m_provider,
-                                               lcfg.random_seed);
-
-        m_final_stage = make_shared<batch_iterator_fbm>(m_decoder, lcfg.batch_size, m_provider);
-    }
->>>>>>> refactoring async_manager to take shared_ptr instead of raw pointer
+    m_final_stage =
+        make_shared<batch_iterator_fbm>(m_decoder, lcfg.batch_size, m_provider, !lcfg.batch_major);
 
     m_output_buffer_ptr = m_final_stage->next();
 
@@ -309,86 +282,59 @@ std::unique_ptr<loader> loader_factory::get_loader(const std::string& config)
 
 std::unique_ptr<loader> loader_factory::get_loader(const json& config)
 {
+#if defined(ENABLE_AEON_SERVICE)
     if (remote_version(config))
     {
-        string address;
-        int    port;
-        try
-        {
-            address = config["server"].at("address");
-        }
-        catch (const exception& ex)
-        {
-            throw invalid_argument(string("cannot parse 'address' field from 'service' object: ") +
-                                   ex.what());
-        }
-
-        try
-        {
-            port = config["server"].at("port");
-        }
-        catch (const exception& ex)
-        {
-            throw invalid_argument(string("cannot parse 'port' field from 'service' object: ") +
-                                   ex.what());
-        }
-
-        bool use_async = true;
-        try
-        {
-            use_async = config["server"].at("async");
-        }
-        catch (const exception&)
-        {
-        }
-
-        shared_ptr<http_connector> my_http_connector = make_shared<curl_connector>(address, port);
-
-        shared_ptr<service> my_service;
-        if (use_async)
-        {
-            auto my_service_connector    = make_shared<service_connector>(my_http_connector);
-            auto my_service_async_source = make_shared<service_async_source>(my_service_connector);
-            my_service                   = make_shared<service_async>(my_service_async_source);
-        }
-        else
-        {
-            my_service = make_shared<service_connector>(my_http_connector);
-        }
-
-        return unique_ptr<loader_remote>(new loader_remote(my_service, config));
+        return create_loader_remote(config);
     }
+#endif
     return unique_ptr<loader_local>(new loader_local(config));
 }
+
+#if defined(ENABLE_AEON_SERVICE)
 
 bool loader_factory::remote_version(const json& config)
 {
     try
     {
-        config.at("server");
+        config.at("remote");
     }
     catch (json::out_of_range)
     {
         return false;
     }
 
-    try
-    {
-        config.at("server").at("address");
-    }
-    catch (json::out_of_range)
-    {
-        throw invalid_argument("no 'address' field in 'server' object in config");
-    }
-
-    try
-    {
-        config.at("server").at("port");
-    }
-    catch (json::out_of_range)
-    {
-        throw invalid_argument("no 'port' field in 'server' object in config");
-    }
-
     return true;
 }
+
+unique_ptr<loader> loader_factory::create_loader_remote(const json& js)
+{
+    remote_config config(js.at("remote"));
+
+    shared_ptr<http_connector> http_connector_obj =
+        make_shared<curl_connector>(config.address, config.port);
+#if defined(ENABLE_OPENFABRICS_CONNECTOR)
+    if (!config.rdma_address.empty() && config.rdma_port != 0)
+    {
+        INFO << "Using OFI library to fetch batches via RDMA.";
+        auto ofi_ptr = new ofi_connector(config.rdma_address, config.rdma_port, http_connector_obj);
+        http_connector_obj = shared_ptr<ofi_connector>(ofi_ptr);
+    }
+#endif
+    shared_ptr<service> service_obj;
+    if (config.async)
+    {
+        auto service_connector_obj    = make_shared<service_connector>(http_connector_obj);
+        auto service_async_source_obj = make_shared<service_async_source>(service_connector_obj);
+        service_obj                   = make_shared<service_async>(service_async_source_obj);
+        INFO << "Using asynchronous batch fetching.";
+    }
+    else
+    {
+        service_obj = make_shared<service_connector>(http_connector_obj);
+    }
+
+    loader_remote* new_loader = new loader_remote(service_obj, js);
+    return unique_ptr<loader_remote>(new_loader);
+}
+#endif

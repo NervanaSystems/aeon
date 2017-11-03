@@ -1,5 +1,5 @@
 .. ---------------------------------------------------------------------------
-.. Copyright 2017 Nervana Systems Inc.
+.. Copyright 2017 Intel(R) Nervana(TM)
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -37,7 +37,7 @@ Data format
 
 As mentioned above, users interact with the dataloader by providing two items:
 
-1. Manifest file, a tab-separated file (*.tsv).
+1. Manifest file, a tab-separated file (\*.tsv).
 2. Configuration parameters, as a ``json`` structure.
 
 Operations such as generating training/testing splits, or balancing labels for imbalanced datasets should be implemented outside of the dataloader by the user during **ingest** to create the appropriate manifest files. Several example ingest scripts are in the neon repository.
@@ -192,7 +192,7 @@ The possible base loader configurations are the following (configurations withou
    iteration_mode_count||
    etl||
    augmentation||
-   server|| Configuration of server in distrubted dataloading scenario. Please take a look at server documentation.
+   remote|| Configuration of connection with aeon service in distrubted dataloading scenario. Please take a look at :doc:`service <service>` documentation.
 
 Example python usage
 --------------------

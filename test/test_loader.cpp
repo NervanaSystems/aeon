@@ -1,5 +1,5 @@
 /*
- Copyright 2016 Nervana Systems Inc.
+ Copyright 2016 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -25,12 +25,15 @@
 #define private public
 
 #include "loader.hpp"
-#include "client/loader_remote.hpp"
 #include "manifest_builder.hpp"
 #include "gen_image.hpp"
 #include "file_util.hpp"
 #include "util.hpp"
+
+#if defined(ENABLE_AEON_SERVICE)
 #include "service/service.hpp"
+#include "client/loader_remote.hpp"
+#endif
 
 using namespace std;
 using namespace nervana;
@@ -39,8 +42,42 @@ using nlohmann::json;
 
 namespace
 {
-    string create_manifest_file(size_t record_count, size_t width, size_t height);
-    json create_some_config_with_manifest();
+    string create_manifest_file(size_t record_count, size_t width, size_t height)
+    {
+        string           manifest_filename = file_util::tmp_filename();
+        manifest_builder mb;
+        auto& ms = mb.record_count(record_count).image_width(width).image_height(height).create();
+        ofstream f(manifest_filename);
+        f << ms.str();
+        return manifest_filename;
+    }
+
+#if defined(ENABLE_AEON_SERVICE)
+
+    json create_some_config_with_manifest()
+    {
+        int    height            = 32;
+        int    width             = 32;
+        size_t batch_size        = 2;
+        size_t record_count      = 10;
+        string manifest_filename = create_manifest_file(record_count, width, height);
+
+        json image = {{"type", "image"},
+                      {"name", "image1"},
+                      {"height", height},
+                      {"width", width},
+                      {"channel_major", false}};
+        json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
+        json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
+        json js           = {{"manifest_filename", manifest_filename},
+                   {"batch_size", batch_size},
+                   {"iteration_mode", "ONCE"},
+                   {"etl", {image, label}},
+                   {"augmentation", augmentation}};
+        return js;
+    }
+
+#endif
 }
 
 TEST(loader, syntax)
@@ -458,7 +495,8 @@ TEST(loader, deterministic)
     EXPECT_EQ(data[2], expected_result[2]);
 }
 
-TEST(loader, loader_factory_no_server)
+#if defined(ENABLE_AEON_SERVICE)
+TEST(loader, loader_factory_no_remote)
 {
     loader_factory factory;
     json           config_json = create_some_config_with_manifest();
@@ -471,21 +509,22 @@ TEST(loader, loader_factory_no_server)
     ASSERT_TRUE(dynamic_cast<loader_remote*>(ptr2.get()) == 0);
 }
 
-TEST(loader, loader_factory_server)
+TEST(loader, loader_factory_remote)
 {
     loader_factory factory;
     json           config_json = create_some_config_with_manifest();
-    aeon::service  service{ "http://127.0.0.1:34568" };
+    aeon::service  service{"http://127.0.0.1:34568"};
 
-    // there is no server running, so we expect exception
-    config_json["server"] = {{"address", "127.0.0.1"}, {"port", 34569}};
+    // there is no service running, so we expect exception
+    config_json["remote"] = {{"address", "127.0.0.1"}, {"port", 34569}};
     EXPECT_THROW(unique_ptr<loader> ptr = factory.get_loader(config_json), std::runtime_error);
 
-    config_json["server"]    = {{"address", "127.0.0.1"}, {"port", 34568}};
+    config_json["remote"]   = {{"address", "127.0.0.1"}, {"port", 34568}};
     unique_ptr<loader> ptr2 = factory.get_loader(config_json);
     ASSERT_TRUE(dynamic_cast<loader_remote*>(ptr2.get()) != 0);
     ASSERT_TRUE(dynamic_cast<loader_local*>(ptr2.get()) == 0);
 }
+#endif
 
 TEST(benchmark, imagenet)
 {
@@ -493,6 +532,8 @@ TEST(benchmark, imagenet)
     char* cache_root    = getenv("TEST_IMAGENET_CACHE");
     char* address       = getenv("TEST_IMAGENET_ADDRESS");
     char* port          = getenv("TEST_IMAGENET_PORT");
+    char* rdma_address  = getenv("TEST_IMAGENET_RDMA_ADDRESS");
+    char* rdma_port     = getenv("TEST_IMAGENET_RDMA_PORT");
     char* session_id    = getenv("TEST_IMAGENET_SESSION_ID");
     char* async         = getenv("TEST_IMAGENET_ASYNC");
     char* batch_delay   = getenv("TEST_IMAGENET_BATCH_DELAY");
@@ -523,23 +564,28 @@ TEST(benchmark, imagenet)
                        {"iteration_mode", "INFINITE"},
                        {"cache_directory", cache_root},
                        {"decode_thread_count", 0},
-                       {"web_server_port", 8086},
+                       //{"web_server_port", 8086},
                        {"etl", {image_config, label_config}},
                        {"augmentation", aug_config}};
 
         if (address != NULL && port != NULL)
         {
-            config["server"]["address"] = address;
-            config["server"]["port"]    = std::stoi(port);
+            config["remote"]["address"] = address;
+            config["remote"]["port"]    = std::stoi(port);
             if (session_id != NULL)
             {
-                config["server"]["session_id"] = session_id;
+                config["remote"]["session_id"] = session_id;
             }
             if (async != NULL)
             {
                 bool b;
                 istringstream(async) >> b;
-                config["server"]["async"] = b;
+                config["remote"]["async"] = b;
+            }
+            if (rdma_address != NULL && rdma_port != NULL)
+            {
+                config["remote"]["rdma_address"] = rdma_address;
+                config["remote"]["rdma_port"]    = std::stoi(rdma_port);
             }
         }
 
@@ -740,41 +786,5 @@ TEST(benchmark, load_block_manager)
         float time = timer.get_microseconds() / 1000000.;
         cout << "count=" << count << ", time=" << time << " images/second " << count / time << endl;
         timer.start();
-    }
-}
-
-namespace
-{
-    string create_manifest_file(size_t record_count, size_t width, size_t height)
-    {
-        string           manifest_filename = file_util::tmp_filename();
-        manifest_builder mb;
-        auto& ms = mb.record_count(record_count).image_width(width).image_height(height).create();
-        ofstream f(manifest_filename);
-        f << ms.str();
-        return manifest_filename;
-    }
-
-    json create_some_config_with_manifest()
-    {
-        int    height            = 32;
-        int    width             = 32;
-        size_t batch_size        = 2;
-        size_t record_count      = 10;
-        string manifest_filename = create_manifest_file(record_count, width, height);
-
-        json image = {{"type", "image"},
-                      {"name", "image1"},
-                      {"height", height},
-                      {"width", width},
-                      {"channel_major", false}};
-        json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
-        json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
-        json js           = {{"manifest_filename", manifest_filename},
-                   {"batch_size", batch_size},
-                   {"iteration_mode", "ONCE"},
-                   {"etl", {image, label}},
-                   {"augmentation", augmentation}};
-        return js;
     }
 }

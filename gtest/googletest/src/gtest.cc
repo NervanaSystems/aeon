@@ -384,6 +384,7 @@ void AssertHelper::operator=(const Message& message) const {
 GTEST_API_ GTEST_DEFINE_STATIC_MUTEX_(g_linked_ptr_mutex);
 
 // A copy of all command line arguments.  Set by InitGoogleTest().
+extern ::std::vector<testing::internal::string> g_argvs;
 ::std::vector<testing::internal::string> g_argvs;
 
 const ::std::vector<testing::internal::string>& GetArgvs() {
@@ -2576,35 +2577,6 @@ void ReportInvalidTestCaseType(const char* test_case_name,
 #endif  // GTEST_HAS_PARAM_TEST
 
 }  // namespace internal
-
-namespace {
-
-// A predicate that checks the test name of a TestInfo against a known
-// value.
-//
-// This is used for implementation of the TestCase class only.  We put
-// it in the anonymous namespace to prevent polluting the outer
-// namespace.
-//
-// TestNameIs is copyable.
-class TestNameIs {
- public:
-  // Constructor.
-  //
-  // TestNameIs has NO default constructor.
-  explicit TestNameIs(const char* name)
-      : name_(name) {}
-
-  // Returns true iff the test name of test_info matches name_.
-  bool operator()(const TestInfo * test_info) const {
-    return test_info && test_info->name() == name_;
-  }
-
- private:
-  std::string name_;
-};
-
-}  // namespace
 
 namespace internal {
 

@@ -8,7 +8,7 @@
 
 For fast iteration and model exploration, it is already used by fastest performance deep learning framework [neon](https://github.com/NervanaSystems/neon).
 
-See the new features in our latest release. 
+See the new features in our latest release.
 
 # Getting Started
 
@@ -18,7 +18,7 @@ First grab Aeon's dependencies:
 
 ### Ubuntu (release 14.04 LTS and later):
 
-    apt-get install git clang cmake python-dev python-pip libcurl4-openssl-dev libopencv-dev libsox-dev libcpprest-dev
+    apt-get install git clang libcurl4-openssl-dev libopencv-dev libsox-dev libboost-filesystem-dev libboost-system-dev
 
 ##### For Python 3.n
 
@@ -27,7 +27,7 @@ First grab Aeon's dependencies:
 ### CentOS (release 7.2 and later):
 
     yum install epel-release
-    yum install git clang gcc-c++ make cmake opencv-devel libcurl-devel sox-devel
+    yum install git clang gcc-c++ make cmake opencv-devel libcurl-devel sox-devel boost-devel boost-filesystem boost-system
 
 ##### For Python 2.7
 

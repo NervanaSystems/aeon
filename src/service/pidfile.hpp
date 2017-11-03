@@ -25,77 +25,96 @@
 
 #include <boost/filesystem/path.hpp>
 
-namespace nervana {
-  namespace pidfile {
-
-    namespace detail {
-      constexpr char path[] = "/var/run/aeon-service.pid";
-    }
-
-    namespace exception {
-      namespace detail{
-        class exception {
-        public:
-          explicit exception(int error_code) noexcept
-            : error_code_{ error_code } {
-          }
-          std::string error_message() const {
-            return std::strerror(error_code_);
-          }
-        private:
-          int error_code_{ 0 };
-        };
-      }
-      class open : public detail::exception {
-      public:
-        open() : detail::exception{ errno } {}
-      };
-      class lock : public detail::exception {
-      public:
-        lock() : detail::exception{ errno } {}
-      };
-      class write : public detail::exception {
-      public:
-        write() : detail::exception{ errno } {}
-      };
-    }
-
-    inline void create() {
-      int fd{ open(detail::path, O_WRONLY | O_CREAT, 0640) };
-      if (fd < 0) {
-        throw pidfile::exception::open{};
-      }
-      if (lockf(fd, F_TLOCK, 0) < 0) {
-        close(fd);
-        throw pidfile::exception::lock{};
-      }
-      std::string pid{ std::to_string(getpid()) };
-      ssize_t count{ write(fd, pid.c_str(), pid.size()) };
-      close(fd);
-      if (count < pid.size()) {
-        throw pidfile::exception::write{};
-      }
-    }
-
-    inline void remove() {
-      unlink(detail::path);
-    }
-
-    inline bool check() {
-      pid_t pid{ 0 };
-      {
-        std::ifstream ifs{ detail::path };
-        if (ifs.is_open()) {
-          ifs >> pid;
+namespace nervana
+{
+    namespace pidfile
+    {
+        namespace detail
+        {
+            constexpr char path[] = "/var/run/aeon-service.pid";
         }
-      }
-      if (pid > 0) {
-        return ::system(("kill -0 " + std::to_string(pid) + " 2>/dev/null").c_str()) == 0;
-      }
-      return false;
-    }
 
-  }
+        namespace exception
+        {
+            namespace detail
+            {
+                class exception
+                {
+                public:
+                    explicit exception(int error_code) noexcept
+                        : m_error_code{error_code}
+                    {
+                    }
+                    std::string error_message() const { return std::strerror(m_error_code); }
+                private:
+                    int m_error_code{0};
+                };
+            }
+            class open : public detail::exception
+            {
+            public:
+                open()
+                    : detail::exception{errno}
+                {
+                }
+            };
+            class lock : public detail::exception
+            {
+            public:
+                lock()
+                    : detail::exception{errno}
+                {
+                }
+            };
+            class write : public detail::exception
+            {
+            public:
+                write()
+                    : detail::exception{errno}
+                {
+                }
+            };
+        }
+
+        inline void create()
+        {
+            int fd{open(detail::path, O_WRONLY | O_CREAT, 0640)};
+            if (fd < 0)
+            {
+                throw pidfile::exception::open{};
+            }
+            if (lockf(fd, F_TLOCK, 0) < 0)
+            {
+                close(fd);
+                throw pidfile::exception::lock{};
+            }
+            std::string pid{std::to_string(getpid())};
+            ssize_t     count{write(fd, pid.c_str(), pid.size())};
+            close(fd);
+            if (count < pid.size())
+            {
+                throw pidfile::exception::write{};
+            }
+        }
+
+        inline void remove() { unlink(detail::path); }
+        inline bool check()
+        {
+            pid_t pid{0};
+            {
+                std::ifstream ifs{detail::path};
+                if (ifs.is_open())
+                {
+                    ifs >> pid;
+                }
+            }
+            if (pid > 0)
+            {
+                return ::system(("kill -0 " + std::to_string(pid) + " 2>/dev/null").c_str()) == 0;
+            }
+            return false;
+        }
+    }
 }
 
 #endif /* AEON_Service_PIDFILE_H_INCLUDED_ */

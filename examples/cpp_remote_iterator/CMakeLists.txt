@@ -1,17 +1,21 @@
-project(remote_iterator)
+#
+# Copyright 2017 Intel(R) Nervana(TM)
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
-set(SRC
-    remote_iterator.cpp
-)
+set(REMOTE_ITERATOR_SOURCE_FILES remote_iterator.cpp)
 
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../server/)
-
-add_executable(remote_iterator ${SRC})
-
-add_dependencies(remote_iterator aeon)
+add_executable(remote_iterator ${REMOTE_ITERATOR_SOURCE_FILES})
 add_dependencies(remote_iterator aeon-service)
 
-add_custom_command(TARGET remote_iterator POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/server/aeon-server ${CMAKE_CURRENT_BINARY_DIR}/../server/)
-
-target_link_libraries(remote_iterator aeon pthread sox ${CURL_LIBRARIES} opencv_imgproc opencv_highgui opencv_core ${PYTHON_LIBRARIES})
+target_link_libraries(remote_iterator aeon ${CURL_LIBRARIES} ${Boost_LIBRARIES})

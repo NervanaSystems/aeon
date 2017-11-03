@@ -1,5 +1,5 @@
 .. ---------------------------------------------------------------------------
-.. Copyright 2015 Nervana Systems Inc.
+.. Copyright 2015 Intel(R) Nervana(TM)
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -16,28 +16,6 @@
 Developer's Guide
 =================
 
-Setup
------
-
-You'll probably want to install gtest_ for running and implementing your C++ 
-unit tests.
-
-In Ubuntu::
-
-  sudo apt-get install libgtest-dev
-  cd /usr/src/gtest
-  sudo cmake .  sudo make
-  sudo mv libg* /usr/local/lib/
-
-Mac OS X::
-
-  brew install cmake
-  git clone https://github.com/google/googletest.git
-  cd googletest
-  cmake .
-  make -j
-  make install
-
 Custom data types
 -----------------
 
@@ -47,19 +25,19 @@ All data types must define three interfaces:
    :members:
    :undoc-members:
    :outline:
-   :no-link:  
-   
+   :no-link:
+
 .. doxygenclass:: nervana::interface::transformer
    :members:
    :undoc-members:
    :outline:
-   :no-link:  
-   
+   :no-link:
+
 .. doxygenclass:: nervana::interface::loader
    :members:
    :undoc-members:
    :outline:
-   :no-link:  
+   :no-link:
 
 and a configuration class inheriting from:
 
@@ -67,25 +45,25 @@ and a configuration class inheriting from:
    :members: add_shape_type
    :undoc-members:
    :outline:
-   :no-link: 
+   :no-link:
 
 
-The config should probably make use of the following three macros to define the 
+The config should probably make use of the following three macros to define the
 entries that make up the configuration options.
 
 .. doxygendefine:: ADD_SCALAR
    :outline:
-   :no-link: 
-   
+   :no-link:
+
 .. doxygendefine:: ADD_IGNORE
    :outline:
-   :no-link: 
-   
+   :no-link:
+
 .. doxygendefine:: ADD_DISTRIBUTION
    :outline:
-   :no-link: 
+   :no-link:
 
-For example, in ``nervana::video::config``, the following snippet adds the 
+For example, in ``nervana::video::config``, the following snippet adds the
 appropriate config options for ``frame`` and ``max_frame_count``:
 
 .. code-block:: c++
@@ -95,7 +73,7 @@ appropriate config options for ``frame`` and ``max_frame_count``:
         ADD_IGNORE(frame)
     };
 
-Then in the ``config`` method, these attributes are then added using the 
+Then in the ``config`` method, these attributes are then added using the
 ``add_shape_type`` method:
 
 .. code-block:: c++
@@ -116,6 +94,6 @@ Then in the ``config`` method, these attributes are then added using the
         add_shape_type({frame.channels, max_frame_count, frame.height, frame.width},
                         frame.type_string);
         }
-   
+
 
 .. _gtest: https://github.com/google/googletest

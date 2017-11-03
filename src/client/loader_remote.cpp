@@ -1,5 +1,5 @@
 /*
- Copyright 2017 Nervana Systems Inc.
+ Copyright 2017 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -53,7 +53,7 @@ nervana::loader_remote::loader_remote(shared_ptr<service> client, const nlohmann
 
 nervana::loader_remote::~loader_remote()
 {
-    if (!m_shared_session && !m_session_id.empty() && m_close_session)
+    if (!m_session_id.empty() && m_close_session)
     {
         close_session();
     }
@@ -64,15 +64,19 @@ void nervana::loader_remote::initialize()
     // If there is a session_id provided, we share already created session. Otherwise, we create a new one.
     try
     {
-        m_session_id     = m_config.at("server").at("session_id");
+        m_session_id     = m_config.at("remote").at("session_id");
         m_shared_session = true;
     }
-    catch (const std::exception&)
+    catch (const nlohmann::detail::out_of_range&)
     {
+    }
+    catch (const std::exception& ex)
+    {
+        WARN << "Error when parsing session_id: " << ex.what();
     }
     try
     {
-        m_close_session = m_config.at("server").at("close_session");
+        m_close_session = m_config.at("remote").at("close_session");
     }
     catch (const std::exception&)
     {

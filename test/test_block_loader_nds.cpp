@@ -1,5 +1,5 @@
 /*
- Copyright 2016 Nervana Systems Inc.
+ Copyright 2016 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -61,7 +61,7 @@ TEST(block_loader_nds, curl_stream)
                                         .collection_id(1)
                                         .block_size(block_size)
                                         .elements_per_record(elements_per_record)
-                                        .create());
+                                        .make_shared());
 
     stringstream stream;
     client->m_network_client.get("http://127.0.0.1:5000/test_pattern/", stream);
@@ -89,6 +89,7 @@ TEST(block_loader_nds, curl_stream_filename)
     std::ofstream ofs(tmp_filename);
 
     json >> ofs;
+    ofs.close();
 
     manifest_nds client = manifest_nds_builder()
                               .filename(tmp_filename)
@@ -118,7 +119,7 @@ TEST(block_loader_nds, curl_stream_error)
                                         .collection_id(1)
                                         .block_size(block_size)
                                         .elements_per_record(elements_per_record)
-                                        .create());
+                                        .make_shared());
 
     stringstream stream;
     EXPECT_THROW(client->m_network_client.get("http://127.0.0.1:5000/error", stream),
@@ -136,7 +137,7 @@ TEST(block_loader_nds, record_count)
                                         .collection_id(1)
                                         .block_size(block_size)
                                         .elements_per_record(elements_per_record)
-                                        .create());
+                                        .make_shared());
 
     // 200 and 5 are hard coded in the mock nds server
     ASSERT_EQ(client->record_count(), 200);
@@ -155,7 +156,7 @@ TEST(block_loader_nds, cpio)
                                         .collection_id(1)
                                         .block_size(block_size)
                                         .elements_per_record(elements_per_record)
-                                        .create());
+                                        .make_shared());
 
     size_t record_number = 0;
     for (size_t block_number = 0; block_number < block_count; block_number++)
@@ -194,6 +195,7 @@ TEST(block_loader_nds, cpio_filename)
     std::ofstream ofs(tmp_filename);
 
     json >> ofs;
+    ofs.close();
 
     manifest_nds client = manifest_nds_builder()
                               .filename(tmp_filename)

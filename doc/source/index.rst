@@ -1,5 +1,5 @@
 .. ---------------------------------------------------------------------------
-.. Copyright 2015-2017 Nervana Systems Inc.
+.. Copyright 2015-2017 Intel(R) Nervana(TM)
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -41,7 +41,7 @@ bug reports at aeon_issues_ .
    getting_started
    user_guide
    developer_guide
-   server
+   service
 
 .. toctree::
    :hidden:
@@ -82,4 +82,4 @@ bug reports at aeon_issues_ .
 
    python_api
    cpp_api
-   server_api
+   service_api

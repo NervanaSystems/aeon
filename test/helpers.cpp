@@ -1,5 +1,5 @@
 /*
- Copyright 2016 Nervana Systems Inc.
+ Copyright 2016 Intel(R) Nervana(TM)
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -101,6 +101,7 @@ fixed_buffer_map& get_fixed_buffer_map()
     return result;
 }
 
+#if defined(ENABLE_AEON_SERVICE)
 names_and_shapes get_names_and_shapes()
 {
     names_and_shapes nas;
@@ -110,3 +111,4 @@ names_and_shapes get_names_and_shapes()
     nas.emplace_back("s2", s2);
     return nas;
 }
+#endif /* ENABLE_AEON_SERVICE */
