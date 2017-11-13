@@ -5,7 +5,7 @@ set(CMAKE_CXX_COMPILER "clang++")
 
 project (aeon)
 
-set(AEON_VERSION 1.0.0)
+set(AEON_VERSION 1.1.0)
 if(APPLE)
 set(CMAKE_MACOSX_RPATH 1)
 endif()
