@@ -206,8 +206,12 @@ static void transpose_buf(
     }
 }
 
-void fixed_buffer_map::copy(
-    fixed_buffer_map& src, size_t src_index, size_t dst_index, size_t count, size_t batch_size)
+void fixed_buffer_map::copy(fixed_buffer_map& src,
+                            size_t            src_index,
+                            size_t            dst_index,
+                            size_t            count,
+                            size_t            batch_size,
+                            bool              transpose)
 {
     for (auto name : m_names)
     {
@@ -222,7 +226,7 @@ void fixed_buffer_map::copy(
 
         int element_size = (this->operator[](name))->get_shape_type().get_otype().get_size();
         int cols         = count * src_fbm->get_stride() / batch_size / element_size;
-        if (batch_size > 1 && cols > 1)
+        if (transpose && batch_size > 1 && cols > 1)
             if ((cols % (16 / element_size)) ||
                 (batch_size % 16)) //data must be bounded to 16 bytes for using SSE
                 transpose_buf(p_dst, p_src, batch_size, cols, element_size, TransposeType::REGULAR);

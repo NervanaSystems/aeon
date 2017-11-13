@@ -86,9 +86,11 @@ encoded_record_list* batch_iterator::filler()
 
 batch_iterator_fbm::batch_iterator_fbm(batch_decoder*                             blkl,
                                        size_t                                     batch_size,
-                                       const std::shared_ptr<provider_interface>& prov)
+                                       const std::shared_ptr<provider_interface>& prov,
+                                       bool                                       transpose)
     : async_manager<fixed_buffer_map, fixed_buffer_map>(blkl, "batch_iterator")
     , m_batch_size(batch_size)
+    , m_transpose(transpose)
     , m_element_count(blkl->elements_per_record())
 {
     m_element_count = elements_per_record();
@@ -133,7 +135,8 @@ fixed_buffer_map* batch_iterator_fbm::filler()
         size_t       current_input_size = input_size - m_src_index;
         size_t move_count = (current_input_size <= remainder) ? current_input_size : remainder;
 
-        rc->copy(*m_input_ptr, m_src_index, m_dst_index, move_count, m_batch_size);
+        rc->copy(*m_input_ptr, m_src_index, m_dst_index, move_count, m_batch_size, m_transpose);
+
         m_src_index += move_count;
         m_dst_index += move_count;
 

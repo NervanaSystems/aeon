@@ -157,7 +157,8 @@ void loader::initialize(nlohmann::json& config_json)
                                            m_provider,
                                            lcfg.random_seed);
 
-    m_final_stage = make_shared<batch_iterator_fbm>(m_decoder.get(), lcfg.batch_size, m_provider);
+    m_final_stage = make_shared<batch_iterator_fbm>(
+        m_decoder.get(), lcfg.batch_size, m_provider, !lcfg.batch_major);
 
     m_output_buffer_ptr = m_final_stage->next();
 

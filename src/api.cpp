@@ -75,7 +75,7 @@ static PyObject* dict2json(PyObject* self, PyObject* dictionary)
     }
 }
 
-static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf);
+static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf, bool transposed);
 
 typedef struct
 {
@@ -106,7 +106,7 @@ static PyObject* DataLoader_iternext(PyObject* self)
 {
     INFO << " aeon_DataLoader_iternext";
     PyObject* result = NULL;
-
+    auto      lconf  = loader_config(DL_get_loader(self)->get_current_config());
     if (!((aeon_DataLoader*)(self))->m_first_iteration)
         DL_get_loader(self)->get_current_iter()++;
     else
@@ -123,7 +123,7 @@ static PyObject* DataLoader_iternext(PyObject* self)
         int tuple_pos     = 0;
         for (auto&& nm : names)
         {
-            PyObject* wrapped_buf     = wrap_buffer_as_np_array(d[nm]);
+            PyObject* wrapped_buf     = wrap_buffer_as_np_array(d[nm], !lconf.batch_major);
             PyObject* buf_name        = Py_BuildValue("s", nm.c_str());
             PyObject* named_buf_tuple = PyTuple_New(buf_tuple_len);
 
@@ -169,15 +169,26 @@ static PySequenceMethods DataLoader_sequence_methods = {aeon_DataLoader_length, 
                                                         0, /* sq_inplace_repeat */
                                                         0 /* sq_inplace_repeat */};
 
-static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf)
+static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf, bool transposed)
 {
     std::vector<npy_intp> dims;
     dims.push_back(buf->get_item_count());
-    auto shape = buf->get_shape_type().get_shape();
-    dims.insert(dims.end(), shape.begin(), shape.end());
+    auto shape  = buf->get_shape_type().get_shape();
+    int  nptype = buf->get_shape_type().get_otype().get_np_type();
+    if (transposed)
+    {
+        int shapex = 1;
 
-    int nptype = buf->get_shape_type().get_otype().get_np_type();
+        for (int i = 0; i < shape.size(); ++i)
+            shapex *= shape[i];
 
+        dims.push_back(shapex);
+        swap(dims[0], dims[1]);
+    }
+    else
+    {
+        dims.insert(dims.end(), shape.begin(), shape.end());
+    }
     PyObject* p_array =
         PyArray_SimpleNewFromData(dims.size(), &dims[0], nptype, const_cast<char*>(buf->data()));
 

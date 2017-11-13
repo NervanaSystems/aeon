@@ -58,6 +58,7 @@ public:
     bool                        shuffle_enable       = false;
     bool                        shuffle_manifest     = false;
     bool                        pinned               = false;
+    bool                        batch_major          = true;
     uint32_t                    random_seed          = 0;
     uint32_t                    decode_thread_count  = 0;
     std::string                 iteration_mode       = "ONCE";
@@ -76,6 +77,7 @@ private:
         ADD_SCALAR(batch_size, mode::REQUIRED),
         ADD_SCALAR(cache_directory, mode::OPTIONAL),
         ADD_SCALAR(block_size, mode::OPTIONAL),
+        ADD_SCALAR(batch_major, mode::OPTIONAL),
         ADD_SCALAR(subset_fraction,
                    mode::OPTIONAL,
                    [](decltype(subset_fraction) v) { return v <= 1.0f && v >= 0.0f; }),
