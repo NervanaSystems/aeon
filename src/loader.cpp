@@ -146,31 +146,17 @@ void loader::initialize(nlohmann::json& config_json)
     unsigned int threads_num = lcfg.decode_thread_count != 0 ? lcfg.decode_thread_count
                                                              : std::thread::hardware_concurrency();
 
-    if (lcfg.batch_size > threads_num * m_increase_input_size_coefficient)
-    {
-        m_batch_iterator = make_shared<batch_iterator>(m_block_manager.get(), lcfg.batch_size);
-        m_final_stage    = make_shared<batch_decoder>(m_batch_iterator.get(),
-                                                   static_cast<size_t>(lcfg.batch_size),
-                                                   lcfg.decode_thread_count,
-                                                   lcfg.pinned,
-                                                   m_provider,
-                                                   lcfg.random_seed);
-    }
-    else
-    {
-        const int decode_size = threads_num * m_input_multiplier;
-        m_batch_iterator      = make_shared<batch_iterator>(m_block_manager.get(), decode_size);
+    const int decode_size = threads_num * m_input_multiplier;
+    m_batch_iterator      = make_shared<batch_iterator>(m_block_manager.get(), decode_size);
 
-        m_decoder = make_shared<batch_decoder>(m_batch_iterator.get(),
-                                               decode_size,
-                                               lcfg.decode_thread_count,
-                                               lcfg.pinned,
-                                               m_provider,
-                                               lcfg.random_seed);
+    m_decoder = make_shared<batch_decoder>(m_batch_iterator.get(),
+                                           decode_size,
+                                           lcfg.decode_thread_count,
+                                           lcfg.pinned,
+                                           m_provider,
+                                           lcfg.random_seed);
 
-        m_final_stage =
-            make_shared<batch_iterator_fbm>(m_decoder.get(), lcfg.batch_size, m_provider);
-    }
+    m_final_stage = make_shared<batch_iterator_fbm>(m_decoder.get(), lcfg.batch_size, m_provider);
 
     m_output_buffer_ptr = m_final_stage->next();
 
