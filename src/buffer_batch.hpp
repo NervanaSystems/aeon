@@ -237,7 +237,8 @@ public:
         return (it == m_data.end() ? nullptr : it->second);
     }
 
-    void copy(fixed_buffer_map& src, size_t src_index, size_t dst_index, size_t count);
+    void copy(
+        fixed_buffer_map& src, size_t src_index, size_t dst_index, size_t count, size_t batch_size);
 
     size_t size() const { return m_data.size(); }
 private:

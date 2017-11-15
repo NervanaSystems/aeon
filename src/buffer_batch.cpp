@@ -18,6 +18,14 @@
 
 #include "buffer_batch.hpp"
 #include "log.hpp"
+#include <xmmintrin.h>
+#include "transpose.hpp"
+
+enum TransposeType
+{
+    REGULAR,
+    SSE
+};
 
 using namespace std;
 using namespace nervana;
@@ -148,7 +156,58 @@ buffer_fixed_size_elements::~buffer_fixed_size_elements()
 #endif
 }
 
-void fixed_buffer_map::copy(fixed_buffer_map& src, size_t src_index, size_t dst_index, size_t count)
+// Transposes the rows and columns of a matrix
+template <typename T>
+static void transpose_regular(T* dest, const T* src, int rows, int cols)
+{
+    int dst_indx = 0;
+    int src_indx = 0;
+    for (int c = 0; c < cols; ++c)
+    {
+        src_indx = c;
+        for (int r = 0; r < rows; ++r)
+        {
+            dest[dst_indx++] = src[src_indx];
+            src_indx += cols;
+        }
+    }
+}
+
+static void transpose_buf(
+    char* dest, char* src, size_t rows, size_t cols, size_t element_size, TransposeType type)
+{
+    switch (element_size)
+    {
+    case 1:
+    {
+        if (type == TransposeType::REGULAR)
+            transpose_regular<uint8_t>(
+                reinterpret_cast<uint8_t*>(dest), reinterpret_cast<uint8_t*>(src), rows, cols);
+        else if (type == TransposeType::SSE)
+            transpose::sse::transpose(
+                reinterpret_cast<uint8_t*>(dest), reinterpret_cast<uint8_t*>(src), rows, cols);
+        break;
+    }
+    case 2:
+        transpose_regular<uint16_t>(
+            reinterpret_cast<uint16_t*>(dest), reinterpret_cast<uint16_t*>(src), rows, cols);
+        break;
+    case 4:
+    {
+        transpose_regular<uint32_t>(
+            reinterpret_cast<uint32_t*>(dest), reinterpret_cast<uint32_t*>(src), rows, cols);
+        break;
+    }
+    case 8:
+        transpose_regular<uint64_t>(
+            reinterpret_cast<uint64_t*>(dest), reinterpret_cast<uint64_t*>(src), rows, cols);
+        break;
+    default: throw "unsupported type";
+    }
+}
+
+void fixed_buffer_map::copy(
+    fixed_buffer_map& src, size_t src_index, size_t dst_index, size_t count, size_t batch_size)
 {
     for (auto name : m_names)
     {
@@ -161,6 +220,15 @@ void fixed_buffer_map::copy(fixed_buffer_map& src, size_t src_index, size_t dst_
             (count + dst_index > dst_fbm->get_item_count()))
             throw invalid_argument("buffer_fixed_size: count out-of-range");
 
-        memcpy(p_dst, p_src, count * src_fbm->get_stride());
+        int element_size = (this->operator[](name))->get_shape_type().get_otype().get_size();
+        int cols         = count * src_fbm->get_stride() / batch_size / element_size;
+        if (batch_size > 1 && cols > 1)
+            if ((cols % (16 / element_size)) ||
+                (batch_size % 16)) //data must be bounded to 16 bytes for using SSE
+                transpose_buf(p_dst, p_src, batch_size, cols, element_size, TransposeType::REGULAR);
+            else
+                transpose_buf(p_dst, p_src, batch_size, cols, element_size, TransposeType::SSE);
+        else
+            memcpy(p_dst, p_src, count * src_fbm->get_stride());
     }
 }
