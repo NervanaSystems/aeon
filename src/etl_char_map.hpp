@@ -83,7 +83,7 @@ private:
         {
             throw std::runtime_error("alphabet does not consist of unique chars " + alphabet);
         }
-        if (unknown_value > 0 && unknown_value < alphabet.size())
+        if (unknown_value > 0 && unknown_value < walphabet.size())
         {
             throw std::runtime_error(
                 "unknown_value should be >= alphabet length and <= 4294967295");

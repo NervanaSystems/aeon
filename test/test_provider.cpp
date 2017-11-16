@@ -220,16 +220,17 @@ TEST(provider, blob)
 
 TEST(provider, char_map)
 {
-    string alphabet    = "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()敏捷的棕色狐狸跳過了懶狗";
-    string transcript1 = "The quick brown fox jumps over the lazy dog";
-    string transcript2 = "敏捷的棕色狐狸跳過了懶狗";
-    size_t max_length  = 100;
-    size_t batch_size  = 128;
+    string alphabet      = "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,()敏捷的棕色狐狸跳過了懶狗";
+    string transcript1   = "The quick brown fox jumps over the lazy dog";
+    string transcript2   = "敏捷的棕色狐狸跳過了懶狗";
+    size_t max_length    = 100;
+    size_t batch_size    = 128;
+    int    unknown_value = to_wstring(alphabet).size();
 
     nlohmann::json char_map = {{"type", "char_map"},
                                {"alphabet", alphabet},
                                {"max_length", max_length},
-                               {"unknown_value", 255}};
+                               {"unknown_value", unknown_value}};
     nlohmann::json label = {{"type", "label"}, {"binary", true}};
     nlohmann::json js    = {{"etl", {char_map, label}}};
 
