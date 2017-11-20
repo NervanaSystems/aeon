@@ -101,7 +101,7 @@ high and low level build systems)::
 
 ### To install Aeon:
 
-    git clone https://github.com/NervanaSystems/private-aeon.git aeon
+    git clone https://github.com/NervanaSystems/aeon.git
 
 ##### For Python 2.7
 
