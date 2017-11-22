@@ -179,6 +179,7 @@ The possible base loader configurations are the following (configurations withou
    manifest_filename (string)| *Required* | Path to the manifest file.
    manifest_root (string)| ~"~" |
    batch_size (int)| *Required* | Batch size. In neon, typically accesible via ``be.bsz``.
+   batch_major (bool)| True | If set to `true`, the data order is N,DATA. Otherwise it's DATA,N (where DATA is any sequence of data, e.g., N,C,H,W to C,H,W,N for images).
    manifest_root (string) | ~"~" | If provided, ``manifest_root`` is prepended to all manifest items with relative paths, while manifest items with absolute paths are left untouched.
    cache_directory (string)| ~"~" | If provided, the dataloader will cache the data into ``*.cpio`` files for fast disk reads.
    subset_fraction (float)| 1.0 | Fraction of the dataset to iterate over. Useful when testing code on smaller data samples.
