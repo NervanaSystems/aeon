@@ -32,7 +32,9 @@ std::vector<block_info> nervana::generate_block_list(size_t record_count, size_t
         size_t sequence_count = block_size;
         if (sequence_start + sequence_count > record_count)
         {
-            sequence_count -= sequence_start + sequence_count - record_count;
+            sequence_count = record_count - sequence_start;
+            rc.emplace_back(sequence_start, sequence_count);
+            break;
         }
         rc.emplace_back(sequence_start, sequence_count);
     }
