@@ -122,7 +122,7 @@ Now continue on to the [user guide](http://aeon.nervanasys.com/index.html/user_g
 
 # Documentation
 
-The complete documentation for aeon is available [here](aeon.nervanasys.com).
+The complete documentation for aeon is available [here](http://aeon.nervanasys.com).
 
 # Support
 
