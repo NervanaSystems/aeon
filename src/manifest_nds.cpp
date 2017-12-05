@@ -120,6 +120,12 @@ string network_client::metadata_url()
     return ss.str();
 }
 
+manifest_nds_builder& manifest_nds_builder::filename(const std::string& filename)
+{
+    parse_json(filename);
+    return *this;
+}
+
 manifest_nds_builder& manifest_nds_builder::base_url(const std::string& url)
 {
     m_base_url = url;
@@ -174,6 +180,40 @@ manifest_nds_builder& manifest_nds_builder::seed(uint32_t seed)
     return *this;
 }
 
+void manifest_nds_builder::parse_json(const std::string& filename)
+{
+    // parse json
+    nlohmann::json j;
+    try {
+        ifstream ifs(filename);
+        ifs >> j;
+    } catch (std::exception& ex) {
+        stringstream ss;
+        ss << "Error while parsing manifest json: " << filename << " : ";
+        ss << ex.what();
+        throw std::runtime_error(ss.str());
+    }
+
+    // extract manifest params from parsed json
+    try {
+        interface::config::parse_value(m_base_url, "url", j, interface::config::mode::REQUIRED);
+
+        auto val = j.find("params");
+        if(val != j.end()) {
+            nlohmann::json params = *val;
+            interface::config::parse_value(m_token, "token", params, interface::config::mode::REQUIRED);
+            interface::config::parse_value(m_collection_id, "collection_id", params, interface::config::mode::REQUIRED);
+        } else {
+            throw std::runtime_error("couldn't find key 'params' in nds manifest file.");
+        }
+    } catch (std::exception& ex) {
+        stringstream ss;
+        ss << "Error while pulling config out of manifest json: " << filename << " : ";
+        ss << ex.what();
+        throw std::runtime_error(ss.str());
+    }
+}
+
 manifest_nds manifest_nds_builder::create()
 {
     if (m_base_url == "")
@@ -202,6 +242,18 @@ manifest_nds manifest_nds_builder::create()
                         m_shard_index,
                         m_shuffle,
                         m_seed);
+}
+
+std::shared_ptr<manifest_nds> manifest_nds_builder::make_shared()
+{
+    return std::shared_ptr<manifest_nds>(new manifest_nds(m_base_url,
+                                                          m_token,
+                                                          m_collection_id,
+                                                          m_block_size,
+                                                          m_elements_per_record,
+                                                          m_shard_count,
+                                                          m_shard_index,
+                                                          m_shuffle));
 }
 
 manifest_nds::manifest_nds(const std::string& base_url,

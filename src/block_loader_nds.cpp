@@ -45,14 +45,19 @@ nervana::encoded_record_list* block_loader_nds::filler()
 {
     m_state                    = async_state::wait_for_buffer;
     encoded_record_list* rc    = get_pending_buffer();
-    encoded_record_list* input = nullptr;
+    m_state                    = async_state::processing;
 
+    encoded_record_list* input = nullptr;
     rc->clear();
-    input = m_manifest.next();
+
+    m_state    = async_state::fetching_data;
+    input = m_source->next();
+    m_state    = async_state::processing;
+
     if (input != nullptr)
     {
         input->swap(*rc);
     }
-
+    m_state = async_state::idle;
     return rc;
 }

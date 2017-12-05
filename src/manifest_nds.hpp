@@ -63,6 +63,7 @@ private:
 class nervana::manifest_nds_builder
 {
 public:
+    manifest_nds_builder& filename(const std::string& filename);
     manifest_nds_builder& base_url(const std::string& url);
     manifest_nds_builder& token(const std::string& token);
     manifest_nds_builder& collection_id(size_t collection_id);
@@ -73,8 +74,11 @@ public:
     manifest_nds_builder& shuffle(bool enable);
     manifest_nds_builder& seed(uint32_t seed);
     manifest_nds create();
+    std::shared_ptr<manifest_nds> make_shared();
 
 private:
+    void parse_json(const std::string& filename);
+
     std::string m_base_url;
     std::string m_token;
     size_t      m_collection_id       = -1;
@@ -113,9 +117,8 @@ public:
 
     // NDS manifests doesn't have versions since collections are immutable
     std::string version() override { return ""; }
-private:
     static bool is_likely_json(const std::string filename);
-
+private:
     void load_metadata();
 
     const std::string   m_base_url;

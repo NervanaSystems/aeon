@@ -74,6 +74,38 @@ TEST(block_loader_nds, curl_stream)
     ASSERT_EQ(stream.str(), expected.str());
 }
 
+TEST(block_loader_nds, curl_stream_filename)
+{
+    size_t block_size          = 16;
+    size_t elements_per_record = 2;
+
+    nlohmann::json json;
+    json["url"] = "http://127.0.0.1:5000";
+    json["params"]["token"] = "token";
+    json["params"]["collection_id"] = 1;
+    json["params"]["tag"] = "train";
+
+    std::ofstream ofs("test.json");
+
+    json >> ofs;
+
+    manifest_nds client = manifest_nds_builder()
+                              .filename("test.json")
+                              .block_size(block_size)
+                              .elements_per_record(elements_per_record)
+                              .create();
+
+    stringstream stream;
+    client.m_network_client.get("http://127.0.0.1:5000/test_pattern/", stream);
+
+    stringstream expected;
+    for (int i = 0; i < 1024; ++i)
+    {
+        expected << "0123456789abcdef";
+    }
+    ASSERT_EQ(stream.str(), expected.str());
+}
+
 TEST(block_loader_nds, curl_stream_error)
 {
     size_t block_size          = 16;
@@ -120,6 +152,49 @@ TEST(block_loader_nds, cpio)
                               .base_url("http://127.0.0.1:5000")
                               .token("token")
                               .collection_id(1)
+                              .block_size(block_size)
+                              .elements_per_record(elements_per_record)
+                              .create();
+
+    size_t record_number = 0;
+    for (size_t block_number = 0; block_number < block_count; block_number++)
+    {
+        encoded_record_list* block = client.load_block(block_number);
+        ASSERT_EQ(block_size, block->size());
+
+        for (auto record : *block)
+        {
+            element_info info0(vector2string(record.element(0)));
+            element_info info1(vector2string(record.element(1)));
+
+            ASSERT_EQ(record_number, info0.record_number());
+            ASSERT_EQ(record_number, info1.record_number());
+            ASSERT_EQ(0, info0.element_number());
+            ASSERT_EQ(1, info1.element_number());
+
+            record_number++;
+        }
+    }
+}
+
+TEST(block_loader_nds, cpio_filename)
+{
+    size_t block_size          = 16;
+    size_t elements_per_record = 2;
+    size_t block_count         = 3;
+
+    nlohmann::json json;
+    json["url"] = "http://127.0.0.1:5000";
+    json["params"]["token"] = "token";
+    json["params"]["collection_id"] = 1;
+    json["params"]["tag"] = "train";
+
+    std::ofstream ofs("test.json");
+
+    json >> ofs;
+
+    manifest_nds client = manifest_nds_builder()
+                              .filename("test.json")
                               .block_size(block_size)
                               .elements_per_record(elements_per_record)
                               .create();

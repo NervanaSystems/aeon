@@ -25,6 +25,7 @@
 #include "loader.hpp"
 #include "log.hpp"
 #include "web_app.hpp"
+#include "manifest_nds.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -104,42 +105,72 @@ void loader::initialize(nlohmann::json& config_json)
     // shared_ptr<manifest> base_manifest;
     sox_format_init();
 
-    // the manifest defines which data should be included in the dataset
-    m_manifest = make_shared<manifest_file>(lcfg.manifest_filename,
-                                            lcfg.shuffle_manifest,
-                                            lcfg.manifest_root,
-                                            lcfg.subset_fraction,
-                                            lcfg.block_size,
-                                            lcfg.random_seed);
+    if (nervana::manifest_nds::is_likely_json(lcfg.manifest_filename)) {
+        m_manifest = nervana::manifest_nds_builder()
+                                            .filename(lcfg.manifest_filename)
+                                            .block_size(lcfg.block_size)
+                                            .elements_per_record(2)
+                                            .make_shared();
 
-    // TODO: make the constructor throw this error
-    if (m_manifest->record_count() == 0)
-    {
-        throw std::runtime_error("manifest file is empty");
-    }
-    // Default ceil div to get number of batches
-    m_batch_count_value = (m_manifest->record_count() + m_batch_size - 1) / m_batch_size;
-    if (lcfg.iteration_mode == "ONCE")
-    {
-        m_batch_mode = BatchMode::ONCE;
-    }
-    else if (lcfg.iteration_mode == "INFINITE")
-    {
-        m_batch_mode = BatchMode::INFINITE;
-    }
-    else if (lcfg.iteration_mode == "COUNT")
-    {
-        m_batch_mode        = BatchMode::COUNT;
-        m_batch_count_value = lcfg.iteration_mode_count;
-    }
+        // Default ceil div to get number of batches
+        m_batch_count_value = (m_manifest_nds->record_count() + m_batch_size - 1) / m_batch_size;
+        if (lcfg.iteration_mode == "ONCE")
+        {
+            m_batch_mode = BatchMode::ONCE;
+        }
+        else if (lcfg.iteration_mode == "INFINITE")
+        {
+            m_batch_mode = BatchMode::INFINITE;
+        }
+        else if (lcfg.iteration_mode == "COUNT")
+        {
+            m_batch_mode        = BatchMode::COUNT;
+            m_batch_count_value = lcfg.iteration_mode_count;
+        }
 
-    m_block_loader = make_shared<block_loader_file>(m_manifest.get(), lcfg.block_size);
+        m_block_loader_nds = std::make_shared<block_loader_nds>(m_manifest_nds.get(), lcfg.block_size);
+        m_block_manager = make_shared<block_manager>(m_block_loader_nds.get(),
+                                                     lcfg.block_size,
+                                                     lcfg.cache_directory,
+                                                     lcfg.shuffle_enable);
+    } else {
+        // the manifest defines which data should be included in the dataset
+        m_manifest = make_shared<manifest_file>(lcfg.manifest_filename,
+                                                lcfg.shuffle_manifest,
+                                                lcfg.manifest_root,
+                                                lcfg.subset_fraction,
+                                                lcfg.block_size,
+                                                lcfg.random_seed);
 
-    m_block_manager = make_shared<block_manager>(m_block_loader.get(),
-                                                 lcfg.block_size,
-                                                 lcfg.cache_directory,
-                                                 lcfg.shuffle_enable,
-                                                 lcfg.random_seed);
+        // TODO: make the constructor throw this error
+        if (m_manifest->record_count() == 0)
+        {
+            throw std::runtime_error("manifest file is empty");
+        }
+        // Default ceil div to get number of batches
+        m_batch_count_value = (m_manifest->record_count() + m_batch_size - 1) / m_batch_size;
+        if (lcfg.iteration_mode == "ONCE")
+        {
+            m_batch_mode = BatchMode::ONCE;
+        }
+        else if (lcfg.iteration_mode == "INFINITE")
+        {
+            m_batch_mode = BatchMode::INFINITE;
+        }
+        else if (lcfg.iteration_mode == "COUNT")
+        {
+            m_batch_mode        = BatchMode::COUNT;
+            m_batch_count_value = lcfg.iteration_mode_count;
+        }
+
+        m_block_loader = make_shared<block_loader_file>(m_manifest.get(), lcfg.block_size);
+
+        m_block_manager = make_shared<block_manager>(m_block_loader.get(),
+                                                     lcfg.block_size,
+                                                     lcfg.cache_directory,
+                                                     lcfg.shuffle_enable,
+                                                     lcfg.random_seed);
+    }
 
     m_provider = provider_factory::create(config_json);
 
