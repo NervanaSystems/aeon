@@ -106,7 +106,7 @@ void loader::initialize(nlohmann::json& config_json)
     sox_format_init();
 
     if (nervana::manifest_nds::is_likely_json(lcfg.manifest_filename)) {
-        m_manifest = nervana::manifest_nds_builder()
+        m_manifest_nds = nervana::manifest_nds_builder()
                                             .filename(lcfg.manifest_filename)
                                             .block_size(lcfg.block_size)
                                             .elements_per_record(2)
