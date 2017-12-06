@@ -189,7 +189,7 @@ void manifest_nds_builder::parse_json(const std::string& filename)
         ifstream ifs(filename);
         ifs >> j;
     }
-    catch (std::exception& ex)
+    catch (const std::exception& ex)
     {
         stringstream ss;
         ss << "Error while parsing manifest json: " << filename << " : ";
@@ -216,7 +216,7 @@ void manifest_nds_builder::parse_json(const std::string& filename)
             throw std::runtime_error("couldn't find key 'params' in nds manifest file.");
         }
     }
-    catch (std::exception& ex)
+    catch (const std::exception& ex)
     {
         stringstream ss;
         ss << "Error while pulling config out of manifest json: " << filename << " : ";
@@ -434,7 +434,7 @@ void manifest_nds::load_metadata()
     {
         metadata = nlohmann::json::parse(json_str);
     }
-    catch (std::exception& ex)
+    catch (const std::exception& ex)
     {
         stringstream ss;
         ss << "exception parsing metadata from nds ";
