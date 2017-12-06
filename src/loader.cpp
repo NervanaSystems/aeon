@@ -111,6 +111,7 @@ void loader::initialize(nlohmann::json& config_json)
                              .filename(lcfg.manifest_filename)
                              .block_size(lcfg.block_size)
                              .elements_per_record(2)
+                             .shuffle(lcfg.shuffle_manifest)
                              .seed(lcfg.random_seed)
                              .make_shared();
 
