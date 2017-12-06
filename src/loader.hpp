@@ -187,8 +187,7 @@ private:
     iterator                                                m_end_iter;
     std::shared_ptr<manifest_file>                          m_manifest_file;
     std::shared_ptr<manifest_nds>                           m_manifest_nds;
-    std::shared_ptr<block_loader_file>                      m_block_loader_file;
-    std::shared_ptr<block_loader_nds>                       m_block_loader_nds;
+    std::shared_ptr<block_loader_source>                    m_block_loader;
     std::shared_ptr<block_manager>                          m_block_manager;
     std::shared_ptr<batch_iterator>                         m_batch_iterator;
     std::shared_ptr<provider_interface>                     m_provider;

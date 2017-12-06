@@ -114,13 +114,7 @@ void loader::initialize(nlohmann::json& config_json)
                              .seed(lcfg.random_seed)
                              .make_shared();
 
-        m_block_loader_nds =
-            std::make_shared<block_loader_nds>(m_manifest_nds.get(), lcfg.block_size);
-        m_block_manager = make_shared<block_manager>(m_block_loader_nds.get(),
-                                                     lcfg.block_size,
-                                                     lcfg.cache_directory,
-                                                     lcfg.shuffle_enable,
-                                                     lcfg.random_seed);
+        m_block_loader = std::make_shared<block_loader_nds>(m_manifest_nds.get(), lcfg.block_size);
     }
     else
     {
@@ -137,14 +131,15 @@ void loader::initialize(nlohmann::json& config_json)
         {
             throw std::runtime_error("manifest file is empty");
         }
-        m_block_loader_file =
+        m_block_loader =
             make_shared<block_loader_file>(m_manifest_file.get(), lcfg.block_size);
-        m_block_manager = make_shared<block_manager>(m_block_loader_file.get(),
-                                                     lcfg.block_size,
-                                                     lcfg.cache_directory,
-                                                     lcfg.shuffle_enable,
-                                                     lcfg.random_seed);
     }
+
+    m_block_manager = make_shared<block_manager>(m_block_loader.get(),
+                                                 lcfg.block_size,
+                                                 lcfg.cache_directory,
+                                                 lcfg.shuffle_enable,
+                                                 lcfg.random_seed);
 
     // Default ceil div to get number of batches
     m_batch_count_value = (record_count() + m_batch_size - 1) / m_batch_size;
