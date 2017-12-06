@@ -73,7 +73,7 @@ public:
     manifest_nds_builder& shard_index(size_t shard_index);
     manifest_nds_builder& shuffle(bool enable);
     manifest_nds_builder& seed(uint32_t seed);
-    manifest_nds create();
+    manifest_nds                  create();
     std::shared_ptr<manifest_nds> make_shared();
 
 private:
@@ -118,6 +118,7 @@ public:
     // NDS manifests doesn't have versions since collections are immutable
     std::string version() override { return ""; }
     static bool is_likely_json(const std::string filename);
+
 private:
     void load_metadata();
 

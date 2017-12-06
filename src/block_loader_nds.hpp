@@ -36,7 +36,7 @@ class nervana::block_loader_nds : public block_loader_source,
                                   public async_manager<encoded_record_list, encoded_record_list>
 {
 public:
-    block_loader_nds(manifest_nds*, size_t block_size);
+    block_loader_nds(manifest_nds* manifest, size_t block_size);
 
     virtual ~block_loader_nds() { finalize(); }
     encoded_record_list* filler() override;
@@ -47,9 +47,8 @@ public:
     size_t       elements_per_record() const override { return m_elements_per_record; }
     source_uid_t get_uid() const override { return 0; }
 private:
-    manifest_nds& m_manifest;
-    size_t        m_block_size;
-    size_t        m_block_count;
-    size_t        m_record_count;
-    size_t        m_elements_per_record;
+    size_t m_block_size;
+    size_t m_block_count;
+    size_t m_record_count;
+    size_t m_elements_per_record;
 };

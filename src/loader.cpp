@@ -108,16 +108,15 @@ void loader::initialize(nlohmann::json& config_json)
     if (nervana::manifest_nds::is_likely_json(lcfg.manifest_filename))
     {
         m_manifest_nds = nervana::manifest_nds_builder()
-                                            .filename(lcfg.manifest_filename)
-                                            .block_size(lcfg.block_size)
-                                            .elements_per_record(2)
-                                            .make_shared();
+                             .filename(lcfg.manifest_filename)
+                             .block_size(lcfg.block_size)
+                             .elements_per_record(2)
+                             .make_shared();
 
-        m_block_loader_nds = std::make_shared<block_loader_nds>(m_manifest_nds.get(), lcfg.block_size);
-        m_block_manager = make_shared<block_manager>(m_block_loader_nds.get(),
-                                                     lcfg.block_size,
-                                                     lcfg.cache_directory,
-                                                     lcfg.shuffle_enable);
+        m_block_loader_nds =
+            std::make_shared<block_loader_nds>(m_manifest_nds.get(), lcfg.block_size);
+        m_block_manager = make_shared<block_manager>(
+            m_block_loader_nds.get(), lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_enable);
     }
     else
     {
@@ -134,7 +133,8 @@ void loader::initialize(nlohmann::json& config_json)
         {
             throw std::runtime_error("manifest file is empty");
         }
-        m_block_loader_file = make_shared<block_loader_file>(m_manifest_file.get(), lcfg.block_size);
+        m_block_loader_file =
+            make_shared<block_loader_file>(m_manifest_file.get(), lcfg.block_size);
         m_block_manager = make_shared<block_manager>(m_block_loader_file.get(),
                                                      lcfg.block_size,
                                                      lcfg.cache_directory,

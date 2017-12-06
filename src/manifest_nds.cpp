@@ -184,10 +184,13 @@ void manifest_nds_builder::parse_json(const std::string& filename)
 {
     // parse json
     nlohmann::json j;
-    try {
+    try
+    {
         ifstream ifs(filename);
         ifs >> j;
-    } catch (std::exception& ex) {
+    }
+    catch (std::exception& ex)
+    {
         stringstream ss;
         ss << "Error while parsing manifest json: " << filename << " : ";
         ss << ex.what();
@@ -195,18 +198,26 @@ void manifest_nds_builder::parse_json(const std::string& filename)
     }
 
     // extract manifest params from parsed json
-    try {
+    try
+    {
         interface::config::parse_value(m_base_url, "url", j, interface::config::mode::REQUIRED);
 
         auto val = j.find("params");
-        if(val != j.end()) {
+        if (val != j.end())
+        {
             nlohmann::json params = *val;
-            interface::config::parse_value(m_token, "token", params, interface::config::mode::REQUIRED);
-            interface::config::parse_value(m_collection_id, "collection_id", params, interface::config::mode::REQUIRED);
-        } else {
+            interface::config::parse_value(
+                m_token, "token", params, interface::config::mode::REQUIRED);
+            interface::config::parse_value(
+                m_collection_id, "collection_id", params, interface::config::mode::REQUIRED);
+        }
+        else
+        {
             throw std::runtime_error("couldn't find key 'params' in nds manifest file.");
         }
-    } catch (std::exception& ex) {
+    }
+    catch (std::exception& ex)
+    {
         stringstream ss;
         ss << "Error while pulling config out of manifest json: " << filename << " : ";
         ss << ex.what();

@@ -80,10 +80,10 @@ TEST(block_loader_nds, curl_stream_filename)
     size_t elements_per_record = 2;
 
     nlohmann::json json;
-    json["url"] = "http://127.0.0.1:5000";
-    json["params"]["token"] = "token";
+    json["url"]                     = "http://127.0.0.1:5000";
+    json["params"]["token"]         = "token";
     json["params"]["collection_id"] = 1;
-    json["params"]["tag"] = "train";
+    json["params"]["tag"]           = "train";
 
     std::ofstream ofs("test.json");
 
@@ -184,10 +184,10 @@ TEST(block_loader_nds, cpio_filename)
     size_t block_count         = 3;
 
     nlohmann::json json;
-    json["url"] = "http://127.0.0.1:5000";
-    json["params"]["token"] = "token";
+    json["url"]                     = "http://127.0.0.1:5000";
+    json["params"]["token"]         = "token";
     json["params"]["collection_id"] = 1;
-    json["params"]["tag"] = "train";
+    json["params"]["tag"]           = "train";
 
     std::ofstream ofs("test.json");
 
