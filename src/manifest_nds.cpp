@@ -264,7 +264,8 @@ std::shared_ptr<manifest_nds> manifest_nds_builder::make_shared()
                                                           m_elements_per_record,
                                                           m_shard_count,
                                                           m_shard_index,
-                                                          m_shuffle));
+                                                          m_shuffle,
+                                                          m_seed));
 }
 
 manifest_nds::manifest_nds(const std::string& base_url,

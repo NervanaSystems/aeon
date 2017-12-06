@@ -111,12 +111,16 @@ void loader::initialize(nlohmann::json& config_json)
                              .filename(lcfg.manifest_filename)
                              .block_size(lcfg.block_size)
                              .elements_per_record(2)
+                             .seed(lcfg.random_seed)
                              .make_shared();
 
         m_block_loader_nds =
             std::make_shared<block_loader_nds>(m_manifest_nds.get(), lcfg.block_size);
-        m_block_manager = make_shared<block_manager>(
-            m_block_loader_nds.get(), lcfg.block_size, lcfg.cache_directory, lcfg.shuffle_enable);
+        m_block_manager = make_shared<block_manager>(m_block_loader_nds.get(),
+                                                     lcfg.block_size,
+                                                     lcfg.cache_directory,
+                                                     lcfg.shuffle_enable,
+                                                     lcfg.random_seed);
     }
     else
     {
