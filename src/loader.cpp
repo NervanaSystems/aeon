@@ -131,8 +131,7 @@ void loader::initialize(nlohmann::json& config_json)
         {
             throw std::runtime_error("manifest file is empty");
         }
-        m_block_loader =
-            make_shared<block_loader_file>(m_manifest_file.get(), lcfg.block_size);
+        m_block_loader = make_shared<block_loader_file>(m_manifest_file.get(), lcfg.block_size);
     }
 
     m_block_manager = make_shared<block_manager>(m_block_loader.get(),

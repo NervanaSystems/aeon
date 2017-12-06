@@ -85,12 +85,13 @@ TEST(block_loader_nds, curl_stream_filename)
     json["params"]["collection_id"] = 1;
     json["params"]["tag"]           = "train";
 
-    std::ofstream ofs("test.json");
+    std::string   tmp_filename = nervana::file_util::tmp_filename();
+    std::ofstream ofs(tmp_filename);
 
     json >> ofs;
 
     manifest_nds client = manifest_nds_builder()
-                              .filename("test.json")
+                              .filename(tmp_filename)
                               .block_size(block_size)
                               .elements_per_record(elements_per_record)
                               .create();
@@ -189,12 +190,13 @@ TEST(block_loader_nds, cpio_filename)
     json["params"]["collection_id"] = 1;
     json["params"]["tag"]           = "train";
 
-    std::ofstream ofs("test.json");
+    std::string   tmp_filename = nervana::file_util::tmp_filename();
+    std::ofstream ofs(tmp_filename);
 
     json >> ofs;
 
     manifest_nds client = manifest_nds_builder()
-                              .filename("test.json")
+                              .filename(tmp_filename)
                               .block_size(block_size)
                               .elements_per_record(elements_per_record)
                               .create();
