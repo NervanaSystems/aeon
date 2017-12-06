@@ -122,7 +122,7 @@ public:
     const std::vector<std::pair<std::string, shape_type>>& get_names_and_shapes() const;
     const shape_t& get_shape(const std::string& name) const;
 
-    int record_count() { return m_manifest_nds ? m_manifest_nds->record_count() : m_manifest->record_count(); }
+    int record_count() { return m_manifest_nds ? m_manifest_nds->record_count() : m_manifest_file->record_count(); }
     int batch_size() { return m_batch_size; }
     // member typedefs provided through inheriting from std::iterator
     class iterator : public std::iterator<std::input_iterator_tag, // iterator_category
@@ -182,9 +182,9 @@ private:
 
     iterator                                                m_current_iter;
     iterator                                                m_end_iter;
-    std::shared_ptr<manifest_file>                          m_manifest;
+    std::shared_ptr<manifest_file>                          m_manifest_file;
     std::shared_ptr<manifest_nds>                           m_manifest_nds;
-    std::shared_ptr<block_loader_file>                      m_block_loader;
+    std::shared_ptr<block_loader_file>                      m_block_loader_file;
     std::shared_ptr<block_loader_nds>                       m_block_loader_nds;
     std::shared_ptr<block_manager>                          m_block_manager;
     std::shared_ptr<batch_iterator>                         m_batch_iterator;
