@@ -220,7 +220,7 @@ public:
             std::bind(&thread_pool<T, process_func>::run, &m_thread_pool, worker, task_count));
         auto fut = task.get_future();
         m_task_queue.push(std::move(task));
-        fut.wait();
+        fut.get();
     }
 
 private:
