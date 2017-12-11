@@ -14,16 +14,16 @@
 .. ---------------------------------------------------------------------------
 
 Distributed Data Loading
-==========
+=========================
 
 Aeon Service
------------
+-------------
 ``aeon-service`` is a component managing distributed data loading sessions. It does all heavy computing of data extraction, transformation and augmentation. Clients talk with service via REST-like API. Client may either create new sessions or connect to existing ones.
 
 .. _dependencies:
 
 Dependencies
-^^^^^^^^^^^
+^^^^^^^^^^^^^
 `cpprestsdk <https://github.com/Microsoft/cpprestsdk>`_ library is used to implement REST service.  It's available on Ubuntu 16.04, but not on Ubuntu 14.04 or Centos. If that's your problem, you need to build this library from sources. `This <https://github.com/Microsoft/cpprestsdk/wiki/How-to-build-for-Linux>`_ might be helpful to achieve that.  Version 2.4 is proved to be working on Centos 7.4.
 
 On Ubuntu 16.04 and higher you need just:

@@ -67,7 +67,7 @@ The configuration options for the video etl module are:
    :escape: ~
 
    max_frame_count (uint) | *Required* | Maximum number of frames to extract from video. Shorter samples will be zero padded.
-   frame (object) | *Required* | An :doc:`Image configuration <image_etl>` for each frame extracted from the video.
+   frame (object) | *Required* | An :doc:`Image configuration <provider_image>` for each frame extracted from the video.
    name (string) | ~"~" | Name prepended to the output buffer name
 
 The output buffer provisioned to the model from the video module is described below:

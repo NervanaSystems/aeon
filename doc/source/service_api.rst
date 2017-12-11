@@ -15,7 +15,7 @@
 .. neon documentation master file
 
 Service RESTful API
-==================
+====================
 
    **URI structure**:
 

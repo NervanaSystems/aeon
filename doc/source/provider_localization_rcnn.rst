@@ -14,11 +14,12 @@
 .. ---------------------------------------------------------------------------
 
 Faster-RCNN Localization
-============
+=========================
 
 The object localization provider module (``type=localization_rcnn``) is designed to work with the Faster-RCNN model. The manifest should include paths to both the image but also the bounding box annotations:
 
 .. code-block:: bash
+
     @FILE	FILE
     /image_dir/image0001.jpg	/annotations/0001.json
     /image_dir/image0002.jpg	/annotations/0002.json

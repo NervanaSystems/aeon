@@ -23,6 +23,7 @@ For segmentation problems (``type=pixelmask``), the input is an image, and the t
 The manifest file contains paths to the input image, as well as the target image:
 
 .. code-block:: bash
+
     @FILE	FILE
     /image_dir/img1.jpg	/mask_dir/mask1.png
     /image_dir/img2.jpg	/mask_dir/mask2.png

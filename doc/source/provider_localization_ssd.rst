@@ -19,6 +19,7 @@ SSD Localization
 The object localization provider (``type=localization_ssd``) is designed to work with the Single Shot MultiBox Detector model. The manifest should include paths to both the image but also the bounding box annotations:
 
 .. code-block:: bash
+
     @FILE	FILE
     /annotations/0001.json	/image_dir/image0001.jpg
     /annotations/0002.json	/image_dir/image0002.jpg
