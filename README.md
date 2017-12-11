@@ -27,7 +27,7 @@ First grab Aeon's dependencies:
 ### CentOS (release 7.2 and later):
 
     yum install epel-release
-    yum install git clang gcc-c++ make cmake opencv-devel libcurl-devel sox-devel boost-devel boost-filesystem boost-system
+    yum install git clang gcc-c++ make cmake openssl-devel opencv-devel libcurl-devel sox-devel boost-devel boost-filesystem boost-system
 
 ##### For Python 2.7
 

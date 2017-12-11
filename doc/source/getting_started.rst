@@ -28,7 +28,7 @@ Ubuntu::
 Centos::
 
   yum install epel-release
-  yum install git clang gcc-c++ make cmake opencv-devel libcurl-devel sox-devel boost-devel boost-filesystem boost-system
+  yum install git clang gcc-c++ make cmake openssl-devel opencv-devel libcurl-devel sox-devel boost-devel boost-filesystem boost-system
 
 OSX (Assuming you followed neon's Homebrew based install)::
 

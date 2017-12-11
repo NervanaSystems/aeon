@@ -41,10 +41,7 @@ namespace nervana
                 class exception
                 {
                 public:
-                    explicit exception(int error_code) noexcept
-                        : m_error_code{error_code}
-                    {
-                    }
+                    explicit exception(int error_code) noexcept : m_error_code{error_code} {}
                     std::string error_message() const { return std::strerror(m_error_code); }
                 private:
                     int m_error_code{0};
