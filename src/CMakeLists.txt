@@ -62,15 +62,18 @@ set (SRC
     event.cpp
     raw_image.cpp)
 
-if (ENABLE_AEON_SERVICE)
+if (ENABLE_AEON_CLIENT)
     list(APPEND SRC
         client/curl_connector.cpp
         client/loader_remote.cpp
         client/service.cpp
         client/remote_config.cpp)
-    if (ENABLE_OPENFABRICS_CONNECTOR)
-        list(APPEND SRC rdma/ofi.cpp client/ofi_connector.cpp)
-    endif()
+endif()
+
+if (ENABLE_OPENFABRICS_CONNECTOR)
+    list(APPEND SRC
+         rdma/ofi.cpp
+         client/ofi_connector.cpp)
 endif()
 
 set(AEON_HEADER_FILES

@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 2.8.12)
 
 # Set this flag before project definition to avoid using other compiler by gtest
 set(CMAKE_CXX_COMPILER "clang++")
@@ -40,8 +40,9 @@ add_definitions(-DBUILD_VERSION_MAJOR=${AEON_VERSION_MAJOR}
                 -DBUILD_VERSION_PATCH=${AEON_VERSION_PATCH}
                 -DBUILD_BUILD_NUMBER=${AEON_BUILD_NUMBER})
 
-option(ENABLE_AEON_SERVICE "Enable compilation of AEON Service and AEON Client" ON)
-option(ENABLE_OPENFABRICS_CONNECTOR   "Enable OpenFabrics connector for batch exchange between service and client" ON)
+option(ENABLE_AEON_SERVICE "Enable compilation of AEON Service" OFF)
+option(ENABLE_AEON_CLIENT "Enable compilation of AEON Client" ON)
+option(ENABLE_OPENFABRICS_CONNECTOR "Enable OpenFabrics connector for batch exchange between service and client" OFF)
 
 include(cmake/summary.cmake)
 
@@ -159,21 +160,22 @@ else()
 endif (PYTHONLIBS_FOUND)
 
 if (ENABLE_AEON_SERVICE)
-
-    if (${CMAKE_VERSION} VERSION_LESS "3.0.2")
-        message(FATAL_ERROR "Your CMake versions is ${CMAKE_VERSION},"
-                " however, version 3.0.2 is required at least to build"
-                " AEON Service. Please consider upgrading CMake to newer"
-                " version or turn building AEON Service off.")
+    # Check for C++ REST SDK from Microsoft
+    find_package(CppRest)
+    if (CPPREST_FOUND)
+        include_directories(${CPPREST_INCLUDE_DIRS})
+        link_directories(${CPPREST_LIBRARY_DIRS})
+    else()
+        set(ENABLE_AEON_SERVICE OFF)
     endif()
+endif()
 
-# Check for C++ REST API
-find_package(CppRest)
+if (NOT ENABLE_AEON_SERVICE AND NOT ENABLE_AEON_CLIENT)
+    set(ENABLE_OPENFABRICS_CONNECTOR OFF)
+endif()
 
-if (CPPREST_FOUND)
-    include_directories(${CPPREST_INCLUDE_DIRS})
-    link_directories(${CPPREST_LIBRARY_DIRS})
-    # Check for Open Fabric (RDMA)
+if (ENABLE_OPENFABRICS_CONNECTOR)
+    # Check for OpenFabrics Interface
     find_package(OpenFabrics)
     if (OPENFABRICS_FOUND)
         include_directories(${OPENFABRICS_INCLUDE_DIRS})
@@ -181,11 +183,7 @@ if (CPPREST_FOUND)
     else()
         set(ENABLE_OPENFABRICS_CONNECTOR OFF)
     endif()
-else(CPPREST_FOUND)
-    set(ENABLE_AEON_SERVICE OFF)
-endif(CPPREST_FOUND)
-
-endif(ENABLE_AEON_SERVICE)
+endif()
 
 # Check for BOOST components
 find_package(Boost REQUIRED COMPONENTS system filesystem)
@@ -202,10 +200,14 @@ link_directories(${OPENSSL_LIBRARY_DIRS})
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 
 if (ENABLE_AEON_SERVICE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_AEON_SERVICE")
+    add_definitions(-DENABLE_AEON_SERVICE)
     if (ENABLE_OPENFABRICS_CONNECTOR)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_OPENFABRICS_CONNECTOR")
+        add_definitions(-DENABLE_OPENFABRICS_CONNECTOR)
     endif()
+endif()
+
+if (ENABLE_AEON_CLIENT)
+    add_definitions(-DENABLE_AEON_CLIENT)
 endif()
 
 # Check for documentation prerequisites
@@ -224,7 +226,7 @@ if (ENABLE_AEON_SERVICE)
 add_subdirectory(src/service)
 endif()
 include_directories(src)
-if (ENABLE_AEON_SERVICE)
+if (ENABLE_AEON_CLIENT)
 include_directories(src/client)
 endif()
 add_subdirectory(test)

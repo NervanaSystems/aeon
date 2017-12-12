@@ -53,13 +53,20 @@ If it's not available in your OS, you need to build it from  `sources <https://g
 
 Building
 ^^^^^^^^^^^
-``aeon-service`` and it's client support will be built automatically when cpprest library is detected by cmake.
-If you don't want this, then provide cmake flag ``-DENABLE_AEON_SERVICE=OFF``.
+The building of AEON client is enabled by default. To disable building AEON client please provide cmake flag ``-DENABLE_AEON_CLIENT=OFF``.
 
-If you have custom cpprest library directory, then you can provide it with ``-DCPPREST_DIR`` parameter.
+To enable building the AEON service (by default disabled) please provide cmake flag ``-DENABLE_AEON_SERVICE=ON``.
+By providing the flag the cmake will start resolving dependencies required for AEON service tragets.
+The "must have" component is C++ REST SDK from Microsoft (both runtime and development files).
+The packages are available in all recent Linux operating systems, for other supported systems the ``cpprest`` package might not exist.
+In such a case please build the library from source files. If you plan to install the library in non-standard directory, then let know
+to the cmake its location by providing option ``-DCPPREST_DIR`` (root directory of runtime and development files).
 
-Support for RDMA can be analogously disabled with ``-DENABLE_OPENFABRICS_CONNECTOR=OFF`` flag and custom libfabric directory can be provided with ``-DOPENFABRICS_DIR``.
-
+To enable RDMA support (by default disabled) please provide the cmake flag ``-DENABLE_OPENFABRICS_CONNECTOR=ON``. The flag is recognized
+by AEON service and AEON client targets. The "must have" component in this case is OpenFrabics Interface library (runtime and development
+files). The packages are available for all recent Linux operating systems, and for other supported systems please build the library from
+source files. If you plan to install the library in non-standard directory, then let know to the cmake its location by providing the
+option ``-DOPENFABRICS_DIR`` (root directory of runtime and development files).
 
 Sessions
 ^^^^^^^^^^^
