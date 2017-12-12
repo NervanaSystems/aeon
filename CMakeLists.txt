@@ -200,14 +200,14 @@ link_directories(${OPENSSL_LIBRARY_DIRS})
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 
 if (ENABLE_AEON_SERVICE)
-    add_definitions(-DENABLE_AEON_SERVICE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_AEON_SERVICE")
     if (ENABLE_OPENFABRICS_CONNECTOR)
-        add_definitions(-DENABLE_OPENFABRICS_CONNECTOR)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_OPENFABRICS_CONNECTOR")
     endif()
 endif()
 
 if (ENABLE_AEON_CLIENT)
-    add_definitions(-DENABLE_AEON_CLIENT)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_AEON_CLIENT")
 endif()
 
 # Check for documentation prerequisites
