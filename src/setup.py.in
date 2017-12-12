@@ -56,7 +56,7 @@ include_dirs += ' ${Boost_INCLUDE_DIRS}'
 lib_dirs += ' ${Boost_LIBRARY_DIRS}'
 libs += ' -lboost_system -lboost_filesystem'
 
-if '${OPENFABRICS_INCLUDE_DIRS}' != '':
+if '${OPENFABRICS_FOUND}' == 'TRUE':
     include_dirs += ' -I${OPENFABRICS_INCLUDE_DIRS} '
     lib_dirs += ' -L${OPENFABRICS_LIBRARY_DIRS} '
     libs += ' -lfabric '
