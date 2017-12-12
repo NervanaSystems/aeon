@@ -158,25 +158,34 @@ else()
     unset(PYTHON_LIBRARIES)
 endif (PYTHONLIBS_FOUND)
 
+if (ENABLE_AEON_SERVICE)
+
+    if (${CMAKE_VERSION} VERSION_LESS "3.0.2")
+        message(FATAL_ERROR "Your CMake versions is ${CMAKE_VERSION},"
+                " however, version 3.0.2 is required at least to build"
+                " AEON Service. Please consider upgrading CMake to newer"
+                " version or turn building AEON Service off.")
+    endif()
+
 # Check for C++ REST API
 find_package(CppRest)
 
 if (CPPREST_FOUND)
     include_directories(${CPPREST_INCLUDE_DIRS})
     link_directories(${CPPREST_LIBRARY_DIRS})
+    # Check for Open Fabric (RDMA)
+    find_package(OpenFabrics)
+    if (OPENFABRICS_FOUND)
+        include_directories(${OPENFABRICS_INCLUDE_DIRS})
+        link_directories(${OPENFABRICS_LIBRARY_DIRS})
+    else()
+        set(ENABLE_OPENFABRICS_CONNECTOR OFF)
+    endif()
 else(CPPREST_FOUND)
     set(ENABLE_AEON_SERVICE OFF)
 endif(CPPREST_FOUND)
 
-# Check for Open Fabric (RDMA)
-find_package(OpenFabrics)
-
-if (OPENFABRICS_FOUND)
-    include_directories(${OPENFABRICS_INCLUDE_DIRS})
-    link_directories(${OPENFABRICS_LIBRARY_DIRS})
-else()
-    set(ENABLE_OPENFABRICS_CONNECTOR OFF)
-endif()
+endif(ENABLE_AEON_SERVICE)
 
 # Check for BOOST components
 find_package(Boost REQUIRED COMPONENTS system filesystem)
