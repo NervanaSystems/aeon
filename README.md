@@ -46,7 +46,7 @@ First grab Aeon's dependencies:
 
 ## Distributed Aeon
 
-Please take a look at [distributed documentation](doc/source/service.rst).
+Please take a look at [distributed documentation](http://aeon.nervanasys.com/index.html/service.html).
 
 ## Code coverage
 
