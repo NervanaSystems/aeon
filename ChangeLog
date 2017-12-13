@@ -1,16 +1,43 @@
 # ChangeLog
 
 
-## v1.0.0 (2017-04-07)
+## v1.3.0 (2017-12-13)
+* Code changes:
+   * Distributed dataloading using HTTP or RDMA transfer
+   * Re-enabling of NDS support
+   * cmake files improvements
+* API changes:
+   * session_id field added
+* New dependencies:
+   * boost-filesystem
+   * boost-system
+   * For distributed:
+      * cpprestsdk
+      * libfabric (optional)
+
+
+## v1.2.0 (2017-11-24)
+* Batch transpose implemented in aeon and configurable with `batch_major` field
+
+
+## v1.1.0 (2017-11-13)
+* Working deterministic mode
+* Shared thread pool
+* Refactoring of box classes
+
+
+## v1.0.0 (2017-09-19)
 * Internal Changes
    * No longer rely upon a python backend for initiating transfers to device (all prepared data now remains on host)
    * Use of async_manager class to manage all double-buffered workflow
    * Removal of support for post-processing of a decoded and loaded batch (was only used for packing transcripts)
+   * Performance optimizations for batch processing pipeline
 * Enhancements
    * Modular providers supported by mixing and matching etl components
    * Direct c++ interface to loader as an iterator
    * Python loader implemented via python c-api
    * Unicode support for char_map
+   * support for SSD topology
 
 
 ## v0.2.7 (2017-03-02)
@@ -63,7 +90,6 @@
 
 
 ## v0.2.0 (2016-09-23):
-
 * Improved documentation
 * Audio improvements
     * Sox based extraction to handle more formats natively
