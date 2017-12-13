@@ -22,7 +22,7 @@ First grab Aeon's dependencies:
 
 ##### For Python 3.n
 
-    apt-get install python3-dev python3-pip
+    apt-get install python3-dev python3-pip python3-numpy
 
 ### CentOS (release 7.2 and later):
 

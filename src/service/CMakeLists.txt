@@ -25,4 +25,3 @@ target_link_libraries(aeon-service aeon ${CMAKE_THREAD_LIBS_INIT}
 install(TARGETS aeon-service DESTINATION sbin)
 # we need to run ldconfig to make aeon library visible for aeon-service
 install(CODE "execute_process(COMMAND ldconfig)")
-

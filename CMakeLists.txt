@@ -47,7 +47,7 @@ option(ENABLE_OPENFABRICS_CONNECTOR "Enable OpenFabrics connector for batch exch
 include(cmake/summary.cmake)
 
 if(APPLE)
-set(CMAKE_MACOSX_RPATH 1)
+    set(CMAKE_MACOSX_RPATH 1)
 endif()
 
 if(NOT ${POSTFIX_VERSION} STREQUAL "")
@@ -161,13 +161,14 @@ endif (PYTHONLIBS_FOUND)
 
 if (ENABLE_AEON_SERVICE)
     # Check for C++ REST SDK from Microsoft
-    find_package(CppRest)
-    if (CPPREST_FOUND)
-        include_directories(${CPPREST_INCLUDE_DIRS})
-        link_directories(${CPPREST_LIBRARY_DIRS})
-    else()
-        set(ENABLE_AEON_SERVICE OFF)
-    endif()
+    find_package(CppRest REQUIRED)
+    include_directories(${CPPREST_INCLUDE_DIRS})
+    link_directories(${CPPREST_LIBRARY_DIRS})
+
+    # Check for OpenSSL
+    find_package(OpenSSL REQUIRED)
+    include_directories(${OPENSSL_INCLUDE_DIRS})
+    link_directories(${OPENSSL_LIBRARY_DIRS})
 endif()
 
 if (NOT ENABLE_AEON_SERVICE AND NOT ENABLE_AEON_CLIENT)
@@ -176,13 +177,9 @@ endif()
 
 if (ENABLE_OPENFABRICS_CONNECTOR)
     # Check for OpenFabrics Interface
-    find_package(OpenFabrics)
-    if (OPENFABRICS_FOUND)
-        include_directories(${OPENFABRICS_INCLUDE_DIRS})
-        link_directories(${OPENFABRICS_LIBRARY_DIRS})
-    else()
-        set(ENABLE_OPENFABRICS_CONNECTOR OFF)
-    endif()
+    find_package(OpenFabrics REQUIRED)
+    include_directories(${OPENFABRICS_INCLUDE_DIRS})
+    link_directories(${OPENFABRICS_LIBRARY_DIRS})
 endif()
 
 # Check for BOOST components
@@ -190,12 +187,6 @@ find_package(Boost REQUIRED COMPONENTS system filesystem)
 
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
-
-# Check for OpenSSL
-find_package(OpenSSL REQUIRED)
-
-include_directories(${OPENSSL_INCLUDE_DIRS})
-link_directories(${OPENSSL_LIBRARY_DIRS})
 
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 
