@@ -46,19 +46,15 @@ namespace
 
 string nervana::to_string(service_status_type type)
 {
-    static map<service_status_type, string> status_map = {
+    static const map<service_status_type, string> status_map = {
         {service_status_type::SUCCESS, "SUCCESS"},
         {service_status_type::FAILURE, "FAILURE"},
         {service_status_type::END_OF_DATASET, "END_OF_DATASET"},
         {service_status_type::UNDEFINED, "UNDEFINED"}};
-    try
-    {
-        return status_map.at(type);
-    }
-    catch (const std::out_of_range&)
-    {
-        return "UNKNOWN";
-    }
+    auto found = status_map.find(type);
+    if (found != std::end(status_map))
+        return found->second;
+    return "UNKNOWN";
 }
 
 service_status_type nervana::service_status_type_from_string(const string& input)

@@ -13,6 +13,8 @@
  limitations under the License.
 */
 
+#include <algorithm>
+
 #include "loader_remote.hpp"
 
 using nlohmann::json;
@@ -70,15 +72,11 @@ void nervana::loader_remote::initialize()
     catch (const nlohmann::detail::out_of_range&)
     {
     }
-    catch (const std::exception& ex)
-    {
-        WARN << "Error when parsing session_id: " << ex.what();
-    }
     try
     {
         m_close_session = m_config.at("remote").at("close_session");
     }
-    catch (const std::exception&)
+    catch (const nlohmann::detail::out_of_range&)
     {
     }
     if (m_session_id.empty())
@@ -123,22 +121,25 @@ const vector<string>& nervana::loader_remote::get_buffer_names() const
 {
     if (m_names.empty())
     {
-        for (const auto& item : m_names_and_shapes)
-        {
-            m_names.push_back(std::get<0>(item));
-        }
+        std::transform(m_names_and_shapes.begin(),
+                       m_names_and_shapes.end(),
+                       std::back_inserter(m_names),
+                       [](const std::pair<std::string, shape_type>& item) -> std::string {
+                           return std::get<0>(item);
+                       });
     }
     return m_names;
 }
 
 const shape_t& nervana::loader_remote::get_shape(const string& name) const
 {
-    for (const auto& item : m_names_and_shapes)
+    auto found = std::find_if(
+        m_names_and_shapes.begin(),
+        m_names_and_shapes.end(),
+        [&](const std::pair<std::string, shape_type>& item) { return std::get<0>(item) == name; });
+    if (found != std::end(m_names_and_shapes))
     {
-        if (std::get<0>(item) == name)
-        {
-            return std::get<1>(item).get_shape();
-        }
+        return std::get<1>(*found).get_shape();
     }
     std::stringstream ss;
     ss << "key '" << name << "' not found";
