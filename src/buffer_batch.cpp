@@ -18,7 +18,6 @@
 
 #include "buffer_batch.hpp"
 #include "log.hpp"
-#include <xmmintrin.h>
 #include "transpose.hpp"
 
 enum TransposeType
@@ -213,25 +212,33 @@ static void transpose_buf(
             transpose_regular<uint8_t>(
                 reinterpret_cast<uint8_t*>(dest), reinterpret_cast<uint8_t*>(src), rows, cols);
         else if (type == TransposeType::SSE)
-            transpose::sse::transpose(
+            transpose::sse::transpose<1>(
                 reinterpret_cast<uint8_t*>(dest), reinterpret_cast<uint8_t*>(src), rows, cols);
         break;
     }
     case 2:
-        transpose_regular<uint16_t>(
-            reinterpret_cast<uint16_t*>(dest), reinterpret_cast<uint16_t*>(src), rows, cols);
+        if (type == TransposeType::REGULAR)
+            transpose_regular<uint16_t>(
+                reinterpret_cast<uint16_t*>(dest), reinterpret_cast<uint16_t*>(src), rows, cols);
+        else if (type == TransposeType::SSE)
+            transpose::sse::transpose<2>(
+                reinterpret_cast<uint8_t*>(dest), reinterpret_cast<uint8_t*>(src), rows, cols);
         break;
     case 4:
     {
-        transpose_regular<uint32_t>(
-            reinterpret_cast<uint32_t*>(dest), reinterpret_cast<uint32_t*>(src), rows, cols);
+        if (type == TransposeType::REGULAR)
+            transpose_regular<uint32_t>(
+                reinterpret_cast<uint32_t*>(dest), reinterpret_cast<uint32_t*>(src), rows, cols);
+        else if (type == TransposeType::SSE)
+            transpose::sse::transpose<4>(
+                reinterpret_cast<uint8_t*>(dest), reinterpret_cast<uint8_t*>(src), rows, cols);
         break;
     }
     case 8:
         transpose_regular<uint64_t>(
             reinterpret_cast<uint64_t*>(dest), reinterpret_cast<uint64_t*>(src), rows, cols);
         break;
-    default: throw "unsupported type";
+    default: throw "unsupported datatype for transpose";
     }
 }
 
@@ -261,8 +268,8 @@ void fixed_buffer_map::copy(fixed_buffer_map& src,
         int element_size = (this->operator[](name))->get_shape_type().get_otype().get_size();
         int cols         = count * src_fbm->get_stride() / batch_size / element_size;
         if (transpose && batch_size > 1 && cols > 1)
-            if ((cols % (16 / element_size)) ||
-                (batch_size % 16)) //data must be bounded to 16 bytes for using SSE
+            if ((cols % 16) ||
+                (batch_size % 16)) //data must be bounded to 16 elements for using SSE
                 transpose_buf(p_dst, p_src, batch_size, cols, element_size, TransposeType::REGULAR);
             else
                 transpose_buf(p_dst, p_src, batch_size, cols, element_size, TransposeType::SSE);
