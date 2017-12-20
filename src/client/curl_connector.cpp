@@ -56,7 +56,7 @@ namespace nervana
         curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &stream);
-        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
+        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "*");
 
         string call = "[GET] " + url;
         INFO << call;
@@ -92,7 +92,7 @@ namespace nervana
         curl_easy_setopt(curl_handle, CURLOPT_READFUNCTION, read_callback);
         curl_easy_setopt(curl_handle, CURLOPT_READDATA, &read_stream);
         curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, body.size());
-        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
+        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "*");
 
         string call = "[POST] " + url;
         INFO << call;
@@ -125,7 +125,7 @@ namespace nervana
         curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &stream);
         curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, query_string.c_str());
         curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, query_string.size());
-        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
+        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "*");
 
         string call = "[POST] " + url;
         INFO << call;
@@ -156,7 +156,7 @@ namespace nervana
         curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &stream);
-        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "127.0.0.1,localhost");
+        curl_easy_setopt(curl_handle, CURLOPT_NOPROXY, "*");
         curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "DELETE");
 
         string call = "[DELETE] " + url;
