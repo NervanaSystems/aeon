@@ -16,6 +16,7 @@
 #include <algorithm>
 
 #include "loader_remote.hpp"
+#include "remote_config.hpp"
 
 using nlohmann::json;
 using std::exception;
@@ -63,25 +64,23 @@ nervana::loader_remote::~loader_remote()
 
 void nervana::loader_remote::initialize()
 {
+    remote_config config{m_config["remote"]};
+    m_session_id    = config.session_id;
+    m_close_session = config.close_session;
     // If there is a session_id provided, we share already created session. Otherwise, we create a new one.
-    try
-    {
-        m_session_id     = m_config.at("remote").at("session_id");
-        m_shared_session = true;
-    }
-    catch (const nlohmann::detail::out_of_range&)
-    {
-    }
-    try
-    {
-        m_close_session = m_config.at("remote").at("close_session");
-    }
-    catch (const nlohmann::detail::out_of_range&)
-    {
-    }
     if (m_session_id.empty())
     {
         create_session();
+    }
+    else
+    {
+        m_shared_session = true;
+    }
+
+    if (!config.debug_output_directory.empty())
+    {
+        m_output_saver =
+            std::unique_ptr<output_saver>(new output_saver(config.debug_output_directory));
     }
 
     retrieve_names_and_shapes();
@@ -227,6 +226,11 @@ void nervana::loader_remote::retrieve_next_batch()
             throw service_exception(response.status, "cannot retrieve next batch");
         }
     }
+    else if (m_output_saver)
+    {
+        m_output_saver->save(response.data.data.get());
+    }
+
     const next_response& next = response.data;
     m_output_buffer_ptr       = next.data;
 }

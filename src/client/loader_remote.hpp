@@ -17,6 +17,7 @@
 
 #include "../loader.hpp"
 #include "service.hpp"
+#include "../output_saver.hpp"
 
 namespace nervana
 {
@@ -77,5 +78,6 @@ namespace nervana
         bool                              m_shared_session{false};
         bool                              m_batch_to_fetch{true};
         bool                              m_close_session{true};
+        std::unique_ptr<output_saver>     m_output_saver;
     };
 }

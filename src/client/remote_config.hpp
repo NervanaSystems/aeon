@@ -36,13 +36,17 @@ public:
     bool         close_session{true};
     std::string  rdma_address;
     unsigned int rdma_port{0};
+    std::string  debug_output_directory;
 
 private:
     std::vector<std::shared_ptr<nervana::interface::config_info_interface>> config_list = {
         ADD_SCALAR(address, mode::REQUIRED),
         ADD_SCALAR(port, mode::REQUIRED),
+        ADD_SCALAR(session_id, mode::OPTIONAL),
         ADD_SCALAR(async, mode::OPTIONAL),
+        ADD_SCALAR(close_session, mode::OPTIONAL),
         ADD_SCALAR(rdma_address, mode::OPTIONAL),
-        ADD_SCALAR(rdma_port, mode::OPTIONAL)};
+        ADD_SCALAR(rdma_port, mode::OPTIONAL),
+        ADD_SCALAR(debug_output_directory, mode::OPTIONAL)};
     nlohmann::json rdma_json;
 };

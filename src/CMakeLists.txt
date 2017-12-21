@@ -60,7 +60,8 @@ set (SRC
     web_app.cpp
     web_server.cpp
     event.cpp
-    raw_image.cpp)
+    raw_image.cpp
+    output_saver.cpp)
 
 if (ENABLE_AEON_CLIENT)
     list(APPEND SRC

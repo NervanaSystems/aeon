@@ -121,6 +121,7 @@ Parameters of ``remote`` object from main aeon config:
    async | bool | true | async set to true makes batch loading to be double-buffered. Please note that async mode can make client fetch one batch more than requested.
    rdma_address | string | ~"~" | IP address of RDMA interface.
    rdma_port | uint | 0 | Port number of RDMA interface.
+   debug_output_directory | string | ~"~" |  Writes received images to the provided directory.
 
 Usage
 ^^^^^^^^^^^^^

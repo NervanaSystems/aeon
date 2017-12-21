@@ -14,20 +14,12 @@
 */
 
 #include "etl_image.hpp"
+#include "output_saver.hpp"
 
 #include <atomic>
-#include <fstream>
 
 using namespace std;
 using namespace nervana;
-
-namespace
-{
-    string get_debug_file_id();
-    void write_image_with_settings(const string&                      filename,
-                                   const cv::Mat&                     image,
-                                   shared_ptr<augment::image::params> img_xform);
-}
 
 image::config::config(nlohmann::json js)
 {
@@ -174,9 +166,8 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
     }
     if (!img_xform->debug_output_directory.empty())
     {
-        string id       = get_debug_file_id();
-        string filename = img_xform->debug_output_directory + "/" + id;
-        write_image_with_settings(filename, *finalImage, img_xform);
+        static output_saver saver;
+        saver.save(*finalImage, img_xform);
     }
     return *finalImage;
 }
@@ -268,26 +259,5 @@ void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::de
             }
             image::convert_mix_channels(source, target, from_to);
         }
-    }
-}
-
-namespace
-{
-    string get_debug_file_id()
-    {
-        static std::atomic_uint index{0};
-        unsigned int            number = index++;
-
-        return std::to_string(number);
-    }
-
-    void write_image_with_settings(const string&                      filename,
-                                   const cv::Mat&                     image,
-                                   shared_ptr<augment::image::params> img_xform)
-    {
-        cv::imwrite(filename + ".png", image);
-        ofstream ofs(filename + ".txt", ofstream::out);
-        ofs << *img_xform;
-        ofs.close();
     }
 }
