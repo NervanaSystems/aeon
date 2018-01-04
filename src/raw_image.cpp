@@ -155,7 +155,7 @@ cv::Mat raw_image::to_cvmat()
         }
     }
 
-    cv::Mat rc{(int)m_height, (int)m_width, type};
+    cv::Mat rc((int)m_height, (int)m_width, type);
     memcpy(rc.data, &*m_data, size());
 
     return rc;

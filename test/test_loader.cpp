@@ -684,6 +684,8 @@ TEST(benchmark, read_jpeg)
     size_t       manifest_size = 10000;
     string       image_path    = file_util::path_join(CURDIR, "test_data/img_2112_70.jpg");
     stringstream manifest_stream;
+    manifest_stream << "@FILE"
+                    << "\n";
     for (size_t i = 0; i < manifest_size; i++)
     {
         manifest_stream << image_path << "\n";
@@ -735,6 +737,8 @@ TEST(benchmark, load_jpeg_manifest)
     size_t       manifest_size = 10000;
     string       image_path    = file_util::path_join(CURDIR, "test_data/img_2112_70.jpg");
     stringstream manifest_stream;
+    manifest_stream << "@FILE"
+                    << "\n";
     for (size_t i = 0; i < manifest_size; i++)
     {
         manifest_stream << image_path << "\n";
@@ -757,13 +761,16 @@ TEST(benchmark, load_jpeg_manifest)
 TEST(benchmark, load_block_manager)
 {
     stopwatch timer;
-    string    cache_directory = "/scratch/bob/aeon_cache";
+    string    home            = getenv("HOME");
+    string    cache_directory = home + "/aeon_cache";
     bool      shuffle         = false;
     size_t    block_size      = 5000;
 
     size_t       manifest_size = 30000;
     string       image_path    = file_util::path_join(CURDIR, "test_data/img_2112_70.jpg");
     stringstream manifest_stream;
+    manifest_stream << "@FILE"
+                    << "\n";
     for (size_t i = 0; i < manifest_size; i++)
     {
         manifest_stream << image_path << "\n";

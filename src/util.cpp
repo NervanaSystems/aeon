@@ -306,6 +306,20 @@ cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
     }
 }
 
+// Audio buffer must be int16
+void nervana::write_audio_to_file(cv::Mat buffer, std::string path, sox_rate_t sample_rate_hz)
+{
+    sox_signalinfo_t signal{sample_rate_hz, 1, 16, buffer.total(), NULL};
+    auto             t = sox_open_write(path.c_str(), &signal, NULL, NULL, NULL, NULL);
+
+    sox_sample_t sample_buffer[buffer.total()];
+    for (auto i = 0; i < buffer.total(); i++)
+    {
+        sample_buffer[i] = SOX_SIGNED_16BIT_TO_SAMPLE(buffer.at<int16_t>(i), 0);
+    }
+    sox_write(t, sample_buffer, buffer.total());
+}
+
 std::vector<char> nervana::string2vector(const std::string& s)
 {
     return vector<char>{s.begin(), s.end()};

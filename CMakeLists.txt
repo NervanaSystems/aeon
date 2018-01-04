@@ -70,6 +70,12 @@ if(COVERAGE)
   set(LCOVERAGE "--coverage")
 endif(COVERAGE)
 
+option(PYTHON_PLUGIN "Enable support of custom python plugins in augmentation pipeline" OFF)
+if(PYTHON_PLUGIN)
+    add_definitions(-DPYTHON_PLUGIN)
+    list(APPEND CMAKE_CXX_FLAGS "-DPYTHON_PLUGIN")
+endif(PYTHON_PLUGIN)
+
 if(CMAKE_BUILD_TYPE STREQUAL "DEBUG")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 else()
@@ -126,6 +132,7 @@ link_directories(${SOX_LIBRARY_DIRS})
 add_definitions(${SOX_CFLAGS_OTHERS})
 
 find_package(OpenCV REQUIRED)
+
 include_directories(${OpenCV_INCLUDE_DIRS})
 link_directories(${OpenCV_LIBRARY_DIRS})
 
@@ -144,6 +151,13 @@ set(Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4)
 
 find_package(PythonLibs)
 find_package(PythonInterp)
+
+if (PYTHON_PLUGIN)
+    if (NOT ${PYTHON_VERISON_MAJOR} EQUAL ${OpenCV_VERSION_MAJOR})
+        message(WARNING "Python version " ${PYTHON_VERSION_MAJOR} " incompatible with OpenCV version " ${OpenCV_VERSION_MAJOR})
+    endif ()
+endif (PYTHON_PLUGIN)
+
 
 if (PYTHONLIBS_FOUND)
     find_package(NumPy)

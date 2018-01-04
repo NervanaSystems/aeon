@@ -256,6 +256,10 @@ vector<bbox> boundingbox::transformer::transform_box(const std::vector<bbox>&   
             rc.push_back(b);
         }
     }
+#ifdef PYTHON_PLUGIN
+    if (pptr->user_plugin)
+        rc = pptr->user_plugin->augment_boundingbox(rc);
+#endif
     return rc;
 }
 

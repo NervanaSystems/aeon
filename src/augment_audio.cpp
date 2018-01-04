@@ -45,12 +45,44 @@ nervana::augment::audio::param_factory::param_factory(nlohmann::json js)
             add_noise = std::bernoulli_distribution{add_noise_probability};
             // validate();
         }
+#ifndef PYTHON_PLUGIN
+        if (js.find("plugin_filename") != js.end())
+            WARN << "Detected `plugin_filename` in augmentation config, but aeon was not compiled "
+                    "with "
+                    "PYTHON_PLUGIN flag. Recompile with PYTHON_PLUGIN flag in order to use plugins."
+                 << std::endl;
+        if (js.find("plugin_params") != js.end())
+            WARN << "Detected `plugin_params` in augmentation config, but aeon was not compiled "
+                    "with "
+                    "PYTHON_PLUGIN flag. Recompile with PYTHON_PLUGIN flag in order to use plugins."
+                 << std::endl;
+#endif
     }
 }
 
 shared_ptr<augment::audio::params> augment::audio::param_factory::make_params() const
 {
     auto audio_stgs = shared_ptr<augment::audio::params>(new augment::audio::params());
+
+#ifdef PYTHON_PLUGIN
+    if (!plugin_filename.empty())
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        if (user_plugin_map.find(this_thread::get_id()) == user_plugin_map.end())
+        {
+            user_plugin_map[std::this_thread::get_id()] =
+                std::make_shared<plugin>(plugin_filename, plugin_params.dump());
+        }
+        audio_stgs->user_plugin = user_plugin_map[this_thread::get_id()];
+
+        if (audio_stgs->user_plugin)
+            audio_stgs->user_plugin->prepare();
+    }
+    else
+    {
+        audio_stgs->user_plugin.reset();
+    }
+#endif
 
     auto& random = get_thread_local_random_engine();
 

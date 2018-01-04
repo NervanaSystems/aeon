@@ -1,5 +1,6 @@
 # ChangeLog
 
+* Python plugins performing transformation can now be called after aeon transformations.
 
 ## v1.3.0 (2017-12-13)
 * Code changes:

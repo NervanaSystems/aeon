@@ -84,6 +84,12 @@ if (PYTHON_FOUND)
     list(APPEND SRC api.cpp)
 endif(PYTHON_FOUND)
 
+if (PYTHON_PLUGIN)
+    list(APPEND SRC python_plugin.cpp
+                    conversion.cpp
+                    python_utils.cpp)
+endif(PYTHON_PLUGIN)
+
 set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
 set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/../setup.py")
 configure_file(${SETUP_PY_IN} ${SETUP_PY})

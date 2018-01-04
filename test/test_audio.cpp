@@ -391,3 +391,61 @@ TEST(audio, filterbank)
         ASSERT_NEAR(expected[ii], fbank.at<float>(ii, 0), 1e-6);
     }
 }
+
+#ifdef PYTHON_PLUGIN
+TEST(plugin, audio_example_scale)
+{
+    auto js     = R"(
+        {
+            "max_duration": "3 seconds",
+            "frame_length": "1 samples",
+            "frame_stride": "1 samples",
+            "sample_freq_hz": 16000,
+            "feature_type": "samples",
+            "output_type": "int16_t"
+        }
+    )"_json;
+    auto js_aug = R"(
+        {
+            "type": "audio",
+            "plugin_filename": "scale",
+            "plugin_params": {"probability": 1, "amplitude": [0.1, 0.1]}
+        }
+    )"_json;
+
+    float              sine_freq = 400;
+    int16_t            sine_ampl = 25000;
+    sinewave_generator sg{sine_freq, sine_ampl};
+    int                wav_len_sec = 3, sample_freq = 16000;
+    bool               stereo = false;
+
+    wav_data wav(sg, wav_len_sec, sample_freq, stereo);
+    uint32_t bufsize = wav_data::HEADER_SIZE + wav.nbytes();
+    char*    databuf = new char[bufsize];
+
+    wav.write_to_buffer(databuf, bufsize);
+
+    audio::config config(js);
+
+    audio::extractor              extractor;
+    audio::transformer            _audioTransformer(config);
+    augment::audio::param_factory factory(js_aug);
+
+    auto decoded_audio = extractor.extract(databuf, bufsize);
+    ASSERT_EQ(decoded_audio->get_time_data().rows, 16000 * 3);
+    cv::Mat old = decoded_audio->get_time_data().clone();
+    //nervana::write_audio_to_file(old, "scale_before.wav", sample_freq);
+    auto audioParams = factory.make_params();
+
+    _audioTransformer.transform(audioParams, decoded_audio);
+    cv::Mat after = decoded_audio->get_freq_data().clone();
+    //nervana::write_audio_to_file(after, "scale_after.wav", sample_freq);
+    auto shape = config.get_shape_type();
+    ASSERT_EQ(after.cols, old.cols);
+    ASSERT_EQ(after.rows, old.rows);
+    cv::Mat diff = after * 10 - old;
+    double  min, max;
+    cv::minMaxLoc(diff, &min, &max);
+    EXPECT_NEAR(min, max, 18);
+}
+#endif

@@ -178,6 +178,7 @@ namespace nervana
     random_engine_t&          get_thread_local_random_engine();
 
     cv::Mat read_audio_from_mem(const char* item, int itemSize);
+    void write_audio_to_file(cv::Mat buffer, std::string path, sox_rate_t sample_rate_hz);
 
     std::vector<char> string2vector(const std::string& s);
     std::string vector2string(const std::vector<char>& s);

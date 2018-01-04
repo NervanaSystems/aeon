@@ -67,6 +67,7 @@ bug reports at aeon_issues_ .
 
    augment_image
    augment_audio
+   augmentation_plugins
 
 .. toctree::
    :hidden:

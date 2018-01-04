@@ -32,7 +32,7 @@ private:
         None
     };
 
-    /* This function handles py2 and py3 independent unpacking of string object 
+    /* This function handles py2 and py3 independent unpacking of string object
      * (bytes or unicode) as an ascii std::string
      */
     std::string py23_string_to_ascii_string(PyObject* py_str)

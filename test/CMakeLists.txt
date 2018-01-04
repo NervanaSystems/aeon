@@ -34,6 +34,7 @@ set (SRC
     test_char_map.cpp
     test_config.cpp
     test_cpio.cpp
+    test_depthmap.cpp
     test_file_util.cpp
     test_image.cpp
     test_label_map.cpp

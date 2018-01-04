@@ -70,7 +70,7 @@ vector<unsigned char> gen_image::render_target(int number)
 
 cv::Mat embedded_id_image::generate_image(int rows, int cols, int embedded_id)
 {
-    cv::Mat  image{rows, cols, CV_8UC3};
+    cv::Mat  image(rows, cols, CV_8UC3);
     uint8_t* p = image.data;
     for (int row = 0; row < rows; row++)
     {

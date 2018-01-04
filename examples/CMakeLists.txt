@@ -15,6 +15,7 @@
 
 add_subdirectory(cpp_iterator)
 add_subdirectory(augmentation_assistant)
+add_subdirectory(plugins)
 if (ENABLE_AEON_SERVICE)
     add_subdirectory(cpp_remote_iterator)
 endif()

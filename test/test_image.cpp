@@ -344,15 +344,15 @@ TEST(image, transform_expand_crop_flip_resize)
             auto pixel = image.at<cv::Vec3b>(i, j);
             if (j >= output_width / 2 + blurred_bias && i < output_height / 2 - blurred_bias)
             {
-                EXPECT_EQ(pixel[0], 0xFF);
-                EXPECT_EQ(pixel[1], 0x0);
-                EXPECT_EQ(pixel[2], 0x0);
+                ASSERT_EQ(pixel[0], 0xFF);
+                ASSERT_EQ(pixel[1], 0x0);
+                ASSERT_EQ(pixel[2], 0x0);
             }
             else if (j < output_width / 2 - blurred_bias || i >= output_height / 2 + blurred_bias)
             {
-                EXPECT_EQ(pixel[0], 0x0);
-                EXPECT_EQ(pixel[1], 0x0);
-                EXPECT_EQ(pixel[2], 0x0);
+                ASSERT_EQ(pixel[0], 0x0);
+                ASSERT_EQ(pixel[1], 0x0);
+                ASSERT_EQ(pixel[2], 0x0);
             }
         }
     }
@@ -1171,7 +1171,7 @@ bool test_contrast_image(cv::Mat m, float v1, float v2, float v3)
 
 TEST(photometric, contrast)
 {
-    cv::Mat  source{384, 512, CV_8UC3};
+    cv::Mat  source(384, 512, CV_8UC3);
     uint8_t* p = source.data;
     for (int row = 0; row < 128; row++)
     {
@@ -1224,7 +1224,7 @@ TEST(photometric, contrast)
 
 TEST(photometric, brightness)
 {
-    cv::Mat  source{384, 512, CV_8UC3};
+    cv::Mat  source(384, 512, CV_8UC3);
     uint8_t* p = source.data;
     for (int row = 0; row < 128; row++)
     {
@@ -1328,7 +1328,7 @@ bool test_saturation(cv::Mat m, vector<float> v1, vector<float> v2, vector<float
 
 TEST(DISABLED_photometric, saturation)
 {
-    cv::Mat  source{128 * 4, 512, CV_8UC3};
+    cv::Mat  source(128 * 4, 512, CV_8UC3);
     uint8_t* p = source.data;
     for (int row = 0; row < 128; row++)
     {
@@ -1461,3 +1461,109 @@ TEST(photometric, hue)
         //        cv::imwrite(name, mat);
     }
 }
+
+#ifdef PYTHON_PLUGIN
+TEST(plugin, image_example_rotate)
+{
+    auto                  indexed = generate_indexed_image(256, 256);
+    vector<unsigned char> img;
+    cv::imencode(".png", indexed, img);
+    nlohmann::json jsConfig = {{"width", 256}, {"height", 256}, {"channels", 3}};
+    nlohmann::json aug      = {{"type", "image"},
+                          {"crop_enable", false},
+                          {"plugin_filename", "rotate"},
+                          {"plugin_params", {{"angle", {20, 20}}}}};
+
+    image::config config_ptr{jsConfig};
+
+    image::extractor           ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    augment::image::param_factory factory(aug);
+
+    auto                               image_size = decoded->get_image_size();
+    shared_ptr<augment::image::params> params_ptr = factory.make_params(
+        image_size.width, image_size.height, config_ptr.width, config_ptr.height);
+
+    image::transformer         trans{config_ptr};
+    shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+    cv::Mat image = transformed->get_image(0);
+    EXPECT_EQ(256, image.size().width);
+    EXPECT_EQ(256, image.size().height);
+
+    // phase two
+    aug = {{"type", "image"},
+           {"crop_enable", false},
+           {"angle", {20, 20}},
+           {"plugin_filename", ""},
+           {"plugin_params", ""}};
+
+    augment::image::param_factory factory2(aug);
+
+    params_ptr = factory2.make_params(
+        image_size.width, image_size.height, config_ptr.width, config_ptr.height);
+
+    transformed    = trans.transform(params_ptr, decoded);
+    cv::Mat image2 = transformed->get_image(0);
+    EXPECT_EQ(256, image2.size().width);
+    EXPECT_EQ(256, image2.size().height);
+
+    // compare
+    bool isEqual = (cv::sum(image != image2) == cv::Scalar(0, 0, 0, 0));
+    EXPECT_TRUE(isEqual);
+}
+
+TEST(plugin, image_example_flip)
+{
+    auto                  indexed = generate_indexed_image(256, 256);
+    vector<unsigned char> img;
+    cv::imencode(".png", indexed, img);
+    nlohmann::json jsConfig = {{"width", 256}, {"height", 256}, {"channels", 3}};
+    nlohmann::json aug      = {{"type", "image"},
+                          {"crop_enable", false},
+                          {"flip_enable", false},
+                          {"plugin_filename", "flip"},
+                          {"plugin_params", {{"probability", 1}, {"width", 256}}}};
+
+    image::config config_ptr{jsConfig};
+
+    image::extractor           ext{config_ptr};
+    shared_ptr<image::decoded> decoded = ext.extract((char*)&img[0], img.size());
+
+    augment::image::param_factory factory(aug);
+
+    auto                               image_size = decoded->get_image_size();
+    shared_ptr<augment::image::params> params_ptr = factory.make_params(
+        image_size.width, image_size.height, config_ptr.width, config_ptr.height);
+
+    image::transformer         trans{config_ptr};
+    shared_ptr<image::decoded> transformed = trans.transform(params_ptr, decoded);
+
+    cv::Mat image = transformed->get_image(0);
+    EXPECT_EQ(256, image.size().width);
+    EXPECT_EQ(256, image.size().height);
+
+    // phase two
+    aug = {{"type", "image"},
+           {"crop_enable", false},
+           {"flip_enable", true},
+           {"plugin_filename", ""},
+           {"plugin_params", ""}};
+
+    augment::image::param_factory factory2(aug);
+
+    params_ptr = factory2.make_params(
+        image_size.width, image_size.height, config_ptr.width, config_ptr.height);
+    params_ptr->flip = true;
+
+    transformed    = trans.transform(params_ptr, decoded);
+    cv::Mat image2 = transformed->get_image(0);
+    EXPECT_EQ(256, image2.size().width);
+    EXPECT_EQ(256, image2.size().height);
+
+    // compare
+    bool isEqual = (cv::sum(image != image2) == cv::Scalar(0, 0, 0, 0));
+    EXPECT_TRUE(isEqual);
+}
+#endif

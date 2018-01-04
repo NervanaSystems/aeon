@@ -101,6 +101,11 @@ std::shared_ptr<audio::decoded>
         decoded->valid_frames    = std::min((uint32_t)resized.rows, (uint32_t)_cfg.time_steps);
     }
 
+#ifdef PYTHON_PLUGIN
+    if (params->user_plugin)
+        decoded->get_freq_data() = params->user_plugin->augment_audio(decoded->get_freq_data());
+#endif
+
     return decoded;
 }
 

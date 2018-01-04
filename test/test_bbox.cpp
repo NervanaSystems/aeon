@@ -949,3 +949,93 @@ TEST(boundingbox, operator_equal)
     b2.m_difficult = true;
     EXPECT_NE(b1, b2);
 }
+
+#ifdef PYTHON_PLUGIN
+TEST(plugin, bbox_example_flip)
+{
+    // Create test metadata
+    cv::Rect r0   = cv::Rect(10, 10, 10, 10); // outside
+    cv::Rect r1   = cv::Rect(30, 30, 10, 10); // result[0]
+    cv::Rect r2   = cv::Rect(50, 50, 10, 10); // result[1]
+    cv::Rect r3   = cv::Rect(70, 30, 10, 10); // result[2]
+    cv::Rect r4   = cv::Rect(90, 35, 10, 10); // outside
+    cv::Rect r5   = cv::Rect(30, 70, 10, 10); // result[3]
+    cv::Rect r6   = cv::Rect(70, 70, 10, 10); // result[4]
+    cv::Rect r7   = cv::Rect(30, 30, 80, 80); // result[5]
+    auto     list = {create_box(r0, "lion"),
+                 create_box(r1, "tiger"),
+                 create_box(r2, "eel"),
+                 create_box(r3, "eel"),
+                 create_box(r4, "eel"),
+                 create_box(r5, "eel"),
+                 create_box(r6, "eel"),
+                 create_box(r7, "eel")};
+    auto j = create_metadata(list, 256, 256);
+
+    string buffer = j.dump();
+
+    auto                   cfg = make_bbox_config(100);
+    boundingbox::extractor extractor{cfg.label_map};
+    auto                   decoded = extractor.extract(&buffer[0], buffer.size());
+    vector<bbox>           boxes   = decoded->boxes();
+
+    ASSERT_EQ(8, boxes.size());
+
+    boundingbox::transformer           transform(cfg);
+    shared_ptr<augment::image::params> iparam = make_params(256, 256);
+    stringstream                       ss;
+    ss << "{\"width\": " << 256 << ", \"probability\": 1}";
+    iparam->user_plugin = make_shared<plugin>("flip", ss.str());
+    iparam->user_plugin->prepare();
+    auto         tx_decoded = transform.transform(iparam, decoded);
+    vector<bbox> tx_boxes   = tx_decoded->boxes();
+    ASSERT_EQ(8, tx_boxes.size());
+
+    EXPECT_EQ(cv::Rect(256 - 10 - 10, 10, 10, 10), tx_boxes[0].rect());
+    EXPECT_EQ(cv::Rect(256 - 10 - 30, 30, 10, 10), tx_boxes[1].rect());
+    EXPECT_EQ(cv::Rect(256 - 10 - 50, 50, 10, 10), tx_boxes[2].rect());
+    EXPECT_EQ(cv::Rect(256 - 10 - 70, 30, 10, 10), tx_boxes[3].rect());
+    EXPECT_EQ(cv::Rect(256 - 10 - 90, 35, 10, 10), tx_boxes[4].rect());
+    EXPECT_EQ(cv::Rect(256 - 10 - 30, 70, 10, 10), tx_boxes[5].rect());
+    EXPECT_EQ(cv::Rect(256 - 10 - 70, 70, 10, 10), tx_boxes[6].rect());
+    EXPECT_EQ(cv::Rect(256 - 80 - 30, 30, 80, 80), tx_boxes[7].rect());
+}
+
+TEST(plugin, bbox_example_rotate)
+{
+    // Create test metadata
+    cv::Rect r0   = cv::Rect(10, 10, 10, 10); // outside
+    cv::Rect r1   = cv::Rect(30, 30, 10, 10); // result[0]
+    cv::Rect r2   = cv::Rect(50, 50, 10, 10); // result[1]
+    cv::Rect r3   = cv::Rect(70, 30, 10, 10); // result[2]
+    cv::Rect r4   = cv::Rect(90, 35, 10, 10); // outside
+    cv::Rect r5   = cv::Rect(30, 70, 10, 10); // result[3]
+    cv::Rect r6   = cv::Rect(70, 70, 10, 10); // result[4]
+    cv::Rect r7   = cv::Rect(30, 30, 80, 80); // result[5]
+    auto     list = {create_box(r0, "lion"),
+                 create_box(r1, "tiger"),
+                 create_box(r2, "eel"),
+                 create_box(r3, "eel"),
+                 create_box(r4, "eel"),
+                 create_box(r5, "eel"),
+                 create_box(r6, "eel"),
+                 create_box(r7, "eel")};
+    auto j = create_metadata(list, 256, 256);
+
+    string buffer = j.dump();
+
+    auto                   cfg = make_bbox_config(100);
+    boundingbox::extractor extractor{cfg.label_map};
+    auto                   decoded = extractor.extract(&buffer[0], buffer.size());
+    vector<bbox>           boxes   = decoded->boxes();
+
+    ASSERT_EQ(8, boxes.size());
+
+    boundingbox::transformer           transform(cfg);
+    shared_ptr<augment::image::params> iparam = make_params(256, 256);
+    iparam->user_plugin = make_shared<plugin>("rotate", "{\"angle\": [-20,20]}");
+    iparam->user_plugin->prepare();
+    shared_ptr<boundingbox::decoded> tx_decoded;
+    EXPECT_THROW(tx_decoded = transform.transform(iparam, decoded), std::runtime_error);
+}
+#endif

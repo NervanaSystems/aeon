@@ -14,6 +14,9 @@
 */
 
 #include "etl_image.hpp"
+#ifdef PYTHON_PLUGIN
+#include "python_plugin.hpp"
+#endif
 #include "output_saver.hpp"
 
 #include <atomic>
@@ -25,7 +28,7 @@ image::config::config(nlohmann::json js)
 {
     if (js.is_null())
     {
-        throw std::runtime_error("missing image config in json config");
+        throw runtime_error("missing image config in json config");
     }
 
     for (auto& info : config_list)
@@ -50,11 +53,11 @@ void image::config::validate()
 {
     if (width <= 0)
     {
-        throw std::invalid_argument("invalid width");
+        throw invalid_argument("invalid width");
     }
     if (height <= 0)
     {
-        throw std::invalid_argument("invalid height");
+        throw invalid_argument("invalid height");
     }
 }
 
@@ -63,9 +66,9 @@ image::extractor::extractor(const image::config& cfg)
 {
     if (!(cfg.channels == 1 || cfg.channels == 3))
     {
-        std::stringstream ss;
+        stringstream ss;
         ss << "Unsupported number of channels in image: " << cfg.channels;
-        throw std::runtime_error(ss.str());
+        throw runtime_error(ss.str());
     }
     else
     {
@@ -102,7 +105,6 @@ shared_ptr<image::decoded> image::extractor::extract(const void* inbuf, size_t i
     randomly sampled contrast, brightness, saturation, lighting values (based on params->cbs, lighting bounds)
 
 */
-
 image::transformer::transformer(const image::config&)
 {
 }
@@ -124,6 +126,7 @@ shared_ptr<image::decoded>
     }
     return rc;
 }
+
 /**
  * rotate
  * expand
@@ -144,7 +147,8 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
         image::expand(
             rotatedImage, expandedImage, img_xform->expand_offset, img_xform->expand_size);
     else
-        expandedImage    = rotatedImage;
+        expandedImage = rotatedImage;
+
     cv::Mat croppedImage = expandedImage(img_xform->cropbox);
     image::add_padding(croppedImage, img_xform->padding, img_xform->padding_crop_offset);
 
@@ -157,13 +161,25 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
                     img_xform->hue);
     photo.lighting(resizedImage, img_xform->lighting, img_xform->color_noise_std);
 
-    cv::Mat* finalImage = &resizedImage;
-    cv::Mat  flippedImage;
+    cv::Mat flippedImage;
     if (img_xform->flip)
     {
         cv::flip(resizedImage, flippedImage, 1);
-        finalImage = &flippedImage;
     }
+    else
+        flippedImage = resizedImage;
+
+    cv::Mat* finalImage = &flippedImage;
+
+#ifdef PYTHON_PLUGIN
+    cv::Mat pluginImage;
+    if (img_xform->user_plugin)
+    {
+        pluginImage = img_xform->user_plugin->augment_image(flippedImage);
+        finalImage  = &pluginImage;
+    }
+#endif
+
     if (!img_xform->debug_output_directory.empty())
     {
         static output_saver saver;
@@ -180,7 +196,7 @@ image::loader::loader(const image::config& cfg, bool fixed_aspect_ratio)
 {
 }
 
-void image::loader::load(const std::vector<void*>& outlist, shared_ptr<image::decoded> input) const
+void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded> input) const
 {
     char* outbuf = (char*)outlist[0];
     // TODO: Generalize this to also handle multi_crop case

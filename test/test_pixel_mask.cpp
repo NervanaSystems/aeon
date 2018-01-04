@@ -272,3 +272,70 @@ TEST(pixel_mask, load_int)
 ////        }
 ////    }
 //}
+
+#ifdef PYTHON_PLUGIN
+TEST(plugin, pixel_mask_example_rotate)
+{
+    auto            test_image = generate_test_image();
+    vector<uint8_t> test_data;
+    cv::imencode(".png", test_image, test_data);
+    ASSERT_TRUE(verify_image(test_image));
+
+    nlohmann::json js = {{"width", 256}, {"height", 256}};
+    nlohmann::json aug;
+    image::config  cfg(js);
+
+    pixel_mask::extractor         extractor{cfg};
+    pixel_mask::transformer       transformer{cfg};
+    image::loader                 loader{cfg, false};
+    augment::image::param_factory factory{aug};
+
+    auto extracted  = extractor.extract((const char*)test_data.data(), test_data.size());
+    auto image_size = extracted->get_image_size();
+    auto params_ptr =
+        factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+    params_ptr->user_plugin = make_shared<nervana::plugin>("rotate", "{\"angle\": [45,45]}");
+    shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
+    cv::Mat                    tximg       = transformed->get_image(0);
+    cv::imwrite("tx_pixel_mask_rotate_plugin.png", tximg);
+    EXPECT_TRUE(verify_image(tximg));
+}
+
+TEST(plugin, pixel_mask_example_flip)
+{
+    auto            test_image = generate_test_image();
+    vector<uint8_t> test_data;
+    cv::imencode(".png", test_image, test_data);
+
+    nlohmann::json js  = {{"width", 256}, {"height", 256}};
+    nlohmann::json aug = {{"type", "image"},
+                          {"crop_enable", false},
+                          {"plugin_filename", "flip"},
+                          {"plugin_params", {{"probability", 1}, {"width", 256}}}};
+    image::config cfg(js);
+
+    pixel_mask::extractor         extractor{cfg};
+    pixel_mask::transformer       transformer{cfg};
+    image::loader                 loader{cfg, false};
+    augment::image::param_factory factory{aug};
+
+    auto extracted  = extractor.extract((const char*)test_data.data(), test_data.size());
+    auto image_size = extracted->get_image_size();
+    auto params_ptr =
+        factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+    shared_ptr<image::decoded> transformed = transformer.transform(params_ptr, extracted);
+    cv::Mat                    tximg       = transformed->get_image(0);
+
+    // phase two
+    aug = {{"type", "image"}, {"crop_enable", false}, {"flip_enable", true}};
+    augment::image::param_factory factory2{aug};
+    params_ptr = factory2.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
+    params_ptr->flip = true;
+    transformed      = transformer.transform(params_ptr, extracted);
+    cv::Mat tximg2   = transformed->get_image(0);
+
+    // compare
+    bool isEqual = (cv::sum(tximg != tximg2) == cv::Scalar(0, 0, 0, 0));
+    EXPECT_TRUE(isEqual);
+}
+#endif
