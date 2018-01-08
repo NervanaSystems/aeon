@@ -18,7 +18,6 @@
 #include "http_connector.hpp"
 #include <curl/curl.h>
 #include <curl/easy.h>
-#include <curl/curlbuild.h>
 
 namespace nervana
 {
