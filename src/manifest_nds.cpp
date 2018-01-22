@@ -19,7 +19,6 @@
 
 #include <curl/curl.h>
 #include <curl/easy.h>
-#include <curl/curlbuild.h>
 
 #include "json.hpp"
 #include "manifest_nds.hpp"
