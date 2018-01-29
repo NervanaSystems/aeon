@@ -76,6 +76,30 @@ Service RESTful API
    :statuscode 500: internal error
 
 
+.. http:get:: health
+
+   Diagnostic endpoint
+
+   **Example request**:
+
+   .. sourcecode:: bash
+
+        curl "http://example.com:34568/health"
+
+   **Example response**:
+
+   .. sourcecode:: json
+
+        {
+           "status": {
+              "type": "SUCCESS"
+           }
+        }
+
+   :statuscode 200: no error
+   :statuscode 500: internal error
+
+
 .. http:get:: /api/v1/dataset/(int:session_id)/names_and_shapes
 
    Provides data names and its shapes for session ``session_id``.

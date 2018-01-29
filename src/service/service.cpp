@@ -23,6 +23,13 @@ namespace nervana
         {
             constexpr char not_found_loader[] = "loader doesn't exist";
 
+            web::json::value success_json()
+            {
+                web::json::value response_json  = web::json::value::object();
+                response_json["status"]["type"] = web::json::value::string("SUCCESS");
+                return response_json;
+            }
+
             web::json::value not_found_json()
             {
                 web::json::value response_json         = web::json::value::object();
@@ -84,7 +91,13 @@ namespace nervana
         {
             string path = web::uri::decode(request.relative_uri().path());
             log::info("[GET] %s", path);
-            auto                          query = uri::split_query(request.request_uri().query());
+            auto query = uri::split_query(request.request_uri().query());
+            auto paths = web::uri::split_path(path);
+            if (paths.size() > 0 && paths[0] == "health")
+            {
+                request.reply(status_codes::OK, success_json().serialize());
+                return;
+            }
             statused_response<next_tuple> reply = m_parser.get(path);
             if (std::get<1>(reply.value).empty())
                 request.reply(reply.status_code, get<0>(reply.value));

@@ -90,8 +90,9 @@ namespace nervana
             statused_response<next_tuple> get(const std::string& msg);
 
         private:
+            const std::string api             = "api";
             const std::string version         = "v1";
-            const std::string endpoint_prefix = "/" + version + "/dataset";
+            const std::string endpoint_prefix = "/" + api + "/" + version + "/dataset";
 
             using msg_process_func_t = std::function<web::json::value(loader_adapter&)>;
 
@@ -152,7 +153,7 @@ namespace nervana
                              std::string rdma_addr = ""
 #endif
                              )
-                : m_listener{web::http::uri_builder{uri}.append_path(U("api")).to_uri()}
+                : m_listener{web::http::uri_builder{uri}.to_uri()}
             {
 #if defined(ENABLE_OPENFABRICS_CONNECTOR)
                 if (rdma_addr.size() > 1)
