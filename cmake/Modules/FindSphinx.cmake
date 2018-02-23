@@ -19,17 +19,14 @@ unset(SPHINX_VERSION)
 find_program(SPHINX_EXECUTABLE NAMES sphinx-build sphinx-build2 DOC "Path to sphinx-build executable")
 
 if (SPHINX_EXECUTABLE)
-    execute_process(COMMAND "${SPHINX_EXECUTABLE}"
+    execute_process(COMMAND ${SPHINX_EXECUTABLE} --version
                     RESULT_VARIABLE __sphinx_result OUTPUT_VARIABLE __sphinx_output ERROR_VARIABLE __sphinx_error
                     OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE)
-    if ("${__sphinx_output}" STREQUAL "")
-        set(__sphinx_output "${__sphinx_error}")
-    endif()
-    if (__sphinx_result MATCHES 1)
-        string(REGEX MATCH "Sphinx v([0-9]+)\\.([0-9]+)\\.([0-9]+)" __sphinx_version_check "${__sphinx_output}")
+    if (__sphinx_result MATCHES 0)
+        string(REGEX MATCH ".* ([0-9]+)\\.([0-9]+)\\.([0-9]+)" __sphinx_version_check "${__sphinx_error}")
         set(SPHINX_VERSION ${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3})
     else()
-        unset(SPHINX_VERSION "?unknown?")
+        set(__sphinx_output "${__sphinx_error}")
         message(WARNING "Sphinx: problem extracting version!")
     endif()
 endif()

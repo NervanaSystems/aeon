@@ -11,10 +11,10 @@ if [ -z ${ID+x} ]; then
 fi
 case $ID in
 ubuntu)
-    apt install -y doxygen python-sphinxcontrib-httpdomain python-pip
+    apt install -y python-pip doxygen
     ;;
 centos)
-    yum -y install doxygen python2-sphinxcontrib-httpdomain python-pip
+    yum -y install python-pip doxygen
     ;;
 *)
     echo >&2 "error: unsupported Linux distribution detected (ID=\"$(ID)\")"
@@ -26,4 +26,4 @@ esac
 # https://github.com/michaeljones/breathe/issues/261
 # I've pinned the commit to what worked for me
 
-pip install Sphinx git+https://github.com/michaeljones/breathe.git@d681785bb728eb02261263f26736bf6b2a929da5 sphinxcontrib-httpdomain
+pip install --upgrade Sphinx breathe sphinxcontrib-httpdomain sphinxcontrib-napoleon
