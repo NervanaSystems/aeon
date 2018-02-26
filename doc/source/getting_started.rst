@@ -23,7 +23,7 @@ First grab aeon's dependencies:
 
 Ubuntu::
 
-  apt-get install git clang libcurl4-openssl-dev libopencv-dev libsox-dev libboost-filesystem-dev libboost-system-dev
+  apt-get install git clang libcurl4-openssl-dev libopencv-dev libsox-dev libboost-filesystem-dev libboost-system-dev libssl-dev
 
 Centos::
 
