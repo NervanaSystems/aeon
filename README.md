@@ -16,7 +16,7 @@ See the new features in our latest release.
 
 First grab Aeon's dependencies:
 
-### Ubuntu (release 14.04 LTS and later):
+### Ubuntu (release 16.04 LTS and later):
 
     apt-get install git clang libcurl4-openssl-dev libopencv-dev libsox-dev libboost-filesystem-dev libboost-system-dev libssl-dev
 

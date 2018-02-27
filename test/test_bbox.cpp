@@ -784,7 +784,7 @@ TEST(boundingbox, intersect_boundingbox)
     }
 }
 
-TEST(normalized_gbox, intersect_normalized_box)
+TEST(normalized_box, intersect_normalized_box)
 {
     nbox box1(0.0, 0.0, 0.1, 0.1);
     std::vector<std::tuple<nbox, nbox, nbox>> boxes = {
