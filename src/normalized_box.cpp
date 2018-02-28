@@ -77,7 +77,7 @@ nbox nbox::intersect(const nbox& second_nbox) const
     if (second_nbox.xmin() > xmax() || second_nbox.xmax() < xmin() || second_nbox.ymin() > ymax() ||
         second_nbox.ymax() < ymin())
     {
-        return box();
+        return nbox();
     }
 
     return nbox(std::max(xmin(), second_nbox.xmin()),

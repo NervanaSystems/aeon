@@ -156,10 +156,10 @@ TEST(localization_ssd, extract_gt_boxes)
 
 TEST(localization_ssd, transform)
 {
-    //just check that transformations are executed on bboxes (flip here) and they are eventually normalized
+    //just check that transformations are executed on bboxes (flip and rescale) and they are eventually normalized
     int input_width   = 100;
     int input_height  = 100;
-    int output_width  = 200;
+    int output_width  = 300;
     int output_height = 300;
 
     nlohmann::json js_local = {{"height", output_height},
@@ -171,10 +171,9 @@ TEST(localization_ssd, transform)
     decoded->input_image_size  = cv::Size2i(input_width, input_height);
     decoded->output_image_size = cv::Size2i(output_width, output_height);
     decoded->m_boxes = vector<bbox>{bbox(0, 0, 99, 99), bbox(20, 40, 29, 49), bbox(10, 20, 29, 39)};
-    auto expected =
-        vector<bbox>{nbox(0.0f, 0.0f, 1.0, 1.0).unnormalize(output_width, output_height),
-                     nbox(0.7f, 0.4f, 0.8f, 0.5f).unnormalize(output_width, output_height),
-                     nbox(0.7f, 0.2f, 0.9f, 0.4f).unnormalize(output_width, output_height)};
+    auto expected    = vector<bbox>{bbox(0, 0, 99, 99).rescale(3, 3),
+                                 bbox(70, 40, 79, 49).rescale(3, 3),
+                                 bbox(70, 20, 89, 39).rescale(3, 3)};
     augment::image::param_factory      factory({{"type", "image"}, {"crop_enable", false}});
     shared_ptr<augment::image::params> augmentation_params = factory.make_ssd_params(
         input_width, input_height, output_width, output_height, vector<bbox>());
@@ -190,7 +189,10 @@ TEST(localization_ssd, transform)
     for (int i = 0; i < decoded->gt_boxes.size(); i++)
     {
         std::stringstream ss;
-        ss << decoded->gt_boxes[i] << " is not equal to " << expected[i];
+        ss << decoded->gt_boxes[i] << std::endl
+           << "is not equal to" << std::endl
+           << expected[i] << std::endl
+           << "at iteration " << i << std::endl;
         EXPECT_EQ(decoded->gt_boxes[i], expected[i]) << ss.str() << endl;
     }
 }
