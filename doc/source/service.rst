@@ -50,8 +50,8 @@ If it's not available in your OS, you need to build it from  `sources <https://g
     ./configure --prefix=$OPENFABRICS_DIR
     make -j
     sudo make install
-    
-where <ABSOLUTE_PATH_TO_INSTALL> is i.e. `/opt/libfabric`.
+
+where <ABSOLUTE_PATH_TO_INSTALL> is i.e. ``/opt/libfabric``.
 
 .. _building:
 
