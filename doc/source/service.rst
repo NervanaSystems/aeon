@@ -44,15 +44,12 @@ If it's not available in your OS, you need to build it from  `sources <https://g
 
 .. code-block:: bash
 
-    export OPENFABRICS_DIR=<ABOSLUTE_PATH_TO_INSTALL>
     git clone https://github.com/ofiwg/libfabric
     cd libfabric
     ./autogen.sh
-    ./configure --prefix=$OPENFABRICS_DIR
+    ./configure
     make -j
     sudo make install
-
-where <ABSOLUTE_PATH_TO_INSTALL> is i.e. ``/opt/libfabric``.
 
 .. _building:
 
