@@ -46,7 +46,8 @@ If it's not available in your OS, you need to build it from  `sources <https://g
 
     git clone https://github.com/ofiwg/libfabric
     cd libfabric
-    ./configure --prefix=<PATH_TO_LOCAL_DIR>
+    ./autogen.sh
+    ./configure
     make -j
     sudo make install
 
