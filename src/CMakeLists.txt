@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-set (SRC
+set(AEON_SOURCE_FILES
     async_manager.cpp
     augment_audio.cpp
     augment_image.cpp
@@ -65,7 +65,7 @@ set (SRC
     output_saver.cpp)
 
 if (ENABLE_AEON_CLIENT)
-    list(APPEND SRC
+    list(APPEND AEON_SOURCE_FILES
         client/curl_connector.cpp
         client/loader_remote.cpp
         client/service.cpp
@@ -73,7 +73,7 @@ if (ENABLE_AEON_CLIENT)
 endif()
 
 if (ENABLE_OPENFABRICS_CONNECTOR)
-    list(APPEND SRC
+    list(APPEND AEON_SOURCE_FILES
          rdma/ofi.cpp
          client/ofi_connector.cpp)
 endif()
@@ -82,20 +82,22 @@ set(AEON_HEADER_FILES
         version.hpp)
 
 if (PYTHON_FOUND)
-    list(APPEND SRC api.cpp)
+    list(APPEND AEON_SOURCE_FILES
+        api.cpp)
 endif(PYTHON_FOUND)
 
 if (PYTHON_PLUGIN)
-    list(APPEND SRC python_plugin.cpp
-                    conversion.cpp
-                    python_utils.cpp)
+    list(APPEND AEON_SOURCE_FILES
+        python_plugin.cpp
+        conversion.cpp
+        python_utils.cpp)
 endif(PYTHON_PLUGIN)
 
 set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
 set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/../setup.py")
 configure_file(${SETUP_PY_IN} ${SETUP_PY})
 
-add_library(aeon SHARED ${SRC} ${AEON_HEADER_FILES})
+add_library(aeon SHARED ${AEON_SOURCE_FILES} ${AEON_HEADER_FILES})
 
 install(TARGETS aeon DESTINATION lib)
 
