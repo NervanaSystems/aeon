@@ -18,7 +18,7 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-shift-sign-overflow")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-noreturn")
 
-set (SRC
+set(TESTSUITE_SOURCE_FILES
     gen_image.cpp
     helpers.cpp
     main.cpp
@@ -60,12 +60,12 @@ set(TESTSUITE_LIBRARIES aeon ${SOX_LIBRARIES} gtest gmock
     ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 if (ENABLE_AEON_CLIENT)
-    list(APPEND SRC
+    list(APPEND TESTSUITE_SOURCE_FILES
         test_curl_connector.cpp)
 endif()
 
 if (ENABLE_AEON_SERVICE)
-    list(APPEND SRC
+    list(APPEND TESTSUITE_SOURCE_FILES
         ../src/service/service.cpp
         test_service.cpp
         test_loader_remote.cpp)
@@ -75,7 +75,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
 
-add_executable(testsuite ${SRC})
+add_executable(testsuite ${TESTSUITE_SOURCE_FILES})
 target_link_libraries(testsuite ${TESTSUITE_LIBRARIES})
 add_dependencies(testsuite aeon)
 
