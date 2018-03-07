@@ -84,14 +84,14 @@ set(AEON_HEADER_FILES
 if (PYTHON_FOUND)
     list(APPEND AEON_SOURCE_FILES
         api.cpp)
-endif(PYTHON_FOUND)
+endif()
 
 if (PYTHON_PLUGIN)
     list(APPEND AEON_SOURCE_FILES
         python_plugin.cpp
         conversion.cpp
         python_utils.cpp)
-endif(PYTHON_PLUGIN)
+endif()
 
 set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
 set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/../setup.py")
