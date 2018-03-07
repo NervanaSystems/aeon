@@ -242,3 +242,9 @@ include(cmake/clang-format.cmake)
 include(cmake/coverage.cmake)
 
 print_configuration_summary()
+
+unset(ENABLE_AEON_SERVICE CACHE)
+unset(ENABLE_AEON_CLIENT CACHE)
+unset(ENABLE_OPENFARBICS_CONNECTOR CACHE)
+unset(PYTHON_PLUGIN CACHE)
+
