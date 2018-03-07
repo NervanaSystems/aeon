@@ -185,6 +185,11 @@ if (ENABLE_AEON_SERVICE)
     find_package(OpenSSL REQUIRED)
     include_directories(${OPENSSL_INCLUDE_DIRS})
     link_directories(${OPENSSL_LIBRARY_DIRS})
+
+    # Check for Boost components
+    find_package(Boost REQUIRED COMPONENTS system filesystem)
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${Boost_LIBRARY_DIRS})
 endif()
 
 if (NOT ENABLE_AEON_SERVICE AND NOT ENABLE_AEON_CLIENT)
@@ -197,12 +202,6 @@ if (ENABLE_OPENFABRICS_CONNECTOR)
     include_directories(${OPENFABRICS_INCLUDE_DIRS})
     link_directories(${OPENFABRICS_LIBRARY_DIRS})
 endif()
-
-# Check for BOOST components
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
 
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 
