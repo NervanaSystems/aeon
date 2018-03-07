@@ -24,5 +24,4 @@ target_link_libraries(aeon-service aeon ${CMAKE_THREAD_LIBS_INIT}
         ${Boost_LIBRARIES} ${CPPREST_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 install(TARGETS aeon-service DESTINATION sbin)
-# we need to run ldconfig to make aeon library visible for aeon-service
-install(CODE "execute_process(COMMAND ldconfig)")
+

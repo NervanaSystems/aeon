@@ -100,6 +100,7 @@ configure_file(${SETUP_PY_IN} ${SETUP_PY})
 add_library(aeon SHARED ${AEON_SOURCE_FILES} ${AEON_HEADER_FILES})
 
 install(TARGETS aeon DESTINATION lib)
+install(CODE "execute_process(COMMAND ldconfig)")
 
 set(AEON_LIBRARIES ${CURL_LIBRARIES} ${SOX_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
 if (ENABLE_OPENFABRICS_CONNECTOR)
@@ -109,3 +110,4 @@ endif()
 target_link_libraries(aeon ${AEON_LIBRARIES})
 set_target_properties(aeon PROPERTIES VERSION ${AEON_VERSION_MAJOR}.${AEON_VERSION_MINOR}.${AEON_VERSION_PATCH}
                                       SOVERSION ${AEON_VERSION_MAJOR})
+
