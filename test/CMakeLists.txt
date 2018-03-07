@@ -57,17 +57,20 @@ set (SRC
 
 set(TESTSUITE_LIBRARIES aeon ${SOX_LIBRARIES} gtest gmock
     ${LCOVERAGE} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES}
-    ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+    ${CURL_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+
+if (ENABLE_AEON_CLIENT)
+    list(APPEND SRC
+        test_curl_connector.cpp)
+endif()
 
 if (ENABLE_AEON_SERVICE)
     list(APPEND SRC
         ../src/service/service.cpp
-        test_curl_connector.cpp
         test_service.cpp
         test_loader_remote.cpp)
-
     list(APPEND TESTSUITE_LIBRARIES
-        ${CURL_LIBRARIES} ${CPPREST_LIBRARIES} ${OPENSSL_LIBRARIES})
+        ${CPPREST_LIBRARIES} ${OPENSSL_LIBRARIES})
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")

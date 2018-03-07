@@ -144,6 +144,7 @@ list(REMOVE_ITEM OpenCV_LIBRARIES "${OpenCV_LIB_DIR_OPT}/libopencv_ts.so")
 # Ubuntu like os:
 list(REMOVE_ITEM OpenCV_LIBRARIES opencv_ts)
 
+# Check for Curl (required by Aeon client and NDS connector)
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 link_directories(${CURL_LIBRARY_DIRS})
