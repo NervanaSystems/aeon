@@ -62,7 +62,7 @@ if '${OPENFABRICS_FOUND}' == 'TRUE':
     libs += ' -lfabric '
 
 os.environ["CC"] = "clang++"
-src_list = "${SRC}".split(";")
+src_list = "${AEON_SOURCE_FILES}".split(";")
 sources = [
     '${CMAKE_CURRENT_SOURCE_DIR}/'+src for src in src_list
 ]
