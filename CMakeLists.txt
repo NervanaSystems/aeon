@@ -185,11 +185,6 @@ if (ENABLE_AEON_SERVICE)
     find_package(OpenSSL REQUIRED)
     include_directories(${OPENSSL_INCLUDE_DIRS})
     link_directories(${OPENSSL_LIBRARY_DIRS})
-
-    # Check for Boost components
-    find_package(Boost REQUIRED COMPONENTS system filesystem)
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
 endif()
 
 if (NOT ENABLE_AEON_SERVICE AND NOT ENABLE_AEON_CLIENT)
@@ -215,6 +210,11 @@ endif()
 if (ENABLE_AEON_CLIENT)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_AEON_CLIENT")
 endif()
+
+# Check for Boost components
+find_package(Boost REQUIRED COMPONENTS system filesystem)
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
 
 # Check for documentation prerequisites
 find_package(LATEX)
