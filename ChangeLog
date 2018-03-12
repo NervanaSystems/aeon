@@ -1,6 +1,33 @@
 # ChangeLog
 
-* Python plugins performing transformation can now be called after aeon transformations.
+## v1.3.1 (2018-01-09)
+* Code changes:
+   * bugfix: of cmake showing error when it could not find Sphinx
+   * bugfix: cmake DEBUG flag has proper case sensitivity now (Debug instead of DEBUG)
+   * copyright notice headers updated
+   * added diagnostic endpoint to aeon service 
+   * (optional) Python plugins performing transformations added 
+      * can be called after aeon built-in transformations.
+      * created directory examples/plugins with example usage
+      * created "plugins" directory with example plugins
+* Documentation changes:
+   * doc update with libssl-dev requirement
+   * support for Ubuntu 14.04 LTS ended, recommended update to 16.04 LTS
+   * aeon service doc update (openfabrics installation, health endpoint)
+   * docs on Python plugins:
+      * documentation doc/source/augmentation_plugins.rst
+* New dependencies:
+   * For Python plugins:
+      * yaml
+      * OpenCV version matching Python version
+   * Sphinx and breathe no longer required for source building (only for docs)
+* API changes:
+   * For Python plugins:
+      * "plugin_filename" field added under "augmentations"
+      * "plugin_params" filed added under "augmentations"
+   * For aeon service:
+      * health endpoint added
+
 
 ## v1.3.0 (2017-12-13)
 * Code changes:
