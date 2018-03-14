@@ -242,7 +242,6 @@ endif()
 if (BUILD_UNIT_TESTS)
   add_subdirectory(test)
 endif()
-add_subdirectory(examples)
 add_subdirectory(doc)
 
 include(cmake/clang-format.cmake)
@@ -255,4 +254,5 @@ unset(ENABLE_AEON_CLIENT CACHE)
 unset(ENABLE_OPENFARBICS_CONNECTOR CACHE)
 unset(PYTHON_PLUGIN CACHE)
 unset(BUILD_UNIT_TESTS CACHE)
+unset(BUILD_EXAMPLES CACHE)
 
