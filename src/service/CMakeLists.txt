@@ -23,5 +23,5 @@ add_executable(aeon-service ${AEON_SERVICE_SOURCES} ${AEON_SERVICE_HEADERS})
 target_link_libraries(aeon-service aeon ${CMAKE_THREAD_LIBS_INIT}
         ${Boost_LIBRARIES} ${CPPREST_LIBRARIES} ${OPENSSL_LIBRARIES})
 
-install(TARGETS aeon-service DESTINATION sbin)
+install(TARGETS aeon-service DESTINATION ${CMAKE_INSTALL_SBINDIR})
 

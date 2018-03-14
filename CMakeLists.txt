@@ -46,6 +46,7 @@ option(ENABLE_AEON_CLIENT "Enable compilation of AEON Client" ON)
 option(ENABLE_OPENFABRICS_CONNECTOR "Enable OpenFabrics connector for batch exchange between service and client" OFF)
 
 include(cmake/summary.cmake)
+include(GNUInstallDirs)
 
 if(APPLE)
     set(CMAKE_MACOSX_RPATH 1)
