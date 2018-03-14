@@ -1,0 +1,9 @@
+Document: libaeon
+Title: AEON
+Author: Intel AI
+Abstract: Framework-independent data loader for machine learning
+Section: Science
+
+Format: HTML
+Index: /usr/share/doc/aeon/html/index.html
+Files: /usr/share/doc/aeon/html/*.html
