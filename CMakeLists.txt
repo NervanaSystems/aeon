@@ -135,17 +135,15 @@ include_directories(${SOX_INCLUDE_DIRS})
 link_directories(${SOX_LIBRARY_DIRS})
 add_definitions(${SOX_CFLAGS_OTHERS})
 
-find_package(OpenCV REQUIRED)
+set(OpenCV_Components core highgui)
+if (BUILD_UNIT_TESTS)
+    list(APPEND OpenCV_Components imgproc imgcodecs)
+endif()
+
+find_package(OpenCV REQUIRED COMPONENTS ${OpenCV_Components})
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 link_directories(${OpenCV_LIBRARY_DIRS})
-
-# opecv_ts is for testing opencv. if it is left in the lib list then we get an error when
-# the unit test exits.
-# Centos like os:
-list(REMOVE_ITEM OpenCV_LIBRARIES "${OpenCV_LIB_DIR_OPT}/libopencv_ts.so")
-# Ubuntu like os:
-list(REMOVE_ITEM OpenCV_LIBRARIES opencv_ts)
 
 # Check for Curl (required by Aeon client and NDS connector)
 find_package(CURL REQUIRED)
