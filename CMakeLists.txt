@@ -48,6 +48,7 @@ option(BUILD_UNIT_TESTS "Enable compilation of unit tests during the build of AE
 
 include(cmake/summary.cmake)
 include(GNUInstallDirs)
+include(cmake/platform.cmake)
 
 if(APPLE)
     set(CMAKE_MACOSX_RPATH 1)
