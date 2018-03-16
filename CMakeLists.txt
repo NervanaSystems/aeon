@@ -130,6 +130,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
 find_package(Threads)
 find_package(PkgConfig REQUIRED)
 
+if (NOT ${DISTRIB_ID} STREQUAL "Ubuntu")
+    set(NLOHMANN_JSON_DIR "include")
+else()
+    if (${DISTRIB_RELEASE} VERSION_LESS "17.10")
+        set(NLOHMANN_JSON_DIR "include")
+    endif()
+endif()
+
+find_package(NlohmannJson REQUIRED)
+include_directories(${NLOHMANN_JSON_INCLUDE_DIRS})
+
 pkg_check_modules(SOX REQUIRED sox)
 include_directories(${SOX_INCLUDE_DIRS})
 link_directories(${SOX_LIBRARY_DIRS})

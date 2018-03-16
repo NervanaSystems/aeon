@@ -131,7 +131,7 @@ nervana::http_response nervana::ofi_connector::receive_data(const string&       
         remote_address = data.at("address");
         key            = data.at("key");
     }
-    catch (const nlohmann::detail::out_of_range& ex)
+    catch (const std::out_of_range& ex)
     {
         throw std::runtime_error(string("wrong remote response: ") + ex.what());
     }

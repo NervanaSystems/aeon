@@ -132,19 +132,12 @@ static PyObject* DataLoader_iternext(PyObject* self)
     allow_threads a;
 
     nlohmann::json conf = DL_get_loader(self)->get_current_config();
-    bool           batch_major{true};
-    try
-    {
-        batch_major = conf.at("batch_major");
-    }
-    catch (nlohmann::detail::out_of_range&)
-    {
-    }
-    if (!((aeon_DataLoader*)(self))->m_first_iteration)
+    bool batch_major{ conf.at("batch_major") };
+    if (!((aeon_DataLoader*)(self))->m_first_iteration) {
         DL_get_loader(self)->get_current_iter()++;
-    else
+    } else {
         ((aeon_DataLoader*)(self))->m_first_iteration = false;
-
+    }
     if (DL_get_loader(self)->get_current_iter() != DL_get_loader(self)->get_end_iter())
     {
         // d will be const fixed_buffer_map&

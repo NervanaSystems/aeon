@@ -25,9 +25,10 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include <json.hpp>
+
 #include "boundingbox.hpp"
 #include "normalized_box.hpp"
-#include "json.hpp"
 #include "interface.hpp"
 #include "box.hpp"
 #ifdef PYTHON_PLUGIN
