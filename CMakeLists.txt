@@ -17,6 +17,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 # Set this flag before project definition to avoid using other compiler by gtest
+set(CMAKE_C_COMPILER "clang")
 set(CMAKE_CXX_COMPILER "clang++")
 
 project(aeon C CXX)
