@@ -49,6 +49,7 @@ First grab Aeon's dependencies:
 Please take a look at [distributed documentation](http://aeon.nervanasys.com/index.html/service.html).
 
 ## Code coverage
+Please do not use code coverage in production. It is only for development. Python bindings are not supported when built with coverage.
 
     Code coverage in aeon depends on llvm-cov and lcov.
     Report will be generated in html-coverage-report/index.html
