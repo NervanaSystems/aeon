@@ -37,11 +37,6 @@ set(AEON_BUILD_NUMBER 0)
 set(AEON_VERSION ${AEON_VERSION_MAJOR}.${AEON_VERSION_MINOR}.${AEON_VERSION_PATCH}
                  CACHE STRING "AEON logical version")
 
-add_definitions(-DBUILD_VERSION_MAJOR=${AEON_VERSION_MAJOR}
-                -DBUILD_VERSION_MINOR=${AEON_VERSION_MINOR}
-                -DBUILD_VERSION_PATCH=${AEON_VERSION_PATCH}
-                -DBUILD_BUILD_NUMBER=${AEON_BUILD_NUMBER})
-
 option(ENABLE_AEON_SERVICE "Enable compilation of AEON Service" OFF)
 option(ENABLE_AEON_CLIENT "Enable compilation of AEON Client" ON)
 option(ENABLE_OPENFABRICS_CONNECTOR "Enable OpenFabrics connector for batch exchange between service and client" OFF)
