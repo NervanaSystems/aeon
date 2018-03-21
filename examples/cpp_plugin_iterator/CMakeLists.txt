@@ -20,7 +20,7 @@ if (APPLE AND POLICY CMP0025)
     cmake_policy(SET CMP0025 NEW)
 endif()
 
-project(remote_iterator)
+project(plugin_iterator)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
@@ -39,8 +39,8 @@ find_package(Aeon REQUIRED)
 include_directories(${Aeon_INCLUDE_DIRS})
 link_directories(${Aeon_LIBRARY_DIRS})
 
-set(REMOTE_ITERATOR_SOURCE_FILES remote_iterator.cpp)
+set(PLUGIN_ITERATOR_SOURCE_FILES plugin_iterator.cpp)
 
-add_executable(remote_iterator ${REMOTE_ITERATOR_SOURCE_FILES})
-target_link_libraries(remote_iterator ${Aeon_LIBRARIES})
+add_executable(plugin_iterator ${PLUGIN_ITERATOR_SOURCE_FILES})
+target_link_libraries(plugin_iterator ${Aeon_LIBRARIES})
 
