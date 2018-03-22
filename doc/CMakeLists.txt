@@ -34,7 +34,6 @@ if (NOT BREATHE_FOUND)
 endif ()
 
 if (REQUIRED_PACKAGES_FOUND)
-#	file(COPY source DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 	file(GLOB_RECURSE files "source/*")
 	string(LENGTH ${CMAKE_CURRENT_SOURCE_DIR} DIR_LEN)
 	foreach(SOURCE ${files})
@@ -58,7 +57,7 @@ if (REQUIRED_PACKAGES_FOUND)
 	# BUILDDIR      = build
 	set(BUILDDIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 
-
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build/html DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
 	# # User-friendly check for sphinx-build
 	# ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)

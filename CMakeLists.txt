@@ -249,6 +249,7 @@ if (BUILD_UNIT_TESTS)
   add_subdirectory(test)
 endif()
 add_subdirectory(doc)
+add_subdirectory(examples)
 
 include(cmake/clang-format.cmake)
 include(cmake/coverage.cmake)
