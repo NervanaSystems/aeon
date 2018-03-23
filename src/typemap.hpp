@@ -101,7 +101,7 @@ public:
         obj.m_size    = js[m_size_json_name];
     }
 
-    explicit operator nlohmann::json() const {
+    /* explicit */ operator nlohmann::json() const {
         nlohmann::json result;
         to_json(result, *this);
         return result;

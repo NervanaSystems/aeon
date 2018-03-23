@@ -40,7 +40,7 @@ TEST(typemap, otype_serialize)
 {
     {
         output_type    opt{"int8_t"};
-        nlohmann::json js{ static_cast<nlohmann::json>(opt) };
+        nlohmann::json js = opt;
 
         std::stringstream is;
         is << js;

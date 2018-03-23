@@ -144,7 +144,10 @@ add_definitions(${SOX_CFLAGS_OTHERS})
 
 set(OpenCV_Components core highgui)
 if (BUILD_UNIT_TESTS)
-    list(APPEND OpenCV_Components imgproc imgcodecs)
+    list(APPEND OpenCV_Components imgproc)
+    if (${DISTRIB_ID} STREQUAL "Ubuntu")
+        list(APPEND OpenCV_Components imgcodecs)
+    endif()
 endif()
 
 find_package(OpenCV REQUIRED COMPONENTS ${OpenCV_Components})

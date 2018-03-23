@@ -14,9 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <json.hpp>
+
 #include "ofi_connector.hpp"
 #include "../log.hpp"
-#include "../json.hpp"
 
 using std::string;
 
