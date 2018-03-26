@@ -135,7 +135,7 @@ else()
 endif()
 
 find_package(NlohmannJson REQUIRED)
-include_directories(${NLOHMANN_JSON_INCLUDE_DIRS})
+include_directories(SYSTEM ${NLOHMANN_JSON_INCLUDE_DIRS})
 
 pkg_check_modules(SOX REQUIRED sox)
 include_directories(${SOX_INCLUDE_DIRS})
@@ -145,14 +145,13 @@ add_definitions(${SOX_CFLAGS_OTHERS})
 set(OpenCV_Components core highgui)
 if (BUILD_UNIT_TESTS)
     list(APPEND OpenCV_Components imgproc)
-    if (${DISTRIB_ID} STREQUAL "Ubuntu")
+    if (${DISTRIB_ID} STREQUAL "Ubuntu" AND NOT ${DISTRIB_RELEASE} VERSION_LESS "17.04")
         list(APPEND OpenCV_Components imgcodecs)
     endif()
 endif()
 
 find_package(OpenCV REQUIRED COMPONENTS ${OpenCV_Components})
-
-include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
 link_directories(${OpenCV_LIBRARY_DIRS})
 
 # Check for Curl (required by Aeon client and NDS connector)

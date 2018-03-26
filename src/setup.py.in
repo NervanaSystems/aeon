@@ -52,6 +52,8 @@ lib_dirs += getoutput("pkg-config --libs-only-L sox")
 libs += ' ' + getoutput("pkg-config --libs-only-l sox")
 libs += ' -lcurl'
 
+include_dirs += ' ${NLOHMANN_JSON_INCLUDE_DIRS}'
+
 include_dirs += ' ${Boost_INCLUDE_DIRS}'
 lib_dirs += ' ${Boost_LIBRARY_DIRS}'
 libs += ' -lboost_system -lboost_filesystem'
