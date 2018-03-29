@@ -67,7 +67,9 @@ int main(int argc, char** argv)
     json label_config = {{"type", "label"},
                                {"binary", false}};
     json aug_config = {{{"type", "image"},
-                             {"flip_enable", true}}};
+                             {"flip_enable", true},
+                             {"plugin_filename", "rotate"},
+                             {"plugin_params", {{"angle", {-45,45}}}}}};
     json config = {{"manifest_root", manifest_root},
                          {"manifest_filename", manifest},
                          {"batch_size", batch_size},

@@ -17,7 +17,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 # Set this flag before project definition to avoid using other compiler by gtest
-set(CMAKE_C_COMPILER "clang")
 set(CMAKE_CXX_COMPILER "clang++")
 
 project(aeon C CXX)
@@ -37,14 +36,16 @@ set(AEON_BUILD_NUMBER 0)
 set(AEON_VERSION ${AEON_VERSION_MAJOR}.${AEON_VERSION_MINOR}.${AEON_VERSION_PATCH}
                  CACHE STRING "AEON logical version")
 
+add_definitions(-DBUILD_VERSION_MAJOR=${AEON_VERSION_MAJOR}
+                -DBUILD_VERSION_MINOR=${AEON_VERSION_MINOR}
+                -DBUILD_VERSION_PATCH=${AEON_VERSION_PATCH}
+                -DBUILD_BUILD_NUMBER=${AEON_BUILD_NUMBER})
+
 option(ENABLE_AEON_SERVICE "Enable compilation of AEON Service" OFF)
 option(ENABLE_AEON_CLIENT "Enable compilation of AEON Client" ON)
 option(ENABLE_OPENFABRICS_CONNECTOR "Enable OpenFabrics connector for batch exchange between service and client" OFF)
-option(BUILD_UNIT_TESTS "Enable compilation of unit tests during the build of AEON" ON)
 
 include(cmake/summary.cmake)
-include(GNUInstallDirs)
-include(cmake/platform.cmake)
 
 if(APPLE)
     set(CMAKE_MACOSX_RPATH 1)
@@ -68,13 +69,13 @@ if(COVERAGE)
   endif()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
   set(LCOVERAGE "--coverage")
-endif()
+endif(COVERAGE)
 
 option(PYTHON_PLUGIN "Enable support of custom python plugins in augmentation pipeline" OFF)
 if(PYTHON_PLUGIN)
     add_definitions(-DPYTHON_PLUGIN)
     list(APPEND CMAKE_CXX_FLAGS "-DPYTHON_PLUGIN")
-endif()
+endif(PYTHON_PLUGIN)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
@@ -126,35 +127,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
 find_package(Threads)
 find_package(PkgConfig REQUIRED)
 
-if (NOT ${DISTRIB_ID} STREQUAL "Ubuntu")
-    set(NLOHMANN_JSON_DIR "include")
-else()
-    if (${DISTRIB_RELEASE} VERSION_LESS "17.10")
-        set(NLOHMANN_JSON_DIR "include")
-    endif()
-endif()
-
-find_package(NlohmannJson REQUIRED)
-include_directories(SYSTEM ${NLOHMANN_JSON_INCLUDE_DIRS})
-
 pkg_check_modules(SOX REQUIRED sox)
 include_directories(${SOX_INCLUDE_DIRS})
 link_directories(${SOX_LIBRARY_DIRS})
 add_definitions(${SOX_CFLAGS_OTHERS})
 
-set(OpenCV_Components core highgui)
-if (BUILD_UNIT_TESTS)
-    list(APPEND OpenCV_Components imgproc)
-    if (${DISTRIB_ID} STREQUAL "Ubuntu" AND NOT ${DISTRIB_RELEASE} VERSION_LESS "17.04")
-        list(APPEND OpenCV_Components imgcodecs)
-    endif()
-endif()
+find_package(OpenCV REQUIRED)
 
-find_package(OpenCV REQUIRED COMPONENTS ${OpenCV_Components})
-include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
+include_directories(${OpenCV_INCLUDE_DIRS})
 link_directories(${OpenCV_LIBRARY_DIRS})
 
-# Check for Curl (required by Aeon client and NDS connector)
+# opecv_ts is for testing opencv. if it is left in the lib list then we get an error when
+# the unit test exits.
+# Centos like os:
+list(REMOVE_ITEM OpenCV_LIBRARIES "${OpenCV_LIB_DIR_OPT}/libopencv_ts.so")
+# Ubuntu like os:
+list(REMOVE_ITEM OpenCV_LIBRARIES opencv_ts)
+
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 link_directories(${CURL_LIBRARY_DIRS})
@@ -180,7 +169,7 @@ if (PYTHONLIBS_FOUND)
         link_directories(${PYTHON_LIBRARY_DIRS})
         include_directories(SYSTEM ${NUMPY_INCLUDE_DIRS})
         link_directories(${NUMPY_LIBRARY_DIRS})
-    endif()
+    endif(NUMPY_FOUND)
 else()
     unset(PYTHON_LIBRARIES)
 endif (PYTHONLIBS_FOUND)
@@ -208,6 +197,12 @@ if (ENABLE_OPENFABRICS_CONNECTOR)
     link_directories(${OPENFABRICS_LIBRARY_DIRS})
 endif()
 
+# Check for BOOST components
+find_package(Boost REQUIRED COMPONENTS system filesystem)
+
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 
 if (ENABLE_AEON_SERVICE)
@@ -221,47 +216,29 @@ if (ENABLE_AEON_CLIENT)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_AEON_CLIENT")
 endif()
 
-# Check for Boost components
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
-
 # Check for documentation prerequisites
 find_package(LATEX)
 find_package(Doxygen)
 find_package(Sphinx)
 find_package(Breathe)
 
-if (BUILD_UNIT_TESTS)
-  include_directories(BEFORE gtest/googletest/include)
-  include_directories(BEFORE gtest/googlemock/include)
-  set(BUILD_SHARED_LIBS off)
-  add_subdirectory(gtest)
-  set(BUILD_SHARED_LIBS on)
-endif()
+include_directories(BEFORE gtest/googletest/include)
+include_directories(BEFORE gtest/googlemock/include)
+set(BUILD_SHARED_LIBS off)
+add_subdirectory(gtest)
+set(BUILD_SHARED_LIBS on)
 add_subdirectory(src)
 if (ENABLE_AEON_SERVICE)
-  add_subdirectory(src/service)
+add_subdirectory(src/service)
 endif()
 include_directories(src)
 if (ENABLE_AEON_CLIENT)
-  include_directories(src/client)
+include_directories(src/client)
 endif()
-if (BUILD_UNIT_TESTS)
-  add_subdirectory(test)
-endif()
-add_subdirectory(doc)
+add_subdirectory(test)
 add_subdirectory(examples)
-
+add_subdirectory(doc)
 include(cmake/clang-format.cmake)
 include(cmake/coverage.cmake)
 
 print_configuration_summary()
-
-unset(ENABLE_AEON_SERVICE CACHE)
-unset(ENABLE_AEON_CLIENT CACHE)
-unset(ENABLE_OPENFARBICS_CONNECTOR CACHE)
-unset(PYTHON_PLUGIN CACHE)
-unset(BUILD_UNIT_TESTS CACHE)
-unset(BUILD_EXAMPLES CACHE)
-

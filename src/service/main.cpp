@@ -26,6 +26,7 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include "version.hpp"
 #include "log.hpp"
 #include "pidfile.hpp"
 #include "service.hpp"
@@ -75,9 +76,10 @@ namespace
 
         inline std::ostream& titleinfo(std::ostream& outs)
         {
-            outs << "Intel(R) AEON Service " << VERSION_MAJOR << "." << VERSION_MINOR
-                 << "." << VERSION_PATCH << " (build " << BUILD_NUMBER << ")"
+            outs << "Intel(R) AEON Service " << aeon::version::major << "." << aeon::version::minor
+                 << " (build " << aeon::build::number << ")"
                  << "\nCopyright (C) 2017-2018 by Intel Corporation. All rights reserved.\n\n";
+
 
             return outs;
         }

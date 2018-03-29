@@ -12,8 +12,6 @@ See the new features in our latest release.
 
 # Getting Started
 
-Aeon does not support other than official Python distributions and may not work.
-
 ## Installation
 
 First grab Aeon's dependencies:
@@ -46,6 +44,25 @@ First grab Aeon's dependencies:
     brew install sox
     brew install boost
 
+## Distributed Aeon
+
+Please take a look at [distributed documentation](http://aeon.nervanasys.com/index.html/service.html).
+
+## Code coverage
+
+    Code coverage in aeon depends on llvm-cov and lcov.
+    Report will be generated in html-coverage-report/index.html
+
+    Example:
+
+    sudo apt-get install llvm lcov
+    mkdir build
+    cd build
+    # COVERAGE flag must be set to generate coverage report
+    cmake .. -DCOVERAGE=ON
+    # If you want to generate report when unit test fails: make -i coverage
+    make coverage
+
 ### To install Aeon:
 
     git clone https://github.com/NervanaSystems/aeon.git
@@ -66,27 +83,6 @@ Note: if installing system wide (as opposed to within a virtual environment) you
 
 Now continue on to the [user guide](http://aeon.nervanasys.com/index.html/user_guide.html) to get started using aeon. Or to the
 [developer guide](http://aeon.nervanasys.com/index.html/developer_guide.html) to developing custom loaders/transformers.
-
-
-## Distributed Aeon
-
-Please take a look at [distributed documentation](http://aeon.nervanasys.com/index.html/service.html).
-
-## Code coverage
-Please do not use code coverage in production. It is only for development. Python bindings are not supported when built with coverage.
-
-    Code coverage in aeon depends on llvm-cov and lcov.
-    Report will be generated in html-coverage-report/index.html
-
-    Example:
-
-    sudo apt-get install llvm lcov
-    mkdir build
-    cd build
-    # COVERAGE flag must be set to generate coverage report
-    cmake .. -DCOVERAGE=ON
-    # If you want to generate report when unit test fails: make -i coverage
-    make coverage
 
 # Documentation
 

@@ -101,7 +101,7 @@ TEST(typemap, shapetype_serialize)
         std::vector<std::string> axis_names{"dim1", "dim2", "dim3"};
         s1.set_names(axis_names);
 
-        nlohmann::json    js = static_cast<nlohmann::json>(s1);
+        nlohmann::json    js = s1;
         std::stringstream is;
         is << js;
 

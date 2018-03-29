@@ -1,4 +1,4 @@
-# ****************************************************************************** 
+# ******************************************************************************
 # Copyright 2017-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,11 @@
 # limitations under the License.
 # ******************************************************************************
 
-install(DIRECTORY augmentation_assistant DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples/)
-install(DIRECTORY cpp_iterator DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples/)
-install(DIRECTORY python_iterator DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples/)
-install(DIRECTORY localization_drawer DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples/)
+add_subdirectory(cpp_iterator)
+add_subdirectory(augmentation_assistant)
+if (PYTHON_PLUGIN)
+    add_subdirectory(plugins)
+endif()
+if (ENABLE_AEON_SERVICE)
+    add_subdirectory(cpp_remote_iterator)
+endif()

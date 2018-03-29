@@ -104,17 +104,11 @@ public:
         {
             try
             {
-                std::string bufString((const char*)buf, bufSize);
-                lbl = std::stoi(bufString);
+                lbl = std::stoi(std::string((const char*)buf, bufSize));
             }
             catch (const std::invalid_argument& ex)
             {
-                const char* charValues = static_cast<const char*>(buf);
-                std::string integerValues;
-                for(unsigned i = 0; i < bufSize; i++)
-                    integerValues.append(std::to_string((int)charValues[i])).append(1, ' ');
-                ERR << "Cannot convert label composed of ASCII values " << integerValues
-                    << "to integer: " << ex.what();
+                ERR << "Cannot convert string to integer: " << ex.what();
                 throw ex;
             }
             catch (const std::out_of_range& ex)

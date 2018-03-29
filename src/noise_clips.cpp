@@ -47,7 +47,7 @@ void noise_clips::load_index(const std::string& index_file, const std::string& r
 
     if (!ifs)
     {
-        throw std::runtime_error("Could not open " + index_file);
+        throw std::ios_base::failure("Could not open " + index_file);
     }
 
     string line;

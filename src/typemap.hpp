@@ -18,7 +18,7 @@
 
 #include <map>
 #include <opencv2/core/core.hpp>
-#include <json.hpp>
+#include "json.hpp"
 
 #ifdef PYTHON_FOUND
 #include <Python.h>
@@ -101,12 +101,6 @@ public:
         obj.m_size    = js[m_size_json_name];
     }
 
-    /* explicit */ operator nlohmann::json() const {
-        nlohmann::json result;
-        to_json(result, *this);
-        return result;
-    }
-
     std::string m_tp_name;
     int         m_np_type;
     int         m_cv_type;
@@ -178,7 +172,7 @@ public:
     friend void to_json(nlohmann::json& out, const nervana::shape_type& obj)
     {
         out[m_shape_json_name]     = obj.m_shape;
-        out[m_otype_json_name]     = static_cast<nlohmann::json>(obj.m_otype);
+        out[m_otype_json_name]     = obj.m_otype;
         out[m_byte_size_json_name] = obj.m_byte_size;
         out[m_names_json_name]     = obj.m_names;
     }
@@ -199,12 +193,6 @@ public:
         {
             obj.m_names.push_back(name);
         }
-    }
-
-    explicit operator nlohmann::json () const {
-        nlohmann::json result;
-        to_json(result, *this);
-        return result;
     }
 
     std::ostream& serialize(std::ostream& out) const;

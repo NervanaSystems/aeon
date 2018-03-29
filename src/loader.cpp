@@ -300,7 +300,7 @@ bool loader_factory::remote_version(const json& config)
     {
         config.at("remote");
     }
-    catch (const std::exception&)
+    catch (json::out_of_range)
     {
         return false;
     }

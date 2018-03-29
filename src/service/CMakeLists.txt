@@ -23,11 +23,6 @@ add_executable(aeon-service ${AEON_SERVICE_SOURCES} ${AEON_SERVICE_HEADERS})
 target_link_libraries(aeon-service aeon ${CMAKE_THREAD_LIBS_INIT}
         ${Boost_LIBRARIES} ${CPPREST_LIBRARIES} ${OPENSSL_LIBRARIES})
 
-target_compile_definitions(aeon-service PRIVATE
-        VERSION_MAJOR=${AEON_VERSION_MAJOR}
-        VERSION_MINOR=${AEON_VERSION_MINOR}
-        VERSION_PATCH=${AEON_VERSION_PATCH}
-        BUILD_NUMBER=${AEON_BUILD_NUMBER})
-
-install(TARGETS aeon-service DESTINATION ${CMAKE_INSTALL_SBINDIR})
-
+install(TARGETS aeon-service DESTINATION sbin)
+# we need to run ldconfig to make aeon library visible for aeon-service
+install(CODE "execute_process(COMMAND ldconfig)")

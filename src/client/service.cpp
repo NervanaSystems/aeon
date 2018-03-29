@@ -73,18 +73,38 @@ service_status_type nervana::service_status_type_from_string(const string& input
 }
 
 nervana::service_status::service_status(const json& input)
-  : type{ service_status_type_from_string( input.at("type")) }
 {
-    try {
+    string type_str;
+    try
+    {
+        type_str = input.at("type");
+    }
+    catch (const nlohmann::detail::out_of_range&)
+    {
+        throw invalid_argument("cannot parse service_status: no 'type' field provided");
+    }
+
+    try
+    {
+        type = service_status_type_from_string(type_str);
+    }
+    catch (const exception& ex)
+    {
+        throw invalid_argument(string("cannot parse service_status: ") + ex.what());
+    }
+
+    try
+    {
         description = input.at("description");
-    } catch (const std::exception&) {
-      // it's ok not to have description
+    }
+    catch (const exception&) // it's ok to not have description
+    {
         description = "";
     }
 }
 
 nervana::service_connector::service_connector(std::shared_ptr<http_connector> http)
-    : m_http{ std::move(http) }
+    : m_http(http)
 {
 }
 
@@ -181,7 +201,7 @@ service_response<names_and_shapes>
     {
         serialized_nas = json_response.at("names_and_shapes");
     }
-    catch (const std::out_of_range&)
+    catch (const nlohmann::detail::out_of_range&)
     {
         throw runtime_error("no field 'names_and_shapes' in 'data' object of service response");
     }
@@ -241,7 +261,7 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
     {
         input_json = json::parse(input);
     }
-    catch (const std::exception& ex)
+    catch (const nlohmann::detail::exception& ex)
     {
         throw runtime_error(string("cannot parse json: ") + ex.what());
     }
@@ -251,7 +271,7 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
     {
         status_json = input_json.at("status");
     }
-    catch (const std::out_of_range&)
+    catch (const nlohmann::detail::out_of_range&)
     {
         throw runtime_error("service response does not contain status field");
     }
@@ -261,7 +281,7 @@ void nervana::service_connector::extract_status_and_json(const string&   input,
     {
         output_json = input_json.at("data");
     }
-    catch (const std::out_of_range&)
+    catch (const nlohmann::detail::out_of_range&)
     {
         // no data was provided
         output_json = json({});
@@ -322,7 +342,7 @@ namespace
         {
             return input.at(key);
         }
-        catch (const std::out_of_range&)
+        catch (const nlohmann::detail::out_of_range&)
         {
             throw std::runtime_error("response body does not contain string field '" + key + "': " +
                                      status.to_string());
@@ -336,7 +356,7 @@ namespace
         {
             field = input.at(key);
         }
-        catch (const std::out_of_range&)
+        catch (const nlohmann::detail::out_of_range&)
         {
             throw std::runtime_error("response body does not contain number field '" + key + "': " +
                                      status.to_string());

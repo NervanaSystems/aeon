@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(AEON_SOURCE_FILES
+set (SRC
     async_manager.cpp
     augment_audio.cpp
     augment_image.cpp
@@ -65,7 +65,7 @@ set(AEON_SOURCE_FILES
     output_saver.cpp)
 
 if (ENABLE_AEON_CLIENT)
-    list(APPEND AEON_SOURCE_FILES
+    list(APPEND SRC
         client/curl_connector.cpp
         client/loader_remote.cpp
         client/service.cpp
@@ -73,56 +73,33 @@ if (ENABLE_AEON_CLIENT)
 endif()
 
 if (ENABLE_OPENFABRICS_CONNECTOR)
-    list(APPEND AEON_SOURCE_FILES
+    list(APPEND SRC
          rdma/ofi.cpp
          client/ofi_connector.cpp)
 endif()
 
-set(AEON_HEADER_FILE_NAME aeon.hpp)
-set(AEON_HEADER_FILE_IN ${AEON_HEADER_FILE_NAME}.in)
-set(AEON_HEADER_FILE ${CMAKE_CURRENT_BINARY_DIR}/${AEON_HEADER_FILE_NAME})
-
-configure_file(${AEON_HEADER_FILE_IN} ${AEON_HEADER_FILE} @ONLY)
-
-set(AEON_INSTALLABLE_HEADER_FILES
-    ${AEON_HEADER_FILE})
-
 set(AEON_HEADER_FILES
-    ${AEON_INSTALLABLE_HEADER_FILES})
-
-set(AEON_PKGCONFIG_FILE_NAME libaeon.pc)
-set(AEON_PKGCONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/${AEON_PKGCONFIG_FILE_NAME})
-set(AEON_PKGCONFIG_FILE_IN ${AEON_PKGCONFIG_FILE_NAME}.in)
-
-configure_file(${AEON_PKGCONFIG_FILE_IN} ${AEON_PKGCONFIG_FILE} @ONLY)
-
-set(AEON_CMAKE_FIND_PACKAGE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/Modules/AeonConfig.cmake)
+        version.hpp)
 
 if (PYTHON_FOUND)
-    list(APPEND AEON_SOURCE_FILES
-        api.cpp)
-endif()
+    list(APPEND SRC api.cpp)
+endif(PYTHON_FOUND)
 
 if (PYTHON_PLUGIN)
-    list(APPEND AEON_SOURCE_FILES
-        python_plugin.cpp
-        conversion.cpp
-        python_utils.cpp)
-endif()
+    list(APPEND SRC python_plugin.cpp
+                    conversion.cpp
+                    python_utils.cpp)
+endif(PYTHON_PLUGIN)
 
 set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
 set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/../setup.py")
 configure_file(${SETUP_PY_IN} ${SETUP_PY})
 
-add_library(aeon SHARED ${AEON_SOURCE_FILES} ${AEON_HEADER_FILES})
+add_library(aeon SHARED ${SRC} ${AEON_HEADER_FILES})
 
-install(TARGETS aeon DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${AEON_INSTALLABLE_HEADER_FILES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/aeon/)
-install(FILES ${AEON_PKGCONFIG_FILE} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig/)
-install(FILES ${AEON_CMAKE_FIND_PACKAGE} DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Aeon/)
+install(TARGETS aeon DESTINATION lib)
 
-set(AEON_LIBRARIES ${Boost_LIBRARIES} ${SOX_LIBRARIES} ${CURL_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
+set(AEON_LIBRARIES ${SOX_LIBRARIES} ${CURL_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
 if (ENABLE_OPENFABRICS_CONNECTOR)
     list(APPEND AEON_LIBRARIES ${OPENFABRICS_LIBRARIES})
 endif()
@@ -130,4 +107,3 @@ endif()
 target_link_libraries(aeon ${AEON_LIBRARIES})
 set_target_properties(aeon PROPERTIES VERSION ${AEON_VERSION_MAJOR}.${AEON_VERSION_MINOR}.${AEON_VERSION_PATCH}
                                       SOVERSION ${AEON_VERSION_MAJOR})
-
