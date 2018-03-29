@@ -1,0 +1,46 @@
+{
+    "filename": "000001.jpg",
+    "folder": "VOC2007",
+    "object": [
+        {
+            "bndbox": {
+                "xmax": 194,
+                "xmin": 47,
+                "ymax": 370,
+                "ymin": 239
+            },
+            "difficult": false,
+            "name": "dog",
+            "pose": "Left",
+            "truncated": true
+        },
+        {
+            "bndbox": {
+                "xmax": 351,
+                "xmin": 7,
+                "ymax": 497,
+                "ymin": 11
+            },
+            "difficult": false,
+            "name": "person",
+            "pose": "Left",
+            "truncated": true
+        }
+    ],
+    "owner": {
+        "flickrid": "Fried Camels",
+        "name": "Jinky the Fruit Bat"
+    },
+    "segmented": "0",
+    "size": {
+        "depth": 3,
+        "height": 500,
+        "width": 353
+    },
+    "source": {
+        "annotation": "PASCAL VOC2007",
+        "database": "The VOC2007 Database",
+        "flickrid": "341012865",
+        "image": "flickr"
+    }
+}
