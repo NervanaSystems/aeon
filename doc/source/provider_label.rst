@@ -28,7 +28,7 @@ The configuration for this provider accepts a few parameters:
    :escape: ~
 
    name (string) | ~"~" | Name prepended to the output buffer name
-   binary (bool) | False |
+   binary (bool) | False | Determines whether label is already converted to ASCII format
    output_type (string) | ~"int32_t~" | label data type
 
 The buffers provisioned to the model are:
