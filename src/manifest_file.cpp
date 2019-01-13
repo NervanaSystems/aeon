@@ -274,7 +274,9 @@ vector<vector<string>>* manifest_file::next()
 
 void manifest_file::generate_blocks()
 {
-        std::shuffle(m_record_list.begin(), m_record_list.end(), m_random);
+        if (m_shuffle)
+            std::shuffle(m_record_list.begin(), m_record_list.end(), m_random);
+
         vector<vector<string>> record_list_shuffled;
         record_list_shuffled.resize(m_record_list.size());
 
