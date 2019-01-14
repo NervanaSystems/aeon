@@ -70,12 +70,12 @@ public:
                   int                batch_size      = 1);
 
     virtual ~manifest_file() {}
-    typedef std::vector<std::string> record;
+    using record_t = std::vector<std::string>;
 
     std::string cache_id() override;
     std::string version() override;
 
-    std::vector<std::vector<std::string>>* next() override;
+    std::vector<record_t>* next() override;
     void                                   reset() override;
 
     size_t   block_count() const { return m_block_list.size(); }
@@ -108,7 +108,8 @@ private:
 
     std::vector<std::vector<std::string>>           m_record_list;
     std::string                      m_source_filename;
-    std::vector<std::vector<record>> m_block_list;
+    std::vector<std::vector<record_t>> m_block_list;
+    std::deque<std::vector<record_t>> m_tmp_blocks;
     CryptoPP::CRC32C                 m_crc_engine;
     uint32_t                         m_computed_crc;
     size_t                           m_counter{0};

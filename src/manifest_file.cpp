@@ -260,13 +260,26 @@ const std::vector<manifest_file::element_t>& manifest_file::get_element_types() 
     return m_element_types;
 }
 
-vector<vector<string>>* manifest_file::next()
+vector<manifest_file::record_t>* manifest_file::next()
 {
     vector<vector<string>>* rc = nullptr;
     if (m_counter < m_block_list.size())
     {
         auto load_index = m_block_load_sequence[m_counter];
-        rc              = &(m_block_list[load_index]);
+        if (m_node_count == 0 )
+        {
+            rc  = &(m_block_list[load_index]);
+        }
+        else
+        {
+            // work around for multinode !!!!!!!!!!!!!
+            // /////////////////////////////////////////////////////
+            m_tmp_blocks.push_back(m_block_list[load_index]);
+            if (m_tmp_blocks.size() > 4) m_tmp_blocks.pop_front();
+            rc = &m_tmp_blocks.back();
+            // //////////////////////////////////////////////////
+        }
+
         m_counter++;
     }
     return rc;
@@ -282,25 +295,28 @@ void manifest_file::generate_blocks()
 
         if (m_node_count != 0 )
         {
-            m_record_count = (m_record_list.size() / m_node_count) * m_node_count;
-            int batches = m_record_count / (m_batch_size * m_node_count);
+            int record_count_src = (m_record_list.size() / m_node_count) * m_node_count;
+            m_record_count = m_record_list.size() / m_node_count;
+            int batches = m_record_count / m_batch_size;
             record_list_shuffled.resize(m_record_count);
 
             for (int i = 0; i < batches * m_batch_size; i++)
             {
-                auto batch_num = i % m_batch_size;
-                record_list_shuffled[i] = m_record_list[batch_num * (m_node_count + m_node_id) + i];
+                auto batch_num = i / m_batch_size;
+                auto index_in_batch = i % m_batch_size;
+                record_list_shuffled[i] = m_record_list[batch_num * m_batch_size * m_node_count + m_batch_size * m_node_id + index_in_batch];
             }
-            int tail_count = (m_record_count - m_node_count * batches * m_batch_size) / m_node_count;
-            int tail_src = batches * m_batch_size * m_node_count + tail_count * m_node_id;
-            int tail_dst = batches * m_batch_size;
+            int tail_count = m_record_count - batches * m_batch_size;
+            int tail_src   = batches * m_batch_size * m_node_count + tail_count * m_node_id;
+            int tail_dst   = batches * m_batch_size;
             for (int i = 0; i < tail_count; i++)
                 record_list_shuffled[i + tail_dst] = m_record_list[i + tail_src];
         }
         else
             record_list_shuffled = m_record_list;
 
-
+        // reset block list
+        
         std::vector<block_info> block_list = generate_block_list(m_record_count, m_block_size);
         for (auto info : block_list)
         {
@@ -342,7 +358,7 @@ void manifest_file::generate_subset(vector<vector<string>>& record_list, float s
     {
         std::bernoulli_distribution distribution(subset_fraction);
         std::default_random_engine  generator(0); //get_global_random_seed());
-        vector<record>              tmp;
+        vector<record_t>              tmp;
         tmp.swap(record_list);
         size_t expected_count = tmp.size() * subset_fraction;
         size_t needed         = expected_count;
@@ -368,7 +384,7 @@ uint32_t manifest_file::get_crc()
 
 const std::vector<std::string>& manifest_file::operator[](size_t offset) const
 {
-    for (const vector<record>& block : m_block_list)
+    for (const vector<record_t>& block : m_block_list)
     {
         if (offset < block.size())
         {

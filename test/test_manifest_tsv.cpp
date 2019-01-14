@@ -110,6 +110,37 @@ TEST(manifest, no_shuffle)
     }
 }
 
+TEST(manifest, no_shuffle_multinode)
+{
+
+    manifest_builder       mm1;
+    auto&                  ms1 = mm1.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest(ms1, false, "", 1.0f, 5000, 1234, 0, 0, 3);
+
+    manifest_builder       mmn1;
+    auto&                  msn1 = mmn1.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest_node2(msn1, false, "", 1.0f, 5000, 1234, 0, 2, 3);
+
+    manifest_builder       mmn2;
+    auto&                  msn2 = mmn2.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest_node1(msn2, false, "", 1.0f, 5000, 1234, 1, 2, 3);
+
+
+    ASSERT_EQ(1, manifest_node1.block_count());
+    ASSERT_EQ(1, manifest_node2.block_count());
+
+    // auto& m1_block = *manifest1.next();
+    // auto& m2_block = *manifest2.next();
+
+    // ASSERT_EQ(manifest1.record_count(), manifest2.record_count());
+    // ASSERT_EQ(2, manifest1.elements_per_record());
+    // for (int i = 0; i < manifest1.record_count(); i++)
+    // {
+    //     ASSERT_EQ(m1_block[i][0], m2_block[i][0]);
+    //     ASSERT_EQ(m1_block[i][1], m2_block[i][1]);
+    // }
+}
+
 TEST(manifest, shuffle)
 {
     manifest_builder       mm1;
