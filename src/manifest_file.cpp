@@ -290,12 +290,11 @@ void manifest_file::generate_blocks()
         if (m_shuffle)
             std::shuffle(m_record_list.begin(), m_record_list.end(), m_random);
 
-        vector<vector<string>> record_list_shuffled;
+        vector<record_t> record_list_shuffled;
         record_list_shuffled.resize(m_record_list.size());
 
         if (m_node_count != 0 )
         {
-            int record_count_src = (m_record_list.size() / m_node_count) * m_node_count;
             m_record_count = m_record_list.size() / m_node_count;
             int batches = m_record_count / m_batch_size;
             record_list_shuffled.resize(m_record_count);
@@ -335,21 +334,13 @@ void manifest_file::generate_blocks()
 
 void manifest_file::reset()
 {
-    if (m_node_count == 0 )
+    if (m_shuffle)
     {
-        if (m_shuffle)
-            shuffle(m_block_load_sequence.begin(), m_block_load_sequence.end(), m_random);
-        m_counter = 0;
+        shuffle(m_block_load_sequence.begin(), m_block_load_sequence.end(), m_random);
+        if (m_node_count != 0 )
+            generate_blocks();
     }
-    else
-    {
-        if (m_shuffle)
-           std::shuffle(m_record_list.begin(), m_record_list.end(), m_random);
-        generate_blocks();
-        m_counter = 0;
-    }
-
-
+    m_counter = 0;
 }
 
 void manifest_file::generate_subset(vector<vector<string>>& record_list, float subset_fraction)
