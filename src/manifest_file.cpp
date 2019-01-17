@@ -219,9 +219,6 @@ void manifest_file::initialize(std::istream&      stream,
     }
     m_crc_engine.TruncatedFinal((uint8_t*)&m_computed_crc, sizeof(m_computed_crc));
 
-    // if (m_shuffle)
-    //     std::shuffle(m_record_list.begin(), m_record_list.end(), m_random);
-
     if (!root.empty())
     {
         for (size_t record_number = 0; record_number < m_record_list.size(); record_number++)
@@ -238,21 +235,6 @@ void manifest_file::initialize(std::istream&      stream,
     }
 
     generate_blocks();
-    // // now that we have a list of all records, create blocks
-    // std::vector<block_info> block_list = generate_block_list(m_record_count, block_size);
-    // for (auto info : block_list)
-    // {
-    //     vector<vector<string>> block;
-    //     for (int i = info.start(); i < info.end(); i++)
-    //     {
-    //         block.push_back(m_record_list[i]);
-    //     }
-    //     m_block_list.push_back(block);
-    // }
-
-    // m_block_load_sequence.reserve(m_block_list.size());
-    // m_block_load_sequence.resize(m_block_list.size());
-    // iota(m_block_load_sequence.begin(), m_block_load_sequence.end(), 0);
 }
 
 const std::vector<manifest_file::element_t>& manifest_file::get_element_types() const
@@ -312,8 +294,12 @@ void manifest_file::generate_blocks()
                 record_list_shuffled[i + tail_dst] = m_record_list[i + tail_src];
         }
         else
+        {
+            // TODO rewrite this in more performance friendly way
             record_list_shuffled = m_record_list;
+        }
 
+        // ///////////////////////////////////////////////////////////////////////////////////
         // reset block list
         
         std::vector<block_info> block_list = generate_block_list(m_record_count, m_block_size);

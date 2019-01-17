@@ -117,6 +117,11 @@ void loader_local::initialize(const json& config_json)
     // shared_ptr<manifest> base_manifest;
     sox_format_init();
 
+    if (lcfg.node_count != 0)
+    {
+        if (lcfg.node_id >= lcfg.node_count) throw std::runtime_error("node_id can't be greater than node_count");
+    }
+
     if (nervana::manifest_nds::is_likely_json(lcfg.manifest_filename))
     {
         m_manifest_nds = nervana::manifest_nds_builder()
