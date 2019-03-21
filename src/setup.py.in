@@ -1,0 +1,92 @@
+import os
+import sys
+from setuptools import setup, Extension
+from distutils.sysconfig import get_python_inc
+# Python 2 and 3
+from future import standard_library
+standard_library.install_aliases()
+from subprocess import getoutput, getstatusoutput
+import numpy
+
+# Parallel build from http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
+# monkey-patch for parallel compilation
+def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=None, debug=0, extra_preargs=None, extra_postargs=None, depends=None):
+    # those lines are copied from distutils.ccompiler.CCompiler directly
+    macros, objects, extra_postargs, pp_opts, build = self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
+    cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+    # removing flags unsuported by clang on centos
+    self.compiler = [x for x in self.compiler if x != '-fstack-protector-strong']
+    self.compiler.append('-fstack-protector')
+    self.compiler_so = [x for x in self.compiler_so if x != '-fstack-protector-strong']
+    self.compiler_so.append('-fstack-protector')
+    # parallel code
+    import multiprocessing.pool
+    def _single_compile(obj):
+        try: src, ext = build[obj]
+        except KeyError: return
+        self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
+    # convert to list, imap is evaluated on-demand
+    list(multiprocessing.pool.ThreadPool().imap(_single_compile,objects))
+    return objects
+import distutils.ccompiler
+distutils.ccompiler.CCompiler.compile=parallelCCompile
+
+lib_dirs = ""
+libs = ""
+include_dirs = ""
+
+status, tmp = getstatusoutput("pkg-config --cflags opencv")
+if status != 0:
+    print("required package 'opencv' not found")
+    exit()
+include_dirs += tmp
+lib_dirs += getoutput("pkg-config --libs-only-L opencv")
+libs += getoutput("pkg-config --libs-only-l opencv")
+
+status, tmp = getstatusoutput("pkg-config --cflags sox")
+if status != 0:
+    print("required package 'sox' not found")
+    exit()
+include_dirs += tmp
+lib_dirs += getoutput("pkg-config --libs-only-L sox")
+libs += ' ' + getoutput("pkg-config --libs-only-l sox")
+libs += ' -lcurl'
+
+include_dirs += ' ${Boost_INCLUDE_DIRS}'
+lib_dirs += ' ${Boost_LIBRARY_DIRS}'
+libs += ' -lboost_system -lboost_filesystem'
+
+if '${OPENFABRICS_FOUND}' == 'TRUE':
+    include_dirs += ' -I${OPENFABRICS_INCLUDE_DIRS} '
+    lib_dirs += ' -L${OPENFABRICS_LIBRARY_DIRS} '
+    libs += ' -lfabric '
+
+os.environ["CC"] = "clang++"
+src_list = "${SRC}".split(";")
+sources = [
+    '${CMAKE_CURRENT_SOURCE_DIR}/'+src for src in src_list
+]
+
+include_dirs = include_dirs.replace('-I', '')
+include_dirs += get_python_inc() + ' ' + numpy.get_include()
+
+include_dirs = include_dirs.split()
+libs = libs.replace('-l', '').split()
+lib_dirs = lib_dirs.replace('-L','').split()
+extra_compile_args = "${CMAKE_CXX_FLAGS}".split(' ')
+
+
+module = Extension(
+    'aeon',
+    sources=sources,
+    include_dirs=include_dirs,
+    libraries=libs,
+    library_dirs=lib_dirs,
+    extra_compile_args=extra_compile_args,
+)
+
+setup(
+    name='nervana-aeon',
+    version='${AEON_VERSION}',
+    ext_modules=[module]
+)

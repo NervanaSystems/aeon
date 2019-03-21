@@ -1,0 +1,133 @@
+# ChangeLog
+
+## v1.3.1 (2018-01-09)
+* Code changes:
+   * bugfix: of cmake showing error when it could not find Sphinx
+   * bugfix: cmake DEBUG flag has proper case sensitivity now (Debug instead of DEBUG)
+   * copyright notice headers updated
+   * added diagnostic endpoint to aeon service 
+   * (optional) Python plugins performing transformations added 
+      * can be called after aeon built-in transformations.
+      * created directory examples/plugins with example usage
+      * created "plugins" directory with example plugins
+* Documentation changes:
+   * doc update with libssl-dev requirement
+   * support for Ubuntu 14.04 LTS ended, recommended update to 16.04 LTS
+   * aeon service doc update (openfabrics installation, health endpoint)
+   * docs on Python plugins:
+      * documentation doc/source/augmentation_plugins.rst
+* New dependencies:
+   * For Python plugins:
+      * yaml
+      * OpenCV version matching Python version
+   * Sphinx and breathe no longer required for source building (only for docs)
+* API changes:
+   * For Python plugins:
+      * "plugin_filename" field added under "augmentations"
+      * "plugin_params" filed added under "augmentations"
+   * For aeon service:
+      * health endpoint added
+
+
+## v1.3.0 (2017-12-13)
+* Code changes:
+   * Distributed dataloading using HTTP or RDMA transfer
+   * Re-enabling of NDS support
+   * cmake files improvements
+* API changes:
+   * session_id field added
+* New dependencies:
+   * boost-filesystem
+   * boost-system
+   * For distributed:
+      * cpprestsdk
+      * libfabric (optional)
+
+
+## v1.2.0 (2017-11-24)
+* Batch transpose implemented in aeon and configurable with `batch_major` field
+
+
+## v1.1.0 (2017-11-13)
+* Working deterministic mode
+* Shared thread pool
+* Refactoring of box classes
+
+
+## v1.0.0 (2017-09-19)
+* Internal Changes
+   * No longer rely upon a python backend for initiating transfers to device (all prepared data now remains on host)
+   * Use of async_manager class to manage all double-buffered workflow
+   * Removal of support for post-processing of a decoded and loaded batch (was only used for packing transcripts)
+   * Performance optimizations for batch processing pipeline
+* Enhancements
+   * Modular providers supported by mixing and matching etl components
+   * Direct c++ interface to loader as an iterator
+   * Python loader implemented via python c-api
+   * Unicode support for char_map
+   * support for SSD topology
+
+
+## v0.2.7 (2017-03-02)
+* Bug fix for clean termination
+
+
+## v0.2.6 (2016-11-16)
+* Bug fix for clean termination
+
+
+## v0.2.5 (2016-11-15)
+* General code cleanup
+* Add prefetch to double-buffer reads for NDS and file block reading
+* Add class to manage python gil state
+* Fix compilation on centos 7
+
+
+## v0.2.4 (2016-11-02)
+* Bug fix for subset sampling of manifest files when block size is small
+   * In general, more robust handling of subset sampling is now done over entire manifest
+   * Associated unit tests
+* Bug fix for format handling in sox when running in
+* Prevent multiple processes from writing to same cache at the same time
+    * Use crc to compute cache hash based on manifest content instead of modification time
+    * Associated unit tests
+* Add configurable unkown value for character mapping ETL pipeline
+    * Associated unit tests
+
+
+## v0.2.3 (2016-10-18)
+* Add noise_root path option for relative noise index files
+* Bug fix for filterbank shaping
+* Bug fix for stereo image provider creation
+
+
+## v0.2.2 (2016-10-13)
+* Add manifest_root path option for cvs manifest files
+* Bug fixes for python 3 compatibility
+    * Retain reference count on python backend object
+* Refactor protobackends and tests
+
+
+## v0.2.1 (2016-10-07)
+* Localization improvements
+    * Bug fix: Handle >64 ground truth bounding boxes
+* Image improvements
+    * Add 'hue' argument to image augmentation where 'hue' can be set from 0..360 degrees
+* Stereo provider improvements
+    * stereo_image,blob provides direct passthrough of arbitrary binary blob
+
+
+## v0.2.0 (2016-09-23):
+* Improved documentation
+* Audio improvements
+    * Sox based extraction to handle more formats natively
+    * Time domain output
+    * Bug Fix: normalization for spectral outputs to ignore padded regions
+* Image improvements
+    * Unified image handling for variable sized images and fixed output sizes
+    * Bug fix: correct photometric augmentation
+* Additional provider types
+    * Localization provider for faster-rcnn style networks
+    * Stereo image provider
+* Bug fix: Better handling of subset percentage for caching loader
+
