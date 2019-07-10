@@ -303,6 +303,7 @@ void manifest_file::generate_blocks()
         // reset block list
         
         std::vector<block_info> block_list = generate_block_list(m_record_count, m_block_size);
+        m_block_list.clear();
         for (auto info : block_list)
         {
             vector<vector<string>> block;
