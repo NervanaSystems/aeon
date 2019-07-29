@@ -527,9 +527,81 @@ TEST(loader, loader_factory_remote)
 }
 #endif
 
+void benchmark_imagenet(json config, char* batch_delay, size_t batch_size)
+{
+    chrono::high_resolution_clock                     timer;
+    chrono::time_point<chrono::high_resolution_clock> start_time;
+    chrono::time_point<chrono::high_resolution_clock> zero_time;
+    chrono::milliseconds                              total_time{0};
+    stopwatch                                         batch_delay_watch;
+    size_t                                            total_average_delay_time{0};
+
+    try
+    {
+        loader_factory factory;
+        auto           train_set = factory.get_loader(config);
+
+        size_t       total_batch   = ceil((float)train_set->record_count() / (float)batch_size);
+        size_t       current_batch = 0;
+        const size_t batches_per_output = 10;
+        for (const nervana::fixed_buffer_map& x : *train_set)
+        {
+            if (batch_delay != NULL)
+            {
+                batch_delay_watch.stop();
+                int delay_in_ms = std::stoi(batch_delay);
+                usleep(1000 * delay_in_ms);
+            }
+            (void)x;
+            if (++current_batch % batches_per_output == 0)
+            {
+                auto last_time = start_time;
+                start_time     = timer.now();
+                float ms_time =
+                    chrono::duration_cast<chrono::milliseconds>(start_time - last_time).count();
+                float sec_time = ms_time / 1000.;
+                cout << "batch " << current_batch << " of " << total_batch;
+                if (last_time != zero_time)
+                {
+                    cout << " time " << ms_time;
+                    cout << " " << (float)batches_per_output / sec_time << " batches/s";
+                    total_time +=
+                        chrono::duration_cast<chrono::milliseconds>(start_time - last_time);
+                    cout << "\t\taverage "
+                         << (float)(current_batch - batches_per_output) /
+                                (total_time.count() / 1000.0f)
+                         << " batches/s" << endl;
+                    if (batch_delay != NULL)
+                    {
+                        size_t current_delay = batch_delay_watch.get_total_microseconds() /
+                                               batch_delay_watch.get_call_count();
+                        total_average_delay_time += current_delay;
+                        batch_delay_watch = stopwatch();
+                        cout << "batch delay " << current_delay << "us\t\t average "
+                             << total_average_delay_time /
+                                    ((current_batch - batches_per_output) / batches_per_output)
+                             << "us" << endl;
+                    }
+                }
+                cout << endl;
+            }
+            if (batch_delay != NULL)
+            {
+                batch_delay_watch.start();
+            }
+        }
+    }
+    catch (exception& err)
+    {
+        cout << "error processing dataset" << endl;
+        cout << err.what() << endl;
+    }
+}
+
 TEST(benchmark, imagenet)
 {
     char* manifest_root = getenv("TEST_IMAGENET_ROOT");
+    char* manifest_name = getenv("TEST_IMAGENET_MANIFEST");
     char* cache_root    = getenv("TEST_IMAGENET_CACHE");
     char* address       = getenv("TEST_IMAGENET_ADDRESS");
     char* port          = getenv("TEST_IMAGENET_PORT");
@@ -538,6 +610,7 @@ TEST(benchmark, imagenet)
     char* session_id    = getenv("TEST_IMAGENET_SESSION_ID");
     char* async         = getenv("TEST_IMAGENET_ASYNC");
     char* batch_delay   = getenv("TEST_IMAGENET_BATCH_DELAY");
+    char* bsz           = getenv("TEST_IMAGENET_BATCH_SIZE");
 
     if (!manifest_root)
     {
@@ -548,7 +621,18 @@ TEST(benchmark, imagenet)
         int    height     = 224;
         int    width      = 224;
         size_t batch_size = 128;
-        string manifest   = file_util::path_join(manifest_root, "train-index.csv");
+        if (bsz)
+        {
+            std::istringstream iss(bsz);
+            iss >> batch_size;
+        }
+        std::string manifest_filename = "train-index.csv";
+        if (manifest_name)
+        {
+            std::istringstream iss(manifest_name);
+            iss >> manifest_filename;
+        }
+        string manifest = file_util::path_join(manifest_root, manifest_filename);
 
         json image_config = {
             {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
@@ -590,73 +674,73 @@ TEST(benchmark, imagenet)
             }
         }
 
-        chrono::high_resolution_clock                     timer;
-        chrono::time_point<chrono::high_resolution_clock> start_time;
-        chrono::time_point<chrono::high_resolution_clock> zero_time;
-        chrono::milliseconds                              total_time{0};
-        stopwatch                                         batch_delay_watch;
-        size_t                                            total_average_delay_time{0};
+        benchmark_imagenet(config, batch_delay, batch_size);
+    }
+}
 
-        try
-        {
-            loader_factory factory;
-            auto           train_set = factory.get_loader(config);
+TEST(benchmark, imagenet_paddle)
+{
+    char* manifest_root = getenv("TEST_IMAGENET_ROOT");
+    char* manifest_name = getenv("TEST_IMAGENET_MANIFEST");
+    char* cache_root    = getenv("TEST_IMAGENET_CACHE");
+    char* batch_delay   = getenv("TEST_IMAGENET_BATCH_DELAY");
+    char* bsz           = getenv("TEST_IMAGENET_BATCH_SIZE");
 
-            size_t       total_batch   = ceil((float)train_set->record_count() / (float)batch_size);
-            size_t       current_batch = 0;
-            const size_t batches_per_output = 10;
-            for (const nervana::fixed_buffer_map& x : *train_set)
-            {
-                if (batch_delay != NULL)
-                {
-                    batch_delay_watch.stop();
-                    int delay_in_ms = std::stoi(batch_delay);
-                    usleep(1000 * delay_in_ms);
-                }
-                (void)x;
-                if (++current_batch % batches_per_output == 0)
-                {
-                    auto last_time = start_time;
-                    start_time     = timer.now();
-                    float ms_time =
-                        chrono::duration_cast<chrono::milliseconds>(start_time - last_time).count();
-                    float sec_time = ms_time / 1000.;
-                    cout << "batch " << current_batch << " of " << total_batch;
-                    if (last_time != zero_time)
-                    {
-                        cout << " time " << ms_time;
-                        cout << " " << (float)batches_per_output / sec_time << " batches/s";
-                        total_time +=
-                            chrono::duration_cast<chrono::milliseconds>(start_time - last_time);
-                        cout << "\t\taverage "
-                             << (float)(current_batch - batches_per_output) /
-                                    (total_time.count() / 1000.0f)
-                             << " batches/s" << endl;
-                        if (batch_delay != NULL)
-                        {
-                            size_t current_delay = batch_delay_watch.get_total_microseconds() /
-                                                   batch_delay_watch.get_call_count();
-                            total_average_delay_time += current_delay;
-                            batch_delay_watch = stopwatch();
-                            cout << "batch delay " << current_delay << "us\t\t average "
-                                 << total_average_delay_time /
-                                        ((current_batch - batches_per_output) / batches_per_output)
-                                 << "us" << endl;
-                        }
-                    }
-                    cout << endl;
-                }
-                if (batch_delay != NULL)
-                {
-                    batch_delay_watch.start();
-                }
-            }
-        }
-        catch (exception& err)
+    if (!manifest_root)
+    {
+        cout << "Environment vars TEST_IMAGENET_ROOT not found\n";
+    }
+    else
+    {
+        int    height     = 224;
+        int    width      = 224;
+        size_t batch_size = 128;
+        if (bsz)
         {
-            cout << "error processing dataset" << endl;
-            cout << err.what() << endl;
+            std::istringstream iss(bsz);
+            iss >> batch_size;
         }
+        std::string manifest_filename = "train-index.csv";
+        if (manifest_name)
+        {
+            std::istringstream iss(manifest_name);
+            iss >> manifest_filename;
+        }
+        string manifest = file_util::path_join(manifest_root, manifest_filename);
+
+        json image_config = {{"type", "image"},
+                             {"height", height},
+                             {"width", width},
+                             {"channels", 3},
+                             {"output_type", "float"},
+                             {"channel_major", true},
+                             {"bgr_to_rgb", true}};
+
+        json label_config = {{"type", "label"}, {"binary", false}};
+
+        auto aug_config = vector<json>{{{"type", "image"},
+                                        {"flip_enable", true},
+                                        {"center", false},
+                                        {"crop_enable", true},
+                                        {"horizontal_distortion", {3. / 4., 4. / 3.}},
+                                        {"do_area_scale", true},
+                                        {"scale", {0.08, 1.0}},
+                                        {"mean", {0.485, 0.456, 0.406}},
+                                        {"stddev", {0.229, 0.224, 0.225}},
+                                        {"resize_short_size", 0}}};
+
+        json config = {{"manifest_root", manifest_root},
+                       {"manifest_filename", manifest},
+                       {"shuffle_enable", true},
+                       {"shuffle_manifest", true},
+                       {"batch_size", batch_size},
+                       {"iteration_mode", "INFINITE"},
+                       {"cache_directory", cache_root},
+                       {"decode_thread_count", 0},
+                       {"etl", {image_config, label_config}},
+                       {"augmentation", aug_config}};
+
+        benchmark_imagenet(config, batch_delay, batch_size);
     }
 }
 
