@@ -156,6 +156,7 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
     settings->saturation             = saturation(random);
     settings->padding                = padding;
     settings->debug_output_directory = debug_output_directory;
+    settings->resize_short_size      = resize_short_size;
 
     cv::Size2f input_size = cv::Size(input_width, input_height);
 
@@ -175,7 +176,8 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
         {
             image_scale = nervana::image::calculate_scale(input_size, output_width, output_height);
         }
-        input_size                   = input_size * image_scale;
+        input_size = input_size * image_scale;
+
         settings->output_size.width  = nervana::unbiased_round(input_size.width);
         settings->output_size.height = nervana::unbiased_round(input_size.height);
     }
@@ -190,6 +192,16 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
         float      image_scale            = scale(random);
         float      _horizontal_distortion = horizontal_distortion(random);
         cv::Size2f out_shape(output_width * _horizontal_distortion, output_height);
+
+        // TODO(sfraczek): add test for this resize short
+        if (resize_short_size > 0)
+        {
+            auto percent =
+                static_cast<float>(resize_short_size) / std::min(input_width, input_height);
+            auto resized_width  = static_cast<int>(std::round(input_width * percent));
+            auto resized_height = static_cast<int>(std::round(input_height * percent));
+            input_size          = cv::Size(resized_width, resized_height);
+        }
 
         cv::Size2f cropbox_size = nervana::image::cropbox_max_proportional(input_size, out_shape);
         if (do_area_scale)

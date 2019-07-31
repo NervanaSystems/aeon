@@ -84,6 +84,21 @@ void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size
     }
 }
 
+void image::resize_short(const cv::Mat& input, cv::Mat& output, const int target_size)
+{
+    if (target_size == 0)
+    {
+        output = input;
+        return;
+    }
+
+    auto percent = static_cast<float>(target_size) / std::min(input.cols, input.rows);
+
+    auto resized_width  = static_cast<int>(std::round(input.cols * percent));
+    auto resized_height = static_cast<int>(std::round(input.rows * percent));
+    cv::resize(input, output, cv::Size2i(resized_width, resized_height), 0, 0, CV_INTER_CUBIC);
+}
+
 void image::convert_mix_channels(vector<cv::Mat>& source,
                                  vector<cv::Mat>& target,
                                  vector<int>&     from_to)

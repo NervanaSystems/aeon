@@ -131,6 +131,7 @@ shared_ptr<image::decoded>
 /**
  * rotate
  * expand
+ * resize_short
  * crop
  * resize
  * distort
@@ -150,7 +151,11 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
     else
         expandedImage = rotatedImage;
 
-    cv::Mat croppedImage = expandedImage(img_xform->cropbox);
+    // TODO(sfraczek): add test for this resize short
+    cv::Mat resizedShortImage;
+    image::resize_short(expandedImage, resizedShortImage, img_xform->resize_short_size);
+
+    cv::Mat croppedImage = resizedShortImage(img_xform->cropbox);
     image::add_padding(croppedImage, img_xform->padding, img_xform->padding_crop_offset);
 
     cv::Mat resizedImage;
@@ -163,6 +168,7 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
     photo.lighting(resizedImage, img_xform->lighting, img_xform->color_noise_std);
 
     cv::Mat flippedImage;
+
     if (img_xform->flip)
     {
         cv::flip(resizedImage, flippedImage, 1);

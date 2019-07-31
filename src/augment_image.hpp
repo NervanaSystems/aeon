@@ -82,6 +82,7 @@ public:
         out << "emit_constraint_type " << obj.emit_constraint_type << "\n";
         out << "emit_min_overlap     " << obj.emit_min_overlap << "\n";
         out << "cropbox                " << obj.cropbox << "\n";
+        out << "resize_short_size      " << obj.resize_short_size << "\n";
         out << "output_size            " << obj.output_size << "\n";
         out << "angle                  " << obj.angle << "\n";
         out << "flip                   " << obj.flip << "\n";
@@ -104,6 +105,7 @@ public:
     emit_type          emit_constraint_type = emit_type::undefined;
     float              emit_min_overlap     = 0.f;
     cv::Rect           cropbox;
+    int                resize_short_size = 0;
     cv::Size2i         output_size;
     int                angle = 0;
     bool               flip  = false;
@@ -144,6 +146,7 @@ public:
     bool        do_area_scale                 = false;
     bool        crop_enable                   = true;
     bool        fixed_aspect_ratio            = false;
+    int         resize_short_size             = 0;
     float       expand_probability            = 0.;
     float       fixed_scaling_factor          = -1;
     std::string m_emit_constraint_type        = "";
@@ -224,6 +227,7 @@ private:
                          [](decltype(horizontal_distortion) v) { return v.a() <= v.b(); }),
         ADD_SCALAR(flip_enable, mode::OPTIONAL),
         ADD_SCALAR(center, mode::OPTIONAL),
+        ADD_SCALAR(resize_short_size, mode::OPTIONAL),
         ADD_SCALAR(do_area_scale, mode::OPTIONAL),
         ADD_SCALAR(crop_enable, mode::OPTIONAL),
         ADD_SCALAR(expand_probability, mode::OPTIONAL),
