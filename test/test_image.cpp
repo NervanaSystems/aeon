@@ -257,6 +257,125 @@ bool check_value(shared_ptr<image::decoded> transformed, int x0, int y0, int x1,
     return x1 == (int)value[0] && y1 == (int)value[1];
 }
 
+// TODO(sfraczek): add for fixed_aspect_ratio testing other images than height
+// * width
+void test_bgr_to_rgb(int width, int height, bool channel_major, bool fixed_aspect_ratio)
+{
+    vector<cv::Mat> indexed_images = {generate_indexed_image(height, width),
+                                      generate_indexed_image(height, width)};
+
+    int  channels        = 3;
+    auto bytes_per_image = height * width * channels;
+    auto total_bytes     = bytes_per_image * indexed_images.size();
+
+    std::vector<unsigned char> output_image(total_bytes);
+
+    nlohmann::json js = {{"width", width},
+                         {"height", height},
+                         {"channels", channels},
+                         {"bgr_to_rgb", true},
+                         {"channel_major", channel_major}};
+    image::config cfg(js);
+
+    auto decoded = make_shared<image::decoded>();
+    for (int i = 0; i < indexed_images.size(); i++)
+    {
+        decoded->add(indexed_images[i]);
+    }
+
+    image::loader loader(cfg, fixed_aspect_ratio);
+    loader.load({output_image.data()}, decoded);
+
+    // b 0 - col        0
+    // g 1 - row   -->  row
+    // r 2 - 0          col
+
+    if (channel_major)
+    {
+        int ind = 0;
+        for (int i = 0; i < indexed_images.size(); i++)
+        {
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    EXPECT_EQ(output_image.at(ind++), 0);
+                }
+            }
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    EXPECT_EQ(output_image.at(ind++), row);
+                }
+            }
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    EXPECT_EQ(output_image.at(ind++), col);
+                }
+            }
+        }
+    }
+    else
+    {
+        int ind = 0;
+        for (int i = 0; i < indexed_images.size(); i++)
+        {
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    ASSERT_EQ(static_cast<int>(output_image.at(ind++)), 0);
+                    ASSERT_EQ(static_cast<int>(output_image.at(ind++)), row);
+                    ASSERT_EQ(static_cast<int>(output_image.at(ind++)), col);
+                }
+            }
+        }
+    }
+};
+
+TEST(image, bgr_to_rgb)
+{
+    int  width              = 10;
+    int  height             = 20;
+    bool channel_major      = false;
+    bool fixed_aspect_ratio = false;
+
+    test_bgr_to_rgb(width, height, channel_major, fixed_aspect_ratio);
+}
+
+TEST(image, bgr_to_rgb_channel_major)
+{
+    int  width              = 10;
+    int  height             = 20;
+    bool channel_major      = true;
+    bool fixed_aspect_ratio = false;
+
+    test_bgr_to_rgb(width, height, channel_major, fixed_aspect_ratio);
+}
+
+TEST(image, bgr_to_rgb_fixed_aspect_ratio)
+{
+    int  width              = 10;
+    int  height             = 20;
+    bool channel_major      = false;
+    bool fixed_aspect_ratio = true;
+
+    test_bgr_to_rgb(width, height, channel_major, fixed_aspect_ratio);
+}
+
+TEST(image, bgr_to_rgb_channel_major_fixed_aspect_ratio)
+{
+    int  width              = 10;
+    int  height             = 20;
+    bool channel_major      = true;
+    bool fixed_aspect_ratio = true;
+
+    test_bgr_to_rgb(width, height, channel_major, fixed_aspect_ratio);
+}
+
 TEST(image, transform_crop)
 {
     auto                  indexed = generate_indexed_image(256, 256);
@@ -786,6 +905,20 @@ TEST(image, config_bad_scale)
                          {"scale", {0.5, 1.5}},
                          {"channel_major", false},
                          {"flip_enable", false}};
+
+    EXPECT_THROW(image::config{js}, std::invalid_argument);
+}
+
+TEST(image, config_bgr_to_rgb_but_1_channels)
+{
+    int            height   = 128;
+    int            width    = 256;
+    int            channels = 1;
+    nlohmann::json js       = {{"type", "image"},
+                         {"height", height},
+                         {"width", width},
+                         {"channels", channels},
+                         {"bgr_to_rgb", true}};
 
     EXPECT_THROW(image::config{js}, std::invalid_argument);
 }

@@ -60,6 +60,11 @@ void image::config::validate()
     {
         throw invalid_argument("invalid height");
     }
+    if (bgr_to_rgb && channels != 3)
+    {
+        throw invalid_argument(
+            "invalid config: bgr_to_rgb can be 'true' only for channels set to '3'");
+    }
 }
 
 /* Extract */
@@ -200,6 +205,7 @@ image::loader::loader(const image::config& cfg, bool fixed_aspect_ratio)
     , m_fixed_aspect_ratio{fixed_aspect_ratio}
     , m_stype{cfg.get_shape_type()}
     , m_channels{cfg.channels}
+    , m_bgr_to_rgb{cfg.bgr_to_rgb}
 {
 }
 
@@ -209,8 +215,25 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
     // TODO: Generalize this to also handle multi_crop case
     auto cv_type      = m_stype.get_otype().get_cv_type();
     auto element_size = m_stype.get_otype().get_size();
-    auto img          = input->get_image(0);
-    int  image_size   = img.channels() * img.total() * element_size;
+    // if m_channels is 3 but images has 1 channel it is converted to
+    // 3 channels so we need m_channels instead of input channels
+    int  image_size   = m_channels * input->get_image(0).total() * element_size;
+    vector<int> from_to;
+    if (m_channels == 3)
+    {
+        if (m_bgr_to_rgb)
+        {
+            from_to = {0, 2, 1, 1, 2, 0};
+        }
+        else
+        {
+            from_to = {0, 0, 1, 1, 2, 2};
+        }
+    }
+    else
+    {
+        from_to = {0, 0};
+    }
 
     for (int i = 0; i < input->get_image_count(); i++)
     {
@@ -218,42 +241,50 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
         auto            input_image = input->get_image(i);
         vector<cv::Mat> source;
         vector<cv::Mat> target;
-        vector<int>     from_to;
 
         if (m_fixed_aspect_ratio)
         {
             // zero out the output buffer as the image may not fill the canvas
-            for (int j = 0; j < m_stype.get_byte_size(); j++)
-            {
-                outbuf[j] = 0;
-            }
+            std::fill_n(outbuf_i, m_stype.get_byte_size(), 0);
 
             vector<size_t> shape = m_stype.get_shape();
             // methods for image_var
             if (m_channel_major)
             {
                 // Split into separate channels
-                int      width           = shape[1];
-                int      height          = shape[2];
+                int      height          = shape[1];
+                int      width           = shape[2];
                 int      pix_per_channel = width * height;
-                cv::Mat  b(width, height, CV_8U, outbuf);
-                cv::Mat  g(width, height, CV_8U, outbuf + pix_per_channel);
-                cv::Mat  r(width, height, CV_8U, outbuf + 2 * pix_per_channel);
+                cv::Mat  b(height, width, CV_8U, outbuf_i);
+                cv::Mat  g(height, width, CV_8U, outbuf_i + pix_per_channel);
+                cv::Mat  r(height, width, CV_8U, outbuf_i + 2 * pix_per_channel);
                 cv::Rect roi(0, 0, input_image.cols, input_image.rows);
-                cv::Mat  b_roi       = b(roi);
-                cv::Mat  g_roi       = g(roi);
-                cv::Mat  r_roi       = r(roi);
-                cv::Mat  channels[3] = {b_roi, g_roi, r_roi};
-                cv::split(input_image, channels);
+                cv::Mat  b_roi = b(roi);
+                cv::Mat  g_roi = g(roi);
+                cv::Mat  r_roi = r(roi);
+                // TODO(sfraczek): unify this to mix_channels.
+                //  split will fail for 1 channel input image
+                if (m_bgr_to_rgb)
+                {
+                    cv::Mat channels[3] = {r_roi, g_roi, b_roi};
+                    cv::split(input_image, channels);
+                }
+                else
+                {
+                    cv::Mat channels[3] = {b_roi, g_roi, r_roi};
+                    cv::split(input_image, channels);
+                }
             }
             else
             {
                 int     channels = shape[2];
                 int     width    = shape[1];
                 int     height   = shape[0];
-                cv::Mat output(height, width, CV_8UC(channels), outbuf);
+                cv::Mat output(height, width, CV_8UC(channels), outbuf_i);
                 cv::Mat target_roi = output(cv::Rect(0, 0, input_image.cols, input_image.rows));
-                input_image.copyTo(target_roi);
+                source.push_back(input_image);
+                target.push_back(target_roi);
+                image::convert_mix_channels(source, target, from_to);
             }
         }
         else
@@ -265,20 +296,15 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
                 for (int ch = 0; ch < m_channels; ch++)
                 {
                     target.emplace_back(
-                        img.size(), cv_type, (char*)(outbuf_i + ch * img.total() * element_size));
-                    from_to.push_back(ch);
-                    from_to.push_back(ch);
+                        input_image.size(),
+                        cv_type,
+                        (char*)(outbuf_i + ch * input_image.total() * element_size));
                 }
             }
             else
             {
                 target.emplace_back(
                     input_image.size(), CV_MAKETYPE(cv_type, m_channels), (char*)(outbuf_i));
-                for (int ch = 0; ch < m_channels; ch++)
-                {
-                    from_to.push_back(ch);
-                    from_to.push_back(ch);
-                }
             }
             image::convert_mix_channels(source, target, from_to);
         }

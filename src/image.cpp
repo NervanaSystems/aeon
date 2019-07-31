@@ -124,15 +124,7 @@ void image::convert_mix_channels(vector<cv::Mat>& source,
         prepared_source = &tmp_source;
     }
 
-    if (prepared_source->size() == 1 && target.size() == 1)
-    {
-        size_t size = target[0].total() * target[0].elemSize();
-        memcpy(target[0].data, (*prepared_source)[0].data, size);
-    }
-    else
-    {
-        cv::mixChannels(*prepared_source, target, from_to);
-    }
+    cv::mixChannels(*prepared_source, target, from_to);
 }
 
 float image::calculate_scale(const cv::Size& size, int output_width, int output_height)
