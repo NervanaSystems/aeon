@@ -143,14 +143,16 @@ public:
                         size_t                                        output_height,
                         const std::vector<nervana::boundingbox::box>& object_bboxes) const;
 
-    bool        do_area_scale                 = false;
-    bool        crop_enable                   = true;
-    bool        fixed_aspect_ratio            = false;
-    int         resize_short_size             = 0;
-    float       expand_probability            = 0.;
-    float       fixed_scaling_factor          = -1;
-    std::string m_emit_constraint_type        = "";
-    float       m_emit_constraint_min_overlap = 0.0;
+    bool                do_area_scale                 = false;
+    bool                crop_enable                   = true;
+    bool                fixed_aspect_ratio            = false;
+    std::vector<double> mean                          = {};
+    std::vector<double> stddev                        = {};
+    int                 resize_short_size             = 0;
+    float               expand_probability            = 0.;
+    float               fixed_scaling_factor          = -1;
+    std::string         m_emit_constraint_type        = "";
+    float               m_emit_constraint_min_overlap = 0.0;
 #ifdef PYTHON_PLUGIN
     std::string    plugin_filename;
     nlohmann::json plugin_params;
@@ -235,6 +237,8 @@ private:
         ADD_SCALAR_WITH_KEY(
             m_emit_constraint_min_overlap, "emit_constraint_min_overlap", mode::OPTIONAL),
         ADD_SCALAR(fixed_aspect_ratio, mode::OPTIONAL),
+        ADD_SCALAR(mean, mode::OPTIONAL),
+        ADD_SCALAR(stddev, mode::OPTIONAL),
         ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL),
         ADD_SCALAR(padding, mode::OPTIONAL),
         ADD_SCALAR(debug_output_directory, mode::OPTIONAL),

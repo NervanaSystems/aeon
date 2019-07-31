@@ -172,16 +172,21 @@ private:
 class nervana::image::loader : public interface::loader<image::decoded>
 {
 public:
-    loader(const image::config& cfg, bool fixed_aspect_ratio);
+    loader(const image::config& cfg,
+           bool                 fixed_aspect_ratio,
+           std::vector<double>  mean,
+           std::vector<double>  stddev);
     ~loader() {}
     virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) const override;
 
 private:
     void split(cv::Mat&, char*);
 
-    bool       m_channel_major;
-    bool       m_fixed_aspect_ratio;
-    bool       m_bgr_to_rgb;
-    shape_type m_stype;
-    uint32_t   m_channels;
+    bool                m_channel_major;
+    bool                m_fixed_aspect_ratio;
+    bool                m_bgr_to_rgb;
+    shape_type          m_stype;
+    uint32_t            m_channels;
+    std::vector<double> m_mean;
+    std::vector<double> m_stddev;
 };

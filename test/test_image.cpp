@@ -283,7 +283,7 @@ void test_bgr_to_rgb(int width, int height, bool channel_major, bool fixed_aspec
         decoded->add(indexed_images[i]);
     }
 
-    image::loader loader(cfg, fixed_aspect_ratio);
+    image::loader loader(cfg, fixed_aspect_ratio, {}, {});
     loader.load({output_image.data()}, decoded);
 
     // b 0 - col        0
@@ -374,6 +374,88 @@ TEST(image, bgr_to_rgb_channel_major_fixed_aspect_ratio)
     bool fixed_aspect_ratio = true;
 
     test_bgr_to_rgb(width, height, channel_major, fixed_aspect_ratio);
+}
+
+TEST(image, normalize)
+{
+    int width    = 256;
+    int height   = 256;
+    int channels = 3;
+
+    std::vector<double> mean{0.5, 0.5, 0.};
+
+    double              dev = 0.28980498288430989;
+    std::vector<double> stddev{dev, dev, 0.};
+
+    auto indexed = generate_indexed_image(height, width);
+
+    auto total_bytes = height * width * channels * sizeof(float);
+
+    std::vector<unsigned char> output_image(total_bytes);
+
+    nlohmann::json js = {{"width", width},
+                         {"height", height},
+                         {"channels", channels},
+                         {"output_type", "float"},
+                         {"channel_major", false}};
+    image::config cfg(js);
+
+    auto decoded = make_shared<image::decoded>();
+    decoded->add(indexed);
+
+    image::loader loader(cfg, false, mean, stddev);
+    loader.load({output_image.data()}, decoded);
+
+    // normalized image is (X/255 - mean) / stddev
+
+    float* data  = reinterpret_cast<float*>(output_image.data());
+    size_t index = 0;
+    for (int row = 0; row < height; row++)
+    {
+        for (int col = 0; col < width; col++)
+        {
+            EXPECT_NEAR(data[index],
+                        (indexed.data[index] / 255. - mean[0]) / (stddev[0] ? stddev[0] : 1),
+                        1e-5);
+            EXPECT_NEAR(data[index + 1],
+                        (indexed.data[index + 1] / 255. - mean[1]) / (stddev[1] ? stddev[1] : 1),
+                        1e-5);
+            EXPECT_NEAR(data[index + 2],
+                        (indexed.data[index + 2] / 255. - mean[2]) / (stddev[2] ? stddev[2] : 1),
+                        1e-5);
+            index += 3;
+        }
+    }
+}
+
+TEST(image, normalize_validation)
+{
+    auto create_loader = [](int                 channels,
+                            std::string         output_type,
+                            std::vector<double> mean,
+                            std::vector<double> stddev) {
+
+        nlohmann::json js = {
+            {"width", 10}, {"height", 10}, {"channels", channels}, {"output_type", output_type}};
+        image::config cfg(js);
+        return image::loader(cfg, false, mean, stddev);
+    };
+
+    EXPECT_NO_THROW(create_loader(3, "float", {}, {}));
+    EXPECT_NO_THROW(create_loader(1, "uint8_t", {}, {}));
+
+    EXPECT_NO_THROW(create_loader(3, "float", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}));
+    EXPECT_NO_THROW(create_loader(1, "float", {0.4}, {0.3}));
+    EXPECT_NO_THROW(create_loader(3, "double", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}));
+    EXPECT_NO_THROW(create_loader(1, "double", {0.4}, {0.3}));
+
+    EXPECT_THROW(create_loader(3, "float", {0.5}, {0.3}), std::invalid_argument);
+    EXPECT_THROW(create_loader(1, "float", {0.4, 0.6}, {0.3}), std::invalid_argument);
+
+    EXPECT_THROW(create_loader(3, "uint8_t", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}), std::invalid_argument);
+    EXPECT_THROW(create_loader(1, "uint8_t", {0.4}, {0.3}), std::invalid_argument);
+    EXPECT_THROW(create_loader(3, "int32_t", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}), std::invalid_argument);
+    EXPECT_THROW(create_loader(1, "int32_t", {0.4}, {0.3}), std::invalid_argument);
 }
 
 TEST(image, transform_crop)
@@ -619,7 +701,7 @@ TEST(image, noconvert_nosplit)
     image::extractor           ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
 
-    image::loader loader(cfg, false);
+    image::loader loader(cfg, false, {}, {});
     loader.load({output_image.data}, decoded);
 
     //    cv::imwrite("image_noconvert_nosplit.png", output_image);
@@ -655,7 +737,7 @@ TEST(image, noconvert_split)
     image::extractor           ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
 
-    image::loader loader(cfg, false);
+    image::loader loader(cfg, false, {}, {});
     loader.load({output_image.data}, decoded);
 
     // cv::imwrite("image_noconvert_split.png", output_image);
@@ -692,7 +774,7 @@ TEST(image, convert_nosplit)
     image::extractor           ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
 
-    image::loader loader(cfg, false);
+    image::loader loader(cfg, false, {}, {});
     loader.load({output_image.data}, decoded);
 
     //    cv::imwrite("image_convert_nosplit.png", output_image);
@@ -727,7 +809,7 @@ TEST(image, convert_split)
     image::extractor           ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
 
-    image::loader loader(cfg, false);
+    image::loader loader(cfg, false, {}, {});
     loader.load({output_image.data}, decoded);
 
     //    cv::imwrite("image_convert_split.png", output_image);
@@ -817,7 +899,7 @@ TEST(image, transform)
         image::config                 cfg{js};
         image::extractor              extractor{cfg};
         image::transformer            transformer{cfg};
-        image::loader                 loader{cfg, false};
+        image::loader                 loader{cfg, false, {}, {}};
         augment::image::param_factory factory(aug);
 
         auto decoded    = extractor.extract(image_data.data(), image_data.size());
@@ -842,7 +924,7 @@ TEST(image, transform)
         image::config                 cfg{js};
         image::extractor              extractor{cfg};
         image::transformer            transformer{cfg};
-        image::loader                 loader{cfg, false};
+        image::loader                 loader{cfg, false, {}, {}};
         augment::image::param_factory factory(aug);
 
         auto decoded = extractor.extract(image_data.data(), image_data.size());
@@ -873,7 +955,7 @@ TEST(image, transform)
         image::config                 cfg{js};
         image::extractor              extractor{cfg};
         image::transformer            transformer{cfg};
-        image::loader                 loader{cfg, false};
+        image::loader                 loader{cfg, false, {}, {}};
         augment::image::param_factory factory(aug);
 
         auto decoded = extractor.extract(image_data.data(), image_data.size());

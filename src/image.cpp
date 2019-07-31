@@ -99,6 +99,40 @@ void image::resize_short(const cv::Mat& input, cv::Mat& output, const int target
     cv::resize(input, output, cv::Size2i(resized_width, resized_height), 0, 0, CV_INTER_LINEAR);
 }
 
+void image::normalize(std::vector<cv::Mat>&      input,
+                      const std::vector<double>& mean,
+                      const std::vector<double>& stddev)
+{
+    if (mean.empty())
+        return;
+    // prep for division
+    cv::Scalar s_mean, s_stddev;
+    for (int i = 0; i < mean.size(); i++)
+    {
+        s_stddev[i] = stddev[i] ? 1. / stddev[i] : 1.;
+        s_mean[i]   = mean[i];
+    }
+
+    for (int i = 0; i < input.size(); i++)
+    {
+        // divide
+        multiply(input[i], 1. / 255., input[i]);
+
+        if (input[i].channels() == 1)
+        {
+            subtract(input[i], s_mean[i], input[i]);
+            // divide
+            multiply(input[i], s_stddev[i], input[i]);
+        }
+        else
+        {
+            subtract(input[i], s_mean, input[i]);
+            // divide
+            multiply(input[i], s_stddev, input[i]);
+        }
+    }
+}
+
 void image::convert_mix_channels(vector<cv::Mat>& source,
                                  vector<cv::Mat>& target,
                                  vector<int>&     from_to)
