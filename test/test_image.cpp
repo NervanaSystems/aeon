@@ -832,7 +832,7 @@ TEST(image, area_scale)
                 factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
             float cropbox_area  = params->cropbox.area();
             float cropbox_ratio = cropbox_area / source_image_area;
-            EXPECT_NEAR(0.3, cropbox_ratio, 0.0001);
+            EXPECT_NEAR(0.3, cropbox_ratio, 0.0002);
         }
         {
             aug["scale"] = {0.8, 0.8};
