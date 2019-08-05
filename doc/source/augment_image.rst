@@ -22,10 +22,12 @@ aeon performs a series of customizable transformations on the image before provi
 .. image:: etl_image_transforms.png
 
 1. Rotate the image by a random angle drawn from a uniform distribution between the provided ranges (parameter ``angle (int, int)``), and fill the padded regions with zeros.
-2. Take a random crop of the image. The size of the crop is controlled by the parameters ``scale`` and ``do_area_scale``. Suppose the width is the short-side of the input image. By default, the crop width will then be a ``scale`` fraction of the width of the image. Optionally, if ``do_area_scale`` is enabled, then total area of the crop will be a ``scale`` fraction of the input image area. The proportions of the crop box match that of the output shape, unless horizontal_distortion is required.
-3. Adds padding for the image with ``padding`` number of pixels on each side. It then takes random crop of the padded image. The cropbox size is equal to original image size (not changing the output image size then). It cannot be combined with previous crop step, so `crop_enabled` has to be set to `false`.
-4. Resize the cropped image to the desired output shape, defined by the parameters ``height`` and ``width``.
-5. If required, apply any transformations (e.g. lighting, horizontal flip, photometric distortion)
+2. Resize the image proportionally making the shorter dimension equal to the provided size (parameter ``resize_short_size``).
+3. Take a random crop of the image. The size of the crop is controlled by the parameters ``scale`` and ``do_area_scale``. Suppose the width is the short-side of the input image. By default, the crop width will then be a ``scale`` fraction of the width of the image. Optionally, if ``do_area_scale`` is enabled, then total area of the crop will be a ``scale`` fraction of the input image area. If ``resize_short_size`` was specified, the scale is relative to the resized image. The proportions of the crop box match that of the output shape, unless horizontal_distortion is required.
+4. Adds padding for the image with ``padding`` number of pixels on each side. It then takes random crop of the padded image. The cropbox size is equal to original image size (not changing the output image size then). It cannot be combined with previous crop step, so `crop_enabled` has to be set to `false`.
+5. Resize the cropped image to the desired output shape, defined by the parameters ``height`` and ``width``.
+6. If required, apply any transformations (e.g. lighting, horizontal flip, photometric distortion)
+7. Standardize the image (:math:`(I/255 - mean) / stddev`).
 
 .. csv-table::
    :header: "Parameter", "Default", "Description"
@@ -44,16 +46,19 @@ aeon performs a series of customizable transformations on the image before provi
    hue (int) | (0, 0) | Boundaries of a uniform distribution from which to draw a hue adjustment factor. Factors are multiples of 2 degrees, so a full turn is 180. Recommented boundaries for random hue shift are (-18, 18).
    saturation (float, float) | (1.0, 1.0) | Boundaries of a uniform distribution from which to draw a saturation adjustment factor.  A saturation adjustment factor of 1.0 results in no change to the saturation of the image.  Values less than 1 decrease the saturation, while values greater than 1 increase the saturation.  Recommended boundaries for random saturation perturbation are (0.9 and 1.1)
    center (bool) | False | Take the center crop of the image. If false, a randomly located crop will be taken.
-   crop_enable (bool) | True | Crop the input image using ``center`` and ``scale``/``do_area_scale``
+   crop_enable (bool) | True | Crop the input image. using ``center``, ``scale`` and ``do_area_scale``
    padding (int) | 0 | Size of the padding added to the image. Cannot be combined with ``crop_enable`` set to ``true``, because it crops the padded image to adjust to the original input image size.
    fixed_aspect_ratio (bool) | False | Maintain fixed aspect ratio when copying the image to the output buffer. This may result in padding of the output buffer.
    fixed_scaling_factor (float) | | If set, uses fixed scaling factor for output image size.
    expand_probability (float) | 0.0 | Probability of expanding image. Used for SSD.
-   emit_constraint_type ["center", "min_overlap", ""] | \"\" | Used for constraining output bounding boxes in SSD augmentations. `center` means center of ground truth box needs to be present in cropped box. `min_overlap` means that coverage of ground thruth box with cropped box should be equal or bigger than provided value.
-   emit_constraint_min_overlap (float) | "" | Minimum overlap used when `emit_constraint_type` is set to `min_overlap`.
+   emit_constraint_type ["center", "min_overlap", ""] | \"\" | Used for constraining output bounding boxes in SSD augmentations. ``center`` means center of ground truth box needs to be present in cropped box. ``min_overlap`` means that coverage of ground thruth box with cropped box should be equal or bigger than provided value.
+   emit_constraint_min_overlap (float) | "" | Minimum overlap used when ``emit_constraint_type`` is set to ``min_overlap``.
    expand_ratio (float, float) | (1.0, 1.0) | Ratio to expand image in SSD. minimum expand ratio cannot be less than 1.
    batch_samplers (batch_sampler) |  | Batch samplers are objects defining patch generation in SSD.
-   debug_output_directory (string) | "" | Writes transformed images and transformation parameters to the provided directory.
+   debug_output_directory (string) | "" | Writes transformed images and transformation parameters to the provided directory. Does not include ``standardization``.
+   resize_short_size (int) | 0 | Resize the image proportionally to make the shorter dimension equal to the provided size.
+   mean (double, double, double) |  | Mean values per channel for standardization given in order aligned with ``bgr_to_rgb`` attribute of image provider.
+   stddev (double, double, double) |  | Standard deviation per channel for standardization given in order aligned with ``bgr_to_rgb`` attribute of image provider.
 
 
 
