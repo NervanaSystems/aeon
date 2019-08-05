@@ -99,9 +99,9 @@ void image::resize_short(const cv::Mat& input, cv::Mat& output, const int target
     cv::resize(input, output, cv::Size2i(resized_width, resized_height), 0, 0, CV_INTER_LINEAR);
 }
 
-void image::normalize(std::vector<cv::Mat>&      input,
-                      const std::vector<double>& mean,
-                      const std::vector<double>& stddev)
+void image::standardize(std::vector<cv::Mat>&      input,
+                        const std::vector<double>& mean,
+                        const std::vector<double>& stddev)
 {
     if (mean.empty())
         return;

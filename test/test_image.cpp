@@ -376,7 +376,7 @@ TEST(image, bgr_to_rgb_channel_major_fixed_aspect_ratio)
     test_bgr_to_rgb(width, height, channel_major, fixed_aspect_ratio);
 }
 
-TEST(image, normalize)
+TEST(image, standardize)
 {
     int width    = 256;
     int height   = 256;
@@ -406,7 +406,7 @@ TEST(image, normalize)
     image::loader loader(cfg, false, mean, stddev);
     loader.load({output_image.data()}, decoded);
 
-    // normalized image is (X/255 - mean) / stddev
+    // standardized image is (X/255 - mean) / stddev
 
     float* data  = reinterpret_cast<float*>(output_image.data());
     size_t index = 0;
@@ -428,7 +428,7 @@ TEST(image, normalize)
     }
 }
 
-TEST(image, normalize_validation)
+TEST(image, standardize_validation)
 {
     auto create_loader = [](int                 channels,
                             std::string         output_type,

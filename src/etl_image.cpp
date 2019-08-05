@@ -217,7 +217,7 @@ image::loader::loader(const image::config& cfg,
         if (!(cfg.output_type.compare("float") == 0 || cfg.output_type.compare("double") == 0))
         {
             throw invalid_argument(
-                "Normalization (mean, stddev) is supported only for float or double "
+                "Standardization (mean, stddev) is supported only for float or double "
                 "'output_type'.");
         }
         if (m_mean.size() != cfg.channels || m_stddev.size() != cfg.channels)
@@ -296,7 +296,7 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
                     cv::split(input_image, channels);
                 }
                 // channelwise call
-                image::normalize(channels, m_mean, m_stddev);
+                image::standardize(channels, m_mean, m_stddev);
             }
             else
             {
@@ -309,7 +309,7 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
                 target.push_back(target_roi);
                 image::convert_mix_channels(source, target, from_to);
                 // single image call
-                image::normalize(target, m_mean, m_stddev);
+                image::standardize(target, m_mean, m_stddev);
             }
         }
         else
@@ -333,7 +333,7 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
             }
             image::convert_mix_channels(source, target, from_to);
             // 3 channel single image
-            image::normalize(target, m_mean, m_stddev);
+            image::standardize(target, m_mean, m_stddev);
         }
     }
 }
