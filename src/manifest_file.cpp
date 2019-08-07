@@ -60,10 +60,10 @@ manifest_file::manifest_file(const string& filename,
     , m_record_count{0}
     , m_node_id(node_id)
     , m_node_count(node_count)
+    , m_block_size(block_size)
     , m_batch_size(batch_size)
     , m_shuffle{shuffle}
     , m_random{seed ? seed : random_device{}()}
-    , m_block_size(block_size)
 {
     // for now parse the entire manifest on creation
     ifstream infile(m_source_filename);
@@ -86,12 +86,12 @@ manifest_file::manifest_file(std::istream&      stream,
                              uint32_t           node_count,
                              int                batch_size)
     : m_record_count{0}
-    , m_shuffle{shuffle}
     , m_node_id(node_id)
     , m_node_count(node_count)
-    , m_batch_size(batch_size)
-    , m_random{seed ? seed : random_device{}()}
     , m_block_size(block_size)
+    , m_batch_size(batch_size)
+    , m_shuffle{shuffle}
+    , m_random{seed ? seed : random_device{}()}
 {
     initialize(stream, block_size, root, subset_fraction);
 }
@@ -121,7 +121,7 @@ void manifest_file::initialize(std::istream&      stream,
     size_t                 element_count = 0;
     size_t                 line_number   = 0;
     string                 line;
-    
+
 
     // read in each line, then from that istringstream, break into
     // tab-separated elements.
@@ -301,7 +301,7 @@ void manifest_file::generate_blocks()
 
         // ///////////////////////////////////////////////////////////////////////////////////
         // reset block list
-        
+
         std::vector<block_info> block_list = generate_block_list(m_record_count, m_block_size);
         m_block_list.clear();
         for (auto info : block_list)
