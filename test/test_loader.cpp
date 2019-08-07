@@ -489,7 +489,7 @@ TEST(loader, deterministic)
     loader.get_current_iter();
     auto& buffer = *loader.get_current_iter();
 
-    const uint32_t expected_result[3] = {0x3f393834, 0x2c284d47, 0x5c59502b};
+    const uint32_t expected_result[3] = {1210130715, 639721302, 1414547238};
     uint32_t*      data               = reinterpret_cast<uint32_t*>(buffer["image"]->data());
     EXPECT_EQ(data[0], expected_result[0]);
     EXPECT_EQ(data[1], expected_result[1]);
