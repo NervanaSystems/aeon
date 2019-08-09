@@ -413,7 +413,7 @@ provider::pixelmask::pixelmask(nlohmann::json js, nlohmann::json aug)
     , m_extractor{m_config}
     , m_transformer{m_config}
     , m_augmentation_factory{aug}
-    , m_loader{m_config, m_augmentation_factory.fixed_aspect_ratio, {}, {}}
+    , m_loader{m_config, m_augmentation_factory.fixed_aspect_ratio}
     , m_buffer_name{create_name(m_config.name, "pixelmask")}
 {
     m_output_shapes.emplace_back(make_pair(m_buffer_name, m_config.get_shape_type()));

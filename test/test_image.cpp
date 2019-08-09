@@ -283,7 +283,7 @@ void test_bgr_to_rgb(int width, int height, bool channel_major, bool fixed_aspec
         decoded->add(indexed_images[i]);
     }
 
-    image::loader loader(cfg, fixed_aspect_ratio, {}, {});
+    image::loader loader(cfg, fixed_aspect_ratio);
     loader.load({output_image.data()}, decoded);
 
     // b 0 - col        0
@@ -701,7 +701,7 @@ TEST(image, noconvert_nosplit)
     image::extractor           ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
 
-    image::loader loader(cfg, false, {}, {});
+    image::loader loader(cfg, false);
     loader.load({output_image.data}, decoded);
 
     //    cv::imwrite("image_noconvert_nosplit.png", output_image);
@@ -737,7 +737,7 @@ TEST(image, noconvert_split)
     image::extractor           ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
 
-    image::loader loader(cfg, false, {}, {});
+    image::loader loader(cfg, false);
     loader.load({output_image.data}, decoded);
 
     // cv::imwrite("image_noconvert_split.png", output_image);
@@ -774,7 +774,7 @@ TEST(image, convert_nosplit)
     image::extractor           ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
 
-    image::loader loader(cfg, false, {}, {});
+    image::loader loader(cfg, false);
     loader.load({output_image.data}, decoded);
 
     //    cv::imwrite("image_convert_nosplit.png", output_image);
@@ -809,7 +809,7 @@ TEST(image, convert_split)
     image::extractor           ext{cfg};
     shared_ptr<image::decoded> decoded = ext.extract((char*)&image_data[0], image_data.size());
 
-    image::loader loader(cfg, false, {}, {});
+    image::loader loader(cfg, false);
     loader.load({output_image.data}, decoded);
 
     //    cv::imwrite("image_convert_split.png", output_image);
@@ -899,7 +899,7 @@ TEST(image, transform)
         image::config                 cfg{js};
         image::extractor              extractor{cfg};
         image::transformer            transformer{cfg};
-        image::loader                 loader{cfg, false, {}, {}};
+        image::loader                 loader{cfg, false};
         augment::image::param_factory factory(aug);
 
         auto decoded    = extractor.extract(image_data.data(), image_data.size());
@@ -924,7 +924,7 @@ TEST(image, transform)
         image::config                 cfg{js};
         image::extractor              extractor{cfg};
         image::transformer            transformer{cfg};
-        image::loader                 loader{cfg, false, {}, {}};
+        image::loader                 loader{cfg, false};
         augment::image::param_factory factory(aug);
 
         auto decoded = extractor.extract(image_data.data(), image_data.size());
@@ -955,7 +955,7 @@ TEST(image, transform)
         image::config                 cfg{js};
         image::extractor              extractor{cfg};
         image::transformer            transformer{cfg};
-        image::loader                 loader{cfg, false, {}, {}};
+        image::loader                 loader{cfg, false};
         augment::image::param_factory factory(aug);
 
         auto decoded = extractor.extract(image_data.data(), image_data.size());

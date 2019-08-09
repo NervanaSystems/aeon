@@ -86,7 +86,7 @@ TEST(pixel_mask, scale_up)
 
     pixel_mask::extractor         extractor{cfg};
     pixel_mask::transformer       transformer{cfg};
-    image::loader                 loader{cfg, false, {}, {}};
+    image::loader                 loader{cfg, false};
     augment::image::param_factory factory{aug};
 
     auto extracted  = extractor.extract((const char*)test_data.data(), test_data.size());
@@ -113,7 +113,7 @@ TEST(pixel_mask, scale_down)
 
     pixel_mask::extractor         extractor{cfg};
     pixel_mask::transformer       transformer{cfg};
-    image::loader                 loader{cfg, false, {}, {}};
+    image::loader                 loader{cfg, false};
     augment::image::param_factory factory{aug};
 
     auto extracted  = extractor.extract((const char*)test_data.data(), test_data.size());
@@ -140,7 +140,7 @@ TEST(pixel_mask, rotate)
 
     pixel_mask::extractor         extractor{cfg};
     pixel_mask::transformer       transformer{cfg};
-    image::loader                 loader{cfg, false, {}, {}};
+    image::loader                 loader{cfg, false};
     augment::image::param_factory factory{aug};
 
     auto extracted  = extractor.extract((const char*)test_data.data(), test_data.size());
@@ -180,7 +180,7 @@ TEST(pixel_mask, load_int)
 
     pixel_mask::extractor         extractor{cfg};
     pixel_mask::transformer       transformer{cfg};
-    image::loader                 loader{cfg, false, {}, {}};
+    image::loader                 loader{cfg, false};
     augment::image::param_factory factory{aug};
 
     auto extracted  = extractor.extract((const char*)test_data.data(), test_data.size());
@@ -288,7 +288,7 @@ TEST(plugin, pixel_mask_example_rotate)
 
     pixel_mask::extractor         extractor{cfg};
     pixel_mask::transformer       transformer{cfg};
-    image::loader                 loader{cfg, false, {}, {}};
+    image::loader                 loader{cfg, false};
     augment::image::param_factory factory{aug};
 
     auto extracted  = extractor.extract((const char*)test_data.data(), test_data.size());
@@ -317,7 +317,7 @@ TEST(plugin, pixel_mask_example_flip)
 
     pixel_mask::extractor         extractor{cfg};
     pixel_mask::transformer       transformer{cfg};
-    image::loader                 loader{cfg, false, {}, {}};
+    image::loader                 loader{cfg, false};
     augment::image::param_factory factory{aug};
 
     auto extracted  = extractor.extract((const char*)test_data.data(), test_data.size());

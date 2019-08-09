@@ -174,8 +174,8 @@ class nervana::image::loader : public interface::loader<image::decoded>
 public:
     loader(const image::config& cfg,
            bool                 fixed_aspect_ratio,
-           std::vector<double>  mean,
-           std::vector<double>  stddev);
+           std::vector<double>  mean   = {},
+           std::vector<double>  stddev = {});
     ~loader() {}
     virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) const override;
 
