@@ -86,12 +86,6 @@ void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size
 
 void image::resize_short(const cv::Mat& input, cv::Mat& output, const int target_size)
 {
-    if (target_size == 0)
-    {
-        output = input;
-        return;
-    }
-
     auto percent = static_cast<float>(target_size) / std::min(input.cols, input.rows);
 
     auto resized_width  = static_cast<int>(std::round(input.cols * percent));
