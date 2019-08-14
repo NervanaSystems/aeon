@@ -108,11 +108,11 @@ void image::standardize(std::vector<cv::Mat>&      image,
             s_stddev[i] = stddev[i] ? 1. / stddev[i] : 1.;
         }
         // divide by 255
-        multiply(image[0], 1. / 255., image[0]);
+        cv::multiply(image[0], 1. / 255., image[0]);
         // subtract mean
-        subtract(image[0], s_mean, image[0]);
+        cv::subtract(image[0], s_mean, image[0]);
         // divide by stddev
-        multiply(image[0], s_stddev, image[0]);
+        cv::multiply(image[0], s_stddev, image[0]);
         return;
     }
     // channel-major case
@@ -126,12 +126,12 @@ void image::standardize(std::vector<cv::Mat>&      image,
                     "standardize accepts only single n channel image or multiple single channel "
                     "images");
             // divide by 255
-            multiply(image[i], 1. / 255., image[i]);
+            cv::multiply(image[i], 1. / 255., image[i]);
             // subtract mean
-            subtract(image[i], mean[i], image[i]);
+            cv::subtract(image[i], mean[i], image[i]);
             // divide by stddev if its not zero
             if (stddev[i])
-                multiply(image[i], 1. / stddev[i], image[i]);
+                cv::multiply(image[i], 1. / stddev[i], image[i]);
         }
         return;
     }
