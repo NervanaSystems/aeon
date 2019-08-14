@@ -335,7 +335,7 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
                     input_image.size(), CV_MAKETYPE(cv_type, m_channels), (char*)(outbuf_i));
             }
             image::convert_mix_channels(source, target, from_to);
-            // 3 channel single image
+            // single image call
             if (!m_mean.empty())
                 image::standardize(target, m_mean, m_stddev);
         }
