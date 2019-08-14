@@ -297,7 +297,8 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
                     cv::split(input_image, channels);
                 }
                 // channelwise call
-                image::standardize(channels, m_mean, m_stddev);
+                if (!m_mean.empty())
+                    image::standardize(channels, m_mean, m_stddev);
             }
             else
             {
@@ -310,7 +311,8 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
                 target.push_back(target_roi);
                 image::convert_mix_channels(source, target, from_to);
                 // single image call
-                image::standardize(target, m_mean, m_stddev);
+                if (!m_mean.empty())
+                    image::standardize(target, m_mean, m_stddev);
             }
         }
         else
@@ -334,7 +336,8 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
             }
             image::convert_mix_channels(source, target, from_to);
             // 3 channel single image
-            image::standardize(target, m_mean, m_stddev);
+            if (!m_mean.empty())
+                image::standardize(target, m_mean, m_stddev);
         }
     }
 }

@@ -97,8 +97,6 @@ void image::standardize(std::vector<cv::Mat>&      input,
                         const std::vector<double>& mean,
                         const std::vector<double>& stddev)
 {
-    if (mean.empty())
-        return;
     // prep for division
     cv::Scalar s_mean, s_stddev;
     for (int i = 0; i < mean.size(); i++)
