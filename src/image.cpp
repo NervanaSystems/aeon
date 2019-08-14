@@ -127,9 +127,9 @@ void image::standardize(std::vector<cv::Mat>&      input,
     }
 }
 
-void image::convert_mix_channels(vector<cv::Mat>& source,
-                                 vector<cv::Mat>& target,
-                                 vector<int>&     from_to)
+void image::convert_mix_channels(const vector<cv::Mat>& source,
+                                 vector<cv::Mat>&       target,
+                                 const vector<int>&     from_to)
 {
     if (source.size() == 0)
         throw invalid_argument("convertMixChannels source size must be > 0");

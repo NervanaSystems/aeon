@@ -37,9 +37,9 @@ namespace nervana
                     int               angle,
                     bool              interpolate = true,
                     const cv::Scalar& border      = cv::Scalar());
-        void convert_mix_channels(std::vector<cv::Mat>& source,
-                                  std::vector<cv::Mat>& target,
-                                  std::vector<int>&     from_to);
+        void convert_mix_channels(const std::vector<cv::Mat>& source,
+                                  std::vector<cv::Mat>&       target,
+                                  const std::vector<int>&     from_to);
 
         void add_padding(cv::Mat& input, int padding, cv::Size2i crop_offset);
 

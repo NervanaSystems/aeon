@@ -229,6 +229,20 @@ image::loader::loader(const image::config& cfg,
                 "Size of 'mean' and 'stddev' must be equal to number of channels or empty.");
         }
     }
+
+    if (m_bgr_to_rgb)
+    {
+        from_to = {0, 2, 1, 1, 2, 0};
+    }
+    else
+    {
+        from_to.reserve(m_channels * 2);
+        for (int i = 0; i < m_channels; i++)
+        {
+            from_to.push_back(i);
+            from_to.push_back(i);
+        }
+    }
 }
 
 void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded> input) const
@@ -239,23 +253,7 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
     auto element_size = m_stype.get_otype().get_size();
     // if m_channels is 3 but images has 1 channel it is converted to
     // 3 channels so we need m_channels instead of input channels
-    int         image_size = m_channels * input->get_image(0).total() * element_size;
-    vector<int> from_to;
-    if (m_channels == 3)
-    {
-        if (m_bgr_to_rgb)
-        {
-            from_to = {0, 2, 1, 1, 2, 0};
-        }
-        else
-        {
-            from_to = {0, 0, 1, 1, 2, 2};
-        }
-    }
-    else
-    {
-        from_to = {0, 0};
-    }
+    int image_size = m_channels * input->get_image(0).total() * element_size;
 
     for (int i = 0; i < input->get_image_count(); i++)
     {
