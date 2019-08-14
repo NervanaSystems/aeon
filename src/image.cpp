@@ -93,36 +93,51 @@ void image::resize_short(const cv::Mat& input, cv::Mat& output, const int target
     cv::resize(input, output, cv::Size2i(resized_width, resized_height), 0, 0, CV_INTER_LINEAR);
 }
 
-void image::standardize(std::vector<cv::Mat>&      input,
+void image::standardize(std::vector<cv::Mat>&      image,
                         const std::vector<double>& mean,
                         const std::vector<double>& stddev)
 {
-    // prep for division
-    cv::Scalar s_mean, s_stddev;
-    for (int i = 0; i < mean.size(); i++)
+    // single n-channel image case
+    if (image.size() == 1)
     {
-        s_stddev[i] = stddev[i] ? 1. / stddev[i] : 1.;
-        s_mean[i]   = mean[i];
+        // create cv::Scalar from mean and reciprocal of stddev.
+        cv::Scalar s_mean, s_stddev;
+        for (int i = 0; i < mean.size(); i++)
+        {
+            s_mean[i]   = mean[i];
+            s_stddev[i] = stddev[i] ? 1. / stddev[i] : 1.;
+        }
+        // divide by 255
+        multiply(image[0], 1. / 255., image[0]);
+        // subtract mean
+        subtract(image[0], s_mean, image[0]);
+        // divide by stddev
+        multiply(image[0], s_stddev, image[0]);
+        return;
     }
-
-    for (int i = 0; i < input.size(); i++)
+    // channel-major case
+    else if (image.size() > 1)
     {
-        // divide
-        multiply(input[i], 1. / 255., input[i]);
-
-        if (input[i].channels() == 1)
+        // For each channel in the image
+        for (int i = 0; i < image.size(); i++)
         {
-            subtract(input[i], s_mean[i], input[i]);
-            // divide
-            multiply(input[i], s_stddev[i], input[i]);
+            if (image[i].channels() != 1)
+                throw std::invalid_argument(
+                    "standardize accepts only single n channel image or multiple single channel "
+                    "images");
+            // divide by 255
+            multiply(image[i], 1. / 255., image[i]);
+            // subtract mean
+            subtract(image[i], mean[i], image[i]);
+            // divide by stddev if its not zero
+            if (stddev[i])
+                multiply(image[i], 1. / stddev[i], image[i]);
         }
-        else
-        {
-            subtract(input[i], s_mean, input[i]);
-            // divide
-            multiply(input[i], s_stddev, input[i]);
-        }
+        return;
     }
+    throw std::invalid_argument(
+        "standardize accepts only single n channel image or multiple single channel "
+        "images");
 }
 
 void image::convert_mix_channels(const vector<cv::Mat>& source,
