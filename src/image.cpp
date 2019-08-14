@@ -165,7 +165,21 @@ void image::convert_mix_channels(const vector<cv::Mat>& source,
         prepared_source = &tmp_source;
     }
 
-    cv::mixChannels(*prepared_source, target, from_to);
+    bool index  = 0;
+    bool no_mix = std::find_if(from_to.begin(), from_to.end(), [&index](int element) {
+                      return index++ / 2 != element;
+                  }) == from_to.end();
+
+    if (prepared_source->size() == 1 && target.size() == 1 && no_mix &&
+        (*prepared_source)[0].isContinuous() && target[0].isContinuous())
+    {
+        size_t size = target[0].total() * target[0].elemSize();
+        memcpy(target[0].data, (*prepared_source)[0].data, size);
+    }
+    else
+    {
+        cv::mixChannels(*prepared_source, target, from_to);
+    }
 }
 
 float image::calculate_scale(const cv::Size& size, int output_width, int output_height)
