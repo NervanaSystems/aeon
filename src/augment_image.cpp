@@ -157,6 +157,7 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
     settings->padding                = padding;
     settings->debug_output_directory = debug_output_directory;
     settings->resize_short_size      = resize_short_size;
+    settings->interpolation_method   = interpolation_method;
 
     cv::Size2f input_size = cv::Size(input_width, input_height);
 

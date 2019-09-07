@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <string>
 #include <tuple>
 
 #include <opencv2/core/core.hpp>
@@ -26,7 +27,10 @@ namespace nervana
     namespace image
     {
         // These functions may be common across different transformers
-        void resize(const cv::Mat&, cv::Mat&, const cv::Size2i&, bool interpolate = true);
+        void resize(const cv::Mat&,
+                    cv::Mat&,
+                    const cv::Size2i&,
+                    const std::string& interpolation_method = "AREA");
         void resize_short(const cv::Mat&, cv::Mat&, const int target_size);
         void standardize(std::vector<cv::Mat>&,
                          const std::vector<double>& mean,

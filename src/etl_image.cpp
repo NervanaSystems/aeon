@@ -167,7 +167,10 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
     image::add_padding(croppedImage, img_xform->padding, img_xform->padding_crop_offset);
 
     cv::Mat resizedImage;
-    image::resize(croppedImage, resizedImage, img_xform->output_size);
+    image::resize(croppedImage,
+                  resizedImage,
+                  img_xform->output_size,
+                  img_xform->interpolation_method);
     photo.cbsjitter(resizedImage,
                     img_xform->contrast,
                     img_xform->brightness,

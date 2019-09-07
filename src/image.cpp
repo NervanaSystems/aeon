@@ -14,7 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <iostream>
+#include <algorithm>
+#include <cctype>
+#include <map>
 
 #include "image.hpp"
 #include "util.hpp"
@@ -22,6 +24,31 @@
 
 using namespace nervana;
 using namespace std;
+
+namespace
+{
+    int get_interpolation_method(const string& inter_method)
+    {
+        static map<string, int> cv_interpolation_map{
+            {"NEAREST", cv::INTER_NEAREST},
+            {"LINEAR", cv::INTER_LINEAR},
+            {"CUBIC", cv::INTER_CUBIC},
+            {"AREA", cv::INTER_AREA},
+            {"LANCZOS4", cv::INTER_LANCZOS4},
+        };
+
+        string method{inter_method};
+        transform(begin(method), end(method), begin(method), ::toupper);
+
+        auto it = cv_interpolation_map.find(method);
+        if (it != cv_interpolation_map.end())
+        {
+            return it->second;
+        }
+        throw invalid_argument("Provided interpolation method (" + inter_method +
+                               " is unrecognized.");
+    }
+}
 
 void image::rotate(
     const cv::Mat& input, cv::Mat& output, int angle, bool interpolate, const cv::Scalar& border)
@@ -63,7 +90,10 @@ void image::add_padding(cv::Mat& input, int padding, cv::Size2i crop_offset)
     input = paddedImage(cropbox);
 }
 
-void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size, bool interpolate)
+void image::resize(const cv::Mat& input,
+                   cv::Mat& output,
+                   const cv::Size2i& size,
+                   const string& inter_method)
 {
     if (size == input.size())
     {
@@ -71,16 +101,7 @@ void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size
     }
     else
     {
-        int inter;
-        if (interpolate)
-        {
-            inter = input.size().area() < size.area() ? CV_INTER_CUBIC : CV_INTER_AREA;
-        }
-        else
-        {
-            inter = CV_INTER_NN;
-        }
-        cv::resize(input, output, size, 0, 0, inter);
+        cv::resize(input, output, size, 0, 0, get_interpolation_method(inter_method));
     }
 }
 

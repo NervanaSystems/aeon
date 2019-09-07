@@ -184,6 +184,7 @@ void provider::image::provide(int                        idx,
         aug.m_image_augmentations = m_augmentation_factory.make_params(
             input_size.width, input_size.height, m_config.width, m_config.height);
     }
+
     m_loader.load({datum_out}, m_transformer.transform(aug.m_image_augmentations, decoded));
 }
 

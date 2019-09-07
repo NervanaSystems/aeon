@@ -106,6 +106,7 @@ public:
     float              emit_min_overlap     = 0.f;
     cv::Rect           cropbox;
     int                resize_short_size = 0;
+    std::string        interpolation_method = "LINEAR";
     cv::Size2i         output_size;
     int                angle = 0;
     bool               flip  = false;
@@ -149,6 +150,7 @@ public:
     std::vector<double> mean                          = {};
     std::vector<double> stddev                        = {};
     int                 resize_short_size             = 0;
+    std::string         interpolation_method          = "LINEAR";
     float               expand_probability            = 0.;
     float               fixed_scaling_factor          = -1;
     std::string         m_emit_constraint_type        = "";
@@ -230,6 +232,7 @@ private:
         ADD_SCALAR(flip_enable, mode::OPTIONAL),
         ADD_SCALAR(center, mode::OPTIONAL),
         ADD_SCALAR(resize_short_size, mode::OPTIONAL),
+        ADD_SCALAR(interpolation_method, mode::OPTIONAL),
         ADD_SCALAR(do_area_scale, mode::OPTIONAL),
         ADD_SCALAR(crop_enable, mode::OPTIONAL),
         ADD_SCALAR(expand_probability, mode::OPTIONAL),
