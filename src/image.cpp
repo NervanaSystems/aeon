@@ -163,7 +163,8 @@ void image::standardize(std::vector<cv::Mat>&      image,
 
 void image::convert_mix_channels(const vector<cv::Mat>& source,
                                  vector<cv::Mat>&       target,
-                                 const vector<int>&     from_to)
+                                 const vector<int>&     from_to,
+                                 bool                   mix_channels)
 {
     if (source.size() == 0)
         throw invalid_argument("convertMixChannels source size must be > 0");
@@ -186,12 +187,7 @@ void image::convert_mix_channels(const vector<cv::Mat>& source,
         prepared_source = &tmp_source;
     }
 
-    bool index  = 0;
-    bool no_mix = std::find_if(from_to.begin(), from_to.end(), [&index](int element) {
-                      return index++ / 2 != element;
-                  }) == from_to.end();
-
-    if (prepared_source->size() == 1 && target.size() == 1 && no_mix &&
+    if (prepared_source->size() == 1 && target.size() == 1 && mix_channels &&
         (*prepared_source)[0].isContinuous() && target[0].isContinuous())
     {
         size_t size = target[0].total() * target[0].elemSize();

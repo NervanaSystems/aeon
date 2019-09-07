@@ -43,7 +43,8 @@ namespace nervana
                     const cv::Scalar& border      = cv::Scalar());
         void convert_mix_channels(const std::vector<cv::Mat>& source,
                                   std::vector<cv::Mat>&       target,
-                                  const std::vector<int>&     from_to);
+                                  const std::vector<int>&     from_to,
+                                  bool mix_channels = false);
 
         void add_padding(cv::Mat& input, int padding, cv::Size2i crop_offset);
 

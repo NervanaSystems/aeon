@@ -312,7 +312,7 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
                 cv::Mat target_roi = output(cv::Rect(0, 0, input_image.cols, input_image.rows));
                 source.push_back(input_image);
                 target.push_back(target_roi);
-                image::convert_mix_channels(source, target, from_to);
+                image::convert_mix_channels(source, target, from_to, m_bgr_to_rgb);
                 // single image call
                 if (!m_mean.empty())
                     image::standardize(target, m_mean, m_stddev);
@@ -337,7 +337,7 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
                 target.emplace_back(
                     input_image.size(), CV_MAKETYPE(cv_type, m_channels), (char*)(outbuf_i));
             }
-            image::convert_mix_channels(source, target, from_to);
+            image::convert_mix_channels(source, target, from_to, m_bgr_to_rgb);
             // single image call
             if (!m_mean.empty())
                 image::standardize(target, m_mean, m_stddev);
