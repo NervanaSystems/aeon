@@ -431,10 +431,16 @@ TEST(loader, provider)
     }
 }
 
-static std::string generate_manifest_file(size_t record_count)
+static std::string generate_manifest_file(
+    size_t record_count,
+    std::vector<std::string> image_files = std::vector<std::string>{})
 {
     std::string   manifest_name = "manifest.txt";
-    const char*   image_files[] = {"flowers.jpg", "img_2112_70.jpg"};
+    if (image_files.empty())
+    {
+        image_files = std::vector<std::string>{"flowers.jpg", "img_2112_70.jpg"};
+    }
+    const std::size_t img_count = image_files.size();
     std::ofstream f(manifest_name);
     if (f)
     {
@@ -445,9 +451,9 @@ static std::string generate_manifest_file(size_t record_count)
         f << "\n";
         for (size_t i = 0; i < record_count; i++)
         {
-            f << image_files[i % 2];
+            f << image_files[i % img_count];
             f << nervana::manifest_file::get_delimiter();
-            f << std::to_string(i % 2);
+            f << std::to_string(i % img_count);
             f << "\n";
         }
     }
