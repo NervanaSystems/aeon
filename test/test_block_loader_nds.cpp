@@ -32,6 +32,7 @@
 
 #define private public
 #include "manifest_nds.hpp"
+#include "block_loader_nds.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -227,97 +228,97 @@ TEST(DISABLED_block_loader_nds, cpio_filename)
 TEST(DISABLED_block_loader_nds, multiblock_sequential)
 {
 
-    start_server();
-    int block_size = 5000;
-    int elements_per_record = 2;
-    auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, block_size, 1, 0);
-    block_iterator_sequential iter(client);
+    // start_server();
+    // int block_size = 5000;
+    // int elements_per_record = 2;
+    // auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, block_size, 1, 0);
+    // block_iterator_sequential iter(client);
 
-    for(int block_number=0; block_number<10; block_number++)
-    {
-        buffer_in_array dest(elements_per_record);
-        iter.read(dest);
+    // for(int block_number=0; block_number<10; block_number++)
+    // {
+    //     buffer_in_array dest(elements_per_record);
+    //     iter.read(dest);
 
-        vector<buffer_in*> data_buffer;
-        for (int element_number=0; element_number<elements_per_record; element_number++)
-        {
-            data_buffer.push_back(dest[element_number]);
-            ASSERT_EQ(block_size, data_buffer[element_number]->record_count());
-        }
+    //     vector<buffer_in*> data_buffer;
+    //     for (int element_number=0; element_number<elements_per_record; element_number++)
+    //     {
+    //         data_buffer.push_back(dest[element_number]);
+    //         ASSERT_EQ(block_size, data_buffer[element_number]->record_count());
+    //     }
 
-        for (int record_number=0; record_number<block_size; record_number++)
-        {
-            for (int element_number=0; element_number<elements_per_record; element_number++)
-            {
-                const vector<char>& data_actual = data_buffer[element_number]->get_item(record_number);
-                ASSERT_NE(0, data_actual.size());
-                string data        = data_actual.data();
-                auto tokens        = split(data, ':');
-                int record_actual  = stod(tokens[0]);
-                ASSERT_EQ(record_number, record_actual);
-                int element_actual = stod(tokens[1]);
-                ASSERT_EQ(element_number, element_actual);
-            }
-        }
-    }
+    //     for (int record_number=0; record_number<block_size; record_number++)
+    //     {
+    //         for (int element_number=0; element_number<elements_per_record; element_number++)
+    //         {
+    //             const vector<char>& data_actual = data_buffer[element_number]->get_item(record_number);
+    //             ASSERT_NE(0, data_actual.size());
+    //             string data        = data_actual.data();
+    //             auto tokens        = split(data, ':');
+    //             int record_actual  = stod(tokens[0]);
+    //             ASSERT_EQ(record_number, record_actual);
+    //             int element_actual = stod(tokens[1]);
+    //             ASSERT_EQ(element_number, element_actual);
+    //         }
+    //     }
+    // }
 }
 
 TEST(DISABLED_block_loader_nds, multiblock_shuffled)
 {
-    start_server();
-    int block_size = 5000;
-    int elements_per_record = 2;
-    auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, block_size, 1, 0);
-    block_iterator_shuffled iter(client);
+    // start_server();
+    // int block_size = 5000;
+    // int elements_per_record = 2;
+    // auto client = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, block_size, 1, 0);
+    // block_iterator_shuffled iter(client);
 
-    for(int block_number=0; block_number<10; block_number++)
-    {
-        buffer_in_array dest(elements_per_record);
-        iter.read(dest);
+    // for(int block_number=0; block_number<10; block_number++)
+    // {
+    //     buffer_in_array dest(elements_per_record);
+    //     iter.read(dest);
 
-        vector<buffer_in*> data_buffer;
-        for (int element_number=0; element_number<elements_per_record; element_number++)
-        {
-            data_buffer.push_back(dest[element_number]);
-            ASSERT_EQ(block_size, data_buffer[element_number]->record_count());
-        }
+    //     vector<buffer_in*> data_buffer;
+    //     for (int element_number=0; element_number<elements_per_record; element_number++)
+    //     {
+    //         data_buffer.push_back(dest[element_number]);
+    //         ASSERT_EQ(block_size, data_buffer[element_number]->record_count());
+    //     }
 
-        for (int record_number=0; record_number<block_size; record_number++)
-        {
-            for (int element_number=0; element_number<elements_per_record; element_number++)
-            {
-                const vector<char>& data_actual = data_buffer[element_number]->get_item(record_number);
-                ASSERT_NE(0, data_actual.size());
-                string data        = data_actual.data();
-                auto tokens        = split(data, ':');
-//                int record_actual  = stod(tokens[0]);
-//                ASSERT_EQ(record_number, record_actual);
-                int element_actual = stod(tokens[1]);
-                ASSERT_EQ(element_number, element_actual);
-            }
-        }
-    }
+    //     for (int record_number=0; record_number<block_size; record_number++)
+    //     {
+    //         for (int element_number=0; element_number<elements_per_record; element_number++)
+    //         {
+    //             const vector<char>& data_actual = data_buffer[element_number]->get_item(record_number);
+    //             ASSERT_NE(0, data_actual.size());
+    //             string data        = data_actual.data();
+    //             auto tokens        = split(data, ':');
+    //             // int record_actual  = stod(tokens[0]);
+    //             // ASSERT_EQ(record_number, record_actual);
+    //             int element_actual = stod(tokens[1]);
+    //             ASSERT_EQ(element_number, element_actual);
+    //         }
+    //     }
+    // }
 }
 
 TEST(DISABLED_block_loader_nds, performance)
 {
     //    generate_large_cpio_file();
-    string                        cache_dir = file_util::make_temp_directory();
-    chrono::high_resolution_clock timer;
-    start_server();
-    auto                    client   = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
-    string                  cache_id = block_loader_random::randomString();
-    string                  version  = "version123";
-    auto                    cache    = make_shared<block_loader_cpio_cache>(cache_dir, cache_id, version, client);
-    block_iterator_shuffled iter(cache);
+    // string                        cache_dir = file_util::make_temp_directory();
+    // chrono::high_resolution_clock timer;
+    // start_server();
+    // auto                    client   = make_shared<block_loader_nds>("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    // string                  cache_id = block_loader_random::randomString();
+    // string                  version  = "version123";
+    // auto                    cache    = make_shared<block_loader_cpio_cache>(cache_dir, cache_id, version, client);
+    // block_iterator_shuffled iter(cache);
 
-    auto startTime = timer.now();
-    for (int i = 0; i < 300; i++)
-    {
-        buffer_in_array dest(2);
-        iter.read(dest);
-    }
-    auto endTime = timer.now();
-    cout << "time " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count() << " ms" << endl;
-    file_util::remove_directory(cache_dir);
+    // auto startTime = timer.now();
+    // for (int i = 0; i < 300; i++)
+    // {
+    //     buffer_in_array dest(2);
+    //     iter.read(dest);
+    // }
+    // auto endTime = timer.now();
+    // cout << "time " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count() << " ms" << endl;
+    // file_util::remove_directory(cache_dir);
 }
