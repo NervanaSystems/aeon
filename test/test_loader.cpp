@@ -460,7 +460,7 @@ static std::string generate_manifest_file(
     return manifest_name;
 }
 
-TEST(loader, deterministic)
+TEST(DISABLED_loader, deterministic)
 {
     std::string test_data_directory = file_util::path_join(string(CURDIR), "test_data");
     std::string manifest            = generate_manifest_file(20);
@@ -480,7 +480,8 @@ TEST(loader, deterministic)
                                               {"saturation", {0.5, 2.0}},
                                               {"contrast", {0.5, 1.0}},
                                               {"brightness", {0.5, 1.0}},
-                                              {"flip_enable", true}}};
+                                              {"flip_enable", true},
+                                            }};
     nlohmann::json config = {{"manifest_root", test_data_directory},
                              {"manifest_filename", manifest},
                              {"batch_size", batch_size},
