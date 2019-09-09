@@ -105,18 +105,27 @@ void image::resize(const cv::Mat& input,
     }
 }
 
-void image::resize_short(const cv::Mat& input, cv::Mat& output, const int target_size)
+cv::Size2i image::get_resized_short_size(size_t in_width,
+                                         size_t in_height,
+                                         size_t target_size)
 {
-    auto percent = static_cast<float>(target_size) / std::min(input.cols, input.rows);
-
-    auto resized_width  = static_cast<int>(std::round(input.cols * percent));
-    auto resized_height = static_cast<int>(std::round(input.rows * percent));
-    cv::resize(input, output, cv::Size2i(resized_width, resized_height), 0, 0, CV_INTER_LINEAR);
+    auto percent = static_cast<float>(target_size) / min(in_height, in_width);
+    auto resized_width  = static_cast<int>(round(in_width * percent));
+    auto resized_height = static_cast<int>(round(in_height * percent));
+    return cv::Size2i{resized_width, resized_height};
 }
 
-void image::standardize(std::vector<cv::Mat>&      image,
-                        const std::vector<double>& mean,
-                        const std::vector<double>& stddev)
+void image::resize_short(const cv::Mat& input, cv::Mat& output, const int target_size)
+{
+    cv::resize(input,
+               output,
+               get_resized_short_size(input.cols, input.rows, target_size),
+               0, 0, CV_INTER_LINEAR);
+}
+
+void image::standardize(vector<cv::Mat>&      image,
+                        const vector<double>& mean,
+                        const vector<double>& stddev)
 {
     // single n-channel image case
     if (image.size() == 1)
@@ -143,7 +152,7 @@ void image::standardize(std::vector<cv::Mat>&      image,
         for (int i = 0; i < image.size(); i++)
         {
             if (image[i].channels() != 1)
-                throw std::invalid_argument(
+                throw invalid_argument(
                     "standardize accepts only single n channel image or multiple single channel "
                     "images");
             // divide by 255
@@ -187,7 +196,7 @@ void image::convert_mix_channels(const vector<cv::Mat>& source,
         prepared_source = &tmp_source;
     }
 
-    if (prepared_source->size() == 1 && target.size() == 1 && mix_channels &&
+    if (prepared_source->size() == 1 && target.size() == 1 && !mix_channels &&
         (*prepared_source)[0].isContinuous() && target[0].isContinuous())
     {
         size_t size = target[0].total() * target[0].elemSize();

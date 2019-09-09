@@ -189,5 +189,5 @@ private:
     uint32_t            m_channels;
     std::vector<double> m_mean;
     std::vector<double> m_stddev;
-    std::vector<int>    from_to;
+    std::vector<int>    m_from_to;
 };

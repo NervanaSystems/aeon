@@ -235,15 +235,15 @@ image::loader::loader(const image::config& cfg,
 
     if (m_bgr_to_rgb)
     {
-        from_to = {0, 2, 1, 1, 2, 0};
+        m_from_to = {0, 2, 1, 1, 2, 0};
     }
     else
     {
-        from_to.reserve(m_channels * 2);
+        m_from_to.reserve(m_channels * 2);
         for (int i = 0; i < m_channels; i++)
         {
-            from_to.push_back(i);
-            from_to.push_back(i);
+            m_from_to.push_back(i);
+            m_from_to.push_back(i);
         }
     }
 }
@@ -312,7 +312,7 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
                 cv::Mat target_roi = output(cv::Rect(0, 0, input_image.cols, input_image.rows));
                 source.push_back(input_image);
                 target.push_back(target_roi);
-                image::convert_mix_channels(source, target, from_to, m_bgr_to_rgb);
+                image::convert_mix_channels(source, target, m_from_to, m_bgr_to_rgb);
                 // single image call
                 if (!m_mean.empty())
                     image::standardize(target, m_mean, m_stddev);
@@ -337,7 +337,7 @@ void image::loader::load(const vector<void*>& outlist, shared_ptr<image::decoded
                 target.emplace_back(
                     input_image.size(), CV_MAKETYPE(cv_type, m_channels), (char*)(outbuf_i));
             }
-            image::convert_mix_channels(source, target, from_to, m_bgr_to_rgb);
+            image::convert_mix_channels(source, target, m_from_to, m_bgr_to_rgb);
             // single image call
             if (!m_mean.empty())
                 image::standardize(target, m_mean, m_stddev);
