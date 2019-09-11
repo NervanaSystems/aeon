@@ -52,7 +52,7 @@ TEST(buffer, shuffle)
 
     ASSERT_EQ(sorted(buffer_to_vector_of_strings(b)), true);
 
-    b.shuffle(0);
+    b.shuffle(std::minstd_rand0{0});
 
     ASSERT_EQ(sorted(buffer_to_vector_of_strings(b)), false);
 }

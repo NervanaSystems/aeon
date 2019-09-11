@@ -28,6 +28,7 @@ set (SRC
     test_augmentation.cpp
     test_base64.cpp
     test_bbox.cpp
+    test_benchmark.cpp
     test_block_loader_file.cpp
     test_block_loader_nds.cpp
     test_block_manager.cpp

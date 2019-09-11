@@ -52,9 +52,16 @@ manifest_file::manifest_file(const string& filename,
                              const string& root,
                              float         subset_fraction,
                              size_t        block_size,
-                             uint32_t      seed)
+                             uint32_t      seed,
+                             uint32_t      node_id,
+                             uint32_t      node_count,
+                             int           batch_size)
     : m_source_filename(filename)
     , m_record_count{0}
+    , m_node_id(node_id)
+    , m_node_count(node_count)
+    , m_block_size(block_size)
+    , m_batch_size(batch_size)
     , m_shuffle{shuffle}
     , m_random{seed ? seed : random_device{}()}
 {
@@ -74,8 +81,15 @@ manifest_file::manifest_file(std::istream&      stream,
                              const std::string& root,
                              float              subset_fraction,
                              size_t             block_size,
-                             uint32_t           seed)
+                             uint32_t           seed,
+                             uint32_t           node_id,
+                             uint32_t           node_count,
+                             int                batch_size)
     : m_record_count{0}
+    , m_node_id(node_id)
+    , m_node_count(node_count)
+    , m_block_size(block_size)
+    , m_batch_size(batch_size)
     , m_shuffle{shuffle}
     , m_random{seed ? seed : random_device{}()}
 {
@@ -107,7 +121,7 @@ void manifest_file::initialize(std::istream&      stream,
     size_t                 element_count = 0;
     size_t                 line_number   = 0;
     string                 line;
-    vector<vector<string>> record_list;
+
 
     // read in each line, then from that istringstream, break into
     // tab-separated elements.
@@ -182,21 +196,21 @@ void manifest_file::initialize(std::istream&      stream,
                           ostream_iterator<std::string>(ss, " "));
                 throw std::runtime_error(ss.str());
             }
-            record_list.push_back(element_list);
+            m_record_list.push_back(element_list);
         }
         line_number++;
     }
 
     affirm(subset_fraction > 0.0 && subset_fraction <= 1.0,
            "subset_fraction must be >= 0 and <= 1");
-    generate_subset(record_list, subset_fraction);
+    generate_subset(m_record_list, subset_fraction);
 
-    m_record_count = record_list.size();
+    m_record_count = m_record_list.size();
 
     // At this point the manifest is complete and ready to use
     // compute the crc now because we are going to add the manifest_root
     // to the records
-    for (const vector<string>& record : record_list)
+    for (const vector<string>& record : m_record_list)
     {
         for (const string& s : record)
         {
@@ -205,39 +219,22 @@ void manifest_file::initialize(std::istream&      stream,
     }
     m_crc_engine.TruncatedFinal((uint8_t*)&m_computed_crc, sizeof(m_computed_crc));
 
-    if (m_shuffle)
-        std::shuffle(record_list.begin(), record_list.end(), m_random);
-
     if (!root.empty())
     {
-        for (size_t record_number = 0; record_number < record_list.size(); record_number++)
+        for (size_t record_number = 0; record_number < m_record_list.size(); record_number++)
         {
             for (int i = 0; i < m_element_types.size(); i++)
             {
                 if (m_element_types[i] == element_t::FILE)
                 {
-                    record_list[record_number][i] =
-                        file_util::path_join(root, record_list[record_number][i]);
+                    m_record_list[record_number][i] =
+                        file_util::path_join(root, m_record_list[record_number][i]);
                 }
             }
         }
     }
 
-    // now that we have a list of all records, create blocks
-    std::vector<block_info> block_list = generate_block_list(m_record_count, block_size);
-    for (auto info : block_list)
-    {
-        vector<vector<string>> block;
-        for (int i = info.start(); i < info.end(); i++)
-        {
-            block.push_back(record_list[i]);
-        }
-        m_block_list.push_back(block);
-    }
-
-    m_block_load_sequence.reserve(m_block_list.size());
-    m_block_load_sequence.resize(m_block_list.size());
-    iota(m_block_load_sequence.begin(), m_block_load_sequence.end(), 0);
+    generate_blocks();
 }
 
 const std::vector<manifest_file::element_t>& manifest_file::get_element_types() const
@@ -245,16 +242,81 @@ const std::vector<manifest_file::element_t>& manifest_file::get_element_types() 
     return m_element_types;
 }
 
-vector<vector<string>>* manifest_file::next()
+vector<manifest_file::record_t>* manifest_file::next()
 {
     vector<vector<string>>* rc = nullptr;
     if (m_counter < m_block_list.size())
     {
         auto load_index = m_block_load_sequence[m_counter];
-        rc              = &(m_block_list[load_index]);
+        if (m_node_count == 0 )
+        {
+            rc  = &(m_block_list[load_index]);
+        }
+        else
+        {
+            // work around for multinode !!!!!!!!!!!!!
+            // /////////////////////////////////////////////////////
+            m_tmp_blocks.push_back(m_block_list[load_index]);
+            if (m_tmp_blocks.size() > 4) m_tmp_blocks.pop_front();
+            rc = &m_tmp_blocks.back();
+            // //////////////////////////////////////////////////
+        }
+
         m_counter++;
     }
     return rc;
+}
+
+void manifest_file::generate_blocks()
+{
+        if (m_shuffle)
+            std::shuffle(m_record_list.begin(), m_record_list.end(), m_random);
+
+        vector<record_t> record_list_shuffled;
+        record_list_shuffled.resize(m_record_list.size());
+
+        if (m_node_count != 0 )
+        {
+            m_record_count = m_record_list.size() / m_node_count;
+            int batches = m_record_count / m_batch_size;
+            record_list_shuffled.resize(m_record_count);
+
+            for (int i = 0; i < batches * m_batch_size; i++)
+            {
+                auto batch_num = i / m_batch_size;
+                auto index_in_batch = i % m_batch_size;
+                record_list_shuffled[i] = m_record_list[batch_num * m_batch_size * m_node_count + m_batch_size * m_node_id + index_in_batch];
+            }
+            int tail_count = m_record_count - batches * m_batch_size;
+            int tail_src   = batches * m_batch_size * m_node_count + tail_count * m_node_id;
+            int tail_dst   = batches * m_batch_size;
+            for (int i = 0; i < tail_count; i++)
+                record_list_shuffled[i + tail_dst] = m_record_list[i + tail_src];
+        }
+        else
+        {
+            // TODO rewrite this in more performance friendly way
+            record_list_shuffled = m_record_list;
+        }
+
+        // ///////////////////////////////////////////////////////////////////////////////////
+        // reset block list
+
+        std::vector<block_info> block_list = generate_block_list(m_record_count, m_block_size);
+        m_block_list.clear();
+        for (auto info : block_list)
+        {
+            vector<vector<string>> block;
+            for (int i = info.start(); i < info.end(); i++)
+            {
+                block.push_back(record_list_shuffled[i]);
+            }
+            m_block_list.push_back(block);
+        }
+
+        m_block_load_sequence.reserve(m_block_list.size());
+        m_block_load_sequence.resize(m_block_list.size());
+        iota(m_block_load_sequence.begin(), m_block_load_sequence.end(), 0);
 }
 
 void manifest_file::reset()
@@ -262,6 +324,8 @@ void manifest_file::reset()
     if (m_shuffle)
     {
         shuffle(m_block_load_sequence.begin(), m_block_load_sequence.end(), m_random);
+        if (m_node_count != 0 )
+            generate_blocks();
     }
     m_counter = 0;
 }
@@ -272,7 +336,7 @@ void manifest_file::generate_subset(vector<vector<string>>& record_list, float s
     {
         std::bernoulli_distribution distribution(subset_fraction);
         std::default_random_engine  generator(0); //get_global_random_seed());
-        vector<record>              tmp;
+        vector<record_t>              tmp;
         tmp.swap(record_list);
         size_t expected_count = tmp.size() * subset_fraction;
         size_t needed         = expected_count;
@@ -298,7 +362,7 @@ uint32_t manifest_file::get_crc()
 
 const std::vector<std::string>& manifest_file::operator[](size_t offset) const
 {
-    for (const vector<record>& block : m_block_list)
+    for (const vector<record_t>& block : m_block_list)
     {
         if (offset < block.size())
         {
