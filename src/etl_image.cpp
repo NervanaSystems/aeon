@@ -161,7 +161,10 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
     if (img_xform->resize_short_size == 0)
         resizedShortImage = expandedImage;
     else
-        image::resize_short(expandedImage, resizedShortImage, img_xform->resize_short_size);
+        image::resize_short(expandedImage,
+                            resizedShortImage,
+                            img_xform->resize_short_size,
+                            img_xform->interpolation_method);
 
     cv::Mat croppedImage = resizedShortImage(img_xform->cropbox);
     image::add_padding(croppedImage, img_xform->padding, img_xform->padding_crop_offset);

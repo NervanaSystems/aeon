@@ -34,7 +34,10 @@ namespace nervana
         cv::Size2i get_resized_short_size(std::size_t in_width,
                                           std::size_t in_height,
                                           std::size_t target_size);
-        void resize_short(const cv::Mat&, cv::Mat&, const int target_size);
+        void resize_short(const cv::Mat&,
+                                cv::Mat&,
+                          const int target_size,
+                          const std::string& interpolation_method = "AREA");
         void standardize(std::vector<cv::Mat>&,
                          const std::vector<double>& mean,
                          const std::vector<double>& stddev);

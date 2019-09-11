@@ -115,12 +115,15 @@ cv::Size2i image::get_resized_short_size(size_t in_width,
     return cv::Size2i{resized_width, resized_height};
 }
 
-void image::resize_short(const cv::Mat& input, cv::Mat& output, const int target_size)
+void image::resize_short(const cv::Mat& input,
+                               cv::Mat& output,
+                         const int target_size,
+                         const string& inter_method)
 {
     cv::resize(input,
                output,
                get_resized_short_size(input.cols, input.rows, target_size),
-               0, 0, CV_INTER_LINEAR);
+               0, 0, get_interpolation_method(inter_method));
 }
 
 void image::standardize(vector<cv::Mat>&      image,
