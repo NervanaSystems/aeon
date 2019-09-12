@@ -14,7 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <iostream>
+#include <algorithm>
+#include <cctype>
+#include <map>
 
 #include "image.hpp"
 #include "util.hpp"
@@ -22,6 +24,31 @@
 
 using namespace nervana;
 using namespace std;
+
+namespace
+{
+    int get_interpolation_method(const string& inter_method)
+    {
+        static map<string, int> cv_interpolation_map{
+            {"NEAREST", cv::INTER_NEAREST},
+            {"LINEAR", cv::INTER_LINEAR},
+            {"CUBIC", cv::INTER_CUBIC},
+            {"AREA", cv::INTER_AREA},
+            {"LANCZOS4", cv::INTER_LANCZOS4},
+        };
+
+        string method{inter_method};
+        transform(begin(method), end(method), begin(method), ::toupper);
+
+        auto it = cv_interpolation_map.find(method);
+        if (it != cv_interpolation_map.end())
+        {
+            return it->second;
+        }
+        throw invalid_argument("Provided interpolation method (" + inter_method +
+                               " is unrecognized.");
+    }
+}
 
 void image::rotate(
     const cv::Mat& input, cv::Mat& output, int angle, bool interpolate, const cv::Scalar& border)
@@ -63,7 +90,10 @@ void image::add_padding(cv::Mat& input, int padding, cv::Size2i crop_offset)
     input = paddedImage(cropbox);
 }
 
-void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size, bool interpolate)
+void image::resize(const cv::Mat& input,
+                   cv::Mat& output,
+                   const cv::Size2i& size,
+                   const string& inter_method)
 {
     if (size == input.size())
     {
@@ -71,22 +101,82 @@ void image::resize(const cv::Mat& input, cv::Mat& output, const cv::Size2i& size
     }
     else
     {
-        int inter;
-        if (interpolate)
-        {
-            inter = input.size().area() < size.area() ? CV_INTER_CUBIC : CV_INTER_AREA;
-        }
-        else
-        {
-            inter = CV_INTER_NN;
-        }
-        cv::resize(input, output, size, 0, 0, inter);
+        cv::resize(input, output, size, 0, 0, get_interpolation_method(inter_method));
     }
 }
 
-void image::convert_mix_channels(vector<cv::Mat>& source,
-                                 vector<cv::Mat>& target,
-                                 vector<int>&     from_to)
+cv::Size2i image::get_resized_short_size(size_t in_width,
+                                         size_t in_height,
+                                         size_t target_size)
+{
+    auto percent = static_cast<float>(target_size) / min(in_height, in_width);
+    auto resized_width  = static_cast<int>(round(in_width * percent));
+    auto resized_height = static_cast<int>(round(in_height * percent));
+    return cv::Size2i{resized_width, resized_height};
+}
+
+void image::resize_short(const cv::Mat& input,
+                               cv::Mat& output,
+                         const int target_size,
+                         const string& inter_method)
+{
+    cv::resize(input,
+               output,
+               get_resized_short_size(input.cols, input.rows, target_size),
+               0, 0, get_interpolation_method(inter_method));
+}
+
+void image::standardize(vector<cv::Mat>&      image,
+                        const vector<double>& mean,
+                        const vector<double>& stddev)
+{
+    // single n-channel image case
+    if (image.size() == 1)
+    {
+        // create cv::Scalar from mean and reciprocal of stddev.
+        cv::Scalar s_mean, s_stddev;
+        for (int i = 0; i < mean.size(); i++)
+        {
+            s_mean[i]   = mean[i];
+            s_stddev[i] = stddev[i] ? 1. / stddev[i] : 1.;
+        }
+        // divide by 255
+        cv::multiply(image[0], 1. / 255., image[0]);
+        // subtract mean
+        cv::subtract(image[0], s_mean, image[0]);
+        // divide by stddev
+        cv::multiply(image[0], s_stddev, image[0]);
+        return;
+    }
+    // channel-major case
+    else if (image.size() > 1)
+    {
+        // For each channel in the image
+        for (int i = 0; i < image.size(); i++)
+        {
+            if (image[i].channels() != 1)
+                throw invalid_argument(
+                    "standardize accepts only single n channel image or multiple single channel "
+                    "images");
+            // divide by 255
+            cv::multiply(image[i], 1. / 255., image[i]);
+            // subtract mean
+            cv::subtract(image[i], mean[i], image[i]);
+            // divide by stddev if its not zero
+            if (stddev[i])
+                cv::multiply(image[i], 1. / stddev[i], image[i]);
+        }
+        return;
+    }
+    throw std::invalid_argument(
+        "standardize accepts only single n channel image or multiple single channel "
+        "images");
+}
+
+void image::convert_mix_channels(const vector<cv::Mat>& source,
+                                 vector<cv::Mat>&       target,
+                                 const vector<int>&     from_to,
+                                 bool                   mix_channels)
 {
     if (source.size() == 0)
         throw invalid_argument("convertMixChannels source size must be > 0");
@@ -109,7 +199,8 @@ void image::convert_mix_channels(vector<cv::Mat>& source,
         prepared_source = &tmp_source;
     }
 
-    if (prepared_source->size() == 1 && target.size() == 1)
+    if (prepared_source->size() == 1 && target.size() == 1 && !mix_channels &&
+        (*prepared_source)[0].isContinuous() && target[0].isContinuous())
     {
         size_t size = target[0].total() * target[0].elemSize();
         memcpy(target[0].data, (*prepared_source)[0].data, size);
@@ -170,12 +261,12 @@ cv::Size2f image::cropbox_area_scale(const cv::Size2f& in_size,
     return result;
 }
 
-cv::Point2f image::cropbox_shift(const cv::Size2f& in_size,
+cv::Point2i image::cropbox_shift(const cv::Size2f& in_size,
                                  const cv::Size2f& crop_box,
                                  float             xoff,
                                  float             yoff)
 {
-    cv::Point2f result;
+    cv::Point2i result;
     result.x = (in_size.width - crop_box.width) * xoff;
     result.y = (in_size.height - crop_box.height) * yoff;
     return result;

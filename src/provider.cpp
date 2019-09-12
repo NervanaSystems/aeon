@@ -153,7 +153,10 @@ provider::image::image(nlohmann::json js, nlohmann::json aug)
     , m_extractor{m_config}
     , m_transformer{m_config}
     , m_augmentation_factory{aug}
-    , m_loader{m_config, m_augmentation_factory.fixed_aspect_ratio}
+    , m_loader{m_config,
+               m_augmentation_factory.fixed_aspect_ratio,
+               m_augmentation_factory.mean,
+               m_augmentation_factory.stddev}
     , m_buffer_name{create_name(m_config.name, "image")}
 {
     m_output_shapes.emplace_back(make_pair(m_buffer_name, m_config.get_shape_type()));
@@ -181,6 +184,7 @@ void provider::image::provide(int                        idx,
         aug.m_image_augmentations = m_augmentation_factory.make_params(
             input_size.width, input_size.height, m_config.width, m_config.height);
     }
+
     m_loader.load({datum_out}, m_transformer.transform(aug.m_image_augmentations, decoded));
 }
 

@@ -72,7 +72,7 @@ std::shared_ptr<image::decoded>
     cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
 
     cv::Mat resizedImage;
-    image::resize(croppedImage, resizedImage, img_xform->output_size, false);
+    image::resize(croppedImage, resizedImage, img_xform->output_size, "NEAREST");
 
     cv::Mat flippedImage;
     if (img_xform->flip)

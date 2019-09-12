@@ -257,6 +257,207 @@ bool check_value(shared_ptr<image::decoded> transformed, int x0, int y0, int x1,
     return x1 == (int)value[0] && y1 == (int)value[1];
 }
 
+// TODO(sfraczek): add for fixed_aspect_ratio testing other images than height
+// * width
+void test_bgr_to_rgb(int width, int height, bool channel_major, bool fixed_aspect_ratio)
+{
+    vector<cv::Mat> indexed_images = {generate_indexed_image(height, width),
+                                      generate_indexed_image(height, width)};
+
+    int  channels        = 3;
+    auto bytes_per_image = height * width * channels;
+    auto total_bytes     = bytes_per_image * indexed_images.size();
+
+    std::vector<unsigned char> output_image(total_bytes);
+
+    nlohmann::json js = {{"width", width},
+                         {"height", height},
+                         {"channels", channels},
+                         {"bgr_to_rgb", true},
+                         {"channel_major", channel_major}};
+    image::config cfg(js);
+
+    auto decoded = make_shared<image::decoded>();
+    for (int i = 0; i < indexed_images.size(); i++)
+    {
+        decoded->add(indexed_images[i]);
+    }
+
+    image::loader loader(cfg, fixed_aspect_ratio);
+    loader.load({output_image.data()}, decoded);
+
+    // b 0 - col        0
+    // g 1 - row   -->  row
+    // r 2 - 0          col
+
+    if (channel_major)
+    {
+        int ind = 0;
+        for (int i = 0; i < indexed_images.size(); i++)
+        {
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    EXPECT_EQ(output_image.at(ind++), 0);
+                }
+            }
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    EXPECT_EQ(output_image.at(ind++), row);
+                }
+            }
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    EXPECT_EQ(output_image.at(ind++), col);
+                }
+            }
+        }
+    }
+    else
+    {
+        int ind = 0;
+        for (int i = 0; i < indexed_images.size(); i++)
+        {
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    ASSERT_EQ(static_cast<int>(output_image.at(ind++)), 0);
+                    ASSERT_EQ(static_cast<int>(output_image.at(ind++)), row);
+                    ASSERT_EQ(static_cast<int>(output_image.at(ind++)), col);
+                }
+            }
+        }
+    }
+};
+
+TEST(image, bgr_to_rgb)
+{
+    int  width              = 10;
+    int  height             = 20;
+    bool channel_major      = false;
+    bool fixed_aspect_ratio = false;
+
+    test_bgr_to_rgb(width, height, channel_major, fixed_aspect_ratio);
+}
+
+TEST(image, bgr_to_rgb_channel_major)
+{
+    int  width              = 10;
+    int  height             = 20;
+    bool channel_major      = true;
+    bool fixed_aspect_ratio = false;
+
+    test_bgr_to_rgb(width, height, channel_major, fixed_aspect_ratio);
+}
+
+TEST(image, bgr_to_rgb_fixed_aspect_ratio)
+{
+    int  width              = 10;
+    int  height             = 20;
+    bool channel_major      = false;
+    bool fixed_aspect_ratio = true;
+
+    test_bgr_to_rgb(width, height, channel_major, fixed_aspect_ratio);
+}
+
+TEST(image, bgr_to_rgb_channel_major_fixed_aspect_ratio)
+{
+    int  width              = 10;
+    int  height             = 20;
+    bool channel_major      = true;
+    bool fixed_aspect_ratio = true;
+
+    test_bgr_to_rgb(width, height, channel_major, fixed_aspect_ratio);
+}
+
+TEST(image, standardize)
+{
+    int width    = 256;
+    int height   = 256;
+    int channels = 3;
+
+    std::vector<double> mean{0.5, 0.5, 0.};
+
+    double              dev = 0.28980498288430989;
+    std::vector<double> stddev{dev, dev, 0.};
+
+    auto indexed = generate_indexed_image(height, width);
+
+    auto total_bytes = height * width * channels * sizeof(float);
+
+    std::vector<unsigned char> output_image(total_bytes);
+
+    nlohmann::json js = {{"width", width},
+                         {"height", height},
+                         {"channels", channels},
+                         {"output_type", "float"},
+                         {"channel_major", false}};
+    image::config cfg(js);
+
+    auto decoded = make_shared<image::decoded>();
+    decoded->add(indexed);
+
+    image::loader loader(cfg, false, mean, stddev);
+    loader.load({output_image.data()}, decoded);
+
+    // standardized image is (X/255 - mean) / stddev
+
+    float* data  = reinterpret_cast<float*>(output_image.data());
+    size_t index = 0;
+    for (int row = 0; row < height; row++)
+    {
+        for (int col = 0; col < width; col++)
+        {
+            EXPECT_NEAR(data[index],
+                        (indexed.data[index] / 255. - mean[0]) / (stddev[0] ? stddev[0] : 1),
+                        1e-5);
+            EXPECT_NEAR(data[index + 1],
+                        (indexed.data[index + 1] / 255. - mean[1]) / (stddev[1] ? stddev[1] : 1),
+                        1e-5);
+            EXPECT_NEAR(data[index + 2],
+                        (indexed.data[index + 2] / 255. - mean[2]) / (stddev[2] ? stddev[2] : 1),
+                        1e-5);
+            index += 3;
+        }
+    }
+}
+
+TEST(image, standardize_validation)
+{
+    auto create_loader = [](int                 channels,
+                            std::string         output_type,
+                            std::vector<double> mean,
+                            std::vector<double> stddev) {
+
+        nlohmann::json js = {
+            {"width", 10}, {"height", 10}, {"channels", channels}, {"output_type", output_type}};
+        image::config cfg(js);
+        return image::loader(cfg, false, mean, stddev);
+    };
+
+    EXPECT_NO_THROW(create_loader(3, "float", {}, {}));
+    EXPECT_NO_THROW(create_loader(1, "uint8_t", {}, {}));
+
+    EXPECT_NO_THROW(create_loader(3, "float", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}));
+    EXPECT_NO_THROW(create_loader(1, "float", {0.4}, {0.3}));
+    EXPECT_NO_THROW(create_loader(3, "double", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}));
+    EXPECT_NO_THROW(create_loader(1, "double", {0.4}, {0.3}));
+
+    EXPECT_THROW(create_loader(3, "float", {0.5}, {0.3}), std::invalid_argument);
+    EXPECT_THROW(create_loader(1, "float", {0.4, 0.6}, {0.3}), std::invalid_argument);
+
+    EXPECT_THROW(create_loader(3, "uint8_t", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}), std::invalid_argument);
+    EXPECT_THROW(create_loader(1, "uint8_t", {0.4}, {0.3}), std::invalid_argument);
+    EXPECT_THROW(create_loader(3, "int32_t", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}), std::invalid_argument);
+    EXPECT_THROW(create_loader(1, "int32_t", {0.4}, {0.3}), std::invalid_argument);
+}
+
 TEST(image, transform_crop)
 {
     auto                  indexed = generate_indexed_image(256, 256);
@@ -790,6 +991,20 @@ TEST(image, config_bad_scale)
     EXPECT_THROW(image::config{js}, std::invalid_argument);
 }
 
+TEST(image, config_bgr_to_rgb_but_1_channels)
+{
+    int            height   = 128;
+    int            width    = 256;
+    int            channels = 1;
+    nlohmann::json js       = {{"type", "image"},
+                         {"height", height},
+                         {"width", width},
+                         {"channels", channels},
+                         {"bgr_to_rgb", true}};
+
+    EXPECT_THROW(image::config{js}, std::invalid_argument);
+}
+
 TEST(image, area_scale)
 {
     vector<char> image_data = file_util::read_file_contents(CURDIR "/test_data/img_2112_70.jpg");
@@ -832,7 +1047,7 @@ TEST(image, area_scale)
                 factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
             float cropbox_area  = params->cropbox.area();
             float cropbox_ratio = cropbox_area / source_image_area;
-            EXPECT_NEAR(0.3, cropbox_ratio, 0.0001);
+            EXPECT_NEAR(0.3, cropbox_ratio, 0.0002);
         }
         {
             aug["scale"] = {0.8, 0.8};

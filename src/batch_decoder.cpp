@@ -43,7 +43,8 @@ batch_decoder::batch_decoder(shared_ptr<batch_iterator>                 b_itor,
     if (m_deterministic_mode)
     {
         m_random.resize(batch_size);
-        for_each(m_random.begin(), m_random.end(), [&](random_engine_t& eng) { eng.seed(seed++); });
+        random_engine_t generator_seed(seed);
+        for_each(m_random.begin(), m_random.end(), [&](random_engine_t& eng) { eng.seed(generator_seed()); });
     }
 }
 
