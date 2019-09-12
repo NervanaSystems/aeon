@@ -124,10 +124,10 @@ public:
     std::vector<encoded_record>::iterator       end() { return m_records.end(); }
     std::vector<encoded_record>::const_iterator begin() const { return m_records.begin(); }
     std::vector<encoded_record>::const_iterator end() const { return m_records.end(); }
-    void shuffle(uint32_t random_seed)
+    template<typename T>
+    void shuffle(T&& random_generator)
     {
-        std::minstd_rand0 rand_items(random_seed);
-        std::shuffle(m_records.begin(), m_records.end(), rand_items);
+        std::shuffle(m_records.begin(), m_records.end(), random_generator);
     }
 
 private:

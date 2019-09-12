@@ -34,6 +34,8 @@ nervana::block_manager::block_manager(shared_ptr<block_loader_source> file_loade
     , m_block_count{file_loader->block_count()}
     , m_record_count{file_loader->record_count()}
     , m_elements_per_record{file_loader->elements_per_record()}
+    , m_random_generator{seed ? seed : random_device{}()}
+    , m_enable_shuffle(enable_shuffle)
 {
     if (!cache_root.empty())
         m_cache.reset(new cache_system(file_loader->get_uid(),
@@ -88,6 +90,10 @@ nervana::encoded_record_list* block_manager::filler()
             if (m_cache)
                 m_cache->try_get_access();
         }
+
+        // WORKAROUD!!!, should be implemented in manifest_file
+        if (rc && m_enable_shuffle)
+            rc->shuffle(m_random_generator);
     }
 
     if (rc && rc->size() == 0)

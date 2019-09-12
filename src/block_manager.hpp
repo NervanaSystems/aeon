@@ -58,4 +58,6 @@ private:
     size_t                        m_block_count;
     size_t                        m_record_count;
     size_t                        m_elements_per_record;
+    std::minstd_rand0             m_random_generator;
+    bool                          m_enable_shuffle;
 };

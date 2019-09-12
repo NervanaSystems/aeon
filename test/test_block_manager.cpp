@@ -520,7 +520,7 @@ TEST(block_manager, file_shuffle_no_cache)
     EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
 }
 
-TEST(block_manager, nds_no_shuffle_cache)
+TEST(DISABLED_block_manager, nds_no_shuffle_cache)
 {
     string cache_root          = file_util::make_temp_directory();
     size_t record_count        = 1000;
@@ -584,7 +584,7 @@ TEST(block_manager, nds_no_shuffle_cache)
     file_util::remove_directory(cache_root);
 }
 
-TEST(block_manager, nds_no_shuffle_no_cache)
+TEST(DISABLED_block_manager, nds_no_shuffle_no_cache)
 {
     string cache_root          = "";
     size_t record_count        = 1000;
@@ -646,7 +646,7 @@ TEST(block_manager, nds_no_shuffle_no_cache)
     EXPECT_TRUE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
 }
 
-TEST(block_manager, nds_shuffle_cache)
+TEST(DISABLED_block_manager, nds_shuffle_cache)
 {
     string         cache_root          = file_util::make_temp_directory();
     size_t         record_count        = 1000;
@@ -712,7 +712,7 @@ TEST(block_manager, nds_shuffle_cache)
     file_util::remove_directory(cache_root);
 }
 
-TEST(block_manager, nds_shuffle_no_cache)
+TEST(DISABLED_block_manager, nds_shuffle_no_cache)
 {
     string         cache_root          = "";
     size_t         record_count        = 1000;

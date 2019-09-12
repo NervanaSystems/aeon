@@ -33,6 +33,7 @@ The complete table of configuration parameters is shown below:
    output_type (string)| ~"uint8_t~"| Output data type.
    channels (uint) | 3 | Number of channels in input image
    channel_major (bool)| True | Load the pixel buffer in channel major order (that is, all pixels from blue channel contiguous, followed by all pixels from green channel, followed by all pixels from the red channel).  The alternative is to have the color channels for each pixel located adjacent to each other (b1g1r1b2g2r2 rather than b1b2g1g2r1r2).
+   bgr_to_rgb (bool) | False | Reorder output to RGB instead of the default BGR.
    seed (int) | 0 | Random seed
 
 The buffers provisioned to the model are:

@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #define private public
 
@@ -83,7 +84,8 @@ TEST(image_augmentation, config)
                          {"scale", {0.2, 0.8}},
                          {"lighting", {0.0, 0.1}},
                          {"horizontal_distortion", {0.75, 1.33}},
-                         {"flip_enable", false}};
+                         {"flip_enable", false},
+                         {"mean", {0.5, 0.4, 0.6}}};
 
     augment::image::param_factory config(js);
     EXPECT_FALSE(config.do_area_scale);
@@ -116,6 +118,9 @@ TEST(image_augmentation, config)
     EXPECT_FLOAT_EQ(0.5, config.crop_offset.b());
 
     EXPECT_FLOAT_EQ(0.0, config.flip_distribution.p());
+
+    EXPECT_THAT(config.mean, testing::ElementsAre(0.5, 0.4, 0.6));
+    EXPECT_TRUE(config.stddev.empty());
 }
 
 TEST(image_augmnetation, config_crop_and_batch_sampler)

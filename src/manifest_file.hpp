@@ -54,28 +54,36 @@ public:
                   const std::string& root            = "",
                   float              subset_fraction = 1.0,
                   size_t             block_size      = 5000,
-                  uint32_t           seed            = 0);
+                  uint32_t           seed            = 0,
+                  uint32_t           node_id         = 0,
+                  uint32_t           node_count      = 0,
+                  int                batch_size      = 1);
 
     manifest_file(std::istream&      stream,
                   bool               shuffle,
                   const std::string& root            = "",
                   float              subset_fraction = 1.0,
                   size_t             block_size      = 5000,
-                  uint32_t           seed            = 0);
+                  uint32_t           seed            = 0,
+                  uint32_t           node_id         = 0,
+                  uint32_t           node_count      = 0,
+                  int                batch_size      = 1);
 
     virtual ~manifest_file() {}
-    typedef std::vector<std::string> record;
+    using record_t = std::vector<std::string>;
 
     std::string cache_id() override;
     std::string version() override;
 
-    std::vector<std::vector<std::string>>* next() override;
+    std::vector<record_t>* next() override;
     void                                   reset() override;
 
     size_t   block_count() const { return m_block_list.size(); }
     size_t   record_count() const override { return m_record_count; }
     size_t   elements_per_record() const override { return m_element_types.size(); }
     uint32_t get_crc();
+
+    void generate_blocks();
 
     static char                   get_delimiter() { return m_delimiter_char; }
     static char                   get_comment_char() { return m_comment_char; }
@@ -98,12 +106,18 @@ protected:
 private:
     void generate_subset(std::vector<std::vector<std::string>>&, float subset_fraction);
 
+    std::vector<std::vector<std::string>>           m_record_list;
     std::string                      m_source_filename;
-    std::vector<std::vector<record>> m_block_list;
+    std::vector<std::vector<record_t>> m_block_list;
+    std::deque<std::vector<record_t>> m_tmp_blocks;
     CryptoPP::CRC32C                 m_crc_engine;
     uint32_t                         m_computed_crc;
     size_t                           m_counter{0};
     size_t                           m_record_count;
+    uint32_t                         m_node_id{0};
+    uint32_t                         m_node_count{0};
+    size_t                           m_block_size;
+    int                              m_batch_size{1};
     static const char                m_delimiter_char = '\t';
     static const char                m_comment_char   = '#';
     static const char                m_metadata_char  = '@';
