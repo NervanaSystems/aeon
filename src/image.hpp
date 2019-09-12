@@ -61,7 +61,7 @@ namespace nervana
         cv::Size2f cropbox_area_scale(const cv::Size2f& in_size,
                                       const cv::Size2f& cropbox_size,
                                       float             scale);
-        cv::Point2f cropbox_shift(const cv::Size2f&, const cv::Size2f&, float, float);
+        cv::Point2i cropbox_shift(const cv::Size2f&, const cv::Size2f&, float, float);
 
         class photometric
         {

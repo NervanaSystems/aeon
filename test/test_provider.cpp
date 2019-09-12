@@ -188,8 +188,6 @@ TEST(provider, image_paddle_imagenet_validate_augmentation)
 
     const size_t height         = 224;
     const size_t width          = 224;
-    const size_t crop_height    = height;
-    const size_t crop_width     = width;
     const size_t channels       = 3;
     const size_t batch_size     = 1;
     const size_t elements_count = height * width * channels;
@@ -202,24 +200,24 @@ TEST(provider, image_paddle_imagenet_validate_augmentation)
                                    {"bgr_to_rgb", true},
                                };
 
+    const int resize_short_size = 256;
+    const double scale = static_cast<double>(width) / resize_short_size;
     nlohmann::json aug_config = {{"type", "image"},
                                  {"flip_enable", false},
                                  {"center", true},
                                  {"crop_enable", true},
+                                 {"scale", {scale, scale}},
                                  {"interpolation_method", "LINEAR"},
                                  {"mean", {0.485, 0.456, 0.406}},
                                  {"stddev", {0.229, 0.224, 0.225}},
-                                 {"resize_short_size", 256},
+                                 {"resize_short_size", resize_short_size},
                                  {"debug_output_directory", test_results_directory},
                              };
 
     // --- prepare image augmentation parameters ---
     augment::image::param_factory factory(aug_config);
-    image_params_builder builder(factory.make_params(in_img_width, in_img_height, width, height));
     shared_ptr<augment::image::params> aug_params_ptr =
-            builder.cropbox(58, 16, crop_width, crop_height)
-                   .flip(false)
-                   .angle(0);
+        factory.make_params(in_img_width, in_img_height, width, height);
 
     augmentation data_augmentation;
     data_augmentation.m_image_augmentations = aug_params_ptr;
@@ -258,7 +256,7 @@ TEST(provider, image_paddle_imagenet_validate_augmentation)
 
     EXPECT_LE(avg_err, 1e-3f);
     EXPECT_LE(avg_rel_err, 1e-3f);
-    EXPECT_LE(max_err, 1e-3f);
+    EXPECT_LE(max_err, 1e-5f);
     EXPECT_LE(max_rel_err, 1e-2f);
 }
 

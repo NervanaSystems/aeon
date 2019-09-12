@@ -216,7 +216,7 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
         float c_off_x = crop_offset(random);
         float c_off_y = crop_offset(random);
 
-        cv::Point2f cropbox_origin =
+        cv::Point2i cropbox_origin =
             nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
         settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
     }
