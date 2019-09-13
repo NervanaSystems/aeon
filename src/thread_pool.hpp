@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include <thread>
 #include <atomic>
-#include <mutex>
 #include <exception>
+#include <mutex>
+#include <thread>
 
 #ifdef __linux__
 #include <pthread.h>
@@ -83,7 +83,11 @@ template <typename T, void (T::*process_func)(int index)>
 class nervana::thread_pool
 {
 public:
-    thread_pool(int thread_count)
+    thread_pool(int thread_count,
+                std::size_t thr_affinit_low_bound = 0,
+                std::size_t thr_affinity_high_bound = 0)
+        : m_thread_affinity_low_bound(thr_affinit_low_bound)
+        , m_thread_affinity_high_bound(thr_affinity_high_bound)
     {
         int nthreads;
 
@@ -138,8 +142,10 @@ public:
     }
 
 private:
-    const int                       m_max_count_of_free_threads = 2;
-    const int                       m_free_threads_ratio        = 8;
+    const int                       m_max_count_of_free_threads  = 2;
+    const int                       m_free_threads_ratio         = 8;
+    std::size_t                     m_thread_affinity_low_bound  = 0;
+    std::size_t                     m_thread_affinity_high_bound = 0;
     T*                              m_worker;
     int                             m_task_count;
     std::unique_ptr<thread_barrier> m_br_wake;
@@ -150,13 +156,32 @@ private:
     std::exception_ptr              m_pool_exception;
     std::mutex                      m_mutex;
 
+    int get_thread_affinity(int thread_id)
+    {
+        if (m_threads.size() > 1 &&
+            m_thread_affinity_low_bound == 0 &&
+            m_thread_affinity_high_bound == 0)
+        {
+            return thread_id;
+        }
+        // XXX: assume high_boudn > low_bound
+        std::size_t n_cores = m_thread_affinity_high_bound - m_thread_affinity_low_bound;
+        if (thread_id > n_cores)
+        {
+            throw std::invalid_argument("Provided thread id {" + std::to_string(thread_id) +
+                    "} is greater than the number of affiliated cores count: " +
+                    std::to_string(n_cores) + "!");
+        }
+        return m_thread_affinity_low_bound + thread_id;
+    }
+
     template <bool dynamic_task_scheduling>
     void process(int thread_id)
     {
 #ifdef __linux__
         cpu_set_t cpuset;
         CPU_ZERO(&cpuset);
-        CPU_SET(thread_id, &cpuset);
+        CPU_SET(get_thread_affinity(thread_id), &cpuset);
         pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
 #endif
 
@@ -201,8 +226,10 @@ template <typename T, void (T::*process_func)(int index)>
 class nervana::thread_pool_queue
 {
 public:
-    thread_pool_queue(int thread_count)
-        : m_thread_pool(thread_count)
+    thread_pool_queue(int thread_count,
+                      std::size_t thr_affinit_low_bound = 0,
+                      std::size_t thr_affinity_high_bound = 0)
+        : m_thread_pool(thread_count, thr_affinit_low_bound, thr_affinity_high_bound)
         , m_thread(&thread_pool_queue::process_tasks, this)
     {
     }

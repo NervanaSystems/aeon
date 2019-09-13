@@ -191,7 +191,9 @@ void loader_local::initialize(const json& config_json)
                                            lcfg.decode_thread_count,
                                            lcfg.pinned,
                                            m_provider,
-                                           lcfg.random_seed);
+                                           lcfg.random_seed,
+                                           lcfg.thread_affinity_low_bound,
+                                           lcfg.thread_affinity_high_bound);
 
     m_final_stage =
         make_shared<batch_iterator_fbm>(m_decoder, lcfg.batch_size, m_provider, !lcfg.batch_major);

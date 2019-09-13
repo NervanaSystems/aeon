@@ -36,7 +36,9 @@ public:
                   uint32_t                                   thread_count,
                   bool                                       pinned,
                   const std::shared_ptr<provider_interface>& prov,
-                  uint32_t                                   seed = 0);
+                  uint32_t                                   seed = 0,
+                  uint32_t                                   thread_affinity_low_bound = 0,
+                  uint32_t                                   thread_affinity_high_bound = 0);
 
     virtual ~batch_decoder();
 

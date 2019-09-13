@@ -26,14 +26,17 @@ batch_decoder::batch_decoder(shared_ptr<batch_iterator>                 b_itor,
                              uint32_t                                   thread_count,
                              bool                                       pinned,
                              const std::shared_ptr<provider_interface>& prov,
-                             uint32_t                                   seed)
+                             uint32_t                                   seed,
+                             uint32_t                                   thread_affinity_low_bound,
+                             uint32_t                                   thread_affinity_high_bound)
     : async_manager<encoded_record_list, fixed_buffer_map>(b_itor, "batch_decoder")
     , m_batch_size(batch_size)
     , m_provider(prov)
     , m_deterministic_mode(seed != 0)
 {
     m_thread_pool =
-        singleton<thread_pool_queue<batch_decoder, &batch_decoder::process>>::get(thread_count);
+        singleton<thread_pool_queue<batch_decoder, &batch_decoder::process>>::get(
+            thread_count, thread_affinity_low_bound, thread_affinity_high_bound);
     m_number_elements_in = prov->get_input_count();
 
     // Allocate the space in the output buffers

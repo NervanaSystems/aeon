@@ -56,22 +56,24 @@ public:
     std::string manifest_root;
     int         batch_size;
 
-    std::string                 cache_directory      = "";
-    int                         block_size           = 5000;
-    float                       subset_fraction      = 1.0;
-    bool                        shuffle_enable       = false;
-    bool                        shuffle_manifest     = false;
-    bool                        pinned               = false;
-    bool                        batch_major          = true;
-    uint32_t                    random_seed          = 0;
-    uint32_t                    decode_thread_count  = 0;
-    std::string                 iteration_mode       = "ONCE";
-    int                         iteration_mode_count = 0;
-    uint16_t                    web_server_port      = 0;
+    std::string                 cache_directory            = "";
+    int                         block_size                 = 5000;
+    float                       subset_fraction            = 1.0;
+    bool                        shuffle_enable             = false;
+    bool                        shuffle_manifest           = false;
+    bool                        pinned                     = false;
+    bool                        batch_major                = true;
+    uint32_t                    random_seed                = 0;
+    uint32_t                    decode_thread_count        = 0;
+    uint32_t                    thread_affinity_low_bound  = 0;
+    uint32_t                    thread_affinity_high_bound = 0;
+    std::string                 iteration_mode             = "ONCE";
+    int                         iteration_mode_count       = 0;
+    uint16_t                    web_server_port            = 0;
     std::vector<nlohmann::json> etl;
     std::vector<nlohmann::json> augmentation;
-    uint32_t                    node_id              = 0;
-    uint32_t                    node_count           = 0;
+    uint32_t                    node_id                    = 0;
+    uint32_t                    node_count                 = 0;
 #if defined(ENABLE_AEON_SERVICE)
     nlohmann::json remote;
 #endif
@@ -92,6 +94,8 @@ private:
         ADD_SCALAR(shuffle_enable, mode::OPTIONAL),
         ADD_SCALAR(shuffle_manifest, mode::OPTIONAL),
         ADD_SCALAR(decode_thread_count, mode::OPTIONAL),
+        ADD_SCALAR(thread_affinity_low_bound, mode::OPTIONAL),
+        ADD_SCALAR(thread_affinity_high_bound, mode::OPTIONAL),
         ADD_SCALAR(pinned, mode::OPTIONAL),
         ADD_SCALAR(random_seed, mode::OPTIONAL),
         ADD_SCALAR(iteration_mode, mode::OPTIONAL),
