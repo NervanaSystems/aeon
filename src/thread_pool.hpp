@@ -115,6 +115,48 @@ public:
             for (int i = 0; i < nthreads; i++)
                 m_threads.emplace_back(&thread_pool::process<true>, this, i);
         }
+
+        // Parse list of cpu cores to set thread affinity
+        const char* cpu_list = getenv("AEON_CPU_LIST"); // Example: 0-50,10,30,32-33
+        if (cpu_list != nullptr)
+        {
+            std::string              str_cpu_list{cpu_list};
+            std::vector<std::string> groups = split(str_cpu_list, ',', false);
+            try
+            {
+                for (std::string& str : groups)
+                {
+                    auto dash_pos = str.find('-');
+                    if (dash_pos == std::string::npos)
+                    {
+                        thread_affinity_map.push_back(stoi(str));
+                    }
+                    else
+                    {
+                        int from = stoi(str.substr(0, dash_pos));
+                        int to   = stoi(str.substr(dash_pos + 1));
+                        for (int i = from; i <= to; ++i)
+                        {
+                            thread_affinity_map.push_back(i);
+                        }
+                    }
+                }
+            }
+            catch (...)
+            {
+                ERR << "Failed to parse AEON_CPU_LIST";
+                throw;
+            }
+            if (thread_affinity_map.size() < nthreads)
+            {
+                WARN << "AEON_CPU_LIST provides only '" +
+                            std::to_string(thread_affinity_map.size()) + "' cores but aeon uses '" +
+                            std::to_string(nthreads) +
+                            "' decode threads. The remaining threads will be 'wrapped around' and "
+                            "reuse the same cores.";
+            }
+            std::sort(thread_affinity_map.begin(), thread_affinity_map.end());
+        }
     }
 
     ~thread_pool()
@@ -140,6 +182,7 @@ public:
 private:
     const int                       m_max_count_of_free_threads = 2;
     const int                       m_free_threads_ratio        = 8;
+    std::vector<int>                thread_affinity_map;
     T*                              m_worker;
     int                             m_task_count;
     std::unique_ptr<thread_barrier> m_br_wake;
@@ -150,14 +193,22 @@ private:
     std::exception_ptr              m_pool_exception;
     std::mutex                      m_mutex;
 
+    int get_thread_affinity(int thread_id)
+    {
+        return thread_affinity_map[thread_id % thread_affinity_map.size()];
+    }
+
     template <bool dynamic_task_scheduling>
     void process(int thread_id)
     {
 #ifdef __linux__
-        cpu_set_t cpuset;
-        CPU_ZERO(&cpuset);
-        CPU_SET(thread_id, &cpuset);
-        pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+        if (!thread_affinity_map.empty())
+        {
+            cpu_set_t cpuset;
+            CPU_ZERO(&cpuset);
+            CPU_SET(get_thread_affinity(thread_id), &cpuset);
+            pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+        }
 #endif
 
         for (;;)
