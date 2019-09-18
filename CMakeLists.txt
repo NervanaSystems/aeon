@@ -148,10 +148,10 @@ find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 link_directories(${CURL_LIBRARY_DIRS})
 
-set(Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4)
+# set(Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4)
 
-find_package(PythonLibs)
 find_package(PythonInterp)
+find_package(PythonLibs)
 
 if (PYTHON_PLUGIN)
     if (NOT ${PYTHON_VERISON_MAJOR} EQUAL ${OpenCV_VERSION_MAJOR})
