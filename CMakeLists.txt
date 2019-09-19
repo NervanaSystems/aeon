@@ -45,6 +45,10 @@ option(ENABLE_AEON_SERVICE "Enable compilation of AEON Service" OFF)
 option(ENABLE_AEON_CLIENT "Enable compilation of AEON Client" ON)
 option(ENABLE_OPENFABRICS_CONNECTOR "Enable OpenFabrics connector for batch exchange between service and client" OFF)
 option(BUILD_OPENCV "Build Aeon with 3rd party OpenCV support" OFF)
+if(BUILD_OPENCV)
+    add_definitions(-DBUILD_OPENCV)
+    list(APPEND CMAKE_CXX_FLAGS "-DBUILD_OPENCV")
+endif(BUILD_OPENCV)
 
 include(cmake/summary.cmake)
 

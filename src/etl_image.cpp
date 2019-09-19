@@ -80,8 +80,10 @@ image::extractor::extractor(const image::config& cfg)
     {
         _pixel_type = CV_MAKETYPE(CV_8U, cfg.channels);
         _color_mode = cfg.channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR;
+#ifdef BUILD_OPENCV
         // Do not run ApplyExifOrientation as this causes Segmentation faults
         _color_mode = _color_mode | CV_LOAD_IMAGE_IGNORE_ORIENTATION;
+#endif
     }
 }
 
@@ -91,7 +93,11 @@ shared_ptr<image::decoded> image::extractor::extract(const void* inbuf, size_t i
 
     // It is bad to cast away const, but opencv does not support a const Mat
     // The Mat is only used for imdecode on the next line so it is OK here
+#ifdef BUILD_OPENCV
     cv::Mat input_img(insize * CV_MAT_CN(_pixel_type), 1, CV_8UC1, (char*)inbuf);
+#else
+    cv::Mat input_img(1, insize, _pixel_type, (char*)inbuf);
+#endif
     cv::imdecode(input_img, _color_mode, &output_img);
 
     auto rc = make_shared<image::decoded>();

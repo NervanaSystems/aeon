@@ -23,7 +23,9 @@
 #include "specgram.hpp"
 #include "util.hpp"
 
+#ifdef BUILD_OPENCV
 #include <opencv2/imgproc/types_c.h>
+#endif
 #include "noise_clips.hpp"
 #include "augment_audio.hpp"
 

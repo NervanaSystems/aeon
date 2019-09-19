@@ -8,8 +8,10 @@
 #include <fstream>
 #include <memory>
 #include <opencv2/core/core.hpp>
+#ifdef BUILD_OPENCV
 #include <opencv2/imgcodecs/legacy/constants_c.h>
 #include <opencv2/videoio/legacy/constants_c.h>
+#endif
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "opencv2/imgproc/imgproc_c.h"

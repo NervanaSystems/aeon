@@ -19,7 +19,9 @@
 #include <string>
 #include <tuple>
 
+#ifdef BUILD_OPENCV
 #include <opencv2/imgproc/types_c.h>
+#endif
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
