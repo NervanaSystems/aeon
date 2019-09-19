@@ -83,6 +83,10 @@ Please take a look at [distributed documentation](http://aeon.nervanasys.com/ind
 
 Note: if installing system wide (as opposed to within a virtual environment) you may need to run `sudo`
 
+Note: to build Aeon with the latest version of libjpeg-turbo and OpenCV run:
+
+    cmake -DBUILD_OPENCV=ON ..
+
 Now continue on to the [user guide](http://aeon.nervanasys.com/index.html/user_guide.html) to get started using aeon. Or to the
 [developer guide](http://aeon.nervanasys.com/index.html/developer_guide.html) to developing custom loaders/transformers.
 
