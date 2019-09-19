@@ -184,6 +184,8 @@ namespace nervana
     std::vector<char> string2vector(const std::string& s);
     std::string vector2string(const std::vector<char>& s);
 
+    std::vector<int> parse_cpu_list(const std::string& cpu_list);
+
     class stopwatch
     {
     public:

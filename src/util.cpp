@@ -330,3 +330,62 @@ std::string nervana::vector2string(const std::vector<char>& v)
 {
     return string{v.data(), v.size()};
 }
+
+std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
+{
+    std::vector<int>         thread_affinity_map;
+    std::vector<std::string> split_list = nervana::split(cpu_list, ',', false);
+    try
+    {
+        for (std::string& str : split_list)
+        {
+            auto dash_pos = str.find('-');
+            if (dash_pos == std::string::npos)
+            {
+                thread_affinity_map.push_back(stoi(str));
+            }
+            else
+            {
+                int from = stoi(str.substr(0, dash_pos));
+                int to   = stoi(str.substr(dash_pos + 1));
+                for (int i = from; i <= to; ++i)
+                {
+                    thread_affinity_map.push_back(i);
+                }
+            }
+        }
+    }
+    catch (...)
+    {
+        ERR << "Failed to parse cpu list.";
+        throw;
+    }
+    std::sort(thread_affinity_map.begin(), thread_affinity_map.end());
+    auto ip = std::unique(thread_affinity_map.begin(), thread_affinity_map.end());
+    if (ip != thread_affinity_map.end())
+    {
+        auto num_removed_duplicates = std::distance(ip, thread_affinity_map.end());
+        WARN << "Removed '" << std::to_string(num_removed_duplicates) << "' duplicates in cpu list.";
+    }
+    thread_affinity_map.resize(std::distance(thread_affinity_map.begin(), ip));
+
+    if (thread_affinity_map.back() > std::thread::hardware_concurrency())
+    {
+        throw std::invalid_argument("One or more indexes computed from cpu list '" + cpu_list +
+                                    "' exceed number of logical cores. Use values "
+                                    "in "
+                                    "range <0, " +
+                                    std::to_string(std::thread::hardware_concurrency()) + ").");
+    }
+
+    if (thread_affinity_map.front() < 0)
+    {
+        throw std::invalid_argument("One or more indexes computed from cpu list '" + cpu_list +
+                                    "' are less than '0'. Use values "
+                                    "in "
+                                    "range <0, " +
+                                    std::to_string(std::thread::hardware_concurrency()) + ").");
+    }
+
+    return thread_affinity_map;
+}

@@ -64,7 +64,7 @@ public:
     bool                        pinned               = false;
     bool                        batch_major          = true;
     uint32_t                    random_seed          = 0;
-    uint32_t                    decode_thread_count  = 0;
+    std::string                 cpu_list             = "";
     std::string                 iteration_mode       = "ONCE";
     int                         iteration_mode_count = 0;
     uint16_t                    web_server_port      = 0;
@@ -91,7 +91,7 @@ private:
                    [](decltype(subset_fraction) v) { return v <= 1.0f && v >= 0.0f; }),
         ADD_SCALAR(shuffle_enable, mode::OPTIONAL),
         ADD_SCALAR(shuffle_manifest, mode::OPTIONAL),
-        ADD_SCALAR(decode_thread_count, mode::OPTIONAL),
+        ADD_SCALAR(cpu_list, mode::OPTIONAL),
         ADD_SCALAR(pinned, mode::OPTIONAL),
         ADD_SCALAR(random_seed, mode::OPTIONAL),
         ADD_SCALAR(iteration_mode, mode::OPTIONAL),

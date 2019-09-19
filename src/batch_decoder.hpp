@@ -33,7 +33,7 @@ class nervana::batch_decoder : public async_manager<encoded_record_list, fixed_b
 public:
     batch_decoder(std::shared_ptr<batch_iterator>            b_itor,
                   size_t                                     batch_size,
-                  uint32_t                                   thread_count,
+                  std::vector<int>                           thread_affinity_map,
                   bool                                       pinned,
                   const std::shared_ptr<provider_interface>& prov,
                   uint32_t                                   seed = 0);

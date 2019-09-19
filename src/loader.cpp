@@ -119,7 +119,8 @@ void loader_local::initialize(const json& config_json)
 
     if (lcfg.node_count != 0)
     {
-        if (lcfg.node_id >= lcfg.node_count) throw std::runtime_error("node_id can't be greater than node_count");
+        if (lcfg.node_id >= lcfg.node_count)
+            throw std::runtime_error("node_id can't be greater than node_count");
     }
 
     if (nervana::manifest_nds::is_likely_json(lcfg.manifest_filename))
@@ -179,8 +180,32 @@ void loader_local::initialize(const json& config_json)
 
     m_provider = provider_factory::create(config_json);
 
-    unsigned int threads_num = lcfg.decode_thread_count != 0 ? lcfg.decode_thread_count
+    // Parse list of cpu cores to set thread affinity.
+    const char*      env_cpu_list = getenv("AEON_CPU_LIST"); // Example: 0-4,30,10,32-33
+    std::vector<int> thread_affinity_map;
+    if (env_cpu_list != nullptr) // set affinity from environment
+    {
+        std::string str_cpu_list{env_cpu_list};
+        thread_affinity_map = nervana::parse_cpu_list(str_cpu_list);
+
+        if (!lcfg.cpu_list.empty())
+        {
+            WARN << "Both AEON_CPU_LIST and 'cpu_list' are detected. AEON_CPU_LIST environment "
+                    "variable will be used in this case.";
+        }
+    }
+    else if (!lcfg.cpu_list.empty()) // set affinity from config
+    {
+        thread_affinity_map = nervana::parse_cpu_list(lcfg.cpu_list);
+    }
+    unsigned int threads_num = !thread_affinity_map.empty() ? thread_affinity_map.size()
                                                              : std::thread::hardware_concurrency();
+
+    // parser w util.hpp przekazuje do batch_decodera i do thread_pool dalej
+    // TYLKO JEDEN THREAD NA JEDEN CORE
+    // aktualizacja dokumentacji
+    // add more validation wheteher cpu_list is correct?
+    // add unit tests for new functionality
 
     const int decode_size =
         lcfg.batch_size * ((threads_num * m_input_multiplier - 1) / lcfg.batch_size + 1);
@@ -188,7 +213,7 @@ void loader_local::initialize(const json& config_json)
 
     m_decoder = make_shared<batch_decoder>(m_batch_iterator,
                                            decode_size,
-                                           lcfg.decode_thread_count,
+                                           thread_affinity_map,
                                            lcfg.pinned,
                                            m_provider,
                                            lcfg.random_seed);
@@ -256,7 +281,6 @@ bool loader::iterator::operator!=(const iterator& other) const
 {
     return !(*this == other);
 }
-
 // Whether or not this strictly positional iterator has reached the end
 bool loader::iterator::positional_end() const
 {

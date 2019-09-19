@@ -186,7 +186,7 @@ The possible base loader configurations are the following (configurations withou
    subset_fraction (float)| 1.0 | Fraction of the dataset to iterate over. Useful when testing code on smaller data samples.
    shuffle_enable (bool) | False | Shuffles the dataset order for every epoch
    shuffle_manifest (bool) | False | Shuffles manifest file contents
-   decode_thread_count (int)| 0 | Number of threads to use. If default value 0 is set, Aeon automatically chooses number of threads to logical number of cores diminished by two. To execute on a single thread, use value of 1
+   cpu_list (string) | "" | Controls number of decoding threads and their core affinity. If unset, Aeon automatically chooses number of threads to logical number of cores diminished by two and allocates them on cores from 0 to num_logical_cores-2. Cores can be specified by numbers and ranges starting at 0 as follows `AEON_CPU_LIST=0-5,20,10,32-34`.
    pinned (bool)| False |
    random_seed (uint)| 0 | Set not a zero value if you need to have deterministic output. In that case aeon will always produce the same output for given a particular input.
    iteration_mode (string)|"ONCE"| Can be "ONCE", "COUNT", or "INFINITE"
@@ -194,6 +194,8 @@ The possible base loader configurations are the following (configurations withou
    etl||
    augmentation||
    remote|| Configuration of connection with aeon service in distrubted dataloading scenario. Please take a look at :doc:`service <service>` documentation.
+
+Aeon also supports an environment variable ``AEON_CPU_LIST`` which overrides `cpu_list`. 
 
 Example python usage
 --------------------
