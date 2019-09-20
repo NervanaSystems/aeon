@@ -183,7 +183,7 @@ void loader_local::initialize(const json& config_json)
     // Parse list of cpu cores to set thread affinity.
     const char*      env_cpu_list = getenv("AEON_CPU_LIST"); // Example: 0-4,30,10,32-33
     std::vector<int> thread_affinity_map;
-    if (env_cpu_list != nullptr) // set affinity from environment
+    if (env_cpu_list != nullptr && std::strlen(env_cpu_list) > 0) // set affinity from environment
     {
         std::string str_cpu_list{env_cpu_list};
         thread_affinity_map = nervana::parse_cpu_list(str_cpu_list);
@@ -198,14 +198,18 @@ void loader_local::initialize(const json& config_json)
     {
         thread_affinity_map = nervana::parse_cpu_list(lcfg.cpu_list);
     }
+    if (thread_affinity_map.empty()) // automatically determine number of threads
+    {
+        // we don't use all threads, some of them we leave for other pipeline objects and system
+        auto nthreads =
+            std::thread::hardware_concurrency() -
+            std::min(m_max_count_of_free_threads,
+                     static_cast<int>(std::thread::hardware_concurrency() / m_free_threads_ratio));
+        thread_affinity_map.resize(nthreads);
+        std::iota(thread_affinity_map.begin(), thread_affinity_map.end(), 0);
+    }
     unsigned int threads_num = !thread_affinity_map.empty() ? thread_affinity_map.size()
-                                                             : std::thread::hardware_concurrency();
-
-    // parser w util.hpp przekazuje do batch_decodera i do thread_pool dalej
-    // TYLKO JEDEN THREAD NA JEDEN CORE
-    // aktualizacja dokumentacji
-    // add more validation wheteher cpu_list is correct?
-    // add unit tests for new functionality
+                                                            : std::thread::hardware_concurrency();
 
     const int decode_size =
         lcfg.batch_size * ((threads_num * m_input_multiplier - 1) / lcfg.batch_size + 1);

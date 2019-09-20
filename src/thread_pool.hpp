@@ -86,25 +86,7 @@ public:
     thread_pool(std::vector<int> thread_affinity_map)
         : m_thread_affinity_map(thread_affinity_map)
     {
-        int thread_count = thread_affinity_map.size();
-        int nthreads;
-
-        if (thread_count == 0) // automatically determine number of threads
-        {
-            // we don't use all threads, some of them we leave for other pipeline objects and system
-            nthreads = std::thread::hardware_concurrency() -
-                       std::min(m_max_count_of_free_threads,
-                                static_cast<int>(std::thread::hardware_concurrency() /
-                                                 m_free_threads_ratio));
-            thread_affinity_map.reserve(nthreads);
-            std::iota(thread_affinity_map.begin(), thread_affinity_map.end(), 0);
-        }
-        else
-        {
-            // don't return more threads than we can get
-            nthreads =
-                std::min(static_cast<int>(std::thread::hardware_concurrency()), thread_count);
-        }
+        int nthreads = m_thread_affinity_map.size();
 
         m_br_wake.reset(new thread_barrier(nthreads + 1));
         m_br_endtasks.reset(new thread_barrier(nthreads + 1));
@@ -142,9 +124,7 @@ public:
     }
 
 private:
-    const int                       m_max_count_of_free_threads = 2;
-    const int                       m_free_threads_ratio        = 8;
-    std::vector<int>                m_thread_affinity_map;
+    const std::vector<int>          m_thread_affinity_map;
     T*                              m_worker;
     int                             m_task_count;
     std::unique_ptr<thread_barrier> m_br_wake;
@@ -155,18 +135,14 @@ private:
     std::exception_ptr              m_pool_exception;
     std::mutex                      m_mutex;
 
-    int get_thread_affinity(int thread_id) { return m_thread_affinity_map[thread_id]; }
-    template <bool              dynamic_task_scheduling>
+    template <bool dynamic_task_scheduling>
     void process(int thread_id)
     {
 #ifdef __linux__
-        if (!m_thread_affinity_map.empty())
-        {
-            cpu_set_t cpuset;
-            CPU_ZERO(&cpuset);
-            CPU_SET(get_thread_affinity(thread_id), &cpuset);
-            pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
-        }
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(m_thread_affinity_map[thread_id], &cpuset);
+        pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
 #endif
 
         for (;;)

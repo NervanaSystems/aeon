@@ -68,10 +68,10 @@ public:
     std::string                 iteration_mode       = "ONCE";
     int                         iteration_mode_count = 0;
     uint16_t                    web_server_port      = 0;
-    std::vector<nlohmann::json> etl;
-    std::vector<nlohmann::json> augmentation;
     uint32_t                    node_id              = 0;
     uint32_t                    node_count           = 0;
+    std::vector<nlohmann::json> etl;
+    std::vector<nlohmann::json> augmentation;
 #if defined(ENABLE_AEON_SERVICE)
     nlohmann::json remote;
 #endif
@@ -256,6 +256,8 @@ private:
     fixed_buffer_map*                                       m_output_buffer_ptr{nullptr};
     nlohmann::json                                          m_current_config;
     std::shared_ptr<web_app>                                m_debug_web_app;
+    const int                                               m_max_count_of_free_threads = 2;
+    const int                                               m_free_threads_ratio        = 8;
 
     // How many times we should increase input data size for decoder
     const int m_input_multiplier = 8;
