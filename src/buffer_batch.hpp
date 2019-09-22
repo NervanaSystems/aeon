@@ -168,6 +168,7 @@ public:
     void        deallocate();
     const char* get_item(size_t index) const;
     char* get_item(size_t index);
+    void set_item_pointer(char* ptr);
     cv::Mat get_item_as_mat(size_t index, bool channel_major = false) const;
     char*             data() const { return m_data; }
     size_t            get_item_count() const { return m_size / m_stride; }
@@ -184,6 +185,7 @@ protected:
     size_t     m_batch_size{0};
     size_t     m_stride{0};
     bool       m_pinned{false};
+    bool       m_shallow_copy{false};
 };
 
 class nervana::fixed_buffer_map
@@ -266,6 +268,9 @@ public:
               size_t            count,
               size_t            batch_size,
               bool              transpose);
+    void shallow_copy(fixed_buffer_map& src,
+              size_t            src_index,
+              size_t            count);
 
     size_t        size() const { return m_data.size(); }
     std::ostream& serialize(std::ostream& out) const;

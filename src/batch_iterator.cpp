@@ -136,20 +136,26 @@ fixed_buffer_map* batch_iterator_fbm::filler()
         size_t       current_input_size = input_size - m_src_index;
         size_t move_count = (current_input_size <= remainder) ? current_input_size : remainder;
 
-        rc->copy(*m_input_ptr, m_src_index, m_dst_index, move_count, m_batch_size, m_transpose);
+        if (m_transpose)
+            rc->copy(*m_input_ptr, m_src_index, m_dst_index, move_count, m_batch_size, m_transpose);
+        else
+            rc->shallow_copy(*m_input_ptr, m_src_index, move_count);
 
         m_src_index += move_count;
         m_dst_index += move_count;
 
         remainder -= move_count;
 
-        if (remainder > 0 || input_size == m_src_index)
+        if (remainder > 0 )
         {
-            m_state     = async_state::fetching_data;
-            m_input_ptr = m_source->next();
-            m_src_index = 0;
-            m_state     = async_state::processing;
+            throw std::runtime_error("for performance reason we always expect input size as mulitple of batch size");
+//            m_state     = async_state::fetching_data;
+//            m_input_ptr = m_source->next();
+//            m_src_index = 0;
+//            m_state     = async_state::processing;
         }
+        if (input_size == m_src_index)
+            m_input_ptr = nullptr;
     }
 
     m_state = async_state::idle;

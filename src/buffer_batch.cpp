@@ -147,6 +147,12 @@ const char* buffer_fixed_size_elements::get_item(size_t index) const
     return &m_data[offset];
 }
 
+void buffer_fixed_size_elements::set_item_pointer(char* ptr)
+{
+    m_data = ptr;
+    m_shallow_copy = true;
+}
+
 void buffer_fixed_size_elements::allocate()
 {
 #if HAS_GPU
@@ -169,7 +175,7 @@ void buffer_fixed_size_elements::allocate()
 
 void buffer_fixed_size_elements::deallocate()
 {
-    if (m_data == nullptr)
+    if (m_data == nullptr || m_shallow_copy)
         return;
 #if HAS_GPU
     if (m_pinned)
@@ -276,6 +282,24 @@ void fixed_buffer_map::copy(fixed_buffer_map& src,
                 transpose_buf(p_dst, p_src, batch_size, cols, element_size, TransposeType::SSE);
         else
             memcpy(p_dst, p_src, count * src_fbm->get_stride());
+
+    }
+}
+
+void fixed_buffer_map::shallow_copy(fixed_buffer_map& src,
+                                    size_t            src_index,
+                                    size_t            count)
+{
+    for (auto name : m_names)
+    {
+        buffer_fixed_size_elements* src_fbm = src[name];
+        buffer_fixed_size_elements* dst_fbm = operator[](name);
+        char*                       p_src   = src_fbm->get_item(src_index);
+
+        if (count + src_index > src_fbm->get_item_count())
+            throw invalid_argument("buffer_fixed_size: count out-of-range");
+
+        dst_fbm->set_item_pointer(p_src);
     }
 }
 
