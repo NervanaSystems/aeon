@@ -379,15 +379,5 @@ std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
                                     std::to_string(std::thread::hardware_concurrency()) + ").");
     }
 
-    // This should never happen, because it throws at stoi() when parsing
-    // if (thread_affinity_map.front() < 0)
-    // {
-    //     throw std::invalid_argument("One or more indexes computed from cpu list '" + cpu_list +
-    //                                 "' are less than '0'. Use values "
-    //                                 "in "
-    //                                 "range <0, " +
-    //                                 std::to_string(std::thread::hardware_concurrency()) + ").");
-    // }
-
     return thread_affinity_map;
 }
