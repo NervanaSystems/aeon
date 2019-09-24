@@ -256,9 +256,9 @@ private:
     fixed_buffer_map*                                       m_output_buffer_ptr{nullptr};
     nlohmann::json                                          m_current_config;
     std::shared_ptr<web_app>                                m_debug_web_app;
-    const int                                               m_max_count_of_free_threads = 2;
-    const int                                               m_free_threads_ratio        = 8;
 
     // How many times we should increase input data size for decoder
-    const int m_input_multiplier = 8;
+    const int m_input_multiplier          = 8;
+    const int m_max_count_of_free_threads = 2;
+    const int m_free_threads_ratio        = 8;
 };

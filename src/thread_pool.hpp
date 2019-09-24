@@ -83,8 +83,8 @@ template <typename T, void (T::*process_func)(int index)>
 class nervana::thread_pool
 {
 public:
-    thread_pool(const std::vector<int>& thread_affinity_map)
-        : m_thread_affinity_map(thread_affinity_map)
+    thread_pool(std::vector<int> thread_affinity_map)
+        : m_thread_affinity_map(std::move(thread_affinity_map))
     {
         int nthreads = m_thread_affinity_map.size();
 

@@ -331,6 +331,7 @@ std::string nervana::vector2string(const std::vector<char>& v)
     return string{v.data(), v.size()};
 }
 
+// Parses cpu_list string. For example: "0-4,30,10,32-33"
 std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
 {
     std::vector<int>         thread_affinity_map;
@@ -377,6 +378,46 @@ std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
                                     "in "
                                     "range <0, " +
                                     std::to_string(std::thread::hardware_concurrency()) + ").");
+    }
+
+    return thread_affinity_map;
+}
+
+// Parses cpu affinity from loader config or environment variable.
+// Environment has precedence over config. If both are empty, provides the default.
+std::vector<int> nervana::get_thread_affinity_map(const std::string& config_cpu_list,
+                                                  int                max_count_of_free_threads,
+                                                  int                free_threads_ratio)
+{
+    std::vector<int> thread_affinity_map;
+
+    const char* env_cpu_list = getenv("AEON_CPU_LIST");
+    if (env_cpu_list != nullptr && strlen(env_cpu_list) > 0) // set affinity from environment
+    {
+        std::string str_cpu_list{env_cpu_list};
+        thread_affinity_map = nervana::parse_cpu_list(str_cpu_list);
+
+        if (!config_cpu_list.empty())
+        {
+            WARN << "Both AEON_CPU_LIST and 'cpu_list' are detected. AEON_CPU_LIST environment "
+                    "variable will be used in this case.";
+        }
+    }
+    else if (!config_cpu_list.empty()) // set affinity from config
+    {
+        thread_affinity_map = nervana::parse_cpu_list(config_cpu_list);
+    }
+
+    if (thread_affinity_map.empty()) //  automatically determine thread_affinity_map
+    {
+        // we don't use all threads, some of them we leave for other pipeline objects and system
+        int nthreads =
+            std::thread::hardware_concurrency() -
+            std::min(max_count_of_free_threads,
+                     static_cast<int>(std::thread::hardware_concurrency() / free_threads_ratio));
+
+        thread_affinity_map.resize(nthreads);
+        std::iota(thread_affinity_map.begin(), thread_affinity_map.end(), 0);
     }
 
     return thread_affinity_map;

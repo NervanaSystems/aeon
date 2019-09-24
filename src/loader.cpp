@@ -180,39 +180,13 @@ void loader_local::initialize(const json& config_json)
 
     m_provider = provider_factory::create(config_json);
 
-    // Parse list of cpu cores to set thread affinity.
-    const char*      env_cpu_list = getenv("AEON_CPU_LIST"); // Example: 0-4,30,10,32-33
-    std::vector<int> thread_affinity_map;
-    if (env_cpu_list != nullptr && std::strlen(env_cpu_list) > 0) // set affinity from environment
-    {
-        std::string str_cpu_list{env_cpu_list};
-        thread_affinity_map = nervana::parse_cpu_list(str_cpu_list);
+    std::vector<int> thread_affinity_map = nervana::get_thread_affinity_map(
+        lcfg.cpu_list, m_max_count_of_free_threads, m_free_threads_ratio);
 
-        if (!lcfg.cpu_list.empty())
-        {
-            WARN << "Both AEON_CPU_LIST and 'cpu_list' are detected. AEON_CPU_LIST environment "
-                    "variable will be used in this case.";
-        }
-    }
-    else if (!lcfg.cpu_list.empty()) // set affinity from config
-    {
-        thread_affinity_map = nervana::parse_cpu_list(lcfg.cpu_list);
-    }
-    if (thread_affinity_map.empty()) // automatically determine number of threads
-    {
-        // we don't use all threads, some of them we leave for other pipeline objects and system
-        auto nthreads =
-            std::thread::hardware_concurrency() -
-            std::min(m_max_count_of_free_threads,
-                     static_cast<int>(std::thread::hardware_concurrency() / m_free_threads_ratio));
-        thread_affinity_map.resize(nthreads);
-        std::iota(thread_affinity_map.begin(), thread_affinity_map.end(), 0);
-    }
-    unsigned int threads_num = !thread_affinity_map.empty() ? thread_affinity_map.size()
-                                                            : std::thread::hardware_concurrency();
+    // Smallest multiple of batch_size ensuring at least m_input_multiplier images per thread
+    int decode_size = lcfg.batch_size *
+                      ((thread_affinity_map.size() * m_input_multiplier - 1) / lcfg.batch_size + 1);
 
-    const int decode_size =
-        lcfg.batch_size * ((threads_num * m_input_multiplier - 1) / lcfg.batch_size + 1);
     m_batch_iterator = make_shared<batch_iterator>(m_block_manager, decode_size);
 
     m_decoder = make_shared<batch_decoder>(m_batch_iterator,
