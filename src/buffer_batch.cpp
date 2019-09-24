@@ -149,6 +149,7 @@ const char* buffer_fixed_size_elements::get_item(size_t index) const
 
 void buffer_fixed_size_elements::set_item_pointer(char* ptr)
 {
+    deallocate();
     m_data = ptr;
     m_shallow_copy = true;
 }
