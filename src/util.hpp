@@ -184,6 +184,11 @@ namespace nervana
     std::vector<char> string2vector(const std::string& s);
     std::string vector2string(const std::vector<char>& s);
 
+    std::vector<int> parse_cpu_list(const std::string& cpu_list);
+    std::vector<int> get_thread_affinity_map(const std::string& config_cpu_list,
+                                             int                max_count_of_free_threads,
+                                             int                free_threads_ratio);
+
     class stopwatch
     {
     public:
