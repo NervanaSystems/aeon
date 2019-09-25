@@ -376,8 +376,8 @@ std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
         throw std::invalid_argument("One or more indexes computed from cpu list '" + cpu_list +
                                     "' exceed number of logical cores. Use values "
                                     "in "
-                                    "range <0, " +
-                                    std::to_string(std::thread::hardware_concurrency()) + ").");
+                                    "range [0, " +
+                                    std::to_string(std::thread::hardware_concurrency() - 1) + "].");
     }
 
     return thread_affinity_map;

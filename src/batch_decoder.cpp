@@ -23,7 +23,7 @@ using namespace nervana;
 
 batch_decoder::batch_decoder(shared_ptr<batch_iterator>                 b_itor,
                              size_t                                     batch_size,
-                             const std::vector<int>&                    thread_affinity_map,
+                             std::vector<int>                           thread_affinity_map,
                              bool                                       pinned,
                              const std::shared_ptr<provider_interface>& prov,
                              uint32_t                                   seed)
@@ -33,7 +33,7 @@ batch_decoder::batch_decoder(shared_ptr<batch_iterator>                 b_itor,
     , m_deterministic_mode(seed != 0)
 {
     m_thread_pool = singleton<thread_pool_queue<batch_decoder, &batch_decoder::process>>::get(
-        thread_affinity_map);
+        std::move(thread_affinity_map));
     m_number_elements_in = prov->get_input_count();
 
     // Allocate the space in the output buffers

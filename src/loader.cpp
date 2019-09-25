@@ -191,7 +191,7 @@ void loader_local::initialize(const json& config_json)
 
     m_decoder = make_shared<batch_decoder>(m_batch_iterator,
                                            decode_size,
-                                           thread_affinity_map,
+                                           std::move(thread_affinity_map),
                                            lcfg.pinned,
                                            m_provider,
                                            lcfg.random_seed);
