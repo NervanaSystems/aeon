@@ -380,7 +380,7 @@ TEST(loader, provider)
     json label_config = {{"type", "label"}, {"binary", false}};
     json augmentation = {
         {{"height", height}, {"width", width}, {"type", "image"}, {"flip_enable", true}}};
-    json js = {{"decode_thread_count", 1},
+    json js = {{"cpu_list", "0"},
                {"manifest_filename", manifest},
                {"batch_size", batch_size},
                {"iteration_mode", "INFINITE"},
@@ -486,7 +486,7 @@ TEST(DISABLED_loader, deterministic)
                              {"manifest_filename", manifest},
                              {"batch_size", batch_size},
                              {"iteration_mode", "INFINITE"},
-                             {"decode_thread_count", 0},
+                             {"cpu_list", ""},
                              {"shuffle_manifest", true},
                              {"etl", {image_config, label_config}},
                              {"augmentation", aug_config},
@@ -655,7 +655,7 @@ TEST(benchmark, imagenet)
                        {"batch_size", batch_size},
                        {"iteration_mode", "INFINITE"},
                        {"cache_directory", cache_root},
-                       {"decode_thread_count", 0},
+                       {"cpu_list", ""},
                        //{"web_server_port", 8086},
                        {"etl", {image_config, label_config}},
                        {"augmentation", aug_config}};
@@ -743,7 +743,7 @@ TEST(benchmark, imagenet_paddle)
                        {"batch_size", batch_size},
                        {"iteration_mode", "INFINITE"},
                        {"cache_directory", cache_root},
-                       {"decode_thread_count", 0},
+                       {"cpu_list", ""},
                        {"etl", {image_config, label_config}},
                        {"augmentation", aug_config}};
 

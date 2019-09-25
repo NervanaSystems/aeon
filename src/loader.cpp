@@ -119,7 +119,8 @@ void loader_local::initialize(const json& config_json)
 
     if (lcfg.node_count != 0)
     {
-        if (lcfg.node_id >= lcfg.node_count) throw std::runtime_error("node_id can't be greater than node_count");
+        if (lcfg.node_id >= lcfg.node_count)
+            throw std::runtime_error("node_id can't be greater than node_count");
     }
 
     if (nervana::manifest_nds::is_likely_json(lcfg.manifest_filename))
@@ -179,16 +180,18 @@ void loader_local::initialize(const json& config_json)
 
     m_provider = provider_factory::create(config_json);
 
-    unsigned int threads_num = lcfg.decode_thread_count != 0 ? lcfg.decode_thread_count
-                                                             : std::thread::hardware_concurrency();
+    std::vector<int> thread_affinity_map = nervana::get_thread_affinity_map(
+        lcfg.cpu_list, m_max_count_of_free_threads, m_free_threads_ratio);
 
-    const int decode_size =
-        lcfg.batch_size * ((threads_num * m_input_multiplier - 1) / lcfg.batch_size + 1);
+    // Smallest multiple of batch_size ensuring at least m_input_multiplier images per thread
+    int decode_size = lcfg.batch_size *
+                      ((thread_affinity_map.size() * m_input_multiplier - 1) / lcfg.batch_size + 1);
+
     m_batch_iterator = make_shared<batch_iterator>(m_block_manager, decode_size);
 
     m_decoder = make_shared<batch_decoder>(m_batch_iterator,
                                            decode_size,
-                                           lcfg.decode_thread_count,
+                                           std::move(thread_affinity_map),
                                            lcfg.pinned,
                                            m_provider,
                                            lcfg.random_seed);
@@ -256,7 +259,6 @@ bool loader::iterator::operator!=(const iterator& other) const
 {
     return !(*this == other);
 }
-
 // Whether or not this strictly positional iterator has reached the end
 bool loader::iterator::positional_end() const
 {
