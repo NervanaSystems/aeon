@@ -371,7 +371,7 @@ std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
     }
     thread_affinity_map.resize(std::distance(thread_affinity_map.begin(), ip));
 
-    if (thread_affinity_map.back() > std::thread::hardware_concurrency())
+    if (thread_affinity_map.back() >= std::thread::hardware_concurrency())
     {
         throw std::invalid_argument("One or more indexes computed from cpu list '" + cpu_list +
                                     "' exceed number of logical cores. Use values "
