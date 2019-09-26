@@ -79,7 +79,7 @@ namespace
     }
 
 #endif
-}
+} // namespace
 
 TEST(loader, syntax)
 {
@@ -618,6 +618,7 @@ TEST(benchmark, imagenet)
     char* async         = getenv("TEST_IMAGENET_ASYNC");
     char* batch_delay   = getenv("TEST_IMAGENET_BATCH_DELAY");
     char* bsz           = getenv("TEST_IMAGENET_BATCH_SIZE");
+    char* iterations    = getenv("TEST_IMAGENET_ITERATIONS");
 
     if (!manifest_root)
     {
@@ -625,21 +626,13 @@ TEST(benchmark, imagenet)
     }
     else
     {
-        int    height     = 224;
-        int    width      = 224;
-        size_t batch_size = 128;
-        if (bsz)
-        {
-            std::istringstream iss(bsz);
-            iss >> batch_size;
-        }
-        std::string manifest_filename = "train-index.csv";
-        if (manifest_name)
-        {
-            std::istringstream iss(manifest_name);
-            iss >> manifest_filename;
-        }
-        string manifest = file_util::path_join(manifest_root, manifest_filename);
+        int         height     = 224;
+        int         width      = 224;
+        size_t      batch_size = bsz ? atoi(bsz) : 128;
+        std::string manifest =
+            file_util::path_join(manifest_root, manifest_name ? manifest_name : "train-index.csv");
+        std::string iteration_mode       = iterations ? "COUNT" : "INFINITE";
+        int         iteration_mode_count = iterations ? atoi(iterations) : 0;
 
         json image_config = {
             {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
@@ -653,7 +646,8 @@ TEST(benchmark, imagenet)
         json config = {{"manifest_root", manifest_root},
                        {"manifest_filename", manifest},
                        {"batch_size", batch_size},
-                       {"iteration_mode", "INFINITE"},
+                       {"iteration_mode", iteration_mode},
+                       {"iteration_mode_count", iteration_mode_count},
                        {"cache_directory", cache_root},
                        {"cpu_list", ""},
                        //{"web_server_port", 8086},
@@ -692,6 +686,7 @@ TEST(benchmark, imagenet_paddle)
     char* cache_root    = getenv("TEST_IMAGENET_CACHE");
     char* batch_delay   = getenv("TEST_IMAGENET_BATCH_DELAY");
     char* bsz           = getenv("TEST_IMAGENET_BATCH_SIZE");
+    char* iterations    = getenv("TEST_IMAGENET_ITERATIONS");
 
     if (!manifest_root)
     {
@@ -699,21 +694,13 @@ TEST(benchmark, imagenet_paddle)
     }
     else
     {
-        int    height     = 224;
-        int    width      = 224;
-        size_t batch_size = 128;
-        if (bsz)
-        {
-            std::istringstream iss(bsz);
-            iss >> batch_size;
-        }
-        std::string manifest_filename = "train-index.csv";
-        if (manifest_name)
-        {
-            std::istringstream iss(manifest_name);
-            iss >> manifest_filename;
-        }
-        string manifest = file_util::path_join(manifest_root, manifest_filename);
+        int         height     = 224;
+        int         width      = 224;
+        size_t      batch_size = bsz ? atoi(bsz) : 128;
+        std::string manifest =
+            file_util::path_join(manifest_root, manifest_name ? manifest_name : "train-index.csv");
+        std::string iteration_mode       = iterations ? "COUNT" : "INFINITE";
+        int         iteration_mode_count = iterations ? atoi(iterations) : 0;
 
         json image_config = {{"type", "image"},
                              {"height", height},
@@ -735,13 +722,13 @@ TEST(benchmark, imagenet_paddle)
                                         {"mean", {0.485, 0.456, 0.406}},
                                         {"stddev", {0.229, 0.224, 0.225}},
                                         {"resize_short_size", 0}}};
-
         json config = {{"manifest_root", manifest_root},
                        {"manifest_filename", manifest},
                        {"shuffle_enable", true},
                        {"shuffle_manifest", true},
                        {"batch_size", batch_size},
-                       {"iteration_mode", "INFINITE"},
+                       {"iteration_mode", iteration_mode},
+                       {"iteration_mode_count", iteration_mode_count},
                        {"cache_directory", cache_root},
                        {"cpu_list", ""},
                        {"etl", {image_config, label_config}},
