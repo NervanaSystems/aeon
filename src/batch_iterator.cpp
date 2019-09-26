@@ -97,7 +97,7 @@ batch_iterator_fbm::batch_iterator_fbm(shared_ptr<batch_decoder>                
     m_element_count = elements_per_record();
     auto oshapes    = prov->get_output_shapes();
 
-    for (unsigned int k = 0; k < 2; ++k)
+    for (unsigned int k = 0; k < m_buffers_number; ++k)
     {
         for (auto& sz : oshapes)
         {

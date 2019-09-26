@@ -37,7 +37,7 @@ batch_decoder::batch_decoder(shared_ptr<batch_iterator>                 b_itor,
     m_number_elements_in = prov->get_input_count();
 
     // Allocate the space in the output buffers
-    for (unsigned int k = 0; k < 2; ++k)
+    for (unsigned int k = 0; k < m_buffers_number; ++k)
         m_containers[k].add_items(prov->get_output_shapes(), batch_size, pinned);
 
     if (m_deterministic_mode)

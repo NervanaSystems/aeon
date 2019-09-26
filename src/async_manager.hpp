@@ -139,8 +139,10 @@ public:
             m_bfirst_next   = true;
             m_bq_input.clear();
             m_bq_output.clear();
-            m_bq_input.push(inner_buffer_t(&m_containers[0], nullptr));
-            m_bq_input.push(inner_buffer_t(&m_containers[1], nullptr));
+
+            for (int i = 0; i < m_buffers_number; i++)
+                m_bq_input.push(inner_buffer_t(&m_containers[i], nullptr));
+
             fill_thread.reset(new std::thread(&async_manager::run_filler, this));
         }
     }
@@ -200,7 +202,8 @@ protected:
         else
             return &m_containers[0];
     }
-    OUTPUT                                       m_containers[2];
+    static const int                             m_buffers_number = 3;
+    OUTPUT                                       m_containers[m_buffers_number];
     OUTPUT*                                      m_pending_buffer;
     std::shared_ptr<async_manager_source<INPUT>> m_source;
 
