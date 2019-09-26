@@ -124,6 +124,7 @@ public:
             m_active_thread = false;
             m_bq_input.clear();
             m_bq_input.push(inner_buffer_t(nullptr, nullptr));
+            m_bq_input.push(inner_buffer_t(nullptr, nullptr));
             m_source->suspend_output();
             fill_thread->join();
         }
@@ -166,7 +167,7 @@ protected:
         for (;;)
         {
             inner_buffer_t free_buffer;
-            m_bq_input.pop(free_buffer);
+            m_bq_input.pop2(free_buffer);
 
             m_pending_buffer = std::get<0>(free_buffer);
 
