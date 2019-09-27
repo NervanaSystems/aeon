@@ -89,7 +89,7 @@ batch_iterator_fbm::batch_iterator_fbm(shared_ptr<batch_decoder>                
                                        size_t                                     batch_size,
                                        const std::shared_ptr<provider_interface>& prov,
                                        bool                                       transpose)
-    : async_manager<fixed_buffer_map, fixed_buffer_map>(blkl, "batch_iterator")
+    : async_manager<array_fixed_buffer_map, fixed_buffer_map>(blkl, "batch_iterator")
     , m_batch_size(batch_size)
     , m_transpose(transpose)
     , m_element_count(blkl->elements_per_record())
@@ -112,47 +112,76 @@ fixed_buffer_map* batch_iterator_fbm::filler()
     fixed_buffer_map* rc = get_pending_buffer();
     m_state              = async_state::processing;
 
-    // This is for the first pass
+    // // This is for the first pass
+    // if (m_input_ptr == nullptr)
+    // {
+    //     m_state     = async_state::fetching_data;
+    //     m_input_ptr = m_source->next();
+    //     m_src_index = 0;
+    //     m_state     = async_state::processing;
+    // }
+
+    // m_dst_index      = 0;
+    // size_t remainder = m_batch_size;
+    // while (remainder > 0)
+    // {
+    //     if (m_input_ptr == nullptr)
+    //     {
+    //         rc = nullptr;
+    //         break;
+    //     }
+
+    //     const string first_name         = (m_input_ptr->get_names())[0];
+    //     size_t       input_size         = ((*m_input_ptr)[first_name])->get_item_count();
+    //     size_t       current_input_size = input_size - m_src_index;
+    //     size_t move_count = (current_input_size <= remainder) ? current_input_size : remainder;
+
+    //     rc->copy(*m_input_ptr, m_src_index, m_dst_index, move_count, m_batch_size, m_transpose);
+
+    //     m_src_index += move_count;
+    //     m_dst_index += move_count;
+
+    //     remainder -= move_count;
+
+    //     if (remainder > 0 || input_size == m_src_index)
+    //     {
+    //         m_state     = async_state::fetching_data;
+    //         m_input_ptr = m_source->next();
+    //         m_src_index = 0;
+    //         m_state     = async_state::processing;
+    //     }
+    // }
+
+    // m_state = async_state::idle;
+
     if (m_input_ptr == nullptr)
     {
-        m_state     = async_state::fetching_data;
         m_input_ptr = m_source->next();
         m_src_index = 0;
-        m_state     = async_state::processing;
     }
 
-    m_dst_index      = 0;
-    size_t remainder = m_batch_size;
-    while (remainder > 0)
+    if (m_input_ptr == nullptr)
     {
-        if (m_input_ptr == nullptr)
-        {
-            rc = nullptr;
-            break;
-        }
-
-        const string first_name         = (m_input_ptr->get_names())[0];
-        size_t       input_size         = ((*m_input_ptr)[first_name])->get_item_count();
-        size_t       current_input_size = input_size - m_src_index;
-        size_t move_count = (current_input_size <= remainder) ? current_input_size : remainder;
-
-        rc->copy(*m_input_ptr, m_src_index, m_dst_index, move_count, m_batch_size, m_transpose);
-
-        m_src_index += move_count;
-        m_dst_index += move_count;
-
-        remainder -= move_count;
-
-        if (remainder > 0 || input_size == m_src_index)
-        {
-            m_state     = async_state::fetching_data;
-            m_input_ptr = m_source->next();
-            m_src_index = 0;
-            m_state     = async_state::processing;
-        }
+        return nullptr;
     }
 
-    m_state = async_state::idle;
+    auto input_size = m_input_ptr->size();
+
+    if (!m_transpose)
+        std::swap(*rc, (*m_input_ptr)[m_src_index]);
+    else
+    {
+        throw std::runtime_error("transpose hasn't supported yet");
+    }
+
+    m_src_index++;
+
+    if (input_size == m_src_index)
+    {
+        m_input_ptr = m_source->next();
+        m_src_index = 0;
+    }
+
 
     return rc;
 }

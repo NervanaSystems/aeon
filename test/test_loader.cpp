@@ -534,12 +534,8 @@ TEST(loader, loader_factory_remote)
 }
 #endif
 
-void benchmark_imagenet(json config, char* batch_delay, size_t batch_size)
+static void benchmark_imagenet(json config, char* batch_delay, size_t batch_size)
 {
-    chrono::high_resolution_clock                     timer;
-    chrono::time_point<chrono::high_resolution_clock> start_time;
-    chrono::time_point<chrono::high_resolution_clock> zero_time;
-    chrono::milliseconds                              total_time{0};
     stopwatch                                         batch_delay_watch;
     size_t                                            total_average_delay_time{0};
 
@@ -550,52 +546,53 @@ void benchmark_imagenet(json config, char* batch_delay, size_t batch_size)
 
         size_t       total_batch   = ceil((float)train_set->record_count() / (float)batch_size);
         size_t       current_batch = 0;
-        const size_t batches_per_output = 10;
+        const size_t batches_per_output = 100;
+        stopwatch    timer;
+        timer.start();
         for (const nervana::fixed_buffer_map& x : *train_set)
         {
-            if (batch_delay != NULL)
-            {
-                batch_delay_watch.stop();
-                int delay_in_ms = std::stoi(batch_delay);
-                usleep(1000 * delay_in_ms);
-            }
+//            if (batch_delay != NULL)
+//            {
+//                batch_delay_watch.stop();
+//                int delay_in_ms = std::stoi(batch_delay);
+//                usleep(1000 * delay_in_ms);
+//            }
             (void)x;
             if (++current_batch % batches_per_output == 0)
             {
-                auto last_time = start_time;
-                start_time     = timer.now();
-                float ms_time =
-                    chrono::duration_cast<chrono::milliseconds>(start_time - last_time).count();
+                timer.stop();
+                float ms_time = timer.get_milliseconds();
                 float sec_time = ms_time / 1000.;
+                
                 cout << "batch " << current_batch << " of " << total_batch;
-                if (last_time != zero_time)
-                {
-                    cout << " time " << ms_time;
-                    cout << " " << (float)batches_per_output / sec_time << " batches/s";
-                    total_time +=
-                        chrono::duration_cast<chrono::milliseconds>(start_time - last_time);
+                //if (last_time != zero_time)
+                //{
+                    cout << " time " << sec_time;
+                    cout << " " << batch_size * (float)batches_per_output / sec_time << " img/s";
                     cout << "\t\taverage "
-                         << (float)(current_batch - batches_per_output) /
-                                (total_time.count() / 1000.0f)
-                         << " batches/s" << endl;
-                    if (batch_delay != NULL)
-                    {
-                        size_t current_delay = batch_delay_watch.get_total_microseconds() /
-                                               batch_delay_watch.get_call_count();
-                        total_average_delay_time += current_delay;
-                        batch_delay_watch = stopwatch();
-                        cout << "batch delay " << current_delay << "us\t\t average "
-                             << total_average_delay_time /
-                                    ((current_batch - batches_per_output) / batches_per_output)
-                             << "us" << endl;
-                    }
-                }
-                cout << endl;
+                         <<  batch_size * (float)batches_per_output / ((float)timer.get_total_milliseconds() 
+                                /timer.get_call_count()/1000.0f)
+                         << " img/s" << endl;
+//                    if (batch_delay != NULL)
+//                    {
+//                        size_t current_delay = batch_delay_watch.get_total_microseconds() /
+//                                               batch_delay_watch.get_call_count();
+//                        total_average_delay_time += current_delay;
+//                        batch_delay_watch = stopwatch();
+//                        cout << "batch delay " << current_delay << "us\t\t average "
+//                             << total_average_delay_time /
+//                                    ((current_batch - batches_per_output) / batches_per_output)
+//                             << "us" << endl;
+//                    }
+                //}
+               // cout << endl;
+                timer.start();
             }
-            if (batch_delay != NULL)
-            {
-                batch_delay_watch.start();
-            }
+//            if (batch_delay != NULL)
+//            {
+//                batch_delay_watch.start();
+//            }
+
         }
     }
     catch (exception& err)

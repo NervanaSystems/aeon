@@ -112,14 +112,14 @@ provider::provider_base::provider_base(nlohmann::json                     js,
 }
 
 void provider::provider_base::provide(int                           idx,
-                                      nervana::encoded_record_list& in_buf,
+                                      nervana::encoded_record& in_buf,
                                       nervana::fixed_buffer_map&    out_buf) const
 {
     augmentation aug;
     int          index = 0;
     for (const shared_ptr<provider::interface>& provider : m_providers)
     {
-        provider->provide(idx, in_buf.record(idx).element(index++), out_buf, aug);
+        provider->provide(idx, in_buf.element(index++), out_buf, aug);
     }
 }
 

@@ -71,7 +71,7 @@ public:
                   const std::vector<nlohmann::json>& etl,
                   nlohmann::json                     augmentation);
 
-    void provide(int idx, encoded_record_list& in_buf, fixed_buffer_map& out_buf) const override;
+    void provide(int idx, encoded_record& in_buf, fixed_buffer_map& out_buf) const override;
 
 private:
     std::vector<std::shared_ptr<provider::interface>> m_providers;
@@ -106,7 +106,7 @@ public:
 
 private:
     void provide(int                           idx,
-                 nervana::encoded_record_list& in_buf,
+                 nervana::encoded_record& in_buf,
                  nervana::fixed_buffer_map&    out_buf) const
     {
     }

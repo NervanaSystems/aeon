@@ -187,6 +187,7 @@ void loader_local::initialize(const json& config_json)
     m_batch_iterator = make_shared<batch_iterator>(m_block_manager, decode_size);
 
     m_decoder = make_shared<batch_decoder>(m_batch_iterator,
+                                           lcfg.batch_size,
                                            decode_size,
                                            lcfg.decode_thread_count,
                                            lcfg.pinned,
