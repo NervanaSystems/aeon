@@ -25,13 +25,13 @@
 namespace nervana
 {
     class batch_decoder;
-    class batch_iterator;
+    class block_loader_source;
 }
 
 class nervana::batch_decoder : public async_manager<encoded_record_list, array_fixed_buffer_map>
 {
 public:
-    batch_decoder(std::shared_ptr<batch_iterator>            b_itor,
+    batch_decoder(std::shared_ptr<block_loader_source>         b_itor,
                   size_t                                     batch_size,
                   size_t                                     decode_size,
                   uint32_t                                   thread_count,

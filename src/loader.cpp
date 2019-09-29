@@ -122,44 +122,27 @@ void loader_local::initialize(const json& config_json)
         if (lcfg.node_id >= lcfg.node_count) throw std::runtime_error("node_id can't be greater than node_count");
     }
 
-    if (nervana::manifest_nds::is_likely_json(lcfg.manifest_filename))
+   unsigned int threads_num = lcfg.decode_thread_count != 0 ? lcfg.decode_thread_count
+                                                             : std::thread::hardware_concurrency();
+   const int decode_size =
+        lcfg.batch_size * ((threads_num * m_input_multiplier - 1) / lcfg.batch_size + 1);
+
+    m_manifest_file = make_shared<manifest_file>(lcfg.manifest_filename,
+                                                    lcfg.shuffle_manifest,
+                                                    lcfg.manifest_root,
+                                                    lcfg.subset_fraction,
+                                                    decode_size,
+                                                    lcfg.random_seed,
+                                                    lcfg.node_id,
+                                                    lcfg.node_count,
+                                                    lcfg.batch_size);
+
+    // TODO: make the constructor throw this error
+    if (record_count() == 0)
     {
-        m_manifest_nds = nervana::manifest_nds_builder()
-                             .filename(lcfg.manifest_filename)
-                             .block_size(lcfg.block_size)
-                             .elements_per_record(2)
-                             .shuffle(lcfg.shuffle_manifest)
-                             .seed(lcfg.random_seed)
-                             .make_shared();
-
-        m_block_loader = std::make_shared<block_loader_nds>(m_manifest_nds, lcfg.block_size);
+        throw std::runtime_error("manifest file is empty");
     }
-    else
-    {
-        // the manifest defines which data should be included in the dataset
-        m_manifest_file = make_shared<manifest_file>(lcfg.manifest_filename,
-                                                     lcfg.shuffle_manifest,
-                                                     lcfg.manifest_root,
-                                                     lcfg.subset_fraction,
-                                                     lcfg.block_size,
-                                                     lcfg.random_seed,
-                                                     lcfg.node_id,
-                                                     lcfg.node_count,
-                                                     lcfg.batch_size);
-
-        // TODO: make the constructor throw this error
-        if (record_count() == 0)
-        {
-            throw std::runtime_error("manifest file is empty");
-        }
-        m_block_loader = make_shared<block_loader_file>(m_manifest_file, lcfg.block_size);
-    }
-
-    m_block_manager = make_shared<block_manager>(m_block_loader,
-                                                 lcfg.block_size,
-                                                 lcfg.cache_directory,
-                                                 lcfg.shuffle_enable,
-                                                 lcfg.random_seed);
+    m_block_loader = make_shared<block_loader_file>(m_manifest_file, decode_size);
 
     // Default ceil div to get number of batches
     m_batch_count_value = (record_count() + m_batch_size - 1) / m_batch_size;
@@ -179,14 +162,7 @@ void loader_local::initialize(const json& config_json)
 
     m_provider = provider_factory::create(config_json);
 
-    unsigned int threads_num = lcfg.decode_thread_count != 0 ? lcfg.decode_thread_count
-                                                             : std::thread::hardware_concurrency();
-
-    const int decode_size =
-        lcfg.batch_size * ((threads_num * m_input_multiplier - 1) / lcfg.batch_size + 1);
-    m_batch_iterator = make_shared<batch_iterator>(m_block_manager, decode_size);
-
-    m_decoder = make_shared<batch_decoder>(m_batch_iterator,
+    m_decoder = make_shared<batch_decoder>(m_block_loader,
                                            lcfg.batch_size,
                                            decode_size,
                                            lcfg.decode_thread_count,

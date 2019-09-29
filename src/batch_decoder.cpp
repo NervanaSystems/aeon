@@ -17,11 +17,12 @@
 #include "batch_decoder.hpp"
 #include "provider_factory.hpp"
 #include "batch_iterator.hpp"
+#include "block_loader_file.hpp"
 
 using namespace std;
 using namespace nervana;
 
-batch_decoder::batch_decoder(shared_ptr<batch_iterator>                 b_itor,
+batch_decoder::batch_decoder(shared_ptr<block_loader_source>                 b_itor,
                              size_t                                     batch_size,
                              size_t                                     decode_size,
                              uint32_t                                   thread_count,
@@ -71,7 +72,8 @@ array_fixed_buffer_map* batch_decoder::filler()
     m_state                     = async_state::wait_for_buffer;
     array_fixed_buffer_map* outputs   = get_pending_buffer();
     m_state                     = async_state::fetching_data;
-    encoded_record_list* inputs = m_source->next();
+    // static
+        encoded_record_list* inputs = m_source->next();
     m_state                     = async_state::processing;
 
     m_iteration_number++;
