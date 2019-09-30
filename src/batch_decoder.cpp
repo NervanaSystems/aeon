@@ -25,6 +25,7 @@ batch_decoder::batch_decoder(shared_ptr<batch_iterator>                 b_itor,
                              size_t                                     batch_size,
                              size_t                                     decode_size,
                              uint32_t                                   thread_count,
+                             std::vector<int>                           thread_affinity_map,
                              bool                                       pinned,
                              const std::shared_ptr<provider_interface>& prov,
                              uint32_t                                   seed)
@@ -34,8 +35,8 @@ batch_decoder::batch_decoder(shared_ptr<batch_iterator>                 b_itor,
     , m_provider(prov)
     , m_deterministic_mode(seed != 0)
 {
-    m_thread_pool =
-        singleton<thread_pool_queue<batch_decoder, &batch_decoder::process>>::get(thread_count);
+    m_thread_pool = singleton<thread_pool_queue<batch_decoder, &batch_decoder::process>>::get(
+        std::move(thread_affinity_map));
     m_number_elements_in = prov->get_input_count();
 
     // Allocate the space in the output buffers
@@ -46,7 +47,9 @@ batch_decoder::batch_decoder(shared_ptr<batch_iterator>                 b_itor,
     {
         m_random.resize(m_decode_size);
         random_engine_t generator_seed(seed);
-        for_each(m_random.begin(), m_random.end(), [&](random_engine_t& eng) { eng.seed(generator_seed()); });
+        for_each(m_random.begin(), m_random.end(), [&](random_engine_t& eng) {
+            eng.seed(generator_seed());
+        });
     }
 }
 

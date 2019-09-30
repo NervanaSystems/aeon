@@ -83,24 +83,10 @@ template <typename T, void (T::*process_func)(int index)>
 class nervana::thread_pool
 {
 public:
-    thread_pool(int thread_count)
+    thread_pool(std::vector<int> thread_affinity_map)
+        : m_thread_affinity_map(std::move(thread_affinity_map))
     {
-        int nthreads;
-
-        if (thread_count == 0) // automatically determine number of threads
-        {
-            // we don't use all threads, some of them we leave for other pipeline objects and system
-            nthreads = std::thread::hardware_concurrency() -
-                       std::min(m_max_count_of_free_threads,
-                                static_cast<int>(std::thread::hardware_concurrency() /
-                                                 m_free_threads_ratio));
-        }
-        else
-        {
-            // don't return more threads than we can get
-            nthreads =
-                std::min(static_cast<int>(std::thread::hardware_concurrency()), thread_count);
-        }
+        int nthreads = m_thread_affinity_map.size();
 
         m_br_wake.reset(new thread_barrier(nthreads + 1));
         m_br_endtasks.reset(new thread_barrier(nthreads + 1));
@@ -138,8 +124,7 @@ public:
     }
 
 private:
-    const int                       m_max_count_of_free_threads = 2;
-    const int                       m_free_threads_ratio        = 8;
+    const std::vector<int>          m_thread_affinity_map;
     T*                              m_worker;
     int                             m_task_count;
     std::unique_ptr<thread_barrier> m_br_wake;
@@ -156,7 +141,7 @@ private:
 #ifdef __linux__
         cpu_set_t cpuset;
         CPU_ZERO(&cpuset);
-        CPU_SET(thread_id, &cpuset);
+        CPU_SET(m_thread_affinity_map[thread_id], &cpuset);
         pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
 #endif
 
@@ -201,8 +186,8 @@ template <typename T, void (T::*process_func)(int index)>
 class nervana::thread_pool_queue
 {
 public:
-    thread_pool_queue(int thread_count)
-        : m_thread_pool(thread_count)
+    thread_pool_queue(const std::vector<int>& thread_affinity_map)
+        : m_thread_pool(thread_affinity_map)
         , m_thread(&thread_pool_queue::process_tasks, this)
     {
     }

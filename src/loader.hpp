@@ -64,14 +64,15 @@ public:
     bool                        pinned               = false;
     bool                        batch_major          = true;
     uint32_t                    random_seed          = 0;
+    std::string                 cpu_list             = "";
     uint32_t                    decode_thread_count  = 0;
     std::string                 iteration_mode       = "ONCE";
     int                         iteration_mode_count = 0;
     uint16_t                    web_server_port      = 0;
-    std::vector<nlohmann::json> etl;
-    std::vector<nlohmann::json> augmentation;
     uint32_t                    node_id              = 0;
     uint32_t                    node_count           = 0;
+    std::vector<nlohmann::json> etl;
+    std::vector<nlohmann::json> augmentation;
 #if defined(ENABLE_AEON_SERVICE)
     nlohmann::json remote;
 #endif
@@ -91,7 +92,7 @@ private:
                    [](decltype(subset_fraction) v) { return v <= 1.0f && v >= 0.0f; }),
         ADD_SCALAR(shuffle_enable, mode::OPTIONAL),
         ADD_SCALAR(shuffle_manifest, mode::OPTIONAL),
-        ADD_SCALAR(decode_thread_count, mode::OPTIONAL),
+        ADD_SCALAR(cpu_list, mode::OPTIONAL),
         ADD_SCALAR(pinned, mode::OPTIONAL),
         ADD_SCALAR(random_seed, mode::OPTIONAL),
         ADD_SCALAR(iteration_mode, mode::OPTIONAL),
@@ -258,5 +259,7 @@ private:
     std::shared_ptr<web_app>                                m_debug_web_app;
 
     // How many times we should increase input data size for decoder
-    const int m_input_multiplier = 8;
+    const int m_input_multiplier          = 8;
+    const int m_max_count_of_free_threads = 2;
+    const int m_free_threads_ratio        = 8;
 };

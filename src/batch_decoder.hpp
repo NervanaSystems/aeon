@@ -35,6 +35,7 @@ public:
                   size_t                                     batch_size,
                   size_t                                     decode_size,
                   uint32_t                                   thread_count,
+                  std::vector<int>                           thread_affinity_map,
                   bool                                       pinned,
                   const std::shared_ptr<provider_interface>& prov,
                   uint32_t                                   seed = 0);
