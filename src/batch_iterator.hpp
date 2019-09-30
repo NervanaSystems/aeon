@@ -80,5 +80,4 @@ private:
     size_t            m_element_count;
     array_fixed_buffer_map* m_input_ptr{nullptr};
     size_t            m_src_index = 0;
-    size_t            m_dst_index = 0;
 };
