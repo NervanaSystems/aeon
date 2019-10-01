@@ -536,9 +536,6 @@ TEST(loader, loader_factory_remote)
 
 static void benchmark_imagenet(json config, char* batch_delay, size_t batch_size)
 {
-    stopwatch                                         batch_delay_watch;
-    size_t                                            total_average_delay_time{0};
-
     try
     {
         loader_factory factory;
@@ -551,12 +548,6 @@ static void benchmark_imagenet(json config, char* batch_delay, size_t batch_size
         timer.start();
         for (const nervana::fixed_buffer_map& x : *train_set)
         {
-//            if (batch_delay != NULL)
-//            {
-//                batch_delay_watch.stop();
-//                int delay_in_ms = std::stoi(batch_delay);
-//                usleep(1000 * delay_in_ms);
-//            }
             (void)x;
             if (++current_batch % batches_per_output == 0)
             {
@@ -565,35 +556,15 @@ static void benchmark_imagenet(json config, char* batch_delay, size_t batch_size
                 float sec_time = ms_time / 1000.;
                 
                 cout << "batch " << current_batch << " of " << total_batch;
-                //if (last_time != zero_time)
-                //{
-                    cout << " time " << sec_time;
-                    cout << " " << batch_size * (float)batches_per_output / sec_time << " img/s";
-                    cout << "\t\taverage "
-                         <<  batch_size * (float)batches_per_output / ((float)timer.get_total_milliseconds() 
-                                /timer.get_call_count()/1000.0f)
-                         << " img/s" << endl;
-//                    if (batch_delay != NULL)
-//                    {
-//                        size_t current_delay = batch_delay_watch.get_total_microseconds() /
-//                                               batch_delay_watch.get_call_count();
-//                        total_average_delay_time += current_delay;
-//                        batch_delay_watch = stopwatch();
-//                        cout << "batch delay " << current_delay << "us\t\t average "
-//                             << total_average_delay_time /
-//                                    ((current_batch - batches_per_output) / batches_per_output)
-//                             << "us" << endl;
-//                    }
-                //}
-               // cout << endl;
+                cout << " time " << sec_time;
+                cout << " " << batch_size * (float)batches_per_output / sec_time << " img/s";
+                cout << "\t\taverage "
+                        <<  batch_size * (float)batches_per_output / ((float)timer.get_total_milliseconds() 
+                            /timer.get_call_count()/1000.0f)
+                        << " img/s" << endl;
                 timer.start();
             }
-//            if (batch_delay != NULL)
-//            {
-//                batch_delay_watch.start();
-//            }
-
-        }
+            }
     }
     catch (exception& err)
     {
