@@ -56,7 +56,7 @@ private:
     encoded_record_list* m_input_ptr{nullptr};
 };
 
-class nervana::batch_iterator_fbm : public async_manager<fixed_buffer_map, fixed_buffer_map>
+class nervana::batch_iterator_fbm : public async_manager<array_fixed_buffer_map, fixed_buffer_map>
 {
 public:
     batch_iterator_fbm(std::shared_ptr<batch_decoder>             blkl,
@@ -71,14 +71,13 @@ public:
     void   initialize() override
     {
         m_input_ptr = nullptr;
-        async_manager<fixed_buffer_map, fixed_buffer_map>::initialize();
+        async_manager<array_fixed_buffer_map, fixed_buffer_map>::initialize();
     }
 
 private:
     size_t            m_batch_size;
     bool              m_transpose;
     size_t            m_element_count;
-    fixed_buffer_map* m_input_ptr{nullptr};
+    array_fixed_buffer_map* m_input_ptr{nullptr};
     size_t            m_src_index = 0;
-    size_t            m_dst_index = 0;
 };

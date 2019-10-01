@@ -28,11 +28,12 @@ namespace nervana
     class batch_iterator;
 }
 
-class nervana::batch_decoder : public async_manager<encoded_record_list, fixed_buffer_map>
+class nervana::batch_decoder : public async_manager<encoded_record_list, array_fixed_buffer_map>
 {
 public:
     batch_decoder(std::shared_ptr<batch_iterator>            b_itor,
                   size_t                                     batch_size,
+                  size_t                                     decode_size,
                   std::vector<int>                           thread_affinity_map,
                   bool                                       pinned,
                   const std::shared_ptr<provider_interface>& prov,
@@ -40,11 +41,11 @@ public:
 
     virtual ~batch_decoder();
 
-    virtual size_t            record_count() const override { return m_batch_size; }
+    virtual size_t            record_count() const override { return m_decode_size; }
     virtual size_t            elements_per_record() const override { return m_number_elements_out; }
-    virtual fixed_buffer_map* filler() override;
+    virtual array_fixed_buffer_map* filler() override;
 
-    void register_info_handler(std::function<void(const fixed_buffer_map*)>& f)
+    void register_info_handler(std::function<void(const array_fixed_buffer_map*)>& f)
     {
         m_info_handler = f;
     }
@@ -53,14 +54,15 @@ public:
 
 private:
     size_t                                    m_batch_size;
+    size_t                                    m_decode_size;
     size_t                                    m_number_elements_in;
     size_t                                    m_number_elements_out;
     std::shared_ptr<const provider_interface> m_provider;
     encoded_record_list*                      m_inputs{nullptr};
-    fixed_buffer_map*                         m_outputs{nullptr};
+    array_fixed_buffer_map*                   m_outputs{nullptr};
     std::shared_ptr<thread_pool_queue<batch_decoder, &batch_decoder::process>> m_thread_pool;
-    std::function<void(const fixed_buffer_map*)>                               m_info_handler;
-    size_t                                m_iteration_number{0};
-    std::vector<nervana::random_engine_t> m_random;
-    bool                                  m_deterministic_mode;
+    std::function<void(const array_fixed_buffer_map*)>                         m_info_handler;
+    size_t                                       m_iteration_number{0};
+    std::vector<nervana::random_engine_t>        m_random;
+    bool                                         m_deterministic_mode;
 };
