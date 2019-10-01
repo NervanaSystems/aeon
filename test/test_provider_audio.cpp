@@ -72,7 +72,7 @@ TEST(provider, audio_classify)
 
     for (int i = 0; i < batch_size; i++)
     {
-        media->provide(i, bp, out_buf);
+        media->provide(i, bp.record(i), out_buf);
     }
 
     for (int i = 0; i < batch_size; i++)
@@ -120,7 +120,7 @@ TEST(provider, transcript_length_check)
 
     for (int i = 0; i < batch_size; i++)
     {
-        media->provide(i, bp, out_buf);
+        media->provide(i, bp.record(i), out_buf);
     }
 
     // Check that the lengths are emitted as expected
@@ -205,7 +205,7 @@ TEST(provider, audio_transcript)
     // Call the provider
     for (int i = 0; i < batch_size; i++)
     {
-        media->provide(i, bp, out_buf);
+        media->provide(i, bp.record(i), out_buf);
     }
 
     // Check target sequences against their source string
@@ -286,7 +286,7 @@ TEST(provider, audio_transcript_extends_max_duration)
     // Call the provider
     for (int i = 0; i < batch_size; i++)
     {
-        media->provide(i, bp, out_buf);
+        media->provide(i, bp.record(i), out_buf);
     }
 
     // Check target sequences against their source string

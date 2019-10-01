@@ -80,7 +80,7 @@ TEST(provider, image)
     EXPECT_GT(bp.size(), batch_size);
     for (int i = 0; i < batch_size; i++)
     {
-        media->provide(i, bp, out_buf);
+        media->provide(i, bp.record(i), out_buf);
 
         //  cv::Mat mat(width,height,CV_8UC3,&dbuffer[0]);
         //  string filename = "data" + to_string(i) + ".png";
@@ -372,7 +372,7 @@ TEST(provider, blob)
     in_buf.add_record(record);
 
     // call the provider
-    media->provide(0, in_buf, out_buf);
+    media->provide(0, in_buf.record(0), out_buf);
 
     cv::Mat output_left{image_size, CV_8UC3, out_buf["left.image"]->data()};
     cv::imwrite("output_left.jpg", output_left);
@@ -420,7 +420,7 @@ TEST(provider, char_map)
 
     for (int i = 0; i < batch_size; i++)
     {
-        media->provide(i, in_buf, out_buf);
+        media->provide(i, in_buf.record(i), out_buf);
     }
 
     for (int i = 0; i < batch_size; i++)

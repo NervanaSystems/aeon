@@ -34,6 +34,7 @@ namespace nervana
 {
     class buffer_fixed_size_elements;
     class fixed_buffer_map;
+    class array_fixed_buffer_map;
     class encoded_record;
     class encoded_record_list;
 
@@ -280,6 +281,30 @@ private:
     std::vector<std::string> m_names;
     std::vector<std::pair<std::string, buffer_fixed_size_elements*>> m_data;
 };
+
+
+class nervana::array_fixed_buffer_map
+{
+public:
+    array_fixed_buffer_map() = default;
+    array_fixed_buffer_map(const std::vector<std::pair<std::string, shape_type>>& write_sizes,
+                            size_t array_size,
+                            size_t batch_size,
+                            bool   pinned = false)
+    {
+        for (int i = 0; i < array_size; i++)
+            m_buffer.emplace_back(nervana::fixed_buffer_map(write_sizes, batch_size, pinned));
+    }
+
+    nervana::fixed_buffer_map& operator[](int index)
+    {
+        return m_buffer[index];
+    }
+    size_t size() const {return m_buffer.size();}
+private:
+    std::vector<nervana::fixed_buffer_map> m_buffer;
+};
+
 
 std::ostream& operator<<(std::ostream& out, const nervana::fixed_buffer_map& obj);
 std::istream& operator>>(std::istream& in, nervana::fixed_buffer_map& obj);
