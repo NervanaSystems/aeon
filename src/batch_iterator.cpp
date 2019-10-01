@@ -114,12 +114,11 @@ fixed_buffer_map* batch_iterator_fbm::filler()
 
     if (m_input_ptr == nullptr)
     {
-        m_input_ptr = m_source->next();
         m_src_index = 0;
+        m_input_ptr = m_source->next();
+        if (m_input_ptr == nullptr)
+            return nullptr;
     }
-
-    if (m_input_ptr == nullptr)
-        return nullptr;
 
     auto input_size = m_input_ptr->size();
 
@@ -137,10 +136,7 @@ fixed_buffer_map* batch_iterator_fbm::filler()
     m_src_index++;
 
     if (input_size == m_src_index)
-    {
-        m_input_ptr = m_source->next();
-        m_src_index = 0;
-    }
+        m_input_ptr = nullptr;
 
     return rc;
 }
