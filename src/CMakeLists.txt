@@ -16,7 +16,6 @@
 
 set (SRC
     async_manager.cpp
-    augment_audio.cpp
     augment_image.cpp
     avi.cpp
     base64.cpp
@@ -33,7 +32,6 @@ set (SRC
     cap_mjpeg_decoder.cpp
     cpio.cpp
     crc.cpp
-    etl_audio.cpp
     etl_boundingbox.cpp
     etl_char_map.cpp
     etl_depthmap.cpp
@@ -50,7 +48,6 @@ set (SRC
     log.cpp
     manifest_file.cpp
     manifest_nds.cpp
-    noise_clips.cpp
     normalized_box.cpp
     provider.cpp
     provider_factory.cpp
@@ -63,6 +60,13 @@ set (SRC
     event.cpp
     raw_image.cpp
     output_saver.cpp)
+
+if (WITH_SOX)
+    list(APPEND SRC
+        augment_audio.cpp
+        etl_audio.cpp
+        noise_clips.cpp)
+endif()
 
 if (ENABLE_AEON_CLIENT)
     list(APPEND SRC

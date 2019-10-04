@@ -19,7 +19,9 @@
 #include <cmath>
 #include <cassert>
 #include <iomanip>
+#ifdef WITH_SOX
 #include <sox.h>
+#endif
 
 #include "util.hpp"
 #include "log.hpp"
@@ -271,6 +273,7 @@ nervana::random_engine_t& nervana::get_thread_local_random_engine()
     return local_random_engine;
 }
 
+#ifdef WITH_SOX
 cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
 {
     SOX_SAMPLE_LOCALS;
@@ -320,6 +323,7 @@ void nervana::write_audio_to_file(cv::Mat buffer, std::string path, sox_rate_t s
     }
     sox_write(t, sample_buffer, buffer.total());
 }
+#endif
 
 std::vector<char> nervana::string2vector(const std::string& s)
 {
