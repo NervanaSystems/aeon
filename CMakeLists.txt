@@ -140,6 +140,7 @@ if (WITH_SOX)
 	add_definitions(${SOX_CFLAGS_OTHERS})
 endif (WITH_SOX)
 
+set(OpenCV_STATIC ON)
 find_package(OpenCV REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
