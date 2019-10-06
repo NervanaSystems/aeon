@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#ifdef WITH_SOX
+
 #pragma once
 
 #include <vector>
@@ -336,3 +338,4 @@ public:
 private:
     const audio::config& _cfg;
 };
+#endif

@@ -30,6 +30,7 @@
 using namespace std;
 using namespace nervana;
 
+#ifdef WITH_SOX
 TEST(provider, audio_classify)
 {
     nlohmann::json js_label = {{"type", "label"}, {"binary", true}};
@@ -81,6 +82,7 @@ TEST(provider, audio_classify)
         EXPECT_EQ(42 + i, target_value);
     }
 }
+#endif
 
 TEST(provider, transcript_length_check)
 {
@@ -148,6 +150,7 @@ TEST(provider, transcript_length_check)
     }
 }
 
+#ifdef WITH_SOX
 TEST(provider, audio_transcript)
 {
     nlohmann::json js_audio = {{"type", "audio"},
@@ -310,3 +313,4 @@ TEST(provider, audio_transcript_extends_max_duration)
         ASSERT_EQ(unpack<uint32_t>(out_buf["char_map_length"]->get_item(i)), tr[i % 2].length());
     }
 }
+#endif

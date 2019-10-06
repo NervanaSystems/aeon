@@ -43,7 +43,9 @@ namespace nervana
         class provider_base;
         class image;
         class label;
+#ifdef WITH_SOX
         class audio;
+#endif
         namespace localization
         {
             class rcnn;
@@ -85,7 +87,9 @@ class nervana::augmentation
 {
 public:
     std::shared_ptr<augment::image::params> m_image_augmentations;
+#ifdef WITH_SOX
     std::shared_ptr<augment::audio::params> m_audio_augmentations;
+#endif
 };
 
 //=================================================================================================
@@ -156,6 +160,7 @@ private:
     const std::string         m_buffer_name;
 };
 
+#ifdef WITH_SOX
 //=================================================================================================
 // audio
 //=================================================================================================
@@ -179,6 +184,7 @@ private:
     const std::string             m_buffer_name;
     const std::string             m_length_name;
 };
+#endif
 
 //=================================================================================================
 // localization::rcnn
