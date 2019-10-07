@@ -33,7 +33,7 @@ using namespace std;
 using namespace nervana;
 
 block_loader_nds::block_loader_nds(shared_ptr<manifest_nds> manifest, size_t block_size)
-    : async_manager<encoded_record_list, encoded_record_list>{manifest, "block_loader_nds"}
+    : async_manager<encoded_record_list, encoded_record_list>(manifest, "block_loader_nds")
     , m_block_size{0}
     , m_block_count{manifest->block_count()}
     , m_record_count{manifest->record_count()}

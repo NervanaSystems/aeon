@@ -28,7 +28,7 @@ nervana::block_manager::block_manager(shared_ptr<block_loader_source> file_loade
                                       const string&                   cache_root,
                                       bool                            enable_shuffle,
                                       uint32_t                        seed)
-    : async_manager<encoded_record_list, encoded_record_list>{file_loader, "block_manager"}
+    : async_manager<encoded_record_list, encoded_record_list>(file_loader, "block_manager")
     , m_current_block_number{0}
     , m_block_size{file_loader->block_size()}
     , m_block_count{file_loader->block_count()}
