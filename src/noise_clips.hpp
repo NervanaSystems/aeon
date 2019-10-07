@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#ifdef USE_SOX
+
 #pragma once
 
 #include <opencv2/core/core.hpp>
@@ -46,3 +48,4 @@ private:
     char*                    _buf    = 0;
     int                      _bufLen = 0;
 };
+#endif

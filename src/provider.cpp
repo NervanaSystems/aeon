@@ -51,8 +51,12 @@ provider::provider_base::provider_base(nlohmann::json                     js,
         }
         else if (type == "audio")
         {
+#ifdef USE_SOX
             prov = static_pointer_cast<provider::interface>(
                 make_shared<provider::audio>(j, augmentation));
+#else
+            throw std::runtime_error("Unsupported etl type 'audio'. Aeon was built without audio support. To build with it, run 'cmake -DUSE_SOX'.");
+#endif
         }
         else if (type == "localization_rcnn")
         {
@@ -220,6 +224,7 @@ void provider::label::provide(int                        idx,
     m_loader.load({target_out}, label_dec);
 }
 
+#ifdef USE_SOX
 //=================================================================================================
 // audio
 //=================================================================================================
@@ -272,6 +277,7 @@ void provider::audio::provide(int                        idx,
         m_loader.load({datum_out}, transformed);
     }
 }
+#endif
 
 //=================================================================================================
 // localization::rcnn

@@ -24,7 +24,6 @@ set (SRC
     main.cpp
     manifest_builder.cpp
     test_async_manager.cpp
-    test_audio.cpp
     test_augmentation.cpp
     test_base64.cpp
     test_bbox.cpp
@@ -55,6 +54,11 @@ set (SRC
     test_video.cpp
     test_raw_image.cpp
 )
+
+if(USE_SOX)
+list(APPEND SRC
+    test_audio.cpp)
+endif()
 
 set(TESTSUITE_LIBRARIES aeon ${SOX_LIBRARIES} gtest gmock
     ${LCOVERAGE} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES}
