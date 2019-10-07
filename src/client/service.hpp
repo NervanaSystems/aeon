@@ -217,7 +217,7 @@ namespace nervana
     public:
         service_async(std::shared_ptr<service_async_source> base_service)
             : async_manager<service_response<next_response>,
-                            service_response<next_response>>{base_service, "service_async"}
+                            service_response<next_response>>(base_service, "service_async")
             , m_base_service(base_service)
         {
         }
