@@ -17,6 +17,8 @@
 audio
 =====
 
+In order to build Aeon with audio support you need to compile Aeon with cmake flag ``USE_SOX=ON``.
+
 For audio data, Aeon has providers for both classification and transcription tasks. Currently, audio can be stored in any file format handled by the sox_ command line utility (e.g. .wav, .mp3, .aiff), but must first be converted to 16-bit, single channel. This conversion is done by the user before calling the dataloader. For example, to convert ``*.wav`` files to the correct format, one could use:
 
 .. code-block:: bash

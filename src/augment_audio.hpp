@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#ifdef USE_SOX
+
 #pragma once
 
 #include <random>
@@ -119,3 +121,4 @@ private:
         ADD_DISTRIBUTION(
             noise_level, mode::OPTIONAL, [](decltype(noise_level) v) { return v.a() <= v.b(); })};
 };
+#endif 
