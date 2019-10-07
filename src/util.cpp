@@ -19,7 +19,7 @@
 #include <cmath>
 #include <cassert>
 #include <iomanip>
-#ifdef WITH_SOX
+#ifdef USE_SOX
 #include <sox.h>
 #endif
 
@@ -273,7 +273,7 @@ nervana::random_engine_t& nervana::get_thread_local_random_engine()
     return local_random_engine;
 }
 
-#ifdef WITH_SOX
+#ifdef USE_SOX
 cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
 {
     SOX_SAMPLE_LOCALS;

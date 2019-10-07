@@ -30,7 +30,7 @@
 using namespace std;
 using namespace nervana;
 
-#ifdef WITH_SOX
+#ifdef USE_SOX
 TEST(provider, audio_classify)
 {
     nlohmann::json js_label = {{"type", "label"}, {"binary", true}};
@@ -150,7 +150,7 @@ TEST(provider, transcript_length_check)
     }
 }
 
-#ifdef WITH_SOX
+#ifdef USE_SOX
 TEST(provider, audio_transcript)
 {
     nlohmann::json js_audio = {{"type", "audio"},

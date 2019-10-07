@@ -32,7 +32,7 @@
 
 #define private public
 
-#ifdef WITH_SOX
+#ifdef USE_SOX
 #include "etl_audio.hpp"
 #endif
 #include "etl_boundingbox.hpp"
@@ -319,7 +319,7 @@ void dump_config_info(ostream& f, shared_ptr<nervana::interface::config_info_int
 TEST(util, param_dump)
 {
     ofstream f("config_args.txt", ios::trunc);
-#ifdef WITH_SOX
+#ifdef USE_SOX
     DUMP_CONFIG(audio);
 #endif
     DUMP_CONFIG(boundingbox);

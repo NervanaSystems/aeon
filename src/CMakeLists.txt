@@ -61,7 +61,7 @@ set (SRC
     raw_image.cpp
     output_saver.cpp)
 
-if (WITH_SOX)
+if (USE_SOX)
     list(APPEND SRC
         augment_audio.cpp
         etl_audio.cpp

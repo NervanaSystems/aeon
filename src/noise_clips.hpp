@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#ifdef WITH_SOX
+#ifdef USE_SOX
 
 #pragma once
 

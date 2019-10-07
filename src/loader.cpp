@@ -20,7 +20,7 @@
 #include <chrono>
 #include <utility>
 #include <algorithm>
-#ifdef WITH_SOX
+#ifdef USE_SOX
 #include <sox.h>
 #endif
 #include <memory>
@@ -117,9 +117,9 @@ void loader_local::initialize(const json& config_json)
     m_batch_size = lcfg.batch_size;
 
     // shared_ptr<manifest> base_manifest;
-    #ifdef WITH_SOX
+#ifdef USE_SOX
     sox_format_init();
-    #endif
+#endif
 
     if (lcfg.node_count != 0)
     {

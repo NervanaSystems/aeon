@@ -55,7 +55,7 @@ set (SRC
     test_raw_image.cpp
 )
 
-if(WITH_SOX)
+if(USE_SOX)
 list(APPEND SRC
     test_audio.cpp)
 endif()
