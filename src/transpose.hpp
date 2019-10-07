@@ -37,6 +37,16 @@ namespace transpose
             return _mm_load_si128(reinterpret_cast<const __m128i*>(p));
         }
 
+        inline void _128_store(unsigned char* p, __m128 x)
+        {
+            _mm_store_ps(reinterpret_cast<float*>(p), x);
+        }
+
+        inline __m128 _128_load(const unsigned char* p)
+        {
+            return _mm_load_ps(reinterpret_cast<const float*>(p));
+        }
+
         template <int  K>
         inline __m128i transpose_4x4(__m128i m)
         {
@@ -228,7 +238,7 @@ namespace transpose
         {
             cols *= 4;
             const int block_size = 4;
-            __m128i   row[4];
+            __m128   row[4];
             for (int cb = 0; cb < cols; cb += block_size * 4)
             {
                 int cbrows = cb * rows;
@@ -238,12 +248,12 @@ namespace transpose
                     uint8_t*       dst_c = dest + cbrows + rb * 4;
 
                     for (int i = 0; i < block_size; i++, src_c += cols)
-                        row[i] = _128i_load(src_c);
+                        row[i] = _128_load(src_c);
 
                     _MM_TRANSPOSE4_PS(row[0], row[1], row[2], row[3]);
 
                     for (int i = 0; i < block_size; i++, dst_c += (rows * 4))
-                        _128i_store(dst_c, row[i]);
+                        _128_store(dst_c, row[i]);
                 }
             }
         }
