@@ -45,13 +45,15 @@ include_dirs += tmp
 lib_dirs += getoutput("pkg-config --libs-only-L opencv")
 libs += getoutput("pkg-config --libs-only-l opencv")
 
-status, tmp = getstatusoutput("pkg-config --cflags sox")
-if status != 0:
-    print("required package 'sox' not found")
-    exit()
-include_dirs += tmp
-lib_dirs += getoutput("pkg-config --libs-only-L sox")
-libs += ' ' + getoutput("pkg-config --libs-only-l sox")
+if '${USE_SOX}' != 'OFF':
+    status, tmp = getstatusoutput("pkg-config --cflags sox")
+    if status != 0:
+        print("required package 'sox' not found")
+        exit()
+    include_dirs += tmp
+    lib_dirs += getoutput("pkg-config --libs-only-L sox")
+    libs += ' ' + getoutput("pkg-config --libs-only-l sox")
+
 libs += ' -lcurl'
 
 include_dirs += ' ${Boost_INCLUDE_DIRS}'
