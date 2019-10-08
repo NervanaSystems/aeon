@@ -125,6 +125,18 @@ void loader_local::initialize(const json& config_json)
     {
         if (lcfg.node_id >= lcfg.node_count)
             throw std::runtime_error("node_id can't be greater than node_count");
+
+        if (!lcfg.cache_directory.empty())
+        {
+            WARN<<"File caching for multinode is not implemented yet";
+            lcfg.cache_directory.clear();
+        }
+
+        if (lcfg.random_seed == 0)
+        {
+            WARN<<"You have to set not zero random seed for multi node training, random_seed = 1 set";
+            lcfg.random_seed = 1;
+        }
     }
 
     if (nervana::manifest_nds::is_likely_json(lcfg.manifest_filename))
