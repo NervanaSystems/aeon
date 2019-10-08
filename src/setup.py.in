@@ -32,8 +32,10 @@ import distutils.ccompiler
 distutils.ccompiler.CCompiler.compile=parallelCCompile
 
 lib_dirs = ""
+lib_dirs += " -L${CMAKE_PREFIX_PATH}/lib "
 libs = ""
 include_dirs = ""
+include_dirs += " -I${CMAKE_PREFIX_PATH}/include "
 
 status, tmp = getstatusoutput("pkg-config --cflags opencv")
 if status != 0:
@@ -61,7 +63,7 @@ if '${OPENFABRICS_FOUND}' == 'TRUE':
     lib_dirs += ' -L${OPENFABRICS_LIBRARY_DIRS} '
     libs += ' -lfabric '
 
-os.environ["CC"] = "clang++"
+os.environ["CC"] = "g++"
 src_list = "${SRC}".split(";")
 sources = [
     '${CMAKE_CURRENT_SOURCE_DIR}/'+src for src in src_list
@@ -73,7 +75,7 @@ include_dirs += get_python_inc() + ' ' + numpy.get_include()
 include_dirs = include_dirs.split()
 libs = libs.replace('-l', '').split()
 lib_dirs = lib_dirs.replace('-L','').split()
-extra_compile_args = "${CMAKE_CXX_FLAGS}".split(' ')
+extra_compile_args = "${CMAKE_CXX_FLAGS}".strip().split(' ')
 
 
 module = Extension(
