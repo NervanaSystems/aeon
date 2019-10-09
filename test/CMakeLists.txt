@@ -54,7 +54,7 @@ set (SRC
     test_raw_image.cpp
 )
 
-set(TESTSUITE_LIBRARIES aeon ${SOX_LIBRARIES} gtest gmock
+set(TESTSUITE_LIBRARIES aeon gtest gmock
     ${LCOVERAGE} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES}
     ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
