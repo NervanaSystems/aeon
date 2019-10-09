@@ -80,7 +80,7 @@ endif(PYTHON_PLUGIN)
 option(USE_SOX "Enable support of audio with SOX library" )
 if(USE_SOX)
     add_definitions(-DUSE_SOX)
-    list(APPEND_CMAKE_CXX_FLAGS "-DUSE_SOX")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_SOX")
 endif(USE_SOX)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
