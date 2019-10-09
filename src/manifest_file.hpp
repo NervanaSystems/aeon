@@ -23,6 +23,7 @@
 #include "manifest.hpp"
 #include "async_manager.hpp"
 #include "crc.hpp"
+#include "util.hpp"
 
 /* Manifest
  *
@@ -124,7 +125,7 @@ private:
     std::vector<element_t>           m_element_types;
     std::vector<size_t>              m_block_load_sequence;
     bool                             m_shuffle;
-    std::minstd_rand0                m_random;
+    random_engine_t                  m_random;
     static const std::string         m_file_type_id;
     static const std::string         m_binary_type_id;
     static const std::string         m_string_type_id;
