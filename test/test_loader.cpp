@@ -616,7 +616,7 @@ TEST(benchmark, imagenet)
                        {"batch_size", batch_size},
                        {"iteration_mode", iteration_mode},
                        {"iteration_mode_count", iteration_mode_count},
-                       {"cache_directory", cache_root},
+                       {"cache_directory", cache_root ? cache_root : ""},
                        {"cpu_list", ""},
                        //{"web_server_port", 8086},
                        {"etl", {image_config, label_config}},
@@ -697,7 +697,7 @@ TEST(benchmark, imagenet_paddle)
                        {"batch_size", batch_size},
                        {"iteration_mode", iteration_mode},
                        {"iteration_mode_count", iteration_mode_count},
-                       {"cache_directory", cache_root},
+                       {"cache_directory", cache_root ? cache_root : ""},
                        {"cpu_list", ""},
                        {"etl", {image_config, label_config}},
                        {"augmentation", aug_config}};
