@@ -134,7 +134,7 @@ void loader_local::initialize(const json& config_json)
 
         if (lcfg.random_seed == 0)
         {
-            WARN<<"You have to set not zero random seed for multi node training, random_seed = 1 set";
+            WARN<<"You have to set non zero random_seed for multi node training. random_seed = 1 is used";
             lcfg.random_seed = 1;
         }
     }
