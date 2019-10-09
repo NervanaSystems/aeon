@@ -211,7 +211,7 @@ void loader_local::initialize(const json& config_json)
                                            std::move(thread_affinity_map),
                                            lcfg.pinned,
                                            m_provider,
-                                           lcfg.random_seed);
+                                           lcfg.random_seed + lcfg.node_id);
 
     m_final_stage =
         make_shared<batch_iterator_fbm>(m_decoder, lcfg.batch_size, m_provider, !lcfg.batch_major);
