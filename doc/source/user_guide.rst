@@ -17,7 +17,7 @@
 User Guide
 ==========
 
-The aeon dataloader is designed to deal with large datasets from different modalities, including image, video, and audio, that may be too large to load directly into memory. We use a macrobatching approach, where the data is loaded in chunks (macrobatches) that are then split further into minibatches to feed the model.
+The aeon dataloader is designed to deal with large datasets from different modalities, including image, video. We use a macrobatching approach, where the data is loaded in chunks (macrobatches) that are then split further into minibatches to feed the model.
 
 The dataloader was created to provide an easy interface to configure the loader for custom datasets, and also to load data from disk to neon with minimal latency. The basic workflow is show in the schematic below:
 
@@ -108,16 +108,7 @@ In the image classification case,
 
 Note that above, the target labels are simply numerical indexes that correspond to a categorical label.
 
-For audio transcription, paths to target transcriptions are included:
-
-.. code-block:: bash
-
-    @FILE[tab]FILE
-    audio_sample_1.wav[tab]audio_transcript_1.txt
-    audio_sample_2.wav[tab]audio_transcript_2.txt
-    audio_sample_3.wav[tab]audio_transcript_3.txt
-
-For example formats of different modalities and problems, see the image, audio, and video sections.
+For example formats of different modalities and problems, see the image, and video sections.
 
 Configuration
 -------------
@@ -157,7 +148,6 @@ Importantly, the ``type`` key indicates to the dataloader which input data type 
 
    image|image|
    label||
-   audio|audio|
    localization|image|
    localization_ssd|image|
    pixelmask|image|

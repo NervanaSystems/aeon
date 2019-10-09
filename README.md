@@ -4,7 +4,7 @@
 
 [aeon](https://github.com/NervanaSystems/aeon) is Intel Nervana's framework-independent deep learning dataloader committed to best performance. Designed for ease-of-use and extensibility.
 
-- Supports common media types: image, video, audio. It is ready for use with classification, segmentation, localization, transcription and more.
+- Supports common media types: image, video. It is ready for use with classification, segmentation, localization, transcription and more.
 - Loads and augments data in parallel to framework computation.
 - [Examples](examples) folder contains simple scripts showing how to use it.
 

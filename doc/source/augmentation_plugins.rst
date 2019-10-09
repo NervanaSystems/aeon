@@ -80,14 +80,6 @@ Other examples are:
                'plugin_params': {"probability": 0.5}}
            ]
 
-           'augmentation': [
-               {"type": "audio",
-               "plugin_filename": "scale",
-               "plugin_params": {"probability": 1,
-                                 "amplitude": [0.1, 0.1]}
-               }
-           ]
-
 
 Developer Guide
 ---------------
@@ -123,10 +115,6 @@ The base class for plugin implemented as follows:
             print('augment depthmap not implemented')
             raise RuntimeError('Not implemented')
 
-        def augment_audio(self, audio):
-            print('augment audio not implemented')
-            raise RuntimeError('Not implemented')
-
 Therefore by default the plugin throws exception when it is called.
 To write your own plugin overwrite the methods you wish to support.
 
@@ -142,7 +130,6 @@ To write your own plugin overwrite the methods you wish to support.
     augment_boundingbox(self, bboxes) | list of objects with fields "xmin", "xmax", "ymin", "ymax", "label", "difficult", "truncated" | Takes a list of bounding boxes for detection. See :doc:`boundingbox <provider_boundingbox>` 
     augment_pixel_mask(self, pixel_mask) | Pixelmask image for segmentation problems as cv::Mat | See :doc:` pixelmask <provider_pixelmask>`
     augment_depthmap(self, depthmap) | cv::Mat depthmap | Depthmap
-    augment_audio(self, audio) | audio samples or fft as cv::Mat | The type depends on what feature type was specified in the configuration file
 
 Example plugin flip:
 

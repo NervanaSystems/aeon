@@ -40,7 +40,3 @@ class Plugin:
     def augment_depthmap(self, depthmap):
         print('augment depthmap not implemented')
         raise RuntimeError('Not implemented')
-
-    def augment_audio(self, audio):
-        print('augment audio not implemented')
-        raise RuntimeError('Not implemented')

@@ -61,13 +61,6 @@ set (SRC
     raw_image.cpp
     output_saver.cpp)
 
-if (USE_SOX)
-    list(APPEND SRC
-        augment_audio.cpp
-        etl_audio.cpp
-        noise_clips.cpp)
-endif()
-
 if (ENABLE_AEON_CLIENT)
     list(APPEND SRC
         client/curl_connector.cpp

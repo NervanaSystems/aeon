@@ -49,15 +49,6 @@ provider::provider_base::provider_base(nlohmann::json                     js,
         {
             prov = static_pointer_cast<provider::interface>(make_shared<provider::label>(j));
         }
-        else if (type == "audio")
-        {
-#ifdef USE_SOX
-            prov = static_pointer_cast<provider::interface>(
-                make_shared<provider::audio>(j, augmentation));
-#else
-            throw std::runtime_error("Unsupported etl type 'audio'. Aeon was built without audio support. To build with it, run 'cmake -DUSE_SOX'.");
-#endif
-        }
         else if (type == "localization_rcnn")
         {
             prov = static_pointer_cast<provider::interface>(
@@ -223,61 +214,6 @@ void provider::label::provide(int                        idx,
     auto label_dec = m_extractor.extract(datum_in.data(), datum_in.size());
     m_loader.load({target_out}, label_dec);
 }
-
-#ifdef USE_SOX
-//=================================================================================================
-// audio
-//=================================================================================================
-
-provider::audio::audio(nlohmann::json js, nlohmann::json aug)
-    : interface(js, 1)
-    , m_config{js}
-    , m_extractor{}
-    , m_transformer{m_config}
-    , m_loader{m_config}
-    , m_augmentation_factory{aug}
-    , m_buffer_name{create_name(m_config.name, "audio")}
-    , m_length_name{create_name(m_config.name, "audio_length")}
-{
-    auto os = m_config.get_shape_type_list();
-    m_output_shapes.emplace_back(make_pair(m_buffer_name, os[0]));
-    if (m_config.emit_length)
-    {
-        m_output_shapes.emplace_back(make_pair(m_length_name, os[1]));
-    }
-}
-
-void provider::audio::provide(int                        idx,
-                              const std::vector<char>&   datum_in,
-                              nervana::fixed_buffer_map& out_buf,
-                              augmentation&              aug) const
-{
-    char* datum_out = out_buf[m_buffer_name]->get_item(idx);
-
-    // Process audio data
-    auto decoded = m_extractor.extract(datum_in.data(), datum_in.size());
-    shared_ptr<augment::audio::params> params;
-    if (aug.m_audio_augmentations)
-    {
-        params = aug.m_audio_augmentations;
-    }
-    else
-    {
-        params                    = m_augmentation_factory.make_params();
-        aug.m_audio_augmentations = params;
-    }
-    auto transformed = m_transformer.transform(params, decoded);
-    if (m_config.emit_length)
-    {
-        char* length_out = out_buf[m_length_name]->get_item(idx);
-        m_loader.load({datum_out, length_out}, transformed);
-    }
-    else
-    {
-        m_loader.load({datum_out}, transformed);
-    }
-}
-#endif
 
 //=================================================================================================
 // localization::rcnn

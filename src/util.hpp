@@ -22,9 +22,6 @@
 #include <stdexcept>
 #include <random>
 #include <opencv2/core/core.hpp>
-#ifdef USE_SOX
-#include <sox.h>
-#endif
 #include <thread>
 #include <chrono>
 #include <map>
@@ -179,11 +176,6 @@ namespace nervana
 
     typedef std::minstd_rand0 random_engine_t;
     random_engine_t&          get_thread_local_random_engine();
-
-#ifdef USE_SOX
-    cv::Mat read_audio_from_mem(const char* item, int itemSize);
-    void write_audio_to_file(cv::Mat buffer, std::string path, sox_rate_t sample_rate_hz);
-#endif
 
     std::vector<char> string2vector(const std::string& s);
     std::string vector2string(const std::vector<char>& s);
