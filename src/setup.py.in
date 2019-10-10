@@ -83,5 +83,7 @@ module = Extension(
 setup(
     name='nervana-aeon',
     version='${AEON_VERSION}',
+    description='Framework-independent deep learning dataloader',
+    license='Intel Internal Use Software License Agreement',
     ext_modules=[module]
 )
