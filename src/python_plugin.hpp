@@ -42,7 +42,6 @@ namespace nervana
         cv::Mat augment_image(const cv::Mat& m);
         std::vector<boundingbox::box>
             augment_boundingbox(const std::vector<boundingbox::box>& boxes);
-        cv::Mat augment_audio(const cv::Mat& m);
         cv::Mat augment_pixel_mask(const cv::Mat& m);
         cv::Mat augment_depthmap(const cv::Mat& m);
     };

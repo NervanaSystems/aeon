@@ -46,7 +46,6 @@ set (SRC
     test_manifest_tsv.cpp
     test_params.cpp
     test_pixel_mask.cpp
-    test_provider_audio.cpp
     test_provider.cpp
     test_specgram.cpp
     test_types.cpp
@@ -55,12 +54,7 @@ set (SRC
     test_raw_image.cpp
 )
 
-if(USE_SOX)
-list(APPEND SRC
-    test_audio.cpp)
-endif()
-
-set(TESTSUITE_LIBRARIES aeon ${SOX_LIBRARIES} gtest gmock
+set(TESTSUITE_LIBRARIES aeon gtest gmock
     ${LCOVERAGE} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES}
     ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 

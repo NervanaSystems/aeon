@@ -61,13 +61,6 @@ set (SRC
     raw_image.cpp
     output_saver.cpp)
 
-if (USE_SOX)
-    list(APPEND SRC
-        augment_audio.cpp
-        etl_audio.cpp
-        noise_clips.cpp)
-endif()
-
 if (ENABLE_AEON_CLIENT)
     list(APPEND SRC
         client/curl_connector.cpp
@@ -103,7 +96,7 @@ add_library(aeon SHARED ${SRC} ${AEON_HEADER_FILES})
 
 install(TARGETS aeon DESTINATION lib)
 
-set(AEON_LIBRARIES ${SOX_LIBRARIES} ${CURL_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
+set(AEON_LIBRARIES ${CURL_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
 if (ENABLE_OPENFABRICS_CONNECTOR)
     list(APPEND AEON_LIBRARIES ${OPENFABRICS_LIBRARIES})
 endif()
