@@ -23,7 +23,6 @@
 #include "provider_interface.hpp"
 #include "etl_image.hpp"
 #include "etl_label.hpp"
-#include "etl_audio.hpp"
 #include "etl_blob.hpp"
 #include "etl_boundingbox.hpp"
 #include "etl_char_map.hpp"
@@ -43,9 +42,6 @@ namespace nervana
         class provider_base;
         class image;
         class label;
-#ifdef USE_SOX
-        class audio;
-#endif
         namespace localization
         {
             class rcnn;
@@ -87,9 +83,6 @@ class nervana::augmentation
 {
 public:
     std::shared_ptr<augment::image::params> m_image_augmentations;
-#ifdef USE_SOX
-    std::shared_ptr<augment::audio::params> m_audio_augmentations;
-#endif
 };
 
 //=================================================================================================
@@ -159,32 +152,6 @@ private:
     nervana::label::loader    m_loader;
     const std::string         m_buffer_name;
 };
-
-#ifdef USE_SOX
-//=================================================================================================
-// audio
-//=================================================================================================
-
-class nervana::provider::audio : public provider::interface
-{
-public:
-    audio(nlohmann::json js, nlohmann::json aug);
-    virtual ~audio() {}
-    void provide(int                        idx,
-                 const std::vector<char>&   datum_in,
-                 nervana::fixed_buffer_map& out_buf,
-                 augmentation&) const override;
-
-private:
-    nervana::audio::config        m_config;
-    nervana::audio::extractor     m_extractor;
-    nervana::audio::transformer   m_transformer;
-    nervana::audio::loader        m_loader;
-    augment::audio::param_factory m_augmentation_factory;
-    const std::string             m_buffer_name;
-    const std::string             m_length_name;
-};
-#endif
 
 //=================================================================================================
 // localization::rcnn

@@ -77,12 +77,6 @@ if(PYTHON_PLUGIN)
     list(APPEND CMAKE_CXX_FLAGS "-DPYTHON_PLUGIN")
 endif(PYTHON_PLUGIN)
 
-option(USE_SOX "Enable support of audio with SOX library" )
-if(USE_SOX)
-    add_definitions(-DUSE_SOX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_SOX")
-endif(USE_SOX)
-
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 else()
@@ -122,7 +116,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-float-equal")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-duplicate-enum") # from numpy
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-used-but-marked-unused") # from sox
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-compat-deprecated-writable-strings")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-double-promotion")
@@ -132,13 +125,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
 
 find_package(Threads)
 find_package(PkgConfig REQUIRED)
-
-if (USE_SOX)
-	pkg_check_modules(SOX REQUIRED sox)
-	include_directories(${SOX_INCLUDE_DIRS})
-	link_directories(${SOX_LIBRARY_DIRS})
-	add_definitions(${SOX_CFLAGS_OTHERS})
-endif (USE_SOX)
 
 find_package(OpenCV REQUIRED)
 

@@ -51,7 +51,6 @@ bug reports at aeon_issues_ .
 
    provider_image
    provider_label
-   provider_audio
    provider_localization_rcnn
    provider_localization_ssd
    provider_pixelmask
@@ -67,7 +66,6 @@ bug reports at aeon_issues_ .
    :caption: Augmentation
 
    augment_image
-   augment_audio
    augmentation_plugins
 
 .. toctree::

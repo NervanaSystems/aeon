@@ -19,9 +19,6 @@
 #include <cmath>
 #include <cassert>
 #include <iomanip>
-#ifdef USE_SOX
-#include <sox.h>
-#endif
 
 #include "util.hpp"
 #include "log.hpp"
@@ -272,58 +269,6 @@ nervana::random_engine_t& nervana::get_thread_local_random_engine()
 {
     return local_random_engine;
 }
-
-#ifdef USE_SOX
-cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
-{
-    SOX_SAMPLE_LOCALS;
-    sox_format_t* in = sox_open_mem_read((void*)item, itemSize, NULL, NULL, NULL);
-
-    if (in != NULL)
-    {
-        affirm(in->signal.channels == 1, "input audio must be single channel");
-        affirm(in->signal.precision == 16, "input audio must be signed short");
-
-        sox_sample_t* sample_buffer = new sox_sample_t[in->signal.length];
-        size_t        number_read   = sox_read(in, sample_buffer, in->signal.length);
-
-        size_t nclipped = 0;
-
-        cv::Mat samples_mat(in->signal.length, 1, CV_16SC1);
-
-        affirm(in->signal.length == number_read, "unable to read all samples of input audio");
-
-        for (uint i = 0; i < in->signal.length; ++i)
-        {
-            samples_mat.at<int16_t>(i, 0) = SOX_SAMPLE_TO_SIGNED_16BIT(sample_buffer[i], nclipped);
-        }
-        delete[] sample_buffer;
-        sox_close(in);
-        return samples_mat;
-    }
-    else
-    {
-        std::cout << "Unable to read";
-        cv::Mat samples_mat(1, 1, CV_16SC1);
-        sox_close(in);
-        return samples_mat;
-    }
-}
-
-// Audio buffer must be int16
-void nervana::write_audio_to_file(cv::Mat buffer, std::string path, sox_rate_t sample_rate_hz)
-{
-    sox_signalinfo_t signal{sample_rate_hz, 1, 16, buffer.total(), NULL};
-    auto             t = sox_open_write(path.c_str(), &signal, NULL, NULL, NULL, NULL);
-
-    sox_sample_t sample_buffer[buffer.total()];
-    for (auto i = 0; i < buffer.total(); i++)
-    {
-        sample_buffer[i] = SOX_SIGNED_16BIT_TO_SAMPLE(buffer.at<int16_t>(i), 0);
-    }
-    sox_write(t, sample_buffer, buffer.total());
-}
-#endif
 
 std::vector<char> nervana::string2vector(const std::string& s)
 {

@@ -32,9 +32,6 @@
 
 #define private public
 
-#ifdef USE_SOX
-#include "etl_audio.hpp"
-#endif
 #include "etl_boundingbox.hpp"
 #include "etl_char_map.hpp"
 #include "etl_image.hpp"
@@ -319,9 +316,6 @@ void dump_config_info(ostream& f, shared_ptr<nervana::interface::config_info_int
 TEST(util, param_dump)
 {
     ofstream f("config_args.txt", ios::trunc);
-#ifdef USE_SOX
-    DUMP_CONFIG(audio);
-#endif
     DUMP_CONFIG(boundingbox);
     DUMP_CONFIG(char_map);
     DUMP_CONFIG(image);
