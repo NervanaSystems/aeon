@@ -19,6 +19,10 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#ifdef OPENCV_LEGACY_MODE
+#include <opencv2/imgcodecs/legacy/constants_c.h>
+#include <opencv2/videoio/legacy/constants_c.h>
+#endif
 #include <chrono>
 #include "interface.hpp"
 #include "image.hpp"
