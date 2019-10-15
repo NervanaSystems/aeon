@@ -141,8 +141,14 @@ find_package(PkgConfig REQUIRED)
 
 find_package(OpenCV REQUIRED)
 
+if(NOT (${OpenCV_VERSION} LESS 3))
+    add_definitions(-DOPENCV_LEGACY_MODE)
+endif(GREATER_EQUAL)
+
 include_directories(${OpenCV_INCLUDE_DIRS})
 link_directories(${OpenCV_LIBRARY_DIRS})
+
+message("${OpenCV_INCLUDE_DIRS}")
 
 # opecv_ts is for testing opencv. if it is left in the lib list then we get an error when
 # the unit test exits.
