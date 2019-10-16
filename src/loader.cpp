@@ -156,7 +156,8 @@ void loader_local::initialize(const json& config_json)
                                                      lcfg.random_seed,
                                                      lcfg.node_id,
                                                      lcfg.node_count,
-                                                     lcfg.batch_size);
+                                                     lcfg.batch_size,
+                                                     lcfg.drop_incomplete_batch);
 
         // TODO: make the constructor throw this error
         if (record_count() == 0)

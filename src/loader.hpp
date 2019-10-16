@@ -63,6 +63,7 @@ public:
     bool                        shuffle_manifest     = false;
     bool                        pinned               = false;
     bool                        batch_major          = true;
+    bool                        drop_incomplete_batch = false;
     uint32_t                    random_seed          = 0;
     std::string                 cpu_list             = "";
     std::string                 iteration_mode       = "ONCE";
@@ -86,6 +87,7 @@ private:
         ADD_SCALAR(cache_directory, mode::OPTIONAL),
         ADD_SCALAR(block_size, mode::OPTIONAL),
         ADD_SCALAR(batch_major, mode::OPTIONAL),
+        ADD_SCALAR(drop_incomplete_batch, mode::OPTIONAL),
         ADD_SCALAR(subset_fraction,
                    mode::OPTIONAL,
                    [](decltype(subset_fraction) v) { return v <= 1.0f && v >= 0.0f; }),

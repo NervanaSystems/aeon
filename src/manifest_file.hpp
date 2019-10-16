@@ -58,7 +58,8 @@ public:
                   uint32_t           seed            = 0,
                   uint32_t           node_id         = 0,
                   uint32_t           node_count      = 0,
-                  int                batch_size      = 1);
+                  int                batch_size      = 1,
+                  bool               drop_incomplete_batch = false);
 
     manifest_file(std::istream&      stream,
                   bool               shuffle,
@@ -68,7 +69,8 @@ public:
                   uint32_t           seed            = 0,
                   uint32_t           node_id         = 0,
                   uint32_t           node_count      = 0,
-                  int                batch_size      = 1);
+                  int                batch_size      = 1,
+                  bool               drop_incomplete_batch = false);
 
     virtual ~manifest_file() {}
     using record_t = std::vector<std::string>;
@@ -125,6 +127,7 @@ private:
     std::vector<element_t>           m_element_types;
     std::vector<size_t>              m_block_load_sequence;
     bool                             m_shuffle;
+    bool                             m_drop_incomplete_batch;
     random_engine_t                  m_random;
     static const std::string         m_file_type_id;
     static const std::string         m_binary_type_id;

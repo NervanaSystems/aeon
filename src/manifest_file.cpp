@@ -55,7 +55,8 @@ manifest_file::manifest_file(const string& filename,
                              uint32_t      seed,
                              uint32_t      node_id,
                              uint32_t      node_count,
-                             int           batch_size)
+                             int           batch_size,
+                             bool          drop_incomplete_batch)
     : m_source_filename(filename)
     , m_record_count{0}
     , m_node_id(node_id)
@@ -64,6 +65,7 @@ manifest_file::manifest_file(const string& filename,
     , m_batch_size(batch_size)
     , m_shuffle{shuffle}
     , m_random{seed ? seed : random_device{}()}
+    , m_drop_incomplete_batch(drop_incomplete_batch)
 {
     // for now parse the entire manifest on creation
     ifstream infile(m_source_filename);
@@ -84,7 +86,8 @@ manifest_file::manifest_file(std::istream&      stream,
                              uint32_t           seed,
                              uint32_t           node_id,
                              uint32_t           node_count,
-                             int                batch_size)
+                             int                batch_size,
+                             bool               drop_incomplete_batch)
     : m_record_count{0}
     , m_node_id(node_id)
     , m_node_count(node_count)
@@ -92,6 +95,7 @@ manifest_file::manifest_file(std::istream&      stream,
     , m_batch_size(batch_size)
     , m_shuffle{shuffle}
     , m_random{seed ? seed : random_device{}()}
+    , m_drop_incomplete_batch(drop_incomplete_batch)
 {
     initialize(stream, block_size, root, subset_fraction);
 }
@@ -278,6 +282,10 @@ void manifest_file::generate_blocks()
         if (m_node_count != 0 )
         {
             m_record_count = m_record_list.size() / m_node_count;
+
+            if (m_drop_incomplete_batch)
+                m_record_count = m_record_count - (m_record_count % m_batch_size);
+
             int batches = m_record_count / m_batch_size;
             record_list_shuffled.resize(m_record_count);
 
@@ -296,7 +304,13 @@ void manifest_file::generate_blocks()
         else
         {
             // TODO rewrite this in more performance friendly way
-            record_list_shuffled = m_record_list;
+            if (m_drop_incomplete_batch)
+            {
+                m_record_count = m_record_list.size() - (m_record_list.size() % m_batch_size);
+                record_list_shuffled = std::vector<record_t>(m_record_list.begin(), m_record_list.begin() + m_record_count);
+            }
+            else
+                record_list_shuffled = m_record_list;
         }
 
         // ///////////////////////////////////////////////////////////////////////////////////
@@ -323,9 +337,7 @@ void manifest_file::reset()
 {
     if (m_shuffle)
     {
-        shuffle(m_block_load_sequence.begin(), m_block_load_sequence.end(), m_random);
-        if (m_node_count != 0 )
-            generate_blocks();
+        generate_blocks();
     }
     m_counter = 0;
 }
