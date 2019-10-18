@@ -20,6 +20,7 @@
 #include <random>
 #include <iostream>
 #include <ios>
+#include <unordered_set>
 
 #include "gtest/gtest.h"
 
@@ -366,6 +367,88 @@ TEST(loader, test)
         }
     }
 }
+
+
+TEST(loader, multinode_sync_test)
+{
+    int    height            = 16;
+    int    width             = 16;
+    size_t batch_size        = 3;
+    size_t record_count      = 48;
+    size_t block_size        = 7;
+    size_t node_count        = 8;
+    size_t epochs_number     = 30;
+
+    string manifest_filename = create_manifest_file(record_count, width, height);
+    json js_image = {
+        {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
+    json label        = {{"type", "label"}, {"binary", false}};
+    json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
+    json aeon_config  = {{"manifest_filename", manifest_filename},
+                        {"batch_size", batch_size},
+                        {"block_size", block_size},
+                        {"etl", {js_image, label}},
+                        {"iteration_mode", "INFINITE"},
+                        //{"shuffle_enable", true},
+                        {"shuffle_manifest", true},
+                        {"random_seed", 1},
+                        {"node_id", 0},
+                        {"node_count", node_count},
+                        {"augmentation", augmentation}};
+    
+    loader_factory factory;
+    std::vector<std::unique_ptr<loader>> loaders;
+    for(int i = 0; i < node_count; i++)
+    {
+        aeon_config["node_id"] = i;
+        loaders.emplace_back(factory.get_loader(aeon_config));
+    }
+
+    auto buf_names = loaders[0]->get_buffer_names();
+    EXPECT_EQ(2, buf_names.size());
+    EXPECT_NE(find(buf_names.begin(), buf_names.end(), "image"), buf_names.end());
+    EXPECT_NE(find(buf_names.begin(), buf_names.end(), "label"), buf_names.end());
+
+    auto image_shape = loaders[0]->get_shape("image");
+    auto label_shape = loaders[0]->get_shape("label");
+
+    ASSERT_EQ(3, image_shape.size());
+    EXPECT_EQ(height, image_shape[0]);
+    EXPECT_EQ(width, image_shape[1]);
+    EXPECT_EQ(3, image_shape[2]);
+
+    ASSERT_EQ(1, label_shape.size());
+    EXPECT_EQ(1, label_shape[0]);
+
+    for (int epoch = 0; epoch < epochs_number; epoch++)
+    {
+        std::unordered_set<int> index_map;
+        for (int batch_num = 0; batch_num < (record_count / batch_size) / node_count; batch_num++)
+        {
+            for (int ld_idx = 0; ld_idx < loaders.size(); ld_idx++)
+            {
+                auto& aeon_it = loaders[ld_idx]->get_current_iter();
+                const fixed_buffer_map& data = *aeon_it;
+                ASSERT_EQ(2, data.size());
+                const buffer_fixed_size_elements* image_buffer_ptr = data["image"];
+                ASSERT_NE(nullptr, image_buffer_ptr);
+                const buffer_fixed_size_elements& image_buffer = *image_buffer_ptr;
+                for (int i = 0; i < batch_size; i++)
+                {
+                    const char* image_data = image_buffer.get_item(i);
+                    cv::Mat     image{height, width, CV_8UC3, (char*)image_data};
+                    int         actual_id = embedded_id_image::read_embedded_id(image);
+       //             cout <<"node "<<ld_idx<<",  "<<actual_id <<"\n";
+                    ASSERT_FALSE(index_map.find(actual_id) != index_map.end());
+                    index_map.insert(actual_id);
+                }
+                aeon_it++;
+            }
+        }
+     //   cout<<"---------------\n";
+    }
+}
+
 
 TEST(loader, provider)
 {
