@@ -46,7 +46,7 @@ namespace nervana
 }
 
 class nervana::manifest_file
-    : public nervana::async_manager_source<std::vector<std::vector<std::string>>>,
+    : public nervana::async_manager_source<std::vector<std::string>>,
       public nervana::manifest
 {
 public:
@@ -54,7 +54,6 @@ public:
                   bool               shuffle,
                   const std::string& root            = "",
                   float              subset_fraction = 1.0,
-                  size_t             block_size      = 5000,
                   uint32_t           seed            = 0,
                   uint32_t           node_id         = 0,
                   uint32_t           node_count      = 0,
@@ -64,7 +63,6 @@ public:
                   bool               shuffle,
                   const std::string& root            = "",
                   float              subset_fraction = 1.0,
-                  size_t             block_size      = 5000,
                   uint32_t           seed            = 0,
                   uint32_t           node_id         = 0,
                   uint32_t           node_count      = 0,
@@ -76,10 +74,9 @@ public:
     std::string cache_id() override;
     std::string version() override;
 
-    std::vector<record_t>* next() override;
-    void                                   reset() override;
+    record_t*  next() override;
+    void      reset() override;
 
-    size_t   block_count() const { return m_block_list.size(); }
     size_t   record_count() const override { return m_record_count; }
     size_t   elements_per_record() const override { return m_element_types.size(); }
     uint32_t get_crc();
@@ -100,7 +97,6 @@ public:
 
 protected:
     void initialize(std::istream&      stream,
-                    size_t             block_size,
                     const std::string& root,
                     float              subset_fraction);
 
@@ -109,8 +105,6 @@ private:
 
     std::vector<std::vector<std::string>>           m_record_list;
     std::string                      m_source_filename;
-    std::vector<std::vector<record_t>> m_block_list;
-    std::deque<std::vector<record_t>> m_tmp_blocks;
     CryptoPP::CRC32C                 m_crc_engine;
     uint32_t                         m_computed_crc;
     size_t                           m_counter{0};
@@ -123,7 +117,7 @@ private:
     static const char                m_comment_char   = '#';
     static const char                m_metadata_char  = '@';
     std::vector<element_t>           m_element_types;
-    std::vector<size_t>              m_block_load_sequence;
+    std::vector<record_t>            m_output_record_list;
     bool                             m_shuffle;
     random_engine_t                  m_random;
     static const std::string         m_file_type_id;

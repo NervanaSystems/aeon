@@ -144,7 +144,6 @@ void loader_local::initialize(const json& config_json)
                                                     lcfg.shuffle_manifest,
                                                     lcfg.manifest_root,
                                                     lcfg.subset_fraction,
-                                                    decode_size,
                                                     lcfg.random_seed,
                                                     lcfg.node_id,
                                                     lcfg.node_count,

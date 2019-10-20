@@ -22,36 +22,37 @@ set (SRC
     gen_image.cpp
     helpers.cpp
     main.cpp
-    manifest_builder.cpp
-    test_async_manager.cpp
-    test_augmentation.cpp
-    test_base64.cpp
-    test_bbox.cpp
-    test_benchmark.cpp
-    test_block_loader_file.cpp
-    test_block_loader_nds.cpp
-    test_block_manager.cpp
-    test_buffer.cpp
-    test_char_map.cpp
-    test_config.cpp
-    test_cpio.cpp
-    test_depthmap.cpp
-    test_file_util.cpp
-    test_image.cpp
-    test_label_map.cpp
-    test_loader.cpp
-    test_localization_rcnn.cpp
-    test_localization_ssd.cpp
-    test_logging.cpp
-    test_manifest_tsv.cpp
-    test_params.cpp
-    test_pixel_mask.cpp
-    test_provider.cpp
-    test_specgram.cpp
-    test_types.cpp
-    test_util.cpp
-    test_video.cpp
-    test_raw_image.cpp
+   # manifest_builder.cpp
+   # test_async_manager.cpp
+   # test_augmentation.cpp
+   #test_base64.cpp
+   # test_bbox.cpp
+   # test_benchmark.cpp
+   # test_block_loader_file.cpp
+   #test_block_loader_nds.cpp
+   # test_block_manager.cpp
+   #test_buffer.cpp
+   # test_char_map.cpp
+   #test_config.cpp
+   #test_cpio.cpp
+   #test_depthmap.cpp
+   #test_file_util.cpp
+   # test_image.cpp
+   # test_label_map.cpp
+   # test_loader.cpp
+   test_benchmark.cpp
+   #test_localization_rcnn.cpp
+   # test_localization_ssd.cpp
+   # test_logging.cpp
+   # test_manifest_tsv.cpp
+   # test_params.cpp
+   #test_pixel_mask.cpp
+   #test_provider.cpp
+   # test_specgram.cpp
+   # test_types.cpp
+   # test_util.cpp
+   # test_video.cpp
+   # test_raw_image.cpp
 )
 
 set(TESTSUITE_LIBRARIES aeon gtest gmock

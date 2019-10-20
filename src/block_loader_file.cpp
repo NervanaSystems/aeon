@@ -31,14 +31,12 @@ using namespace std;
 using namespace nervana;
 
 block_loader_file::block_loader_file(shared_ptr<manifest_file> manifest, size_t block_size)
-    : async_manager<std::vector<std::vector<std::string>>, encoded_record_list>(manifest,
-                                                                                "block_loader_file")
+    : async_manager<std::vector<std::string>, encoded_record_list>(manifest, "block_loader_file")
     , m_block_size(block_size)
     , m_record_count{manifest->record_count()}
     , m_manifest(manifest)
 {
     m_block_count         = round((float)m_manifest->record_count() / (float)m_block_size);
-    m_block_size          = ceil((float)m_manifest->record_count() / (float)m_block_count);
     m_elements_per_record = manifest->elements_per_record();
 }
 
@@ -47,64 +45,59 @@ nervana::encoded_record_list* block_loader_file::filler()
     m_state                 = async_state::wait_for_buffer;
     encoded_record_list* rc = get_pending_buffer();
     m_state                 = async_state::processing;
-
     rc->clear();
 
-    m_state    = async_state::fetching_data;
-    auto block = m_source->next();
-    m_state    = async_state::processing;
-    if (block != nullptr)
+    for (int i = 0; i < m_block_size; i++)
     {
-        for (auto element_list : *block)
+        auto& element_list = *m_source->next();
+
+        const vector<manifest::element_t>& types = m_manifest->get_element_types();
+        encoded_record                     record;
+        for (int j = 0; j < m_elements_per_record; ++j)
         {
-            const vector<manifest::element_t>& types = m_manifest->get_element_types();
-            encoded_record                     record;
-            for (int j = 0; j < m_elements_per_record; ++j)
+            try
             {
-                try
+                const string& element = element_list[j];
+                switch (types[j])
                 {
-                    const string& element = element_list[j];
-                    switch (types[j])
-                    {
-                    case manifest::element_t::FILE:
-                    {
-                        auto buffer = file_util::read_file_contents(element);
-                        record.add_element(std::move(buffer));
-                        break;
-                    }
-                    case manifest::element_t::BINARY:
-                    {
-                        vector<char> buffer  = string2vector(element);
-                        vector<char> decoded = base64::decode(buffer);
-                        record.add_element(std::move(decoded));
-                        break;
-                    }
-                    case manifest::element_t::STRING:
-                    {
-                        record.add_element(element.data(), element.size());
-                        break;
-                    }
-                    case manifest::element_t::ASCII_INT:
-                    {
-                        int32_t value = stod(element);
-                        record.add_element(&value, sizeof(value));
-                        break;
-                    }
-                    case manifest::element_t::ASCII_FLOAT:
-                    {
-                        float value = stof(element);
-                        record.add_element(&value, sizeof(value));
-                        break;
-                    }
-                    }
+                case manifest::element_t::FILE:
+                {
+                    auto buffer = file_util::read_file_contents(element);
+                    record.add_element(std::move(buffer));
+                    break;
                 }
-                catch (std::exception&)
+                case manifest::element_t::BINARY:
                 {
-                    record.add_exception(current_exception());
+                    vector<char> buffer  = string2vector(element);
+                    vector<char> decoded = base64::decode(buffer);
+                    record.add_element(std::move(decoded));
+                    break;
+                }
+                case manifest::element_t::STRING:
+                {
+                    record.add_element(element.data(), element.size());
+                    break;
+                }
+                case manifest::element_t::ASCII_INT:
+                {
+                    int32_t value = stod(element);
+                    record.add_element(&value, sizeof(value));
+                    break;
+                }
+                case manifest::element_t::ASCII_FLOAT:
+                {
+                    float value = stof(element);
+                    record.add_element(&value, sizeof(value));
+                    break;
+                }
                 }
             }
-            rc->add_record(std::move(record));
+            catch (std::exception&)
+            {
+                record.add_exception(current_exception());
+            }
         }
+        rc->add_record(std::move(record));
     }
 
     if (rc && rc->size() == 0)
@@ -112,6 +105,5 @@ nervana::encoded_record_list* block_loader_file::filler()
         rc = nullptr;
     }
 
-    m_state = async_state::idle;
     return rc;
 }
