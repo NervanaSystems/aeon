@@ -200,7 +200,8 @@ protected:
         else
             return &m_containers[0];
     }
-    OUTPUT                                       m_containers[2];
+    static constexpr uint64_t                    m_buffers_number = 2;
+    OUTPUT                                       m_containers[m_buffers_number];
     OUTPUT*                                      m_pending_buffer;
     std::shared_ptr<async_manager_source<INPUT>> m_source;
 

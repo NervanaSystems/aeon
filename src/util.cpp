@@ -19,7 +19,6 @@
 #include <cmath>
 #include <cassert>
 #include <iomanip>
-#include <sox.h>
 
 #include "util.hpp"
 #include "log.hpp"
@@ -271,56 +270,6 @@ nervana::random_engine_t& nervana::get_thread_local_random_engine()
     return local_random_engine;
 }
 
-cv::Mat nervana::read_audio_from_mem(const char* item, int itemSize)
-{
-    SOX_SAMPLE_LOCALS;
-    sox_format_t* in = sox_open_mem_read((void*)item, itemSize, NULL, NULL, NULL);
-
-    if (in != NULL)
-    {
-        affirm(in->signal.channels == 1, "input audio must be single channel");
-        affirm(in->signal.precision == 16, "input audio must be signed short");
-
-        sox_sample_t* sample_buffer = new sox_sample_t[in->signal.length];
-        size_t        number_read   = sox_read(in, sample_buffer, in->signal.length);
-
-        size_t nclipped = 0;
-
-        cv::Mat samples_mat(in->signal.length, 1, CV_16SC1);
-
-        affirm(in->signal.length == number_read, "unable to read all samples of input audio");
-
-        for (uint i = 0; i < in->signal.length; ++i)
-        {
-            samples_mat.at<int16_t>(i, 0) = SOX_SAMPLE_TO_SIGNED_16BIT(sample_buffer[i], nclipped);
-        }
-        delete[] sample_buffer;
-        sox_close(in);
-        return samples_mat;
-    }
-    else
-    {
-        std::cout << "Unable to read";
-        cv::Mat samples_mat(1, 1, CV_16SC1);
-        sox_close(in);
-        return samples_mat;
-    }
-}
-
-// Audio buffer must be int16
-void nervana::write_audio_to_file(cv::Mat buffer, std::string path, sox_rate_t sample_rate_hz)
-{
-    sox_signalinfo_t signal{sample_rate_hz, 1, 16, buffer.total(), NULL};
-    auto             t = sox_open_write(path.c_str(), &signal, NULL, NULL, NULL, NULL);
-
-    sox_sample_t sample_buffer[buffer.total()];
-    for (auto i = 0; i < buffer.total(); i++)
-    {
-        sample_buffer[i] = SOX_SIGNED_16BIT_TO_SAMPLE(buffer.at<int16_t>(i), 0);
-    }
-    sox_write(t, sample_buffer, buffer.total());
-}
-
 std::vector<char> nervana::string2vector(const std::string& s)
 {
     return vector<char>{s.begin(), s.end()};
@@ -329,4 +278,96 @@ std::vector<char> nervana::string2vector(const std::string& s)
 std::string nervana::vector2string(const std::vector<char>& v)
 {
     return string{v.data(), v.size()};
+}
+
+// Parses cpu_list string. For example: "0-4,30,10,32-33"
+std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
+{
+    std::vector<int>         thread_affinity_map;
+    std::vector<std::string> split_list = nervana::split(cpu_list, ',', false);
+    try
+    {
+        for (std::string& str : split_list)
+        {
+            auto dash_pos = str.find('-');
+            if (dash_pos == std::string::npos)
+            {
+                thread_affinity_map.push_back(stoi(str));
+            }
+            else
+            {
+                int from = stoi(str.substr(0, dash_pos));
+                int to   = stoi(str.substr(dash_pos + 1));
+                for (int i = from; i <= to; ++i)
+                {
+                    thread_affinity_map.push_back(i);
+                }
+            }
+        }
+    }
+    catch (...)
+    {
+        ERR << "Failed to parse cpu list.";
+        throw;
+    }
+    std::sort(thread_affinity_map.begin(), thread_affinity_map.end());
+    auto ip = std::unique(thread_affinity_map.begin(), thread_affinity_map.end());
+    if (ip != thread_affinity_map.end())
+    {
+        auto num_removed_duplicates = std::distance(ip, thread_affinity_map.end());
+        WARN << "Removed " << std::to_string(num_removed_duplicates)
+             << " duplicate entries in cpu list.";
+    }
+    thread_affinity_map.resize(std::distance(thread_affinity_map.begin(), ip));
+
+    if (thread_affinity_map.back() >= std::thread::hardware_concurrency())
+    {
+        throw std::invalid_argument("One or more indexes computed from cpu list '" + cpu_list +
+                                    "' exceed number of logical cores. Use values "
+                                    "in "
+                                    "range [0, " +
+                                    std::to_string(std::thread::hardware_concurrency() - 1) + "].");
+    }
+
+    return thread_affinity_map;
+}
+
+// Parses cpu affinity from loader config or environment variable.
+// Environment has precedence over config. If both are empty, provides the default.
+std::vector<int> nervana::get_thread_affinity_map(const std::string& config_cpu_list,
+                                                  int                max_count_of_free_threads,
+                                                  int                free_threads_ratio)
+{
+    std::vector<int> thread_affinity_map;
+
+    const char* env_cpu_list = getenv("AEON_CPU_LIST");
+    if (env_cpu_list != nullptr && strlen(env_cpu_list) > 0) // set affinity from environment
+    {
+        std::string str_cpu_list{env_cpu_list};
+        thread_affinity_map = nervana::parse_cpu_list(str_cpu_list);
+
+        if (!config_cpu_list.empty())
+        {
+            WARN << "Both AEON_CPU_LIST and 'cpu_list' are detected. AEON_CPU_LIST environment "
+                    "variable will be used in this case.";
+        }
+    }
+    else if (!config_cpu_list.empty()) // set affinity from config
+    {
+        thread_affinity_map = nervana::parse_cpu_list(config_cpu_list);
+    }
+
+    if (thread_affinity_map.empty()) //  automatically determine thread_affinity_map
+    {
+        // we don't use all threads, some of them we leave for other pipeline objects and system
+        int nthreads =
+            std::thread::hardware_concurrency() -
+            std::min(max_count_of_free_threads,
+                     static_cast<int>(std::thread::hardware_concurrency() / free_threads_ratio));
+
+        thread_affinity_map.resize(nthreads);
+        std::iota(thread_affinity_map.begin(), thread_affinity_map.end(), 0);
+    }
+
+    return thread_affinity_map;
 }

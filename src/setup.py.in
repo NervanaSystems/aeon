@@ -32,8 +32,10 @@ import distutils.ccompiler
 distutils.ccompiler.CCompiler.compile=parallelCCompile
 
 lib_dirs = ""
+lib_dirs += " -L${CMAKE_PREFIX_PATH}/lib "
 libs = ""
 include_dirs = ""
+include_dirs += " -I${CMAKE_PREFIX_PATH}/include "
 
 status, tmp = getstatusoutput("pkg-config --cflags opencv")
 if status != 0:
@@ -43,13 +45,6 @@ include_dirs += tmp
 lib_dirs += getoutput("pkg-config --libs-only-L opencv")
 libs += getoutput("pkg-config --libs-only-l opencv")
 
-status, tmp = getstatusoutput("pkg-config --cflags sox")
-if status != 0:
-    print("required package 'sox' not found")
-    exit()
-include_dirs += tmp
-lib_dirs += getoutput("pkg-config --libs-only-L sox")
-libs += ' ' + getoutput("pkg-config --libs-only-l sox")
 libs += ' -lcurl'
 
 include_dirs += ' ${Boost_INCLUDE_DIRS}'
@@ -61,7 +56,7 @@ if '${OPENFABRICS_FOUND}' == 'TRUE':
     lib_dirs += ' -L${OPENFABRICS_LIBRARY_DIRS} '
     libs += ' -lfabric '
 
-os.environ["CC"] = "clang++"
+os.environ["CC"] = "g++"
 src_list = "${SRC}".split(";")
 sources = [
     '${CMAKE_CURRENT_SOURCE_DIR}/'+src for src in src_list
@@ -73,7 +68,7 @@ include_dirs += get_python_inc() + ' ' + numpy.get_include()
 include_dirs = include_dirs.split()
 libs = libs.replace('-l', '').split()
 lib_dirs = lib_dirs.replace('-L','').split()
-extra_compile_args = "${CMAKE_CXX_FLAGS}".split(' ')
+extra_compile_args = "${CMAKE_CXX_FLAGS}".strip().split(' ')
 
 
 module = Extension(
@@ -88,5 +83,7 @@ module = Extension(
 setup(
     name='nervana-aeon',
     version='${AEON_VERSION}',
+    description='Framework-independent deep learning dataloader',
+    license='Intel Internal Use Software License Agreement',
     ext_modules=[module]
 )

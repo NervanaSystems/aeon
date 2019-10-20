@@ -16,7 +16,6 @@
 
 set (SRC
     async_manager.cpp
-    augment_audio.cpp
     augment_image.cpp
     avi.cpp
     base64.cpp
@@ -33,7 +32,6 @@ set (SRC
     cap_mjpeg_decoder.cpp
     cpio.cpp
     crc.cpp
-    etl_audio.cpp
     etl_boundingbox.cpp
     etl_char_map.cpp
     etl_depthmap.cpp
@@ -50,7 +48,6 @@ set (SRC
     log.cpp
     manifest_file.cpp
     manifest_nds.cpp
-    noise_clips.cpp
     normalized_box.cpp
     provider.cpp
     provider_factory.cpp
@@ -99,7 +96,7 @@ add_library(aeon SHARED ${SRC} ${AEON_HEADER_FILES})
 
 install(TARGETS aeon DESTINATION lib)
 
-set(AEON_LIBRARIES ${SOX_LIBRARIES} ${CURL_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
+set(AEON_LIBRARIES ${CURL_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
 if (ENABLE_OPENFABRICS_CONNECTOR)
     list(APPEND AEON_LIBRARIES ${OPENFABRICS_LIBRARIES})
 endif()

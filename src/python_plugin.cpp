@@ -121,7 +121,6 @@ namespace nervana
         return augment("augment_boundingbox", boxes);
     }
 
-    cv::Mat plugin::augment_audio(const cv::Mat& m) { return augment("augment_audio", m); }
     cv::Mat plugin::augment_pixel_mask(const cv::Mat& m)
     {
         return augment("augment_pixel_mask", m);

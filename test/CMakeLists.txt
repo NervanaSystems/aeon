@@ -24,7 +24,6 @@ set (SRC
     main.cpp
     manifest_builder.cpp
     test_async_manager.cpp
-    test_audio.cpp
     test_augmentation.cpp
     test_base64.cpp
     test_bbox.cpp
@@ -47,7 +46,6 @@ set (SRC
     test_manifest_tsv.cpp
     test_params.cpp
     test_pixel_mask.cpp
-    test_provider_audio.cpp
     test_provider.cpp
     test_specgram.cpp
     test_types.cpp
@@ -56,7 +54,7 @@ set (SRC
     test_raw_image.cpp
 )
 
-set(TESTSUITE_LIBRARIES aeon ${SOX_LIBRARIES} gtest gmock
+set(TESTSUITE_LIBRARIES aeon gtest gmock
     ${LCOVERAGE} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES}
     ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 

@@ -20,7 +20,6 @@
 #include <chrono>
 #include <utility>
 #include <algorithm>
-#include <sox.h>
 #include <memory>
 
 #include "loader.hpp"
@@ -115,17 +114,31 @@ void loader_local::initialize(const json& config_json)
     m_batch_size = lcfg.batch_size;
 
     // shared_ptr<manifest> base_manifest;
-    sox_format_init();
 
     if (lcfg.node_count != 0)
     {
-        if (lcfg.node_id >= lcfg.node_count) throw std::runtime_error("node_id can't be greater than node_count");
+        if (lcfg.node_id >= lcfg.node_count)
+            throw std::runtime_error("node_id can't be greater than node_count");
+
+        if (!lcfg.cache_directory.empty())
+        {
+            WARN<<"File caching for multinode is not implemented yet";
+            lcfg.cache_directory.clear();
+        }
+
+        if (lcfg.random_seed == 0)
+        {
+            WARN<<"You have to set non zero random_seed for multi node training. random_seed = 1 is used";
+            lcfg.random_seed = 1;
+        }
     }
 
-   unsigned int threads_num = lcfg.decode_thread_count != 0 ? lcfg.decode_thread_count
-                                                             : std::thread::hardware_concurrency();
-   const int decode_size =
-        lcfg.batch_size * ((threads_num * m_input_multiplier - 1) / lcfg.batch_size + 1);
+    std::vector<int> thread_affinity_map = nervana::get_thread_affinity_map(
+        lcfg.cpu_list, m_max_count_of_free_threads, m_free_threads_ratio);
+
+    // Smallest multiple of batch_size ensuring at least m_input_multiplier images per thread
+    int decode_size = lcfg.batch_size *
+                      ((thread_affinity_map.size() * m_input_multiplier - 1) / lcfg.batch_size + 1);
 
     m_manifest_file = make_shared<manifest_file>(lcfg.manifest_filename,
                                                     lcfg.shuffle_manifest,
@@ -165,10 +178,10 @@ void loader_local::initialize(const json& config_json)
     m_decoder = make_shared<batch_decoder>(m_block_loader,
                                            lcfg.batch_size,
                                            decode_size,
-                                           lcfg.decode_thread_count,
+                                           std::move(thread_affinity_map),
                                            lcfg.pinned,
                                            m_provider,
-                                           lcfg.random_seed);
+                                           lcfg.random_seed + lcfg.node_id);
 
     m_final_stage =
         make_shared<batch_iterator_fbm>(m_decoder, lcfg.batch_size, m_provider, !lcfg.batch_major);
@@ -233,7 +246,6 @@ bool loader::iterator::operator!=(const iterator& other) const
 {
     return !(*this == other);
 }
-
 // Whether or not this strictly positional iterator has reached the end
 bool loader::iterator::positional_end() const
 {

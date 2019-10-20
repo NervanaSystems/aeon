@@ -79,7 +79,7 @@ namespace
     }
 
 #endif
-}
+} // namespace
 
 TEST(loader, syntax)
 {
@@ -380,7 +380,7 @@ TEST(loader, provider)
     json label_config = {{"type", "label"}, {"binary", false}};
     json augmentation = {
         {{"height", height}, {"width", width}, {"type", "image"}, {"flip_enable", true}}};
-    json js = {{"decode_thread_count", 1},
+    json js = {{"cpu_list", "0"},
                {"manifest_filename", manifest},
                {"batch_size", batch_size},
                {"iteration_mode", "INFINITE"},
@@ -486,7 +486,7 @@ TEST(DISABLED_loader, deterministic)
                              {"manifest_filename", manifest},
                              {"batch_size", batch_size},
                              {"iteration_mode", "INFINITE"},
-                             {"decode_thread_count", 0},
+                             {"cpu_list", ""},
                              {"shuffle_manifest", true},
                              {"etl", {image_config, label_config}},
                              {"augmentation", aug_config},
@@ -536,9 +536,6 @@ TEST(loader, loader_factory_remote)
 
 static void benchmark_imagenet(json config, char* batch_delay, size_t batch_size)
 {
-    stopwatch                                         batch_delay_watch;
-    size_t                                            total_average_delay_time{0};
-
     try
     {
         loader_factory factory;
@@ -551,12 +548,6 @@ static void benchmark_imagenet(json config, char* batch_delay, size_t batch_size
         timer.start();
         for (const nervana::fixed_buffer_map& x : *train_set)
         {
-//            if (batch_delay != NULL)
-//            {
-//                batch_delay_watch.stop();
-//                int delay_in_ms = std::stoi(batch_delay);
-//                usleep(1000 * delay_in_ms);
-//            }
             (void)x;
             if (++current_batch % batches_per_output == 0)
             {
@@ -565,35 +556,15 @@ static void benchmark_imagenet(json config, char* batch_delay, size_t batch_size
                 float sec_time = ms_time / 1000.;
                 
                 cout << "batch " << current_batch << " of " << total_batch;
-                //if (last_time != zero_time)
-                //{
-                    cout << " time " << sec_time;
-                    cout << " " << batch_size * (float)batches_per_output / sec_time << " img/s";
-                    cout << "\t\taverage "
-                         <<  batch_size * (float)batches_per_output / ((float)timer.get_total_milliseconds() 
-                                /timer.get_call_count()/1000.0f)
-                         << " img/s" << endl;
-//                    if (batch_delay != NULL)
-//                    {
-//                        size_t current_delay = batch_delay_watch.get_total_microseconds() /
-//                                               batch_delay_watch.get_call_count();
-//                        total_average_delay_time += current_delay;
-//                        batch_delay_watch = stopwatch();
-//                        cout << "batch delay " << current_delay << "us\t\t average "
-//                             << total_average_delay_time /
-//                                    ((current_batch - batches_per_output) / batches_per_output)
-//                             << "us" << endl;
-//                    }
-                //}
-               // cout << endl;
+                cout << " time " << sec_time;
+                cout << " " << batch_size * (float)batches_per_output / sec_time << " img/s";
+                cout << "\t\taverage "
+                        <<  batch_size * (float)batches_per_output / ((float)timer.get_total_milliseconds() 
+                            /timer.get_call_count()/1000.0f)
+                        << " img/s" << endl;
                 timer.start();
             }
-//            if (batch_delay != NULL)
-//            {
-//                batch_delay_watch.start();
-//            }
-
-        }
+            }
     }
     catch (exception& err)
     {
@@ -615,6 +586,7 @@ TEST(benchmark, imagenet)
     char* async         = getenv("TEST_IMAGENET_ASYNC");
     char* batch_delay   = getenv("TEST_IMAGENET_BATCH_DELAY");
     char* bsz           = getenv("TEST_IMAGENET_BATCH_SIZE");
+    char* iterations    = getenv("TEST_IMAGENET_ITERATIONS");
 
     if (!manifest_root)
     {
@@ -622,21 +594,13 @@ TEST(benchmark, imagenet)
     }
     else
     {
-        int    height     = 224;
-        int    width      = 224;
-        size_t batch_size = 128;
-        if (bsz)
-        {
-            std::istringstream iss(bsz);
-            iss >> batch_size;
-        }
-        std::string manifest_filename = "train-index.csv";
-        if (manifest_name)
-        {
-            std::istringstream iss(manifest_name);
-            iss >> manifest_filename;
-        }
-        string manifest = file_util::path_join(manifest_root, manifest_filename);
+        int         height     = 224;
+        int         width      = 224;
+        size_t      batch_size = bsz ? atoi(bsz) : 128;
+        std::string manifest =
+            file_util::path_join(manifest_root, manifest_name ? manifest_name : "train-index.csv");
+        std::string iteration_mode       = iterations ? "COUNT" : "INFINITE";
+        int         iteration_mode_count = iterations ? atoi(iterations) : 0;
 
         json image_config = {
             {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
@@ -650,9 +614,10 @@ TEST(benchmark, imagenet)
         json config = {{"manifest_root", manifest_root},
                        {"manifest_filename", manifest},
                        {"batch_size", batch_size},
-                       {"iteration_mode", "INFINITE"},
-                       {"cache_directory", cache_root},
-                       {"decode_thread_count", 0},
+                       {"iteration_mode", iteration_mode},
+                       {"iteration_mode_count", iteration_mode_count},
+                       {"cache_directory", cache_root ? cache_root : ""},
+                       {"cpu_list", ""},
                        //{"web_server_port", 8086},
                        {"etl", {image_config, label_config}},
                        {"augmentation", aug_config}};
@@ -689,6 +654,7 @@ TEST(benchmark, imagenet_paddle)
     char* cache_root    = getenv("TEST_IMAGENET_CACHE");
     char* batch_delay   = getenv("TEST_IMAGENET_BATCH_DELAY");
     char* bsz           = getenv("TEST_IMAGENET_BATCH_SIZE");
+    char* iterations    = getenv("TEST_IMAGENET_ITERATIONS");
 
     if (!manifest_root)
     {
@@ -696,21 +662,13 @@ TEST(benchmark, imagenet_paddle)
     }
     else
     {
-        int    height     = 224;
-        int    width      = 224;
-        size_t batch_size = 128;
-        if (bsz)
-        {
-            std::istringstream iss(bsz);
-            iss >> batch_size;
-        }
-        std::string manifest_filename = "train-index.csv";
-        if (manifest_name)
-        {
-            std::istringstream iss(manifest_name);
-            iss >> manifest_filename;
-        }
-        string manifest = file_util::path_join(manifest_root, manifest_filename);
+        int         height     = 224;
+        int         width      = 224;
+        size_t      batch_size = bsz ? atoi(bsz) : 128;
+        std::string manifest =
+            file_util::path_join(manifest_root, manifest_name ? manifest_name : "train-index.csv");
+        std::string iteration_mode       = iterations ? "COUNT" : "INFINITE";
+        int         iteration_mode_count = iterations ? atoi(iterations) : 0;
 
         json image_config = {{"type", "image"},
                              {"height", height},
@@ -732,16 +690,17 @@ TEST(benchmark, imagenet_paddle)
                                         {"mean", {0.485, 0.456, 0.406}},
                                         {"stddev", {0.229, 0.224, 0.225}},
                                         {"resize_short_size", 0}}};
-
         json config = {{"manifest_root", manifest_root},
                        {"manifest_filename", manifest},
                        {"shuffle_enable", true},
                        {"shuffle_manifest", true},
                        {"batch_size", batch_size},
-                       {"iteration_mode", "INFINITE"},
-                       {"cache_directory", cache_root},
-                       {"decode_thread_count", 0},
+                       {"iteration_mode", iteration_mode},
+                       {"iteration_mode_count", iteration_mode_count},
+                       {"cache_directory", cache_root ? cache_root : ""},
+                       {"cpu_list", ""},
                        {"etl", {image_config, label_config}},
+                       {"random_seed", 1},
                        {"augmentation", aug_config}};
 
         benchmark_imagenet(config, batch_delay, batch_size);

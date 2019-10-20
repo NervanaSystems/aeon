@@ -17,7 +17,7 @@
 User Guide
 ==========
 
-The aeon dataloader is designed to deal with large datasets from different modalities, including image, video, and audio, that may be too large to load directly into memory. We use a macrobatching approach, where the data is loaded in chunks (macrobatches) that are then split further into minibatches to feed the model.
+The aeon dataloader is designed to deal with large datasets from different modalities, including image and video, that may be too large to load directly into memory. We use a macrobatching approach, where the data is loaded in chunks (macrobatches) that are then split further into minibatches to feed the model.
 
 The dataloader was created to provide an easy interface to configure the loader for custom datasets, and also to load data from disk to neon with minimal latency. The basic workflow is show in the schematic below:
 
@@ -108,16 +108,7 @@ In the image classification case,
 
 Note that above, the target labels are simply numerical indexes that correspond to a categorical label.
 
-For audio transcription, paths to target transcriptions are included:
-
-.. code-block:: bash
-
-    @FILE[tab]FILE
-    audio_sample_1.wav[tab]audio_transcript_1.txt
-    audio_sample_2.wav[tab]audio_transcript_2.txt
-    audio_sample_3.wav[tab]audio_transcript_3.txt
-
-For example formats of different modalities and problems, see the image, audio, and video sections.
+For example formats of different modalities and problems, see the image, and video sections.
 
 Configuration
 -------------
@@ -157,7 +148,6 @@ Importantly, the ``type`` key indicates to the dataloader which input data type 
 
    image|image|
    label||
-   audio|audio|
    localization|image|
    localization_ssd|image|
    pixelmask|image|
@@ -186,7 +176,7 @@ The possible base loader configurations are the following (configurations withou
    subset_fraction (float)| 1.0 | Fraction of the dataset to iterate over. Useful when testing code on smaller data samples.
    shuffle_enable (bool) | False | Shuffles the dataset order for every epoch
    shuffle_manifest (bool) | False | Shuffles manifest file contents
-   decode_thread_count (int)| 0 | Number of threads to use. If default value 0 is set, Aeon automatically chooses number of threads to logical number of cores diminished by two. To execute on a single thread, use value of 1
+   cpu_list (string) | "" | Controls number of decoding threads and their core affinity. If unset, Aeon automatically chooses number of threads to logical number of cores diminished by two and allocates them on cores from 0 to num_logical_cores-2. Cores can be specified as comma separated list of both numbers and ranges. Core indexing start from 0. For example: `0-5,20,10,32-34`.
    pinned (bool)| False |
    random_seed (uint)| 0 | Set not a zero value if you need to have deterministic output. In that case aeon will always produce the same output for given a particular input.
    iteration_mode (string)|"ONCE"| Can be "ONCE", "COUNT", or "INFINITE"
@@ -194,6 +184,8 @@ The possible base loader configurations are the following (configurations withou
    etl||
    augmentation||
    remote|| Configuration of connection with aeon service in distrubted dataloading scenario. Please take a look at :doc:`service <service>` documentation.
+
+Aeon also supports an environment variable ``AEON_CPU_LIST`` which overrides `cpu_list`.
 
 Example python usage
 --------------------

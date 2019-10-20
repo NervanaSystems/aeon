@@ -41,11 +41,3 @@ class plugin(Plugin):
         self.do_scale = np.random.uniform() < self.probability
         self.amplitude = np.random.uniform(self.amplitude_min,
                                            self.amplitude_max)
-
-    def augment_audio(self, mat):
-        if self.do_scale:
-            mat2 = (mat.astype(np.float32) * self.amplitude).astype(np.int16)
-            return mat2
-        else:
-            dst = mat
-        return dst

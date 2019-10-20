@@ -32,7 +32,6 @@
 
 #define private public
 
-#include "etl_audio.hpp"
 #include "etl_boundingbox.hpp"
 #include "etl_char_map.hpp"
 #include "etl_image.hpp"
@@ -317,7 +316,6 @@ void dump_config_info(ostream& f, shared_ptr<nervana::interface::config_info_int
 TEST(util, param_dump)
 {
     ofstream f("config_args.txt", ios::trunc);
-    DUMP_CONFIG(audio);
     DUMP_CONFIG(boundingbox);
     DUMP_CONFIG(char_map);
     DUMP_CONFIG(image);

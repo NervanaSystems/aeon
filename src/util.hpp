@@ -22,7 +22,6 @@
 #include <stdexcept>
 #include <random>
 #include <opencv2/core/core.hpp>
-#include <sox.h>
 #include <thread>
 #include <chrono>
 #include <map>
@@ -178,11 +177,13 @@ namespace nervana
     typedef std::minstd_rand0 random_engine_t;
     random_engine_t&          get_thread_local_random_engine();
 
-    cv::Mat read_audio_from_mem(const char* item, int itemSize);
-    void write_audio_to_file(cv::Mat buffer, std::string path, sox_rate_t sample_rate_hz);
-
     std::vector<char> string2vector(const std::string& s);
     std::string vector2string(const std::vector<char>& s);
+
+    std::vector<int> parse_cpu_list(const std::string& cpu_list);
+    std::vector<int> get_thread_affinity_map(const std::string& config_cpu_list,
+                                             int                max_count_of_free_threads,
+                                             int                free_threads_ratio);
 
     class stopwatch
     {
