@@ -55,11 +55,9 @@ nervana::encoded_record_list* block_loader_file::filler()
         encoded_record                     record;
         for (int j = 0; j < m_elements_per_record; ++j)
         {
-            try
+            const string& element = element_list[j];
+            switch (types[j])
             {
-                const string& element = element_list[j];
-                switch (types[j])
-                {
                 case manifest::element_t::FILE:
                 {
                     auto buffer = file_util::read_file_contents(element);
@@ -90,11 +88,6 @@ nervana::encoded_record_list* block_loader_file::filler()
                     record.add_element(&value, sizeof(value));
                     break;
                 }
-                }
-            }
-            catch (std::exception&)
-            {
-                record.add_exception(current_exception());
             }
         }
         rc->add_record(std::move(record));

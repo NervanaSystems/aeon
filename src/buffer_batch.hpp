@@ -63,20 +63,11 @@ public:
 
     void add_element(const std::vector<char>& data) { m_elements.emplace_back(data); }
     void add_element(std::vector<char>&& data) { m_elements.emplace_back(std::move(data)); }
-    void add_exception(std::exception_ptr e) { m_exception = e; }
     variable_record_field_list::iterator  begin() { return m_elements.begin(); }
     variable_record_field_list::iterator  end() { return m_elements.end(); }
-    void                                  rethrow_if_exception() const
-    {
-        if (m_exception != nullptr)
-        {
-            std::rethrow_exception(m_exception);
-        }
-    }
 
 private:
     variable_record_field_list m_elements;
-    std::exception_ptr         m_exception;
 };
 
 class nervana::encoded_record_list
@@ -85,14 +76,12 @@ public:
     encoded_record& record(size_t index)
     {
         encoded_record& rc = m_records[index];
-        rc.rethrow_if_exception();
         return rc;
     }
 
     const encoded_record& record(size_t index) const
     {
         const encoded_record& rc = m_records[index];
-        rc.rethrow_if_exception();
         return rc;
     }
 
@@ -134,10 +123,7 @@ public:
 private:
     void verify(const encoded_record& buffer)
     {
-        if (buffer.m_exception != nullptr)
-        {
-        }
-        else if (m_elements_per_record == -1)
+        if (m_elements_per_record == -1)
         {
             m_elements_per_record = buffer.size();
         }

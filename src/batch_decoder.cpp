@@ -89,10 +89,6 @@ array_fixed_buffer_map* batch_decoder::filler()
     }
     else
     {
-        for (const encoded_record& record : *inputs)
-        {
-            record.rethrow_if_exception();
-        }
         m_inputs  = inputs;
         m_outputs = outputs;
         m_thread_pool->run(this, m_decode_size);
