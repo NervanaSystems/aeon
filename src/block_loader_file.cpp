@@ -100,3 +100,33 @@ nervana::encoded_record_list* block_loader_file::filler()
 
     return rc;
 }
+
+
+
+block_loader_cache::block_loader_cache(std::shared_ptr<CacheSource> cache_file, size_t block_size)
+    : async_manager<encoded_record, encoded_record_list>(cache_file, "block_loader_cache")
+    , m_block_size(block_size)
+    , m_cache_file(cache_file)
+{
+    m_block_count         = round((float)cache_file->get_record_count() / (float)m_block_size);
+    m_elements_per_record = m_cache_file->get_elements_per_record();
+    m_record_count = m_cache_file->get_record_count();
+}
+
+nervana::encoded_record_list* block_loader_cache::filler()
+{
+    encoded_record_list* rc = get_pending_buffer();
+    rc->clear();
+
+    for (int i = 0; i < m_block_size; i++)
+    {
+        rc->add_record(std::move(m_cache_file->get_record()));
+    }
+
+    if (rc && rc->size() == 0)
+    {
+        rc = nullptr;
+    }
+
+    return rc;
+}

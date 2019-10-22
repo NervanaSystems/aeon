@@ -38,6 +38,7 @@
 #include "log.hpp"
 #include "util.hpp"
 #include "web_app.hpp"
+#include "cache_file.h"
 
 namespace nervana
 {
@@ -205,10 +206,7 @@ public:
     const std::vector<std::pair<std::string, shape_type>>& get_names_and_shapes() const override;
     const shape_t& get_shape(const std::string& name) const override;
 
-    int record_count() const override
-    {
-        return m_manifest_nds ? m_manifest_nds->record_count() : m_manifest_file->record_count();
-    }
+    int record_count() const override {return m_record_count;}
     int      batch_size() const override { return m_batch_size; }
     int      batch_count() const override { return m_batch_count_value; }
     iterator begin() override
@@ -249,7 +247,9 @@ private:
     std::shared_ptr<provider_interface>                     m_provider;
     std::shared_ptr<batch_decoder>                          m_decoder;
     std::shared_ptr<async_manager_source<fixed_buffer_map>> m_final_stage;
+    std::shared_ptr<CacheSource>                            m_cahe_file;
     int                                                     m_batch_size;
+    int                                                     m_record_count;
     BatchMode                                               m_batch_mode;
     int                                                     m_batch_count_value;
     size_t                                                  m_position{0};

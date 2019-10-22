@@ -228,6 +228,9 @@ void manifest_file::initialize(std::istream&      stream,
             }
         }
     }
+    
+    if (m_shuffle)
+        std::shuffle(m_record_list.begin(), m_record_list.end(), m_random);
 
     generate_blocks();
 }
@@ -251,8 +254,6 @@ manifest_file::record_t* manifest_file::next()
 
 void manifest_file::generate_blocks()
 {
-        std::shuffle(m_record_list.begin(), m_record_list.end(), m_random);
-            
         m_output_record_list.clear();
 
         if (m_node_count != 0 )
@@ -284,7 +285,10 @@ void manifest_file::generate_blocks()
 void manifest_file::reset()
 {
     if (m_shuffle)
+    {
+        std::shuffle(m_record_list.begin(), m_record_list.end(), m_random);
         generate_blocks();
+    }
 
     m_counter = 0;
 }

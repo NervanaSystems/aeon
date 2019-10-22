@@ -140,21 +140,34 @@ void loader_local::initialize(const json& config_json)
     int decode_size = lcfg.batch_size *
                       ((thread_affinity_map.size() * m_input_multiplier - 1) / lcfg.batch_size + 1);
 
-    m_manifest_file = make_shared<manifest_file>(lcfg.manifest_filename,
-                                                    lcfg.shuffle_manifest,
-                                                    lcfg.manifest_root,
-                                                    lcfg.subset_fraction,
-                                                    lcfg.random_seed,
-                                                    lcfg.node_id,
-                                                    lcfg.node_count,
-                                                    lcfg.batch_size);
+    cout<<decode_size<<"\n";
 
-    // TODO: make the constructor throw this error
-    if (record_count() == 0)
+    bool read_cache = true;
+    if (!read_cache)
     {
-        throw std::runtime_error("manifest file is empty");
+        m_manifest_file = make_shared<manifest_file>(lcfg.manifest_filename,
+                                                        lcfg.shuffle_manifest,
+                                                        lcfg.manifest_root,
+                                                        lcfg.subset_fraction,
+                                                        lcfg.random_seed,
+                                                        lcfg.node_id,
+                                                        lcfg.node_count,
+                                                        lcfg.batch_size);
+
+        m_record_count = m_manifest_file->record_count();
+        // TODO: make the constructor throw this error
+        if (record_count() == 0)
+        {
+            throw std::runtime_error("manifest file is empty");
+        }
+        m_block_loader = make_shared<block_loader_file>(m_manifest_file, decode_size);
     }
-    m_block_loader = make_shared<block_loader_file>(m_manifest_file, decode_size);
+    else
+    {
+        m_cahe_file = make_shared<CacheSource>("/home/ashvay/aeon_cache.bin");
+        m_record_count = m_cahe_file->get_record_count();
+        m_block_loader = make_shared<block_loader_cache>(m_cahe_file, decode_size);
+    }
 
     // Default ceil div to get number of batches
     m_batch_count_value = (record_count() + m_batch_size - 1) / m_batch_size;

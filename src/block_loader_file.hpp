@@ -21,6 +21,7 @@
 #include "manifest_file.hpp"
 #include "buffer_batch.hpp"
 #include "block_loader_source.hpp"
+#include "cache_file.h"
 
 /* block_loader_file
  *
@@ -31,6 +32,7 @@
 namespace nervana
 {
     class block_loader_file;
+    class block_loader_cache;
 }
 
 class nervana::block_loader_file
@@ -65,3 +67,37 @@ private:
     size_t                         m_elements_per_record;
     std::shared_ptr<manifest_file> m_manifest;
 };
+
+class nervana::block_loader_cache
+    : public block_loader_source,
+      public async_manager<encoded_record, encoded_record_list>
+{
+public:
+    block_loader_cache(std::shared_ptr<CacheSource> cache_file, size_t block_size);
+
+    virtual ~block_loader_cache() { finalize(); }
+    encoded_record_list* filler() override;
+
+    size_t       block_count() const override { return m_block_count; }
+    size_t       record_count() const override { return m_record_count; }
+    size_t       block_size() const override { return 1; }
+    size_t       elements_per_record() const override { return m_elements_per_record; }
+    source_uid_t get_uid() const override { return 0; }
+    async_state  get_state() const override
+    {
+        return async_manager<encoded_record, encoded_record_list>::get_state();
+    }
+
+    const std::string& get_name() const override
+    {
+        return async_manager<encoded_record, encoded_record_list>::get_name();
+    }
+
+private:
+    size_t                         m_block_size;
+    size_t                         m_block_count;
+    size_t                         m_record_count;
+    size_t                         m_elements_per_record;
+    std::shared_ptr<CacheSource>   m_cache_file;
+};
+

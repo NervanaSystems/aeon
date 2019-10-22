@@ -30,6 +30,7 @@
 #include "gen_image.hpp"
 #include "file_util.hpp"
 #include "util.hpp"
+#include "cache_file.h"
 
 #if defined(ENABLE_AEON_SERVICE)
 #include "service/service.hpp"
@@ -84,6 +85,30 @@ namespace
 }
 
 
+TEST(benchmark, create_cache)
+{
+    char* manifest_root = getenv("TEST_IMAGENET_ROOT");
+    if (!manifest_root)
+    {
+        cout << "Environment vars TEST_IMAGENET_ROOT not found\n";
+        return;
+    }
+    std::string manifest_filename =
+            file_util::path_join(manifest_root, "train-index.csv");
+
+    auto manifest_file_src = make_shared<manifest_file>(manifest_filename, false, manifest_root);
+    auto block_loader = make_shared<block_loader_file>(manifest_file_src, 1);
+
+    //int record_count = 20; // manifest_file_src->record_count()
+    int record_count = manifest_file_src->record_count();
+    CacheFile cache_file("/home/ashvay/aeon_cache.bin", record_count);
+    for (int i = 0; i < record_count; i++)
+    {
+       cout<<"["<<i<<"/"<<record_count<<"]"<<std::endl;
+       encoded_record record = std::move(*block_loader->next()->begin());
+       cache_file.add_record(record);
+    }
+}
 
 TEST(benchmark, imagenet)
 {

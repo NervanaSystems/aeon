@@ -29,6 +29,7 @@ set (SRC
     boundingbox.cpp
     buffer_batch.cpp
     cache_system.cpp
+    cache_file.cpp
     cap_mjpeg_decoder.cpp
     cpio.cpp
     crc.cpp
