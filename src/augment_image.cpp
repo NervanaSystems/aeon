@@ -218,7 +218,9 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
 
         cv::Point2i cropbox_origin =
             nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
-        settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
+        settings->cropbox = cv::Rect(cropbox_origin,
+                                     cv::Size2i(static_cast<int>(cropbox_size.width),
+                                                static_cast<int>(cropbox_size.height)));
     }
 
     if (lighting.stddev() != 0)
