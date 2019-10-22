@@ -1,4 +1,4 @@
-pillow==3.3.1
+pillow==6.2.0
 numpy==1.13.1
 pytest==3.0.1
 pytest-cov==2.3.1
