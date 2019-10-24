@@ -91,16 +91,8 @@ public:
         m_br_wake.reset(new thread_barrier(nthreads + 1));
         m_br_endtasks.reset(new thread_barrier(nthreads + 1));
 
-        if (nthreads == m_task_count)
-        {
-            for (int i = 0; i < nthreads; i++)
-                m_threads.emplace_back(&thread_pool::process<false>, this, i);
-        }
-        else
-        {
-            for (int i = 0; i < nthreads; i++)
-                m_threads.emplace_back(&thread_pool::process<true>, this, i);
-        }
+        for (int i = 0; i < nthreads; i++)
+            m_threads.emplace_back(&thread_pool::process<true>, this, i);
     }
 
     ~thread_pool()
