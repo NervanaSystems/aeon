@@ -4,6 +4,11 @@
 #include <fstream>
 #include <string>
 
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "async_manager.hpp"
 #include "buffer_batch.hpp"
 
@@ -29,6 +34,10 @@ namespace nervana
 		uint64_t current_id;
 		bool mode_read = true;
 		random_engine_t    random_;
+
+		int fd_;
+		size_t map_size_;
+		char* map_data_;
 	};
 
 	class CacheSource: public nervana::async_manager_source<encoded_record>, public CacheFile

@@ -142,7 +142,7 @@ void loader_local::initialize(const json& config_json)
 
     cout<<decode_size<<"\n";
 
-    bool read_cache = true;
+    bool read_cache = false;
     if (!read_cache)
     {
         m_manifest_file = make_shared<manifest_file>(lcfg.manifest_filename,
