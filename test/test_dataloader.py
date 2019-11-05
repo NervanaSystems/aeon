@@ -51,7 +51,6 @@ def test_loader_invalid_manifest():
     assert 'must be string, but is null' in str(ex)
 
 def test_loader_broken_image():
-    filename = tempfile.mkstemp()[1]
     manifest = random_manifest(2, broken_image_index=1)
     config = generic_config(manifest.name, batch_size)
 
