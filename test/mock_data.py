@@ -84,6 +84,7 @@ def random_manifest(num_lines, invalid_image_index=None, broken_image_index=None
 
 def generic_config(manifest_name, batch_size):
     return {"manifest_filename": manifest_name,
+        "cpu_list": "0",
         "batch_size": batch_size,
         "etl": [{"type": "image","height": 2,"width": 2}, {"type": "label", "binary": False}]
         }
