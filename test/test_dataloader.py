@@ -50,6 +50,15 @@ def test_loader_invalid_manifest():
         dl = DataLoader(config)
     assert 'must be string, but is null' in str(ex)
 
+def test_loader_broken_image():
+    filename = tempfile.mkstemp()[1]
+    manifest = random_manifest(2, broken_image_index=1)
+    config = generic_config(manifest.name, batch_size)
+
+    with pytest.raises(Exception) as ex:
+        dl = DataLoader(config)
+    assert 'Input image contains invalid data or the buffer is too short' in str(ex)
+
 
 def test_loader():
     # NOTE: manifest needs to stay in scope until DataLoader has read it.

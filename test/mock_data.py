@@ -31,6 +31,15 @@ def invalid_image(filename):
     with open(filename, 'w') as f:
         pass
 
+def broken_image(filename):
+    """
+    generate a small random broken image
+    """
+    random_image(filename)
+    with open(filename, 'r+b') as file:
+        file.seek(3)
+        file.write(bytearray(b'{\x00\x00d'))
+
 
 def random_target(filename):
     target = int(random.random() * 1024)
@@ -41,7 +50,8 @@ def random_target(filename):
     return filename
 
 
-def random_manifest(num_lines, invalid_image_index=None):
+def random_manifest(num_lines, invalid_image_index=None, broken_image_index=None):
+    assert broken_image_index is None or broken_image_index != invalid_image_index
     global first_time
     if first_time is True:
         first_time = False
@@ -54,6 +64,8 @@ def random_manifest(num_lines, invalid_image_index=None):
         img_filename = tempfile.mkstemp(suffix='.jpg')[1]
         if i == invalid_image_index:
             invalid_image(img_filename)
+        elif i == broken_image_index:
+            broken_image(img_filename)
         else:
             random_image(img_filename)
 
