@@ -44,8 +44,28 @@ add_definitions(-DBUILD_VERSION_MAJOR=${AEON_VERSION_MAJOR}
 option(ENABLE_AEON_SERVICE "Enable compilation of AEON Service" OFF)
 option(ENABLE_AEON_CLIENT "Enable compilation of AEON Client" ON)
 option(ENABLE_OPENFABRICS_CONNECTOR "Enable OpenFabrics connector for batch exchange between service and client" OFF)
+option(SANITIZER_TYPE "Choose the type of sanitizer, options are: Address, Leak, Memory, Thread, Undefined" OFF)
 
 include(cmake/summary.cmake)
+
+if (SANITIZER_TYPE AND NOT "${SANITIZER_TYPE}" MATCHES "^(Address|Leak|Memory|Thread|Undefined)$")
+  message("Choose the correct type of sanitizer")
+  return()
+endif()
+
+# Only one sanitizer is allowed in compile time
+string(TOLOWER "${SANITIZER_TYPE}" sanitizer_type)
+if(sanitizer_type STREQUAL "address")
+    set(fsanitize "-fsanitize=address")
+elseif(sanitizer_type STREQUAL "leak")
+    set(fsanitize "-fsanitize=leak")
+elseif(sanitizer_type STREQUAL "memory")
+    set(fsanitize "-fsanitize=memory")
+elseif(sanitizer_type STREQUAL "thread")
+    set(fsanitize "-fsanitize=thread")
+elseif(sanitizer_type STREQUAL "undefined")
+    set(fsanitize "-fsanitize=undefined")
+endif()
 
 if(APPLE)
     set(CMAKE_MACOSX_RPATH 1)
@@ -84,6 +104,8 @@ else()
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${fsanitize}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=return-type")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=inconsistent-missing-override")
