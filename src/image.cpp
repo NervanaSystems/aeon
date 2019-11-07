@@ -27,16 +27,16 @@ using namespace std;
 
 namespace
 {
+    static const map<string, int> cv_interpolation_map{
+        {"NEAREST", cv::INTER_NEAREST},
+        {"LINEAR", cv::INTER_LINEAR},
+        {"CUBIC", cv::INTER_CUBIC},
+        {"AREA", cv::INTER_AREA},
+        {"LANCZOS4", cv::INTER_LANCZOS4},
+    };
+
     int get_interpolation_method(const string& inter_method)
     {
-        static map<string, int> cv_interpolation_map{
-            {"NEAREST", cv::INTER_NEAREST},
-            {"LINEAR", cv::INTER_LINEAR},
-            {"CUBIC", cv::INTER_CUBIC},
-            {"AREA", cv::INTER_AREA},
-            {"LANCZOS4", cv::INTER_LANCZOS4},
-        };
-
         string method{inter_method};
         transform(begin(method), end(method), begin(method), ::toupper);
 
