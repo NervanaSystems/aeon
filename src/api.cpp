@@ -269,6 +269,7 @@ static void DataLoader_dealloc(aeon_DataLoader* self)
         if (self->m_loader != nullptr)
         {
             delete self->m_loader;
+            self->m_loader = nullptr;
         }
     }
 
