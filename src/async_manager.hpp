@@ -212,6 +212,6 @@ protected:
     BlockingQueue<inner_buffer_t> m_bq_output;
     std::shared_ptr<std::thread>  fill_thread;
     bool                          m_bfirst_next{true};
-    volatile bool                 m_active_thread{false};
+    std::atomic<bool>             m_active_thread{false};
     std::mutex                    m_mutex;
 };
