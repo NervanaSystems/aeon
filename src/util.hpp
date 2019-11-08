@@ -53,13 +53,13 @@ namespace nervana
         singleton& operator=(const singleton&) = delete;
 
         template <typename... Args>
-        static std::shared_ptr<T> get(Args... args)
+        static std::shared_ptr<T> get(Args&&... args)
         {
             std::lock_guard<std::mutex> lg(m_mutex);
             std::shared_ptr<T>          instance = m_singleton.lock();
             if (!instance)
             {
-                instance.reset(new T(args...));
+                instance.reset(new T(std::forward<Args>(args)...));
                 m_singleton = instance;
             }
             return instance;
