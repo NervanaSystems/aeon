@@ -33,9 +33,8 @@ batch_decoder::batch_decoder(shared_ptr<batch_iterator>                 b_itor,
     , m_decode_size(decode_size)
     , m_provider(prov)
     , m_deterministic_mode(seed != 0)
+    , m_thread_pool(std::move(thread_affinity_map))
 {
-    m_thread_pool = singleton<thread_pool_queue<batch_decoder, &batch_decoder::process>>::get(
-        std::move(thread_affinity_map));
     m_number_elements_in = prov->get_input_count();
 
     if (m_decode_size % m_batch_size != 0)
@@ -93,7 +92,7 @@ array_fixed_buffer_map* batch_decoder::filler()
         }
         m_inputs  = inputs;
         m_outputs = outputs;
-        m_thread_pool->run(this, m_decode_size);
+        m_thread_pool.run(this, m_decode_size);
     }
     m_state = async_state::idle;
     return outputs;

@@ -64,5 +64,5 @@ private:
     size_t                                       m_iteration_number{0};
     std::vector<nervana::random_engine_t>        m_random;
     bool                                         m_deterministic_mode;
-    std::shared_ptr<thread_pool_queue<batch_decoder, &batch_decoder::process>> m_thread_pool;
+    thread_pool_queue<batch_decoder, &batch_decoder::process> m_thread_pool;
 };
