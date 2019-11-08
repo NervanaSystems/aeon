@@ -56,7 +56,7 @@ if '${OPENFABRICS_FOUND}' == 'TRUE':
     lib_dirs += ' -L${OPENFABRICS_LIBRARY_DIRS} '
     libs += ' -lfabric '
 
-os.environ["CC"] = "g++"
+os.environ["CC"] = "${CMAKE_CXX_COMPILER}"
 src_list = "${SRC}".split(";")
 sources = [
     '${CMAKE_CURRENT_SOURCE_DIR}/'+src for src in src_list
