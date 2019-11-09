@@ -184,41 +184,69 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
     }
     else
     {
-        if (padding > 0)
-        {
-            throw invalid_argument(
-                "crop_enable should not be true: when padding is defined, crop is executed by "
-                "default with cropbox size equal to intput image size");
-        }
-        float      image_scale            = scale(random);
-        float      _horizontal_distortion = horizontal_distortion(random);
-        cv::Size2f out_shape(output_width * _horizontal_distortion, output_height);
-
-        // TODO(sfraczek): add test for this resize short
-        if (resize_short_size > 0)
-        {
-            input_size = nervana::image::get_resized_short_size(input_width,
-                                                                input_height,
-                                                                resize_short_size);
-        }
-
-        cv::Size2f cropbox_size = nervana::image::cropbox_max_proportional(input_size, out_shape);
         if (do_area_scale)
         {
-            cropbox_size =
-                nervana::image::cropbox_area_scale(input_size, cropbox_size, image_scale);
+            float      _horizontal_distortion = horizontal_distortion(random);
+            _horizontal_distortion = sqrt(_horizontal_distortion);
+            cv::Size2f out_shape(_horizontal_distortion, 1 / _horizontal_distortion);
+            
+            float bound = min((float)input_width / input_height /(out_shape.width * out_shape.width), 
+                             (float)input_height / input_width /( out_shape.height * out_shape.height));
+
+            float scale_max = std::min(scale.max(), bound);
+            float scale_min = std::min(scale.min(), bound);
+            
+            std::uniform_real_distribution<float> scale2{scale_min, scale_max};
+
+            float target_area = sqrt(input_height * input_width * scale2(random));
+            out_shape.width  *= target_area;
+            out_shape.height *= target_area;
+            
+            float c_off_x = crop_offset(random);
+            float c_off_y = crop_offset(random);
+
+            cv::Size2f cropbox_size = out_shape;
+            cv::Point2i cropbox_origin = nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
+            settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
         }
         else
         {
-            cropbox_size = nervana::image::cropbox_linear_scale(cropbox_size, image_scale);
+            if (padding > 0)
+            {
+                throw invalid_argument(
+                    "crop_enable should not be true: when padding is defined, crop is executed by "
+                    "default with cropbox size equal to intput image size");
+            }
+            float      image_scale            = scale(random);
+            float      _horizontal_distortion = horizontal_distortion(random);
+            cv::Size2f out_shape(output_width * _horizontal_distortion, output_height);
+
+            // TODO(sfraczek): add test for this resize short
+            if (resize_short_size > 0)
+            {
+                input_size = nervana::image::get_resized_short_size(input_width,
+                                                                    input_height,
+                                                                    resize_short_size);
+            }
+
+            cv::Size2f cropbox_size = nervana::image::cropbox_max_proportional(input_size, out_shape);
+            if (do_area_scale)
+            {
+                cropbox_size =
+                    nervana::image::cropbox_area_scale(input_size, cropbox_size, image_scale);
+            }
+            else
+            {
+                cropbox_size = nervana::image::cropbox_linear_scale(cropbox_size, image_scale);
+            }
+
+            float c_off_x = crop_offset(random);
+            float c_off_y = crop_offset(random);
+
+            cv::Point2i cropbox_origin =
+                nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
+            settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
         }
-
-        float c_off_x = crop_offset(random);
-        float c_off_y = crop_offset(random);
-
-        cv::Point2i cropbox_origin =
-            nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
-        settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
     }
 
     if (lighting.stddev() != 0)
