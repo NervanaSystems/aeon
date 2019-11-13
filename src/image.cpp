@@ -53,25 +53,18 @@ namespace
 void image::rotate(
     const cv::Mat& input, cv::Mat& output, int angle, bool interpolate, const cv::Scalar& border)
 {
-    if (angle == 0)
+    cv::Point2i pt(input.cols / 2, input.rows / 2);
+    cv::Mat     rot = cv::getRotationMatrix2D(pt, angle, 1.0);
+    int         flags;
+    if (interpolate)
     {
-        output = input;
+        flags = cv::INTER_LINEAR;
     }
     else
     {
-        cv::Point2i pt(input.cols / 2, input.rows / 2);
-        cv::Mat     rot = cv::getRotationMatrix2D(pt, angle, 1.0);
-        int         flags;
-        if (interpolate)
-        {
-            flags = cv::INTER_LINEAR;
-        }
-        else
-        {
-            flags = cv::INTER_NEAREST;
-        }
-        cv::warpAffine(input, output, rot, input.size(), flags, cv::BORDER_CONSTANT, border);
+        flags = cv::INTER_NEAREST;
     }
+    cv::warpAffine(input, output, rot, input.size(), flags, cv::BORDER_CONSTANT, border);
 }
 
 void image::add_padding(cv::Mat& input, int padding, cv::Size2i crop_offset)

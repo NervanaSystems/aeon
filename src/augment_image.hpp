@@ -146,6 +146,8 @@ public:
 
     bool                do_area_scale                 = false;
     bool                crop_enable                   = true;
+    // crop_origin is for testing only. Do not use it!
+    std::vector<int>    crop_origin                   = {};
     bool                fixed_aspect_ratio            = false;
     std::vector<double> mean                          = {};
     std::vector<double> stddev                        = {};
@@ -235,6 +237,7 @@ private:
         ADD_SCALAR(interpolation_method, mode::OPTIONAL),
         ADD_SCALAR(do_area_scale, mode::OPTIONAL),
         ADD_SCALAR(crop_enable, mode::OPTIONAL),
+        ADD_SCALAR(crop_origin, mode::OPTIONAL),
         ADD_SCALAR(expand_probability, mode::OPTIONAL),
         ADD_SCALAR_WITH_KEY(m_emit_constraint_type, "emit_constraint_type", mode::OPTIONAL),
         ADD_SCALAR_WITH_KEY(

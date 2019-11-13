@@ -67,6 +67,13 @@ augment::image::param_factory::param_factory(nlohmann::json js)
                     "method in augmentations.");
             }
 
+            if (!crop_origin.empty() && (crop_origin.size() != 2 || crop_origin[0] < 0 || crop_origin[1] < 0))
+            {
+                throw invalid_argument(
+                    "Invalid crop_origin provided. This argument is for testing only - do not use "
+                    "it! It accepts two non-negative integers.");
+            }
+
             // Now fill in derived
             if (flip_enable)
             {
@@ -247,6 +254,10 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
                 nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
             settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
         }
+    }
+    if (crop_origin.size() == 2) {
+        settings->cropbox.x = crop_origin[0];
+        settings->cropbox.y = crop_origin[1];
     }
 
     if (lighting.stddev() != 0)

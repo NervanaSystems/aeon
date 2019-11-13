@@ -145,9 +145,12 @@ shared_ptr<image::decoded>
 cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::params> img_xform,
                                                    cv::Mat& single_img) const
 {
-    // img_xform->dump(cout);
     cv::Mat rotatedImage;
-    image::rotate(single_img, rotatedImage, img_xform->angle);
+    if (img_xform->angle == 0) {
+        rotatedImage = single_img;
+    } else {
+        image::rotate(single_img, rotatedImage, img_xform->angle);
+    }
 
     cv::Mat expandedImage;
     if (img_xform->expand_ratio > 1.0)
