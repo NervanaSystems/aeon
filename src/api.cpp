@@ -31,6 +31,7 @@ namespace
 {
     loader* create_loader(const json& config);
 
+    // allows/blocks aeon to call python plugins during lifespan of this object
     using block_threads = nervana::python::block_threads;
     using allow_threads = nervana::python::allow_threads;
 }
@@ -144,15 +145,8 @@ static PyObject* DataLoader_iternext(PyObject* self)
 
     allow_threads a;
 
-    nlohmann::json conf = DL_get_loader(self)->get_current_config();
-    bool           batch_major{true};
-    try
-    {
-        batch_major = conf.at("batch_major");
-    }
-    catch (nlohmann::detail::out_of_range&)
-    {
-    }
+    nlohmann::json conf        = DL_get_loader(self)->get_current_config();
+    bool           batch_major = conf.value("batch_major", true);
     try {
         if (!((aeon_DataLoader*)(self))->m_first_iteration)
             DL_get_loader(self)->get_current_iter()++;
@@ -197,8 +191,6 @@ static PyObject* DataLoader_iternext(PyObject* self)
             /* Raising of standard StopIteration exception with empty value. */
             PyErr_SetNone(PyExc_StopIteration);
         }
-
-        return result;
     }
     catch (std::exception& e)
     {
@@ -210,6 +202,7 @@ static PyObject* DataLoader_iternext(PyObject* self)
         PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
         return NULL;
     }
+    return result;
 }
 
 static Py_ssize_t aeon_DataLoader_length(PyObject* self)
