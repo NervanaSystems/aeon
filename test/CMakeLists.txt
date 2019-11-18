@@ -26,48 +26,28 @@ set (SRC
     test_async_manager.cpp
     test_augmentation.cpp
     test_base64.cpp
-    test_bbox.cpp
     test_benchmark.cpp
     test_block_loader_file.cpp
-    test_block_loader_nds.cpp
     test_block_manager.cpp
     test_buffer.cpp
-    test_char_map.cpp
     test_config.cpp
     test_cpio.cpp
-    test_depthmap.cpp
     test_file_util.cpp
     test_image.cpp
     test_label_map.cpp
     test_loader.cpp
-    test_localization_rcnn.cpp
-    test_localization_ssd.cpp
     test_logging.cpp
     test_manifest_tsv.cpp
     test_params.cpp
-    test_pixel_mask.cpp
     test_provider.cpp
-    test_specgram.cpp
     test_types.cpp
     test_util.cpp
-    test_video.cpp
     test_raw_image.cpp
 )
 
 set(TESTSUITE_LIBRARIES aeon gtest gmock
     ${LCOVERAGE} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES}
     ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-
-if (ENABLE_AEON_SERVICE)
-    list(APPEND SRC
-        ../src/service/service.cpp
-        test_curl_connector.cpp
-        test_service.cpp
-        test_loader_remote.cpp)
-
-    list(APPEND TESTSUITE_LIBRARIES
-        ${CURL_LIBRARIES} ${CPPREST_LIBRARIES} ${OPENSSL_LIBRARIES})
-endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
 

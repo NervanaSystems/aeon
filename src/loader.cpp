@@ -25,15 +25,6 @@
 #include "loader.hpp"
 #include "log.hpp"
 
-#if defined(ENABLE_AEON_SERVICE)
-#include "client/loader_remote.hpp"
-#include "client/curl_connector.hpp"
-#include "client/remote_config.hpp"
-#if defined(ENABLE_OPENFABRICS_CONNECTOR)
-#include "client/ofi_connector.hpp"
-#endif
-#endif
-
 using namespace std;
 using namespace nervana;
 
@@ -112,7 +103,6 @@ void loader_local::initialize(const json& config_json)
     if (lcfg.node_count != 0)
     {
         if (lcfg.node_id >= lcfg.node_count)
-            throw std::runtime_error("node_id can't be greater than node_count");
 
         if (!lcfg.cache_directory.empty())
         {
@@ -277,59 +267,5 @@ std::unique_ptr<loader> loader_factory::get_loader(const std::string& config)
 
 std::unique_ptr<loader> loader_factory::get_loader(const json& config)
 {
-#if defined(ENABLE_AEON_SERVICE)
-    if (remote_version(config))
-    {
-        return create_loader_remote(config);
-    }
-#endif
     return unique_ptr<loader_local>(new loader_local(config));
 }
-
-#if defined(ENABLE_AEON_SERVICE)
-
-bool loader_factory::remote_version(const json& config)
-{
-    try
-    {
-        config.at("remote");
-    }
-    catch (json::out_of_range)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-unique_ptr<loader> loader_factory::create_loader_remote(const json& js)
-{
-    remote_config config(js.at("remote"));
-
-    shared_ptr<http_connector> http_connector_obj =
-        make_shared<curl_connector>(config.address, config.port);
-#if defined(ENABLE_OPENFABRICS_CONNECTOR)
-    if (!config.rdma_address.empty() && config.rdma_port != 0)
-    {
-        INFO << "Using OFI library to fetch batches via RDMA.";
-        auto ofi_ptr = new ofi_connector(config.rdma_address, config.rdma_port, http_connector_obj);
-        http_connector_obj = shared_ptr<ofi_connector>(ofi_ptr);
-    }
-#endif
-    shared_ptr<service> service_obj;
-    if (config.async)
-    {
-        auto service_connector_obj    = make_shared<service_connector>(http_connector_obj);
-        auto service_async_source_obj = make_shared<service_async_source>(service_connector_obj);
-        service_obj                   = make_shared<service_async>(service_async_source_obj);
-        INFO << "Using asynchronous batch fetching.";
-    }
-    else
-    {
-        service_obj = make_shared<service_connector>(http_connector_obj);
-    }
-
-    loader_remote* new_loader = new loader_remote(service_obj, js);
-    return unique_ptr<loader_remote>(new_loader);
-}
-#endif

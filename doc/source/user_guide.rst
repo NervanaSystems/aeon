@@ -148,13 +148,6 @@ Importantly, the ``type`` key indicates to the dataloader which input data type 
 
    image|image|
    label||
-   localization|image|
-   localization_ssd|image|
-   pixelmask|image|
-   boundingbox|image|
-   blob||
-   video|image|
-   char_map||
    label_map||
 
 aeon is designed to be modular and developer-friendly, so its relatively easy to write your own dataloader type and register it with the dataloader. For more information, see our Developer Guide.

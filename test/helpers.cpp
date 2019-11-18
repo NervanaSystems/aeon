@@ -63,26 +63,6 @@ void assert_vector_unique(vector<string>& words)
     }
 }
 
-nlohmann::json create_box(const cv::Rect& rect, const string& label)
-{
-    nlohmann::json j = {{"bndbox",
-                         {{"xmax", rect.x + rect.width - 1},
-                          {"xmin", rect.x},
-                          {"ymax", rect.y + rect.height - 1},
-                          {"ymin", rect.y}}},
-                        {"name", label}};
-    return j;
-}
-
-nlohmann::json create_box(const boundingbox::box& box, const string& label)
-{
-    nlohmann::json j = {
-        {"bndbox",
-         {{"xmax", box.xmax()}, {"xmin", box.xmin()}, {"ymax", box.ymax()}, {"ymin", box.ymin()}}},
-        {"name", label}};
-    return j;
-}
-
 nlohmann::json create_metadata(const vector<nlohmann::json>& boxes, int width, int height)
 {
     nlohmann::json j = nlohmann::json::object();
@@ -102,14 +82,3 @@ fixed_buffer_map& get_fixed_buffer_map()
     return result;
 }
 
-#if defined(ENABLE_AEON_SERVICE)
-names_and_shapes get_names_and_shapes()
-{
-    names_and_shapes nas;
-    shape_type       s1{{1, 2}, {"int8_t"}};
-    shape_type       s2{{1, 2, 3, 4, 5}, {"int32_t"}};
-    nas.emplace_back("s1", s1);
-    nas.emplace_back("s2", s2);
-    return nas;
-}
-#endif /* ENABLE_AEON_SERVICE */

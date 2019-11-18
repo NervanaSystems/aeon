@@ -23,15 +23,7 @@
 #include "provider_interface.hpp"
 #include "etl_image.hpp"
 #include "etl_label.hpp"
-#include "etl_blob.hpp"
-#include "etl_boundingbox.hpp"
-#include "etl_char_map.hpp"
-#include "etl_depthmap.hpp"
 #include "etl_label_map.hpp"
-#include "etl_localization_rcnn.hpp"
-#include "etl_localization_ssd.hpp"
-#include "etl_pixel_mask.hpp"
-#include "etl_video.hpp"
 #include "augment_image.hpp"
 
 namespace nervana
@@ -42,18 +34,7 @@ namespace nervana
         class provider_base;
         class image;
         class label;
-        namespace localization
-        {
-            class rcnn;
-            class ssd;
-        }
-        class pixelmask;
-        class boundingbox;
-        class blob;
-        class video;
-        class char_map;
         class label_map;
-        class multicrop;
     }
     class augmentation;
 }
@@ -154,179 +135,6 @@ private:
 };
 
 //=================================================================================================
-// localization::rcnn
-//=================================================================================================
-
-class nervana::provider::localization::rcnn : public provider::interface
-{
-public:
-    rcnn(nlohmann::json js, nlohmann::json aug);
-    virtual ~rcnn() {}
-    void provide(int                        idx,
-                 const std::vector<char>&   datum_in,
-                 nervana::fixed_buffer_map& out_buf,
-                 augmentation&) const override;
-
-private:
-    nervana::localization::rcnn::config      m_config;
-    nervana::augment::image::param_factory   m_augmentation_factory;
-    nervana::localization::rcnn::extractor   m_extractor;
-    nervana::localization::rcnn::transformer m_transformer;
-    nervana::localization::rcnn::loader      m_loader;
-    const std::string                        m_bbtargets_buffer_name;
-    const std::string                        m_bbtargets_mask_buffer_name;
-    const std::string                        m_labels_flat_buffer_name;
-    const std::string                        m_labels_mask_buffer_name;
-    const std::string                        m_image_shape_buffer_name;
-    const std::string                        m_gt_boxes_buffer_name;
-    const std::string                        m_gt_box_count_buffer_name;
-    const std::string                        m_gt_class_count_buffer_name;
-    const std::string                        m_image_scale_buffer_name;
-    const std::string                        m_difficult_flag_buffer_name;
-};
-
-//=================================================================================================
-// localization::ssd
-//=================================================================================================
-
-class nervana::provider::localization::ssd : public provider::interface
-{
-public:
-    ssd(nlohmann::json js, nlohmann::json aug);
-    virtual ~ssd() {}
-    void provide(int                        idx,
-                 const std::vector<char>&   datum_in,
-                 nervana::fixed_buffer_map& out_buf,
-                 augmentation&) const override;
-
-private:
-    nervana::localization::ssd::config      m_config;
-    nervana::augment::image::param_factory  m_augmentation_factory;
-    nervana::localization::ssd::extractor   m_extractor;
-    nervana::localization::ssd::transformer m_transformer;
-    nervana::localization::ssd::loader      m_loader;
-    const std::string                       m_image_shape_buffer_name;
-    const std::string                       m_gt_boxes_buffer_name;
-    const std::string                       m_gt_box_count_buffer_name;
-    const std::string                       m_gt_class_count_buffer_name;
-    const std::string                       m_difficult_flag_buffer_name;
-};
-
-//=================================================================================================
-// pixelmask
-//=================================================================================================
-
-class nervana::provider::pixelmask : public provider::interface
-{
-public:
-    pixelmask(nlohmann::json js, nlohmann::json aug);
-    virtual ~pixelmask() {}
-    void provide(int                        idx,
-                 const std::vector<char>&   datum_in,
-                 nervana::fixed_buffer_map& out_buf,
-                 augmentation&) const override;
-
-private:
-    nervana::image::config                 m_config;
-    nervana::pixel_mask::extractor         m_extractor;
-    nervana::pixel_mask::transformer       m_transformer;
-    nervana::augment::image::param_factory m_augmentation_factory;
-    nervana::image::loader                 m_loader;
-    const std::string                      m_buffer_name;
-};
-
-//=================================================================================================
-// boundingbox
-//=================================================================================================
-
-class nervana::provider::boundingbox : public provider::interface
-{
-public:
-    boundingbox(nlohmann::json js, nlohmann::json aug);
-    virtual ~boundingbox() {}
-    void provide(int                        idx,
-                 const std::vector<char>&   datum_in,
-                 nervana::fixed_buffer_map& out_buf,
-                 augmentation&) const override;
-
-private:
-    boundingbox() = delete;
-    nervana::boundingbox::config           m_config;
-    nervana::boundingbox::extractor        m_extractor;
-    nervana::boundingbox::transformer      m_transformer;
-    nervana::boundingbox::loader           m_loader;
-    nervana::augment::image::param_factory m_augmentation_factory;
-    const std::string                      m_buffer_name;
-};
-
-//=================================================================================================
-// blob
-//=================================================================================================
-
-class nervana::provider::blob : public provider::interface
-{
-public:
-    blob(nlohmann::json js);
-    virtual ~blob() {}
-    void provide(int                        idx,
-                 const std::vector<char>&   datum_in,
-                 nervana::fixed_buffer_map& out_buf,
-                 augmentation&) const override;
-
-private:
-    blob() = delete;
-    nervana::blob::config    m_config;
-    nervana::blob::extractor m_extractor;
-    nervana::blob::loader    m_loader;
-    const std::string        m_buffer_name;
-};
-
-//=================================================================================================
-// video
-//=================================================================================================
-
-class nervana::provider::video : public provider::interface
-{
-public:
-    video(nlohmann::json js, nlohmann::json aug);
-    void provide(int                        idx,
-                 const std::vector<char>&   datum_in,
-                 nervana::fixed_buffer_map& out_buf,
-                 augmentation&) const override;
-
-private:
-    nervana::video::config        m_config;
-    nervana::video::extractor     m_extractor;
-    nervana::video::transformer   m_transformer;
-    nervana::video::loader        m_loader;
-    augment::image::param_factory m_augmentation_factory;
-    const std::string             m_buffer_name;
-};
-
-//=================================================================================================
-// char_map
-//=================================================================================================
-
-class nervana::provider::char_map : public provider::interface
-{
-public:
-    char_map(nlohmann::json js);
-    virtual ~char_map() {}
-    void provide(int                        idx,
-                 const std::vector<char>&   datum_in,
-                 nervana::fixed_buffer_map& out_buf,
-                 augmentation&) const override;
-
-private:
-    char_map() = delete;
-    nervana::char_map::config    m_config;
-    nervana::char_map::extractor m_extractor;
-    nervana::char_map::loader    m_loader;
-    const std::string            m_buffer_name;
-    const std::string            m_length_name;
-};
-
-//=================================================================================================
 // label_map
 //=================================================================================================
 
@@ -347,7 +155,3 @@ private:
     nervana::label_map::loader    m_loader;
     const std::string             m_buffer_name;
 };
-
-//=================================================================================================
-// multicrop
-//=================================================================================================

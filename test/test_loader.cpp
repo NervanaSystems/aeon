@@ -31,11 +31,6 @@
 #include "file_util.hpp"
 #include "util.hpp"
 
-#if defined(ENABLE_AEON_SERVICE)
-#include "service/service.hpp"
-#include "client/loader_remote.hpp"
-#endif
-
 using namespace std;
 using namespace nervana;
 
@@ -53,32 +48,6 @@ namespace
         return manifest_filename;
     }
 
-#if defined(ENABLE_AEON_SERVICE)
-
-    json create_some_config_with_manifest()
-    {
-        int    height            = 32;
-        int    width             = 32;
-        size_t batch_size        = 2;
-        size_t record_count      = 10;
-        string manifest_filename = create_manifest_file(record_count, width, height);
-
-        json image = {{"type", "image"},
-                      {"name", "image1"},
-                      {"height", height},
-                      {"width", width},
-                      {"channel_major", false}};
-        json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
-        json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
-        json js           = {{"manifest_filename", manifest_filename},
-                   {"batch_size", batch_size},
-                   {"iteration_mode", "ONCE"},
-                   {"etl", {image, label}},
-                   {"augmentation", augmentation}};
-        return js;
-    }
-
-#endif
 } // namespace
 
 TEST(loader, syntax)
@@ -502,38 +471,6 @@ TEST(DISABLED_loader, deterministic)
     EXPECT_EQ(data[1], expected_result[1]);
     EXPECT_EQ(data[2], expected_result[2]);
 }
-
-#if defined(ENABLE_AEON_SERVICE)
-TEST(loader, loader_factory_no_remote)
-{
-    loader_factory factory;
-    json           config_json = create_some_config_with_manifest();
-    string         config      = config_json.dump();
-
-    unique_ptr<loader> ptr = factory.get_loader(config);
-    ASSERT_TRUE(dynamic_cast<loader_local*>(ptr.get()) != 0);
-
-    unique_ptr<loader> ptr2 = factory.get_loader(config);
-    ASSERT_TRUE(dynamic_cast<loader_remote*>(ptr2.get()) == 0);
-}
-
-TEST(loader, loader_factory_remote)
-{
-    loader_factory factory;
-    json           config_json = create_some_config_with_manifest();
-    aeon::service  service{"http://127.0.0.1:34568"};
-
-    // there is no service running, so we expect exception
-    config_json["remote"] = {{"address", "127.0.0.1"}, {"port", 34569}};
-    EXPECT_THROW(unique_ptr<loader> ptr = factory.get_loader(config_json), std::runtime_error);
-
-    config_json["remote"]   = {{"address", "127.0.0.1"}, {"port", 34568}};
-    unique_ptr<loader> ptr2 = factory.get_loader(config_json);
-    ASSERT_TRUE(dynamic_cast<loader_remote*>(ptr2.get()) != 0);
-    ASSERT_TRUE(dynamic_cast<loader_local*>(ptr2.get()) == 0);
-}
-#endif
-
 static void benchmark_imagenet(json config, char* batch_delay, size_t batch_size)
 {
     try
@@ -554,12 +491,12 @@ static void benchmark_imagenet(json config, char* batch_delay, size_t batch_size
                 timer.stop();
                 float ms_time = timer.get_milliseconds();
                 float sec_time = ms_time / 1000.;
-                
+
                 cout << "batch " << current_batch << " of " << total_batch;
                 cout << " time " << sec_time;
                 cout << " " << batch_size * (float)batches_per_output / sec_time << " img/s";
                 cout << "\t\taverage "
-                        <<  batch_size * (float)batches_per_output / ((float)timer.get_total_milliseconds() 
+                        <<  batch_size * (float)batches_per_output / ((float)timer.get_total_milliseconds()
                             /timer.get_call_count()/1000.0f)
                         << " img/s" << endl;
                 timer.start();

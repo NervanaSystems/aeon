@@ -51,13 +51,6 @@ bug reports at aeon_issues_ .
 
    provider_image
    provider_label
-   provider_localization_rcnn
-   provider_localization_ssd
-   provider_pixelmask
-   provider_boundingbox
-   provider_blob
-   provider_video
-   provider_charmap
    provider_labelmap
 
 .. toctree::
@@ -66,7 +59,6 @@ bug reports at aeon_issues_ .
    :caption: Augmentation
 
    augment_image
-   augmentation_plugins
 
 .. toctree::
    :hidden:

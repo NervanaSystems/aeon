@@ -255,83 +255,11 @@ Here is a c++ configuration example::
                              {"flip_enable", true},
                              {"expand_ratio", {1., 4.}},
                              {"expand_probability", 0.5},
-                             {"emit_constraint_type", "center"},
                              {"brightness", {0, 32}},
                              {"hue", {-18, 18}}
                              {"saturation", {0.5, 1.5}},
                              {"contrast", {0.5 1.5}},
-                             {"batch_samplers": {
-                             {
-                                 "max_trials": 1,
-                                 "max_sample": 1
-                             },
-                             {
-                                 "max_trials": 50,
-                                 "max_sample": 1,
-                                 "sample_constraint": {
-                                     "min_jaccard_overlap": 0.1
-                                 },
-                                 "sampler": {
-                                     "aspect_ratio": {0.5, 2.0},
-                                     "scale": {0.3, 1.0}
-                                 }
-                             },
-                             {
-                                 "max_trials": 50,
-                                 "max_sample": 1,
-                                 "sample_constraint": {
-                                     "min_jaccard_overlap": 0.3
-                                 },
-                                 "sampler": {
-                                     "aspect_ratio": { 0.5, 2.0},
-                                     "scale": {0.3, 1.0},
-                                 }
-                             },
-                             {
-                                 "max_trials": 50,
-                                 "max_sample": 1,
-                                 "sample_constraint": {
-                                 "min_jaccard_overlap": 0.5
-                                 },
-                                 "sampler": {
-                                     "aspect_ratio": {0.5, 2.0},
-                                     "scale": {0.3, 1.0},
-                                 }
-                             },
-                             {
-                                 "max_trials": 50,
-                                 "max_sample": 1,
-                                 "sample_constraint": {
-                                     "min_jaccard_overlap": 0.7
-                                 },
-                                 "sampler": {
-                                     "aspect_ratio": {0.5, 2.0},
-                                     "scale": {0.3, 1.0},
-                                 }
-                             },
-                             {
-                                 "max_trials": 50,
-                                 "max_sample": 1,
-                                 "sample_constraint": {
-                                     "min_jaccard_overlap": 0.9
-                                 },
-                                 "sampler": {
-                                     "aspect_ratio": {0.5, 2.0},
-                                     "scale": {0.3, 1.0},
-                                 }
-                             },
-                             {
-                                 "max_trials": 50,
-                                 "max_sample": 1,
-                                 "sample_constraint": {
-                                     "max_jaccard_overlap": 1.0
-                                 },
-                                 "sampler": {
-                                     "aspect_ratio": {0.5, 2.0},
-                                     "scale": {0.3, 1.0},
-                                 }
-                             }
-                         }}}
+                         }
 
     nlohmann::json config = {{"manifest_root", manifest_root},
                              {"manifest_filename", manifest},
@@ -341,6 +269,3 @@ Here is a c++ configuration example::
                              {"augmentation", {js_aug}}};
 
     auto train_set = nervana::loader{config};
-
-
-For SSD, we handle variable image sizes by resizing (warping) an image to the input size of the network (``width`` and ``height``. The image configuration is used as above with the added parameters ``expand_ratio`` set to {1., 4.}, ``expand_probability`` to 1., and ``emit_constraint_type`` set to ``center``. These settings place the original image at random position inside the output canvas enlarged by randomized ratio in range from 1 to 4. Expansion is applied before cropping (according to sampled patch). Deltas for ``brightness``, ``hue``, ``saturation`` and ``contrast`` specify photometric distortions. For patch sampling, you can define a number of ``batch_samplers``. If provided, ``max_sample`` determines how many patch samples at most (satisfying constraints) can be generated by this patch sampler in ``max_trials`` number of trials during single patch sampling step. Batch sampler contains a ``sampler`` structure and ``sample constraint``. If specified, the contraints can be either ``min_jaccard_overlap`` or ``max_jaccard_overlap`` or both. At least one ground truth box has to meet the constraints for the sample to be satisfied. Parameters of ``sampler`` (``scale`` and ``aspect_ratio``) bind the dimensions of sample to a specified scale and aspect ratio range. Note that the ``angle`` transformation is not supported.

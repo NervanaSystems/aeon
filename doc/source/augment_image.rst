@@ -51,56 +51,9 @@ aeon performs a series of customizable transformations on the image before provi
    fixed_aspect_ratio (bool) | False | Maintain fixed aspect ratio when copying the image to the output buffer. This may result in padding of the output buffer.
    fixed_scaling_factor (float) | | If set, uses fixed scaling factor for output image size.
    expand_probability (float) | 0.0 | Probability of expanding image. Used for SSD.
-   emit_constraint_type ["center", "min_overlap", ""] | \"\" | Used for constraining output bounding boxes in SSD augmentations. ``center`` means center of ground truth box needs to be present in cropped box. ``min_overlap`` means that coverage of ground thruth box with cropped box should be equal or bigger than provided value.
-   emit_constraint_min_overlap (float) | "" | Minimum overlap used when ``emit_constraint_type`` is set to ``min_overlap``.
    expand_ratio (float, float) | (1.0, 1.0) | Ratio to expand image in SSD. minimum expand ratio cannot be less than 1.
-   batch_samplers (batch_sampler) |  | Batch samplers are objects defining patch generation in SSD.
    debug_output_directory (string) | "" | Writes transformed images and transformation parameters to the provided directory. Does not include ``standardization``.
    resize_short_size (int) | 0 | Resize the image proportionally to make the shorter dimension equal to the provided size.
    mean (double, double, double) |  | Mean values per channel for standardization given in order aligned with ``bgr_to_rgb`` attribute of image provider.
    stddev (double, double, double) |  | Standard deviation per channel for standardization given in order aligned with ``bgr_to_rgb`` attribute of image provider.
 
-
-
-**batch_sampler** object:
-
-.. csv-table::
-   :header: "Parameter", "Default", "Description"
-   :widths: 20, 10, 50
-   :delim: |
-   :escape: ~
-
-   max_sample (int) | | If provided, break when found certain number of samples satisfing the sample_constraint.
-   max_trials (int) | 100 | Maximum number of trials for sampling to avoid infinite loop
-   sampler (sampler)  | | Object describing sampling parameters
-   sample_constraint (sample_constraint) | | Object descibing sample constraints
-
-
-**sampler** object:
-
-.. csv-table::
-   :header: "Parameter", "Default", "Description"
-   :widths: 20, 10, 50
-   :delim: |
-   :escape: ~
-
-   scale (float, float) | (1.0, 1.0) | patch scale
-   aspect_ratio (float, float) | (1.0, 1.0) | patch aspect ratio
-
-
-**sample_constraint** object:
-
-It's a set of constraints for generating patch (cropbox). They concern candidate patch and ground truth box. They are not taken under consideration if not set. At least one set of constraints (jaccard_overalp or sample_coverage or object_coverage) must be met to accept patch.
-
-.. csv-table::
-   :header: "Parameter", "Description"
-   :widths: 20, 50
-   :delim: |
-   :escape: ~
-
-   min_jaccard_overlap (float) | Min value of jaccard overlap: (sample ∩ bounding box) / (sample ∪ bounding box)
-   max_jaccard_overlap (float) | Max value of jaccard overlap: (sample ∩ bounding box) / (sample ∪ bounding box)
-   min_sample_coverage (float) | Min value of sample (patch) coverage: (sample ∩ bounding box) / sample
-   max_sample_coverage (float) | Max value of sample (patch) coverage: (sample ∩ bounding box) / sample
-   min_object_coverage (float) | Min value of object (boudning box): coverage (sample ∩ bounding box) / bounding box
-   max_object_coverage (float) | Max value of object (bounding box): coverage (sample ∩ bounding box) / bounding box

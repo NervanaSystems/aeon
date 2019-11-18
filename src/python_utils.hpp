@@ -50,29 +50,6 @@ namespace nervana
             PyThreadState* _save = nullptr;
         };
 
-#ifdef PYTHON_PLUGIN
-        struct block_threads;
-        struct allow_threads
-        {
-            allow_threads();
-            ~allow_threads();
-
-        private:
-            friend struct block_threads;
-            PyThreadState* _state{nullptr};
-        };
-
-        struct block_threads
-        {
-            block_threads(allow_threads& a);
-            block_threads() = delete;
-            ~block_threads();
-
-        private:
-            allow_threads& _parent;
-            PyThreadState* _state{nullptr};
-        };
-#else
         struct allow_threads
         {
         };
@@ -81,6 +58,5 @@ namespace nervana
         {
             block_threads(allow_threads&) {}
         };
-#endif
     }
 }

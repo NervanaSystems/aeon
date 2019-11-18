@@ -19,6 +19,7 @@
 #include <sstream>
 #include <random>
 #include <future>
+#include <fstream>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -26,21 +27,13 @@
 
 #include "gtest/gtest.h"
 #include "util.hpp"
-#include "wav_data.hpp"
-#include "cap_mjpeg_decoder.hpp"
 #include "image.hpp"
 
 #define private public
 
-#include "etl_boundingbox.hpp"
-#include "etl_char_map.hpp"
 #include "etl_image.hpp"
 #include "etl_label.hpp"
 #include "etl_label_map.hpp"
-#include "etl_localization_rcnn.hpp"
-#include "etl_localization_ssd.hpp"
-#include "etl_pixel_mask.hpp"
-#include "etl_video.hpp"
 #include "loader.hpp"
 
 using namespace std;
@@ -141,49 +134,6 @@ TEST(util, pack_le)
         pack<int>(&actual, 0x01000000);
         EXPECT_EQ(expected, actual);
     }
-}
-
-TEST(avi, video_file)
-{
-    const string                  filename  = CURDIR "/test_data/bb8.avi";
-    shared_ptr<MotionJpegCapture> mjdecoder = make_shared<MotionJpegCapture>(filename);
-    ASSERT_TRUE(mjdecoder->isOpened());
-    cv::Mat image;
-    int     image_number = 0;
-    while (mjdecoder->grabFrame() && mjdecoder->retrieveFrame(0, image))
-    {
-        ASSERT_NE(0, image.size().area());
-        //        string output_name = "mjpeg_frame_"+to_string(image_number)+".jpg";
-        //        cv::imwrite(output_name,image);
-        image_number++;
-    }
-    EXPECT_EQ(6, image_number);
-}
-
-TEST(avi, video_buffer)
-{
-    const string filename = CURDIR "/test_data/bb8.avi";
-    ifstream     in(filename, ios_base::binary);
-    ASSERT_TRUE(in);
-    in.seekg(0, in.end);
-    size_t size = in.tellg();
-    in.seekg(0, in.beg);
-    vector<char> data(size);
-    data.assign(istreambuf_iterator<char>(in), istreambuf_iterator<char>());
-
-    shared_ptr<MotionJpegCapture> mjdecoder =
-        make_shared<MotionJpegCapture>(data.data(), data.size());
-    ASSERT_TRUE(mjdecoder->isOpened());
-    cv::Mat image;
-    int     image_number = 0;
-    while (mjdecoder->grabFrame() && mjdecoder->retrieveFrame(0, image))
-    {
-        ASSERT_NE(0, image.size().area());
-        //        string output_name = "mjpeg_frame_"+to_string(image_number)+".jpg";
-        //        cv::imwrite(output_name,image);
-        image_number++;
-    }
-    EXPECT_EQ(6, image_number);
 }
 
 TEST(util, memstream)
@@ -316,14 +266,9 @@ void dump_config_info(ostream& f, shared_ptr<nervana::interface::config_info_int
 TEST(util, param_dump)
 {
     ofstream f("config_args.txt", ios::trunc);
-    DUMP_CONFIG(boundingbox);
-    DUMP_CONFIG(char_map);
     DUMP_CONFIG(image);
     DUMP_CONFIG(label);
     DUMP_CONFIG(label_map);
-    DUMP_CONFIG(localization::rcnn);
-    DUMP_CONFIG(localization::ssd);
-    DUMP_CONFIG(video);
     {
         loader_config cfg;
         f << "loader_config"
