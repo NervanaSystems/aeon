@@ -33,11 +33,9 @@
 #include "batch_iterator.hpp"
 #include "batch_decoder.hpp"
 #include "block_loader_file.hpp"
-#include "block_loader_nds.hpp"
 #include "block_manager.hpp"
 #include "log.hpp"
 #include "util.hpp"
-#include "web_app.hpp"
 
 namespace nervana
 {
@@ -67,7 +65,6 @@ public:
     std::string                 cpu_list             = "";
     std::string                 iteration_mode       = "ONCE";
     int                         iteration_mode_count = 0;
-    uint16_t                    web_server_port      = 0;
     uint32_t                    node_id              = 0;
     uint32_t                    node_count           = 0;
     std::vector<nlohmann::json> etl;
@@ -96,7 +93,6 @@ private:
         ADD_SCALAR(random_seed, mode::OPTIONAL),
         ADD_SCALAR(iteration_mode, mode::OPTIONAL),
         ADD_SCALAR(iteration_mode_count, mode::OPTIONAL),
-        ADD_SCALAR(web_server_port, mode::OPTIONAL),
         ADD_OBJECT(etl, mode::REQUIRED),
         ADD_OBJECT(augmentation, mode::OPTIONAL),
         ADD_SCALAR(node_id, mode::OPTIONAL),
@@ -207,7 +203,7 @@ public:
 
     int record_count() const override
     {
-        return m_manifest_nds ? m_manifest_nds->record_count() : m_manifest_file->record_count();
+        return m_manifest_file->record_count();
     }
     int      batch_size() const override { return m_batch_size; }
     int      batch_count() const override { return m_batch_count_value; }
@@ -242,7 +238,6 @@ private:
     iterator                                                m_current_iter;
     iterator                                                m_end_iter;
     std::shared_ptr<manifest_file>                          m_manifest_file;
-    std::shared_ptr<manifest_nds>                           m_manifest_nds;
     std::shared_ptr<block_loader_source>                    m_block_loader;
     std::shared_ptr<block_manager>                          m_block_manager;
     std::shared_ptr<batch_iterator>                         m_batch_iterator;
@@ -255,7 +250,6 @@ private:
     size_t                                                  m_position{0};
     fixed_buffer_map*                                       m_output_buffer_ptr{nullptr};
     nlohmann::json                                          m_current_config;
-    std::shared_ptr<web_app>                                m_debug_web_app;
 
     // How many times we should increase input data size for decoder
     const int m_input_multiplier          = 8;
