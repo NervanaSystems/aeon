@@ -15,7 +15,7 @@
 *******************************************************************************/
 
 #pragma once
-
+#ifdef WITH_OPENCV
 #include <string>
 #include <tuple>
 
@@ -84,3 +84,4 @@ namespace nervana
         };
     }
 }
+#endif

@@ -17,7 +17,9 @@
 #pragma once
 
 #include <map>
+#ifdef WITH_OPENCV
 #include <opencv2/core/core.hpp>
+#endif
 #include "json.hpp"
 
 #ifdef PYTHON_FOUND

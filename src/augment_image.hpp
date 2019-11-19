@@ -21,9 +21,11 @@
 #include <limits>
 #include <string>
 
+#ifdef WITH_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#endif
 
 #include "json.hpp"
 #include "interface.hpp"
@@ -68,16 +70,18 @@ public:
     }
 
     float              expand_ratio = 1.0;
+    #ifdef WITH_OPENCV
     cv::Size2i         expand_offset;
     cv::Size2i         expand_size;
     cv::Rect           cropbox;
+    cv::Size2i         output_size;
+    cv::Size2i         padding_crop_offset;
+    #endif
     int                resize_short_size = 0;
     std::string        interpolation_method = "LINEAR";
-    cv::Size2i         output_size;
     int                angle = 0;
     bool               flip  = false;
     int                padding;
-    cv::Size2i         padding_crop_offset;
     std::vector<float> lighting; // pixelwise random values
     float              color_noise_std        = 0;
     float              contrast               = 1.0;

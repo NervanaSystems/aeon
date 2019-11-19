@@ -560,7 +560,7 @@ TEST(benchmark, imagenet_paddle)
         std::string iteration_mode       = iterations ? "COUNT" : "INFINITE";
         int         iteration_mode_count = iterations ? atoi(iterations) : 0;
 
-        json image_config = {{"type", "image"},
+        json image_config = {{"type", "dummy_image"},
                              {"height", height},
                              {"width", width},
                              {"channels", 3},
@@ -570,7 +570,7 @@ TEST(benchmark, imagenet_paddle)
 
         json label_config = {{"type", "label"}, {"binary", false}};
 
-        auto aug_config = vector<json>{{{"type", "image"},
+        auto aug_config = vector<json>{{{"type", "dummy_image"},
                                         {"flip_enable", true},
                                         {"center", false},
                                         {"crop_enable", true},

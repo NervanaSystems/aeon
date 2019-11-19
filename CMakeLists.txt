@@ -139,6 +139,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
 find_package(Threads)
 find_package(PkgConfig REQUIRED)
 
+if (WITH_OPENCV)
 find_package(OpenCV REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
@@ -150,6 +151,7 @@ link_directories(${OpenCV_LIBRARY_DIRS})
 list(REMOVE_ITEM OpenCV_LIBRARIES "${OpenCV_LIB_DIR_OPT}/libopencv_ts.so")
 # Ubuntu like os:
 list(REMOVE_ITEM OpenCV_LIBRARIES opencv_ts)
+endif()
 
 # set(Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4)
 

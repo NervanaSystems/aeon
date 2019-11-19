@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-
+#ifdef WITH_OPENCV
 #include <algorithm>
 #include <cctype>
 #include <map>
@@ -475,3 +475,4 @@ void image::photometric::cbsjitter(
 //         p += 3;
 //     }
 // }
+#endif

@@ -37,13 +37,14 @@ libs = ""
 include_dirs = ""
 include_dirs += " -I${CMAKE_PREFIX_PATH}/include "
 
-status, tmp = getstatusoutput("pkg-config --cflags opencv")
-if status != 0:
-    print("required package 'opencv' not found")
-    exit()
-include_dirs += tmp
-lib_dirs += getoutput("pkg-config --libs-only-L opencv")
-libs += getoutput("pkg-config --libs-only-l opencv")
+if ${WITH_OPENCV}:
+    status, tmp = getstatusoutput("pkg-config --cflags opencv")
+    if status != 0:
+        print("required package 'opencv' not found")
+        exit()
+    include_dirs += tmp
+    lib_dirs += getoutput("pkg-config --libs-only-L opencv")
+    libs += getoutput("pkg-config --libs-only-l opencv")
 
 include_dirs += ' ${Boost_INCLUDE_DIRS}'
 lib_dirs += ' ${Boost_LIBRARY_DIRS}'

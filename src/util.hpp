@@ -21,7 +21,9 @@
 #include <vector>
 #include <stdexcept>
 #include <random>
+#ifdef WITH_OPENCV
 #include <opencv2/core/core.hpp>
+#endif
 #include <thread>
 #include <chrono>
 #include <map>

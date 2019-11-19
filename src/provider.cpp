@@ -44,6 +44,10 @@ provider::provider_base::provider_base(nlohmann::json                     js,
         {
             prov = static_pointer_cast<provider::interface>(
                 make_shared<provider::image>(j, augmentation));
+        } else if (type == "dummy_image")
+        {
+            prov = static_pointer_cast<provider::interface>(
+                make_shared<provider::dummy_image>(j, augmentation));
         }
         else if (type == "label")
         {
@@ -130,6 +134,45 @@ void provider::image::provide(int                        idx,
     }
 
     // Process image data
+    auto decoded    = m_extractor.extract(datum_in.data(), datum_in.size());
+    auto input_size = decoded->get_image_size();
+    if (aug.m_image_augmentations == nullptr)
+    {
+        aug.m_image_augmentations = m_augmentation_factory.make_params(
+            input_size.width, input_size.height, m_config.width, m_config.height);
+    }
+
+    m_loader.load({datum_out}, m_transformer.transform(aug.m_image_augmentations, decoded));
+}
+
+
+provider::dummy_image::dummy_image(nlohmann::json js, nlohmann::json aug)
+    : interface(js, 1)
+    , m_config{js}
+    , m_extractor{m_config}
+    , m_transformer{m_config}
+    , m_augmentation_factory{aug}
+    , m_loader{m_config}
+    , m_buffer_name{create_name(m_config.name, "dummy_image")}
+{
+    m_output_shapes.emplace_back(make_pair(m_buffer_name, m_config.get_shape_type()));
+}
+
+void provider::dummy_image::provide(int                        idx,
+                              const std::vector<char>&   datum_in,
+                              nervana::fixed_buffer_map& out_buf,
+                              augmentation&              aug) const
+{
+    char* datum_out = out_buf[m_buffer_name]->get_item(idx);
+
+    if (datum_in.size() == 0)
+    {
+        std::stringstream ss;
+        ss << "received encoded dummy_image with size 0, at idx " << idx;
+        throw std::runtime_error(ss.str());
+    }
+
+    // Process dummy_imag data
     auto decoded    = m_extractor.extract(datum_in.data(), datum_in.size());
     auto input_size = decoded->get_image_size();
     if (aug.m_image_augmentations == nullptr)

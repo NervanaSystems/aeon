@@ -48,8 +48,9 @@ void exit_func(int s)
 extern "C" int main(int argc, char** argv)
 {
     std::setlocale(LC_CTYPE, "");
-
+    #ifdef WITH_OPENCV
     cout << "OpenCV version : " << CV_VERSION << endl;
+    #endif
     // mock_nds_server server;
 
     const char*   exclude = "--gtest_filter=-benchmark.*";

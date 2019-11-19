@@ -32,6 +32,7 @@ namespace nervana
         class interface;
         class provider_base;
         class image;
+        class dummy_image;
         class label;
     }
     class augmentation;
@@ -108,6 +109,25 @@ private:
     nervana::image::transformer            m_transformer;
     nervana::augment::image::param_factory m_augmentation_factory;
     nervana::image::loader                 m_loader;
+    const std::string                      m_buffer_name;
+};
+
+class nervana::provider::dummy_image : public provider::interface
+{
+public:
+    dummy_image(nlohmann::json config, nlohmann::json aug);
+    virtual ~dummy_image() {}
+    void provide(int                        idx,
+                 const std::vector<char>&   datum_in,
+                 nervana::fixed_buffer_map& out_buf,
+                 augmentation&) const override;
+
+private:
+    const nervana::image::config           m_config;
+    nervana::image::dummy_extractor              m_extractor;
+    nervana::image::dummy_transformer            m_transformer;
+    nervana::augment::image::param_factory m_augmentation_factory;
+    nervana::image::dummy_loader                 m_loader;
     const std::string                      m_buffer_name;
 };
 

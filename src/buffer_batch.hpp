@@ -21,7 +21,9 @@
 #include <cstring>
 #include <iostream>
 #include <initializer_list>
+#ifdef WITH_OPENCV
 #include <opencv2/core/core.hpp>
+#endif
 #include <tuple>
 
 #include "typemap.hpp"
@@ -169,7 +171,9 @@ public:
     void        deallocate();
     const char* get_item(size_t index) const;
     char* get_item(size_t index);
+    #ifdef WITH_OPENCV
     cv::Mat get_item_as_mat(size_t index, bool channel_major = false) const;
+    #endif
     char*             data() const { return m_data; }
     size_t            get_item_count() const { return m_size / m_stride; }
     size_t            size() const { return m_size; }

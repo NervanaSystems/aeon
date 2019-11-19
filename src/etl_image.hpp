@@ -16,9 +16,11 @@
 
 #pragma once
 
+#ifdef WITH_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#endif
 #include <chrono>
 #include "interface.hpp"
 #include "image.hpp"
@@ -35,6 +37,10 @@ namespace nervana
         class extractor;
         class transformer;
         class loader;
+
+        class dummy_extractor;
+        class dummy_transformer;
+        class dummy_loader;
     }
     namespace video
     {
@@ -98,7 +104,7 @@ private:
 // ===============================================================================================
 // Decoded
 // ===============================================================================================
-
+#ifdef WITH_OPENCV
 class nervana::image::decoded : public interface::decoded_image
 {
 public:
@@ -190,4 +196,36 @@ private:
     std::vector<double> m_mean;
     std::vector<double> m_stddev;
     std::vector<int>    m_from_to;
+};
+#endif
+class nervana::image::dummy_extractor : public interface::extractor<image::decoded>
+{
+public:
+    dummy_extractor(const image::config&);
+    ~dummy_extractor() {}
+    virtual std::shared_ptr<image::decoded> extract(const void*, size_t) const override;
+};
+
+class nervana::image::dummy_transformer
+    : public interface::transformer<image::decoded, augment::image::params>
+{
+public:
+    dummy_transformer(const image::config&);
+    ~dummy_transformer() {}
+    virtual std::shared_ptr<image::decoded>
+        transform(std::shared_ptr<augment::image::params>,
+                  std::shared_ptr<image::decoded>) const override;
+
+    cv::Mat transform_single_image(std::shared_ptr<augment::image::params>, cv::Mat&) const;
+};
+
+class nervana::image::dummy_loader : public interface::loader<image::decoded>
+{
+public:
+    dummy_loader(const image::config& cfg);
+    ~dummy_loader() {}
+    virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) const override;
+
+private:
+    shape_type          m_stype;
 };

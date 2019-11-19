@@ -22,11 +22,11 @@
 #include <vector>
 #include <cstdio>
 #include <unistd.h>
-
+#ifdef WITH_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-
+#endif
 #include "manifest_builder.hpp"
 #include "manifest_file.hpp"
 #include "file_util.hpp"
