@@ -15,7 +15,6 @@
 # ******************************************************************************
 
 set (SRC
-    async_manager.cpp
     augment_image.cpp
     base64.cpp
     batch_decoder.cpp

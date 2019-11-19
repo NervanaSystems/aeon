@@ -39,7 +39,6 @@ namespace nervana
     class async_manager_source;
     template <typename INPUT, typename OUTPUT>
     class async_manager;
-    class async_manager_info;
 
     enum class async_state
     {
@@ -48,16 +47,7 @@ namespace nervana
         fetching_data,
         processing
     };
-    extern std::vector<async_manager_info*> async_manager_status;
 }
-
-class nervana::async_manager_info
-{
-public:
-    virtual ~async_manager_info() {}
-    virtual async_state        get_state() const = 0;
-    virtual const std::string& get_name() const  = 0;
-};
 
 template <typename OUTPUT>
 class nervana::async_manager_source
@@ -74,17 +64,13 @@ public:
 };
 
 template <typename INPUT, typename OUTPUT>
-class nervana::async_manager : public virtual nervana::async_manager_source<OUTPUT>,
-                               public async_manager_info
+class nervana::async_manager : public virtual nervana::async_manager_source<OUTPUT>
 {
 public:
     async_manager(std::shared_ptr<async_manager_source<INPUT>> source, const std::string& name)
         : m_source(source)
-        , m_state{async_state::idle}
         , m_name{name}
     {
-        // Make the container pair?  Currently letting child handle it in filler()
-        async_manager_status.push_back(this);
     }
     virtual ~async_manager() { finalize(); }
     OUTPUT* next() override
@@ -151,8 +137,8 @@ public:
         m_bq_output.push(inner_buffer_t(nullptr, nullptr));
     }
 
-    async_state        get_state() const override { return m_state; }
-    const std::string& get_name() const override { return m_name; }
+    virtual async_state        get_state() const { return m_state; }
+    virtual const std::string& get_name() const { return m_name; }
 protected:
     typedef std::tuple<OUTPUT*, std::exception_ptr> inner_buffer_t;
 
