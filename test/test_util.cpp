@@ -33,7 +33,6 @@
 
 #include "etl_image.hpp"
 #include "etl_label.hpp"
-#include "etl_label_map.hpp"
 #include "loader.hpp"
 
 using namespace std;
@@ -268,7 +267,6 @@ TEST(util, param_dump)
     ofstream f("config_args.txt", ios::trunc);
     DUMP_CONFIG(image);
     DUMP_CONFIG(label);
-    DUMP_CONFIG(label_map);
     {
         loader_config cfg;
         f << "loader_config"

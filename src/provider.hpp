@@ -23,7 +23,6 @@
 #include "provider_interface.hpp"
 #include "etl_image.hpp"
 #include "etl_label.hpp"
-#include "etl_label_map.hpp"
 #include "augment_image.hpp"
 
 namespace nervana
@@ -34,7 +33,6 @@ namespace nervana
         class provider_base;
         class image;
         class label;
-        class label_map;
     }
     class augmentation;
 }
@@ -134,24 +132,3 @@ private:
     const std::string         m_buffer_name;
 };
 
-//=================================================================================================
-// label_map
-//=================================================================================================
-
-class nervana::provider::label_map : public provider::interface
-{
-public:
-    label_map(nlohmann::json js);
-    virtual ~label_map() {}
-    void provide(int                        idx,
-                 const std::vector<char>&   datum_in,
-                 nervana::fixed_buffer_map& out_buf,
-                 augmentation&) const override;
-
-private:
-    label_map() = delete;
-    nervana::label_map::config    m_config;
-    nervana::label_map::extractor m_extractor;
-    nervana::label_map::loader    m_loader;
-    const std::string             m_buffer_name;
-};

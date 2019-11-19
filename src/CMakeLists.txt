@@ -28,7 +28,6 @@ set (SRC
     cpio.cpp
     crc.cpp
     etl_image.cpp
-    etl_label_map.cpp
     file_util.cpp
     image.cpp
     interface.cpp

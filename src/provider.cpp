@@ -49,15 +49,6 @@ provider::provider_base::provider_base(nlohmann::json                     js,
         {
             prov = static_pointer_cast<provider::interface>(make_shared<provider::label>(j));
         }
-        else if (type == "label_map")
-        {
-            prov = static_pointer_cast<provider::interface>(make_shared<provider::label_map>(j));
-        }
-        // else if (type == "multicrop")
-        // {
-        //     prov = static_pointer_cast<provider::interface>(
-        //         make_shared<provider::multicrop>(j, augmentation));
-        // }
         else
         {
             stringstream ss;
@@ -180,37 +171,5 @@ void provider::label::provide(int                        idx,
 
     auto label_dec = m_extractor.extract(datum_in.data(), datum_in.size());
     m_loader.load({target_out}, label_dec);
-}
-
-//=================================================================================================
-// label_map
-//=================================================================================================
-
-provider::label_map::label_map(nlohmann::json js)
-    : interface(js, 1)
-    , m_config{js}
-    , m_extractor{m_config}
-    , m_loader{m_config}
-    , m_buffer_name{create_name(m_config.name, "label_map")}
-{
-    m_output_shapes.emplace_back(make_pair(m_buffer_name, m_config.get_shape_type()));
-}
-
-void provider::label_map::provide(int                        idx,
-                                  const std::vector<char>&   datum_in,
-                                  nervana::fixed_buffer_map& out_buf,
-                                  augmentation&) const
-{
-    char* datum_out = out_buf[m_buffer_name]->get_item(idx);
-
-    if (datum_in.size() == 0)
-    {
-        std::stringstream ss;
-        ss << "received label_map with size 0, at idx " << idx;
-        throw std::runtime_error(ss.str());
-    }
-
-    auto decoded = m_extractor.extract(datum_in.data(), datum_in.size());
-    m_loader.load({datum_out}, decoded);
 }
 

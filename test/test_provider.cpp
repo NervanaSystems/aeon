@@ -23,7 +23,6 @@
 
 #include "cpio.hpp"
 #include "etl_image.hpp"
-#include "etl_label_map.hpp"
 #include "file_util.hpp"
 #include "gen_image.hpp"
 #include "helpers.hpp"
