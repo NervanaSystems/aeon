@@ -39,7 +39,6 @@ set (SRC
     test_provider.cpp
     test_types.cpp
     test_util.cpp
-    test_raw_image.cpp
 )
 
 set(TESTSUITE_LIBRARIES aeon gtest gmock

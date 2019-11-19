@@ -35,7 +35,7 @@ set (SRC
     provider_factory.cpp
     typemap.cpp
     util.cpp
-    raw_image.cpp)
+    )
 
 set(AEON_HEADER_FILES
         version.hpp)
