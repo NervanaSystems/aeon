@@ -18,14 +18,12 @@
 
 #include "block_manager.hpp"
 #include "file_util.hpp"
-#include "cpio.hpp"
 
 using namespace std;
 using namespace nervana;
 
 nervana::block_manager::block_manager(shared_ptr<block_loader_source> file_loader,
                                       size_t                          block_size,
-                                      const string&                   cache_root,
                                       bool                            enable_shuffle,
                                       uint32_t                        seed)
     : async_manager<encoded_record_list, encoded_record_list>(file_loader, "block_manager")
@@ -37,20 +35,11 @@ nervana::block_manager::block_manager(shared_ptr<block_loader_source> file_loade
     , m_random_generator{seed ? seed : random_device{}()}
     , m_enable_shuffle(enable_shuffle)
 {
-    if (!cache_root.empty())
-        m_cache.reset(new cache_system(file_loader->get_uid(),
-                                       file_loader->block_count(),
-                                       file_loader->elements_per_record(),
-                                       cache_root,
-                                       enable_shuffle,
-                                       seed));
 }
 
 void block_manager::initialize()
 {
     m_current_block_number = 0;
-    if (m_cache)
-        m_cache->restart();
     async_manager<encoded_record_list, encoded_record_list>::initialize();
 }
 
@@ -63,38 +52,27 @@ nervana::encoded_record_list* block_manager::filler()
 
     rc->clear();
 
-    if (m_cache && m_cache->is_complete())
+    m_state = async_state::fetching_data;
+    input   = m_source->next();
+    m_state = async_state::processing;
+    if (input == nullptr)
     {
-        m_cache->load_block(*rc);
+        rc = nullptr;
     }
     else
     {
-        m_state = async_state::fetching_data;
-        input   = m_source->next();
-        m_state = async_state::processing;
-        if (input == nullptr)
-        {
-            rc = nullptr;
-        }
-        else
-        {
-            if (m_cache && m_cache->is_ownership())
-                m_cache->store_block(*input);
-            input->swap(*rc);
-        }
-
-        if (++m_current_block_number == m_block_count)
-        {
-            m_current_block_number = 0;
-            m_source->reset();
-            if (m_cache)
-                m_cache->try_get_access();
-        }
-
-        // WORKAROUD!!!, should be implemented in manifest_file
-        if (rc && m_enable_shuffle)
-            rc->shuffle(m_random_generator);
+        input->swap(*rc);
     }
+
+    if (++m_current_block_number == m_block_count)
+    {
+        m_current_block_number = 0;
+        m_source->reset();
+    }
+
+    // WORKAROUD!!!, should be implemented in manifest_file
+    if (rc && m_enable_shuffle)
+        rc->shuffle(m_random_generator);
 
     if (rc && rc->size() == 0)
     {

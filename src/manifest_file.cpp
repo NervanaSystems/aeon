@@ -96,15 +96,6 @@ manifest_file::manifest_file(std::istream&      stream,
     initialize(stream, block_size, root, subset_fraction);
 }
 
-string manifest_file::cache_id()
-{
-    // returns a hash of the m_filename
-    std::size_t  h = std::hash<std::string>()(m_source_filename);
-    stringstream ss;
-    ss << setfill('0') << setw(16) << hex << h;
-    return ss.str();
-}
-
 string manifest_file::version()
 {
     stringstream ss;

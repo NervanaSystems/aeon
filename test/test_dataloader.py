@@ -207,14 +207,12 @@ def test_dataloader_axes_info():
     manifest_root = os.path.join(pdir, 'test_data')
 
     manifest_file = os.path.join(manifest_root, 'manifest.tsv')
-    cache_root = ""
 
     cfg = {
            'manifest_filename': manifest_file,
            'manifest_root': manifest_root,
            'batch_size': 20,
            'block_size': 40,
-           'cache_directory': cache_root,
            'etl': [
                {'type': 'image',
                 'channel_major': False,

@@ -35,10 +35,6 @@
  * object_filename2,target_filename2
  * ...
  *
- * string hash() is to be used as a key for the cache.  It is possible
- * that it will be better to use the filename and last modified time as
- * a key instead.
- *
  */
 namespace nervana
 {
@@ -73,7 +69,6 @@ public:
     virtual ~manifest_file() {}
     using record_t = std::vector<std::string>;
 
-    std::string cache_id() override;
     std::string version() override;
 
     std::vector<record_t>* next() override;

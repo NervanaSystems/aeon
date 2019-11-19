@@ -231,48 +231,6 @@ TEST(loader, infinite)
     ASSERT_EQ(expected_iterations, count);
 }
 
-TEST(loader, cache)
-{
-    int    height            = 16;
-    int    width             = 16;
-    size_t batch_size        = 32;
-    size_t record_count      = 1002;
-    size_t block_size        = 300;
-    string cache_root        = file_util::get_temp_directory();
-    string manifest_filename = create_manifest_file(record_count, width, height);
-
-    json image = {{"type", "image"},
-                  {"name", "image1"},
-                  {"height", height},
-                  {"width", width},
-                  {"channel_major", false}};
-    json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
-    json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
-    json js           = {{"manifest_filename", manifest_filename},
-               {"batch_size", batch_size},
-               {"block_size", block_size},
-               {"cache_directory", cache_root},
-               {"iteration_mode", "INFINITE"},
-               {"etl", {image, label}},
-               {"augmentation", augmentation}};
-
-    loader_factory factory;
-    auto           train_set = factory.get_loader(js);
-
-    int count               = 0;
-    int expected_iterations = record_count * 3;
-    for (const fixed_buffer_map& data : *train_set)
-    {
-        (void)data; // silence compiler warning
-        count++;
-        if (count == expected_iterations)
-        {
-            break;
-        }
-    }
-    ASSERT_EQ(expected_iterations, count);
-}
-
 TEST(loader, test)
 {
     int    height            = 16;
@@ -514,7 +472,6 @@ TEST(benchmark, imagenet)
 {
     char* manifest_root = getenv("TEST_IMAGENET_ROOT");
     char* manifest_name = getenv("TEST_IMAGENET_MANIFEST");
-    char* cache_root    = getenv("TEST_IMAGENET_CACHE");
     char* address       = getenv("TEST_IMAGENET_ADDRESS");
     char* port          = getenv("TEST_IMAGENET_PORT");
     char* rdma_address  = getenv("TEST_IMAGENET_RDMA_ADDRESS");
@@ -553,7 +510,6 @@ TEST(benchmark, imagenet)
                        {"batch_size", batch_size},
                        {"iteration_mode", iteration_mode},
                        {"iteration_mode_count", iteration_mode_count},
-                       {"cache_directory", cache_root ? cache_root : ""},
                        {"cpu_list", ""},
                        //{"web_server_port", 8086},
                        {"etl", {image_config, label_config}},
@@ -588,7 +544,6 @@ TEST(benchmark, imagenet_paddle)
 {
     char* manifest_root = getenv("TEST_IMAGENET_ROOT");
     char* manifest_name = getenv("TEST_IMAGENET_MANIFEST");
-    char* cache_root    = getenv("TEST_IMAGENET_CACHE");
     char* batch_delay   = getenv("TEST_IMAGENET_BATCH_DELAY");
     char* bsz           = getenv("TEST_IMAGENET_BATCH_SIZE");
     char* iterations    = getenv("TEST_IMAGENET_ITERATIONS");
@@ -634,7 +589,6 @@ TEST(benchmark, imagenet_paddle)
                        {"batch_size", batch_size},
                        {"iteration_mode", iteration_mode},
                        {"iteration_mode_count", iteration_mode_count},
-                       {"cache_directory", cache_root ? cache_root : ""},
                        {"cpu_list", ""},
                        {"etl", {image_config, label_config}},
                        {"augmentation", aug_config}};
@@ -746,7 +700,6 @@ TEST(benchmark, load_block_manager)
 {
     stopwatch timer;
     string    home            = getenv("HOME");
-    string    cache_directory = home + "/aeon_cache";
     bool      shuffle         = false;
     size_t    block_size      = 5000;
 
@@ -763,7 +716,7 @@ TEST(benchmark, load_block_manager)
 
     auto loader = make_shared<block_loader_file>(manifest, block_size);
 
-    block_manager manager{loader, 5000, cache_directory, shuffle};
+    block_manager manager{loader, 5000, shuffle};
 
     encoded_record_list* records;
     timer.start();

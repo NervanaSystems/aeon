@@ -104,12 +104,6 @@ void loader_local::initialize(const json& config_json)
     {
         if (lcfg.node_id >= lcfg.node_count)
 
-        if (!lcfg.cache_directory.empty())
-        {
-            WARN<<"File caching for multinode is not implemented yet";
-            lcfg.cache_directory.clear();
-        }
-
         if (lcfg.random_seed == 0)
         {
             WARN<<"You have to set non zero random_seed for multi node training. random_seed = 1 is used";
@@ -137,7 +131,6 @@ void loader_local::initialize(const json& config_json)
 
     m_block_manager = make_shared<block_manager>(m_block_loader,
                                                  lcfg.block_size,
-                                                 lcfg.cache_directory,
                                                  lcfg.shuffle_enable,
                                                  lcfg.random_seed);
 

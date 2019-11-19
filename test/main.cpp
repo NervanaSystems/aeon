@@ -25,7 +25,6 @@
 #include "file_util.hpp"
 #include "log.hpp"
 #include "json.hpp"
-#include "cpio.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -35,21 +34,6 @@ extern string    test_cache_directory;
 
 gen_image image_dataset;
 string    test_cache_directory;
-
-static void CreateImageDataset()
-{
-    //    std::chrono::high_resolution_clock timer;
-    //    auto start = timer.now();
-    image_dataset.directory("image_data")
-        .prefix("archive-")
-        .macrobatch_max_records(500)
-        // SetSize must be a multiple of (minibatchCount*batchSize) which is 8320 currently
-        .dataset_size(1500)
-        .ImageSize(128, 128)
-        .create();
-    //    auto end = timer.now();
-    //    cout << "image dataset " << (chrono::duration_cast<chrono::milliseconds>(end - start)).count() << " msec" << endl;
-}
 
 static void DeleteDataset()
 {
@@ -79,14 +63,8 @@ extern "C" int main(int argc, char** argv)
     }
     argc++;
 
-    CreateImageDataset();
-    test_cache_directory = nervana::file_util::make_temp_directory();
-
     ::testing::InitGoogleMock(&argc, argv_vector.data());
     int rc = RUN_ALL_TESTS();
-
-    nervana::file_util::remove_directory(test_cache_directory);
-    DeleteDataset();
 
     return rc;
 }

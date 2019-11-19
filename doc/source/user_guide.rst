@@ -25,11 +25,9 @@ The dataloader was created to provide an easy interface to configure the loader 
 
 Users first perform **ingest**, which means converting their data into a format supported by the dataloader (if needed), and generating a manifest file in tab-separated values (tsv) format. This file tells the dataloader where the input and target data reside.
 
-Given a configuration file, the aeon dataloader takes care of the rest (green box). During operation, the first time a dataset is encountered, the dataloader will **cache** the data into `cpio <https://en.wikipedia.org/wiki/Cpio>`_ format, allowing for quick subsequent reads. This is an optional but highly recommended step.
+Given a configuration file, the aeon dataloader takes care of the rest (green box).
 
 During **provision**, the dataloader reads the data from disk, performs any needed transformations on-the-fly, transfers the data to device memory (e.g. GPU), and provisions the data to the model as an input-target pair. We use a multi-threaded library to hide the latency of these disk reads and operations in the device compute.
-
-The caching step can be skipped by providing an empty ``cache_directory`` configuration (see below). In that case, the dataloader will read directly from the source data files.
 
 Note that **ingest** (creation of the manifest files and any data formatting needed) occurs outside aeon by the user since they are specific to the dataset.
 
@@ -164,7 +162,6 @@ The possible base loader configurations are the following (configurations withou
    batch_size (int)| *Required* | Batch size. In neon, typically accesible via ``be.bsz``.
    batch_major (bool)| True | If set to `true`, the data order is N,DATA. Otherwise it's DATA,N (where DATA is any sequence of data, e.g., N,C,H,W to C,H,W,N for images).
    manifest_root (string) | ~"~" | If provided, ``manifest_root`` is prepended to all manifest items with relative paths, while manifest items with absolute paths are left untouched.
-   cache_directory (string)| ~"~" | If provided, the dataloader will cache the data into ``*.cpio`` files for fast disk reads.
    subset_fraction (float)| 1.0 | Fraction of the dataset to iterate over. Useful when testing code on smaller data samples.
    shuffle_enable (bool) | False | Shuffles the dataset order for every epoch
    shuffle_manifest (bool) | False | Shuffles manifest file contents

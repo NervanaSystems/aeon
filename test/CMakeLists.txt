@@ -31,7 +31,6 @@ set (SRC
     test_block_manager.cpp
     test_buffer.cpp
     test_config.cpp
-    test_cpio.cpp
     test_file_util.cpp
     test_image.cpp
     test_loader.cpp

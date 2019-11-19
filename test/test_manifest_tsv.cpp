@@ -184,7 +184,7 @@ void test_multinode_manifest(bool shuffle)
     auto block_node2 = manifest_node2.next();
 
     manifest.reset();
-    manifest_node1.reset();    
+    manifest_node1.reset();
     manifest_node2.reset();
 
     block       = manifest.next();
@@ -822,7 +822,6 @@ TEST(manifest, comma)
 TEST(benchmark, manifest)
 {
     string manifest_filename = file_util::tmp_filename();
-    string cache_root        = "/this/is/supposed/to/be/long/so/we/make/it/so/";
     cout << "tmp manifest file " << manifest_filename << endl;
 
     chrono::high_resolution_clock timer;
@@ -833,8 +832,8 @@ TEST(benchmark, manifest)
         ofstream mfile(manifest_filename);
         for (int i = 0; i < 10e6; i++)
         {
-            mfile << cache_root << "image_" << i << ".jpg,";
-            mfile << cache_root << "target_" << i << ".txt\n";
+            mfile << "image_" << i << ".jpg,";
+            mfile << "target_" << i << ".txt\n";
         }
         auto endTime = timer.now();
         cout << "create manifest "

@@ -62,14 +62,12 @@ def parse_input():
 
 def main():
     address, port, manifest, rdma_address, rdma_port = parse_input()
-    cache_root = "" # don't create cache
     batch_size = 4
 
     cfg = {
                'manifest_filename': manifest,
                'manifest_root': os.path.dirname(manifest),
                'batch_size': batch_size,
-               'cache_directory': cache_root,
                'etl': [
                    {'type': 'image',
                     'width': 28,

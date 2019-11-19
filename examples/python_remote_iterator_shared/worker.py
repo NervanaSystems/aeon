@@ -61,7 +61,6 @@ def parse_input():
 
 def main():
     address, port, session_id, rdma_address, rdma_port = parse_input()
-    cache_root = "" # don't create cache
     batch_size = 4
 
     cfg = {

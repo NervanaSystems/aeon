@@ -54,7 +54,6 @@ public:
     std::string manifest_root;
     int         batch_size;
 
-    std::string                 cache_directory      = "";
     int                         block_size           = 5000;
     float                       subset_fraction      = 1.0;
     bool                        shuffle_enable       = false;
@@ -77,7 +76,6 @@ private:
         ADD_SCALAR(manifest_filename, mode::REQUIRED),
         ADD_SCALAR(manifest_root, mode::OPTIONAL),
         ADD_SCALAR(batch_size, mode::REQUIRED),
-        ADD_SCALAR(cache_directory, mode::OPTIONAL),
         ADD_SCALAR(block_size, mode::OPTIONAL),
         ADD_SCALAR(batch_major, mode::OPTIONAL),
         ADD_SCALAR(subset_fraction,

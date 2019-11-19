@@ -21,7 +21,6 @@
 #include "gtest/gtest.h"
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "cpio.hpp"
 #include "etl_image.hpp"
 #include "file_util.hpp"
 #include "gen_image.hpp"
@@ -49,46 +48,6 @@ TEST(provider, empty_config)
     nlohmann::json js    = {{"etl", {image, label}}};
 
     nervana::provider_factory::create(js);
-}
-
-TEST(provider, image)
-{
-    nlohmann::json image = {{"type", "image"}, {"height", 128}, {"width", 128}};
-    nlohmann::json label = {{"type", "label"}, {"binary", true}};
-    nlohmann::json js    = {{"etl", {image, label}}};
-
-    auto media   = nervana::provider_factory::create(js);
-    auto oshapes = media->get_output_shapes();
-
-    size_t batch_size = 128;
-
-    fixed_buffer_map    out_buf(oshapes, batch_size);
-    encoded_record_list bp;
-
-    auto files = image_dataset.get_files();
-    ASSERT_NE(0, files.size());
-    ifstream f(files[0], istream::binary);
-    ASSERT_TRUE(f);
-    cpio::reader reader(f);
-    for (int i = 0; i < reader.record_count() / 2; i++)
-    {
-        reader.read(bp, 2);
-    }
-
-    EXPECT_GT(bp.size(), batch_size);
-    for (int i = 0; i < batch_size; i++)
-    {
-        media->provide(i, bp.record(i), out_buf);
-
-        //  cv::Mat mat(width,height,CV_8UC3,&dbuffer[0]);
-        //  string filename = "data" + to_string(i) + ".png";
-        //  cv::imwrite(filename,mat);
-    }
-    for (int i = 0; i < batch_size; i++)
-    {
-        int target_value = unpack<int>(out_buf["label"]->get_item(i));
-        EXPECT_EQ(42 + i, target_value);
-    }
 }
 
 TEST(provider, image_paddle_imagenet_training_augmentation)

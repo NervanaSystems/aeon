@@ -22,11 +22,10 @@
 #include "buffer_batch.hpp"
 #include "block.hpp"
 #include "block_loader_source.hpp"
-#include "cache_system.hpp"
 
 /* block_manager
  *
- * Reads files from the manifest and optionally caches and shuffles them.
+ * Reads files from the manifest.
  *
  */
 
@@ -40,7 +39,6 @@ class nervana::block_manager : public async_manager<encoded_record_list, encoded
 public:
     block_manager(std::shared_ptr<block_loader_source> file_loader,
                   size_t                               block_size,
-                  const std::string&                   cache_root,
                   bool                                 enable_shuffle,
                   uint32_t                             seed = 0);
 
@@ -52,7 +50,6 @@ public:
     size_t record_count() const override { return m_block_size; }
     size_t elements_per_record() const override { return m_elements_per_record; }
 private:
-    std::unique_ptr<cache_system> m_cache;
     size_t                        m_current_block_number;
     size_t                        m_block_size;
     size_t                        m_block_count;

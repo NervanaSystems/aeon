@@ -37,7 +37,6 @@ namespace nervana
 
         manifest() {}
         virtual ~manifest() {}
-        virtual std::string cache_id() = 0;
         virtual std::string version()  = 0;
 
         void set_block_load_sequence(const std::vector<std::pair<size_t, size_t>>& seq)

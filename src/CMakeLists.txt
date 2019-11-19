@@ -24,8 +24,6 @@ set (SRC
     block_loader_file.cpp
     block_manager.cpp
     buffer_batch.cpp
-    cache_system.cpp
-    cpio.cpp
     crc.cpp
     etl_image.cpp
     file_util.cpp

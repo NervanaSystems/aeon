@@ -23,7 +23,6 @@
 #include <sys/stat.h>
 #include <fstream>
 
-#include "cpio.hpp"
 #include "file_util.hpp"
 
 template <typename T>
@@ -72,47 +71,6 @@ public:
         assert(size > 0);
         m_set_size = size;
         return *(T*)this;
-    }
-
-    int create()
-    {
-        int rc          = -1;
-        int fileNo      = 0;
-        m_path_existed  = exists(m_path);
-        int datumNumber = 0;
-        if (m_path_existed || mkdir(m_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
-        {
-            int remainder = m_set_size;
-            while (remainder > 0)
-            {
-                int         batchSize = std::min(remainder, m_max_items);
-                std::string fileName  = nervana::file_util::path_join(
-                    m_path, m_prefix + std::to_string(fileNo++) + ".cpio");
-                m_file_list.push_back(fileName);
-                std::ofstream f(fileName, std::ostream::binary);
-                if (f)
-                {
-                    nervana::cpio::writer writer{f};
-                    for (int i = 0; i < batchSize; i++)
-                    {
-                        const std::vector<unsigned char> datum = render_datum(datumNumber);
-                        writer.write_record_element((char*)datum.data(), datum.size(), 0);
-
-                        const std::vector<unsigned char> target = render_target(datumNumber);
-                        writer.write_record_element((char*)target.data(), target.size(), 1);
-
-                        writer.increment_record_count();
-                        datumNumber++;
-                    }
-                    remainder -= batchSize;
-                }
-            }
-        }
-        else
-        {
-            std::cout << "failed to create path " << m_path << std::endl;
-        }
-        return rc;
     }
 
     void delete_files()
