@@ -519,11 +519,6 @@ TEST(manifest, string)
     size_t block_size = 16;
     auto   manifest   = make_shared<manifest_file>(ss, false, test_data_directory, 1.0, block_size);
 
-    //    for (auto data : manifest)
-    //    {
-    //        INFO << data[0] << ", " << data[1];
-    //    }
-
     auto types = manifest->get_element_types();
     ASSERT_EQ(2, types.size());
     EXPECT_EQ(manifest::element_t::FILE, types[0]);

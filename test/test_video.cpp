@@ -17,7 +17,6 @@
 #include "gtest/gtest.h"
 
 #include "etl_video.hpp"
-#include "log.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -77,10 +76,6 @@ TEST(video, extract_transform)
         ASSERT_EQ(transformed_vid->get_image_size(), cv::Size2i(width / 2, height / 2));
 
         remove(test_file.c_str());
-    }
-    else
-    {
-        ERR << "Missing ffmpeg for video extraction test" << endl;
     }
 }
 

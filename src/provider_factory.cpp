@@ -16,7 +16,6 @@
 
 #include "provider_factory.hpp"
 #include "provider.hpp"
-#include "log.hpp"
 #include <sstream>
 
 using namespace std;

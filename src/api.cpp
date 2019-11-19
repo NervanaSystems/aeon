@@ -107,7 +107,6 @@ static PyMethodDef aeon_methods[] = {
 
 static PyObject* DataLoader_iter(PyObject* self)
 {
-    INFO << " aeon_DataLoader_iter";
     Py_INCREF(self);
 
     allow_threads a;
@@ -119,7 +118,6 @@ static PyObject* DataLoader_iter(PyObject* self)
 
 static PyObject* DataLoader_iternext(PyObject* self)
 {
-    INFO << " aeon_DataLoader_iternext";
     PyObject* result = NULL;
 
     allow_threads a;
@@ -165,7 +163,6 @@ static PyObject* DataLoader_iternext(PyObject* self)
             // Note: PyTuple_SetItem steals the reference.
             if (set_status < 0)
             {
-                ERR << "Error building shape string";
                 PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
             }
         }
@@ -182,7 +179,6 @@ static PyObject* DataLoader_iternext(PyObject* self)
 
 static Py_ssize_t aeon_DataLoader_length(PyObject* self)
 {
-    INFO << " aeon_DataLoader_length " << DL_get_loader(self)->record_count();
     return DL_get_loader(self)->record_count();
 }
 
@@ -222,7 +218,6 @@ static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf, 
 
     if (p_array == NULL)
     {
-        ERR << "Unable to wrap buffer as npy array";
         PyErr_SetString(PyExc_RuntimeError, "Unable to wrap buffer as npy array");
     }
 
@@ -231,7 +226,6 @@ static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf, 
 
 static void DataLoader_dealloc(aeon_DataLoader* self)
 {
-    INFO << " DataLoader_dealloc";
     {
         allow_threads a;
         if (self->m_loader != nullptr)
@@ -249,7 +243,6 @@ static void DataLoader_dealloc(aeon_DataLoader* self)
 
 static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
-    INFO << " DataLoader_new";
     aeon_DataLoader* self = nullptr;
 
     static const char* keyword_list[] = {"config", nullptr};
@@ -269,11 +262,9 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
         {
             std::stringstream ss;
             ss << "Unable to parse config: " << e.what();
-            ERR << ss.str();
             PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
             return NULL;
         }
-        INFO << " config " << json_config.dump(4);
         self = (aeon_DataLoader*)type->tp_alloc(type, 0);
         if (!self)
         {
@@ -318,7 +309,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
 
                     if (py_temp_tuple == NULL)
                     {
-                        ERR << "Error creating new tuple";
                         PyErr_SetString(PyExc_RuntimeError, "Error creating new tuple");
                         return NULL;
                     }
@@ -331,7 +321,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                     int tuple_status = PyTuple_SetItem(py_axis_tuple, j, py_temp_tuple);
                     if (tuple_status != 0)
                     {
-                        ERR << "Error building tuple of (axis_name, axis_length)";
                         PyErr_SetString(PyExc_RuntimeError, "Error building shape tuple");
                         return NULL;
                     }
@@ -349,7 +338,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
 
                 if (tuple_status < 0)
                 {
-                    ERR << "Error building shape string";
                     PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
                     return NULL;
                 }
@@ -362,7 +350,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             // Some kind of problem with creating the internal loader object
             std::stringstream ss;
             ss << "Unable to create internal loader object: " << e.what() << endl;
-            ERR << "Unable to create internal loader object: " << e.what() << endl;
             ss << "config is: " << json_config << endl;
             PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
             return NULL;
@@ -378,7 +365,6 @@ static int DataLoader_init(aeon_DataLoader* self, PyObject* args, PyObject* kwds
 
 static PyObject* aeon_reset(PyObject* self, PyObject*)
 {
-    INFO << " aeon_reset";
     DL_get_loader(self)->reset();
     return Py_None;
 }
@@ -496,8 +482,6 @@ PyMODINIT_FUNC PyInit_aeon(void)
 PyMODINIT_FUNC initaeon(void)
 #endif
 {
-    INFO << " initaeon";
-
     PyObject* m;
     if (PyType_Ready(&aeon_DataLoaderType) < 0)
     {

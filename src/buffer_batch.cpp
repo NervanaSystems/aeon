@@ -18,7 +18,6 @@
 #include <stdexcept>
 
 #include "buffer_batch.hpp"
-#include "log.hpp"
 #include "transpose.hpp"
 
 enum TransposeType

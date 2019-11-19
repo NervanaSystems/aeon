@@ -24,7 +24,6 @@
 #include "block_loader_file.hpp"
 #include "util.hpp"
 #include "file_util.hpp"
-#include "log.hpp"
 #include "base64.hpp"
 
 using namespace std;

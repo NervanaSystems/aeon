@@ -282,7 +282,6 @@ TEST(loader, test)
             const char* image_data = image_buffer.get_item(i);
             cv::Mat     image{height, width, CV_8UC3, (char*)image_data};
             int         actual_id = embedded_id_image::read_embedded_id(image);
-            // INFO << "train_loop " << expected_id << "," << actual_id;
             ASSERT_EQ(expected_id % record_count, actual_id);
             expected_id++;
         }
@@ -346,7 +345,6 @@ TEST(loader, provider)
             const char* image_data = image_buffer.get_item(i);
             cv::Mat     image{height, width, CV_8UC3, (char*)image_data};
             int         actual_id = embedded_id_image::read_embedded_id(image);
-            // INFO << "train_loop " << expected_id << "," << actual_id;
             ASSERT_EQ(expected_id % record_count, actual_id);
             expected_id++;
         }

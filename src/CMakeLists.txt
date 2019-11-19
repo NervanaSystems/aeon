@@ -30,7 +30,6 @@ set (SRC
     image.cpp
     interface.cpp
     loader.cpp
-    log.cpp
     manifest_file.cpp
     provider.cpp
     provider_factory.cpp

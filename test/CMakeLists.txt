@@ -34,7 +34,6 @@ set (SRC
     test_file_util.cpp
     test_image.cpp
     test_loader.cpp
-    test_logging.cpp
     test_manifest_tsv.cpp
     test_params.cpp
     test_provider.cpp

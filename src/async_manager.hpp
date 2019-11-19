@@ -31,7 +31,6 @@
 #include <tuple>
 #include <exception>
 
-#include "log.hpp"
 #include "blocking_queue.h"
 
 namespace nervana

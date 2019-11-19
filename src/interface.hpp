@@ -28,7 +28,6 @@
 #include "typemap.hpp"
 #include "util.hpp"
 #include "json.hpp"
-#include "log.hpp"
 
 static int IGNORE_VALUE;
 

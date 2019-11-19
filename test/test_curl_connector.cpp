@@ -17,7 +17,6 @@
 #include "gtest/gtest.h"
 
 #include "curl_connector.hpp"
-#include "log.hpp"
 #include "web_server.hpp"
 
 using std::ostream;

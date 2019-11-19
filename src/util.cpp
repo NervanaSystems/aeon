@@ -21,7 +21,6 @@
 #include <iomanip>
 
 #include "util.hpp"
-#include "log.hpp"
 
 using namespace std;
 
@@ -307,7 +306,6 @@ std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
     }
     catch (...)
     {
-        ERR << "Failed to parse cpu list.";
         throw;
     }
     std::sort(thread_affinity_map.begin(), thread_affinity_map.end());
@@ -315,8 +313,6 @@ std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
     if (ip != thread_affinity_map.end())
     {
         auto num_removed_duplicates = std::distance(ip, thread_affinity_map.end());
-        WARN << "Removed " << std::to_string(num_removed_duplicates)
-             << " duplicate entries in cpu list.";
     }
     thread_affinity_map.resize(std::distance(thread_affinity_map.begin(), ip));
 
@@ -346,11 +342,6 @@ std::vector<int> nervana::get_thread_affinity_map(const std::string& config_cpu_
         std::string str_cpu_list{env_cpu_list};
         thread_affinity_map = nervana::parse_cpu_list(str_cpu_list);
 
-        if (!config_cpu_list.empty())
-        {
-            WARN << "Both AEON_CPU_LIST and 'cpu_list' are detected. AEON_CPU_LIST environment "
-                    "variable will be used in this case.";
-        }
     }
     else if (!config_cpu_list.empty()) // set affinity from config
     {

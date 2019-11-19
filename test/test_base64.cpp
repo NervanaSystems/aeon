@@ -40,9 +40,6 @@ static string encoded_text =
 
 TEST(base64, encode)
 {
-    //    string s = base64::gen_decode_table();
-    //    INFO << s;
-
     vector<char> encoded = base64::encode(plain_text.data(), plain_text.size());
     string       actual{encoded.data(), encoded.size()};
     EXPECT_STREQ(encoded_text.c_str(), actual.c_str());

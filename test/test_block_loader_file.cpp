@@ -22,7 +22,6 @@
 #include "block_manager.hpp"
 #include "manifest_builder.hpp"
 #include "file_util.hpp"
-#include "log.hpp"
 #include "util.hpp"
 
 using namespace std;

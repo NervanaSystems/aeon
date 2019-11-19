@@ -28,7 +28,6 @@
 #include "json.hpp"
 #include "helpers.hpp"
 #include "image.hpp"
-#include "log.hpp"
 #include "util.hpp"
 #include "file_util.hpp"
 
@@ -1199,9 +1198,6 @@ bool test_contrast_image(cv::Mat m, float v1, float v2, float v3)
 
     if (!rc)
     {
-        INFO << m.at<cv::Vec3b>(0, 0);
-        INFO << m.at<cv::Vec3b>(128, 0);
-        INFO << m.at<cv::Vec3b>(256, 0);
     }
 
     return rc;
@@ -1356,9 +1352,6 @@ bool test_saturation(cv::Mat m, vector<float> v1, vector<float> v2, vector<float
 
     if (!rc)
     {
-        INFO << m.at<cv::Vec3b>(0, 0);
-        INFO << m.at<cv::Vec3b>(128, 0);
-        INFO << m.at<cv::Vec3b>(256, 0);
     }
 
     return rc;

@@ -20,7 +20,6 @@
 
 #include "image.hpp"
 #include "util.hpp"
-#include "log.hpp"
 
 using namespace nervana;
 using namespace std;
@@ -416,7 +415,6 @@ void image::photometric::cbsjitter(
 //                             (1 - saturation) * cv::Mat::ones(3, 1, CV_32FC1) * GSCL.t());
 //     cv::transform(inout, inout, satmtx);
 
-//     INFO << "\n" << satmtx;
 
 //     /*************
 //     *  CONTRAST  *
@@ -452,9 +450,6 @@ void image::photometric::cbsjitter(
 //     const float VSU = v_gain*s_gain*cos(h_gain*M_PI/180);
 //     const float VSW = v_gain*s_gain*sin(h_gain*M_PI/180);
 
-//     INFO << "hue " << h_gain;
-//     INFO << "sat " << s_gain;
-//     INFO << "val " << v_gain;
 
 //     uint8_t* p = image.data;
 //     for (int i = 0; i < image.size().area(); i++)

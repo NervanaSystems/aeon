@@ -21,7 +21,6 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "raw_image.hpp"
-#include "log.hpp"
 #include "util.hpp"
 
 using namespace std;

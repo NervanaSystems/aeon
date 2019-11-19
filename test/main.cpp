@@ -23,7 +23,6 @@
 
 #include "gen_image.hpp"
 #include "file_util.hpp"
-#include "log.hpp"
 #include "json.hpp"
 
 using namespace std;

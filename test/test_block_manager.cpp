@@ -19,7 +19,6 @@
 
 #include "gtest/gtest.h"
 #include "file_util.hpp"
-#include "log.hpp"
 #include "manifest_builder.hpp"
 #include "manifest_file.hpp"
 #include "block_loader_file.hpp"

@@ -19,7 +19,6 @@
 
 #include "base64.hpp"
 #include "helpers.hpp"
-#include "log.hpp"
 #include "service.hpp"
 
 using namespace std;

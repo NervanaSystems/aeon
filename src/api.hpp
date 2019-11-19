@@ -23,4 +23,3 @@
 #include "json.hpp"
 #include "buffer_batch.hpp"
 #include "loader.hpp"
-#include "log.hpp"

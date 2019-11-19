@@ -20,8 +20,6 @@
 #include "block_manager.hpp"
 #include "batch_decoder.hpp"
 
-#include "log.hpp"
-
 using namespace nervana;
 using namespace std;
 

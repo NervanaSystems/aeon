@@ -20,7 +20,6 @@
 
 #include "helpers.hpp"
 #include "gtest/gtest.h"
-#include "log.hpp"
 
 using namespace std;
 using namespace nervana;

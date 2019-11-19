@@ -34,7 +34,6 @@
 #include "etl_localization_ssd.hpp"
 #include "json.hpp"
 #include "provider_factory.hpp"
-#include "log.hpp"
 #include "loader.hpp"
 #include "test_localization.hpp"
 #include "helpers.hpp"

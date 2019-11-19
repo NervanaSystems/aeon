@@ -18,7 +18,6 @@
 
 #include "buffer_batch.hpp"
 #include "helpers.hpp"
-#include "log.hpp"
 #include "file_util.hpp"
 #include "provider_factory.hpp"
 #include "provider_interface.hpp"

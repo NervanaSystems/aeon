@@ -20,7 +20,6 @@
 #include "base64.hpp"
 #include "helpers.hpp"
 #include "loader_remote.hpp"
-#include "log.hpp"
 #include "service.hpp"
 
 using namespace std;

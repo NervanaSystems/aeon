@@ -19,8 +19,6 @@
 #include <string>
 #include <vector>
 
-#include "log.hpp"
-
 namespace nervana
 {
     class manifest

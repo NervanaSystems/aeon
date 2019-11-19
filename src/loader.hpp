@@ -34,7 +34,6 @@
 #include "batch_decoder.hpp"
 #include "block_loader_file.hpp"
 #include "block_manager.hpp"
-#include "log.hpp"
 #include "util.hpp"
 
 namespace nervana
