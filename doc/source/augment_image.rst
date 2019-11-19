@@ -52,7 +52,6 @@ aeon performs a series of customizable transformations on the image before provi
    fixed_scaling_factor (float) | | If set, uses fixed scaling factor for output image size.
    expand_probability (float) | 0.0 | Probability of expanding image. Used for SSD.
    expand_ratio (float, float) | (1.0, 1.0) | Ratio to expand image in SSD. minimum expand ratio cannot be less than 1.
-   debug_output_directory (string) | "" | Writes transformed images and transformation parameters to the provided directory. Does not include ``standardization``.
    resize_short_size (int) | 0 | Resize the image proportionally to make the shorter dimension equal to the provided size.
    mean (double, double, double) |  | Mean values per channel for standardization given in order aligned with ``bgr_to_rgb`` attribute of image provider.
    stddev (double, double, double) |  | Standard deviation per channel for standardization given in order aligned with ``bgr_to_rgb`` attribute of image provider.

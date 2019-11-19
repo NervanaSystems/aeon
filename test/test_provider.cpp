@@ -123,7 +123,6 @@ TEST(provider, image_paddle_imagenet_training_augmentation)
                                  {"mean", {0.485, 0.456, 0.406}},
                                  {"stddev", {0.229, 0.224, 0.225}},
                                  {"resize_short_size", 0},
-                                 {"debug_output_directory", test_results_directory},
                              };
 
     // --- prepare image augmentation parameters ---
@@ -209,7 +208,6 @@ TEST(provider, image_paddle_imagenet_validate_augmentation)
                                  {"mean", {0.485, 0.456, 0.406}},
                                  {"stddev", {0.229, 0.224, 0.225}},
                                  {"resize_short_size", resize_short_size},
-                                 {"debug_output_directory", test_results_directory},
                              };
 
     // --- prepare image augmentation parameters ---
