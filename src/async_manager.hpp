@@ -61,7 +61,6 @@ class nervana::async_manager : public virtual nervana::async_manager_source<OUTP
 public:
     async_manager(std::shared_ptr<async_manager_source<INPUT>> source, const std::string& name)
         : m_source(source)
-        , m_name{name}
     {
     }
     virtual ~async_manager() { finalize(); }
@@ -129,7 +128,6 @@ public:
         m_bq_output.push(inner_buffer_t(nullptr, nullptr));
     }
 
-    virtual const std::string& get_name() const { return m_name; }
 protected:
     typedef std::tuple<OUTPUT*, std::exception_ptr> inner_buffer_t;
 
@@ -180,8 +178,6 @@ protected:
     OUTPUT                                       m_containers[m_buffers_number];
     OUTPUT*                                      m_pending_buffer;
     std::shared_ptr<async_manager_source<INPUT>> m_source;
-
-    std::string m_name;
 
     BlockingQueue<inner_buffer_t> m_bq_input;
     BlockingQueue<inner_buffer_t> m_bq_output;
