@@ -32,18 +32,14 @@ batch_iterator::batch_iterator(shared_ptr<block_manager> blkl, size_t batch_size
 
 encoded_record_list* batch_iterator::filler()
 {
-    m_state                 = async_state::wait_for_buffer;
     encoded_record_list* rc = get_pending_buffer();
-    m_state                 = async_state::processing;
 
     rc->clear();
 
     // This is for the first pass
     if (m_input_ptr == nullptr)
     {
-        m_state     = async_state::fetching_data;
         m_input_ptr = m_source->next();
-        m_state     = async_state::processing;
     }
 
     size_t remainder = m_batch_size;
@@ -72,14 +68,9 @@ encoded_record_list* batch_iterator::filler()
 
         if (remainder > 0 || m_input_ptr->size() == 0)
         {
-            m_state     = async_state::fetching_data;
             m_input_ptr = m_source->next();
-            m_state     = async_state::processing;
         }
     }
-
-    m_state = async_state::idle;
-
     return rc;
 }
 
@@ -106,9 +97,7 @@ batch_iterator_fbm::batch_iterator_fbm(shared_ptr<batch_decoder>                
 
 fixed_buffer_map* batch_iterator_fbm::filler()
 {
-    m_state              = async_state::wait_for_buffer;
     fixed_buffer_map* rc = get_pending_buffer();
-    m_state              = async_state::processing;
 
     if (m_input_ptr == nullptr)
     {

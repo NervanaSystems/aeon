@@ -72,11 +72,8 @@ void batch_decoder::process(const int index)
 
 array_fixed_buffer_map* batch_decoder::filler()
 {
-    m_state                     = async_state::wait_for_buffer;
     array_fixed_buffer_map* outputs   = get_pending_buffer();
-    m_state                     = async_state::fetching_data;
     encoded_record_list* inputs = m_source->next();
-    m_state                     = async_state::processing;
 
     m_iteration_number++;
 
@@ -94,6 +91,5 @@ array_fixed_buffer_map* batch_decoder::filler()
         m_outputs = outputs;
         m_thread_pool.run(this, m_decode_size);
     }
-    m_state = async_state::idle;
     return outputs;
 }

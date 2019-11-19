@@ -48,11 +48,6 @@ public:
     size_t       block_size() const override { return 1; }
     size_t       elements_per_record() const override { return m_elements_per_record; }
     source_uid_t get_uid() const override { return m_manifest->get_crc(); }
-    async_state  get_state() const override
-    {
-        return async_manager<std::vector<std::vector<std::string>>,
-                             encoded_record_list>::get_state();
-    }
 
     const std::string& get_name() const override
     {

@@ -43,15 +43,11 @@ block_loader_file::block_loader_file(shared_ptr<manifest_file> manifest, size_t 
 
 nervana::encoded_record_list* block_loader_file::filler()
 {
-    m_state                 = async_state::wait_for_buffer;
     encoded_record_list* rc = get_pending_buffer();
-    m_state                 = async_state::processing;
 
     rc->clear();
 
-    m_state    = async_state::fetching_data;
     auto block = m_source->next();
-    m_state    = async_state::processing;
     if (block != nullptr)
     {
         for (auto element_list : *block)
@@ -111,6 +107,5 @@ nervana::encoded_record_list* block_loader_file::filler()
         rc = nullptr;
     }
 
-    m_state = async_state::idle;
     return rc;
 }

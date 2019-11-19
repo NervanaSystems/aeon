@@ -39,14 +39,6 @@ namespace nervana
     class async_manager_source;
     template <typename INPUT, typename OUTPUT>
     class async_manager;
-
-    enum class async_state
-    {
-        idle,
-        wait_for_buffer,
-        fetching_data,
-        processing
-    };
 }
 
 template <typename OUTPUT>
@@ -137,7 +129,6 @@ public:
         m_bq_output.push(inner_buffer_t(nullptr, nullptr));
     }
 
-    virtual async_state        get_state() const { return m_state; }
     virtual const std::string& get_name() const { return m_name; }
 protected:
     typedef std::tuple<OUTPUT*, std::exception_ptr> inner_buffer_t;
@@ -190,7 +181,6 @@ protected:
     OUTPUT*                                      m_pending_buffer;
     std::shared_ptr<async_manager_source<INPUT>> m_source;
 
-    async_state m_state = async_state::idle;
     std::string m_name;
 
     BlockingQueue<inner_buffer_t> m_bq_input;
