@@ -38,7 +38,6 @@ set (SRC
     provider_factory.cpp
     typemap.cpp
     util.cpp
-    event.cpp
     raw_image.cpp)
 
 set(AEON_HEADER_FILES
