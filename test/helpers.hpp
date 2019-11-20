@@ -48,6 +48,7 @@ private:
     size_t m_element_number;
 };
 
+#ifdef WITH_OPENCV
 class image_params_builder
 {
 public:
@@ -121,5 +122,6 @@ public:
 private:
     std::shared_ptr<nervana::augment::image::params> obj;
 };
+#endif
 
 nlohmann::json create_metadata(const std::vector<nlohmann::json>& boxes, int width, int height);

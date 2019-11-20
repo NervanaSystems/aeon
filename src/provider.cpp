@@ -40,11 +40,15 @@ provider::provider_base::provider_base(nlohmann::json                     js,
             throw invalid_argument("missing required 'type' element in etl object");
         }
         shared_ptr<provider::interface> prov = nullptr;
+#ifdef WITH_OPENCV
         if (type == "image")
         {
             prov = static_pointer_cast<provider::interface>(
                 make_shared<provider::image>(j, augmentation));
-        } else if (type == "dummy_image")
+        }
+        else
+#endif
+        if (type == "dummy_image")
         {
             prov = static_pointer_cast<provider::interface>(
                 make_shared<provider::dummy_image>(j, augmentation));
@@ -103,7 +107,7 @@ string provider::interface::create_name(const string& name, const string& base_n
 //=================================================================================================
 // image
 //=================================================================================================
-
+#ifdef WITH_OPENCV
 provider::image::image(nlohmann::json js, nlohmann::json aug)
     : interface(js, 1)
     , m_config{js}
@@ -144,14 +148,12 @@ void provider::image::provide(int                        idx,
 
     m_loader.load({datum_out}, m_transformer.transform(aug.m_image_augmentations, decoded));
 }
+#endif
 
 
 provider::dummy_image::dummy_image(nlohmann::json js, nlohmann::json aug)
     : interface(js, 1)
     , m_config{js}
-    , m_extractor{m_config}
-    , m_transformer{m_config}
-    , m_augmentation_factory{aug}
     , m_loader{m_config}
     , m_buffer_name{create_name(m_config.name, "dummy_image")}
 {
@@ -173,15 +175,7 @@ void provider::dummy_image::provide(int                        idx,
     }
 
     // Process dummy_imag data
-    auto decoded    = m_extractor.extract(datum_in.data(), datum_in.size());
-    auto input_size = decoded->get_image_size();
-    if (aug.m_image_augmentations == nullptr)
-    {
-        aug.m_image_augmentations = m_augmentation_factory.make_params(
-            input_size.width, input_size.height, m_config.width, m_config.height);
-    }
-
-    m_loader.load({datum_out}, m_transformer.transform(aug.m_image_augmentations, decoded));
+    m_loader.load({datum_out}, {});
 }
 
 //=================================================================================================

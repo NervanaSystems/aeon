@@ -37,7 +37,7 @@ libs = ""
 include_dirs = ""
 include_dirs += " -I${CMAKE_PREFIX_PATH}/include "
 
-if ${WITH_OPENCV}:
+if '${WITH_OPENCV}' is not '':
     status, tmp = getstatusoutput("pkg-config --cflags opencv")
     if status != 0:
         print("required package 'opencv' not found")

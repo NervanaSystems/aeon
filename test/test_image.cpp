@@ -38,6 +38,7 @@
 using namespace std;
 using namespace nervana;
 
+#ifdef WITH_OPENCV
 static cv::Mat generate_indexed_image(int rows, int cols)
 {
     cv::Mat        color = cv::Mat(rows, cols, CV_8UC3);
@@ -188,6 +189,7 @@ TEST(image, decoded)
     EXPECT_FALSE(decoded.add(img4)); // image size does not match
     EXPECT_FALSE(decoded.add(v2));
 }
+#endif
 
 TEST(image, missing_config_arg)
 {
@@ -212,7 +214,7 @@ TEST(image, config)
     EXPECT_TRUE(config.channel_major);
     EXPECT_EQ(3, config.channels);
 }
-
+#ifdef WITH_OPENCV
 TEST(image, extract1)
 {
     auto                  indexed = generate_indexed_image(256, 256);
@@ -903,6 +905,7 @@ TEST(image, transform)
         cv::imwrite(filename, output_image);
     }
 }
+#endif
 
 TEST(image, config_bad_scale)
 {
@@ -935,6 +938,7 @@ TEST(image, config_bgr_to_rgb_but_1_channels)
     EXPECT_THROW(image::config{js}, std::invalid_argument);
 }
 
+#ifdef WITH_OPENCV
 TEST(image, area_scale)
 {
     vector<char> image_data = file_util::read_file_contents(CURDIR "/test_data/img_2112_70.jpg");
@@ -1493,3 +1497,4 @@ TEST(photometric, hue)
     }
 }
 
+#endif

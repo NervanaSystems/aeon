@@ -166,6 +166,7 @@ TEST(util, memstream)
     // test stream reset
 }
 
+#ifdef WITH_OPENCV
 TEST(util, mixchannels)
 {
     int rows = 10;
@@ -238,6 +239,7 @@ TEST(util, mixchannels)
         }
     }
 }
+#endif
 
 TEST(util, distance)
 {

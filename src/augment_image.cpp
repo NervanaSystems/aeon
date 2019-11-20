@@ -64,7 +64,6 @@ augment::image::param_factory::param_factory(nlohmann::json js)
         }
     }
 }
-
 shared_ptr<augment::image::params> augment::image::param_factory::make_params(
     size_t input_width, size_t input_height, size_t output_width, size_t output_height) const
 {
@@ -75,7 +74,9 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
 
     auto& random = get_thread_local_random_engine();
 
+#ifdef WITH_OPENCV
     settings->output_size = cv::Size2i(output_width, output_height);
+#endif
 
     settings->angle                  = angle(random);
     settings->flip                   = flip_distribution(random);
@@ -87,14 +88,18 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
     settings->resize_short_size      = resize_short_size;
     settings->interpolation_method   = interpolation_method;
 
+#ifdef WITH_OPENCV
     cv::Size2f input_size = cv::Size(input_width, input_height);
+#endif
 
     if (!crop_enable)
     {
         int c_off_x                   = padding_crop_offset_distribution(random);
         int c_off_y                   = padding_crop_offset_distribution(random);
+#ifdef WITH_OPENCV
         settings->padding_crop_offset = cv::Size2i(c_off_x, c_off_y);
         settings->cropbox             = cv::Rect(cv::Point2f(0, 0), input_size);
+#endif
 
         float image_scale;
         if (fixed_scaling_factor > 0)
@@ -103,17 +108,24 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
         }
         else
         {
+#ifdef WITH_OPENCV
             image_scale = nervana::image::calculate_scale(input_size, output_width, output_height);
+#endif
         }
+#ifdef WITH_OPENCV
         input_size = input_size * image_scale;
+#endif
 
+#ifdef WITH_OPENCV
         settings->output_size.width  = unbiased_round(input_size.width);
         settings->output_size.height = unbiased_round(input_size.height);
+#endif
     }
     else
     {
         if (do_area_scale)
         {
+#ifdef WITH_OPENCV
             float      _horizontal_distortion = horizontal_distortion(random);
             _horizontal_distortion = sqrt(_horizontal_distortion);
             cv::Size2f out_shape(_horizontal_distortion, 1 / _horizontal_distortion);
@@ -136,6 +148,7 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
             cv::Size2f cropbox_size = out_shape;
             cv::Point2i cropbox_origin = nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
             settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
+#endif
         }
         else
         {
@@ -147,6 +160,7 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
             }
             float      image_scale            = scale(random);
             float      _horizontal_distortion = horizontal_distortion(random);
+#ifdef WITH_OPENCV
             cv::Size2f out_shape(output_width * _horizontal_distortion, output_height);
 
             // TODO(sfraczek): add test for this resize short
@@ -174,6 +188,7 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
             cv::Point2i cropbox_origin =
                 nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
             settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
+#endif
         }
     }
 
@@ -188,4 +203,3 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
 
     return settings;
 }
-

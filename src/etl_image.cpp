@@ -344,10 +344,7 @@ image::dummy_extractor::dummy_extractor(const image::config& cfg)
 
 shared_ptr<image::decoded> image::dummy_extractor::extract(const void* inbuf, size_t insize) const
 {
-    cv::Mat output_img(224, 224, CV_8UC3);
-    auto rc = make_shared<image::decoded>();
-    rc->add(output_img);
-    return rc;
+    return {};
 }
 
 image::dummy_transformer::dummy_transformer(const image::config&)
@@ -358,24 +355,7 @@ shared_ptr<image::decoded>
     image::dummy_transformer::transform(shared_ptr<augment::image::params> img_xform,
                                   shared_ptr<image::decoded>         img) const
 {
-    vector<cv::Mat> finalImageList;
-    for (int i = 0; i < img->get_image_count(); i++)
-    {
-        finalImageList.push_back(transform_single_image(img_xform, img->get_image(i)));
-    }
-
-    auto rc = make_shared<image::decoded>();
-    if (rc->add(finalImageList) == false)
-    {
-        rc = nullptr;
-    }
-    return rc;
-}
-
-cv::Mat image::dummy_transformer::transform_single_image(shared_ptr<augment::image::params> img_xform,
-                                                   cv::Mat& single_img) const
-{
-    return single_img;
+    return img;
 }
 
 image::dummy_loader::dummy_loader(const image::config& cfg)

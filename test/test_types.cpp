@@ -32,7 +32,11 @@ TEST(typemap, numpy)
 {
     {
         output_type opt{"int8_t"};
+#ifdef WITH_OPENCV
         EXPECT_EQ(CV_8S, opt.get_cv_type());
+#else
+        EXPECT_EQ(1, opt.get_cv_type());
+#endif
     }
 }
 

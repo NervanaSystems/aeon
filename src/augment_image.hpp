@@ -50,15 +50,17 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const params& obj)
     {
         out << "expand_ratio         " << obj.expand_ratio << "\n";
+#ifdef WITH_OPENCV
         out << "expand_offset        " << obj.expand_offset << "\n";
         out << "expand_size          " << obj.expand_size << "\n";
         out << "cropbox                " << obj.cropbox << "\n";
-        out << "resize_short_size      " << obj.resize_short_size << "\n";
+        out << "padding_crop_offset    " << obj.padding_crop_offset << "\n";
         out << "output_size            " << obj.output_size << "\n";
+#endif
+        out << "resize_short_size      " << obj.resize_short_size << "\n";
         out << "angle                  " << obj.angle << "\n";
         out << "flip                   " << obj.flip << "\n";
         out << "padding                " << obj.padding << "\n";
-        out << "padding_crop_offset    " << obj.padding_crop_offset << "\n";
         out << "lighting               " << join(obj.lighting, ", ") << "\n";
         out << "color_noise_std        " << obj.color_noise_std << "\n";
         out << "contrast               " << obj.contrast << "\n";

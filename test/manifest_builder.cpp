@@ -36,6 +36,7 @@
 using namespace std;
 using namespace nervana;
 
+#ifdef WITH_OPENCV
 stringstream& manifest_builder::create()
 {
     m_stream.str("");
@@ -94,6 +95,10 @@ stringstream& manifest_builder::create()
 
     return m_stream;
 }
+#else
+stringstream& manifest_builder::create()
+{return m_stream; }
+#endif
 
 manifest_builder& manifest_builder::record_count(size_t value)
 {

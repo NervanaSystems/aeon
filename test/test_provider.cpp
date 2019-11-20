@@ -50,6 +50,7 @@ TEST(provider, empty_config)
     nervana::provider_factory::create(js);
 }
 
+#ifdef WITH_OPENCV
 TEST(provider, image_paddle_imagenet_training_augmentation)
 {
     string test_data_directory = file_util::path_join(string(CURDIR), "test_data");
@@ -254,3 +255,4 @@ TEST(provider, argtype)
             img_prm_maker.make_params(image_size.width, image_size.height, itpj.width, itpj.height);
     }
 }
+#endif

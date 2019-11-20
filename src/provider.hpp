@@ -92,7 +92,7 @@ private:
 //=================================================================================================
 // image
 //=================================================================================================
-
+#ifdef WITH_OPENCV
 class nervana::provider::image : public provider::interface
 {
 public:
@@ -111,7 +111,7 @@ private:
     nervana::image::loader                 m_loader;
     const std::string                      m_buffer_name;
 };
-
+#endif
 class nervana::provider::dummy_image : public provider::interface
 {
 public:
@@ -124,10 +124,7 @@ public:
 
 private:
     const nervana::image::config           m_config;
-    nervana::image::dummy_extractor              m_extractor;
-    nervana::image::dummy_transformer            m_transformer;
-    nervana::augment::image::param_factory m_augmentation_factory;
-    nervana::image::dummy_loader                 m_loader;
+    nervana::image::dummy_loader           m_loader;
     const std::string                      m_buffer_name;
 };
 

@@ -215,8 +215,6 @@ public:
     virtual std::shared_ptr<image::decoded>
         transform(std::shared_ptr<augment::image::params>,
                   std::shared_ptr<image::decoded>) const override;
-
-    cv::Mat transform_single_image(std::shared_ptr<augment::image::params>, cv::Mat&) const;
 };
 
 class nervana::image::dummy_loader : public interface::loader<image::decoded>

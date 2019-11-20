@@ -41,7 +41,7 @@ namespace nervana
 {
     class output_type;
     class shape_type;
-
+#ifdef WITH_OPENCV
     static const std::map<std::string, std::tuple<int, int, size_t>> all_outputs{
         {"int8_t", std::make_tuple<int, int, size_t>(NPY_INT8, CV_8S, sizeof(int8_t))},
         {"uint8_t", std::make_tuple<int, int, size_t>(NPY_UINT8, CV_8U, sizeof(uint8_t))},
@@ -52,6 +52,18 @@ namespace nervana
         {"float", std::make_tuple<int, int, size_t>(NPY_FLOAT32, CV_32F, sizeof(float))},
         {"double", std::make_tuple<int, int, size_t>(NPY_FLOAT64, CV_64F, sizeof(double))},
         {"char", std::make_tuple<int, int, size_t>(NPY_INT8, CV_8S, sizeof(char))}};
+#else
+    static const std::map<std::string, std::tuple<int, int, size_t>> all_outputs{
+        {"int8_t", std::make_tuple<int, int, size_t>(NPY_INT8, 0, sizeof(int8_t))},
+        {"uint8_t", std::make_tuple<int, int, size_t>(NPY_UINT8, 1, sizeof(uint8_t))},
+        {"int16_t", std::make_tuple<int, int, size_t>(NPY_INT16, 2, sizeof(int16_t))},
+        {"uint16_t", std::make_tuple<int, int, size_t>(NPY_UINT16, 3, sizeof(uint16_t))},
+        {"int32_t", std::make_tuple<int, int, size_t>(NPY_INT32, 4, sizeof(int32_t))},
+        {"uint32_t", std::make_tuple<int, int, size_t>(NPY_UINT32, 5, sizeof(uint32_t))},
+        {"float", std::make_tuple<int, int, size_t>(NPY_FLOAT32, 6, sizeof(float))},
+        {"double", std::make_tuple<int, int, size_t>(NPY_FLOAT64, 7, sizeof(double))},
+        {"char", std::make_tuple<int, int, size_t>(NPY_INT8, 8, sizeof(char))}};
+#endif
 }
 
 class nervana::output_type

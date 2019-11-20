@@ -108,6 +108,7 @@ char* buffer_fixed_size_elements::get_item(size_t index)
     return &m_data[offset];
 }
 
+#ifdef WITH_OPENCV
 cv::Mat buffer_fixed_size_elements::get_item_as_mat(size_t index, bool channel_major) const
 {
     std::vector<int> sizes;
@@ -135,6 +136,7 @@ cv::Mat buffer_fixed_size_elements::get_item_as_mat(size_t index, bool channel_m
                 (void*)&m_data[index * m_stride]);
     return ret;
 }
+#endif
 
 const char* buffer_fixed_size_elements::get_item(size_t index) const
 {

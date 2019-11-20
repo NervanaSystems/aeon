@@ -633,6 +633,7 @@ TEST(manifest, ascii_float)
 
 extern string test_cache_directory;
 
+#ifdef WITH_OPENCV
 class manifest_manager
 {
 public:
@@ -750,6 +751,7 @@ TEST(manifest, subset_fraction)
 
     EXPECT_EQ(manifest1_crc, manifest2_crc);
 }
+#endif
 
 TEST(manifest, crc_root_dir)
 {

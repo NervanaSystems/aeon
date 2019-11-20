@@ -15,7 +15,7 @@
 *******************************************************************************/
 
 #include <algorithm>
-#include <string>
+#include <cstring>
 #include <cmath>
 #include <cassert>
 #include <iomanip>

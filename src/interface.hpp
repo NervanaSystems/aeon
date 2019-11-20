@@ -378,7 +378,9 @@ public:
 class nervana::interface::decoded_image : public decoded_media
 {
 public:
+#ifdef WITH_OPENCV
     virtual cv::Size2i image_size() const = 0;
+#endif
     virtual ~decoded_image() {}
 };
 

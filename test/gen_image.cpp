@@ -41,6 +41,7 @@ gen_image& gen_image::ImageSize(int rows, int cols)
     return *this;
 }
 
+#ifdef WITH_OPENCV
 vector<unsigned char> gen_image::render_datum(int number)
 {
     cv::Mat image      = cv::Mat(m_image_rows, m_image_cols, CV_8UC3);
@@ -60,6 +61,10 @@ vector<unsigned char> gen_image::render_datum(int number)
     cv::imencode(".png", image, result);
     return result;
 }
+#else
+
+vector<unsigned char> gen_image::render_datum(int number) { return {};}
+#endif
 
 vector<unsigned char> gen_image::render_target(int number)
 {
@@ -68,7 +73,7 @@ vector<unsigned char> gen_image::render_target(int number)
     nervana::pack<int>((char*)&rc[0], target);
     return rc;
 }
-
+#ifdef WITH_OPENCV
 cv::Mat embedded_id_image::generate_image(int rows, int cols, int embedded_id)
 {
     cv::Mat  image(rows, cols, CV_8UC3);
@@ -94,3 +99,4 @@ int embedded_id_image::read_embedded_id(const cv::Mat& image)
     id |= int(*p++ << 0);
     return id;
 }
+#endif

@@ -140,17 +140,17 @@ find_package(Threads)
 find_package(PkgConfig REQUIRED)
 
 if (WITH_OPENCV)
-find_package(OpenCV REQUIRED)
+    find_package(OpenCV REQUIRED)
 
-include_directories(${OpenCV_INCLUDE_DIRS})
-link_directories(${OpenCV_LIBRARY_DIRS})
+    include_directories(${OpenCV_INCLUDE_DIRS})
+    link_directories(${OpenCV_LIBRARY_DIRS})
 
-# opecv_ts is for testing opencv. if it is left in the lib list then we get an error when
-# the unit test exits.
-# Centos like os:
-list(REMOVE_ITEM OpenCV_LIBRARIES "${OpenCV_LIB_DIR_OPT}/libopencv_ts.so")
-# Ubuntu like os:
-list(REMOVE_ITEM OpenCV_LIBRARIES opencv_ts)
+    # opecv_ts is for testing opencv. if it is left in the lib list then we get an error when
+    # the unit test exits.
+    # Centos like os:
+    list(REMOVE_ITEM OpenCV_LIBRARIES "${OpenCV_LIB_DIR_OPT}/libopencv_ts.so")
+    # Ubuntu like os:
+    list(REMOVE_ITEM OpenCV_LIBRARIES opencv_ts)
 endif()
 
 # set(Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4)

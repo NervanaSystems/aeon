@@ -27,6 +27,7 @@
 using namespace std;
 using namespace nervana;
 
+#if WITH_OPENCV
 TEST(block_loader_file, file_block)
 {
     manifest_builder mb;
@@ -104,3 +105,4 @@ TEST(block_loader_file, file_block_odd)
         ASSERT_EQ(2, data.elements_per_record());
     }
 }
+#endif

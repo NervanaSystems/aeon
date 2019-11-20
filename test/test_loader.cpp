@@ -231,6 +231,7 @@ TEST(loader, infinite)
     ASSERT_EQ(expected_iterations, count);
 }
 
+#ifdef WITH_OPENCV
 TEST(loader, test)
 {
     int    height            = 16;
@@ -427,6 +428,7 @@ TEST(DISABLED_loader, deterministic)
     EXPECT_EQ(data[1], expected_result[1]);
     EXPECT_EQ(data[2], expected_result[2]);
 }
+
 static void benchmark_imagenet(json config, char* batch_delay, size_t batch_size)
 {
     try
@@ -649,6 +651,7 @@ TEST(benchmark, read_jpeg)
         }
     }
 }
+#endif
 
 TEST(benchmark, load_jpeg)
 {
