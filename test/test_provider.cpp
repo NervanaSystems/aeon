@@ -19,7 +19,9 @@
 #include <numeric>
 
 #include "gtest/gtest.h"
+#ifdef WITH_OPENCV
 #include <opencv2/imgproc/imgproc.hpp>
+#endif
 
 #include "etl_image.hpp"
 #include "file_util.hpp"
