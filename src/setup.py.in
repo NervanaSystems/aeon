@@ -70,6 +70,10 @@ libs = libs.replace('-l', '').split()
 lib_dirs = lib_dirs.replace('-L','').split()
 extra_compile_args = "${CMAKE_CXX_FLAGS}".strip().split(' ')
 
+hashfile = open(os.path.join('${CMAKE_BINARY_DIR}','githash'),'w')
+hashfile.write('${AEON_CURRENT_HASH}')
+hashfile.close()
+
 
 module = Extension(
     'aeon',
@@ -82,8 +86,16 @@ module = Extension(
 
 setup(
     name='nervana-aeon',
-    version='${AEON_VERSION}',
     description='Framework-independent deep learning dataloader',
+    version='${AEON_VERSION}',
+    author='Intel Corporation',
+    author_email='intelnervana@intel.com',
+    url='https://github.com/NervanaSystems/aeon/',
     license='Intel Internal Use Software License Agreement',
-    ext_modules=[module]
+    long_description=open(os.path.join('${PROJECT_SOURCE_DIR}', 'README.md')).read(),
+    long_description_content_type='text/markdown',
+    keywords='Intel aeon data reader loader deep learning',
+    platforms='Linux',
+    ext_modules=[module],
+    data_files=[('extra_files', ['${CMAKE_BINARY_DIR}/githash'])]
 )

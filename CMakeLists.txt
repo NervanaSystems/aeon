@@ -27,19 +27,26 @@ if (NOT CMAKE_BUILD_TYPE)
         FORCE)
 endif()
 
-set(AEON_VERSION_MAJOR 1)
-set(AEON_VERSION_MINOR 3)
-set(AEON_VERSION_PATCH 3)
+# Set directory where the custom finders live
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-set(AEON_BUILD_NUMBER 0)
+# Get actual aeon version number from sources
+include(AeonVersion)
 
-set(AEON_VERSION ${AEON_VERSION_MAJOR}.${AEON_VERSION_MINOR}.${AEON_VERSION_PATCH}
-                 CACHE STRING "AEON logical version")
+AEON_GET_VERSION_LABEL()
+
+string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)(-(rc|dev)\\.[0-9?]+)?" AEON_VERSION "${AEON_VERSION_LABEL}")
+string(REGEX REPLACE "-rc." "rc" AEON_VERSION "${AEON_VERSION}")
+string(REGEX REPLACE "-dev." "dev" AEON_VERSION "${AEON_VERSION}")
+string(REGEX MATCH "[^v](.*)" AEON_VERSION "${AEON_VERSION_LABEL}")
+string(REPLACE "." ";" AEON_VERSION_PARTS "${AEON_VERSION}")
+list(GET AEON_VERSION_PARTS 0 AEON_VERSION_MAJOR)
+list(GET AEON_VERSION_PARTS 1 AEON_VERSION_MINOR)
+list(GET AEON_VERSION_PARTS 2 AEON_VERSION_PATCH)
 
 add_definitions(-DBUILD_VERSION_MAJOR=${AEON_VERSION_MAJOR}
                 -DBUILD_VERSION_MINOR=${AEON_VERSION_MINOR}
-                -DBUILD_VERSION_PATCH=${AEON_VERSION_PATCH}
-                -DBUILD_BUILD_NUMBER=${AEON_BUILD_NUMBER})
+                -DBUILD_VERSION_PATCH=${AEON_VERSION_PATCH})
 
 option(ENABLE_AEON_SERVICE "Enable compilation of AEON Service" OFF)
 option(ENABLE_AEON_CLIENT "Enable compilation of AEON Client" ON)
@@ -52,15 +59,8 @@ if(APPLE)
     set(CMAKE_MACOSX_RPATH 1)
 endif()
 
-if(NOT ${POSTFIX_VERSION} STREQUAL "")
-    set(AEON_VERSION "${AEON_VERSION}${POSTFIX_VERSION}")
-endif()
-
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-
-# set directory where the custom finders live
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 option(COVERAGE "make code coverage" OFF)
 if(COVERAGE)
