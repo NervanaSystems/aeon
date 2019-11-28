@@ -248,7 +248,7 @@ vector<manifest_file::record_t>* manifest_file::next()
     if (m_counter < m_block_list.size())
     {
         auto load_index = m_block_load_sequence[m_counter];
-        if (m_node_count == 0 )
+        if (m_node_count == 0 || m_node_count == 1 )
         {
             rc  = &(m_block_list[load_index]);
         }
@@ -275,7 +275,7 @@ void manifest_file::generate_blocks()
         vector<record_t> record_list_shuffled;
         record_list_shuffled.resize(m_record_list.size());
 
-        if (m_node_count != 0 )
+        if (m_node_count > 1 )
         {
             m_record_count = m_record_list.size() / m_node_count;
             int batches = m_record_count / m_batch_size;
@@ -324,7 +324,7 @@ void manifest_file::reset()
     if (m_shuffle)
     {
         shuffle(m_block_load_sequence.begin(), m_block_load_sequence.end(), m_random);
-        if (m_node_count != 0 )
+        if (m_node_count > 1)
             generate_blocks();
     }
     m_counter = 0;
