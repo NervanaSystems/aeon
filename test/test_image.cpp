@@ -275,7 +275,7 @@ void test_bgr_to_rgb(int width, int height, bool channel_major, bool fixed_aspec
                          {"channels", channels},
                          {"bgr_to_rgb", true},
                          {"channel_major", channel_major}};
-    image::config cfg(js);
+    image::config  cfg(js);
 
     auto decoded = make_shared<image::decoded>();
     for (int i = 0; i < indexed_images.size(); i++)
@@ -398,7 +398,7 @@ TEST(image, standardize)
                          {"channels", channels},
                          {"output_type", "float"},
                          {"channel_major", false}};
-    image::config cfg(js);
+    image::config  cfg(js);
 
     auto decoded = make_shared<image::decoded>();
     decoded->add(indexed);
@@ -434,7 +434,6 @@ TEST(image, standardize_validation)
                             std::string         output_type,
                             std::vector<double> mean,
                             std::vector<double> stddev) {
-
         nlohmann::json js = {
             {"width", 10}, {"height", 10}, {"channels", channels}, {"output_type", output_type}};
         image::config cfg(js);
@@ -452,9 +451,11 @@ TEST(image, standardize_validation)
     EXPECT_THROW(create_loader(3, "float", {0.5}, {0.3}), std::invalid_argument);
     EXPECT_THROW(create_loader(1, "float", {0.4, 0.6}, {0.3}), std::invalid_argument);
 
-    EXPECT_THROW(create_loader(3, "uint8_t", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}), std::invalid_argument);
+    EXPECT_THROW(create_loader(3, "uint8_t", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}),
+                 std::invalid_argument);
     EXPECT_THROW(create_loader(1, "uint8_t", {0.4}, {0.3}), std::invalid_argument);
-    EXPECT_THROW(create_loader(3, "int32_t", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}), std::invalid_argument);
+    EXPECT_THROW(create_loader(3, "int32_t", {0.4, 0.2, 0.5}, {0.5, 0.4, 0.3}),
+                 std::invalid_argument);
     EXPECT_THROW(create_loader(1, "int32_t", {0.4}, {0.3}), std::invalid_argument);
 }
 
@@ -519,8 +520,8 @@ TEST(image, transform_expand_crop_flip_resize)
 
     augment::image::param_factory factory(aug);
 
-    auto                 image_size = decoded->get_image_size();
-    image_params_builder builder(factory.make_ssd_params(image_size.width,
+    auto                               image_size = decoded->get_image_size();
+    image_params_builder               builder(factory.make_ssd_params(image_size.width,
                                                          image_size.height,
                                                          output_width,
                                                          output_height,
@@ -689,7 +690,7 @@ TEST(image, noconvert_nosplit)
                          {"channels", 3},
                          {"channel_major", false},
                          {"output_type", "uint8_t"}};
-    image::config cfg(js);
+    image::config  cfg(js);
 
     cv::Mat input_image(100, 100, CV_8UC3);
     input_image = cv::Scalar(50, 100, 200);
@@ -725,7 +726,7 @@ TEST(image, noconvert_split)
                          {"channels", 3},
                          {"channel_major", true},
                          {"output_type", "uint8_t"}};
-    image::config cfg(js);
+    image::config  cfg(js);
 
     cv::Mat input_image(100, 100, CV_8UC3);
     input_image = cv::Scalar(50, 100, 150);
@@ -762,7 +763,7 @@ TEST(image, convert_nosplit)
                          {"channels", 3},
                          {"channel_major", false},
                          {"output_type", "uint32_t"}};
-    image::config cfg(js);
+    image::config  cfg(js);
 
     cv::Mat input_image(100, 100, CV_8UC3);
     input_image = cv::Scalar(50, 100, 200);
@@ -797,7 +798,7 @@ TEST(image, convert_split)
                          {"channels", 3},
                          {"channel_major", true},
                          {"output_type", "uint32_t"}};
-    image::config cfg(js);
+    image::config  cfg(js);
 
     cv::Mat input_image(100, 100, CV_8UC3);
     input_image = cv::Scalar(50, 100, 150);
@@ -996,73 +997,51 @@ TEST(image, config_bgr_to_rgb_but_1_channels)
     int            height   = 128;
     int            width    = 256;
     int            channels = 1;
-    nlohmann::json js       = {{"type", "image"},
-                         {"height", height},
-                         {"width", width},
-                         {"channels", channels},
-                         {"bgr_to_rgb", true}};
+    nlohmann::json js       = {
+        {"height", height}, {"width", width}, {"channels", channels}, {"bgr_to_rgb", true}};
 
     EXPECT_THROW(image::config{js}, std::invalid_argument);
 }
 
 TEST(image, area_scale)
 {
-    vector<char> image_data = file_util::read_file_contents(CURDIR "/test_data/img_2112_70.jpg");
-    float        max_cropbox_area;
-    float        max_cropbox_ratio;
-    float        source_image_area;
+    nlohmann::json js = {
+        {"height", 128}, {"width", 256}, {"channels", 3}, {"channel_major", false}};
+    image::config cfg{js};
 
+    const float eps_err = 0.0002;
+    // Big size -> small eps_err
+    for (auto& image_size :
+         std::initializer_list<cv::Size2i>{{40000, 20000}, {30000, 30000}, {20000, 40000}})
     {
-        int            height   = 128;
-        int            width    = 256;
-        int            channels = 3;
-        nlohmann::json js       = {
-            {"height", height}, {"width", width}, {"channels", channels}, {"channel_major", false}};
-        nlohmann::json aug = {{"type", "image"}, {"do_area_scale", true}, {"flip_enable", false}};
-
+        float source_image_area = image_size.area();
+        for (auto& area_ratio : {1.f, 0.8f, 0.6f, 0.4f, 0.2f, 0.07f})
         {
-            image::config                 cfg{js};
-            image::extractor              extractor{cfg};
-            augment::image::param_factory factory(aug);
-
-            auto decoded      = extractor.extract(image_data.data(), image_data.size());
-            source_image_area = decoded->get_image_size().area();
-
-            auto                               image_size = decoded->get_image_size();
-            shared_ptr<augment::image::params> params =
-                factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-            max_cropbox_area  = params->cropbox.area();
-            max_cropbox_ratio = max_cropbox_area / source_image_area;
-        }
-        {
-            aug["scale"] = {0.3, 0.3};
-            image::config                 cfg{js};
-            image::extractor              extractor{cfg};
-            augment::image::param_factory factory(aug);
-
-            auto decoded = extractor.extract(image_data.data(), image_data.size());
-
-            auto                               image_size = decoded->get_image_size();
-            shared_ptr<augment::image::params> params =
-                factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-            float cropbox_area  = params->cropbox.area();
-            float cropbox_ratio = cropbox_area / source_image_area;
-            EXPECT_NEAR(0.3, cropbox_ratio, 0.0002);
-        }
-        {
-            aug["scale"] = {0.8, 0.8};
-            image::config                 cfg{js};
-            image::extractor              extractor{cfg};
-            augment::image::param_factory factory(aug);
-
-            auto decoded = extractor.extract(image_data.data(), image_data.size());
-
-            auto                               image_size = decoded->get_image_size();
-            shared_ptr<augment::image::params> params =
-                factory.make_params(image_size.width, image_size.height, cfg.width, cfg.height);
-            float cropbox_area  = params->cropbox.area();
-            float cropbox_ratio = cropbox_area / source_image_area;
-            EXPECT_FLOAT_EQ(max_cropbox_ratio, cropbox_ratio);
+            for (auto& aspect_ratio :
+                 {2.f / 3.f, 9.f / 16.f, 3.f / 4.f, 1.f, 4.f / 3.f, 16.f / 9.f, 3.f / 2.f})
+            {
+                float bound = std::min(
+                    static_cast<float>(image_size.width) / image_size.height / aspect_ratio,
+                    static_cast<float>(image_size.height) / image_size.width * aspect_ratio);
+                float          bound_scale    = std::min(area_ratio, bound);
+                float          new_image_area = source_image_area * bound_scale;
+                float          new_area_ratio = new_image_area / source_image_area;
+                nlohmann::json aug            = {{"type", "image"},
+                                      {"flip_enable", false},
+                                      {"do_area_scale", true},
+                                      {"scale", {area_ratio, area_ratio}},
+                                      {"horizontal_distortion", {aspect_ratio, aspect_ratio}}};
+                auto           params         = augment::image::param_factory{aug}.make_params(
+                    image_size.width, image_size.height, cfg.width, cfg.height);
+                // aspect ratio is always respected
+                float cropbox_aspect_ratio =
+                    static_cast<float>(params->cropbox.width) / params->cropbox.height;
+                EXPECT_NEAR(aspect_ratio, cropbox_aspect_ratio, eps_err);
+                // area ratio is cut down if crop would exceed dimensions
+                float cropbox_area_ratio =
+                    static_cast<float>(params->cropbox.area()) / source_image_area;
+                EXPECT_NEAR(new_area_ratio, cropbox_area_ratio, eps_err);
+            }
         }
     }
 }
@@ -1667,7 +1646,7 @@ TEST(photometric, hue)
         cv::Mat mat = source.clone();
         image::photometric::cbsjitter(mat, 1.0, 1.0, 1.0, i);
         cv::Mat expected = refHueShift(source, i);
-        auto lambda      = [](cv::Mat m) {
+        auto    lambda   = [](cv::Mat m) {
             stringstream ss;
             ss << m;
             return ss.str();
