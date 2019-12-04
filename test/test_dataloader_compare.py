@@ -181,7 +181,7 @@ def get_aeon_images(manifest_name, count, output_size, angle, crop,
     return np.copy(raw_aeon_data)
 
 
-ANGLE_OPTIONS = [[0, 0], [-10, -10], [11, 11]]
+ANGLE_OPTIONS = [[0, 0], [-10, -10], [11, 11], [-360, -360]]
 FLIP_OPTIONS = [False]
 BGR_TO_RGB_OPTIONS = [False, True]
 STANDARDIZE_OPTIONS = [False, True]
