@@ -267,5 +267,3 @@ def test_loader_compare_various():
             "\n".join(list_of_errors))
 
     os.chdir(cwd)
-
-test_loader_compare_various()

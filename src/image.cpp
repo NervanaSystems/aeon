@@ -254,12 +254,13 @@ cv::Size2f image::cropbox_area_scale(const cv::Size2f& in_size,
     return result;
 }
 
-cv::Point2i image::cropbox_shift(const cv::Size2f& in_size,
+// rounds to nearest integer
+cv::Point2f image::cropbox_shift(const cv::Size2f& in_size,
                                  const cv::Size2f& crop_box,
                                  float             xoff,
                                  float             yoff)
 {
-    cv::Point2i result;
+    cv::Point2f result;
     result.x = (in_size.width - crop_box.width) * xoff;
     result.y = (in_size.height - crop_box.height) * yoff;
     return result;
