@@ -47,9 +47,9 @@ def random_crop_cv(img, scale, aspect_ratio, origin):
     target_size = math.sqrt(target_area)
     width = int(round(target_size * width))
     height = int(round(target_size * height))
-    i = origin[0] if origin != None else np.random.randint(
+    i = origin[1] if origin != None else np.random.randint(
         0, img.shape[0] - height + 1)
-    j = origin[1] if origin != None else np.random.randint(
+    j = origin[0] if origin != None else np.random.randint(
         0, img.shape[1] - width + 1)
 
     img = img[i:i + height, j:j + width, :]
@@ -216,7 +216,7 @@ def test_loader_compare_various():
     manifest_name = "manifest_for_compare.tsv"
     assert os.path.getsize(manifest_name) > 0
 
-    count = 1  #12
+    count = 12
     output_size = 224
     for values in itertools.product(ANGLE_OPTIONS, CROP_OPTIONS, FLIP_OPTIONS,
                                     BGR_TO_RGB_OPTIONS, STANDARDIZE_OPTIONS,
@@ -267,3 +267,5 @@ def test_loader_compare_various():
             "\n".join(list_of_errors))
 
     os.chdir(cwd)
+
+test_loader_compare_various()

@@ -146,7 +146,7 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
                                                    cv::Mat& single_img) const
 {
     cv::Mat rotatedImage;
-    if (img_xform->angle == 0) {
+    if (img_xform->angle % 360 == 0) {
         rotatedImage = single_img;
     } else {
         image::rotate(single_img, rotatedImage, img_xform->angle);
