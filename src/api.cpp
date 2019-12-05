@@ -124,7 +124,6 @@ static PyObject* DataLoader_iter(PyObject* self)
     {
         DL_get_loader(self)->reset();
         ((aeon_DataLoader*)(self))->m_first_iteration = true;
-        return self;
     }
     catch (std::exception& e)
     {
@@ -134,8 +133,8 @@ static PyObject* DataLoader_iter(PyObject* self)
         ss << "Error creating iterator: " << e.what();
         ERR << ss.str();
         PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
-        return NULL;
     }
+        return self;
 }
 
 static PyObject* DataLoader_iternext(PyObject* self)
