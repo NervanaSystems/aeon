@@ -75,7 +75,7 @@ static PyObject* error_out(PyObject* m)
 {
     struct aeon_state* st = GETSTATE(m);
     PyErr_SetString(st->error, "aeon module level error");
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -90,7 +90,7 @@ static PyObject* dict2json(PyObject* self, PyObject* dictionary)
     catch (std::exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError, e.what());
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -133,6 +133,7 @@ static PyObject* DataLoader_iter(PyObject* self)
         ss << "Error creating iterator: " << e.what();
         ERR << ss.str();
         PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
+        return nullptr;
     }
         return self;
 }
@@ -181,6 +182,7 @@ static PyObject* DataLoader_iternext(PyObject* self)
                 {
                     ERR << "Error building shape string";
                     PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
+                    return nullptr;
                 }
             }
         }
@@ -199,6 +201,7 @@ static PyObject* DataLoader_iternext(PyObject* self)
         ss << "Error when iterating: " << e.what() << endl;
         ERR << ss.str();
         PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
+        return nullptr;
     }
     return result;
 }
@@ -247,6 +250,7 @@ static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf, 
     {
         ERR << "Unable to wrap buffer as npy array";
         PyErr_SetString(PyExc_RuntimeError, "Unable to wrap buffer as npy array");
+        return nullptr;
     }
 
     return p_array;
@@ -300,13 +304,13 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             ss << "Unable to parse config: " << e.what();
             ERR << ss.str();
             PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
-            return NULL;
+            return nullptr;
         }
         INFO << " config " << json_config.dump(4);
         self = (aeon_DataLoader*)type->tp_alloc(type, 0);
         if (!self)
         {
-            return NULL;
+            return nullptr;
         }
 
         allow_threads a;
@@ -346,11 +350,11 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                     PyObject* axes_name     = Py_BuildValue("s", axes_names[j].c_str());
                     PyObject* py_temp_tuple = PyTuple_New(axis_tuple_len);
 
-                    if (py_temp_tuple == NULL)
+                    if (py_temp_tuple == nullptr)
                     {
                         ERR << "Error creating new tuple";
                         PyErr_SetString(PyExc_RuntimeError, "Error creating new tuple");
-                        return NULL;
+                        return nullptr;
                     }
 
                     // create a tuple of (axis_name, axis_length)
@@ -363,7 +367,7 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                     {
                         ERR << "Error building tuple of (axis_name, axis_length)";
                         PyErr_SetString(PyExc_RuntimeError, "Error building shape tuple");
-                        return NULL;
+                        return nullptr;
                     }
                 }
 
@@ -381,7 +385,7 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                 {
                     ERR << "Error building shape string";
                     PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
-                    return NULL;
+                    return nullptr;
                 }
             }
         }
@@ -395,7 +399,7 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             ss << "config is: " << json_config << endl;
             ERR << ss.str();
             PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
-            return NULL;
+            return nullptr;
         }
     }
     return (PyObject*)self;
@@ -419,7 +423,7 @@ static PyObject* aeon_reset(PyObject* self, PyObject*)
         stringstream ss;
         ss << "Error when resetting iterator: " << e.what();
         PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
-        return NULL;
+        return nullptr;
     }
 }
 
