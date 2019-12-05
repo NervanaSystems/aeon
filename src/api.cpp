@@ -140,7 +140,7 @@ static PyObject* DataLoader_iter(PyObject* self)
 static PyObject* DataLoader_iternext(PyObject* self)
 {
     INFO << " aeon_DataLoader_iternext";
-    PyObject* result = NULL;
+    PyObject* result = nullptr;
 
     allow_threads a;
 
@@ -199,7 +199,6 @@ static PyObject* DataLoader_iternext(PyObject* self)
         ss << "Error when iterating: " << e.what() << endl;
         ERR << ss.str();
         PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
-        return NULL;
     }
     return result;
 }
