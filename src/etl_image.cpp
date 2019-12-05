@@ -93,7 +93,7 @@ shared_ptr<image::decoded> image::extractor::extract(const void* inbuf, size_t i
     cv::imdecode(input_img, _color_mode, &output_img);
 
     if (output_img.data == nullptr) {
-        throw runtime_error("Input image contains invalid data or the buffer is too short.");
+        throw runtime_error("Decoding image failed due to invalid data in the image file.");
     }
 
     auto rc = make_shared<image::decoded>();
