@@ -56,7 +56,7 @@ def test_loader_broken_image():
 
     with pytest.raises(Exception) as ex:
         dl = DataLoader(config)
-    assert 'Input image contains invalid data or the buffer is too short' in str(ex)
+    assert 'Decoding image failed due to invalid data in the image file' in str(ex)
 
 def test_loader_broken_image_next():
     manifest = random_manifest(9, broken_image_index=8)
@@ -66,13 +66,13 @@ def test_loader_broken_image_next():
     with pytest.raises(Exception) as ex:
         for i in range(5):
             dl.next()
-    assert 'Input image contains invalid data or the buffer is too short' in str(ex)
+    assert 'Decoding image failed due to invalid data in the image file' in str(ex)
 
     dl2 = DataLoader(config)
     with pytest.raises(Exception) as ex:
         for data in dl2:
             pass
-    assert 'Input image contains invalid data or the buffer is too short' in str(ex)
+    assert 'Decoding image failed due to invalid data in the image file' in str(ex)
 
 
 def test_loader():
