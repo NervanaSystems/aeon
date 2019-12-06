@@ -51,10 +51,10 @@ Please take a look at [distributed documentation](http://aeon.nervanasys.com/ind
 
 ## Code coverage
 
-    Code coverage in aeon depends on llvm-cov and lcov.
-    Report will be generated in html-coverage-report/index.html
+Code coverage in aeon depends on `llvm-cov` and `lcov`.
+Report will be generated in html-coverage-report/index.html
 
-    Example:
+Example:
 
     sudo apt-get install llvm lcov
     mkdir build
@@ -64,17 +64,17 @@ Please take a look at [distributed documentation](http://aeon.nervanasys.com/ind
     # If you want to generate report when unit test fails: make -i coverage
     make coverage
 
-### To install Aeon:
+## To install Aeon:
 
     git clone https://github.com/NervanaSystems/aeon.git
 
-##### For Python 2.7
+### For Python 2.7
 
     cd aeon
     pip install -r requirements.txt
     mkdir -p build && cd $_ && cmake .. && pip install .
 
-##### For Python 3.n
+### For Python 3.n
 
     cd aeon
     pip3 install -r requirements.txt
@@ -84,6 +84,16 @@ Note: if installing system wide (as opposed to within a virtual environment) you
 
 Now continue on to the [user guide](http://aeon.nervanasys.com/index.html/user_guide.html) to get started using aeon. Or to the
 [developer guide](http://aeon.nervanasys.com/index.html/developer_guide.html) to developing custom loaders/transformers.
+
+## Unit Testing
+To run unit tests after building with make, execute inside `build` directory:
+
+    make runtest
+
+To run python tests execute inside `test` directory:
+
+    pytest
+
 
 # Documentation
 
