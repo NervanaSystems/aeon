@@ -41,6 +41,7 @@ namespace nervana
         }
 
         allow_threads::~allow_threads() { PyEval_RestoreThread(_state); }
+
         block_threads::block_threads(allow_threads& a)
             : _parent{a}
         {
@@ -54,5 +55,5 @@ namespace nervana
             std::swap(_parent._state, _state);
         }
 #endif
-    }
-}
+    } // namespace python
+} // namespace nervana

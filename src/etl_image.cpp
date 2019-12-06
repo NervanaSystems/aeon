@@ -92,6 +92,10 @@ shared_ptr<image::decoded> image::extractor::extract(const void* inbuf, size_t i
     cv::Mat input_img(1, insize, _pixel_type, (char*)inbuf);
     cv::imdecode(input_img, _color_mode, &output_img);
 
+    if (output_img.empty()) {
+        throw runtime_error("Decoding image failed due to invalid data in the image file.");
+    }
+
     auto rc = make_shared<image::decoded>();
     rc->add(output_img); // don't need to check return for single image
     return rc;
