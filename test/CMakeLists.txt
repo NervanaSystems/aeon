@@ -47,11 +47,11 @@ set (SRC
     test_params.cpp
     test_pixel_mask.cpp
     test_provider.cpp
+    test_raw_image.cpp
     test_specgram.cpp
     test_types.cpp
     test_util.cpp
     test_video.cpp
-    test_raw_image.cpp
 )
 
 set(TESTSUITE_LIBRARIES aeon gtest gmock
