@@ -97,10 +97,10 @@ TEST(benchmark, jpeg)
 
 TEST(benchmark, block)
 {
-    char* cache_root    = getenv("TEST_IMAGENET_CACHE");
+    char* cache_root    = getenv("TEST_CACHE");
     if (!cache_root)
     {
-        cout<<" no chace\n";
+        cout << "Environment variable TEST_CACHE not found\n";
         return;
     }
     string pathname = string(cache_root);
@@ -502,9 +502,13 @@ TEST(benchmark, load_jpeg_manifest)
 
 TEST(benchmark, load_block_manager)
 {
+    char* cache_root = getenv("TEST_CACHE");
+    if (!cache_root)
+    {
+        cout << "Environment variable TEST_CACHE not found\n";
+        return;
+    }
     stopwatch timer;
-    string    home            = getenv("HOME");
-    string    cache_directory = home + "/aeon_cache";
     bool      shuffle         = false;
     size_t    block_size      = 5000;
 
@@ -521,7 +525,7 @@ TEST(benchmark, load_block_manager)
 
     auto loader = make_shared<block_loader_file>(manifest, block_size);
 
-    block_manager manager{loader, 5000, cache_directory, shuffle};
+    block_manager manager{loader, 5000, cache_root, shuffle};
 
     encoded_record_list* records;
     timer.start();
