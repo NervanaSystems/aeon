@@ -554,9 +554,10 @@ TEST(benchmark, manifest)
     {
         auto     startTime = timer.now();
         ofstream mfile(manifest_filename);
+        mfile << "@FILE\tFILE" << std::endl;
         for (int i = 0; i < 10e6; i++)
         {
-            mfile << cache_root << "image_" << i << ".jpg,";
+            mfile << cache_root << "image_" << i << ".jpg\t";
             mfile << cache_root << "target_" << i << ".txt\n";
         }
         auto endTime = timer.now();
