@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ if (SPHINX_EXECUTABLE)
                     RESULT_VARIABLE __sphinx_result OUTPUT_VARIABLE __sphinx_output ERROR_VARIABLE __sphinx_error
                     OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE)
     if (__sphinx_result MATCHES 0)
-        string(REGEX MATCH ".* ([0-9]+)\\.([0-9]+)\\.([0-9]+)" __sphinx_version_check "${__sphinx_error}")
+        string(REGEX MATCH ".* ([0-9]+)\\.([0-9]+)\\.([0-9]+)" __sphinx_version_check "${__sphinx_output}")
         set(SPHINX_VERSION ${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3})
     else()
         set(__sphinx_output "${__sphinx_error}")
