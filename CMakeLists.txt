@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.13.3)
 
 # Set this flag before project definition to avoid using other compiler by gtest
 set(CMAKE_CXX_COMPILER "g++")
@@ -164,30 +164,19 @@ find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 link_directories(${CURL_LIBRARY_DIRS})
 
-# set(Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4)
-
-find_package(PythonInterp)
-find_package(PythonLibs)
+find_package(Python COMPONENTS Interpreter Development NumPy)
 
 if (PYTHON_PLUGIN)
-    if (NOT ${PYTHON_VERISON_MAJOR} EQUAL ${OpenCV_VERSION_MAJOR})
-        message(WARNING "Python version " ${PYTHON_VERSION_MAJOR} " incompatible with OpenCV version " ${OpenCV_VERSION_MAJOR})
+    if (NOT ${Python_VERISON_MAJOR} EQUAL ${OpenCV_VERSION_MAJOR})
+        message(WARNING "Python version " ${Python_VERSION_MAJOR} " incompatible with OpenCV version " ${OpenCV_VERSION_MAJOR})
     endif ()
 endif (PYTHON_PLUGIN)
 
-if (PYTHONLIBS_FOUND)
-    find_package(NumPy)
-    if(NUMPY_FOUND)
-        set(PYTHON_FOUND true)
+if (Python_FOUND)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPYTHON_FOUND")
-        include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
-        link_directories(${PYTHON_LIBRARY_DIRS})
-        include_directories(SYSTEM ${NUMPY_INCLUDE_DIRS})
-        link_directories(${NUMPY_LIBRARY_DIRS})
-    endif(NUMPY_FOUND)
-else()
-    unset(PYTHON_LIBRARIES)
-endif (PYTHONLIBS_FOUND)
+        include_directories(SYSTEM ${Python_INCLUDE_DIRS} ${Python_NumPy_INCLUDE_DIRS})
+        link_directories(${Python_LIBRARY_DIRS})
+endif (Python_FOUND)
 
 if (ENABLE_AEON_SERVICE)
     # Check for C++ REST SDK from Microsoft
