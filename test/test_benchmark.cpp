@@ -39,7 +39,7 @@ TEST(benchmark, jpeg)
         cout << "Environment vars TEST_IMAGENET_ROOT not found\n";
         return;
     }
-    std::string manifest_filename = "train-index.csv";
+    std::string manifest_filename = "train-index.tsv";
     string manifest = file_util::path_join(manifest_root, manifest_filename);
     
         bool     shuffle_manifest = true;
@@ -158,7 +158,7 @@ TEST(benchmark, cache)
             iss >> batch_size;
         }
 
-        std::string manifest_filename = "train-index.csv";
+        std::string manifest_filename = "train-index.tsv";
         if (manifest_name)
         {
             std::istringstream iss(manifest_name);
@@ -293,7 +293,7 @@ TEST(benchmark, imagenet)
         int         width      = 224;
         size_t      batch_size = bsz ? atoi(bsz) : 128;
         std::string manifest =
-            file_util::path_join(manifest_root, manifest_name ? manifest_name : "train-index.csv");
+            file_util::path_join(manifest_root, manifest_name ? manifest_name : "train-index.tsv");
         std::string iteration_mode       = iterations ? "COUNT" : "INFINITE";
         int         iteration_mode_count = iterations ? atoi(iterations) : 0;
 
@@ -361,7 +361,7 @@ TEST(benchmark, imagenet_paddle)
         int         width      = 224;
         size_t      batch_size = bsz ? atoi(bsz) : 128;
         std::string manifest =
-            file_util::path_join(manifest_root, manifest_name ? manifest_name : "train-index.csv");
+            file_util::path_join(manifest_root, manifest_name ? manifest_name : "train-index.tsv");
         std::string iteration_mode       = iterations ? "COUNT" : "INFINITE";
         int         iteration_mode_count = iterations ? atoi(iterations) : 0;
 
