@@ -68,7 +68,14 @@ include_dirs += get_python_inc() + ' ' + numpy.get_include()
 include_dirs = include_dirs.split()
 libs = libs.replace('-l', '').split()
 lib_dirs = lib_dirs.replace('-L','').split()
-extra_compile_args = "${CMAKE_CXX_FLAGS}".strip().split(' ')
+
+extra_compile_args = []
+extra_link_args = []
+for flag in "${CMAKE_CXX_FLAGS}".strip().split(' '):
+    if flag[0:4] == "-Wl,":
+        extra_link_args.append(flag)
+    else:
+        extra_compile_args.append(flag)
 
 hashfile = open(os.path.join('${CMAKE_BINARY_DIR}','githash'),'w')
 hashfile.write('${AEON_CURRENT_HASH}')
@@ -82,6 +89,7 @@ module = Extension(
     libraries=libs,
     library_dirs=lib_dirs,
     extra_compile_args=extra_compile_args,
+    extra_link_args=extra_link_args,
 )
 
 setup(
