@@ -22,5 +22,5 @@ file(COPY ${TEST_DATA_DIR}/flowers.jpg DESTINATION .)
 file(COPY ${TEST_DATA_DIR}/img_2112_70.jpg DESTINATION .)
 
 add_executable(iterator ${SRC})
-target_link_libraries(iterator aeon pthread ${CURL_LIBRARIES} opencv_imgproc opencv_highgui opencv_core ${Python_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(iterator aeon pthread ${CURL_LIBRARIES} opencv_imgproc opencv_highgui opencv_core ${Python3_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies(iterator aeon)

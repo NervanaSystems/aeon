@@ -78,9 +78,9 @@ endif()
 set(AEON_HEADER_FILES
         version.hpp)
 
-if (Python_FOUND)
+if (Python3_FOUND)
     list(APPEND SRC api.cpp)
-endif(Python_FOUND)
+endif(Python3_FOUND)
 
 if (PYTHON_PLUGIN)
     list(APPEND SRC python_plugin.cpp
@@ -96,7 +96,7 @@ add_library(aeon SHARED ${SRC} ${AEON_HEADER_FILES})
 
 install(TARGETS aeon DESTINATION lib)
 
-set(AEON_LIBRARIES ${CURL_LIBRARIES} ${OpenCV_LIBRARIES} ${Python_LIBRARIES})
+set(AEON_LIBRARIES ${CURL_LIBRARIES} ${OpenCV_LIBRARIES} ${Python3_LIBRARIES})
 if (ENABLE_OPENFABRICS_CONNECTOR)
     list(APPEND AEON_LIBRARIES ${OPENFABRICS_LIBRARIES})
 endif()
