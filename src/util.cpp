@@ -310,7 +310,7 @@ std::vector<unsigned> nervana::parse_cpu_list(const std::string& cpu_list,
                     throw std::out_of_range("Number exceeding " + std::to_string(max_unsigned) +
                                             " found in cpu list string.");
                 }
-                thread_affinity_map.push_back(ul);
+                thread_affinity_map.push_back(static_cast<unsigned>(ul));
             }
             else
             {
