@@ -571,6 +571,7 @@ template <typename T> std::string type_name();
 TEST(util, parse_cpu_list)
 {
     using testing::ElementsAre;
+    EXPECT_THAT(nervana::parse_cpu_list("", 4), ElementsAre());
     EXPECT_THAT(nervana::parse_cpu_list("0-1", 5), ElementsAre(0,1));
     EXPECT_THAT(nervana::parse_cpu_list("1,0", 5), ElementsAre(0,1));
     EXPECT_THAT(nervana::parse_cpu_list("2-4", 5), ElementsAre(2,3,4));
@@ -578,6 +579,7 @@ TEST(util, parse_cpu_list)
     EXPECT_THAT(nervana::parse_cpu_list("4,3,2,1,0,0,3", 5), ElementsAre(0,1,2,3,4));
     EXPECT_THAT(nervana::parse_cpu_list("0-1,5-6,2-4", 10), ElementsAre(0,1,2,3,4,5,6));
 
+    EXPECT_THROW(nervana::parse_cpu_list(" ", 4), std::invalid_argument);
     EXPECT_THROW(nervana::parse_cpu_list("6", 5), std::invalid_argument);
     EXPECT_THROW(nervana::parse_cpu_list("3-8", 5), std::invalid_argument);
     EXPECT_THROW(nervana::parse_cpu_list("1-", 5), std::invalid_argument);

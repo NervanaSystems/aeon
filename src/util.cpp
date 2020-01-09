@@ -284,6 +284,8 @@ std::string nervana::vector2string(const std::vector<char>& v)
 std::vector<unsigned> nervana::parse_cpu_list(const std::string& cpu_list,
                                               unsigned           hardware_concurrency)
 {
+    if (cpu_list.empty())
+        return {};
     auto found = cpu_list.find_first_not_of("0123456789-,");
     if(found != std::string::npos)
     {
