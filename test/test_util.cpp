@@ -585,6 +585,8 @@ TEST(util, parse_cpu_list)
     EXPECT_THROW(nervana::parse_cpu_list("-1-2", 5), std::invalid_argument);
     EXPECT_THROW(nervana::parse_cpu_list("0--2", 5), std::out_of_range);
     EXPECT_THROW(nervana::parse_cpu_list("0-1,5-6:2-4", 10), std::invalid_argument);
+    EXPECT_THROW(nervana::parse_cpu_list("0-1, 3-4", 10), std::invalid_argument);
+    EXPECT_THROW(nervana::parse_cpu_list("0-f", 10), std::invalid_argument);
 
     auto too_big = std::to_string(static_cast<unsigned long>(std::numeric_limits<unsigned>::max())+5);
     EXPECT_THROW(nervana::parse_cpu_list(too_big, 5), std::out_of_range);
