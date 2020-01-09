@@ -190,8 +190,11 @@ void loader_local::initialize(const json& config_json)
 
     m_provider = provider_factory::create(config_json);
 
-    std::vector<int> thread_affinity_map = nervana::get_thread_affinity_map(
-        lcfg.cpu_list, m_max_count_of_free_threads, m_free_threads_ratio);
+    auto thread_affinity_map =
+        nervana::get_thread_affinity_map(lcfg.cpu_list,
+                                         m_max_count_of_free_threads,
+                                         m_free_threads_ratio,
+                                         std::thread::hardware_concurrency());
 
     // Smallest multiple of batch_size ensuring at least m_input_multiplier images per thread
     int decode_size = lcfg.batch_size *

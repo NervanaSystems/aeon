@@ -25,6 +25,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 #include "util.hpp"
 #include "wav_data.hpp"
 #include "cap_mjpeg_decoder.hpp"
@@ -564,3 +565,29 @@ TEST(util, almost_equal_or_less)
                                         << get<1>(test) << ") = " << get<2>(test);
     }
 }
+
+template <typename T> std::string type_name();
+
+TEST(util, parse_cpu_list)
+{
+    using testing::ElementsAre;
+    EXPECT_THAT(nervana::parse_cpu_list("0-1", 5), ElementsAre(0,1));
+    EXPECT_THAT(nervana::parse_cpu_list("1,0", 5), ElementsAre(0,1));
+    EXPECT_THAT(nervana::parse_cpu_list("2-4", 5), ElementsAre(2,3,4));
+    EXPECT_THAT(nervana::parse_cpu_list("0-1,3-5", 6), ElementsAre(0,1,3,4,5));
+    EXPECT_THAT(nervana::parse_cpu_list("4,3,2,1,0,0,3", 5), ElementsAre(0,1,2,3,4));
+    EXPECT_THAT(nervana::parse_cpu_list("0-1,5-6,2-4", 10), ElementsAre(0,1,2,3,4,5,6));
+
+    EXPECT_THROW(nervana::parse_cpu_list("6", 5), std::invalid_argument);
+    EXPECT_THROW(nervana::parse_cpu_list("3-8", 5), std::invalid_argument);
+    EXPECT_THROW(nervana::parse_cpu_list("1-", 5), std::invalid_argument);
+    EXPECT_THROW(nervana::parse_cpu_list("-1", 5), std::invalid_argument);
+    EXPECT_THROW(nervana::parse_cpu_list("-1-2", 5), std::invalid_argument);
+    EXPECT_THROW(nervana::parse_cpu_list("0--2", 5), std::out_of_range);
+    EXPECT_THROW(nervana::parse_cpu_list("0-1,5-6:2-4", 10), std::invalid_argument);
+
+    auto too_big = std::to_string(static_cast<unsigned long>(std::numeric_limits<unsigned>::max())+5);
+    EXPECT_THROW(nervana::parse_cpu_list(too_big, 5), std::out_of_range);
+    EXPECT_THROW(nervana::parse_cpu_list("0-"+too_big, 5), std::out_of_range);
+}
+

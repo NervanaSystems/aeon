@@ -281,10 +281,21 @@ std::string nervana::vector2string(const std::vector<char>& v)
 }
 
 // Parses cpu_list string. For example: "0-4,30,10,32-33"
-std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
+std::vector<unsigned> nervana::parse_cpu_list(const std::string& cpu_list,
+                                              unsigned           hardware_concurrency)
 {
-    std::vector<int>         thread_affinity_map;
+    auto found = cpu_list.find_first_not_of("0123456789-,");
+    if(found != std::string::npos)
+    {
+        ERR << "Failed to parse cpu list.";
+        throw std::invalid_argument(
+            "Found unexpected character '" + std::to_string(cpu_list.at(found)) +
+            "' in cpu list string. Only numbers, commas and dashes are allowed.");
+    }
+    std::vector<unsigned>    thread_affinity_map;
     std::vector<std::string> split_list = nervana::split(cpu_list, ',', false);
+
+    auto max_unsigned = std::numeric_limits<unsigned>::max();
     try
     {
         for (std::string& str : split_list)
@@ -292,13 +303,26 @@ std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
             auto dash_pos = str.find('-');
             if (dash_pos == std::string::npos)
             {
-                thread_affinity_map.push_back(stoi(str));
+                auto ul = stoul(str);
+                if (ul > max_unsigned)
+                {
+                    ERR << "Failed to parse cpu list.";
+                    throw std::out_of_range("Number exceeding " + std::to_string(max_unsigned) +
+                                            " found in cpu list string.");
+                }
+                thread_affinity_map.push_back(ul);
             }
             else
             {
-                int from = stoi(str.substr(0, dash_pos));
-                int to   = stoi(str.substr(dash_pos + 1));
-                for (int i = from; i <= to; ++i)
+                auto from      = stoul(str.substr(0, dash_pos));
+                auto to        = stoul(str.substr(dash_pos + 1));
+                if (from > max_unsigned || to > max_unsigned)
+                {
+                    ERR << "Failed to parse cpu list.";
+                    throw std::out_of_range("Number exceeding " + std::to_string(max_unsigned) +
+                                            " found in cpu list string.");
+                }
+                for (unsigned i = static_cast<unsigned>(from); i <= static_cast<unsigned>(to); ++i)
                 {
                     thread_affinity_map.push_back(i);
                 }
@@ -320,13 +344,13 @@ std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
     }
     thread_affinity_map.resize(std::distance(thread_affinity_map.begin(), ip));
 
-    if (thread_affinity_map.back() >= std::thread::hardware_concurrency())
+    if (thread_affinity_map.back() >= hardware_concurrency)
     {
         throw std::invalid_argument("One or more indexes computed from cpu list '" + cpu_list +
                                     "' exceed number of logical cores. Use values "
                                     "in "
                                     "range [0, " +
-                                    std::to_string(std::thread::hardware_concurrency() - 1) + "].");
+                                    std::to_string(hardware_concurrency - 1) + "].");
     }
 
     return thread_affinity_map;
@@ -334,17 +358,18 @@ std::vector<int> nervana::parse_cpu_list(const std::string& cpu_list)
 
 // Parses cpu affinity from loader config or environment variable.
 // Environment has precedence over config. If both are empty, provides the default.
-std::vector<int> nervana::get_thread_affinity_map(const std::string& config_cpu_list,
-                                                  int                max_count_of_free_threads,
-                                                  int                free_threads_ratio)
+std::vector<unsigned> nervana::get_thread_affinity_map(const std::string& config_cpu_list,
+                                                       unsigned           max_count_of_free_threads,
+                                                       unsigned           free_threads_ratio,
+                                                       unsigned           hardware_concurrency)
 {
-    std::vector<int> thread_affinity_map;
+    std::vector<unsigned> thread_affinity_map;
 
     const char* env_cpu_list = getenv("AEON_CPU_LIST");
     if (env_cpu_list != nullptr && strlen(env_cpu_list) > 0) // set affinity from environment
     {
         std::string str_cpu_list{env_cpu_list};
-        thread_affinity_map = nervana::parse_cpu_list(str_cpu_list);
+        thread_affinity_map = nervana::parse_cpu_list(str_cpu_list, hardware_concurrency);
 
         if (!config_cpu_list.empty())
         {
@@ -354,16 +379,16 @@ std::vector<int> nervana::get_thread_affinity_map(const std::string& config_cpu_
     }
     else if (!config_cpu_list.empty()) // set affinity from config
     {
-        thread_affinity_map = nervana::parse_cpu_list(config_cpu_list);
+        thread_affinity_map = nervana::parse_cpu_list(config_cpu_list, hardware_concurrency);
     }
 
     if (thread_affinity_map.empty()) //  automatically determine thread_affinity_map
     {
         // we don't use all threads, some of them we leave for other pipeline objects and system
-        int nthreads =
-            std::thread::hardware_concurrency() -
+        unsigned nthreads =
+            hardware_concurrency -
             std::min(max_count_of_free_threads,
-                     static_cast<int>(std::thread::hardware_concurrency() / free_threads_ratio));
+                     static_cast<unsigned>(hardware_concurrency / free_threads_ratio));
 
         thread_affinity_map.resize(nthreads);
         std::iota(thread_affinity_map.begin(), thread_affinity_map.end(), 0);
