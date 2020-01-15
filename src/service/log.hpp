@@ -30,8 +30,7 @@
 #include <sstream>
 #include <iostream>
 #include <experimental/filesystem>
-
-#include <boost/format.hpp>
+#include <functional>
 
 namespace nervana
 {
@@ -374,21 +373,15 @@ namespace nervana
 
         namespace detail
         {
-            inline void format(boost::format&) {}
-            template <typename Arg, typename... Args>
-            inline void format(boost::format& log, Arg const& arg, Args&&... args)
+            template <log::level level, typename Arg, typename... Args>
+            inline void log(Arg&& arg, Args&&... args)
             {
-                log % arg;
-                detail::format(log, std::forward<Args>(args)...);
-            }
-
-            template <log::level level, typename... Args>
-            inline void log(const std::string& format, Args&&... args)
-            {
-                boost::format log{format};
-                detail::format(log, std::forward<Args>(args)...);
+                std::stringstream log;
+                log << std::forward<Arg>(arg);
+                using expander = int[];
+                (void)expander{0, (void(log << std::forward<Args>(args)), 0)...};
                 logger::write<level>(log.str());
-            };
+            }
         }
 
         template <typename... T>

@@ -212,12 +212,6 @@ if (ENABLE_OPENFABRICS_CONNECTOR)
     link_directories(${OPENFABRICS_LIBRARY_DIRS})
 endif()
 
-# Check for BOOST components
-find_package(Boost REQUIRED COMPONENTS system)
-
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
-
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 
 if (ENABLE_AEON_SERVICE)

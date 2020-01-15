@@ -19,4 +19,4 @@ set(REMOTE_ITERATOR_SOURCE_FILES remote_iterator.cpp)
 add_executable(remote_iterator ${REMOTE_ITERATOR_SOURCE_FILES})
 add_dependencies(remote_iterator aeon-service)
 
-target_link_libraries(remote_iterator aeon ${CURL_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(remote_iterator aeon ${CURL_LIBRARIES})

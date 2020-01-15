@@ -41,11 +41,6 @@ lib_dirs += getoutput("pkg-config --libs-only-L opencv")
 libs += getoutput("pkg-config --libs-only-l opencv")
 
 libs += ' -lcurl'
-
-include_dirs += ' ${Boost_INCLUDE_DIRS}'
-lib_dirs += ' ${Boost_LIBRARY_DIRS}'
-libs += ' -lboost_system'
-
 libs += ' -lstdc++fs'
 
 if '${OPENFABRICS_FOUND}' == 'TRUE':

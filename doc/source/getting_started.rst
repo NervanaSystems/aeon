@@ -24,18 +24,17 @@ First grab aeon's dependencies:
 
 Ubuntu::
 
-  apt-get install git clang libcurl4-openssl-dev libopencv-dev libboost-system-dev libssl-dev
+  apt-get install git clang libcurl4-openssl-dev libopencv-dev libssl-dev
 
 Centos::
 
   yum install epel-release
-  yum install git clang gcc-c++ make cmake openssl-devel opencv-devel libcurl-devel boost-devel boost-system
+  yum install git clang gcc-c++ make cmake openssl-devel opencv-devel libcurl-devel
 
 OSX (Assuming you followed neon's Homebrew based install)::
 
   brew tap homebrew/science
   brew install opencv
-  brew install boost
 
 
 Then build the aeon libraries::

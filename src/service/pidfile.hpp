@@ -23,6 +23,8 @@
 #include <fstream>
 #include <string>
 #include <stdexcept>
+#include <cstring>
+
 
 namespace nervana
 {
