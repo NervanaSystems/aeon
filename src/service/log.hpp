@@ -29,8 +29,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <experimental/filesystem>
 
-#include <boost/filesystem/path.hpp>
 #include <boost/format.hpp>
 
 namespace nervana
@@ -167,7 +167,7 @@ namespace nervana
             class file : public stream
             {
             public:
-                explicit file(const boost::filesystem::path& path)
+                explicit file(const std::experimental::filesystem::path& path)
                     : m_path{path}
                 {
                 }
@@ -191,7 +191,7 @@ namespace nervana
                 }
 
             private:
-                boost::filesystem::path m_path;
+                std::experimental::filesystem::path m_path;
 
                 void _output(const std::string& prefix, const std::string& msg)
                 {
@@ -367,7 +367,7 @@ namespace nervana
         inline void set_level(log::level level) noexcept { detail::logger::set_level(level); }
         inline log::level get_level() noexcept { return detail::logger::get_level(); }
         inline void add_terminal_sink() { detail::logger::register_sink(new detail::terminal{}); }
-        inline void add_file_sink(const boost::filesystem::path& path)
+        inline void add_file_sink(const std::experimental::filesystem::path& path)
         {
             detail::logger::register_sink(new detail::file{path});
         }

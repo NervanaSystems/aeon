@@ -23,8 +23,7 @@
 #include <limits>
 #include <iostream>
 #include <iomanip>
-
-#include <boost/filesystem/path.hpp>
+#include <experimental/filesystem>
 
 #include "version.hpp"
 #include "log.hpp"
@@ -49,7 +48,7 @@ namespace
             {
             };
 
-            void read(const boost::filesystem::path& path)
+            void read(const std::experimental::filesystem::path& path)
             {
                 configure = 0;
                 log::info("configuration read successfully");
@@ -129,12 +128,12 @@ namespace
 
 int main(int argc, char* argv[])
 {
-    std::string progname{boost::filesystem::path{argv[0]}.filename().c_str()};
+    std::string progname{std::experimental::filesystem::path{argv[0]}.filename().c_str()};
 
     std::string             address;
     std::string             port;
-    boost::filesystem::path log_path;
-    boost::filesystem::path cfg_path{"/etc/aeon/service.cfg"};
+    std::experimental::filesystem::path log_path;
+    std::experimental::filesystem::path cfg_path{"/etc/aeon/service.cfg"};
     web::http::uri          uri;
     bool                    run_as_daemon{false};
     bool                    respawn{false};

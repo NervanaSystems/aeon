@@ -213,7 +213,7 @@ if (ENABLE_OPENFABRICS_CONNECTOR)
 endif()
 
 # Check for BOOST components
-find_package(Boost REQUIRED COMPONENTS system filesystem)
+find_package(Boost REQUIRED COMPONENTS system)
 
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})

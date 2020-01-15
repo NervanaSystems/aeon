@@ -24,8 +24,6 @@
 #include <string>
 #include <stdexcept>
 
-#include <boost/filesystem/path.hpp>
-
 namespace nervana
 {
     namespace pidfile

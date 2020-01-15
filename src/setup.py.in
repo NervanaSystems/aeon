@@ -44,7 +44,9 @@ libs += ' -lcurl'
 
 include_dirs += ' ${Boost_INCLUDE_DIRS}'
 lib_dirs += ' ${Boost_LIBRARY_DIRS}'
-libs += ' -lboost_system -lboost_filesystem'
+libs += ' -lboost_system'
+
+libs += ' -lstdc++fs'
 
 if '${OPENFABRICS_FOUND}' == 'TRUE':
     include_dirs += ' -I${OPENFABRICS_INCLUDE_DIRS} '
