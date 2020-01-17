@@ -15,6 +15,4 @@
 # ******************************************************************************
 
 add_subdirectory(cpp_iterator)
-if (PYTHON_PLUGIN)
-    add_subdirectory(plugins)
 endif()
