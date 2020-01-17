@@ -48,9 +48,6 @@ add_definitions(-DBUILD_VERSION_MAJOR=${AEON_VERSION_MAJOR}
                 -DBUILD_VERSION_MINOR=${AEON_VERSION_MINOR}
                 -DBUILD_VERSION_PATCH=${AEON_VERSION_PATCH})
 
-option(ENABLE_AEON_SERVICE "Enable compilation of AEON Service" OFF)
-option(ENABLE_AEON_CLIENT "Enable compilation of AEON Client" ON)
-option(ENABLE_OPENFABRICS_CONNECTOR "Enable OpenFabrics connector for batch exchange between service and client" OFF)
 option(SANITIZER_TYPE "Choose the type of sanitizer, options are: Address, Leak, Thread, Undefined" OFF)
 
 include(cmake/summary.cmake)
@@ -160,10 +157,6 @@ list(REMOVE_ITEM OpenCV_LIBRARIES "${OpenCV_LIB_DIR_OPT}/libopencv_ts.so")
 # Ubuntu like os:
 list(REMOVE_ITEM OpenCV_LIBRARIES opencv_ts)
 
-find_package(CURL REQUIRED)
-include_directories(${CURL_INCLUDE_DIRS})
-link_directories(${CURL_LIBRARY_DIRS})
-
 # set(Python_ADDITIONAL_VERSIONS 3.6 3.5 3.4)
 
 find_package(PythonInterp)
@@ -189,29 +182,6 @@ else()
     unset(PYTHON_LIBRARIES)
 endif (PYTHONLIBS_FOUND)
 
-if (ENABLE_AEON_SERVICE)
-    # Check for C++ REST SDK from Microsoft
-    find_package(CppRest REQUIRED)
-    include_directories(${CPPREST_INCLUDE_DIRS})
-    link_directories(${CPPREST_LIBRARY_DIRS})
-
-    # Check for OpenSSL
-    find_package(OpenSSL REQUIRED)
-    include_directories(${OPENSSL_INCLUDE_DIRS})
-    link_directories(${OPENSSL_LIBRARY_DIRS})
-endif()
-
-if (NOT ENABLE_AEON_SERVICE AND NOT ENABLE_AEON_CLIENT)
-    set(ENABLE_OPENFABRICS_CONNECTOR OFF)
-endif()
-
-if (ENABLE_OPENFABRICS_CONNECTOR)
-    # Check for OpenFabrics Interface
-    find_package(OpenFabrics REQUIRED)
-    include_directories(${OPENFABRICS_INCLUDE_DIRS})
-    link_directories(${OPENFABRICS_LIBRARY_DIRS})
-endif()
-
 # Check for BOOST components
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 
@@ -219,17 +189,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
-
-if (ENABLE_AEON_SERVICE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_AEON_SERVICE")
-    if (ENABLE_OPENFABRICS_CONNECTOR)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_OPENFABRICS_CONNECTOR")
-    endif()
-endif()
-
-if (ENABLE_AEON_CLIENT)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_AEON_CLIENT")
-endif()
 
 # Check for documentation prerequisites
 find_package(LATEX)
@@ -243,13 +202,7 @@ set(BUILD_SHARED_LIBS off)
 add_subdirectory(gtest)
 set(BUILD_SHARED_LIBS on)
 add_subdirectory(src)
-if (ENABLE_AEON_SERVICE)
-add_subdirectory(src/service)
-endif()
 include_directories(src)
-if (ENABLE_AEON_CLIENT)
-include_directories(src/client)
-endif()
 add_subdirectory(test)
 add_subdirectory(examples)
 add_subdirectory(doc)

@@ -228,7 +228,7 @@ TEST(benchmark, cache)
     }
 }
 
-void benchmark_imagenet(json config, char* batch_delay, size_t batch_size)
+void benchmark_imagenet(json config, size_t batch_size)
 {
     try
     {
@@ -273,13 +273,6 @@ TEST(benchmark, imagenet)
     char* manifest_root = getenv("TEST_IMAGENET_ROOT");
     char* manifest_name = getenv("TEST_IMAGENET_MANIFEST");
     char* cache_root    = getenv("TEST_IMAGENET_CACHE");
-    char* address       = getenv("TEST_IMAGENET_ADDRESS");
-    char* port          = getenv("TEST_IMAGENET_PORT");
-    char* rdma_address  = getenv("TEST_IMAGENET_RDMA_ADDRESS");
-    char* rdma_port     = getenv("TEST_IMAGENET_RDMA_PORT");
-    char* session_id    = getenv("TEST_IMAGENET_SESSION_ID");
-    char* async         = getenv("TEST_IMAGENET_ASYNC");
-    char* batch_delay   = getenv("TEST_IMAGENET_BATCH_DELAY");
     char* bsz           = getenv("TEST_IMAGENET_BATCH_SIZE");
     char* iterations    = getenv("TEST_IMAGENET_ITERATIONS");
 
@@ -313,32 +306,10 @@ TEST(benchmark, imagenet)
                        {"iteration_mode_count", iteration_mode_count},
                        {"cache_directory", cache_root ? cache_root : ""},
                        {"cpu_list", ""},
-                       //{"web_server_port", 8086},
                        {"etl", {image_config, label_config}},
                        {"augmentation", aug_config}};
 
-        if (address != NULL && port != NULL)
-        {
-            config["remote"]["address"] = address;
-            config["remote"]["port"]    = std::stoi(port);
-            if (session_id != NULL)
-            {
-                config["remote"]["session_id"] = session_id;
-            }
-            if (async != NULL)
-            {
-                bool b;
-                istringstream(async) >> b;
-                config["remote"]["async"] = b;
-            }
-            if (rdma_address != NULL && rdma_port != NULL)
-            {
-                config["remote"]["rdma_address"] = rdma_address;
-                config["remote"]["rdma_port"]    = std::stoi(rdma_port);
-            }
-        }
-
-        benchmark_imagenet(config, batch_delay, batch_size);
+        benchmark_imagenet(config, batch_size);
     }
 }
 
@@ -347,7 +318,6 @@ TEST(benchmark, imagenet_paddle)
     char* manifest_root = getenv("TEST_IMAGENET_ROOT");
     char* manifest_name = getenv("TEST_IMAGENET_MANIFEST");
     char* cache_root    = getenv("TEST_IMAGENET_CACHE");
-    char* batch_delay   = getenv("TEST_IMAGENET_BATCH_DELAY");
     char* bsz           = getenv("TEST_IMAGENET_BATCH_SIZE");
     char* iterations    = getenv("TEST_IMAGENET_ITERATIONS");
 
@@ -397,7 +367,7 @@ TEST(benchmark, imagenet_paddle)
                        {"etl", {image_config, label_config}},
                        {"augmentation", aug_config}};
 
-        benchmark_imagenet(config, batch_delay, batch_size);
+        benchmark_imagenet(config, batch_size);
     }
 }
 

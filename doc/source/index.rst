@@ -42,7 +42,6 @@ bug reports at aeon_issues_ .
    getting_started
    user_guide
    developer_guide
-   service
 
 .. toctree::
    :hidden:
@@ -82,4 +81,3 @@ bug reports at aeon_issues_ .
 
    python_api
    cpp_api
-   service_api

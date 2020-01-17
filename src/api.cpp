@@ -102,7 +102,6 @@ typedef struct
     PyObject*               batch_size;
     PyObject*               axes_info;
     PyObject*               config;
-    PyObject*               session_id;
     loader*                 m_loader;
     uint32_t                m_i;
     bool                    m_first_iteration;
@@ -272,7 +271,6 @@ static void DataLoader_dealloc(aeon_DataLoader* self)
     Py_XDECREF(self->batch_size);
     Py_XDECREF(self->axes_info);
     Py_XDECREF(self->config);
-    Py_XDECREF(self->session_id);
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
@@ -325,7 +323,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             self->ndata      = Py_BuildValue("i", self->m_loader->record_count());
             self->batch_size = Py_BuildValue("i", self->m_loader->batch_size());
             self->config     = PyDict_Copy(dict);
-            self->session_id = Py_BuildValue("s", self->m_loader->get_session_id());
 
             // axes_info is represented as a tuple of tuples.
             // A single entry in axes_info is represented as
@@ -455,12 +452,6 @@ static PyMemberDef DataLoader_members[] = {
      offsetof(aeon_DataLoader, config),
      0,
      (char*)"config passed to DataLoader object"},
-    {(char*)"session_id",
-     T_OBJECT_EX,
-     offsetof(aeon_DataLoader, session_id),
-     0,
-     (char*)"ID of DataLoader session object set when remote is defined and no session_id is "
-            "specified"},
     {NULL, NULL, 0, 0, NULL} /* Sentinel */
 };
 
