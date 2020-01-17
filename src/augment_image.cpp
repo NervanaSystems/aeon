@@ -84,18 +84,6 @@ augment::image::param_factory::param_factory(nlohmann::json js)
                     uniform_int_distribution<int>(0, padding * 2);
             }
         }
-#ifndef PYTHON_PLUGIN
-        if (js.find("plugin_filename") != js.end())
-            WARN << "Detected `plugin_filename` in augmentation config, but aeon was not compiled "
-                    "with "
-                    "PYTHON_PLUGIN flag. Recompile with PYTHON_PLUGIN flag in order to use plugins."
-                 << endl;
-        if (js.find("plugin_params") != js.end())
-            WARN << "Detected `plugin_params` in augmentation config, but aeon was not compiled "
-                    "with "
-                    "PYTHON_PLUGIN flag. Recompile with PYTHON_PLUGIN flag in order to use plugins."
-                 << endl;
-#endif
     }
     m_emit_type = get_emit_constraint_type();
 }
@@ -123,26 +111,6 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
     // since the params default ctor is private and factory is friend
     // make_shared is not friend :(
     auto settings = shared_ptr<augment::image::params>(new augment::image::params());
-
-#ifdef PYTHON_PLUGIN
-    if (!plugin_filename.empty())
-    {
-        lock_guard<mutex> lock(mtx);
-        if (user_plugin_map.find(this_thread::get_id()) == user_plugin_map.end())
-        {
-            user_plugin_map[this_thread::get_id()] =
-                make_shared<plugin>(plugin_filename, plugin_params.dump());
-        }
-        settings->user_plugin = user_plugin_map[this_thread::get_id()];
-
-        if (settings->user_plugin)
-            settings->user_plugin->prepare();
-    }
-    else
-    {
-        settings->user_plugin.reset();
-    }
-#endif
 
     auto& random = get_thread_local_random_engine();
 

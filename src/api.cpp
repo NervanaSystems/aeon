@@ -18,7 +18,6 @@
 #include <sstream>
 
 #include "api.hpp"
-#include "python_utils.hpp"
 #include "json_parser.hpp"
 #include <numpy/arrayobject.h>
 #include "structmember.h"
@@ -30,19 +29,9 @@ using nlohmann::json;
 namespace
 {
     loader* create_loader(const json& config);
-
-    // allows/blocks aeon to call python plugins during lifespan of this object
-    using block_threads = nervana::python::block_threads;
-    using allow_threads = nervana::python::allow_threads;
 }
 
 extern "C" {
-#ifndef PYTHON_PLUGIN
-#define Py_BEGIN_ALLOW_THREADS
-#define Py_END_ALLOW_THREADS
-#define Py_BLOCK_THREADS
-#define Py_UNBLOCK_THREADS
-#endif
 
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
@@ -102,7 +91,6 @@ typedef struct
     PyObject*               batch_size;
     PyObject*               axes_info;
     PyObject*               config;
-    PyObject*               session_id;
     loader*                 m_loader;
     uint32_t                m_i;
     bool                    m_first_iteration;
@@ -118,8 +106,6 @@ static PyObject* DataLoader_iter(PyObject* self)
     INFO << " aeon_DataLoader_iter";
     Py_INCREF(self);
 
-    allow_threads a;
-
     try
     {
         DL_get_loader(self)->reset();
@@ -127,8 +113,6 @@ static PyObject* DataLoader_iter(PyObject* self)
     }
     catch (std::exception& e)
     {
-        block_threads b{a};
-
         stringstream ss;
         ss << "Error creating iterator: " << e.what();
         ERR << ss.str();
@@ -142,8 +126,6 @@ static PyObject* DataLoader_iternext(PyObject* self)
 {
     INFO << " aeon_DataLoader_iternext";
     PyObject* result = nullptr;
-
-    allow_threads a;
 
     nlohmann::json conf        = DL_get_loader(self)->get_current_config();
     bool           batch_major = conf.value("batch_major", true);
@@ -159,7 +141,6 @@ static PyObject* DataLoader_iternext(PyObject* self)
             const fixed_buffer_map& d     = *(DL_get_loader(self)->get_current_iter());
             auto                    names = DL_get_loader(self)->get_buffer_names();
 
-            block_threads b{a};
             result            = PyTuple_New(names.size());
             int buf_tuple_len = 2;
             int tuple_pos     = 0;
@@ -188,15 +169,12 @@ static PyObject* DataLoader_iternext(PyObject* self)
         }
         else
         {
-            block_threads b{a};
             /* Raising of standard StopIteration exception with empty value. */
             PyErr_SetNone(PyExc_StopIteration);
         }
     }
     catch (std::exception& e)
     {
-        block_threads b{a};
-
         std::stringstream ss;
         ss << "Error when iterating: " << e.what() << endl;
         ERR << ss.str();
@@ -260,7 +238,6 @@ static void DataLoader_dealloc(aeon_DataLoader* self)
 {
     INFO << " DataLoader_dealloc";
     {
-        allow_threads a;
         if (self->m_loader != nullptr)
         {
             delete self->m_loader;
@@ -272,7 +249,6 @@ static void DataLoader_dealloc(aeon_DataLoader* self)
     Py_XDECREF(self->batch_size);
     Py_XDECREF(self->axes_info);
     Py_XDECREF(self->config);
-    Py_XDECREF(self->session_id);
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
@@ -283,10 +259,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
 
     static const char* keyword_list[] = {"config", nullptr};
 
-#ifdef PYTHON_PLUGIN
-    Py_Initialize();
-    PyEval_InitThreads();
-#endif
     PyObject* dict;
     auto      rc = PyArg_ParseTupleAndKeywords(
         args, kwds, "O!", const_cast<char**>(keyword_list), &PyDict_Type, &dict);
@@ -313,7 +285,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             return nullptr;
         }
 
-        allow_threads a;
         try
         {
             self->m_loader          = create_loader(json_config);
@@ -325,7 +296,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             self->ndata      = Py_BuildValue("i", self->m_loader->record_count());
             self->batch_size = Py_BuildValue("i", self->m_loader->batch_size());
             self->config     = PyDict_Copy(dict);
-            self->session_id = Py_BuildValue("s", self->m_loader->get_session_id());
 
             // axes_info is represented as a tuple of tuples.
             // A single entry in axes_info is represented as
@@ -337,8 +307,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                 auto datum_name   = name_shape_list[i].first;
                 auto axes_lengths = name_shape_list[i].second.get_shape();
                 auto axes_names   = name_shape_list[i].second.get_names();
-
-                block_threads{a};
 
                 // using tuple instead of dict to preserve the order
                 // python 2.x doesnt have the support for ordereddict obj, its supported in python 3.x onwards
@@ -391,8 +359,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
         }
         catch (std::exception& e)
         {
-            block_threads b{a};
-
             // Some kind of problem with creating the internal loader object
             std::stringstream ss;
             ss << "Unable to create internal loader object: " << e.what() << endl;
@@ -455,12 +421,6 @@ static PyMemberDef DataLoader_members[] = {
      offsetof(aeon_DataLoader, config),
      0,
      (char*)"config passed to DataLoader object"},
-    {(char*)"session_id",
-     T_OBJECT_EX,
-     offsetof(aeon_DataLoader, session_id),
-     0,
-     (char*)"ID of DataLoader session object set when remote is defined and no session_id is "
-            "specified"},
     {NULL, NULL, 0, 0, NULL} /* Sentinel */
 };
 

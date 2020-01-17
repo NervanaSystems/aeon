@@ -15,9 +15,6 @@
 *******************************************************************************/
 
 #include "etl_image.hpp"
-#ifdef PYTHON_PLUGIN
-#include "python_plugin.hpp"
-#endif
 
 #include <atomic>
 
@@ -194,16 +191,7 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
         flippedImage = resizedImage;
 
     cv::Mat* finalImage = &flippedImage;
-
-#ifdef PYTHON_PLUGIN
-    cv::Mat pluginImage;
-    if (img_xform->user_plugin)
-    {
-        pluginImage = img_xform->user_plugin->augment_image(flippedImage);
-        finalImage  = &pluginImage;
-    }
-#endif
-
+  
     return *finalImage;
 }
 

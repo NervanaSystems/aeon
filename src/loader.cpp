@@ -24,17 +24,6 @@
 
 #include "loader.hpp"
 #include "log.hpp"
-#include "web_app.hpp"
-#include "manifest_nds.hpp"
-
-#if defined(ENABLE_AEON_SERVICE)
-#include "client/loader_remote.hpp"
-#include "client/curl_connector.hpp"
-#include "client/remote_config.hpp"
-#if defined(ENABLE_OPENFABRICS_CONNECTOR)
-#include "client/ofi_connector.hpp"
-#endif
-#endif
 
 using namespace std;
 using namespace nervana;
@@ -98,14 +87,6 @@ loader_local::loader_local(const json& config_json)
     initialize(config_json);
 }
 
-loader_local::~loader_local()
-{
-    if (m_debug_web_app)
-    {
-        m_debug_web_app->deregister_loader(this);
-    }
-}
-
 void loader_local::initialize(const json& config_json)
 {
     string config_string = config_json.dump();
@@ -133,38 +114,23 @@ void loader_local::initialize(const json& config_json)
         }
     }
 
-    if (nervana::manifest_nds::is_likely_json(lcfg.manifest_filename))
-    {
-        m_manifest_nds = nervana::manifest_nds_builder()
-                             .filename(lcfg.manifest_filename)
-                             .block_size(lcfg.block_size)
-                             .elements_per_record(2)
-                             .shuffle(lcfg.shuffle_manifest)
-                             .seed(lcfg.random_seed)
-                             .make_shared();
+    // the manifest defines which data should be included in the dataset
+    m_manifest_file = make_shared<manifest_file>(lcfg.manifest_filename,
+                                                    lcfg.shuffle_manifest,
+                                                    lcfg.manifest_root,
+                                                    lcfg.subset_fraction,
+                                                    lcfg.block_size,
+                                                    lcfg.random_seed,
+                                                    lcfg.node_id,
+                                                    lcfg.node_count,
+                                                    lcfg.batch_size);
 
-        m_block_loader = std::make_shared<block_loader_nds>(m_manifest_nds, lcfg.block_size);
-    }
-    else
+    // TODO: make the constructor throw this error
+    if (record_count() == 0)
     {
-        // the manifest defines which data should be included in the dataset
-        m_manifest_file = make_shared<manifest_file>(lcfg.manifest_filename,
-                                                     lcfg.shuffle_manifest,
-                                                     lcfg.manifest_root,
-                                                     lcfg.subset_fraction,
-                                                     lcfg.block_size,
-                                                     lcfg.random_seed,
-                                                     lcfg.node_id,
-                                                     lcfg.node_count,
-                                                     lcfg.batch_size);
-
-        // TODO: make the constructor throw this error
-        if (record_count() == 0)
-        {
-            throw std::runtime_error("manifest file is empty");
-        }
-        m_block_loader = make_shared<block_loader_file>(m_manifest_file, lcfg.block_size);
+        throw std::runtime_error("manifest file is empty");
     }
+    m_block_loader = make_shared<block_loader_file>(m_manifest_file, lcfg.block_size);
 
     m_block_manager = make_shared<block_manager>(m_block_loader,
                                                  lcfg.block_size,
@@ -211,12 +177,6 @@ void loader_local::initialize(const json& config_json)
         make_shared<batch_iterator_fbm>(m_decoder, lcfg.batch_size, m_provider, !lcfg.batch_major);
 
     m_output_buffer_ptr = m_final_stage->next();
-
-    if (lcfg.web_server_port != 0)
-    {
-        m_debug_web_app = make_shared<web_app>(lcfg.web_server_port);
-        m_debug_web_app->register_loader(this);
-    }
 }
 
 const vector<string>& loader_local::get_buffer_names() const
@@ -304,59 +264,5 @@ std::unique_ptr<loader> loader_factory::get_loader(const std::string& config)
 
 std::unique_ptr<loader> loader_factory::get_loader(const json& config)
 {
-#if defined(ENABLE_AEON_SERVICE)
-    if (remote_version(config))
-    {
-        return create_loader_remote(config);
-    }
-#endif
     return unique_ptr<loader_local>(new loader_local(config));
 }
-
-#if defined(ENABLE_AEON_SERVICE)
-
-bool loader_factory::remote_version(const json& config)
-{
-    try
-    {
-        config.at("remote");
-    }
-    catch (json::out_of_range)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-unique_ptr<loader> loader_factory::create_loader_remote(const json& js)
-{
-    remote_config config(js.at("remote"));
-
-    shared_ptr<http_connector> http_connector_obj =
-        make_shared<curl_connector>(config.address, config.port);
-#if defined(ENABLE_OPENFABRICS_CONNECTOR)
-    if (!config.rdma_address.empty() && config.rdma_port != 0)
-    {
-        INFO << "Using OFI library to fetch batches via RDMA.";
-        auto ofi_ptr = new ofi_connector(config.rdma_address, config.rdma_port, http_connector_obj);
-        http_connector_obj = shared_ptr<ofi_connector>(ofi_ptr);
-    }
-#endif
-    shared_ptr<service> service_obj;
-    if (config.async)
-    {
-        auto service_connector_obj    = make_shared<service_connector>(http_connector_obj);
-        auto service_async_source_obj = make_shared<service_async_source>(service_connector_obj);
-        service_obj                   = make_shared<service_async>(service_async_source_obj);
-        INFO << "Using asynchronous batch fetching.";
-    }
-    else
-    {
-        service_obj = make_shared<service_connector>(http_connector_obj);
-    }
-
-    loader_remote* new_loader = new loader_remote(service_obj, js);
-    return unique_ptr<loader_remote>(new_loader);
-}
-#endif
