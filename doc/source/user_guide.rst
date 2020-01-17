@@ -183,7 +183,6 @@ The possible base loader configurations are the following (configurations withou
    iteration_mode_count||
    etl||
    augmentation||
-   remote|| Configuration of connection with aeon service in distrubted dataloading scenario. Please take a look at :doc:`service <service>` documentation.
 
 Aeon also supports an environment variable ``AEON_CPU_LIST`` which overrides `cpu_list`.
 
