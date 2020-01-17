@@ -23,7 +23,6 @@ set (SRC
     batch_iterator.cpp
     block.cpp
     block_loader_file.cpp
-    block_loader_nds.cpp
     block_manager.cpp
     box.cpp
     boundingbox.cpp
@@ -47,7 +46,6 @@ set (SRC
     loader.cpp
     log.cpp
     manifest_file.cpp
-    manifest_nds.cpp
     normalized_box.cpp
     provider.cpp
     provider_factory.cpp
@@ -55,25 +53,9 @@ set (SRC
     typemap.cpp
     util.cpp
     wav_data.cpp
-    web_app.cpp
-    web_server.cpp
     event.cpp
     raw_image.cpp
     output_saver.cpp)
-
-if (ENABLE_AEON_CLIENT)
-    list(APPEND SRC
-        client/curl_connector.cpp
-        client/loader_remote.cpp
-        client/service.cpp
-        client/remote_config.cpp)
-endif()
-
-if (ENABLE_OPENFABRICS_CONNECTOR)
-    list(APPEND SRC
-         rdma/ofi.cpp
-         client/ofi_connector.cpp)
-endif()
 
 set(AEON_HEADER_FILES
         version.hpp)
@@ -81,12 +63,6 @@ set(AEON_HEADER_FILES
 if (PYTHON_FOUND)
     list(APPEND SRC api.cpp)
 endif(PYTHON_FOUND)
-
-if (PYTHON_PLUGIN)
-    list(APPEND SRC python_plugin.cpp
-                    conversion.cpp
-                    python_utils.cpp)
-endif(PYTHON_PLUGIN)
 
 set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
 set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/../setup.py")
@@ -97,9 +73,6 @@ add_library(aeon SHARED ${SRC} ${AEON_HEADER_FILES})
 install(TARGETS aeon DESTINATION lib)
 
 set(AEON_LIBRARIES ${CURL_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES}  stdc++fs)
-if (ENABLE_OPENFABRICS_CONNECTOR)
-    list(APPEND AEON_LIBRARIES ${OPENFABRICS_LIBRARIES})
-endif()
 
 target_link_libraries(aeon ${AEON_LIBRARIES})
 set_target_properties(aeon PROPERTIES VERSION ${AEON_VERSION_MAJOR}.${AEON_VERSION_MINOR}.${AEON_VERSION_PATCH}

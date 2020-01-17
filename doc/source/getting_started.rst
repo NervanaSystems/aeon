@@ -24,12 +24,12 @@ First grab aeon's dependencies:
 
 Ubuntu::
 
-  apt-get install git clang libcurl4-openssl-dev libopencv-dev libssl-dev
+  apt-get install git clang libopencv-dev
 
 Centos::
 
   yum install epel-release
-  yum install git clang gcc-c++ make cmake openssl-devel opencv-devel libcurl-devel
+  yum install git clang gcc-c++ make cmake opencv-devel
 
 OSX (Assuming you followed neon's Homebrew based install)::
 
@@ -44,5 +44,3 @@ Then build the aeon libraries::
 
 Now continue on to the :doc:`user_guide` to get started using aeon. Or to the
 :doc:`developer_guide` to developing custom loaders/transformers.
-
-For distributed aeon please check `dependencies <service.html#dependencies>`_ and `building <service.html#building>`_ information.

@@ -101,15 +101,3 @@ fixed_buffer_map& get_fixed_buffer_map()
     static fixed_buffer_map result(write_sizes, batch_size);
     return result;
 }
-
-#if defined(ENABLE_AEON_SERVICE)
-names_and_shapes get_names_and_shapes()
-{
-    names_and_shapes nas;
-    shape_type       s1{{1, 2}, {"int8_t"}};
-    shape_type       s2{{1, 2, 3, 4, 5}, {"int32_t"}};
-    nas.emplace_back("s1", s1);
-    nas.emplace_back("s2", s2);
-    return nas;
-}
-#endif /* ENABLE_AEON_SERVICE */
