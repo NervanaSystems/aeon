@@ -84,14 +84,5 @@ std::shared_ptr<image::decoded>
 
     cv::Mat* finalImage = &flippedImage;
 
-#ifdef PYTHON_PLUGIN
-    cv::Mat pluginImage;
-    if (img_xform->user_plugin)
-    {
-        pluginImage = img_xform->user_plugin->augment_pixel_mask(flippedImage);
-        finalImage  = &pluginImage;
-    }
-#endif
-
     return make_shared<image::decoded>(*finalImage);
 }
