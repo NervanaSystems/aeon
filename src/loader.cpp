@@ -87,10 +87,6 @@ loader_local::loader_local(const json& config_json)
     initialize(config_json);
 }
 
-loader_local::~loader_local()
-{
-}
-
 void loader_local::initialize(const json& config_json)
 {
     string config_string = config_json.dump();

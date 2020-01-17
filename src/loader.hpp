@@ -180,8 +180,6 @@ public:
     loader_local(const std::string&);
     loader_local(const nlohmann::json&);
 
-    ~loader_local() override;
-
     const std::vector<std::string>& get_buffer_names() const override;
     const std::vector<std::pair<std::string, shape_type>>& get_names_and_shapes() const override;
     const shape_t& get_shape(const std::string& name) const override;
