@@ -95,7 +95,6 @@ public:
         out << "saturation             " << obj.saturation << "\n";
         out << "hue                    " << obj.hue << "\n";
         out << "debug_deterministic    " << obj.debug_deterministic << "\n";
-        out << "debug_output_directory " << obj.debug_output_directory << "\n";
         return out;
     }
 
@@ -119,7 +118,6 @@ public:
     float              saturation             = 1.0;
     int                hue                    = 0;
     bool               debug_deterministic    = false;
-    std::string        debug_output_directory = "";
 #ifdef PYTHON_PLUGIN
     std::shared_ptr<plugin> user_plugin = nullptr;
 #endif
@@ -199,9 +197,6 @@ public:
     /** Image padding pixel number with random crop to original image size */
     int padding{0};
 
-    /** Writes transformed data to the provided directory */
-    std::string debug_output_directory = "";
-
     std::vector<nlohmann::json> batch_samplers;
 
 private:
@@ -244,7 +239,6 @@ private:
         ADD_SCALAR(stddev, mode::OPTIONAL),
         ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL),
         ADD_SCALAR(padding, mode::OPTIONAL),
-        ADD_SCALAR(debug_output_directory, mode::OPTIONAL),
         ADD_DISTRIBUTION(
             contrast, mode::OPTIONAL, [](decltype(contrast) v) { return v.a() <= v.b(); }),
         ADD_DISTRIBUTION(
