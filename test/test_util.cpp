@@ -26,7 +26,6 @@
 
 #include "gtest/gtest.h"
 #include "util.hpp"
-#include "wav_data.hpp"
 #include "cap_mjpeg_decoder.hpp"
 #include "image.hpp"
 
