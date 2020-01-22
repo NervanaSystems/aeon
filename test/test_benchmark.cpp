@@ -523,7 +523,7 @@ TEST(benchmark, manifest)
     // Generate a manifest file
     {
         auto     startTime = timer.now();
-        ofstream mfile = nervana::file_util::secure_ofstream(manifest_filename);
+        auto mfile = nervana::file_util::secure_ofstream(manifest_filename);
         mfile << "@FILE\tFILE" << std::endl;
         for (int i = 0; i < 10e6; i++)
         {

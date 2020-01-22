@@ -253,7 +253,7 @@ TEST(manifest, root_path)
 {
     string manifest_file = "tmp_manifest.tsv";
     {
-        ofstream f = nervana::file_util::secure_ofstream(manifest_file);
+        auto f = nervana::file_util::secure_ofstream(manifest_file);
         f << "@FILE\tFILE\n";
         for (int i = 0; i < 10; i++)
         {
@@ -278,7 +278,7 @@ TEST(manifest, root_path)
         }
     }
     {
-        ofstream f = nervana::file_util::secure_ofstream(manifest_file);
+        auto f = nervana::file_util::secure_ofstream(manifest_file);
         f << "@FILE\tFILE\n";
         for (int i = 0; i < 10; i++)
         {
@@ -303,7 +303,7 @@ TEST(manifest, root_path)
         }
     }
     {
-        ofstream f = nervana::file_util::secure_ofstream(manifest_file);
+        auto f = nervana::file_util::secure_ofstream(manifest_file);
         f << "@FILE\tFILE\n";
         for (int i = 0; i < 10; i++)
         {
@@ -647,7 +647,7 @@ public:
         source_directory  = file_util::make_temp_directory(source_dir);
         manifest_filename = file_util::path_join(source_directory, "manifest.tsv");
         file_list.push_back(manifest_filename);
-        ofstream mfile = nervana::file_util::secure_ofstream(manifest_filename);
+        auto mfile = nervana::file_util::secure_ofstream(manifest_filename);
         mfile << "@FILE\tFILE\n";
         for (size_t i = 0; i < count; i++)
         {
@@ -661,7 +661,7 @@ public:
             file_list.push_back(image_filename);
             file_list.push_back(target_filename);
             cv::imwrite(image_filename, image);
-            ofstream tfile = nervana::file_util::secure_ofstream(target_filename);
+            auto tfile = nervana::file_util::secure_ofstream(target_filename);
             tfile << i;
             mfile << image_filename << manifest_file::get_delimiter();
             mfile << target_filename << "\n";

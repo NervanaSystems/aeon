@@ -34,7 +34,7 @@ string generate_manifest_file(size_t record_count)
 {
     string manifest_name = "manifest.txt";
     const char* image_files[] = {"flowers.jpg", "img_2112_70.jpg"};
-    std::ofstream f = nervana::file_util::secure_ofstream(manifest_name);
+    auto f = nervana::file_util::secure_ofstream(manifest_name);
     if (f)
     {
         f << manifest_file::get_metadata_char();

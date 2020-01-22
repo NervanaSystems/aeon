@@ -316,7 +316,7 @@ void dump_config_info(ostream& f, shared_ptr<nervana::interface::config_info_int
 
 TEST(util, param_dump)
 {
-    ofstream f = nervana::file_util::secure_ofstream("config_args.txt", ios::trunc);
+    auto f = nervana::file_util::secure_ofstream("config_args.txt", ios::trunc);
     DUMP_CONFIG(boundingbox);
     DUMP_CONFIG(char_map);
     DUMP_CONFIG(image);

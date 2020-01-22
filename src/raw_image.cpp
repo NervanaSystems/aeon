@@ -99,7 +99,7 @@ void raw_image::read(istream& f)
 
 void raw_image::write(const string& filename)
 {
-    ofstream f = nervana::file_util::secure_ofstream(filename);
+    auto f = nervana::file_util::secure_ofstream(filename);
     if (f)
     {
         write(f);
