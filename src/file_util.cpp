@@ -114,13 +114,13 @@ string nervana::file_util::make_temp_directory(const string& path)
 {
     string fname        = path.empty() ? file_util::get_temp_directory() : path;
     string tmp_template = file_util::path_join(fname, "aeonXXXXXX");
-    char*  tmpname      = strdup(tmp_template.c_str());
 
-    mkdtemp(tmpname);
+    char* ptr = mkdtemp(&tmp_template[0]);
+    if (ptr == nullptr) {
+        throw std::runtime_error(std::string{"Failed to create unique temporary directory. "} + strerror(errno));
+    }
 
-    string rc = tmpname;
-    free(tmpname);
-    return rc;
+    return tmp_template;
 }
 
 std::string nervana::file_util::get_temp_directory()
