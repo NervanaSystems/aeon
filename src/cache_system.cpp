@@ -121,7 +121,7 @@ void cache_system::store_block(const encoded_record_list& buffer)
     string block_name      = create_cache_block_name(m_current_block_number);
     string block_file_path = file_util::path_join(m_cache_dir, block_name);
 
-    ofstream fi(block_file_path);
+    ofstream fi = nervana::file_util::secure_ofstream(block_file_path);
     if (fi)
     {
         cpio::writer writer(fi);
@@ -169,7 +169,7 @@ bool cache_system::check_if_complete(const std::string& cache_dir)
 void cache_system::mark_cache_complete(const std::string& cache_dir)
 {
     string   file = file_util::path_join(cache_dir, m_cache_complete_filename);
-    ofstream f{file};
+    ofstream f = nervana::file_util::secure_ofstream(file);
 }
 
 bool cache_system::take_ownership(const std::string& cache_dir, int& lock)

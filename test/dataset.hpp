@@ -89,7 +89,7 @@ public:
                 std::string fileName  = nervana::file_util::path_join(
                     m_path, m_prefix + std::to_string(fileNo++) + ".cpio");
                 m_file_list.push_back(fileName);
-                std::ofstream f(fileName, std::ostream::binary);
+                std::ofstream f = nervana::file_util::secure_ofstream(fileName, std::ostream::binary);
                 if (f)
                 {
                     nervana::cpio::writer writer{f};
