@@ -263,7 +263,7 @@ string nervana::file_util::tmp_filename(const string& extension)
 void nervana::file_util::touch(const std::string& filename)
 {
     // inspired by http://chris-sharpe.blogspot.com/2013/05/better-than-systemtouch.html
-    int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_NOCTTY | O_NONBLOCK, 0666);
+    int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_NOCTTY | O_NONBLOCK, 0600);
     assert(fd >= 0);
     close(fd);
 
