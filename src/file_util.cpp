@@ -98,7 +98,7 @@ void nervana::file_util::remove_file(const string& file)
 
 bool nervana::file_util::make_directory(const string& dir)
 {
-    if (mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
+    if (mkdir(dir.c_str(), S_IRWXU))
     {
         if (errno == EEXIST)
         {
