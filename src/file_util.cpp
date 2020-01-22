@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <sys/file.h>
 #include <iostream>
+#include <experimental/filesystem>
 
 #include "file_util.hpp"
 
@@ -296,4 +297,13 @@ void nervana::file_util::release_lock(int fd, const std::string& filename)
         remove_file(filename);
         close(fd);
     }
+}
+
+std::ofstream nervana::file_util::secure_ofstream(const std::string&      filename,
+                                                  std::ios_base::openmode mode)
+{
+    std::ofstream ofs(filename, mode);
+    namespace fs = std::experimental::filesystem;
+    fs::permissions(filename, fs::perms::owner_read | fs::perms::owner_write);
+    return ofs;
 }
