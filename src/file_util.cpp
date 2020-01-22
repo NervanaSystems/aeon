@@ -249,14 +249,15 @@ string nervana::file_util::tmp_filename(const string& extension)
 {
     string tmp_template =
         file_util::path_join(file_util::get_temp_directory(), "aeonXXXXXX" + extension);
-    char* tmpname = strdup(tmp_template.c_str());
 
     // mkstemp opens the file with open() so we need to close it
-    close(mkstemps(tmpname, extension.size()));
+    int fid = mkstemps(&tmp_template[0], extension.size());
+    if (fid == -1) {
+        throw std::runtime_error(std::string{"Failed to create and open unique temporary file. "} + strerror(errno));
+    }
+    close(fid);
 
-    string rc = tmpname;
-    free(tmpname);
-    return rc;
+    return tmp_template;
 }
 
 void nervana::file_util::touch(const std::string& filename)
