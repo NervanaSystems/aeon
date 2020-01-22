@@ -281,7 +281,7 @@ bool nervana::file_util::exists(const std::string& filename)
 int nervana::file_util::try_get_lock(const std::string& filename)
 {
     mode_t m  = umask(0);
-    int    fd = open(filename.c_str(), O_RDWR | O_CREAT, 0666);
+    int    fd = open(filename.c_str(), O_RDWR | O_CREAT, 0600);
     umask(m);
     if (fd >= 0 && flock(fd, LOCK_EX | LOCK_NB) < 0)
     {
