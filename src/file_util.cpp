@@ -113,7 +113,7 @@ bool nervana::file_util::make_directory(const string& dir)
 string nervana::file_util::make_temp_directory(const string& path)
 {
     string fname        = path.empty() ? file_util::get_temp_directory() : path;
-    string tmp_template = file_util::path_join(fname, "aeonXXXXXX");
+    string tmp_template = file_util::path_join(fname, "aeon_XXXXXX");
 
     char* ptr = mkdtemp(&tmp_template[0]);
     if (ptr == nullptr) {
@@ -248,7 +248,7 @@ void nervana::file_util::iterate_files_worker(
 string nervana::file_util::tmp_filename(const string& extension)
 {
     string tmp_template =
-        file_util::path_join(file_util::get_temp_directory(), "aeonXXXXXX" + extension);
+        file_util::path_join(file_util::get_temp_directory(), "aeon_XXXXXX" + extension);
 
     // mkstemp opens the file with open() so we need to close it
     int fid = mkstemps(&tmp_template[0], extension.size());
