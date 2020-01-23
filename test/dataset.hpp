@@ -80,7 +80,7 @@ public:
         int fileNo      = 0;
         m_path_existed  = exists(m_path);
         int datumNumber = 0;
-        if (m_path_existed || mkdir(m_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
+        if (m_path_existed || mkdir(m_path.c_str(), S_IRWXU) == 0)
         {
             int remainder = m_set_size;
             while (remainder > 0)
