@@ -1,20 +1,18 @@
 import tempfile
-import numpy as np
-from PIL import Image as PILImage
-import pytest
 import os
 import math
 import glob
 import json
+import pytest
 
 from aeon import DataLoader, dict2json
 from mock_data import random_manifest, generic_config, invalid_image
 
-batch_size = 2
+BATCH_SIZE = 2
 
 def test_loader_invalid_config_type():
     manifest = random_manifest(10)
-    config = generic_config(manifest.name, batch_size)
+    config = generic_config(manifest.name, BATCH_SIZE)
 
     config["etl"][0]["type"] = 'invalid type name'
 
@@ -25,7 +23,7 @@ def test_loader_invalid_config_type():
 
 def test_loader_missing_config_field():
     manifest = random_manifest(10)
-    config = generic_config(manifest.name, batch_size)
+    config = generic_config(manifest.name, BATCH_SIZE)
 
     del config['etl'][0]["height"]
 
@@ -35,7 +33,7 @@ def test_loader_missing_config_field():
 
 
 def test_loader_non_existant_manifest():
-    config = generic_config('/this_manifest_file_does_not_exist', batch_size)
+    config = generic_config('/this_manifest_file_does_not_exist', BATCH_SIZE)
 
     with pytest.raises(RuntimeError) as ex:
         dl = DataLoader(config)
@@ -43,8 +41,8 @@ def test_loader_non_existant_manifest():
 
 
 def test_loader_invalid_manifest():
-    filename = tempfile.mkstemp()[1]
-    config = generic_config(invalid_image(filename), batch_size)
+    filename = tempfile.NamedTemporaryFile(mode='w')
+    config = generic_config(invalid_image(filename.name), BATCH_SIZE)
 
     with pytest.raises(Exception) as ex:
         dl = DataLoader(config)
@@ -52,7 +50,7 @@ def test_loader_invalid_manifest():
 
 def test_loader_broken_image():
     manifest = random_manifest(2, broken_image_index=1)
-    config = generic_config(manifest.name, batch_size)
+    config = generic_config(manifest.name, BATCH_SIZE)
 
     with pytest.raises(Exception) as ex:
         dl = DataLoader(config)
@@ -60,7 +58,7 @@ def test_loader_broken_image():
 
 def test_loader_broken_image_next():
     manifest = random_manifest(9, broken_image_index=8)
-    config = generic_config(manifest.name, batch_size)
+    config = generic_config(manifest.name, BATCH_SIZE)
     dl = DataLoader(config)
 
     with pytest.raises(Exception) as ex:
@@ -79,21 +77,21 @@ def test_loader():
     # NOTE: manifest needs to stay in scope until DataLoader has read it.
     for i in range(1, 10):
         manifest = random_manifest(i)
-        config = generic_config(manifest.name, batch_size)
+        config = generic_config(manifest.name, BATCH_SIZE)
 
         dl = DataLoader(config)
 
-        assert len(list(iter(dl))) == math.ceil(float(i)/batch_size)
+        assert len(list(iter(dl))) == math.ceil(float(i)/BATCH_SIZE)
 
 
 def test_loader_repeat_iter():
     # NOTE: manifest needs to stay in scope until DataLoader has read it.
     manifest = random_manifest(10)
-    config = generic_config(manifest.name, batch_size)
+    config = generic_config(manifest.name, BATCH_SIZE)
 
     dl = DataLoader(config)
 
-    assert len(list(iter(dl))) == math.ceil(10./batch_size)
+    assert len(list(iter(dl))) == math.ceil(10./BATCH_SIZE)
 
 
 def test_loader_exception_next():
@@ -103,7 +101,7 @@ def test_loader_exception_next():
     os.chdir(dir_path+'/test_data')
     manifest = open("manifest.tsv")
 
-    config = generic_config(manifest.name, batch_size)
+    config = generic_config(manifest.name, BATCH_SIZE)
     dl = DataLoader(config)
     num_of_batches_in_manifest = 60
     for x in range(0, num_of_batches_in_manifest):
@@ -121,11 +119,11 @@ def test_loader_exception_iter():
     os.chdir(dir_path+'/test_data')
     manifest = open("manifest.tsv")
 
-    config = generic_config(manifest.name, batch_size)
+    config = generic_config(manifest.name, BATCH_SIZE)
     dl = DataLoader(config)
 
     num_of_manifest_entries = 120.
-    assert len(list(iter(dl))) == math.ceil(num_of_manifest_entries/batch_size)
+    assert len(list(iter(dl))) == math.ceil(num_of_manifest_entries/BATCH_SIZE)
 
     manifest.close()
     os.chdir(cwd)
@@ -134,11 +132,11 @@ def test_loader_exception_iter():
 def test_loader_reset():
     # NOTE: manifest needs to stay in scope until DataLoader has read it.
     manifest = random_manifest(10)
-    config = generic_config(manifest.name, batch_size)
+    config = generic_config(manifest.name, BATCH_SIZE)
     dl = DataLoader(config)
-    assert len(list(iter(dl))) == math.ceil(10./batch_size)
+    assert len(list(iter(dl))) == math.ceil(10./BATCH_SIZE)
     dl.reset()
-    assert len(list(iter(dl))) == math.ceil(10./batch_size)
+    assert len(list(iter(dl))) == math.ceil(10./BATCH_SIZE)
 
 
 def test_loader_json_parser_fail():
