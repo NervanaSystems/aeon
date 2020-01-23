@@ -30,9 +30,6 @@
 using namespace std;
 using namespace nervana;
 
-extern gen_image image_dataset;
-extern string    test_cache_directory;
-
 gen_image image_dataset;
 string    test_cache_directory;
 
