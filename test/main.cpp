@@ -53,12 +53,6 @@ static void DeleteDataset()
     image_dataset.delete_files();
 }
 
-void exit_func(int s)
-{
-    //    cout << __FILE__ << " " << __LINE__ << "exit function " << s << endl;
-    //    exit(-1);
-}
-
 extern "C" int main(int argc, char** argv)
 {
     std::setlocale(LC_CTYPE, "");
