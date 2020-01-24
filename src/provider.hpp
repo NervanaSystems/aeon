@@ -104,7 +104,7 @@ public:
 private:
     void provide(int                           idx,
                  nervana::encoded_record& in_buf,
-                 nervana::fixed_buffer_map&    out_buf) const
+                 nervana::fixed_buffer_map&    out_buf) const override
     {
     }
 };

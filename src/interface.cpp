@@ -24,6 +24,8 @@ using namespace nervana;
 using namespace std;
 using namespace nlohmann;
 
+int IGNORE_VALUE;
+
 void json_configurable::verify_config(
     const std::string&                                          location,
     const vector<shared_ptr<interface::config_info_interface>>& config,

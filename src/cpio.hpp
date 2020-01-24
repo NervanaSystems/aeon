@@ -34,13 +34,6 @@ namespace nervana
 {
     namespace cpio
     {
-        static const uint32_t FORMAT_VERSION = 1;
-        static const uint32_t WRITER_VERSION = 1;
-        static const char*    MAGIC_STRING   = "MACR";
-        static const char*    CPIO_TRAILER   = "TRAILER!!!";
-        static const char*    AEON_HEADER    = "cpiohdr";
-        static const char*    AEON_TRAILER   = "cpiotlr";
-
         class record_header;
         class file_header;
         class file_trailer;

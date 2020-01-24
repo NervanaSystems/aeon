@@ -30,7 +30,7 @@
 #include "json.hpp"
 #include "log.hpp"
 
-static int IGNORE_VALUE;
+extern int IGNORE_VALUE;
 
 namespace nervana
 {

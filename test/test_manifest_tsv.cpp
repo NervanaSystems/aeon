@@ -182,6 +182,9 @@ void test_multinode_manifest(bool shuffle)
     auto block       = manifest.next();
     auto block_node1 = manifest_node1.next();
     auto block_node2 = manifest_node2.next();
+    (void) block;
+    (void) block_node1;
+    (void) block_node2;
 
     manifest.reset();
     manifest_node1.reset();    

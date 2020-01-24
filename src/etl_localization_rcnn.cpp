@@ -110,7 +110,7 @@ shared_ptr<localization::rcnn::decoded>
     }
 
     cv::Size im_size{mp->width(), mp->height()};
-    auto     crop = settings->cropbox;
+    //auto     crop = settings->cropbox;
 
     im_size = cv::Size{int(unbiased_round(input_size.width * im_scale)),
                        int(unbiased_round(input_size.height * im_scale))};
