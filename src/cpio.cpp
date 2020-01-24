@@ -102,10 +102,9 @@ void cpio::record_header::read(istream& ifs, uint32_t* fileSize)
     read_single_value(ifs, &m_filesize);
     load_double_short(fileSize, m_filesize);
 
-    auto buffer = new char[m_namesize];
-    ifs.read(buffer, m_namesize);
-    m_filename = string(buffer, m_namesize - 1);
-    delete[] buffer;
+    auto buffer = unique_ptr<char[]>(new char[m_namesize]);
+    ifs.read(buffer.get(), m_namesize);
+    m_filename = string(buffer.get(), m_namesize - 1);
 
     readPadding(ifs, m_namesize);
 }
