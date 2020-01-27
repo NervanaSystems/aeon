@@ -116,6 +116,20 @@ static void test_image(vector<unsigned char>& img, int channels)
     // }
 }
 
+TEST(image, config_empty_json)
+{
+    nlohmann::json js;
+    EXPECT_THROW(image::config cfg(js), std::runtime_error);
+}
+
+TEST(image, config_invalid_width_and_height)
+{
+    EXPECT_THROW(image::config cfg({{"width", -1}, {"height", 256}}), std::invalid_argument);
+    EXPECT_THROW(image::config cfg({{"width", 0}, {"height", 256}}), std::invalid_argument);
+    EXPECT_THROW(image::config cfg({{"width", 256}, {"height", -1}}), std::invalid_argument);
+    EXPECT_THROW(image::config cfg({{"width", 256}, {"height", 0}}), std::invalid_argument);
+}
+
 TEST(image, passthrough)
 {
     cv::Mat        test_image = cv::Mat(256, 512, CV_8UC3);
