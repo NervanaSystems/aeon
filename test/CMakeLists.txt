@@ -64,5 +64,5 @@ target_link_libraries(testsuite ${TESTSUITE_LIBRARIES})
 add_dependencies(testsuite aeon)
 
 add_custom_target(runtest
-	COMMAND ${PROJECT_BINARY_DIR}/test/testsuite
-	DEPENDS testsuite)
+    COMMAND ${PROJECT_BINARY_DIR}/test/testsuite
+    DEPENDS testsuite)
