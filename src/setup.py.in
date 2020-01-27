@@ -30,7 +30,7 @@ lib_dirs = ""
 lib_dirs += " -L${CMAKE_PREFIX_PATH}/lib "
 libs = ""
 include_dirs = ""
-include_dirs += " -I${CMAKE_PREFIX_PATH}/include "
+include_dirs += " -I${OpenCV_INCLUDE_DIRS} "
 
 status, tmp = getstatusoutput("pkg-config --cflags opencv")
 if status != 0:
