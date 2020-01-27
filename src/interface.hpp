@@ -74,7 +74,7 @@ namespace nervana
 class nervana::interface::config_info_interface
 {
 public:
-    virtual ~config_info_interface() {}
+    virtual ~config_info_interface();
     virtual const std::string& name() const       = 0;
     virtual void parse(nlohmann::json js)         = 0;
     virtual bool        required() const          = 0;

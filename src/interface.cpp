@@ -26,6 +26,8 @@ using namespace nlohmann;
 
 int IGNORE_VALUE;
 
+nervana::interface::config_info_interface::~config_info_interface() {};
+
 void json_configurable::verify_config(
     const std::string&                                          location,
     const vector<shared_ptr<interface::config_info_interface>>& config,

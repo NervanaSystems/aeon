@@ -80,7 +80,7 @@ class nervana::async_manager : public virtual nervana::async_manager_source<OUTP
 {
 public:
     async_manager(std::shared_ptr<async_manager_source<INPUT>> source, const std::string& name)
-        : m_source(source)
+        : m_source(std::move(source))
         , m_state{async_state::idle}
         , m_name{name}
     {
