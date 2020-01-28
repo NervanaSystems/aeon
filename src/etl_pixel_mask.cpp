@@ -36,6 +36,10 @@ shared_ptr<image::decoded> pixel_mask::extractor::extract(const void* inbuf, siz
     cv::Mat input_img(1, insize, CV_8UC1, (char*)inbuf);
     cv::imdecode(input_img, CV_LOAD_IMAGE_ANYDEPTH, &image);
 
+    if (image.empty()) {
+        throw runtime_error("Decoding pixelmask image failed due to invalid data in the image file.");
+    }
+
     // convert input image to single channel if needed
     if (image.channels() > 1)
     {

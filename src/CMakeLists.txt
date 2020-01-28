@@ -52,7 +52,6 @@ set (SRC
     specgram.cpp
     typemap.cpp
     util.cpp
-    wav_data.cpp
     event.cpp
     raw_image.cpp
     output_saver.cpp)
