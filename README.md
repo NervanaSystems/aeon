@@ -18,7 +18,7 @@ First grab Aeon's dependencies:
 
 ### Ubuntu (release 16.04 LTS and later):
 
-    apt-get install git clang libopencv-dev libboost-filesystem-dev libboost-system-dev
+    apt-get install git clang libopencv-dev
 
 ##### For Python 3.n
 
@@ -27,7 +27,7 @@ First grab Aeon's dependencies:
 ### CentOS (release 7.2 and later):
 
     yum install epel-release
-    yum install git clang gcc-c++ make cmake opencv-devel boost-devel boost-filesystem boost-system
+    yum install git clang gcc-c++ make cmake opencv-devel
 
 ##### For Python 2.7
 
@@ -41,7 +41,6 @@ First grab Aeon's dependencies:
 
     brew tap homebrew/science
     brew install opencv
-    brew install boost
 
 ## Code coverage
 
