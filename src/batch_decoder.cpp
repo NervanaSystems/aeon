@@ -24,7 +24,7 @@ using namespace nervana;
 batch_decoder::batch_decoder(shared_ptr<batch_iterator>                 b_itor,
                              size_t                                     batch_size,
                              size_t                                     decode_size,
-                             std::vector<int>                           thread_affinity_map,
+                             std::vector<unsigned>                      thread_affinity_map,
                              bool                                       pinned,
                              const std::shared_ptr<provider_interface>& prov,
                              uint32_t                                   seed)

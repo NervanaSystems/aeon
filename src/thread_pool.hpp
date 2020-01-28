@@ -83,15 +83,15 @@ template <typename T, void (T::*process_func)(int index)>
 class nervana::thread_pool
 {
 public:
-    thread_pool(std::vector<int> thread_affinity_map)
+    thread_pool(std::vector<unsigned> thread_affinity_map)
         : m_thread_affinity_map(std::move(thread_affinity_map))
     {
-        int nthreads = m_thread_affinity_map.size();
+        unsigned nthreads = m_thread_affinity_map.size();
 
         m_br_wake.reset(new thread_barrier(nthreads + 1));
         m_br_endtasks.reset(new thread_barrier(nthreads + 1));
 
-        for (int i = 0; i < nthreads; i++)
+        for (unsigned i = 0; i < nthreads; i++)
             m_threads.emplace_back(&thread_pool::process<true>, this, i);
     }
 
@@ -116,7 +116,7 @@ public:
     }
 
 private:
-    const std::vector<int>          m_thread_affinity_map;
+    const std::vector<unsigned>     m_thread_affinity_map;
     T*                              m_worker;
     int                             m_task_count;
     std::unique_ptr<thread_barrier> m_br_wake;
@@ -178,7 +178,7 @@ template <typename T, void (T::*process_func)(int index)>
 class nervana::thread_pool_queue
 {
 public:
-    thread_pool_queue(const std::vector<int>& thread_affinity_map)
+    thread_pool_queue(const std::vector<unsigned>& thread_affinity_map)
         : m_thread_pool(thread_affinity_map)
         , m_thread(&thread_pool_queue::process_tasks, this)
     {
@@ -204,8 +204,8 @@ public:
 private:
     BlockingQueue<std::packaged_task<void()>> m_task_queue;
     std::atomic<bool>                         m_stop{false};
-    nervana::thread_pool<T, process_func> m_thread_pool;
-    std::thread m_thread;
+    nervana::thread_pool<T, process_func>     m_thread_pool;
+    std::thread                               m_thread;
 
     void process_tasks()
     {
