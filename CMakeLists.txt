@@ -170,11 +170,6 @@ else()
     unset(PYTHON_LIBRARIES)
 endif (PYTHONLIBS_FOUND)
 
-# Check for BOOST components
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
 
 set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/test_data)
 
