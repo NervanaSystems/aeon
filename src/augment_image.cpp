@@ -67,6 +67,13 @@ augment::image::param_factory::param_factory(nlohmann::json js)
                     "method in augmentations.");
             }
 
+            if (!crop_origin.empty() && (crop_origin.size() != 2 || crop_origin[0] < 0 || crop_origin[1] < 0))
+            {
+                throw invalid_argument(
+                    "Invalid crop_origin provided. This argument is for testing only - do not use "
+                    "it! It accepts two non-negative integers.");
+            }
+
             // Now fill in derived
             if (flip_enable)
             {
@@ -166,16 +173,24 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
             
             std::uniform_real_distribution<float> scale2{scale_min, scale_max};
 
-            float target_area = sqrt(input_height * input_width * scale2(random));
-            out_shape.width  *= target_area;
-            out_shape.height *= target_area;
+            float target_size = sqrt(input_height * input_width * scale2(random));
+            cv::Size2f cropbox_size = out_shape * target_size;
             
             float c_off_x = crop_offset(random);
             float c_off_y = crop_offset(random);
 
-            cv::Size2f cropbox_size = out_shape;
-            cv::Point2i cropbox_origin = nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
-            settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
+            cv::Point2f cropbox_origin;
+            if (crop_origin.size() == 2) {
+                cropbox_origin.x = crop_origin[0];
+                cropbox_origin.y = crop_origin[1];
+            } else {
+                cropbox_origin = nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
+            }
+            // explicitly round cropbox_origin and cropbox_size to nearest integer
+            settings->cropbox = cv::Rect(std::round(cropbox_origin.x),
+                                         std::round(cropbox_origin.y),
+                                         std::round(cropbox_size.width),
+                                         std::round(cropbox_size.height));
         }
         else
         {
@@ -211,9 +226,18 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
             float c_off_x = crop_offset(random);
             float c_off_y = crop_offset(random);
 
-            cv::Point2i cropbox_origin =
-                nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
-            settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
+            cv::Point2f cropbox_origin;
+            if (crop_origin.size() == 2) {
+                cropbox_origin.x = crop_origin[0];
+                cropbox_origin.y = crop_origin[1];
+            } else {
+                cropbox_origin = nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
+            }
+            // explicitly round cropbox_origin and cropbox_size to nearest integer
+            settings->cropbox = cv::Rect(std::round(cropbox_origin.x),
+                                         std::round(cropbox_origin.y),
+                                         std::round(cropbox_size.width),
+                                         std::round(cropbox_size.height));
         }
     }
 

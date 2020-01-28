@@ -53,25 +53,18 @@ namespace
 void image::rotate(
     const cv::Mat& input, cv::Mat& output, int angle, bool interpolate, const cv::Scalar& border)
 {
-    if (angle == 0)
+    cv::Point2i pt(input.cols / 2, input.rows / 2);
+    cv::Mat     rot = cv::getRotationMatrix2D(pt, angle, 1.0);
+    int         flags;
+    if (interpolate)
     {
-        output = input;
+        flags = cv::INTER_LINEAR;
     }
     else
     {
-        cv::Point2i pt(input.cols / 2, input.rows / 2);
-        cv::Mat     rot = cv::getRotationMatrix2D(pt, angle, 1.0);
-        int         flags;
-        if (interpolate)
-        {
-            flags = cv::INTER_LINEAR;
-        }
-        else
-        {
-            flags = cv::INTER_NEAREST;
-        }
-        cv::warpAffine(input, output, rot, input.size(), flags, cv::BORDER_CONSTANT, border);
+        flags = cv::INTER_NEAREST;
     }
+    cv::warpAffine(input, output, rot, input.size(), flags, cv::BORDER_CONSTANT, border);
 }
 
 void image::add_padding(cv::Mat& input, int padding, cv::Size2i crop_offset)
@@ -261,12 +254,12 @@ cv::Size2f image::cropbox_area_scale(const cv::Size2f& in_size,
     return result;
 }
 
-cv::Point2i image::cropbox_shift(const cv::Size2f& in_size,
+cv::Point2f image::cropbox_shift(const cv::Size2f& in_size,
                                  const cv::Size2f& crop_box,
                                  float             xoff,
                                  float             yoff)
 {
-    cv::Point2i result;
+    cv::Point2f result;
     result.x = (in_size.width - crop_box.width) * xoff;
     result.y = (in_size.height - crop_box.height) * yoff;
     return result;
