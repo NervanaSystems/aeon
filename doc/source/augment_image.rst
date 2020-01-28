@@ -55,7 +55,6 @@ aeon performs a series of customizable transformations on the image before provi
    emit_constraint_min_overlap (float) | "" | Minimum overlap used when ``emit_constraint_type`` is set to ``min_overlap``.
    expand_ratio (float, float) | (1.0, 1.0) | Ratio to expand image in SSD. minimum expand ratio cannot be less than 1.
    batch_samplers (batch_sampler) |  | Batch samplers are objects defining patch generation in SSD.
-   debug_output_directory (string) | "" | Writes transformed images and transformation parameters to the provided directory. Does not include ``standardization``.
    resize_short_size (int) | 0 | Resize the image proportionally to make the shorter dimension equal to the provided size.
    mean (double, double, double) |  | Mean values per channel for standardization given in order aligned with ``bgr_to_rgb`` attribute of image provider.
    stddev (double, double, double) |  | Standard deviation per channel for standardization given in order aligned with ``bgr_to_rgb`` attribute of image provider.

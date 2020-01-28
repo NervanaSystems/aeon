@@ -53,8 +53,7 @@ set (SRC
     typemap.cpp
     util.cpp
     event.cpp
-    raw_image.cpp
-    output_saver.cpp)
+    raw_image.cpp)
 
 set(AEON_HEADER_FILES
         version.hpp)

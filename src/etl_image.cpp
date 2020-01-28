@@ -15,7 +15,6 @@
 *******************************************************************************/
 
 #include "etl_image.hpp"
-#include "output_saver.hpp"
 
 #include <atomic>
 
@@ -192,12 +191,7 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
         flippedImage = resizedImage;
 
     cv::Mat* finalImage = &flippedImage;
-
-    if (!img_xform->debug_output_directory.empty())
-    {
-        static output_saver saver;
-        saver.save(*finalImage, img_xform);
-    }
+  
     return *finalImage;
 }
 
