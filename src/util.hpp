@@ -44,37 +44,6 @@ namespace nervana
 
 #define DUMP_VALUE(a) cout << __FILE__ << " " << __LINE__ << " " #a " " << a << endl;
 
-    template <class T>
-    class singleton
-    {
-    public:
-        singleton()                 = delete;
-        singleton(const singleton&) = delete;
-        singleton& operator=(const singleton&) = delete;
-
-        template <typename... Args>
-        static std::shared_ptr<T> get(Args&&... args)
-        {
-            std::lock_guard<std::mutex> lg(m_mutex);
-            std::shared_ptr<T>          instance = m_singleton.lock();
-            if (!instance)
-            {
-                instance.reset(new T(std::forward<Args>(args)...));
-                m_singleton = instance;
-            }
-            return instance;
-        }
-
-    private:
-        static std::weak_ptr<T> m_singleton;
-        static std::mutex       m_mutex;
-    };
-
-    template <class T>
-    std::weak_ptr<T> singleton<T>::m_singleton;
-    template <class T>
-    std::mutex singleton<T>::m_mutex;
-
     template <typename T>
     T unpack(const void* _data, size_t offset = 0, endian e = endian::LITTLE)
     {
