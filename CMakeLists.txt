@@ -109,6 +109,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-overflow -fno-delete-null-pointer-checks -fwrapv")
+
 
 if (SANITIZER_TYPE AND NOT "${SANITIZER_TYPE}" MATCHES "^(Address|Leak|Thread|Undefined)$")
   message("Choose the correct type of sanitizer")
