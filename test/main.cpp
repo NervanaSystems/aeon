@@ -78,11 +78,20 @@ extern "C" int main(int argc, char** argv)
     }
     argc++;
 
+    ::testing::InitGoogleMock(&argc, argv_vector.data());
+
     CreateImageDataset();
     test_cache_directory = nervana::file_util::make_temp_directory();
 
-    ::testing::InitGoogleMock(&argc, argv_vector.data());
+    // Make sure to still cleanup in case of ctrl+c by overwriting handler
+    signal(SIGINT, [](int signum) {
+        nervana::file_util::remove_directory(test_cache_directory);
+        DeleteDataset();
+        exit(signum);
+    });
     int rc = RUN_ALL_TESTS();
+    // restore ctrl+c handler
+    signal(SIGINT, SIG_DFL);
 
     nervana::file_util::remove_directory(test_cache_directory);
     DeleteDataset();
