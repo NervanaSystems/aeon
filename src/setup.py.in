@@ -32,13 +32,18 @@ libs = ""
 include_dirs = ""
 include_dirs += " -I${OpenCV_INCLUDE_DIRS} "
 
-status, tmp = getstatusoutput("pkg-config --cflags opencv")
+if "${CMAKE_PREFIX_PATH}":
+    export_cv_pkg_config_path = "export PKG_CONFIG_PATH=${CMAKE_PREFIX_PATH}/lib/pkgconfig;"
+else:
+    export_cv_pkg_config_path = ""
+
+status, tmp = getstatusoutput(export_cv_pkg_config_path + "pkg-config --cflags opencv")
 if status != 0:
     print("required package 'opencv' not found")
     exit()
 include_dirs += tmp
-lib_dirs += getoutput("pkg-config --libs-only-L opencv")
-libs += getoutput("pkg-config --libs-only-l opencv")
+lib_dirs += getoutput(export_cv_pkg_config_path + "pkg-config --libs-only-L opencv")
+libs += getoutput(export_cv_pkg_config_path + "pkg-config --libs-only-l opencv")
 
 include_dirs += ' ${Boost_INCLUDE_DIRS}'
 lib_dirs += ' ${Boost_LIBRARY_DIRS}'
