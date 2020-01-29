@@ -36,6 +36,10 @@ shared_ptr<image::decoded> depthmap::extractor::extract(const void* inbuf, size_
     cv::Mat input_img(1, insize, CV_8UC1, (char*)inbuf);
     cv::imdecode(input_img, CV_LOAD_IMAGE_ANYDEPTH, &image);
 
+    if (image.empty()) {
+        throw runtime_error("Decoding depthmap image failed due to invalid data in the image file.");
+    }
+
     // convert input image to single channel if needed
     if (image.channels() > 1)
     {

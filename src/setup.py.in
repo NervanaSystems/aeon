@@ -45,9 +45,7 @@ include_dirs += tmp
 lib_dirs += getoutput(export_cv_pkg_config_path + "pkg-config --libs-only-L opencv")
 libs += getoutput(export_cv_pkg_config_path + "pkg-config --libs-only-l opencv")
 
-include_dirs += ' ${Boost_INCLUDE_DIRS}'
-lib_dirs += ' ${Boost_LIBRARY_DIRS}'
-libs += ' -lboost_system -lboost_filesystem'
+libs += ' -lstdc++fs'
 
 os.environ["CC"] = "${CMAKE_CXX_COMPILER}"
 src_list = "${SRC}".split(";")

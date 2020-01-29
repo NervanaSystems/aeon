@@ -52,7 +52,6 @@ set (SRC
     specgram.cpp
     typemap.cpp
     util.cpp
-    wav_data.cpp
     event.cpp
     raw_image.cpp
     output_saver.cpp)
@@ -72,7 +71,7 @@ add_library(aeon SHARED ${SRC} ${AEON_HEADER_FILES})
 
 install(TARGETS aeon DESTINATION lib)
 
-set(AEON_LIBRARIES ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES})
+set(AEON_LIBRARIES ${CURL_LIBRARIES} ${OpenCV_LIBRARIES} ${PYTHON_LIBRARIES}  stdc++fs)
 
 target_link_libraries(aeon ${AEON_LIBRARIES})
 set_target_properties(aeon PROPERTIES VERSION ${AEON_VERSION_MAJOR}.${AEON_VERSION_MINOR}.${AEON_VERSION_PATCH}
