@@ -14,9 +14,9 @@ See the new features in our latest release.
 
 ## Installation
 
-First grab Aeon's dependencies:
+First grab aeon's dependencies:
 
-### Ubuntu (release 16.04 LTS and later):
+### Ubuntu (release 16.04 LTS and later)
 
     apt-get install git clang libopencv-dev
 
@@ -24,7 +24,7 @@ First grab Aeon's dependencies:
 
     apt-get install python3-dev python3-pip python3-numpy
 
-### CentOS (release 7.2 and later):
+### CentOS (release 7.2 and later)
 
     yum install epel-release
     yum install git clang gcc-c++ make cmake opencv-devel
@@ -37,7 +37,7 @@ First grab Aeon's dependencies:
 
     yum install python-pip python34-pip python34-devel python34-opencv python34-numpy
 
-### OSX:
+### OSX
 
     brew tap homebrew/science
     brew install opencv
@@ -57,9 +57,9 @@ First grab Aeon's dependencies:
     # If you want to generate report when unit test fails: make -i coverage
     make coverage
 
-### To install Aeon:
+### To install aeon
 
-    git clone https://github.com/NervanaSystems/aeon.git
+    git clone -b develop https://github.com/NervanaSystems/aeon.git
 
 ##### For Python 2.7
 
@@ -72,6 +72,40 @@ First grab Aeon's dependencies:
     cd aeon
     pip3 install -r requirements.txt
     mkdir -p build && cd $_ && cmake .. && pip3 install .
+
+### To install aeon with the latest OpenCV version
+
+##### Clone aeon repository
+
+    git clone -b develop https://github.com/NervanaSystems/aeon.git
+
+##### Build OpenCV
+
+    mkdir -p aeon/build/3rdparty && cd $_
+    git clone https://github.com/opencv/opencv.git
+    cd opencv && mkdir build && cd $_
+
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(pwd)/installation/OpenCV -DINSTALL_C_EXAMPLES=OFF -DINSTALL_PYTHON_EXAMPLES=OFF -DWITH_TBB=OFF -DWITH_V4L=OFF -DWITH_QT=OFF -DWITH_OPENGL=OFF -DBUILD_EXAMPLES=OFF -DWITH_CUDA=OFF -DOPENCV_FORCE_3RDPARTY_BUILD=OFF -DWITH_IPP=OFF -DWITH_ITT=OFF -DBUILD_opencv_gpu=OFF -DOPENCV_GENERATE_PKGCONFIG=ON -DOPENCV_PC_FILE_NAME=opencv.pc ..
+
+    make -j8 # for example it runs 8 jobs in parallel
+    make install
+
+##### Install aeon
+
+    cd ../../../
+    cmake -DCMAKE_PREFIX_PATH=$(pwd)/3rdparty/opencv/build/installation/OpenCV ..
+
+##### For Python 2.7
+
+    pip install -r ../requirements.txt
+    pip install .
+
+##### For Python 3.n
+
+    pip3 install -r ../requirements.txt
+    pip3 install .
+
+You can also build wheel package with command `python setup.py bdist_wheel`
 
 Note: if installing system wide (as opposed to within a virtual environment) you may need to run `sudo`
 
