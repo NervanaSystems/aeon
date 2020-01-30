@@ -30,7 +30,7 @@ namespace nervana
         level_undefined,
     };
 
-    static const char*              log_level_env_var = "AEON_LOG_LEVEL";
+    static const char             log_level_env_var[] = "AEON_LOG_LEVEL";
     static const nervana::log_level default_log_level = nervana::log_level::level_warning;
 
     class conststring
