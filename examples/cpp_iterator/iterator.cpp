@@ -52,7 +52,7 @@ string generate_manifest_file(size_t record_count)
     return manifest_name;
 }
 
-int main(int argc, char** argv)
+int main(void)
 {
     int    height        = 32;
     int    width         = 32;
