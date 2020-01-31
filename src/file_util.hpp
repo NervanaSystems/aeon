@@ -36,7 +36,7 @@ public:
     static void remove_directory(const std::string& dir);
     static bool make_directory(const std::string& dir);
     static std::string make_temp_directory(const std::string& path = "");
-    static std::string get_temp_directory();
+    static std::string get_temp_directory(size_t max_path);
     static void remove_file(const std::string& file);
     static std::vector<char> read_file_contents(const std::string& path);
     static std::string read_file_to_string(const std::string& path);

@@ -32,6 +32,7 @@
 #include <experimental/filesystem>
 
 #include "file_util.hpp"
+#include "log.hpp"
 
 using namespace std;
 
@@ -112,8 +113,9 @@ bool nervana::file_util::make_directory(const string& dir)
 
 string nervana::file_util::make_temp_directory(const string& path)
 {
-    string fname        = path.empty() ? file_util::get_temp_directory() : path;
-    string tmp_template = file_util::path_join(fname, "aeon_XXXXXX");
+    std::string dir_name_template = "aeon_XXXXXX";
+    string      fname             = path.empty() ? file_util::get_temp_directory(PATH_MAX - dir_name_template.size() - 1) : path;
+    string      tmp_template      = file_util::path_join(fname, dir_name_template);
 
     char* ptr = mkdtemp(&tmp_template[0]);
     if (ptr == nullptr) {
@@ -123,7 +125,7 @@ string nervana::file_util::make_temp_directory(const string& path)
     return tmp_template;
 }
 
-std::string nervana::file_util::get_temp_directory()
+std::string nervana::file_util::get_temp_directory(size_t max_path)
 {
     const vector<string> potential_tmps = {"NERVANA_AEON_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
 
@@ -133,7 +135,15 @@ std::string nervana::file_util::get_temp_directory()
         path = getenv(var.c_str());
         if (path != nullptr)
         {
-            break;
+            if (strlen(path) < max_path)
+            {
+                break;
+            }
+            else
+            {
+                WARN << "Path provided in env_var '" + var + "' is too long and will be ignored.";
+                path = nullptr;
+            }
         }
     }
     if (path == nullptr)
@@ -247,8 +257,9 @@ void nervana::file_util::iterate_files_worker(
 
 string nervana::file_util::tmp_filename(const string& extension)
 {
+    std::string filename_template = "aeon_XXXXXX";
     string tmp_template =
-        file_util::path_join(file_util::get_temp_directory(), "aeon_XXXXXX" + extension);
+        file_util::path_join(file_util::get_temp_directory(PATH_MAX - filename_template.size() - 1), filename_template + extension);
 
     // mkstemp opens the file with open() so we need to close it
     int fid = mkstemps(&tmp_template[0], extension.size());

@@ -18,6 +18,7 @@
 #include <string>
 #include <sstream>
 #include <random>
+#include <linux/limits.h>
 
 #include "gtest/gtest.h"
 #include "file_util.hpp"
@@ -92,8 +93,99 @@ TEST(file_util, path_join)
     }
 }
 
-TEST(file_util, get_temp_directory)
+class file_util_tmp_dir_env : public ::testing::Test
 {
-    string tmp = file_util::get_temp_directory();
-    EXPECT_NE(0, tmp.size());
+public:
+    void SetTmpDirEnvVar(std::string new_value)
+    {
+        char* prevous_value = getenv(var_name);
+        if (prevous_value == nullptr) {
+            env_var_already_existed = false;
+        } else {
+            env_var_already_existed = true;
+            env_var_old_value = prevous_value;
+        }
+        setenv(var_name, new_value.c_str(), true);
+    }
+
+private:
+    void TearDown() override
+    {
+        if (env_var_already_existed)
+            setenv(var_name, env_var_old_value.c_str(), true);
+        else
+            unsetenv(var_name);
+    }
+
+    const char* var_name = "NERVANA_AEON_TMP";
+    bool        env_var_already_existed;
+    std::string env_var_old_value;
+    const char* default_path = "/tmp";
+};
+
+TEST_F(file_util_tmp_dir_env, get_temp_directory_short)
+{
+    std::string short_path = "/tmp/aeon/short/path";
+    SetTmpDirEnvVar(short_path);
+    EXPECT_STREQ(short_path.c_str(), file_util::get_temp_directory(PATH_MAX - 50).c_str());
+}
+
+TEST_F(file_util_tmp_dir_env, get_temp_directory_empty)
+{
+    std::string empty_path;
+    SetTmpDirEnvVar(empty_path);
+    EXPECT_STREQ(empty_path.c_str(), file_util::get_temp_directory(PATH_MAX - 50).c_str());
+}
+
+TEST_F(file_util_tmp_dir_env, get_temp_directory_default)
+{
+    EXPECT_STREQ(default_path, file_util::get_temp_directory(PATH_MAX - 50).c_str());
+}
+
+TEST_F(file_util_tmp_dir_env, get_temp_directory_too_long)
+{
+    SetTmpDirEnvVar(std::string(6000, 'A'));
+    std::string tmp_path;
+    EXPECT_NO_THROW(tmp_path = file_util::get_temp_directory(PATH_MAX + 50));
+    EXPECT_STREQ(default_path, tmp_path.c_str());
+}
+
+TEST_F(file_util_tmp_dir_env, make_temp_directory_by_env) 
+{
+    std::string prefix = "/tmp/aeon_test";
+    mkdir(prefix.c_str(), S_IRWXU);
+    SetTmpDirEnvVar(prefix);
+    auto tmp_path = file_util::make_temp_directory();
+    EXPECT_STREQ(prefix.c_str(), tmp_path.substr(0,prefix.size()).c_str());
+    struct stat info;
+    EXPECT_EQ(0, stat(tmp_path.c_str(), &info));
+    EXPECT_TRUE(info.st_mode & S_IFDIR);
+    rmdir(prefix.c_str());
+}
+
+TEST_F(file_util_tmp_dir_env, make_temp_directory_by_provided) 
+{
+    std::string prefix = "/tmp/aeon_test";
+    mkdir(prefix.c_str(), S_IRWXU);
+    auto tmp_path = file_util::make_temp_directory(prefix);
+    EXPECT_STREQ(prefix.c_str(), tmp_path.substr(0,prefix.size()).c_str());
+    struct stat info;
+    EXPECT_EQ(0, stat(tmp_path.c_str(), &info));
+    EXPECT_TRUE(info.st_mode & S_IFDIR);
+    rmdir(prefix.c_str());
+}
+
+TEST_F(file_util_tmp_dir_env, make_temp_directory_too_long_by_env) 
+{
+    std::string tmp_path = "/tmp/aeon_test/";
+    tmp_path += std::string(PATH_MAX - tmp_path.size() - 13, 'A');
+    SetTmpDirEnvVar(tmp_path);
+    EXPECT_THROW(file_util::make_temp_directory(), std::runtime_error);
+}
+
+TEST_F(file_util_tmp_dir_env, make_temp_directory_too_long_by_provided) 
+{
+    std::string tmp_path = "/tmp/aeon_test/";
+    tmp_path += std::string(PATH_MAX - tmp_path.size() - 13, 'A');
+    EXPECT_THROW(file_util::make_temp_directory(tmp_path), std::runtime_error);
 }

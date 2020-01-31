@@ -237,7 +237,7 @@ TEST(loader, cache)
     size_t batch_size        = 32;
     size_t record_count      = 1002;
     size_t block_size        = 300;
-    string cache_root        = file_util::get_temp_directory();
+    string cache_root        = file_util::get_temp_directory(PATH_MAX-50);
     string manifest_filename = create_manifest_file(record_count, width, height);
 
     json image = {{"type", "image"},
