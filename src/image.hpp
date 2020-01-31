@@ -21,6 +21,9 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#ifdef OPENCV_LEGACY_MODE
+#include <opencv2/imgproc/types_c.h>
+#endif
 
 namespace nervana
 {
