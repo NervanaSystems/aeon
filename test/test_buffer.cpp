@@ -123,7 +123,7 @@ TEST(buffer, serialization)
                    {"batch_size", batch_size},
                    {"iteration_mode", "INFINITE"},
                    {"cache_directory", ""},
-                   {"aeon_cpu_list", ""},
+                   {"cpu_list", ""},
                    {"etl", {image_config, label_config}}};
 
     shared_ptr<nervana::provider_interface> provider = provider_factory::create(config);
