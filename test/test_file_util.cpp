@@ -137,11 +137,6 @@ TEST_F(file_util_tmp_dir_env, get_temp_directory_empty)
     EXPECT_STREQ(empty_path.c_str(), file_util::get_temp_directory(PATH_MAX - 50).c_str());
 }
 
-TEST_F(file_util_tmp_dir_env, get_temp_directory_default)
-{
-    EXPECT_STREQ(default_path, file_util::get_temp_directory(PATH_MAX - 50).c_str());
-}
-
 TEST_F(file_util_tmp_dir_env, get_temp_directory_too_long)
 {
     SetTmpDirEnvVar(std::string(6000, 'A'));
