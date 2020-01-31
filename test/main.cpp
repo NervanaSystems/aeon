@@ -23,15 +23,11 @@
 
 #include "gen_image.hpp"
 #include "file_util.hpp"
-#include "log.hpp"
 #include "json.hpp"
 #include "cpio.hpp"
 
 using namespace std;
 using namespace nervana;
-
-extern gen_image image_dataset;
-extern string    test_cache_directory;
 
 gen_image image_dataset;
 string    test_cache_directory;
@@ -54,12 +50,6 @@ static void CreateImageDataset()
 static void DeleteDataset()
 {
     image_dataset.delete_files();
-}
-
-void exit_func(int s)
-{
-    //    cout << __FILE__ << " " << __LINE__ << "exit function " << s << endl;
-    //    exit(-1);
 }
 
 extern "C" int main(int argc, char** argv)

@@ -23,6 +23,7 @@
 #include "raw_image.hpp"
 #include "log.hpp"
 #include "util.hpp"
+#include "file_util.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -98,7 +99,7 @@ void raw_image::read(istream& f)
 
 void raw_image::write(const string& filename)
 {
-    ofstream f(filename);
+    auto f = nervana::file_util::secure_ofstream(filename);
     if (f)
     {
         write(f);

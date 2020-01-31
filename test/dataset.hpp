@@ -80,7 +80,7 @@ public:
         int fileNo      = 0;
         m_path_existed  = exists(m_path);
         int datumNumber = 0;
-        if (m_path_existed || mkdir(m_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
+        if (m_path_existed || mkdir(m_path.c_str(), S_IRWXU) == 0)
         {
             int remainder = m_set_size;
             while (remainder > 0)
@@ -89,7 +89,7 @@ public:
                 std::string fileName  = nervana::file_util::path_join(
                     m_path, m_prefix + std::to_string(fileNo++) + ".cpio");
                 m_file_list.push_back(fileName);
-                std::ofstream f(fileName, std::ostream::binary);
+                auto f = nervana::file_util::secure_ofstream(fileName, std::ostream::binary);
                 if (f)
                 {
                     nervana::cpio::writer writer{f};

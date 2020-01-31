@@ -29,8 +29,10 @@
 #include <sys/types.h>
 #include <sys/file.h>
 #include <iostream>
+#include <experimental/filesystem>
 
 #include "file_util.hpp"
+#include "log.hpp"
 
 using namespace std;
 
@@ -97,7 +99,7 @@ void nervana::file_util::remove_file(const string& file)
 
 bool nervana::file_util::make_directory(const string& dir)
 {
-    if (mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
+    if (mkdir(dir.c_str(), S_IRWXU))
     {
         if (errno == EEXIST)
         {
@@ -111,18 +113,19 @@ bool nervana::file_util::make_directory(const string& dir)
 
 string nervana::file_util::make_temp_directory(const string& path)
 {
-    string fname        = path.empty() ? file_util::get_temp_directory() : path;
-    string tmp_template = file_util::path_join(fname, "aeonXXXXXX");
-    char*  tmpname      = strdup(tmp_template.c_str());
+    std::string dir_name_template = "aeon_XXXXXX";
+    string      fname             = path.empty() ? file_util::get_temp_directory(PATH_MAX - dir_name_template.size() - 1) : path;
+    string      tmp_template      = file_util::path_join(fname, dir_name_template);
 
-    mkdtemp(tmpname);
+    char* ptr = mkdtemp(&tmp_template[0]);
+    if (ptr == nullptr) {
+        throw std::runtime_error(std::string{"Failed to create unique temporary directory: "} + strerror(errno));
+    }
 
-    string rc = tmpname;
-    free(tmpname);
-    return rc;
+    return tmp_template;
 }
 
-std::string nervana::file_util::get_temp_directory()
+std::string nervana::file_util::get_temp_directory(size_t max_path)
 {
     const vector<string> potential_tmps = {"NERVANA_AEON_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
 
@@ -132,7 +135,15 @@ std::string nervana::file_util::get_temp_directory()
         path = getenv(var.c_str());
         if (path != nullptr)
         {
-            break;
+            if (strlen(path) < max_path)
+            {
+                break;
+            }
+            else
+            {
+                WARN << "Path provided in env_var '" + var + "' is too long and will be ignored.";
+                path = nullptr;
+            }
         }
     }
     if (path == nullptr)
@@ -246,22 +257,24 @@ void nervana::file_util::iterate_files_worker(
 
 string nervana::file_util::tmp_filename(const string& extension)
 {
+    std::string filename_template = "aeon_XXXXXX";
     string tmp_template =
-        file_util::path_join(file_util::get_temp_directory(), "aeonXXXXXX" + extension);
-    char* tmpname = strdup(tmp_template.c_str());
+        file_util::path_join(file_util::get_temp_directory(PATH_MAX - filename_template.size() - 1), filename_template + extension);
 
     // mkstemp opens the file with open() so we need to close it
-    close(mkstemps(tmpname, extension.size()));
+    int fid = mkstemps(&tmp_template[0], extension.size());
+    if (fid == -1) {
+        throw std::runtime_error(std::string{"Failed to create and open unique temporary file. "} + strerror(errno));
+    }
+    close(fid);
 
-    string rc = tmpname;
-    free(tmpname);
-    return rc;
+    return tmp_template;
 }
 
 void nervana::file_util::touch(const std::string& filename)
 {
     // inspired by http://chris-sharpe.blogspot.com/2013/05/better-than-systemtouch.html
-    int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_NOCTTY | O_NONBLOCK, 0666);
+    int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_NOCTTY | O_NONBLOCK, 0600);
     assert(fd >= 0);
     close(fd);
 
@@ -279,7 +292,7 @@ bool nervana::file_util::exists(const std::string& filename)
 int nervana::file_util::try_get_lock(const std::string& filename)
 {
     mode_t m  = umask(0);
-    int    fd = open(filename.c_str(), O_RDWR | O_CREAT, 0666);
+    int    fd = open(filename.c_str(), O_RDWR | O_CREAT, 0600);
     umask(m);
     if (fd >= 0 && flock(fd, LOCK_EX | LOCK_NB) < 0)
     {
@@ -296,4 +309,13 @@ void nervana::file_util::release_lock(int fd, const std::string& filename)
         remove_file(filename);
         close(fd);
     }
+}
+
+std::ofstream nervana::file_util::secure_ofstream(const std::string&      filename,
+                                                  std::ios_base::openmode mode)
+{
+    std::ofstream ofs(filename, mode);
+    namespace fs = std::experimental::filesystem;
+    fs::permissions(filename, fs::perms::owner_read | fs::perms::owner_write);
+    return ofs;
 }

@@ -43,7 +43,7 @@ namespace
         string           manifest_filename = file_util::tmp_filename();
         manifest_builder mb;
         auto& ms = mb.record_count(record_count).image_width(width).image_height(height).create();
-        ofstream f(manifest_filename);
+        auto f = nervana::file_util::secure_ofstream(manifest_filename);
         f << ms.str();
         return manifest_filename;
     }
@@ -237,7 +237,7 @@ TEST(loader, cache)
     size_t batch_size        = 32;
     size_t record_count      = 1002;
     size_t block_size        = 300;
-    string cache_root        = file_util::get_temp_directory();
+    string cache_root        = file_util::get_temp_directory(PATH_MAX-50);
     string manifest_filename = create_manifest_file(record_count, width, height);
 
     json image = {{"type", "image"},
@@ -409,7 +409,7 @@ static std::string generate_manifest_file(
         image_files = std::vector<std::string>{"flowers.jpg", "img_2112_70.jpg"};
     }
     const std::size_t img_count = image_files.size();
-    std::ofstream f(manifest_name);
+    auto f = nervana::file_util::secure_ofstream(manifest_name);
     if (f)
     {
         f << nervana::manifest_file::get_metadata_char();
