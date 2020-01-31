@@ -119,7 +119,7 @@ string nervana::file_util::make_temp_directory(const string& path)
 
     char* ptr = mkdtemp(&tmp_template[0]);
     if (ptr == nullptr) {
-        throw std::runtime_error(std::string{"Failed to create unique temporary directory. "} + strerror(errno));
+        throw std::runtime_error(std::string{"Failed to create unique temporary directory: "} + strerror(errno));
     }
 
     return tmp_template;
