@@ -119,17 +119,12 @@ public:
     {
         for (const std::string& f : m_file_list)
         {
-            int rc = remove(f.c_str());
-            if (rc != 0)
-                throw std::runtime_error("Couldn't remove file '"+std::to_string(rc)+"'.");
-
+            remove(f.c_str());
         }
         if (!m_path_existed)
         {
             // delete directory
-            int rc = remove(m_path.c_str());
-            if (rc != 0)
-                throw std::runtime_error("Couldn't remove directory '"+std::to_string(rc)+"'.");
+            remove(m_path.c_str());
         }
     }
 
