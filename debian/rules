@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+
+confflags = -DENABLE_AEON_CLIENT=OFF \
+			-DBUILD_UNIT_TESTS=OFF
+			-DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH)
+
+%:
+	dh $@ --parallel
+
+override_dh_auto_build-indep:
+	$(MAKE) -C obj-$(DEB_HOST_MULTIARCH) html
+
+override_dh_strip:
+	dh_strip -Xaeon
+
+override_dh_auto_configure:
+	dh_auto_configure -- $(confflags)
+

@@ -1,0 +1,141 @@
+Source: libaeon
+Priority: optional
+Maintainer: Artur Wojcik <artur.wojcik@intel.com>
+Build-Depends: debhelper (>= 9),
+ clang,
+ cmake (>= 2.8),
+ libcurl4-openssl-dev,
+ libboost-system-dev,
+ libboost-filesystem-dev,
+ libsox-dev,
+ libopencv-dev
+Standards-Version: 3.9.6
+X-Python-Version: all
+X-Python3-Version: >= 3.3
+Section: libs
+Homepage: https://aeon.nervanasys.com/
+Vcs-Git: https://github.com/NervanaSystems/aeon.git
+
+Package: libaeon
+Section: libs
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
+Recommends: python-aeon (= ${binary:Version}), python3-aeon (= ${binary:Version})
+Suggests: libaeon-doc
+Multi-Arch: same
+Description: framework-independent data loader for machine learning
+ This package provides binary files for libaeon. Please refer to
+ the documentation of libaeon available in libaeon-doc Debian package.
+ .
+ Aeon is framework-independent machine learning data loader committed
+ to the best performance, and designed for ease-of-use and extensibility.
+
+Package: libaeon-dev
+Section: libdevel
+Architecture: amd64
+Depends: libaeon (= ${binary:Version}), ${misc:Depends}
+Suggests: libaeon-doc, libaeon-dbg, pkg-config
+Multi-Arch: same
+Description: framework-independent data loader for machine learning (development files)
+ This package contains the development files for libaeon. Please refer
+ to the documentation of libaeon available in libaeon-doc Debian package.
+ .
+ Aeon is framework-independent machine learning data loader committed
+ to the best performance, and designed for ease-of-use and extensibility.
+
+Package: libaeon-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: framework-independent data loader for machine learning (documentation)
+ This package contains the documentation files for libaeon. Please refer
+ to the documentation of libaeon available in this Debian package.
+ .
+ Aeon is framework-independent machine learning data loader committed
+ to the best performance, and designed for ease-of-use and extensibility.
+
+Package: libaeon-dbg
+Section: debug
+Priority: extra
+Architecture: amd64
+Depends: libaeon (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Multi-Arch: same
+Description: framework-independent data loader for machine learning (debugging symbols)
+ This package contains debugging symbols for libaeon. Please refer
+ to the documentation of libaeon available in libaeon-doc Debian package.
+ .
+ Aeon is framework-independent machine learning data loader committed
+ to the best performance, and designed for ease-of-uuse and extensibility.
+
+Package: python-aeon
+Architecture: amd64
+Depends: libaeon (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Suggests: python-aeon-doc, python-aeon-dbg
+Multi-Arch: same
+Description: Python bindings for libaeon
+ This module provides the Python bindings to libaeon. Please refer to the documentation of
+ python-aeon available in python-aeon-doc Debian package.
+ .
+ This package contains Aeon bindings for Python 2.
+ .
+ Aeon is framework-independtent data loader for machine learning committed to the best
+ performance, and designed for ease-of-use and extensibility.
+
+Package: python-aeon-dbg
+Section: debug
+Architecture: amd64
+Priority: extra
+Depends: python-dbg, python-aeon (= ${binary:Version}), ${misc:Depends}, ${shlibds:Depends}, ${python:Depends}
+Multi-Arch: same
+Description: Python bindings for libaeon (debug extension)
+ This module provides Python bindings to libaeon. Please refer to the documentation of
+ python-aeon available in python-aeon-doc Debian package.
+ .
+ This package contains the extension built for the Python 2 debug interpreter.
+ .
+ Aeon is framework-independent data loader for machine learning committed to the best
+ performance, and designed for ease-of-use and extensibility.
+
+Package: python3-aeon
+Architecture: amd64
+Depends: libaeon (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, ${python3:Depends}
+Suggests: python-aeon-doc, python3-aeon-dbg
+Multi-Arch: same
+Description: Python bindings to libaeon (Python 3)
+ This module provides the Python bindings to libaeon. Please refer to the documentation of
+ python3-aeon available in python-aeon-doc Debian package.
+ .
+ This package contains Aeon bindings for Python 3.
+ .
+ Aeon is framework-independent data loader for machine learning committed to the best
+ performance, and designed for ease-of-use and extensibility.
+
+Package: python3-aeon-dbg
+Section: debug
+Architecture: amd64
+Priority: extra
+Depends: python3-dbg, python3-aeon (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}, ${python3:Depends}
+Multi-Arch: same
+Description: Python bindings to libaeon (debug extension, Python 3)
+ This module provides Python bindings to libaeon. Please refer to the documentation of
+ python3-aeon available in python-aeon-doc Debian package.
+ .
+ This package contains the extension built for the Python 3 debug interpreter.
+ .
+ Aeon is framework-independent data loader for machine learning committed to the best
+ performance, and designed for ease-of-use and extensibility.
+
+Package: python-aeon-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: Python bindings to libaeon (documentation)
+ This module provides the Python bindings to libaeon. Please refer to the documentation
+ available in this Debian package.
+ .
+ This package contains the documentation for Python 2 and Python 3 binaing to libaeon.
+ .
+ Aeon is framework-independent data loader for machine learning committed to the best
+ performance, and designed for ease-of-use and extensibility.
+
