@@ -1067,19 +1067,6 @@ TEST(image, decoded_image)
     image::decoded decoded(img1);
 }
 
-// TEST(image, image_config)
-//{
-//    nlohmann::json js = {{"min_size",300},{"max_size",400},{"channels",3},{"flip_enable", false}};
-
-//    image::config config(js);
-//    EXPECT_EQ(300,config.min_size);
-//    EXPECT_EQ(400,config.max_size);
-//    EXPECT_TRUE(config.channel_major);
-//    EXPECT_EQ(3,config.channels);
-
-//    EXPECT_FLOAT_EQ(0.0,config.flip_distribution.p());
-//}
-
 TEST(image, var_resize)
 {
     auto                  mat = cv::Mat(200, 300, CV_8UC3);
