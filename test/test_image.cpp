@@ -1657,3 +1657,25 @@ TEST(photometric, hue)
         //        cv::imwrite(name, mat);
     }
 }
+
+TEST(image, get_resize_short_size)
+{
+    size_t input_width       = 1024;
+    size_t input_height      = 512;
+    size_t resize_short_size = 200;
+    cv::Size2i   input_size =
+        nervana::image::get_resized_short_size(input_width, input_height, resize_short_size);
+    EXPECT_EQ(input_size.width, 400);
+    EXPECT_EQ(input_size.height, 200);
+}
+
+TEST(image, resize_short_size)
+{
+    cv::Mat img{512, 1024, CV_8UC3, cv::Scalar::all(255)};
+    size_t  resize_short_size    = 200;
+    auto    interpolation_method = "LINEAR";
+    cv::Mat resizedShortImage;
+    image::resize_short(img, resizedShortImage, resize_short_size, interpolation_method);
+    EXPECT_EQ(resizedShortImage.cols, 400);
+    EXPECT_EQ(resizedShortImage.rows, 200);
+}

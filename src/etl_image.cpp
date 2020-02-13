@@ -157,7 +157,6 @@ cv::Mat image::transformer::transform_single_image(shared_ptr<augment::image::pa
     else
         expandedImage = rotatedImage;
 
-    // TODO(sfraczek): add test for this resize short
     cv::Mat resizedShortImage;
     if (img_xform->resize_short_size == 0)
         resizedShortImage = expandedImage;

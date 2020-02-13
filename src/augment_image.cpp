@@ -195,7 +195,6 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
             float      _horizontal_distortion = horizontal_distortion(random);
             cv::Size2f out_shape(output_width * _horizontal_distortion, output_height);
 
-            // TODO(sfraczek): add test for this resize short
             if (resize_short_size > 0)
             {
                 input_size = nervana::image::get_resized_short_size(input_width,
