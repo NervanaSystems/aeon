@@ -44,12 +44,12 @@ First grab Aeon's dependencies:
 
 ## Code coverage
 
-    Code coverage in aeon depends on llvm-cov and lcov.
+    Code coverage in aeon depends on lcov.
     Report will be generated in html-coverage-report/index.html
 
     Example:
 
-    sudo apt-get install llvm lcov
+    sudo apt-get install gcov lcov
     mkdir build
     cd build
     # COVERAGE flag must be set to generate coverage report

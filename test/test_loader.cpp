@@ -470,3 +470,49 @@ TEST(DISABLED_loader, deterministic)
     EXPECT_EQ(data[1], expected_result[1]);
     EXPECT_EQ(data[2], expected_result[2]);
 }
+
+TEST(loader, multinode_syntax)
+{
+    int    height            = 32;
+    int    width             = 32;
+    size_t batch_size        = 2;
+    size_t record_count      = 10;
+    string manifest_filename = create_manifest_file(record_count, width, height);
+
+    json image = {{"type", "image"},
+                  {"name", "image1"},
+                  {"height", height},
+                  {"width", width},
+                  {"channel_major", false}};
+    json label        = {{"type", "label"}, {"name", "label1"}, {"binary", false}};
+    json augmentation = {{{"type", "image"}, {"flip_enable", true}}};
+    json js           = {{"manifest_filename", manifest_filename},
+               {"batch_size", batch_size},
+               {"iteration_mode", "ONCE"},
+               {"etl", {image, label}},
+               {"augmentation", augmentation}};
+
+    auto test_loader_node_id_count = [&js](int id, int count) {
+        js["node_id"] = id;
+        js["node_count"] = count;
+        loader_factory factory;
+        return factory.get_loader(js);
+    };
+
+    // default single node
+    EXPECT_NO_THROW(auto loader = test_loader_node_id_count(0, 0));
+
+    // valid single node
+    EXPECT_NO_THROW(auto loader = test_loader_node_id_count(0, 1));
+
+    // valid multi node
+    EXPECT_NO_THROW(auto loader = test_loader_node_id_count(0, 2));
+    EXPECT_NO_THROW(auto loader = test_loader_node_id_count(1, 2));
+
+    // unacceptable node_id >= node_count
+    EXPECT_THROW(auto loader = test_loader_node_id_count(1, 0), std::invalid_argument);
+    EXPECT_THROW(auto loader = test_loader_node_id_count(1, 1), std::invalid_argument);
+    EXPECT_THROW(auto loader = test_loader_node_id_count(2, 0), std::invalid_argument);
+    EXPECT_THROW(auto loader = test_loader_node_id_count(2, 1), std::invalid_argument);
+    EXPECT_THROW(auto loader = test_loader_node_id_count(2, 2), std::invalid_argument);
+}

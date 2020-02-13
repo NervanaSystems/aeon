@@ -1,2 +1,2 @@
 #!/bin/sh
-exec llvm-cov gcov "$@"
+exec gcov "$@"

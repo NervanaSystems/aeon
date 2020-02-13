@@ -116,6 +116,20 @@ static void test_image(vector<unsigned char>& img, int channels)
     // }
 }
 
+TEST(image, config_empty_json)
+{
+    nlohmann::json js;
+    EXPECT_THROW(image::config cfg(js), std::runtime_error);
+}
+
+TEST(image, config_invalid_width_and_height)
+{
+    EXPECT_THROW(image::config cfg({{"width", -1}, {"height", 256}}), std::invalid_argument);
+    EXPECT_THROW(image::config cfg({{"width", 0}, {"height", 256}}), std::invalid_argument);
+    EXPECT_THROW(image::config cfg({{"width", 256}, {"height", -1}}), std::invalid_argument);
+    EXPECT_THROW(image::config cfg({{"width", 256}, {"height", 0}}), std::invalid_argument);
+}
+
 TEST(image, passthrough)
 {
     cv::Mat        test_image = cv::Mat(256, 512, CV_8UC3);
@@ -1053,19 +1067,6 @@ TEST(image, decoded_image)
     image::decoded decoded(img1);
 }
 
-// TEST(image, image_config)
-//{
-//    nlohmann::json js = {{"min_size",300},{"max_size",400},{"channels",3},{"flip_enable", false}};
-
-//    image::config config(js);
-//    EXPECT_EQ(300,config.min_size);
-//    EXPECT_EQ(400,config.max_size);
-//    EXPECT_TRUE(config.channel_major);
-//    EXPECT_EQ(3,config.channels);
-
-//    EXPECT_FLOAT_EQ(0.0,config.flip_distribution.p());
-//}
-
 TEST(image, var_resize)
 {
     auto                  mat = cv::Mat(200, 300, CV_8UC3);
@@ -1655,4 +1656,26 @@ TEST(photometric, hue)
         //        string name = "hue_" + to_string(i) + ".png";
         //        cv::imwrite(name, mat);
     }
+}
+
+TEST(image, get_resize_short_size)
+{
+    size_t input_width       = 1024;
+    size_t input_height      = 512;
+    size_t resize_short_size = 200;
+    cv::Size2i   input_size =
+        nervana::image::get_resized_short_size(input_width, input_height, resize_short_size);
+    EXPECT_EQ(input_size.width, 400);
+    EXPECT_EQ(input_size.height, 200);
+}
+
+TEST(image, resize_short_size)
+{
+    cv::Mat img{512, 1024, CV_8UC3, cv::Scalar::all(255)};
+    size_t  resize_short_size    = 200;
+    auto    interpolation_method = "LINEAR";
+    cv::Mat resizedShortImage;
+    image::resize_short(img, resizedShortImage, resize_short_size, interpolation_method);
+    EXPECT_EQ(resizedShortImage.cols, 400);
+    EXPECT_EQ(resizedShortImage.rows, 200);
 }

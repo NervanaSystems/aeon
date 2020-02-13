@@ -121,6 +121,14 @@ TEST(image_augmentation, config)
 
     EXPECT_THAT(config.mean, testing::ElementsAre(0.5, 0.4, 0.6));
     EXPECT_TRUE(config.stddev.empty());
+
+    EXPECT_EQ(config.resize_short_size, 0);
+}
+
+TEST(image_augmentation, config_negative_resize_short_size)
+{
+    nlohmann::json js = {{"type", "image"}, {"resize_short_size", -1}};
+    EXPECT_THROW(augment::image::param_factory factory(js), std::invalid_argument);
 }
 
 TEST(image_augmnetation, config_crop_and_batch_sampler)

@@ -96,20 +96,21 @@ void loader_local::initialize(const json& config_json)
 
     // shared_ptr<manifest> base_manifest;
 
+    if (lcfg.node_id > lcfg.node_count || lcfg.node_id == lcfg.node_count && lcfg.node_count > 0)
+        throw std::invalid_argument("node_id can't be greater than node_count.");
+
     if (lcfg.node_count > 1)
     {
-        if (lcfg.node_id >= lcfg.node_count)
-            throw std::runtime_error("node_id can't be greater than node_count");
-
         if (!lcfg.cache_directory.empty())
         {
-            WARN<<"File caching for multinode is not implemented yet";
+            WARN << "File caching for multinode is not implemented yet.";
             lcfg.cache_directory.clear();
         }
 
         if (lcfg.random_seed == 0)
         {
-            WARN<<"You have to set non zero random_seed for multi node training. random_seed = 1 is used";
+            WARN << "You have to set non zero random_seed for multi node training. random_seed = 1 "
+                    "is used.";
             lcfg.random_seed = 1;
         }
     }
