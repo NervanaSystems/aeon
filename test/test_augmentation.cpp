@@ -121,6 +121,8 @@ TEST(image_augmentation, config)
 
     EXPECT_THAT(config.mean, testing::ElementsAre(0.5, 0.4, 0.6));
     EXPECT_TRUE(config.stddev.empty());
+
+    EXPECT_EQ(config.resize_short_size, 0);
 }
 
 TEST(image_augmentation, config_negative_resize_short_size)
