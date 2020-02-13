@@ -83,6 +83,12 @@ augment::image::param_factory::param_factory(nlohmann::json js)
                 padding_crop_offset_distribution =
                     uniform_int_distribution<int>(0, padding * 2);
             }
+
+            if (resize_short_size < 0)
+            {
+                throw std::invalid_argument("Negative resize_short_size provided:" +
+                                            std::to_string(resize_short_size) + ".");
+            }
         }
     }
     m_emit_type = get_emit_constraint_type();
