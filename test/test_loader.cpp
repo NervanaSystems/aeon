@@ -509,6 +509,11 @@ TEST(loader, multinode_syntax)
     EXPECT_NO_THROW(auto loader = test_loader_node_id_count(0, 2));
     EXPECT_NO_THROW(auto loader = test_loader_node_id_count(1, 2));
 
+    // unacceptable negative values
+    EXPECT_THROW(auto loader = test_loader_node_id_count(0, -1), std::invalid_argument);
+    EXPECT_THROW(auto loader = test_loader_node_id_count(-1, 0), std::invalid_argument);
+    EXPECT_THROW(auto loader = test_loader_node_id_count(-1, -1), std::invalid_argument);
+
     // unacceptable node_id >= node_count
     EXPECT_THROW(auto loader = test_loader_node_id_count(1, 0), std::invalid_argument);
     EXPECT_THROW(auto loader = test_loader_node_id_count(1, 1), std::invalid_argument);

@@ -21,6 +21,7 @@
 #include <utility>
 #include <algorithm>
 #include <memory>
+#include <limits>
 
 #include "loader.hpp"
 #include "log.hpp"
@@ -70,6 +71,34 @@ void loader_config::validate()
     {
         throw invalid_argument("iteration_mode must be one of ONCE, COUNT, or INFINITE");
     }
+
+    if (node_id > numeric_limits<decltype(node_id)>::max() / 2)
+    {
+        throw std::invalid_argument("node_id or node_count is unexpectedly big.");
+    }
+    if (node_count > numeric_limits<decltype(node_count)>::max() / 2)
+    {
+        throw std::invalid_argument("node_id or node_count is unexpectedly big.");
+    }
+    if (node_id > node_count || node_id == node_count && node_count > 0)
+    {
+        throw std::invalid_argument("node_id can't be greater than node_count.");
+    }
+    if (node_count > 1)
+    {
+        if (!cache_directory.empty())
+        {
+            WARN << "File caching for multinode is not implemented yet.";
+            cache_directory.clear();
+        }
+
+        if (random_seed == 0)
+        {
+            WARN << "You have to set non zero random_seed for multi node training. random_seed = 1 "
+                    "is used.";
+            random_seed = 1;
+        }
+    }
 }
 
 loader_local::loader_local(const std::string& config_string)
@@ -95,25 +124,6 @@ void loader_local::initialize(const json& config_json)
     m_batch_size = lcfg.batch_size;
 
     // shared_ptr<manifest> base_manifest;
-
-    if (lcfg.node_id > lcfg.node_count || lcfg.node_id == lcfg.node_count && lcfg.node_count > 0)
-        throw std::invalid_argument("node_id can't be greater than node_count.");
-
-    if (lcfg.node_count > 1)
-    {
-        if (!lcfg.cache_directory.empty())
-        {
-            WARN << "File caching for multinode is not implemented yet.";
-            lcfg.cache_directory.clear();
-        }
-
-        if (lcfg.random_seed == 0)
-        {
-            WARN << "You have to set non zero random_seed for multi node training. random_seed = 1 "
-                    "is used.";
-            lcfg.random_seed = 1;
-        }
-    }
 
     // the manifest defines which data should be included in the dataset
     m_manifest_file = make_shared<manifest_file>(lcfg.manifest_filename,
