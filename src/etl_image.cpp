@@ -49,14 +49,17 @@ image::config::config(nlohmann::json js)
 
 void image::config::validate()
 {
-    if (width <= 0)
+    THROW_IF_TOO_BIG(width)
+    THROW_IF_TOO_BIG(height)
+    if (width == 0)
     {
-        throw invalid_argument("invalid width");
+        throw std::invalid_argument("width can't be 0.");
     }
-    if (height <= 0)
+    if (height == 0)
     {
-        throw invalid_argument("invalid height");
+        throw std::invalid_argument("height can't be 0.");
     }
+
     if (bgr_to_rgb && channels != 3)
     {
         throw invalid_argument(

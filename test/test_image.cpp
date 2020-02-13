@@ -122,7 +122,7 @@ TEST(image, config_empty_json)
     EXPECT_THROW(image::config cfg(js), std::runtime_error);
 }
 
-TEST(image, config_invalid_width_and_height)
+TEST(image, config_invalid_width_or_height)
 {
     EXPECT_THROW(image::config cfg({{"width", -1}, {"height", 256}}), std::invalid_argument);
     EXPECT_THROW(image::config cfg({{"width", 0}, {"height", 256}}), std::invalid_argument);

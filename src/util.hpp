@@ -26,6 +26,7 @@
 #include <chrono>
 #include <map>
 #include <mutex>
+#include <limits>
 
 namespace nervana
 {
@@ -43,6 +44,13 @@ namespace nervana
 #define BYTEIDX(idx, width, endianess) (endianess == endian::LITTLE ? idx : width - idx - 1)
 
 #define DUMP_VALUE(a) cout << __FILE__ << " " << __LINE__ << " " #a " " << a << endl;
+
+#define THROW_IF_TOO_BIG(a)                                                                        \
+    if (a > numeric_limits<decltype(a)>::max() / 2)                                                \
+    {                                                                                              \
+        throw std::invalid_argument("Value of '" #a "' which is " + std::to_string(a) +            \
+                                    " is unexpectedly big.");                                      \
+    }
 
     template <class T>
     class singleton

@@ -21,7 +21,6 @@
 #include <utility>
 #include <algorithm>
 #include <memory>
-#include <limits>
 
 #include "loader.hpp"
 #include "log.hpp"
@@ -72,14 +71,9 @@ void loader_config::validate()
         throw invalid_argument("iteration_mode must be one of ONCE, COUNT, or INFINITE");
     }
 
-    if (node_id > numeric_limits<decltype(node_id)>::max() / 2)
-    {
-        throw std::invalid_argument("node_id or node_count is unexpectedly big.");
-    }
-    if (node_count > numeric_limits<decltype(node_count)>::max() / 2)
-    {
-        throw std::invalid_argument("node_id or node_count is unexpectedly big.");
-    }
+    THROW_IF_TOO_BIG(node_count);
+    THROW_IF_TOO_BIG(node_id);
+
     if (node_id > node_count || node_id == node_count && node_count > 0)
     {
         throw std::invalid_argument("node_id can't be greater than node_count.");
