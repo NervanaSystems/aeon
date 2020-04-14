@@ -4,7 +4,7 @@
 #include <string>
 
 #include "service.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "loader.hpp"
 #include "typemap.hpp"
 

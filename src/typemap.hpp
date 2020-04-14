@@ -18,7 +18,7 @@
 
 #include <map>
 #include <opencv2/core/core.hpp>
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 
 #ifdef PYTHON_FOUND
 #include <Python.h>

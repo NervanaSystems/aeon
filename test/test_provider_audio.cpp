@@ -23,7 +23,7 @@
 #include "etl_label.hpp"
 #include "etl_char_map.hpp"
 #include "wav_data.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "util.hpp"
 #include "log.hpp"
 

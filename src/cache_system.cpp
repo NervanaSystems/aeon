@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <fstream>
+#include <iomanip>
 #include <random>
 
 #include "cache_system.hpp"

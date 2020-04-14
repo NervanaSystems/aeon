@@ -28,7 +28,7 @@
 #include "etl_label.hpp"
 #include "etl_boundingbox.hpp"
 #include "etl_label_map.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 
 using namespace std;
 using namespace nervana;

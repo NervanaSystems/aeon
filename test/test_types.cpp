@@ -21,7 +21,7 @@
 
 #include "gtest/gtest.h"
 #include "typemap.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include <typeinfo>
 #include <typeindex>
 

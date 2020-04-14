@@ -32,7 +32,7 @@
 #include "etl_label.hpp"
 #include "etl_boundingbox.hpp"
 #include "etl_label_map.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "helpers.hpp"
 
 extern gen_image image_dataset;

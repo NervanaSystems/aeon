@@ -25,14 +25,14 @@
 
 #include "gtest/gtest.h"
 #include "gen_image.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 
 #define private public
 #define protected public
 
 #include "file_util.hpp"
 #include "etl_localization_ssd.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "provider_factory.hpp"
 #include "log.hpp"
 #include "loader.hpp"

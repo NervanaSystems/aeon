@@ -27,7 +27,7 @@
 
 #include "boundingbox.hpp"
 #include "normalized_box.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "interface.hpp"
 #include "box.hpp"
 #ifdef PYTHON_PLUGIN
@@ -375,7 +375,7 @@ private:
     bool has_max_sample() const { return m_max_sample != -1; }
     std::vector<std::shared_ptr<interface::config_info_interface>> config_list = {
         ADD_SCALAR_WITH_KEY(
-            m_max_sample, "max_sample", mode::OPTIONAL, [](int x) { return x >= 0; }),
+            m_max_sample, "max_sample", mode::OPTIONAL, [](int x) { return x >= -1; }),
         ADD_SCALAR_WITH_KEY(m_max_trials, "max_trials", mode::OPTIONAL),
         ADD_JSON(m_sampler_json, "sampler", mode::OPTIONAL),
         ADD_JSON(m_sample_constraint_json, "sample_constraint", mode::OPTIONAL)};

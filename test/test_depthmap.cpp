@@ -22,7 +22,7 @@
 #define private public
 
 #include "etl_depthmap.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "helpers.hpp"
 
 using namespace std;

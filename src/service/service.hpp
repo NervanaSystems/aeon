@@ -9,7 +9,7 @@
 
 #include <cpprest/http_listener.h>
 
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "loader.hpp"
 #include "log.hpp"
 #if defined(ENABLE_OPENFABRICS_CONNECTOR)

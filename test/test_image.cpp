@@ -25,7 +25,7 @@
 
 #include "gtest/gtest.h"
 
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "helpers.hpp"
 #include "image.hpp"
 #include "log.hpp"

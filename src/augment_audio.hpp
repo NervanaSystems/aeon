@@ -18,7 +18,7 @@
 
 #include <random>
 
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "interface.hpp"
 #ifdef PYTHON_PLUGIN
 #include "python_plugin.hpp"

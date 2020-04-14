@@ -21,7 +21,7 @@
 
 #include "interface.hpp"
 #include "etl_image.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "box.hpp"
 
 namespace nervana

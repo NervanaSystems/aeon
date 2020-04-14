@@ -25,7 +25,7 @@
 #include "file_util.hpp"
 #include "gen_image.hpp"
 #include "helpers.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "loader.hpp"
 #include "provider_factory.hpp"
 #include "provider_factory.hpp"

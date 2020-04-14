@@ -28,7 +28,7 @@
 #define private public
 
 #include "etl_pixel_mask.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "helpers.hpp"
 #include "provider_factory.hpp"
 

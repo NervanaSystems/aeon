@@ -20,7 +20,7 @@
 #include <vector>
 #include <map>
 
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "buffer_batch.hpp"
 #include "loader.hpp"
 #include "log.hpp"

@@ -22,7 +22,7 @@
 
 #include "etl_image.hpp"
 #include "buffer_batch.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 
 namespace nervana
 {
