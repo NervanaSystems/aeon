@@ -78,7 +78,6 @@ namespace
                  << " (build " << aeon::build::number << ")"
                  << "\nCopyright (C) 2017-2018 by Intel Corporation. All rights reserved.\n\n";
 
-
             return outs;
         }
 

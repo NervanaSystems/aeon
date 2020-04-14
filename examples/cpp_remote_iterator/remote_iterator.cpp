@@ -34,7 +34,11 @@ using nervana::loader;
 using nervana::loader_factory;
 using nervana::manifest_file;
 
-void use_aeon(const string& address, int port, const string& manifest_path, const string& rdma_address, int rdma_port);
+void use_aeon(const string& address,
+              int           port,
+              const string& manifest_path,
+              const string& rdma_address,
+              int           rdma_port);
 
 int main(int argc, char** argv)
 {
@@ -42,52 +46,62 @@ int main(int argc, char** argv)
     int    port{0};
     string manifest_path;
     string rdma_address;
-    int rdma_port{0};
+    int    rdma_port{0};
 
     int opt;
     while ((opt = getopt(argc, argv, "a:p:m:r:s:h")) != EOF)
         switch (opt)
         {
-        case 'a': address = optarg; break;
-        case 'p': port    = stoi(optarg); break;
+        case 'a': address       = optarg; break;
+        case 'p': port          = stoi(optarg); break;
         case 'm': manifest_path = optarg; break;
-        case 'r': rdma_address = optarg; break;
-        case 's': rdma_port = stoi(optarg); break;
+        case 'r': rdma_address  = optarg; break;
+        case 's': rdma_port     = stoi(optarg); break;
         case 'h':
-        case '?': cout << "remote_iterator -a <address> -p <port> -m <manifest> -r <rdma_address> -s <rdma_port>" << endl; return 0;
+        case '?':
+            cout << "remote_iterator -a <address> -p <port> -m <manifest> -r <rdma_address> -s "
+                    "<rdma_port>"
+                 << endl;
+            return 0;
         }
 
     if (address.empty() || port == 0 || manifest_path.empty())
     {
-        cerr << "address (-a), port (-p) and manifest (-m) parameters have to be provided. Try remote_iterator -h for more information." << endl;
+        cerr << "address (-a), port (-p) and manifest (-m) parameters have to be provided. Try "
+                "remote_iterator -h for more information."
+             << endl;
         return 1;
     }
 
     use_aeon(address, port, manifest_path, rdma_address, rdma_port);
 }
 
-void use_aeon(const string& address, int port, const string& manifest_path, const string& rdma_address, int rdma_port)
+void use_aeon(const string& address,
+              int           port,
+              const string& manifest_path,
+              const string& rdma_address,
+              int           rdma_port)
 {
-    int    height        = 32;
-    int    width         = 32;
-    size_t batch_size    = 4;
+    int    height     = 32;
+    int    width      = 32;
+    size_t batch_size = 4;
 
     json image_config = {
         {"type", "image"}, {"height", height}, {"width", width}, {"channel_major", false}};
     json label_config = {{"type", "label"}, {"binary", false}};
     json aug_config   = {{{"type", "image"}, {"flip_enable", true}}};
-    json config       = {{"manifest_root", manifest_path.parent_path().string() },
-                   {"manifest_filename", manifest_path.string() },
+    json config       = {{"manifest_root", manifest_path.parent_path().string()},
+                   {"manifest_filename", manifest_path.string()},
                    {"batch_size", batch_size},
                    {"iteration_mode", "ONCE"},
                    {"etl", {image_config, label_config}},
                    {"augmentation", aug_config},
                    {"remote", {{"address", address}, {"port", port}}}};
 
-    if(!rdma_address.empty() && rdma_port)
+    if (!rdma_address.empty() && rdma_port)
     {
         config["remote"]["rdma_address"] = rdma_address;
-        config["remote"]["rdma_port"] = rdma_port;
+        config["remote"]["rdma_port"]    = rdma_port;
     }
 
     // initialize loader object

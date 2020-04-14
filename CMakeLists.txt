@@ -202,7 +202,12 @@ endif()
 add_subdirectory(test)
 add_subdirectory(examples)
 add_subdirectory(doc)
-include(cmake/clang-format.cmake)
 include(cmake/coverage.cmake)
+
+if (UNIX)
+    add_custom_target(style-check COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/check-code-format.sh)
+    add_custom_target(style-apply COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
+    add_custom_target(style COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
+endif()
 
 print_configuration_summary()

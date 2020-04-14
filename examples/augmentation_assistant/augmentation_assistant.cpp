@@ -86,16 +86,12 @@ public:
         }
     }
 
-    void wait_for_exit()
-    {
-        m_server.wait_for_exit();
-    }
-
+    void wait_for_exit() { m_server.wait_for_exit(); }
     void home_page(web::page& p)
     {
-        time_t     t   = time(0);
-        struct tm* now = localtime(&t);
-        ostream&   out = p.output_stream();
+        time_t                 t   = time(0);
+        struct tm*             now = localtime(&t);
+        ostream&               out = p.output_stream();
         nervana::image::config cfg;
 
         out << "<span>Current time: " << asctime(now) << "</span>\n";
@@ -108,36 +104,38 @@ public:
         out << "    <th>Default</th>\n";
         out << "  </thead>\n";
         out << "  <tbody>\n";
-        for (auto x : cfg.get_config_list())                                                             \
+        for (auto x : cfg.get_config_list())
         {
             out << "  <tr>\n";
             out << "    <td>" << x->name() << "</td>\n";
-            out << "    <td>" << x->type()  << "</td>\n";
-            out << "    <td>" << (x->required() ? "REQUIRED" : "OPTIONAL")  << "</td>\n";
-            out << "    <td>" << (x->required() ? "" : x->get_default_value())  << "</td>\n";
+            out << "    <td>" << x->type() << "</td>\n";
+            out << "    <td>" << (x->required() ? "REQUIRED" : "OPTIONAL") << "</td>\n";
+            out << "    <td>" << (x->required() ? "" : x->get_default_value()) << "</td>\n";
             out << "  </tr>\n";
         }
         out << "  </tbody>\n";
         out << "</table>\n";
 
-
-
         out << "<form class=\"form-horizontal\">\n";
-        for (auto x : cfg.get_config_list())                                                             \
+        for (auto x : cfg.get_config_list())
         {
             out << "  <div class=\"form-group\">\n";
             if (x->type() == "unsigned int" || x->type() == "float")
             {
-                out << "    <label for=\"" << x->name() << "\" class=\"col-sm-2 control-label\">" << x->name() << "</label>\n";
+                out << "    <label for=\"" << x->name() << "\" class=\"col-sm-2 control-label\">"
+                    << x->name() << "</label>\n";
                 out << "    <div class=\"col-sm-3\">\n";
-                out << "      <input type=\"number\" class=\"form-control\" id=\"" << x->name() << "\">\n";
+                out << "      <input type=\"number\" class=\"form-control\" id=\"" << x->name()
+                    << "\">\n";
                 out << "    </div>\n";
             }
             else if (x->type() == "std::string")
             {
-                out << "    <label for=\"" << x->name() << "\" class=\"col-sm-2 control-label\">" << x->name() << "</label>\n";
+                out << "    <label for=\"" << x->name() << "\" class=\"col-sm-2 control-label\">"
+                    << x->name() << "</label>\n";
                 out << "    <div class=\"col-sm-3\">\n";
-                out << "      <input type=\"text\" class=\"form-control\" id=\"" << x->name() << "\">\n";
+                out << "      <input type=\"text\" class=\"form-control\" id=\"" << x->name()
+                    << "\">\n";
                 out << "    </div>\n";
             }
             else if (x->type() == "bool")
@@ -145,16 +143,20 @@ public:
                 out << "    <div class=\"col-sm-offset-2 col-sm-3\">\n";
                 out << "      <div class=\"checkbox\">\n";
                 out << "        <label>\n";
-                out << "          <input type=\"checkbox\" " << (x->get_default_value() == "0" ? "" : "checked") << "> " << x->name() << "\n";
+                out << "          <input type=\"checkbox\" "
+                    << (x->get_default_value() == "0" ? "" : "checked") << "> " << x->name()
+                    << "\n";
                 out << "        </label>\n";
                 out << "      </div>\n";
                 out << "    </div>\n";
             }
             else if (x->type().find("distribution") != string::npos)
             {
-                out << "    <label for=\"" << x->name() << "\" class=\"col-sm-2 control-label\">" << x->name() << "</label>\n";
+                out << "    <label for=\"" << x->name() << "\" class=\"col-sm-2 control-label\">"
+                    << x->name() << "</label>\n";
                 out << "    <div class=\"col-sm-3\">\n";
-                out << "      <input type=\"text\" class=\"form-control\" id=\"" << x->name() << "\">\n";
+                out << "      <input type=\"text\" class=\"form-control\" id=\"" << x->name()
+                    << "\">\n";
                 out << "    </div>\n";
             }
             else

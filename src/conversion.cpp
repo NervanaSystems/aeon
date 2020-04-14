@@ -273,9 +273,9 @@ cv::Mat python::conversion::detail::to_mat(const PyObject* o)
                                      ? CV_16S
                                      : typenum == NPY_INT || typenum == NPY_LONG
                                            ? CV_32S
-                                           : typenum == NPY_FLOAT ? CV_32F : typenum == NPY_DOUBLE
-                                                                                 ? CV_64F
-                                                                                 : -1;
+                                           : typenum == NPY_FLOAT
+                                                 ? CV_32F
+                                                 : typenum == NPY_DOUBLE ? CV_64F : -1;
 
     if (type < 0)
     {
