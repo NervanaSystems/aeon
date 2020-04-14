@@ -104,6 +104,6 @@ if (ENABLE_OPENFABRICS_CONNECTOR)
     list(APPEND AEON_LIBRARIES ${OPENFABRICS_LIBRARIES})
 endif()
 
-target_link_libraries(aeon ${AEON_LIBRARIES})
+target_link_libraries(aeon ${AEON_LIBRARIES} libjson)
 set_target_properties(aeon PROPERTIES VERSION ${AEON_VERSION_MAJOR}.${AEON_VERSION_MINOR}.${AEON_VERSION_PATCH}
                                       SOVERSION ${AEON_VERSION_MAJOR})
