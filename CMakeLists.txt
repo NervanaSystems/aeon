@@ -14,9 +14,13 @@
 # limitations under the License.
 # ******************************************************************************
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5)
 
 project(aeon)
+
+if (UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
@@ -42,7 +46,9 @@ option(ENABLE_AEON_SERVICE "Enable compilation of AEON Service" OFF)
 option(ENABLE_AEON_CLIENT "Enable compilation of AEON Client" ON)
 option(ENABLE_OPENFABRICS_CONNECTOR "Enable OpenFabrics connector for batch exchange between service and client" OFF)
 
+set(EXTERNAL_PROJECTS_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 include(cmake/summary.cmake)
+include(cmake/external_gtest.cmake)
 
 if(APPLE)
     set(CMAKE_MACOSX_RPATH 1)
@@ -219,11 +225,6 @@ find_package(Doxygen)
 find_package(Sphinx)
 find_package(Breathe)
 
-include_directories(BEFORE gtest/googletest/include)
-include_directories(BEFORE gtest/googlemock/include)
-set(BUILD_SHARED_LIBS off)
-add_subdirectory(gtest)
-set(BUILD_SHARED_LIBS on)
 add_subdirectory(src)
 if (ENABLE_AEON_SERVICE)
 add_subdirectory(src/service)
