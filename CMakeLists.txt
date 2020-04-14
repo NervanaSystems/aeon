@@ -16,10 +16,7 @@
 
 cmake_minimum_required(VERSION 2.8.12)
 
-# Set this flag before project definition to avoid using other compiler by gtest
-set(CMAKE_CXX_COMPILER "clang++")
-
-project(aeon C CXX)
+project(aeon)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
