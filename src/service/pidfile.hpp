@@ -14,8 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#if !defined(AEON_Service_PIDFILE_H_INCLUDED_)
-#define AEON_Service_PIDFILE_H_INCLUDED_
+#pragma once
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -23,8 +22,6 @@
 #include <fstream>
 #include <string>
 #include <stdexcept>
-
-#include <boost/filesystem/path.hpp>
 
 namespace nervana
 {
@@ -114,5 +111,3 @@ namespace nervana
         }
     }
 }
-
-#endif /* AEON_Service_PIDFILE_H_INCLUDED_ */

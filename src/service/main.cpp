@@ -24,8 +24,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include <boost/filesystem/path.hpp>
-
 #include "version.hpp"
 #include "log.hpp"
 #include "pidfile.hpp"

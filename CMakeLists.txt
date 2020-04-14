@@ -169,9 +169,6 @@ if (ENABLE_OPENFABRICS_CONNECTOR)
     link_directories(${OPENFABRICS_LIBRARY_DIRS})
 endif()
 
-# Check for BOOST components
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
@@ -196,11 +193,11 @@ find_package(Breathe)
 
 add_subdirectory(src)
 if (ENABLE_AEON_SERVICE)
-add_subdirectory(src/service)
+    add_subdirectory(src/service)
 endif()
 include_directories(src)
 if (ENABLE_AEON_CLIENT)
-include_directories(src/client)
+    include_directories(src/client)
 endif()
 add_subdirectory(test)
 add_subdirectory(examples)

@@ -14,9 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-#if !defined(AEON_Service_LOG_HPP_INCLUDED_)
-#define AEON_Service_LOG_HPP_INCLUDED_
-
 #pragma once
 
 #include <syslog.h>
@@ -29,9 +26,6 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-
-#include <boost/filesystem/path.hpp>
-#include <boost/format.hpp>
 
 namespace nervana
 {
@@ -167,7 +161,7 @@ namespace nervana
             class file : public stream
             {
             public:
-                explicit file(const boost::filesystem::path& path)
+                explicit file(const string& path)
                     : m_path{path}
                 {
                 }
@@ -191,7 +185,7 @@ namespace nervana
                 }
 
             private:
-                boost::filesystem::path m_path;
+                string m_path;
 
                 void _output(const std::string& prefix, const std::string& msg)
                 {
@@ -214,7 +208,7 @@ namespace nervana
                                << prefix << "] ";
                         }};
                     ss << msg << "\n";
-                    std::ofstream ofs{m_path.string(), std::ios::ate | std::ios::app};
+                    std::ofstream ofs{m_path, std::ios::ate | std::ios::app};
                     if (ofs.is_open())
                     {
                         ofs << ss.str() << std::flush;
@@ -367,7 +361,7 @@ namespace nervana
         inline void set_level(log::level level) noexcept { detail::logger::set_level(level); }
         inline log::level get_level() noexcept { return detail::logger::get_level(); }
         inline void add_terminal_sink() { detail::logger::register_sink(new detail::terminal{}); }
-        inline void add_file_sink(const boost::filesystem::path& path)
+        inline void add_file_sink(const std::string& path)
         {
             detail::logger::register_sink(new detail::file{path});
         }
@@ -440,5 +434,3 @@ namespace nervana
         }
     }
 }
-
-#endif /* AEON_Service_LOG_H_INCLUDED_ */

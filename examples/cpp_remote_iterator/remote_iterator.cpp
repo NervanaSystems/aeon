@@ -17,8 +17,6 @@
 #include <iostream>
 #include <string>
 
-#include <boost/filesystem/path.hpp>
-
 #include "aeon.hpp"
 #include "file_util.hpp"
 
@@ -36,13 +34,13 @@ using nervana::loader;
 using nervana::loader_factory;
 using nervana::manifest_file;
 
-void use_aeon(const string& address, int port, const boost::filesystem::path& manifest_path, const string& rdma_address, int rdma_port);
+void use_aeon(const string& address, int port, const string& manifest_path, const string& rdma_address, int rdma_port);
 
 int main(int argc, char** argv)
 {
     string address;
     int    port{0};
-    boost::filesystem::path manifest_path;
+    string manifest_path;
     string rdma_address;
     int rdma_port{0};
 
@@ -68,7 +66,7 @@ int main(int argc, char** argv)
     use_aeon(address, port, manifest_path, rdma_address, rdma_port);
 }
 
-void use_aeon(const string& address, int port, const boost::filesystem::path& manifest_path, const string& rdma_address, int rdma_port)
+void use_aeon(const string& address, int port, const string& manifest_path, const string& rdma_address, int rdma_port)
 {
     int    height        = 32;
     int    width         = 32;
