@@ -22,7 +22,6 @@
 #include <stdexcept>
 #include <random>
 #include <opencv2/core/core.hpp>
-#include <sox.h>
 #include <thread>
 #include <chrono>
 #include <map>
@@ -44,37 +43,6 @@ namespace nervana
 #define BYTEIDX(idx, width, endianess) (endianess == endian::LITTLE ? idx : width - idx - 1)
 
 #define DUMP_VALUE(a) cout << __FILE__ << " " << __LINE__ << " " #a " " << a << endl;
-
-    template <class T>
-    class singleton
-    {
-    public:
-        singleton()                 = delete;
-        singleton(const singleton&) = delete;
-        singleton& operator=(const singleton&) = delete;
-
-        template <typename... Args>
-        static std::shared_ptr<T> get(Args... args)
-        {
-            std::lock_guard<std::mutex> lg(m_mutex);
-            std::shared_ptr<T>          instance = m_singleton.lock();
-            if (!instance)
-            {
-                instance.reset(new T(args...));
-                m_singleton = instance;
-            }
-            return instance;
-        }
-
-    private:
-        static std::weak_ptr<T> m_singleton;
-        static std::mutex       m_mutex;
-    };
-
-    template <class T>
-    std::weak_ptr<T> singleton<T>::m_singleton;
-    template <class T>
-    std::mutex singleton<T>::m_mutex;
 
     template <typename T>
     T unpack(const void* _data, size_t offset = 0, endian e = endian::LITTLE)
@@ -178,11 +146,13 @@ namespace nervana
     typedef std::minstd_rand0 random_engine_t;
     random_engine_t&          get_thread_local_random_engine();
 
-    cv::Mat read_audio_from_mem(const char* item, int itemSize);
-    void write_audio_to_file(cv::Mat buffer, std::string path, sox_rate_t sample_rate_hz);
-
     std::vector<char> string2vector(const std::string& s);
     std::string vector2string(const std::vector<char>& s);
+
+    std::vector<int> parse_cpu_list(const std::string& cpu_list);
+    std::vector<int> get_thread_affinity_map(const std::string& config_cpu_list,
+                                             int                max_count_of_free_threads,
+                                             int                free_threads_ratio);
 
     class stopwatch
     {

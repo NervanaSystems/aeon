@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #define private public
 
@@ -83,7 +84,8 @@ TEST(image_augmentation, config)
                          {"scale", {0.2, 0.8}},
                          {"lighting", {0.0, 0.1}},
                          {"horizontal_distortion", {0.75, 1.33}},
-                         {"flip_enable", false}};
+                         {"flip_enable", false},
+                         {"mean", {0.5, 0.4, 0.6}}};
 
     augment::image::param_factory config(js);
     EXPECT_FALSE(config.do_area_scale);
@@ -116,6 +118,9 @@ TEST(image_augmentation, config)
     EXPECT_FLOAT_EQ(0.5, config.crop_offset.b());
 
     EXPECT_FLOAT_EQ(0.0, config.flip_distribution.p());
+
+    EXPECT_THAT(config.mean, testing::ElementsAre(0.5, 0.4, 0.6));
+    EXPECT_TRUE(config.stddev.empty());
 }
 
 TEST(image_augmnetation, config_crop_and_batch_sampler)
@@ -309,9 +314,6 @@ TEST(image_augmentation, make_ssd_params_transformations)
     EXPECT_EQ(params->output_size, cv::Size2i(20, 30));
     EXPECT_EQ(params->debug_deterministic, false);
     EXPECT_EQ(params->debug_output_directory, "");
-#ifdef PYTHON_PLUGIN
-    EXPECT_EQ(params->user_plugin, nullptr);
-#endif
 }
 
 TEST(image_augmentation, batch_sampler_ratio_scale)
@@ -454,76 +456,3 @@ TEST(image_augmentation, padding_with_crop_enabled)
     augment::image::param_factory config(js);
     EXPECT_THROW(config.make_params(10, 10, 10, 10), std::invalid_argument);
 }
-
-#ifdef PYTHON_PLUGIN
-TEST(image_augmentation, plugin_example_rotate_config)
-{
-    nlohmann::json js = {{"type", "image"},
-                         {"crop_enable", false},
-                         {"plugin_filename", "rotate"},
-                         {"plugin_params", {{"angle", {-20, 20}}}}};
-
-    augment::image::param_factory config(js);
-    config.make_params(10, 10, 10, 10);
-}
-
-TEST(image_augmentation, plugin_example_flip_config)
-{
-    nlohmann::json js = {{"type", "image"},
-                         {"crop_enable", false},
-                         {"plugin_filename", "flip"},
-                         {"plugin_params", {{"width", 10}}}};
-
-    augment::image::param_factory config(js);
-    config.make_params(10, 10, 10, 10);
-}
-
-TEST(image_augmentation, plugin_example_flip_config_missing_argument)
-{
-    nlohmann::json js = {{"type", "image"},
-                         {"crop_enable", false},
-                         {"plugin_filename", "flip"},
-                         {"plugin_params", nlohmann::json({})}};
-
-    augment::image::param_factory config(js);
-    EXPECT_THROW(config.make_params(10, 10, 10, 10), std::runtime_error);
-}
-
-TEST(image_augmentation, plugin_base_class_config)
-{
-    nlohmann::json js = {{"type", "image"},
-                         {"crop_enable", false},
-                         {"plugin_filename", "plugin"},
-                         {"plugin_params", nlohmann::json({})}};
-
-    std::shared_ptr<augment::image::param_factory> factory;
-    factory = make_shared<augment::image::param_factory>(js);
-    EXPECT_THROW(factory->make_params(10, 10, 10, 10), std::runtime_error);
-}
-
-TEST(image_augmentation, different_plugins_at_once)
-{
-    nlohmann::json js = {{"type", "image"},
-                         {"crop_enable", false},
-                         {"plugin_filename", "flip"},
-                         {"plugin_params", {{"width", 20}}}};
-
-    // output the random parameters
-    augment::image::param_factory factory(js);
-    auto                          its = factory.make_params(256, 256, 256, 256);
-
-    nlohmann::json js2 = {{"type", "image"},
-                          {"crop_enable", false},
-                          {"plugin_filename", "rotate"},
-                          {"plugin_params", {{"angle", {-20, 20}}}}};
-
-    // output the random parameters
-    augment::image::param_factory factory2(js2);
-    auto                          its2 = factory2.make_params(256, 256, 256, 256);
-
-    EXPECT_NE(factory.user_plugin_map[std::this_thread::get_id()]->get_name(),
-              factory2.user_plugin_map[std::this_thread::get_id()]->get_name());
-    EXPECT_EQ(its->user_plugin, factory.user_plugin_map[std::this_thread::get_id()]);
-    EXPECT_EQ(its2->user_plugin, factory2.user_plugin_map[std::this_thread::get_id()]);
-}
-#endif

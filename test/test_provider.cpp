@@ -14,9 +14,12 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <cmath>
+#include <fstream>
 #include <numeric>
 
 #include "gtest/gtest.h"
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include "cpio.hpp"
 #include "etl_boundingbox.hpp"
@@ -28,7 +31,7 @@
 #include "json.hpp"
 #include "loader.hpp"
 #include "provider_factory.hpp"
-#include "provider_factory.hpp"
+#include "provider.hpp"
 #include "util.hpp"
 
 extern gen_image image_dataset;
@@ -77,7 +80,7 @@ TEST(provider, image)
     EXPECT_GT(bp.size(), batch_size);
     for (int i = 0; i < batch_size; i++)
     {
-        media->provide(i, bp, out_buf);
+        media->provide(i, bp.record(i), out_buf);
 
         //  cv::Mat mat(width,height,CV_8UC3,&dbuffer[0]);
         //  string filename = "data" + to_string(i) + ".png";
@@ -88,6 +91,173 @@ TEST(provider, image)
         int target_value = unpack<int>(out_buf["label"]->get_item(i));
         EXPECT_EQ(42 + i, target_value);
     }
+}
+
+TEST(provider, image_paddle_imagenet_training_augmentation)
+{
+    string test_data_directory = file_util::path_join(string(CURDIR), "test_data");
+    string test_results_directory = file_util::path_join(string(CURDIR), "test_results");
+
+    const size_t in_img_height = 360;
+    const size_t in_img_width  = 480;
+
+    const size_t height         = 224;
+    const size_t width          = 224;
+    const size_t crop_height    = 201;
+    const size_t crop_width     = 171;
+    const size_t channels       = 3;
+    const size_t batch_size     = 1;
+    const size_t elements_count = height * width * channels;
+
+    nlohmann::json image_config = {{"height", height},
+                                   {"width", width},
+                                   {"channels", 3},
+                                   {"output_type", "float"},
+                                   {"channel_major", true},
+                                   {"bgr_to_rgb", true},
+                               };
+
+    nlohmann::json aug_config = {{"type", "image"},
+                                 {"flip_enable", true},
+                                 {"center", false},
+                                 {"crop_enable", true},
+                                 {"interpolation_method", "LINEAR"},
+                                 {"mean", {0.485, 0.456, 0.406}},
+                                 {"stddev", {0.229, 0.224, 0.225}},
+                                 {"resize_short_size", 0},
+                                 {"debug_output_directory", test_results_directory},
+                             };
+
+    // --- prepare image augmentation parameters ---
+    augment::image::param_factory factory(aug_config);
+    image_params_builder builder(factory.make_params(in_img_width, in_img_height, width, height));
+    shared_ptr<augment::image::params> aug_params_ptr =
+            builder.cropbox(50, 50, crop_width, crop_height)
+                   .flip(true)
+                   .angle(0);
+
+    augmentation data_augmentation;
+    data_augmentation.m_image_augmentations = aug_params_ptr;
+
+    // --- prepare output buffer ---
+    shape_type out_shape{{channels, height, width}, output_type{"float"}};
+    fixed_buffer_map out_buf;
+    out_buf.add_item("image", out_shape, batch_size);
+
+    // --- prepare input data ---
+    string input_file_path = file_util::path_join(test_data_directory,
+                                                  "img_2112_70.jpg");
+    std::vector<char> input_data{file_util::read_binary_file<char>(input_file_path)};
+
+    // --- extract, transform, load ---
+    provider::image img_provider{image_config, aug_config};
+    img_provider.provide(0, input_data, out_buf, data_augmentation);
+
+    // ---compare results ---
+    using pixel_type = float;
+    pixel_type* output_image = reinterpret_cast<pixel_type*>(out_buf["image"]->data());
+    const std::vector<pixel_type> expected_result =
+        file_util::read_binary_file<pixel_type>(file_util::path_join(test_data_directory,
+                                           "augment_output_linear_train.bin"));
+
+    double err{0}, rel_err{0}, max_err{0}, max_rel_err{0};
+    for (std::size_t i = 0; i < elements_count; ++i)
+    {
+        double diff = std::abs(expected_result[i] - output_image[i]);
+        err += diff;
+        rel_err += diff / std::abs(expected_result[i]);
+        max_err = std::max(max_err, diff);
+        max_rel_err = std::max(max_rel_err, diff / std::abs(expected_result[i]));
+    }
+    double avg_err = err / static_cast<double>(elements_count);
+    double avg_rel_err = rel_err / static_cast<double>(elements_count);
+
+    EXPECT_LE(avg_err, 1e-3f);
+    EXPECT_LE(avg_rel_err, 1e-3f);
+    EXPECT_LE(max_err, 1e-3f);
+    EXPECT_LE(max_rel_err, 1e-2f);
+}
+
+TEST(provider, image_paddle_imagenet_validate_augmentation)
+{
+    string test_data_directory = file_util::path_join(string(CURDIR), "test_data");
+    string test_results_directory = file_util::path_join(string(CURDIR), "test_results");
+
+    const size_t in_img_height = 360;
+    const size_t in_img_width  = 480;
+
+    const size_t height         = 224;
+    const size_t width          = 224;
+    const size_t channels       = 3;
+    const size_t batch_size     = 1;
+    const size_t elements_count = height * width * channels;
+
+    nlohmann::json image_config = {{"height", height},
+                                   {"width", width},
+                                   {"channels", 3},
+                                   {"output_type", "float"},
+                                   {"channel_major", true},
+                                   {"bgr_to_rgb", true},
+                               };
+
+    const int resize_short_size = 256;
+    const double scale = static_cast<double>(width) / resize_short_size;
+    nlohmann::json aug_config = {{"type", "image"},
+                                 {"flip_enable", false},
+                                 {"center", true},
+                                 {"crop_enable", true},
+                                 {"scale", {scale, scale}},
+                                 {"interpolation_method", "LINEAR"},
+                                 {"mean", {0.485, 0.456, 0.406}},
+                                 {"stddev", {0.229, 0.224, 0.225}},
+                                 {"resize_short_size", resize_short_size},
+                                 {"debug_output_directory", test_results_directory},
+                             };
+
+    // --- prepare image augmentation parameters ---
+    augment::image::param_factory factory(aug_config);
+    shared_ptr<augment::image::params> aug_params_ptr =
+        factory.make_params(in_img_width, in_img_height, width, height);
+
+    augmentation data_augmentation;
+    data_augmentation.m_image_augmentations = aug_params_ptr;
+
+    // --- prepare output buffer ---
+    shape_type out_shape{{channels, height, width}, output_type{"float"}};
+    fixed_buffer_map out_buf;
+    out_buf.add_item("image", out_shape, batch_size);
+
+    // --- prepare input data ---
+    string input_file_path = file_util::path_join(test_data_directory,
+                                                  "img_2112_70.jpg");
+    std::vector<char> input_data{file_util::read_binary_file<char>(input_file_path)};
+
+    // --- extract, transform, load ---
+    provider::image img_provider{image_config, aug_config};
+    img_provider.provide(0, input_data, out_buf, data_augmentation);
+
+    // ---compare results ---
+    using pixel_type = float;
+    pixel_type* output_image = reinterpret_cast<pixel_type*>(out_buf["image"]->data());
+    const std::vector<pixel_type> expected_result =
+        file_util::read_binary_file<pixel_type>(file_util::path_join(test_data_directory,
+                                           "augment_output_linear_eval.bin"));
+    double err{0}, rel_err{0}, max_err{0}, max_rel_err{0};
+    for (std::size_t i = 0; i < elements_count; ++i)
+    {
+        double diff = std::abs(expected_result[i] - output_image[i]);
+        err += diff;
+        rel_err += diff / std::abs(expected_result[i]);
+        max_err = std::max(max_err, diff);
+        max_rel_err = std::max(max_rel_err, diff / std::abs(expected_result[i]));
+    }
+    double avg_err = err / static_cast<double>(elements_count);
+    double avg_rel_err = rel_err / static_cast<double>(elements_count);
+
+    EXPECT_LE(avg_err, 1e-3f);
+    EXPECT_LE(avg_rel_err, 1e-3f);
+    EXPECT_LE(max_err, 1e-5f);
+    EXPECT_LE(max_rel_err, 1e-2f);
 }
 
 TEST(provider, argtype)
@@ -202,7 +372,7 @@ TEST(provider, blob)
     in_buf.add_record(record);
 
     // call the provider
-    media->provide(0, in_buf, out_buf);
+    media->provide(0, in_buf.record(0), out_buf);
 
     cv::Mat output_left{image_size, CV_8UC3, out_buf["left.image"]->data()};
     cv::imwrite("output_left.jpg", output_left);
@@ -250,7 +420,7 @@ TEST(provider, char_map)
 
     for (int i = 0; i < batch_size; i++)
     {
-        media->provide(i, in_buf, out_buf);
+        media->provide(i, in_buf.record(i), out_buf);
     }
 
     for (int i = 0; i < batch_size; i++)

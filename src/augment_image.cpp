@@ -33,7 +33,7 @@ augment::image::param_factory::param_factory(nlohmann::json js)
         auto   val = js.find("type");
         if (val == js.end())
         {
-            throw std::invalid_argument("augmentation missing 'type'");
+            throw invalid_argument("augmentation missing 'type'");
         }
         else
         {
@@ -62,7 +62,7 @@ augment::image::param_factory::param_factory(nlohmann::json js)
             }
             if (crop_enable && !m_batch_samplers.empty())
             {
-                throw std::invalid_argument(
+                throw invalid_argument(
                     "'Cannot use 'batch_samplers' with 'crop_enable'. Please use only one cropping "
                     "method in augmentations.");
             }
@@ -81,28 +81,16 @@ augment::image::param_factory::param_factory(nlohmann::json js)
             if (padding > 0)
             {
                 padding_crop_offset_distribution =
-                    std::uniform_int_distribution<int>(0, padding * 2);
+                    uniform_int_distribution<int>(0, padding * 2);
             }
         }
-#ifndef PYTHON_PLUGIN
-        if (js.find("plugin_filename") != js.end())
-            WARN << "Detected `plugin_filename` in augmentation config, but aeon was not compiled "
-                    "with "
-                    "PYTHON_PLUGIN flag. Recompile with PYTHON_PLUGIN flag in order to use plugins."
-                 << std::endl;
-        if (js.find("plugin_params") != js.end())
-            WARN << "Detected `plugin_params` in augmentation config, but aeon was not compiled "
-                    "with "
-                    "PYTHON_PLUGIN flag. Recompile with PYTHON_PLUGIN flag in order to use plugins."
-                 << std::endl;
-#endif
     }
     m_emit_type = get_emit_constraint_type();
 }
 
 emit_type augment::image::param_factory::get_emit_constraint_type()
 {
-    std::transform(m_emit_constraint_type.begin(),
+    transform(m_emit_constraint_type.begin(),
                    m_emit_constraint_type.end(),
                    m_emit_constraint_type.begin(),
                    ::tolower);
@@ -113,7 +101,7 @@ emit_type augment::image::param_factory::get_emit_constraint_type()
     else if (m_emit_constraint_type == "")
         return emit_type::undefined;
     else
-        throw std::invalid_argument("Invalid emit constraint type");
+        throw invalid_argument("Invalid emit constraint type");
 }
 
 shared_ptr<augment::image::params> augment::image::param_factory::make_params(
@@ -123,26 +111,6 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
     // since the params default ctor is private and factory is friend
     // make_shared is not friend :(
     auto settings = shared_ptr<augment::image::params>(new augment::image::params());
-
-#ifdef PYTHON_PLUGIN
-    if (!plugin_filename.empty())
-    {
-        std::lock_guard<std::mutex> lock(mtx);
-        if (user_plugin_map.find(this_thread::get_id()) == user_plugin_map.end())
-        {
-            user_plugin_map[std::this_thread::get_id()] =
-                std::make_shared<plugin>(plugin_filename, plugin_params.dump());
-        }
-        settings->user_plugin = user_plugin_map[this_thread::get_id()];
-
-        if (settings->user_plugin)
-            settings->user_plugin->prepare();
-    }
-    else
-    {
-        settings->user_plugin.reset();
-    }
-#endif
 
     auto& random = get_thread_local_random_engine();
 
@@ -156,6 +124,8 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
     settings->saturation             = saturation(random);
     settings->padding                = padding;
     settings->debug_output_directory = debug_output_directory;
+    settings->resize_short_size      = resize_short_size;
+    settings->interpolation_method   = interpolation_method;
 
     cv::Size2f input_size = cv::Size(input_width, input_height);
 
@@ -175,39 +145,76 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
         {
             image_scale = nervana::image::calculate_scale(input_size, output_width, output_height);
         }
-        input_size                   = input_size * image_scale;
-        settings->output_size.width  = nervana::unbiased_round(input_size.width);
-        settings->output_size.height = nervana::unbiased_round(input_size.height);
+        input_size = input_size * image_scale;
+
+        settings->output_size.width  = unbiased_round(input_size.width);
+        settings->output_size.height = unbiased_round(input_size.height);
     }
     else
     {
-        if (padding > 0)
-        {
-            throw std::invalid_argument(
-                "crop_enable should not be true: when padding is defined, crop is executed by "
-                "default with cropbox size equal to intput image size");
-        }
-        float      image_scale            = scale(random);
-        float      _horizontal_distortion = horizontal_distortion(random);
-        cv::Size2f out_shape(output_width * _horizontal_distortion, output_height);
-
-        cv::Size2f cropbox_size = nervana::image::cropbox_max_proportional(input_size, out_shape);
         if (do_area_scale)
         {
-            cropbox_size =
-                nervana::image::cropbox_area_scale(input_size, cropbox_size, image_scale);
+            float      _horizontal_distortion = horizontal_distortion(random);
+            _horizontal_distortion = sqrt(_horizontal_distortion);
+            cv::Size2f out_shape(_horizontal_distortion, 1 / _horizontal_distortion);
+            
+            float bound = min((float)input_width / input_height /(out_shape.width * out_shape.width), 
+                             (float)input_height / input_width /( out_shape.height * out_shape.height));
+
+            float scale_max = std::min(scale.max(), bound);
+            float scale_min = std::min(scale.min(), bound);
+            
+            std::uniform_real_distribution<float> scale2{scale_min, scale_max};
+
+            float target_area = sqrt(input_height * input_width * scale2(random));
+            out_shape.width  *= target_area;
+            out_shape.height *= target_area;
+            
+            float c_off_x = crop_offset(random);
+            float c_off_y = crop_offset(random);
+
+            cv::Size2f cropbox_size = out_shape;
+            cv::Point2i cropbox_origin = nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
+            settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
         }
         else
         {
-            cropbox_size = nervana::image::cropbox_linear_scale(cropbox_size, image_scale);
+            if (padding > 0)
+            {
+                throw invalid_argument(
+                    "crop_enable should not be true: when padding is defined, crop is executed by "
+                    "default with cropbox size equal to intput image size");
+            }
+            float      image_scale            = scale(random);
+            float      _horizontal_distortion = horizontal_distortion(random);
+            cv::Size2f out_shape(output_width * _horizontal_distortion, output_height);
+
+            // TODO(sfraczek): add test for this resize short
+            if (resize_short_size > 0)
+            {
+                input_size = nervana::image::get_resized_short_size(input_width,
+                                                                    input_height,
+                                                                    resize_short_size);
+            }
+
+            cv::Size2f cropbox_size = nervana::image::cropbox_max_proportional(input_size, out_shape);
+            if (do_area_scale)
+            {
+                cropbox_size =
+                    nervana::image::cropbox_area_scale(input_size, cropbox_size, image_scale);
+            }
+            else
+            {
+                cropbox_size = nervana::image::cropbox_linear_scale(cropbox_size, image_scale);
+            }
+
+            float c_off_x = crop_offset(random);
+            float c_off_y = crop_offset(random);
+
+            cv::Point2i cropbox_origin =
+                nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
+            settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
         }
-
-        float c_off_x = crop_offset(random);
-        float c_off_y = crop_offset(random);
-
-        cv::Point2f cropbox_origin =
-            nervana::image::cropbox_shift(input_size, cropbox_size, c_off_x, c_off_y);
-        settings->cropbox = cv::Rect(cropbox_origin, cropbox_size);
     }
 
     if (lighting.stddev() != 0)
@@ -223,11 +230,11 @@ shared_ptr<augment::image::params> augment::image::param_factory::make_params(
 }
 
 shared_ptr<augment::image::params>
-    augment::image::param_factory::make_ssd_params(size_t                   input_width,
-                                                   size_t                   input_height,
-                                                   size_t                   output_width,
-                                                   size_t                   output_height,
-                                                   const std::vector<bbox>& object_bboxes) const
+    augment::image::param_factory::make_ssd_params(size_t              input_width,
+                                                   size_t              input_height,
+                                                   size_t              output_width,
+                                                   size_t              output_height,
+                                                   const vector<bbox>& object_bboxes) const
 {
     auto& random   = get_thread_local_random_engine();
     auto  settings = make_params(input_width, input_height, output_width, output_height);
@@ -245,7 +252,7 @@ shared_ptr<augment::image::params>
 
     if (settings->expand_ratio < 1.)
     {
-        throw std::invalid_argument("Expand ratio must be greater than 1.");
+        throw invalid_argument("Expand ratio must be greater than 1.");
     }
     if (expand_enabled)
     {
@@ -316,9 +323,9 @@ nbox augment::image::param_factory::sample_patch(const vector<nbox>& object_bbox
         return nbox(0, 0, 1, 1);
     }
 
-    std::uniform_int_distribution<int> uniform_dist(0, batch_samples.size() - 1);
-    int                                rand_index  = uniform_dist(get_thread_local_random_engine());
-    nbox                               chosen_bbox = batch_samples[rand_index];
+    uniform_int_distribution<int> uniform_dist(0, batch_samples.size() - 1);
+    int                           rand_index  = uniform_dist(get_thread_local_random_engine());
+    nbox                          chosen_bbox = batch_samples[rand_index];
 
     return chosen_bbox;
 }
@@ -353,11 +360,10 @@ nbox augment::image::sampler::sample_patch() const
 {
     auto& random           = get_thread_local_random_engine();
     float scale            = m_scale_generator(random);
-    float min_aspect_ratio = std::max<float>(m_aspect_ratio_generator.min(), std::pow(scale, 2.));
-    float max_aspect_ratio =
-        std::min<float>(m_aspect_ratio_generator.max(), 1 / std::pow(scale, 2.));
+    float min_aspect_ratio = max<float>(m_aspect_ratio_generator.min(), pow(scale, 2.));
+    float max_aspect_ratio = min<float>(m_aspect_ratio_generator.max(), 1 / pow(scale, 2.));
     auto local_aspect_ratio_generator =
-        std::uniform_real_distribution<float>(min_aspect_ratio, max_aspect_ratio);
+        uniform_real_distribution<float>(min_aspect_ratio, max_aspect_ratio);
     float aspect_ratio = local_aspect_ratio_generator(random);
 
     // Figure out nbox dimension.
@@ -365,9 +371,9 @@ nbox augment::image::sampler::sample_patch() const
     float bbox_height = scale / sqrt(aspect_ratio);
 
     // Figure out top left coordinates.
-    float                                 w_off, h_off;
-    std::uniform_real_distribution<float> width_generator(0.f, 1.f - bbox_width);
-    std::uniform_real_distribution<float> height_generator(0.f, 1.f - bbox_height);
+    float                            w_off, h_off;
+    uniform_real_distribution<float> width_generator(0.f, 1.f - bbox_width);
+    uniform_real_distribution<float> height_generator(0.f, 1.f - bbox_height);
     w_off = width_generator(random);
     h_off = height_generator(random);
 
@@ -388,8 +394,8 @@ nbox augment::image::sampler::sample_patch() const
     }
 }
 
-bool augment::image::sample_constraint::satisfies(const nbox&              sampled_bbox,
-                                                  const std::vector<nbox>& object_bboxes) const
+bool augment::image::sample_constraint::satisfies(const nbox&         sampled_bbox,
+                                                  const vector<nbox>& object_bboxes) const
 {
     bool has_jaccard_overlap = has_min_jaccard_overlap() || has_max_jaccard_overlap();
     bool has_sample_coverage = has_min_sample_coverage() || has_max_sample_coverage();
@@ -485,7 +491,7 @@ float augment::image::sample_constraint::get_min_jaccard_overlap() const
 {
     if (!has_min_jaccard_overlap())
     {
-        throw std::runtime_error("min_jaccard_overlap is not set");
+        throw runtime_error("min_jaccard_overlap is not set");
     }
     return m_min_jaccard_overlap;
 }
@@ -494,7 +500,7 @@ float augment::image::sample_constraint::get_max_jaccard_overlap() const
 {
     if (!has_max_jaccard_overlap())
     {
-        throw std::runtime_error("max_jaccard_overlap is not set");
+        throw runtime_error("max_jaccard_overlap is not set");
     }
     return m_max_jaccard_overlap;
 }
@@ -503,7 +509,7 @@ float augment::image::sample_constraint::get_min_sample_coverage() const
 {
     if (!has_min_sample_coverage())
     {
-        throw std::runtime_error("min_sample_coverage is not set");
+        throw runtime_error("min_sample_coverage is not set");
     }
     return m_min_sample_coverage;
 }
@@ -512,7 +518,7 @@ float augment::image::sample_constraint::get_max_sample_coverage() const
 {
     if (!has_max_sample_coverage())
     {
-        throw std::runtime_error("max_sample_coverage is not set");
+        throw runtime_error("max_sample_coverage is not set");
     }
     return m_max_sample_coverage;
 }
@@ -521,7 +527,7 @@ float augment::image::sample_constraint::get_min_object_coverage() const
 {
     if (!has_min_object_coverage())
     {
-        throw std::runtime_error("min_object_coverage is not set");
+        throw runtime_error("min_object_coverage is not set");
     }
     return m_min_object_coverage;
 }
@@ -530,7 +536,7 @@ float augment::image::sample_constraint::get_max_object_coverage() const
 {
     if (!has_max_object_coverage())
     {
-        throw std::runtime_error("max_object_coverage is not set");
+        throw runtime_error("max_object_coverage is not set");
     }
     return m_max_object_coverage;
 }

@@ -1,10 +1,8 @@
-**DISCONTINUATION OF PROJECT.** This project will no longer be maintained by Intel. Intel will not provide or guarantee development of or support for this project, including but not limited to, maintenance, bug fixes, new releases or updates. Patches to this project are no longer accepted by Intel. If you have an ongoing need to use this project, are interested in independently developing it, or would like to maintain patches for the community, please create your own fork of the project.
-
 # aeon
 
 [aeon](https://github.com/NervanaSystems/aeon) is Intel Nervana's framework-independent deep learning dataloader committed to best performance. Designed for ease-of-use and extensibility.
 
-- Supports common media types: image, video, audio. It is ready for use with classification, segmentation, localization, transcription and more.
+- Supports common media types: image, video. It is ready for use with classification, segmentation, localization, transcription and more.
 - Loads and augments data in parallel to framework computation.
 - [Examples](examples) folder contains simple scripts showing how to use it.
 
@@ -20,7 +18,7 @@ First grab Aeon's dependencies:
 
 ### Ubuntu (release 16.04 LTS and later):
 
-    apt-get install git clang libcurl4-openssl-dev libopencv-dev libsox-dev libboost-filesystem-dev libboost-system-dev libssl-dev
+    apt-get install git clang libopencv-dev
 
 ##### For Python 3.n
 
@@ -29,7 +27,7 @@ First grab Aeon's dependencies:
 ### CentOS (release 7.2 and later):
 
     yum install epel-release
-    yum install git clang gcc-c++ make cmake openssl-devel opencv-devel libcurl-devel sox-devel boost-devel boost-filesystem boost-system
+    yum install git clang gcc-c++ make cmake opencv-devel
 
 ##### For Python 2.7
 
@@ -43,12 +41,6 @@ First grab Aeon's dependencies:
 
     brew tap homebrew/science
     brew install opencv
-    brew install sox
-    brew install boost
-
-## Distributed Aeon
-
-Please take a look at [distributed documentation](http://aeon.nervanasys.com/index.html/service.html).
 
 ## Code coverage
 

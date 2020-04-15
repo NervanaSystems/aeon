@@ -50,6 +50,30 @@ def test_loader_invalid_manifest():
         dl = DataLoader(config)
     assert 'must be string, but is null' in str(ex)
 
+def test_loader_broken_image():
+    manifest = random_manifest(2, broken_image_index=1)
+    config = generic_config(manifest.name, batch_size)
+
+    with pytest.raises(Exception) as ex:
+        dl = DataLoader(config)
+    assert 'Decoding image failed due to invalid data in the image file' in str(ex)
+
+def test_loader_broken_image_next():
+    manifest = random_manifest(9, broken_image_index=8)
+    config = generic_config(manifest.name, batch_size)
+    dl = DataLoader(config)
+
+    with pytest.raises(Exception) as ex:
+        for i in range(5):
+            dl.next()
+    assert 'Decoding image failed due to invalid data in the image file' in str(ex)
+
+    dl2 = DataLoader(config)
+    with pytest.raises(Exception) as ex:
+        for data in dl2:
+            pass
+    assert 'Decoding image failed due to invalid data in the image file' in str(ex)
+
 
 def test_loader():
     # NOTE: manifest needs to stay in scope until DataLoader has read it.

@@ -98,7 +98,7 @@ appropriate entry for video options:
     augmentation_config = {"type": "image",
                            "scale": [0.875, 0.875]}
 
-    aeon_config = {"manifest_filename": "train.csv",
+    aeon_config = {"manifest_filename": "train.tsv",
                    "etl": (video_config, label_config),
                    "augmentation": (augmentation_config),
                    "batch_size": 128}

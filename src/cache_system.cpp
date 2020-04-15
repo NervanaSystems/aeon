@@ -102,7 +102,7 @@ void cache_system::load_block(encoded_record_list& buffer)
                 buffer.add_record(record);
             }
             if (m_shuffle_enabled)
-                buffer.shuffle(std::random_device{}());
+                buffer.shuffle(m_random);
         }
     }
     else

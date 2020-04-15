@@ -36,6 +36,10 @@ shared_ptr<image::decoded> depthmap::extractor::extract(const void* inbuf, size_
     cv::Mat input_img(1, insize, CV_8UC1, (char*)inbuf);
     cv::imdecode(input_img, CV_LOAD_IMAGE_ANYDEPTH, &image);
 
+    if (image.empty()) {
+        throw runtime_error("Decoding depthmap image failed due to invalid data in the image file.");
+    }
+
     // convert input image to single channel if needed
     if (image.channels() > 1)
     {
@@ -72,7 +76,7 @@ std::shared_ptr<image::decoded>
     cv::Mat croppedImage = rotatedImage(img_xform->cropbox);
 
     cv::Mat resizedImage;
-    image::resize(croppedImage, resizedImage, img_xform->output_size, false);
+    image::resize(croppedImage, resizedImage, img_xform->output_size, "NEAREST");
 
     cv::Mat flippedImage;
     if (img_xform->flip)
@@ -83,15 +87,6 @@ std::shared_ptr<image::decoded>
         flippedImage = resizedImage;
 
     cv::Mat* finalImage = &flippedImage;
-
-#ifdef PYTHON_PLUGIN
-    cv::Mat pluginImage;
-    if (img_xform->user_plugin)
-    {
-        pluginImage = img_xform->user_plugin->augment_depthmap(flippedImage);
-        finalImage  = &pluginImage;
-    }
-#endif
 
     return make_shared<image::decoded>(*finalImage);
 }

@@ -14,11 +14,6 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     # those lines are copied from distutils.ccompiler.CCompiler directly
     macros, objects, extra_postargs, pp_opts, build = self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
-    # removing flags unsuported by clang on centos
-    self.compiler = [x for x in self.compiler if x != '-fstack-protector-strong']
-    self.compiler.append('-fstack-protector')
-    self.compiler_so = [x for x in self.compiler_so if x != '-fstack-protector-strong']
-    self.compiler_so.append('-fstack-protector')
     # parallel code
     import multiprocessing.pool
     def _single_compile(obj):
@@ -32,8 +27,10 @@ import distutils.ccompiler
 distutils.ccompiler.CCompiler.compile=parallelCCompile
 
 lib_dirs = ""
+lib_dirs += " -L${CMAKE_PREFIX_PATH}/lib "
 libs = ""
 include_dirs = ""
+include_dirs += " -I${CMAKE_PREFIX_PATH}/include "
 
 status, tmp = getstatusoutput("pkg-config --cflags opencv")
 if status != 0:
@@ -43,25 +40,9 @@ include_dirs += tmp
 lib_dirs += getoutput("pkg-config --libs-only-L opencv")
 libs += getoutput("pkg-config --libs-only-l opencv")
 
-status, tmp = getstatusoutput("pkg-config --cflags sox")
-if status != 0:
-    print("required package 'sox' not found")
-    exit()
-include_dirs += tmp
-lib_dirs += getoutput("pkg-config --libs-only-L sox")
-libs += ' ' + getoutput("pkg-config --libs-only-l sox")
-libs += ' -lcurl'
+libs += ' -lstdc++fs'
 
-include_dirs += ' ${Boost_INCLUDE_DIRS}'
-lib_dirs += ' ${Boost_LIBRARY_DIRS}'
-libs += ' -lboost_system -lboost_filesystem'
-
-if '${OPENFABRICS_FOUND}' == 'TRUE':
-    include_dirs += ' -I${OPENFABRICS_INCLUDE_DIRS} '
-    lib_dirs += ' -L${OPENFABRICS_LIBRARY_DIRS} '
-    libs += ' -lfabric '
-
-os.environ["CC"] = "clang++"
+os.environ["CC"] = "${CMAKE_CXX_COMPILER}"
 src_list = "${SRC}".split(";")
 sources = [
     '${CMAKE_CURRENT_SOURCE_DIR}/'+src for src in src_list
@@ -73,7 +54,18 @@ include_dirs += get_python_inc() + ' ' + numpy.get_include()
 include_dirs = include_dirs.split()
 libs = libs.replace('-l', '').split()
 lib_dirs = lib_dirs.replace('-L','').split()
-extra_compile_args = "${CMAKE_CXX_FLAGS}".split(' ')
+
+extra_compile_args = []
+extra_link_args = []
+for flag in "${CMAKE_CXX_FLAGS}".strip().split(' '):
+    if flag[0:4] == "-Wl,":
+        extra_link_args.append(flag)
+    else:
+        extra_compile_args.append(flag)
+
+hashfile = open(os.path.join('${CMAKE_BINARY_DIR}','githash'),'w')
+hashfile.write('${AEON_CURRENT_HASH}')
+hashfile.close()
 
 
 module = Extension(
@@ -83,10 +75,21 @@ module = Extension(
     libraries=libs,
     library_dirs=lib_dirs,
     extra_compile_args=extra_compile_args,
+    extra_link_args=extra_link_args,
 )
 
 setup(
     name='nervana-aeon',
+    description='Framework-independent deep learning dataloader',
     version='${AEON_VERSION}',
-    ext_modules=[module]
+    author='Intel Corporation',
+    author_email='intelnervana@intel.com',
+    url='https://github.com/NervanaSystems/aeon/',
+    license='Intel Internal Use Software License Agreement',
+    long_description=open(os.path.join('${PROJECT_SOURCE_DIR}', 'README.md')).read(),
+    long_description_content_type='text/markdown',
+    keywords='Intel aeon data reader loader deep learning',
+    platforms='Linux',
+    ext_modules=[module],
+    data_files=[('extra_files', ['${CMAKE_BINARY_DIR}/githash'])]
 )

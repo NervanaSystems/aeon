@@ -63,6 +63,7 @@ public:
     uint32_t    width;
     std::string output_type{"uint8_t"};
 
+    bool     bgr_to_rgb    = false;
     bool     channel_major = true;
     uint32_t channels      = 3;
 
@@ -81,6 +82,7 @@ private:
         ADD_SCALAR(height, mode::REQUIRED),
         ADD_SCALAR(width, mode::REQUIRED),
         ADD_SCALAR(name, mode::OPTIONAL),
+        ADD_SCALAR(bgr_to_rgb, mode::OPTIONAL),
         ADD_SCALAR(channel_major, mode::OPTIONAL),
         ADD_SCALAR(channels, mode::OPTIONAL, [](uint32_t v) { return v == 1 || v == 3; }),
         ADD_SCALAR(output_type, mode::OPTIONAL, [](const std::string& v) {
@@ -170,15 +172,22 @@ private:
 class nervana::image::loader : public interface::loader<image::decoded>
 {
 public:
-    loader(const image::config& cfg, bool fixed_aspect_ratio);
+    loader(const image::config& cfg,
+           bool                 fixed_aspect_ratio,
+           std::vector<double>  mean   = {},
+           std::vector<double>  stddev = {});
     ~loader() {}
     virtual void load(const std::vector<void*>&, std::shared_ptr<image::decoded>) const override;
 
 private:
     void split(cv::Mat&, char*);
 
-    bool       m_channel_major;
-    bool       m_fixed_aspect_ratio;
-    shape_type m_stype;
-    uint32_t   m_channels;
+    bool                m_channel_major;
+    bool                m_fixed_aspect_ratio;
+    bool                m_bgr_to_rgb;
+    shape_type          m_stype;
+    uint32_t            m_channels;
+    std::vector<double> m_mean;
+    std::vector<double> m_stddev;
+    std::vector<int>    m_from_to;
 };
