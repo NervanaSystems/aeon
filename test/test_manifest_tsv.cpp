@@ -110,6 +110,100 @@ TEST(manifest, no_shuffle)
     }
 }
 
+namespace {
+void test_multinode_manifest(bool shuffle)
+{
+    const uint32_t record_count = 17;
+    const uint32_t batch_size = 3;
+    const uint32_t node_count = 2;
+
+    manifest_builder       mm1;
+    auto&                  ms1 = mm1.sizes({4, 4}).record_count(record_count).create();
+    nervana::manifest_file manifest(ms1, shuffle, "", 1.0f, 5000, 1234, 0, 0, batch_size);
+
+    manifest_builder       mmn1;
+    auto&                  msn1 = mmn1.sizes({4, 4}).record_count(record_count).create();
+    nervana::manifest_file manifest_node1(msn1, shuffle, "", 1.0f, 5000, 1234, 0, 2, batch_size);
+
+    manifest_builder       mmn2;
+    auto&                  msn2 = mmn2.sizes({4, 4}).record_count(record_count).create();
+    nervana::manifest_file manifest_node2(msn2, shuffle, "", 1.0f, 5000, 1234, 1, 2, batch_size);
+
+
+    ASSERT_EQ(1, manifest_node1.block_count());
+    ASSERT_EQ(1, manifest_node2.block_count());
+
+    ASSERT_EQ(8, manifest_node1.record_count());
+    ASSERT_EQ(8, manifest_node2.record_count());
+
+    ASSERT_EQ(2, manifest_node1.elements_per_record());
+    ASSERT_EQ(2, manifest_node2.elements_per_record());
+
+    auto record_count_node = (manifest.record_count() / node_count) * node_count;
+    uint32_t batches = ((record_count_node / node_count) / batch_size) * node_count;
+
+    for (int i = 0; i < batches; i++)
+    {
+        for (int j = 0; j < batch_size; j++)
+        {
+            uint32_t src_index = i * batch_size + j;
+            uint32_t dst_index = ( i / node_count ) * batch_size + j;
+            if ( i % node_count == 0)
+            {
+                ASSERT_EQ(manifest[src_index][0], manifest_node1[dst_index][0]);
+                ASSERT_EQ(manifest[src_index][1], manifest_node1[dst_index][1]);
+            }
+            else
+            {
+                ASSERT_EQ(manifest[src_index][0], manifest_node2[dst_index][0]);
+                ASSERT_EQ(manifest[src_index][1], manifest_node2[dst_index][1]);
+            }
+        }
+    }
+
+    auto remain = record_count_node - batches * batch_size;
+    for (int i = 0; i < remain; i++)
+    {
+            uint32_t src_index = batches * batch_size + i;
+            uint32_t dst_index = batches * batch_size / node_count + i % node_count;
+
+            if ( i / node_count == 0)
+            {
+                ASSERT_EQ(manifest[src_index][0], manifest_node1[dst_index][0]);
+                ASSERT_EQ(manifest[src_index][1], manifest_node1[dst_index][1]);
+            }
+            else
+            {
+                ASSERT_EQ(manifest[src_index][0], manifest_node2[dst_index][0]);
+                ASSERT_EQ(manifest[src_index][1], manifest_node2[dst_index][1]);
+            }
+    }
+
+    auto block       = manifest.next();
+    auto block_node1 = manifest_node1.next();
+    auto block_node2 = manifest_node2.next();
+
+    manifest.reset();
+    manifest_node1.reset();    
+    manifest_node2.reset();
+
+    block       = manifest.next();
+    block_node1 = manifest_node1.next();
+    block_node2 = manifest_node2.next();
+}
+
+}
+
+TEST(manifest, no_shuffle_multinode)
+{
+    test_multinode_manifest(false);
+}
+
+TEST(manifest, shuffle_multinode)
+{
+    test_multinode_manifest(true);
+}
+
 TEST(manifest, shuffle)
 {
     manifest_builder       mm1;
@@ -723,52 +817,4 @@ TEST(manifest, comma)
         loader_factory factory;
         EXPECT_THROW(factory.get_loader(config), std::runtime_error);
     }
-}
-
-TEST(benchmark, manifest)
-{
-    string manifest_filename = file_util::tmp_filename();
-    string cache_root        = "/this/is/supposed/to/be/long/so/we/make/it/so/";
-    cout << "tmp manifest file " << manifest_filename << endl;
-
-    chrono::high_resolution_clock timer;
-
-    // Generate a manifest file
-    {
-        auto     startTime = timer.now();
-        ofstream mfile(manifest_filename);
-        for (int i = 0; i < 10e6; i++)
-        {
-            mfile << cache_root << "image_" << i << ".jpg,";
-            mfile << cache_root << "target_" << i << ".txt\n";
-        }
-        auto endTime = timer.now();
-        cout << "create manifest "
-             << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count() << " ms"
-             << endl;
-    }
-
-    // Parse the manifest file
-    shared_ptr<manifest_file> manifest;
-    {
-        auto startTime = timer.now();
-        manifest       = make_shared<manifest_file>(manifest_filename, false);
-        auto endTime   = timer.now();
-        cout << "load manifest "
-             << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count() << " ms"
-             << endl;
-    }
-
-    // compute the CRC
-    {
-        auto     startTime = timer.now();
-        uint32_t crc       = manifest->get_crc();
-        auto     endTime   = timer.now();
-        cout << "manifest crc 0x" << setfill('0') << setw(8) << hex << crc << dec << endl;
-        cout << "crc time "
-             << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count() << " ms"
-             << endl;
-    }
-
-    remove(manifest_filename.c_str());
 }

@@ -89,7 +89,7 @@ TEST(localization_ssd, provider)
     fixed_buffer_map  out_buf(oshapes, 1);
     const shape_type& image_shape = media->get_output_shape("image");
 
-    media->provide(0, in_buf, out_buf);
+    media->provide(0, in_buf.record(0), out_buf);
 
     int     output_width  = image_shape.get_shape()[0];
     int     output_height = image_shape.get_shape()[1];

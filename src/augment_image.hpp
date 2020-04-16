@@ -30,9 +30,6 @@
 #include "json.hpp"
 #include "interface.hpp"
 #include "box.hpp"
-#ifdef PYTHON_PLUGIN
-#include "python_plugin.hpp"
-#endif
 
 namespace nervana
 {
@@ -82,6 +79,7 @@ public:
         out << "emit_constraint_type " << obj.emit_constraint_type << "\n";
         out << "emit_min_overlap     " << obj.emit_min_overlap << "\n";
         out << "cropbox                " << obj.cropbox << "\n";
+        out << "resize_short_size      " << obj.resize_short_size << "\n";
         out << "output_size            " << obj.output_size << "\n";
         out << "angle                  " << obj.angle << "\n";
         out << "flip                   " << obj.flip << "\n";
@@ -104,6 +102,8 @@ public:
     emit_type          emit_constraint_type = emit_type::undefined;
     float              emit_min_overlap     = 0.f;
     cv::Rect           cropbox;
+    int                resize_short_size = 0;
+    std::string        interpolation_method = "LINEAR";
     cv::Size2i         output_size;
     int                angle = 0;
     bool               flip  = false;
@@ -117,9 +117,6 @@ public:
     int                hue                    = 0;
     bool               debug_deterministic    = false;
     std::string        debug_output_directory = "";
-#ifdef PYTHON_PLUGIN
-    std::shared_ptr<plugin> user_plugin = nullptr;
-#endif
 
 private:
     params() {}
@@ -141,19 +138,17 @@ public:
                         size_t                                        output_height,
                         const std::vector<nervana::boundingbox::box>& object_bboxes) const;
 
-    bool        do_area_scale                 = false;
-    bool        crop_enable                   = true;
-    bool        fixed_aspect_ratio            = false;
-    float       expand_probability            = 0.;
-    float       fixed_scaling_factor          = -1;
-    std::string m_emit_constraint_type        = "";
-    float       m_emit_constraint_min_overlap = 0.0;
-#ifdef PYTHON_PLUGIN
-    std::string    plugin_filename;
-    nlohmann::json plugin_params;
-    mutable std::map<std::thread::id, std::shared_ptr<plugin>> user_plugin_map;
-    mutable std::mutex mtx;
-#endif
+    bool                do_area_scale                 = false;
+    bool                crop_enable                   = true;
+    bool                fixed_aspect_ratio            = false;
+    std::vector<double> mean                          = {};
+    std::vector<double> stddev                        = {};
+    int                 resize_short_size             = 0;
+    std::string         interpolation_method          = "LINEAR";
+    float               expand_probability            = 0.;
+    float               fixed_scaling_factor          = -1;
+    std::string         m_emit_constraint_type        = "";
+    float               m_emit_constraint_min_overlap = 0.0;
 
     /** Scale the crop box (width, height) */
     mutable std::uniform_real_distribution<float> scale{1.0f, 1.0f};
@@ -224,6 +219,8 @@ private:
                          [](decltype(horizontal_distortion) v) { return v.a() <= v.b(); }),
         ADD_SCALAR(flip_enable, mode::OPTIONAL),
         ADD_SCALAR(center, mode::OPTIONAL),
+        ADD_SCALAR(resize_short_size, mode::OPTIONAL),
+        ADD_SCALAR(interpolation_method, mode::OPTIONAL),
         ADD_SCALAR(do_area_scale, mode::OPTIONAL),
         ADD_SCALAR(crop_enable, mode::OPTIONAL),
         ADD_SCALAR(expand_probability, mode::OPTIONAL),
@@ -231,6 +228,8 @@ private:
         ADD_SCALAR_WITH_KEY(
             m_emit_constraint_min_overlap, "emit_constraint_min_overlap", mode::OPTIONAL),
         ADD_SCALAR(fixed_aspect_ratio, mode::OPTIONAL),
+        ADD_SCALAR(mean, mode::OPTIONAL),
+        ADD_SCALAR(stddev, mode::OPTIONAL),
         ADD_SCALAR(fixed_scaling_factor, mode::OPTIONAL),
         ADD_SCALAR(padding, mode::OPTIONAL),
         ADD_SCALAR(debug_output_directory, mode::OPTIONAL),
@@ -244,10 +243,6 @@ private:
                          mode::OPTIONAL,
                          [](decltype(expand_ratio) v) { return v.a() >= 1 && v.a() <= v.b(); }),
         ADD_DISTRIBUTION(hue, mode::OPTIONAL, [](decltype(hue) v) { return v.a() <= v.b(); }),
-#ifdef PYTHON_PLUGIN
-        ADD_SCALAR(plugin_filename, mode::OPTIONAL),
-        ADD_JSON(plugin_params, "plugin_params", mode::OPTIONAL),
-#endif
         ADD_OBJECT(batch_samplers, mode::OPTIONAL)};
 
     emit_type get_emit_constraint_type();

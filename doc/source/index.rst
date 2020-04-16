@@ -42,7 +42,6 @@ bug reports at aeon_issues_ .
    getting_started
    user_guide
    developer_guide
-   service
 
 .. toctree::
    :hidden:
@@ -51,7 +50,6 @@ bug reports at aeon_issues_ .
 
    provider_image
    provider_label
-   provider_audio
    provider_localization_rcnn
    provider_localization_ssd
    provider_pixelmask
@@ -67,8 +65,6 @@ bug reports at aeon_issues_ .
    :caption: Augmentation
 
    augment_image
-   augment_audio
-   augmentation_plugins
 
 .. toctree::
    :hidden:
@@ -84,4 +80,3 @@ bug reports at aeon_issues_ .
 
    python_api
    cpp_api
-   service_api

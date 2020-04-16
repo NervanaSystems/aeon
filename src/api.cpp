@@ -18,7 +18,6 @@
 #include <sstream>
 
 #include "api.hpp"
-#include "python_utils.hpp"
 #include "json_parser.hpp"
 #include <numpy/arrayobject.h>
 #include "structmember.h"
@@ -30,18 +29,9 @@ using nlohmann::json;
 namespace
 {
     loader* create_loader(const json& config);
-
-    using block_threads = nervana::python::block_threads;
-    using allow_threads = nervana::python::allow_threads;
 }
 
 extern "C" {
-#ifndef PYTHON_PLUGIN
-#define Py_BEGIN_ALLOW_THREADS
-#define Py_END_ALLOW_THREADS
-#define Py_BLOCK_THREADS
-#define Py_UNBLOCK_THREADS
-#endif
 
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
@@ -74,7 +64,7 @@ static PyObject* error_out(PyObject* m)
 {
     struct aeon_state* st = GETSTATE(m);
     PyErr_SetString(st->error, "aeon module level error");
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -89,7 +79,7 @@ static PyObject* dict2json(PyObject* self, PyObject* dictionary)
     catch (std::exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError, e.what());
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -101,7 +91,6 @@ typedef struct
     PyObject*               batch_size;
     PyObject*               axes_info;
     PyObject*               config;
-    PyObject*               session_id;
     loader*                 m_loader;
     uint32_t                m_i;
     bool                    m_first_iteration;
@@ -117,73 +106,81 @@ static PyObject* DataLoader_iter(PyObject* self)
     INFO << " aeon_DataLoader_iter";
     Py_INCREF(self);
 
-    allow_threads a;
-
-    DL_get_loader(self)->reset();
-    ((aeon_DataLoader*)(self))->m_first_iteration = true;
-    return self;
+    try
+    {
+        DL_get_loader(self)->reset();
+        ((aeon_DataLoader*)(self))->m_first_iteration = true;
+    }
+    catch (std::exception& e)
+    {
+        stringstream ss;
+        ss << "Error creating iterator: " << e.what();
+        ERR << ss.str();
+        PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
+        return nullptr;
+    }
+        return self;
 }
 
 static PyObject* DataLoader_iternext(PyObject* self)
 {
     INFO << " aeon_DataLoader_iternext";
-    PyObject* result = NULL;
+    PyObject* result = nullptr;
 
-    allow_threads a;
+    nlohmann::json conf        = DL_get_loader(self)->get_current_config();
+    bool           batch_major = conf.value("batch_major", true);
+    try {
+        if (!((aeon_DataLoader*)(self))->m_first_iteration)
+            DL_get_loader(self)->get_current_iter()++;
+        else
+            ((aeon_DataLoader*)(self))->m_first_iteration = false;
 
-    nlohmann::json conf = DL_get_loader(self)->get_current_config();
-    bool           batch_major{true};
-    try
-    {
-        batch_major = conf.at("batch_major");
-    }
-    catch (nlohmann::detail::out_of_range&)
-    {
-    }
-    if (!((aeon_DataLoader*)(self))->m_first_iteration)
-        DL_get_loader(self)->get_current_iter()++;
-    else
-        ((aeon_DataLoader*)(self))->m_first_iteration = false;
-
-    if (DL_get_loader(self)->get_current_iter() != DL_get_loader(self)->get_end_iter())
-    {
-        // d will be const fixed_buffer_map&
-        const fixed_buffer_map& d     = *(DL_get_loader(self)->get_current_iter());
-        auto                    names = DL_get_loader(self)->get_buffer_names();
-
-        block_threads b{a};
-        result            = PyTuple_New(names.size());
-        int buf_tuple_len = 2;
-        int tuple_pos     = 0;
-        for (auto&& nm : names)
+        if (DL_get_loader(self)->get_current_iter() != DL_get_loader(self)->get_end_iter())
         {
-            PyObject* wrapped_buf     = wrap_buffer_as_np_array(d[nm], !batch_major);
-            PyObject* buf_name        = Py_BuildValue("s", nm.c_str());
-            PyObject* named_buf_tuple = PyTuple_New(buf_tuple_len);
+            // d will be const fixed_buffer_map&
+            const fixed_buffer_map& d     = *(DL_get_loader(self)->get_current_iter());
+            auto                    names = DL_get_loader(self)->get_buffer_names();
 
-            // build tuple of (name, buffer) ex: ('image', buf)
-            PyTuple_SetItem(named_buf_tuple, 0, buf_name);
-            PyTuple_SetItem(named_buf_tuple, 1, wrapped_buf);
-
-            int set_status = PyTuple_SetItem(result, tuple_pos, named_buf_tuple);
-            tuple_pos++;
-
-            // Fix me: do i need call Py_DECREF on named_buf_tuple?
-            // Note: PyTuple_SetItem steals the reference.
-            if (set_status < 0)
+            result            = PyTuple_New(names.size());
+            int buf_tuple_len = 2;
+            int tuple_pos     = 0;
+            for (auto&& nm : names)
             {
-                ERR << "Error building shape string";
-                PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
+                PyObject* wrapped_buf     = wrap_buffer_as_np_array(d[nm], !batch_major);
+                PyObject* buf_name        = Py_BuildValue("s", nm.c_str());
+                PyObject* named_buf_tuple = PyTuple_New(buf_tuple_len);
+
+                // build tuple of (name, buffer) ex: ('image', buf)
+                PyTuple_SetItem(named_buf_tuple, 0, buf_name);
+                PyTuple_SetItem(named_buf_tuple, 1, wrapped_buf);
+
+                int set_status = PyTuple_SetItem(result, tuple_pos, named_buf_tuple);
+                tuple_pos++;
+
+                // Fix me: do i need call Py_DECREF on named_buf_tuple?
+                // Note: PyTuple_SetItem steals the reference.
+                if (set_status < 0)
+                {
+                    ERR << "Error building shape string";
+                    PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
+                    return nullptr;
+                }
             }
         }
+        else
+        {
+            /* Raising of standard StopIteration exception with empty value. */
+            PyErr_SetNone(PyExc_StopIteration);
+        }
     }
-    else
+    catch (std::exception& e)
     {
-        block_threads b{a};
-        /* Raising of standard StopIteration exception with empty value. */
-        PyErr_SetNone(PyExc_StopIteration);
+        std::stringstream ss;
+        ss << "Error when iterating: " << e.what() << endl;
+        ERR << ss.str();
+        PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
+        return nullptr;
     }
-
     return result;
 }
 
@@ -231,6 +228,7 @@ static PyObject* wrap_buffer_as_np_array(const buffer_fixed_size_elements* buf, 
     {
         ERR << "Unable to wrap buffer as npy array";
         PyErr_SetString(PyExc_RuntimeError, "Unable to wrap buffer as npy array");
+        return nullptr;
     }
 
     return p_array;
@@ -240,10 +238,10 @@ static void DataLoader_dealloc(aeon_DataLoader* self)
 {
     INFO << " DataLoader_dealloc";
     {
-        allow_threads a;
         if (self->m_loader != nullptr)
         {
             delete self->m_loader;
+            self->m_loader = nullptr;
         }
     }
 
@@ -251,7 +249,6 @@ static void DataLoader_dealloc(aeon_DataLoader* self)
     Py_XDECREF(self->batch_size);
     Py_XDECREF(self->axes_info);
     Py_XDECREF(self->config);
-    Py_XDECREF(self->session_id);
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
@@ -262,10 +259,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
 
     static const char* keyword_list[] = {"config", nullptr};
 
-#ifdef PYTHON_PLUGIN
-    Py_Initialize();
-    PyEval_InitThreads();
-#endif
     PyObject* dict;
     auto      rc = PyArg_ParseTupleAndKeywords(
         args, kwds, "O!", const_cast<char**>(keyword_list), &PyDict_Type, &dict);
@@ -283,16 +276,15 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             ss << "Unable to parse config: " << e.what();
             ERR << ss.str();
             PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
-            return NULL;
+            return nullptr;
         }
         INFO << " config " << json_config.dump(4);
         self = (aeon_DataLoader*)type->tp_alloc(type, 0);
         if (!self)
         {
-            return NULL;
+            return nullptr;
         }
 
-        allow_threads a;
         try
         {
             self->m_loader          = create_loader(json_config);
@@ -304,7 +296,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
             self->ndata      = Py_BuildValue("i", self->m_loader->record_count());
             self->batch_size = Py_BuildValue("i", self->m_loader->batch_size());
             self->config     = PyDict_Copy(dict);
-            self->session_id = Py_BuildValue("s", self->m_loader->get_session_id());
 
             // axes_info is represented as a tuple of tuples.
             // A single entry in axes_info is represented as
@@ -317,8 +308,6 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                 auto axes_lengths = name_shape_list[i].second.get_shape();
                 auto axes_names   = name_shape_list[i].second.get_names();
 
-                block_threads{a};
-
                 // using tuple instead of dict to preserve the order
                 // python 2.x doesnt have the support for ordereddict obj, its supported in python 3.x onwards
                 PyObject* py_axis_tuple  = PyTuple_New(axes_lengths.size());
@@ -329,11 +318,11 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                     PyObject* axes_name     = Py_BuildValue("s", axes_names[j].c_str());
                     PyObject* py_temp_tuple = PyTuple_New(axis_tuple_len);
 
-                    if (py_temp_tuple == NULL)
+                    if (py_temp_tuple == nullptr)
                     {
                         ERR << "Error creating new tuple";
                         PyErr_SetString(PyExc_RuntimeError, "Error creating new tuple");
-                        return NULL;
+                        return nullptr;
                     }
 
                     // create a tuple of (axis_name, axis_length)
@@ -346,7 +335,7 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                     {
                         ERR << "Error building tuple of (axis_name, axis_length)";
                         PyErr_SetString(PyExc_RuntimeError, "Error building shape tuple");
-                        return NULL;
+                        return nullptr;
                     }
                 }
 
@@ -364,21 +353,19 @@ static PyObject* DataLoader_new(PyTypeObject* type, PyObject* args, PyObject* kw
                 {
                     ERR << "Error building shape string";
                     PyErr_SetString(PyExc_RuntimeError, "Error building shape dict");
-                    return NULL;
+                    return nullptr;
                 }
             }
         }
         catch (std::exception& e)
         {
-            block_threads b{a};
-
             // Some kind of problem with creating the internal loader object
             std::stringstream ss;
             ss << "Unable to create internal loader object: " << e.what() << endl;
-            ERR << "Unable to create internal loader object: " << e.what() << endl;
             ss << "config is: " << json_config << endl;
+            ERR << ss.str();
             PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
-            return NULL;
+            return nullptr;
         }
     }
     return (PyObject*)self;
@@ -392,8 +379,18 @@ static int DataLoader_init(aeon_DataLoader* self, PyObject* args, PyObject* kwds
 static PyObject* aeon_reset(PyObject* self, PyObject*)
 {
     INFO << " aeon_reset";
-    DL_get_loader(self)->reset();
-    return Py_None;
+    try
+    {
+        DL_get_loader(self)->reset();
+        return Py_None;
+    }
+    catch (std::exception& e)
+    {
+        stringstream ss;
+        ss << "Error when resetting iterator: " << e.what();
+        PyErr_SetString(PyExc_RuntimeError, ss.str().c_str());
+        return nullptr;
+    }
 }
 
 static PyMethodDef DataLoader_methods[] = {
@@ -424,12 +421,6 @@ static PyMemberDef DataLoader_members[] = {
      offsetof(aeon_DataLoader, config),
      0,
      (char*)"config passed to DataLoader object"},
-    {(char*)"session_id",
-     T_OBJECT_EX,
-     offsetof(aeon_DataLoader, session_id),
-     0,
-     (char*)"ID of DataLoader session object set when remote is defined and no session_id is "
-            "specified"},
     {NULL, NULL, 0, 0, NULL} /* Sentinel */
 };
 

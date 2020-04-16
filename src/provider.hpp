@@ -23,7 +23,6 @@
 #include "provider_interface.hpp"
 #include "etl_image.hpp"
 #include "etl_label.hpp"
-#include "etl_audio.hpp"
 #include "etl_blob.hpp"
 #include "etl_boundingbox.hpp"
 #include "etl_char_map.hpp"
@@ -43,7 +42,6 @@ namespace nervana
         class provider_base;
         class image;
         class label;
-        class audio;
         namespace localization
         {
             class rcnn;
@@ -71,7 +69,7 @@ public:
                   const std::vector<nlohmann::json>& etl,
                   nlohmann::json                     augmentation);
 
-    void provide(int idx, encoded_record_list& in_buf, fixed_buffer_map& out_buf) const override;
+    void provide(int idx, encoded_record& in_buf, fixed_buffer_map& out_buf) const override;
 
 private:
     std::vector<std::shared_ptr<provider::interface>> m_providers;
@@ -85,7 +83,6 @@ class nervana::augmentation
 {
 public:
     std::shared_ptr<augment::image::params> m_image_augmentations;
-    std::shared_ptr<augment::audio::params> m_audio_augmentations;
 };
 
 //=================================================================================================
@@ -106,7 +103,7 @@ public:
 
 private:
     void provide(int                           idx,
-                 nervana::encoded_record_list& in_buf,
+                 nervana::encoded_record& in_buf,
                  nervana::fixed_buffer_map&    out_buf) const
     {
     }
@@ -154,30 +151,6 @@ private:
     nervana::label::extractor m_extractor;
     nervana::label::loader    m_loader;
     const std::string         m_buffer_name;
-};
-
-//=================================================================================================
-// audio
-//=================================================================================================
-
-class nervana::provider::audio : public provider::interface
-{
-public:
-    audio(nlohmann::json js, nlohmann::json aug);
-    virtual ~audio() {}
-    void provide(int                        idx,
-                 const std::vector<char>&   datum_in,
-                 nervana::fixed_buffer_map& out_buf,
-                 augmentation&) const override;
-
-private:
-    nervana::audio::config        m_config;
-    nervana::audio::extractor     m_extractor;
-    nervana::audio::transformer   m_transformer;
-    nervana::audio::loader        m_loader;
-    augment::audio::param_factory m_augmentation_factory;
-    const std::string             m_buffer_name;
-    const std::string             m_length_name;
 };
 
 //=================================================================================================

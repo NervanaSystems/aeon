@@ -16,8 +16,7 @@
 
 #include <fstream>
 #include <vector>
-
-#include "boost/filesystem/path.hpp"
+#include <experimental/filesystem>
 
 #include "output_saver.hpp"
 
@@ -73,6 +72,6 @@ string nervana::output_saver::get_filename()
 
 string nervana::output_saver::get_filename(const string& directory)
 {
-    auto filename = boost::filesystem::path(directory) / get_debug_file_id();
+    auto filename = std::experimental::filesystem::path(directory) / get_debug_file_id();
     return filename.string();
 }

@@ -52,7 +52,7 @@ TEST(buffer, shuffle)
 
     ASSERT_EQ(sorted(buffer_to_vector_of_strings(b)), true);
 
-    b.shuffle(0);
+    b.shuffle(std::minstd_rand0{0});
 
     ASSERT_EQ(sorted(buffer_to_vector_of_strings(b)), false);
 }
@@ -123,7 +123,7 @@ TEST(buffer, serialization)
                    {"batch_size", batch_size},
                    {"iteration_mode", "INFINITE"},
                    {"cache_directory", ""},
-                   {"decode_thread_count", 0},
+                   {"aeon_cpu_list", ""},
                    {"etl", {image_config, label_config}}};
 
     shared_ptr<nervana::provider_interface> provider = provider_factory::create(config);

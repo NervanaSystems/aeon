@@ -23,7 +23,6 @@
 #include "interface.hpp"
 #include "buffer_batch.hpp"
 #include "augment_image.hpp"
-#include "augment_audio.hpp"
 
 namespace nervana
 {
@@ -41,7 +40,7 @@ public:
 
     virtual ~provider_interface() {}
     virtual void provide(int                           idx,
-                         nervana::encoded_record_list& in_buf,
+                         nervana::encoded_record&      in_buf,
                          nervana::fixed_buffer_map&    out_buf) const = 0;
 
     size_t       get_input_count() const { return m_input_count; }
