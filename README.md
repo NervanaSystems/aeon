@@ -1,3 +1,8 @@
+# DISCONTINUATION OF PROJECT #
+This project will no longer be maintained by Intel.
+This project has been identified as having known security escapes.
+Intel has ceased development and contributions including, but not limited to, maintenance, bug fixes, new releases, or updates, to this project.
+Intel no longer accepts patches to this project.
 # aeon
 
 [aeon](https://github.com/NervanaSystems/aeon) is Intel Nervana's framework-independent deep learning dataloader committed to best performance. Designed for ease-of-use and extensibility.
